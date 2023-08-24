@@ -271,12 +271,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const dataToken = `${token}-data`
         const errToken = `${token}-error`
         const endToken = `${token}-end`
-        // let count=0
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
             const { Response, Request } = data
             const { FuzzerIndex = "" } = Request
-            // console.log('count',count++)
-            // console.log("data", FuzzerIndex, Request, Response, Uint8ArrayToString(Response.ResponseRaw))
+            console.log("data", FuzzerIndex, Request, Response,)
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -442,6 +440,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 if (setType) setType("config")
                 return
             }
+
             onSetOriginSequence(pageChildrenList)
             const newSequenceList: SequenceProps[] = []
             sequenceList.forEach((item) => {
@@ -457,6 +456,22 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     })
                 }
             })
+            if (newSequenceList.findIndex(ele => ele.pageId === currentSequenceItem?.pageId) === -1) {
+                setCurrentSequenceItem(undefined)
+            }
+            if (newSequenceList.length === 0) {
+                const newItem: SequenceProps = {
+                    id: "1",
+                    name: `Step [0]`,
+                    pageId: "",
+                    pageGroupId: "",
+                    pageName: "",
+                    inheritCookies: true,
+                    inheritVariables: true,
+                    // pageParams: defaultPageParams
+                }
+                newSequenceList.push(newItem)
+            }
             setSequenceList([...newSequenceList])
         }),
         { wait: 200 }
@@ -682,8 +697,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 <YakitButton
                                     onClick={() => onForcedStop()}
                                     icon={<SolidStopIcon className={styles["stop-icon"]} />}
-                                    className='button-primary-danger'
-                                    danger={true}
+                                    colors='danger'
                                     type={"primary"}
                                 >
                                     强制停止
