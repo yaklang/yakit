@@ -569,9 +569,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ...item,
             //  pageParams: originItem.pageParams
         }
-        if(item.id!==currentSequenceItem?.id){
-            setCurrentSequenceItem({...item})
-        }
+        setCurrentSequenceItem({...item})
         setSequenceList([...sequenceList])
     })
     const onUpdateItem = useMemoizedFn((item: SequenceProps, index: number) => {
