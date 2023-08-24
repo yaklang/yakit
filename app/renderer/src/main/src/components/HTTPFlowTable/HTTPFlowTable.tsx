@@ -830,8 +830,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             newParams = {
                 ...newParams,
                 SearchContentType:"",
+                ExcludeContentType:searchContentType.length===0?[]:searchContentType.split(","),
+                IncludeInUrl:[],
                 ExcludeInUrl:hostName,
-                IncludeInUrl:[]
+                IncludePath:[],
+                ExcludePath:urlPath,
+                IncludeSuffix:[],
+                ExcludeSuffix:fileSuffix
             }
         }
         // 展示
@@ -839,12 +844,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             newParams = {
                 ...newParams,
                 SearchContentType:searchContentType,
+                ExcludeContentType:[],
+                IncludeInUrl:hostName,
                 ExcludeInUrl:[],
-                IncludeInUrl:hostName
+                IncludePath:urlPath,
+                ExcludePath:[],
+                IncludeSuffix:fileSuffix,
+                ExcludeSuffix:[]
             }
         }
-        console.log("请求参数：",newParams);
-        
         setParams(newParams)
         setTimeout(() => {
             update(1)

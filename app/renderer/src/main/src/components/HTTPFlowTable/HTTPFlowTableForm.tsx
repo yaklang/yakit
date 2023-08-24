@@ -2,10 +2,7 @@ import React, {useEffect, useRef, useState} from "react"
 import {Form, Modal} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
 import styles from "./HTTPFlowTableForm.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
@@ -14,7 +11,6 @@ import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {FiltersItemProps} from "../TableVirtualResize/TableVirtualResizeType"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoveIcon} from "@/assets/newIcon"
-const {ipcRenderer} = window.require("electron")
 export interface HTTPFlowTableFormConfigurationProps {
     visible: boolean
     setVisible: (b: boolean) => void
@@ -103,7 +99,6 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         const newValue = {
             ...formValue
         }
-        console.log("ppoo", JSON.stringify(oldValue), JSON.stringify(newValue))
         if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
             Modal.confirm({
                 title: "温馨提示",
