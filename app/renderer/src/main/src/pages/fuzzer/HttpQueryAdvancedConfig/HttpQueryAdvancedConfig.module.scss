@@ -158,22 +158,14 @@
             &:hover {
                 .variable-list-remove {
                     display: flex;
-                    color: var(--yakit-body-text-color);
                 }
             }
 
             .variable-list-remove {
                 display: none;
-                align-items: center;
-                justify-content: center;
-                width: 24px;
-                height: 24px;
-                color: var(--yakit-helper-text-color);
-                border-radius: 4px;
 
                 &:hover {
-                    background: var(--yakit-card-background-color);
-                    color: var(--yakit-danger-5);
+                    background: var(--yakit-background-color);
                 }
             }
 
