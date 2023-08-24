@@ -113,6 +113,7 @@ export interface SequenceResponseHeardProps {
     disabled: boolean
     droppedCount: number
     currentSequenceItemName: string
+    currentSequenceItemPageName: string
     advancedConfigValue?: AdvancedConfigValueProps
     responseInfo?: ResponseProps
     onShowAll: () => void

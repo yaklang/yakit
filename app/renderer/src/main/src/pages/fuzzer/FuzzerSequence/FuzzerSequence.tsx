@@ -25,7 +25,7 @@ import {
     useThrottleFn,
     useUpdateEffect,
 } from "ahooks"
-import { OutlineArrowcirclerightIcon, OutlineCogIcon, OutlinePlussmIcon, OutlineTrashIcon } from "@/assets/icon/outline"
+import { OutlineArrowcirclerightIcon, OutlineCogIcon, OutlinePencilaltIcon, OutlinePlussmIcon, OutlineTrashIcon } from "@/assets/icon/outline"
 import { Divider, Form, Result, Tooltip } from "antd"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -522,7 +522,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 inheritCookies: true,
                 inheritVariables: true
             }
-            setCurrentSequenceItem({...item})
+            setCurrentSequenceItem({ ...item })
             setSequenceList([item])
         }
     })
@@ -569,7 +569,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ...item,
             //  pageParams: originItem.pageParams
         }
-        setCurrentSequenceItem({...item})
+        setCurrentSequenceItem({ ...item })
         setSequenceList([...sequenceList])
     })
     const onUpdateItem = useMemoizedFn((item: SequenceProps, index: number) => {
@@ -639,7 +639,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             inheritVariables: true,
             // pageParams: defaultPageParams
         }
-        setCurrentSequenceItem({...addItem})
+        setCurrentSequenceItem({ ...addItem })
         setSequenceList([...sequenceList, addItem])
     })
     const onApplyOtherNodes = useMemoizedFn((extraSetting: ExtraSettingProps) => {
@@ -666,7 +666,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 // pageParams: defaultPageParams
             }
             setSequenceList([newItem])
-            setCurrentSequenceItem({...newItem})
+            setCurrentSequenceItem({ ...newItem })
         } else {
             if (currentSequenceItem?.id === sequenceList[index].id) {
                 setCurrentSequenceItem(sequenceList[index - 1]);
@@ -680,7 +680,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             yakitNotify("error", "请配置序列后再选中")
             return
         }
-        setCurrentSequenceItem({...val})
+        setCurrentSequenceItem({ ...val })
     })
     const onSetShowAllResponse = useMemoizedFn(() => {
         setShowAllResponse(false)
@@ -795,6 +795,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         <>
                             <SequenceResponseHeard
                                 currentSequenceItemName={currentSequenceItem.name}
+                                currentSequenceItemPageName={currentSequenceItem.pageName}
                                 disabled={responseMap.size === 0 || loading}
                                 responseInfo={currentSelectResponse}
                                 advancedConfigValue={currentSelectRequest?.advancedConfigValue}
@@ -843,6 +844,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         onRemove,
         onSelect
     } = props
+    const [selectVisible, setSelectVisible] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     const [editNameVisible, setEditNameVisible] = useState<boolean>(false)
     const [name, setName] = useState<string>(item.name)
@@ -950,8 +952,8 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                 visible={editNameVisible}
                                 onVisibleChange={setEditNameVisible}
                             >
-                                <PencilAltIcon
-                                    className={classNames({
+                                <OutlinePencilaltIcon
+                                    className={classNames(styles["list-item-icon"], {
                                         [styles["icon-active"]]: editNameVisible
                                     })}
                                     onClick={(e) => {
@@ -1071,6 +1073,10 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                             }}
                             getPopupContainer={(dom) => dom}
                             disabled={disabled}
+                            onDropdownVisibleChange={(v) => {
+                                setSelectVisible(v)
+                            }}
+                            open={selectVisible && !isDragging}
                         />
                     </div>
                 </div>
@@ -1081,7 +1087,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
 
 
 const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((props) => {
-    const { advancedConfigValue, droppedCount, responseInfo, disabled, onShowAll, currentSequenceItemName } = props
+    const { advancedConfigValue, droppedCount, responseInfo, disabled, onShowAll, currentSequenceItemName, currentSequenceItemPageName } = props
     const {
         onlyOneResponse: httpResponse,
         successCount,
@@ -1102,7 +1108,11 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
     }, [cachedTotal])
     return (<div className={styles['sequence-response-heard']}>
         <div className={styles['sequence-response-heard-left']}>
-            <span className={styles['sequence-response-heard-left-title']}>{currentSequenceItemName || ''}</span>
+            <span>
+                <span className={styles['sequence-response-heard-left-title']}>{currentSequenceItemName || ''}</span>
+                <span className={styles['sequence-response-heard-left-subTitle']}>{currentSequenceItemPageName || ''}</span>
+            </span>
+
             <FuzzerExtraShow droppedCount={droppedCount} advancedConfigValue={advancedConfigValue || defaultAdvancedConfigValue} onlyOneResponse={onlyOneResponse} httpResponse={httpResponse} />
         </div>
         <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()}>展示全部响应</YakitButton>

@@ -2088,13 +2088,14 @@ interface SecondNodeTitleProps {
     failedFuzzerLength: number
     showSuccess: boolean
     setShowSuccess: (b: boolean) => void
+    size?: YakitButtonProp['size']
 }
 
 /**
  * @description 右边的返回内容 头部left内容
  */
 export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props) => {
-    const { cachedTotal, rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess } =
+    const { cachedTotal, rsp, onlyOneResponse, successFuzzerLength, failedFuzzerLength, showSuccess, setShowSuccess,size='small' } =
         props
     if (onlyOneResponse) {
         return (
@@ -2110,7 +2111,7 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         return (
             <div className={styles["second-node-title"]}>
                 <YakitRadioButtons
-                    size='small'
+                    size={size==='small'?'small':'middle'}
                     value={showSuccess}
                     onChange={(e) => {
                         setShowSuccess(e.target.value)

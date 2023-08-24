@@ -81,6 +81,7 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         setShowSuccess(v)
                         setQuery(undefined)
                     }}
+                    size="middle"
                 />
             </div>
             <div className={styles['all-sequence-response-heard-extra']}>
