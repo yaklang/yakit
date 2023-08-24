@@ -106,7 +106,7 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
         key: "rename"
     },
     {
-        label: "将标签页添加到组",
+        label: "将标签页移动到组",
         key: "addToGroup",
         children: [
             {
@@ -2616,7 +2616,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
         }
         onUpdatePageCache([...subPage])
     })
-    /**将标签页添加到组 */
+    /**将标签页移动到组 */
     const onAddToGroup = useMemoizedFn((item: MultipleNodeInfo, key: string) => {
         const { index, subIndex } = getPageItemById(subPage, item.id)
         const { index: gIndex, current: currentGroup } = getPageItemById(subPage, key)
