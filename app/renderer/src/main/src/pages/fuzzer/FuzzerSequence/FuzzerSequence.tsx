@@ -26,7 +26,7 @@ import {
     useUpdateEffect,
 } from "ahooks"
 import { OutlineArrowcirclerightIcon, OutlineCogIcon, OutlinePlussmIcon, OutlineTrashIcon } from "@/assets/icon/outline"
-import { Divider, Form, Result } from "antd"
+import { Divider, Form, Result, Tooltip } from "antd"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
@@ -522,6 +522,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 inheritCookies: true,
                 inheritVariables: true
             }
+            setCurrentSequenceItem({...item})
             setSequenceList([item])
         }
     })
@@ -567,6 +568,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         sequenceList[index] = {
             ...item,
             //  pageParams: originItem.pageParams
+        }
+        if(item.id!==currentSequenceItem?.id){
+            setCurrentSequenceItem({...item})
         }
         setSequenceList([...sequenceList])
     })
@@ -637,6 +641,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             inheritVariables: true,
             // pageParams: defaultPageParams
         }
+        setCurrentSequenceItem({...addItem})
         setSequenceList([...sequenceList, addItem])
     })
     const onApplyOtherNodes = useMemoizedFn((extraSetting: ExtraSettingProps) => {
@@ -663,7 +668,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 // pageParams: defaultPageParams
             }
             setSequenceList([newItem])
-            setCurrentSequenceItem(undefined)
+            setCurrentSequenceItem({...newItem})
         } else {
             if (currentSequenceItem?.id === sequenceList[index].id) {
                 setCurrentSequenceItem(sequenceList[index - 1]);
@@ -677,7 +682,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             yakitNotify("error", "请配置序列后再选中")
             return
         }
-        setCurrentSequenceItem(val)
+        setCurrentSequenceItem({...val})
     })
     const onSetShowAllResponse = useMemoizedFn(() => {
         setShowAllResponse(false)
@@ -1032,20 +1037,22 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                 </>
                             )}
                             <Divider type='vertical' style={{ margin: 0 }} />
-                            <OutlineArrowcirclerightIcon
-                                className={classNames(styles["list-item-icon"], {
-                                    [styles["list-item-disabled-icon"]]: disabled
-                                })}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (disabled) return
-                                    if (!item.pageId) {
-                                        yakitNotify('error', '请选择页面')
-                                    } else {
-                                        onSelectSubMenuById(item.pageId)
-                                    }
-                                }}
-                            />
+                            <Tooltip title='前往Fuzzer配置'>
+                                <OutlineArrowcirclerightIcon
+                                    className={classNames(styles["list-item-icon"], {
+                                        [styles["list-item-disabled-icon"]]: disabled
+                                    })}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (disabled) return
+                                        if (!item.pageId) {
+                                            yakitNotify('error', '请选择页面')
+                                        } else {
+                                            onSelectSubMenuById(item.pageId)
+                                        }
+                                    }}
+                                />
+                            </Tooltip>
                         </div>
                     </div>
                     <div
@@ -1097,7 +1104,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
     }, [cachedTotal])
     return (<div className={styles['sequence-response-heard']}>
         <div className={styles['sequence-response-heard-left']}>
-            <span>{currentSequenceItemName || ''}</span>
+            <span className={styles['sequence-response-heard-left-title']}>{currentSequenceItemName || ''}</span>
             <FuzzerExtraShow droppedCount={droppedCount} advancedConfigValue={advancedConfigValue || defaultAdvancedConfigValue} onlyOneResponse={onlyOneResponse} httpResponse={httpResponse} />
         </div>
         <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()}>展示全部响应</YakitButton>
