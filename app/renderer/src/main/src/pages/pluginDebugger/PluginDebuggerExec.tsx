@@ -49,8 +49,10 @@ export const PluginDebuggerExec: React.FC<PluginDebuggerExecProp> = (props) => {
     })
 
     const cancel = useMemoizedFn(() => {
-        ipcRenderer.invoke("DebugPlugin", getToken(), {}).then(() => {
-            info("启动任务成功")
+        ipcRenderer.invoke("cancel-DebugPlugin", getToken(), {}).then(() => {
+            info("取消任务")
+        }).finally(() => {
+            setToken(randomString(40))
         })
     })
 

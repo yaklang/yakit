@@ -5,7 +5,7 @@ import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
-import {yakitNotify} from "../../utils/notification"
+import {yakitInfo, yakitNotify} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -393,6 +393,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 export interface HTTPFlowTableProp {
     onSelected?: (i?: HTTPFlow) => any
     noHeader?: boolean
+    noDeleteAll?: boolean
     tableHeight?: number
     paginationPosition?: "topRight" | "bottomRight"
     params?: YakQueryHTTPFlowRequest
@@ -966,6 +967,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 yakitNotify("error", `query HTTP Flow failed: ${e}`)
             })
     })
+
     // 获取tags等分组
     const getHTTPFlowsFieldGroup = useMemoizedFn((RefreshRequest: boolean) => {
         ipcRenderer
@@ -2373,7 +2375,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         </YakitPopover>
                                     )}
                                     <div className={style["empty-button"]}>
-                                        <YakitDropdownMenu
+                                        {!props.noDeleteAll && <YakitDropdownMenu
                                             menu={{
                                                 data: [
                                                     {
@@ -2409,8 +2411,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             >
                                                 清空
                                             </YakitButton>
-                                        </YakitDropdownMenu>
-
+                                        </YakitDropdownMenu>}
                                         <YakitDropdownMenu
                                         menu={{
                                             data: [

@@ -7,7 +7,7 @@ import {
 import {ExecResult} from "../pages/invoker/schema"
 import {StatusCardInfoProps, StatusCardProps} from "../pages/yakitStore/viewers/base"
 import {writeExecResultXTerm} from "../utils/xtermUtils"
-import {failed, info} from "../utils/notification"
+import {failed, info, yakitInfo} from "../utils/notification"
 import {useGetState} from "ahooks"
 import {Risk} from "@/pages/risks/schema";
 import {isEnpriTraceAgent} from "@/utils/envfile"
@@ -128,7 +128,7 @@ export default function useHoldingIPCRStream(
 
         let runtimeId = "";
         ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
-            if (runtimeId === "" && !!(data?.RuntimeID)) {
+            if (runtimeId === "" && !!(data?.RuntimeID) && runtimeId != data.RuntimeID) {
                 runtimeId = data.RuntimeID;
                 if (onRuntimeId) {
                     onRuntimeId(runtimeId);
