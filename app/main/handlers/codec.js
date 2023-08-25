@@ -48,4 +48,18 @@ module.exports = (win, getClient) => {
     ipcMain.handle("PacketPrettifyHelper", async (e, params) => {
         return await asyncPacketPrettifyHelper(params)
     })
+    const asyncNewCodec = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().NewCodec(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("newCodec", async (e, params) => {
+        return await asyncNewCodec(params)
+    })
 }
