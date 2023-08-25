@@ -33,8 +33,6 @@ import {
     useLongPress,
     useMemoizedFn,
     useThrottleFn,
-    useTrackedEffect,
-    useWhyDidYouUpdate,
 } from "ahooks"
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import classNames from "classnames"
@@ -1108,8 +1106,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     multipleNode: multipleNodeList,
                     multipleLength: multipleNodeListLength
                 }
-                // console.log("multipleNodeList", multipleNodeList)
-                // console.log("pageNodeInfo", pageNodeInfo)
                 const oldPageCache = [...pageCache]
                 const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
                 if (index === -1) {
@@ -1871,7 +1867,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
                 removeCurrentSelectGroup(YakitRoute.HTTPFuzzer)
                 // setSelectGroupId('')
             } else {
-                console.log('selectSubMenu', selectSubMenu)
                 setCurrentSelectGroup(YakitRoute.HTTPFuzzer, selectSubMenu.groupId)
                 addFuzzerSequenceList({
                     groupId: selectSubMenu.groupId
@@ -3275,7 +3270,6 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     const groupChildrenList = useMemo(() => {
         return subItem.groupChildren || []
     }, [subItem.groupChildren])
-    // useWhyDidYouUpdate('SubTabGroupItem', { ...props });
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(providedGroup, snapshotGroup) => {

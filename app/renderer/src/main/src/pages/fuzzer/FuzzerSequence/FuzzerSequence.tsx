@@ -274,7 +274,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
             const { Response, Request } = data
             const { FuzzerIndex = "" } = Request
-            console.log("data", FuzzerIndex, Request, Response,)
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -435,7 +434,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         useMemoizedFn(() => {
             if (loading || !inViewport) return
             const pageChildrenList = getCurrentGroupSequence()
-            console.log('pageChildrenList', pageChildrenList)
             if (pageChildrenList.length === 0) {
                 if (setType) setType("config")
                 return
@@ -615,7 +613,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 httpParams.push(httpParamsItem)
             }
         })
-        console.log("httpParams", httpParams)
         const newSequenceList = sequenceList.map((item) => ({ ...item, disabled: true }))
         setSequenceList([...newSequenceList])
         ipcRenderer.invoke("HTTPFuzzerSequence", { Requests: httpParams }, fuzzTokenRef.current)

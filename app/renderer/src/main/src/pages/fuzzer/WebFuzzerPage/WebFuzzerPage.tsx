@@ -3,7 +3,7 @@ import { WebFuzzerPageProps, WebFuzzerType } from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
 import { OutlineAdjustmentsIcon, OutlineCollectionIcon, OutlineXIcon } from "@/assets/icon/outline"
 import classNames from "classnames"
-import { useCreation, useInViewport, useMemoizedFn, useWhyDidYouUpdate } from "ahooks"
+import { useCreation, useInViewport, useMemoizedFn } from "ahooks"
 import { NodeInfoProps, PageNodeItemProps, usePageNode } from "@/store/pageNodeInfo"
 import { YakitRoute } from "@/routes/newRoute"
 import "video-react/dist/video-react.css" // import css
@@ -29,9 +29,7 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
 
     const onSwitchType = useMemoizedFn((key) => {
         if (!props.id) return
-        // const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
         const nodeInfo: PageNodeItemProps | undefined = getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
-        console.log('nodeInfo', nodeInfo, props.id)
         if (!nodeInfo) {
             // 新建组
             onAddGroup(props.id)
@@ -48,7 +46,6 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         ipcRenderer.invoke("send-webFuzzer-setType", { type: key })
     })
-    // useWhyDidYouUpdate('WebFuzzerPage', { ...props, });
     return (
         <div className={styles["web-fuzzer"]}>
             <div className={styles["web-fuzzer-tab"]}>

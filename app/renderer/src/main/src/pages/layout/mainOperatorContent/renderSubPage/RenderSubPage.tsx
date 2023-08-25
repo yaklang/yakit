@@ -1,6 +1,6 @@
 import { NoPaddingRoute, RouteToPage, YakitRoute } from "@/routes/newRoute"
 import React, { useContext, useEffect, useMemo, useReducer, useRef, useState } from "react"
-import { useMap, useDebounceEffect, useMemoizedFn, useWhyDidYouUpdate } from "ahooks"
+import { useMap, useDebounceEffect, useMemoizedFn } from "ahooks"
 import styles from "./RenderSubPage.module.scss"
 import { PageItemProps, RenderFuzzerSequenceProps, RenderSubPageItemProps, RenderSubPageProps } from "./RenderSubPageType"
 import { MultipleNodeInfo } from "../MainOperatorContentType"
@@ -25,7 +25,6 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo((props) =>
         [selectSubMenuId],
         { wait: 100, leading: true }
     )
-    // useWhyDidYouUpdate('RenderSubPage', { ...props, pageRenderList })
     return (
         <>
             {renderSubPage.map((subItem, numberSub) => {
@@ -70,7 +69,6 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo((props) =>
 
 export const RenderSubPageItem: React.FC<RenderSubPageItemProps> = React.memo((props) => {
     const { subItem, selectSubMenuId, route, pluginId } = props;
-    // useWhyDidYouUpdate('RenderSubPageItem', { ...props, selectSubMenuId })
     return (<div
         key={subItem.id}
         tabIndex={selectSubMenuId === subItem.id ? 1 : -1}
@@ -163,7 +161,6 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
 
 const PageItem: React.FC<PageItemProps> = React.memo(
     (props) => {
-        // useWhyDidYouUpdate('PageItem', { ...props, })
         const { routeKey, yakScriptId, params } = props
         return <>{RouteToPage(routeKey, yakScriptId, params)}</>
     }, (preProps, nextProps) => {
