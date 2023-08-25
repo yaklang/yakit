@@ -341,7 +341,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         DNSServers: value.dnsServers,
         EtcHosts: value.etcHosts,
         // 设置变量
-        Params: value.params
+        Params: (value.params || [])
             .filter((ele) => ele.Key || ele.Value)
             .map((ele) => ({
                 Key: ele.Key,
