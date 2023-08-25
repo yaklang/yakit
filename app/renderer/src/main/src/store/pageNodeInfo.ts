@@ -166,8 +166,8 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
             currentSelectGroup: selectGroup
         })
     },
-    removeCurrentSelectGroup:(key)=>{
-        const currentSelectGroup= get().currentSelectGroup;
+    removeCurrentSelectGroup: (key) => {
+        const currentSelectGroup = get().currentSelectGroup;
         currentSelectGroup.delete(key)
         set({
             ...get(),
@@ -225,6 +225,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         }
         node.pageNodeList = [...pageNodeList];
         newVal.set(key, { ...node })
+        console.log('removePageNodeInfoByPageId', newVal)
         set({
             ...get(),
             pageNode: newVal
@@ -333,8 +334,23 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
     },
     addPageNode: (key, list) => {
         const newVal = get().pageNode
-        const current: PageInfoProps | undefined = newVal.get(key)
-        if (!current) return
+        let current: PageInfoProps | undefined = newVal.get(key)
+        if (!current) {
+            current = {
+                routeKey: key,
+                singleNode: false,
+                pageNodeList: [{
+                    ...list,
+                    id: `${randomString(8)}-${1}`,
+                }]
+            }
+            newVal.set(key, current)
+            set({
+                ...get(),
+                pageNode: newVal
+            })
+            return
+        }
         const { pageNodeList } = current
         const { pageChildrenList } = list
         const newPageNodeList: PageNodeItemProps[] = pageNodeList.filter(ele => pageChildrenList.findIndex(l => l.pageId === ele.pageId) === -1)

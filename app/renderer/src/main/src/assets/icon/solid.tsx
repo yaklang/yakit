@@ -4792,7 +4792,7 @@ export const SolidToleftIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidToleft} {...props} />
 }
 
-const SwitchConfiguration = () => (
+const SolidSwitchConfiguration = () => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path fillRule="evenodd" clipRule="evenodd" d="M2 6.29412C2 4.47483 3.47483 3 5.29412 3H14.7059C16.5252 3 18 4.47483 18 6.29412C18 8.11341 16.5252 9.58824 14.7059 9.58824H5.29412C3.47483 9.58824 2 8.11341 2 6.29412ZM5.29412 3.94118C3.99462 3.94118 2.94118 4.99462 2.94118 6.29412C2.94118 7.59361 3.99462 8.64706 5.29412 8.64706H14.7059C16.0054 8.64706 17.0588 7.59361 17.0588 6.29412C17.0588 4.99462 16.0054 3.94118 14.7059 3.94118H5.29412Z" fill="currentColor" />
         <path d="M7.17647 6.29412C7.17647 7.33371 6.33371 8.17647 5.29412 8.17647C4.25452 8.17647 3.41176 7.33371 3.41176 6.29412C3.41176 5.25452 4.25452 4.41176 5.29412 4.41176C6.33371 4.41176 7.17647 5.25452 7.17647 6.29412Z" fill="currentColor" />
@@ -4804,6 +4804,6 @@ const SwitchConfiguration = () => (
 /**
  * @description  Icon/Solid/switch 配置
  */
-export const SwitchConfigurationIcon = (props: Partial<IconProps>) => {
-    return <Icon component={SwitchConfiguration} {...props} />
+export const SolidSwitchConfigurationIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidSwitchConfiguration} {...props} />
 }

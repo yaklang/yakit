@@ -2585,6 +2585,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(React.forwardRef((props, ref)
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
                 // push新的序列表数据
                 pushSequenceByGroupChildren(newGroup)
+                // removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer,item.id)
             }
         } else {
             // 组A移动到新建组

@@ -11,7 +11,7 @@ import {
 } from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { SolidDragsortIcon, SolidPlayIcon, SolidPlusIcon, SolidStopIcon, SwitchConfigurationIcon } from "@/assets/icon/solid"
+import { SolidDragsortIcon, SolidPlayIcon, SolidPlusIcon, SolidStopIcon, SolidSwitchConfigurationIcon } from "@/assets/icon/solid"
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import {
     useCreation,
@@ -1024,7 +1024,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                         }}
                                         overlayClassName={styles["cog-popover"]}
                                     >
-                                        <SwitchConfigurationIcon
+                                        <SolidSwitchConfigurationIcon
                                             className={classNames(styles["list-item-icon"], {
                                                 [styles["list-item-icon-hover"]]: visible,
                                                 [styles["list-item-disabled-icon"]]: disabled
