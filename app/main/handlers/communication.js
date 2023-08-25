@@ -1,4 +1,4 @@
-const { ipcMain } = require("electron")
+const {ipcMain} = require("electron")
 const isDev = require("electron-is-dev")
 const exec = require("child_process").exec
 module.exports = (win, getClient) => {
@@ -133,8 +133,12 @@ module.exports = (win, getClient) => {
         win.webContents.send("fetch-add-group", params)
     })
 
-    // 新建组 onAddGroup
+    //
     ipcMain.handle("send-open-subMenu-item", (e, params) => {
         win.webContents.send("fetch-open-subMenu-item", params)
+    })
+    
+    ipcMain.handle("send-ref-webFuzzer-request", (e, params) => {
+        win.webContents.send("fetch-ref-webFuzzer-request", params)
     })
 }

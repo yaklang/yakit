@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
+import React, {useCallback, useContext, useEffect, useMemo, useRef, useState} from "react"
 import {
     ExtraSettingProps,
     FuzzerSequenceProps,
@@ -10,9 +10,15 @@ import {
     SequenceResponseProps
 } from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { SolidDragsortIcon, SolidPlayIcon, SolidPlusIcon, SolidStopIcon, SolidSwitchConfigurationIcon } from "@/assets/icon/solid"
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {
+    SolidDragsortIcon,
+    SolidPlayIcon,
+    SolidPlusIcon,
+    SolidStopIcon,
+    SolidSwitchConfigurationIcon
+} from "@/assets/icon/solid"
+import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {
     useCreation,
     useDebounceFn,
@@ -23,20 +29,26 @@ import {
     useSize,
     useThrottleEffect,
     useThrottleFn,
-    useUpdateEffect,
+    useUpdateEffect
 } from "ahooks"
-import { OutlineArrowcirclerightIcon, OutlineCogIcon, OutlinePencilaltIcon, OutlinePlussmIcon, OutlineTrashIcon } from "@/assets/icon/outline"
-import { Divider, Form, Result, Tooltip } from "antd"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
-import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {
+    OutlineArrowcirclerightIcon,
+    OutlineCogIcon,
+    OutlinePencilaltIcon,
+    OutlinePlussmIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
+import {Divider, Form, Result, Tooltip} from "antd"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
 import {
     LabelNodeItem,
     defaultExtractorItem,
     defaultMatcherItem
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
-import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import { yakitNotify } from "@/utils/notification"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {yakitNotify} from "@/utils/notification"
 import {
     NodeInfoProps,
     PageInfoProps,
@@ -44,7 +56,7 @@ import {
     WebFuzzerPageInfoProps,
     usePageNode
 } from "@/store/pageNodeInfo"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRoute"
 import {
     FuzzerExtraShow,
     FuzzerRequestProps,
@@ -57,28 +69,27 @@ import {
     advancedConfigValueToFuzzerRequests,
     defaultAdvancedConfigValue,
     defaultPostTemplate,
-    emptyFuzzer,
+    emptyFuzzer
 } from "../HTTPFuzzerPage"
-import { randomString } from "@/utils/randomUtil"
-import { getLocalValue, getRemoteValue } from "@/utils/kv"
-import { AdvancedConfigValueProps } from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import { ResizeCardBox } from "@/components/ResizeCardBox/ResizeCardBox"
-import { NewHTTPPacketEditor } from "@/utils/editors"
-import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import { HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery } from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str"
-import { MatcherValueProps, ExtractorValueProps } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
-import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
-import { InheritLineIcon, InheritArrowIcon } from "./icon"
-import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
-import { PencilAltIcon } from "@/assets/newIcon"
-import { WebFuzzerNewEditor } from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
+import {randomString} from "@/utils/randomUtil"
+import {getLocalValue, getRemoteValue} from "@/utils/kv"
+import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {ResizeCardBox} from "@/components/ResizeCardBox/ResizeCardBox"
+import {NewHTTPPacketEditor} from "@/utils/editors"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import {MatcherValueProps, ExtractorValueProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {InheritLineIcon, InheritArrowIcon} from "./icon"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {PencilAltIcon} from "@/assets/newIcon"
+import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 // import { ResponseCard } from "./ResponseCard"
-
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 // 拖拽功能所需
 const getItemStyle = (isDragging, draggableStyle) => {
@@ -115,7 +126,7 @@ const reorder = (arr, index1, index2) => {
 }
 
 const defaultPageParams: WebFuzzerPageInfoProps = {
-    pageId: '',
+    pageId: "",
     advancedConfigValue: {
         ...defaultAdvancedConfigValue
     },
@@ -127,7 +138,7 @@ const isEmptySequence = (list: SequenceProps[]) => {
 }
 
 const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
-    const { setType } = props
+    const {setType} = props
     const [loading, setLoading] = useState<boolean>(false)
 
     const [originSequenceList, setOriginSequenceList] = useState<SequenceProps[]>([])
@@ -138,14 +149,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     // Request
     const [currentSelectRequest, setCurrentSelectRequest] = useState<WebFuzzerPageInfoProps>()
-    const [requestMap, { set: setRequest, get: getRequest, }] = useMap<string, AdvancedConfigValueProps>(new Map())
+    const [requestMap, {set: setRequest, get: getRequest}] = useMap<string, AdvancedConfigValueProps>(new Map())
 
     // Response
     const [currentSequenceItem, setCurrentSequenceItem] = useState<SequenceProps>()
 
     const [currentSelectResponse, setCurrentSelectResponse] = useState<ResponseProps>()
-    const [responseMap, { set: setResponse, get: getResponse, reset: resetResponse }] = useMap<string, ResponseProps>()
-    const [droppedCountMap, { set: setDroppedCount, get: getDroppedCount, reset: resetDroppedCount }] = useMap<
+    const [responseMap, {set: setResponse, get: getResponse, reset: resetResponse}] = useMap<string, ResponseProps>()
+    const [droppedCountMap, {set: setDroppedCount, get: getDroppedCount, reset: resetDroppedCount}] = useMap<
         string,
         number
     >(new Map())
@@ -157,14 +168,17 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
-    const { getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId, getCurrentSelectGroup } = usePageNode()
-    const [extractedMap, { reset, set }] = useMap<string, Map<string, string>>()
+    const {getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId, getCurrentSelectGroup} = usePageNode()
+    const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
     useEffect(() => {
-        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: { pageId: string, type: string, extractedMap: Map<string, string> }) => {
-            if (data.type === 'fuzzerSequence') {
-                setExtractedMap(data.extractedMap)
+        ipcRenderer.on(
+            "fetch-extracted-to-table",
+            (e: any, data: {pageId: string; type: string; extractedMap: Map<string, string>}) => {
+                if (data.type === "fuzzerSequence") {
+                    setExtractedMap(data.extractedMap)
+                }
             }
-        })
+        )
         return () => {
             ipcRenderer.removeAllListeners("fetch-extracted-to-table")
         }
@@ -218,11 +232,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 const currentSequenceRequest = getCurrentSequenceRequest(currentSequenceItem.pageId)
                 if (currentSequenceRequest?.pageParamsInfo.webFuzzerPageInfo) {
                     setCurrentSelectRequest({
-                        ...(currentSequenceRequest.pageParamsInfo.webFuzzerPageInfo)
+                        ...currentSequenceRequest.pageParamsInfo.webFuzzerPageInfo
                     })
                 }
             }
-        }, 200);
+        }, 200)
     }, [inViewport])
 
     const successCountRef = useRef<Map<string, number>>(new Map())
@@ -235,13 +249,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const currentSequenceRequest = getCurrentSequenceRequest(currentSequenceItem.pageId)
             if (currentSequenceRequest?.pageParamsInfo.webFuzzerPageInfo) {
                 setCurrentSelectRequest({
-                    ...(currentSequenceRequest.pageParamsInfo.webFuzzerPageInfo)
+                    ...currentSequenceRequest.pageParamsInfo.webFuzzerPageInfo
                 })
             }
 
             const currentResponse = responseMap.get(currentSequenceItem.id)
             if (currentResponse) {
-                setCurrentSelectResponse({ ...currentResponse })
+                setCurrentSelectResponse({...currentResponse})
             } else {
                 setCurrentSelectResponse(undefined)
             }
@@ -258,7 +272,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         () => {
             if (currentSequenceItem) {
                 const currentResponse = responseMap.get(currentSequenceItem.id)
-                if (currentResponse) setCurrentSelectResponse({ ...currentResponse })
+                if (currentResponse) setCurrentSelectResponse({...currentResponse})
             }
         },
         [responseMap],
@@ -272,8 +286,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const errToken = `${token}-error`
         const endToken = `${token}-end`
         ipcRenderer.on(dataToken, (e: any, data: FuzzerSequenceResponse) => {
-            const { Response, Request } = data
-            const { FuzzerIndex = "" } = Request
+            const {Response, Request} = data
+            const {FuzzerIndex = ""} = Request
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -343,7 +357,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const getCurrentSequenceRequest = useMemoizedFn((pageId: string) => {
         const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pageId)
         if (nodeInfo) {
-            const { currentItem } = nodeInfo
+            const {currentItem} = nodeInfo
             return currentItem
         }
     })
@@ -351,7 +365,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         // const nodeInfo: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, props.groupId)
         const nodeInfo = getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
         if (!nodeInfo) return []
-        const { pageChildrenList } = nodeInfo
+        const {pageChildrenList} = nodeInfo
         return pageChildrenList || []
     })
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
@@ -366,60 +380,63 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
         }
     })
-    const updateData = useThrottleFn((fuzzerIndex: string) => {
-        // if (fuzzerIndex === "-1") {
-        //     onClearRef()
-        //     const newSequenceList = sequenceList.map((item) => ({
-        //         ...item,
-        //         disabled: false
-        //     }))
-        //     setSequenceList([...newSequenceList])
-        //     return
-        // }
-        const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
-        const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
-        if (failedBuffer.length + successBuffer.length === 0) {
-            return
-        }
-        const newSequenceList = sequenceList.map((item) => {
-            if (item.disabled) {
-                return {
-                    ...item,
-                    disabled: item.id === fuzzerIndex ? false : true
-                }
-            } else {
-                return item
+    const updateData = useThrottleFn(
+        (fuzzerIndex: string) => {
+            // if (fuzzerIndex === "-1") {
+            //     onClearRef()
+            //     const newSequenceList = sequenceList.map((item) => ({
+            //         ...item,
+            //         disabled: false
+            //     }))
+            //     setSequenceList([...newSequenceList])
+            //     return
+            // }
+            const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
+            const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
+            if (failedBuffer.length + successBuffer.length === 0) {
+                return
             }
-        })
-        setSequenceList([...newSequenceList])
+            const newSequenceList = sequenceList.map((item) => {
+                if (item.disabled) {
+                    return {
+                        ...item,
+                        disabled: item.id === fuzzerIndex ? false : true
+                    }
+                } else {
+                    return item
+                }
+            })
+            setSequenceList([...newSequenceList])
 
-        let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
-        let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
-        if (successBuffer.length + failedBuffer.length === 1) {
-            const onlyOneResponse = successBuffer.length === 1 ? successBuffer[0] : failedBuffer[0]
-            // 设置第一个 response
-            setResponse(fuzzerIndex, {
+            let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
+            let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
+            if (successBuffer.length + failedBuffer.length === 1) {
+                const onlyOneResponse = successBuffer.length === 1 ? successBuffer[0] : failedBuffer[0]
+                // 设置第一个 response
+                setResponse(fuzzerIndex, {
+                    id: fuzzerIndex,
+                    onlyOneResponse,
+                    successCount: currentSuccessCount,
+                    failedCount: currentFailedCount,
+                    successFuzzer: successBuffer,
+                    failedFuzzer: failedBuffer
+                })
+                return
+            }
+            const currentResponse = getResponse(fuzzerIndex)
+            const newResponse: ResponseProps = {
                 id: fuzzerIndex,
-                onlyOneResponse,
+                onlyOneResponse: emptyFuzzer,
+                ...currentResponse,
                 successCount: currentSuccessCount,
                 failedCount: currentFailedCount,
                 successFuzzer: successBuffer,
                 failedFuzzer: failedBuffer
-            })
-            return
-        }
-        const currentResponse = getResponse(fuzzerIndex)
-        const newResponse: ResponseProps = {
-            id: fuzzerIndex,
-            onlyOneResponse: emptyFuzzer,
-            ...currentResponse,
-            successCount: currentSuccessCount,
-            failedCount: currentFailedCount,
-            successFuzzer: successBuffer,
-            failedFuzzer: failedBuffer
-        }
-        setResponse(fuzzerIndex, newResponse)
-    }, { wait: 200 }).run
+            }
+            setResponse(fuzzerIndex, newResponse)
+        },
+        {wait: 200}
+    ).run
     const onClearRef = useMemoizedFn(() => {
         successCountRef.current.clear()
         failedCountRef.current.clear()
@@ -450,11 +467,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }
                 if (current) {
                     newSequenceList.push({
-                        ...item,
+                        ...item
                     })
                 }
             })
-            if (newSequenceList.findIndex(ele => ele.pageId === currentSequenceItem?.pageId) === -1) {
+            if (newSequenceList.findIndex((ele) => ele.pageId === currentSequenceItem?.pageId) === -1) {
                 setCurrentSequenceItem(undefined)
             }
             if (newSequenceList.length === 0) {
@@ -465,14 +482,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     pageGroupId: "",
                     pageName: "",
                     inheritCookies: true,
-                    inheritVariables: true,
+                    inheritVariables: true
                     // pageParams: defaultPageParams
                 }
                 newSequenceList.push(newItem)
             }
             setSequenceList([...newSequenceList])
         }),
-        { wait: 200 }
+        {wait: 200}
     ).run
     /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
     const onIsDropped = useMemoizedFn((data, fuzzerIndex) => {
@@ -513,14 +530,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         if (sequenceList.length === 0) {
             const item: SequenceProps = {
                 id: `${randomString(8)}-1`,
-                name: 'Step [0]',
+                name: "Step [0]",
                 pageId: "",
                 pageGroupId: pageChildrenList[0]?.pageGroupId || props.groupId,
                 pageName: "",
                 inheritCookies: true,
                 inheritVariables: true
             }
-            setCurrentSequenceItem({ ...item })
+            setCurrentSequenceItem({...item})
             setSequenceList([item])
         }
     })
@@ -564,17 +581,17 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const originItem = originSequenceList.find((ele) => ele.pageId === item.pageId)
         if (!originItem) return
         sequenceList[index] = {
-            ...item,
+            ...item
             //  pageParams: originItem.pageParams
         }
-        setCurrentSequenceItem({ ...item })
+        setCurrentSequenceItem({...item})
         setSequenceList([...sequenceList])
     })
     const onUpdateItem = useMemoizedFn((item: SequenceProps, index: number) => {
         if (item.id === currentSequenceItem?.id) {
-            setCurrentSequenceItem({ ...item })
+            setCurrentSequenceItem({...item})
         }
-        sequenceList[index] = { ...item }
+        sequenceList[index] = {...item}
         setSequenceList([...sequenceList])
     })
     /**
@@ -593,10 +610,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         resetResponse()
         resetDroppedCount()
         setCurrentSelectResponse(undefined)
-        const httpParams: FuzzerRequestProps[] = [];
+        const httpParams: FuzzerRequestProps[] = []
         const pageChildrenList = getCurrentGroupSequence()
-        sequenceList.forEach(item => {
-            const requestItem = pageChildrenList.find(ele => ele.pageId === item.pageId);
+        sequenceList.forEach((item) => {
+            const requestItem = pageChildrenList.find((ele) => ele.pageId === item.pageId)
             const webFuzzerPageInfo = requestItem?.pageParamsInfo.webFuzzerPageInfo
             if (webFuzzerPageInfo) {
                 const httpParamsItem: FuzzerRequestProps = {
@@ -613,9 +630,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 httpParams.push(httpParamsItem)
             }
         })
-        const newSequenceList = sequenceList.map((item) => ({ ...item, disabled: true }))
+        const newSequenceList = sequenceList.map((item) => ({...item, disabled: true}))
         setSequenceList([...newSequenceList])
-        ipcRenderer.invoke("HTTPFuzzerSequence", { Requests: httpParams }, fuzzTokenRef.current)
+        ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
     })
     const onForcedStop = useMemoizedFn(() => {
         setLoading(false)
@@ -633,10 +650,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             pageName: "",
             pageGroupId: "",
             inheritCookies: true,
-            inheritVariables: true,
+            inheritVariables: true
             // pageParams: defaultPageParams
         }
-        setCurrentSequenceItem({ ...addItem })
+        setCurrentSequenceItem({...addItem})
         setSequenceList([...sequenceList, addItem])
     })
     const onApplyOtherNodes = useMemoizedFn((extraSetting: ExtraSettingProps) => {
@@ -645,7 +662,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ...extraSetting
         }))
         setSequenceList([...newSequenceList])
-        yakitNotify('success', '应用成功')
+        yakitNotify("success", "应用成功")
     })
     const onRemoveNode = useMemoizedFn((index: number) => {
         if (index === errorIndex) {
@@ -659,14 +676,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 pageGroupId: "",
                 pageName: "",
                 inheritCookies: true,
-                inheritVariables: true,
+                inheritVariables: true
                 // pageParams: defaultPageParams
             }
             setSequenceList([newItem])
-            setCurrentSequenceItem({ ...newItem })
+            setCurrentSequenceItem({...newItem})
         } else {
             if (currentSequenceItem?.id === sequenceList[index].id) {
-                setCurrentSequenceItem(sequenceList[index - 1]);
+                setCurrentSequenceItem(sequenceList[index - 1])
             }
             sequenceList.splice(index, 1)
             setSequenceList([...sequenceList])
@@ -677,14 +694,18 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             yakitNotify("error", "请配置序列后再选中")
             return
         }
-        setCurrentSequenceItem({ ...val })
+        setCurrentSequenceItem({...val})
     })
     const onSetShowAllResponse = useMemoizedFn(() => {
         setShowAllResponse(false)
     })
     return (
         <>
-            <div className={styles["fuzzer-sequence"]} style={{ display: showAllResponse ? 'none' : '' }} ref={fuzzerSequenceRef}>
+            <div
+                className={styles["fuzzer-sequence"]}
+                style={{display: showAllResponse ? "none" : ""}}
+                ref={fuzzerSequenceRef}
+            >
                 <div className={styles["fuzzer-sequence-left"]}>
                     <div className={styles["fuzzer-sequence-left-heard"]}>
                         <span>序列配置</span>
@@ -744,7 +765,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                                                 <SequenceItem
                                                                     pageNodeList={originSequenceList}
                                                                     item={sequenceItem}
-                                                                    isSelect={currentSequenceItem?.id === sequenceItem.id}
+                                                                    isSelect={
+                                                                        currentSequenceItem?.id === sequenceItem.id
+                                                                    }
                                                                     index={index}
                                                                     errorIndex={errorIndex}
                                                                     isDragging={snapshotItem.isDragging}
@@ -753,14 +776,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                                                         loading && index === sequenceList.length - 1
                                                                     }
                                                                     onApplyOtherNodes={onApplyOtherNodes}
-                                                                    onUpdateItemPage={(item) => onUpdateItemPage(item, index)}
+                                                                    onUpdateItemPage={(item) =>
+                                                                        onUpdateItemPage(item, index)
+                                                                    }
                                                                     onUpdateItem={(item) => onUpdateItem(item, index)}
                                                                     onRemove={() => {
                                                                         onRemoveNode(index)
                                                                     }}
                                                                     onSelect={(val) => onSelect(val)}
                                                                 />
-
                                                             </div>
                                                         )}
                                                     </Draggable>
@@ -775,13 +799,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
                         {!loading && (
                             <div className={styles["plus-sm-icon-body"]}>
-                                {
-                                    sequenceList.length > 0 &&
-                                    <div className={classNames(styles['inherit-line-icon'])}>
+                                {sequenceList.length > 0 && (
+                                    <div className={classNames(styles["inherit-line-icon"])}>
                                         <InheritLineIcon />
                                     </div>
-                                }
-                                <OutlinePlussmIcon className={styles["plus-sm-icon"]} onClick={() => onAddSequenceNode()} />
+                                )}
+                                <OutlinePlussmIcon
+                                    className={styles["plus-sm-icon"]}
+                                    onClick={() => onAddSequenceNode()}
+                                />
                             </div>
                         )}
                         <div className={styles["to-end"]}>已经到底啦～</div>
@@ -857,38 +883,39 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
     }, [pageNodeList])
     const tipText = useMemo(() => {
         const t: string[] = []
-        if (item?.inheritVariables) t.push('变量')
-        if (item?.inheritCookies) t.push('Cookie')
-        return t.join('  ,  ')
+        if (item?.inheritVariables) t.push("变量")
+        if (item?.inheritCookies) t.push("Cookie")
+        return t.join("  ,  ")
     }, [item?.inheritVariables, item?.inheritCookies])
     const onSelectSubMenuById = useMemoizedFn((pageId: string) => {
-        ipcRenderer.invoke("send-open-subMenu-item", { pageId })
+        ipcRenderer.invoke("send-open-subMenu-item", {pageId})
+        ipcRenderer.invoke("send-ref-webFuzzer-request", {type: "config"})
     })
     return (
         <>
-            {
-                index > 0 &&
+            {index > 0 && (
                 <div
-                    className={styles['fuzzer-sequence-list-item-footer']}
+                    className={styles["fuzzer-sequence-list-item-footer"]}
                     style={{
-                        opacity: isDragging ? 0 : 1,
-                    }}>
-                    <div className={classNames(styles['fuzzer-sequence-list-item-footer-line'], {
-                        [styles['fuzzer-sequence-list-item-footer-line-primary']]: item?.inheritVariables || item?.inheritCookies
-                    })}>
+                        opacity: isDragging ? 0 : 1
+                    }}
+                >
+                    <div
+                        className={classNames(styles["fuzzer-sequence-list-item-footer-line"], {
+                            [styles["fuzzer-sequence-list-item-footer-line-primary"]]:
+                                item?.inheritVariables || item?.inheritCookies
+                        })}
+                    >
                         <InheritLineIcon />
                     </div>
-                    {
-                        (item?.inheritVariables || item?.inheritCookies) &&
+                    {(item?.inheritVariables || item?.inheritCookies) && (
                         <>
-                            <div className={styles['fuzzer-sequence-list-item-footer-tag']}>
-                                {tipText}
-                            </div>
+                            <div className={styles["fuzzer-sequence-list-item-footer-tag"]}>{tipText}</div>
                             <InheritArrowIcon />
                         </>
-                    }
+                    )}
                 </div>
-            }
+            )}
             <div
                 className={styles["fuzzer-sequence-list-item-body"]}
                 onClick={() => {
@@ -903,7 +930,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                         [styles["fuzzer-sequence-list-item-disabled"]]: disabled,
                         [styles["fuzzer-sequence-list-item-isDragging"]]: isDragging,
                         [styles["fuzzer-sequence-list-item-isSelect"]]: isSelect,
-                        [styles["fuzzer-sequence-list-item-errorIndex"]]: errorIndex === index,
+                        [styles["fuzzer-sequence-list-item-errorIndex"]]: errorIndex === index
                         // [styles["fuzzer-sequence-list-item-no-line"]]: isShowLine
                     })}
                 >
@@ -924,9 +951,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                             e.stopPropagation()
                                         }}
                                     >
-                                        <div className={styles["edit-name-popover-content-title"]}>
-                                            修改名称
-                                        </div>
+                                        <div className={styles["edit-name-popover-content-title"]}>修改名称</div>
                                         <YakitInput
                                             defaultValue={item.name}
                                             value={name}
@@ -935,10 +960,10 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                             }}
                                             onBlur={(e) => {
                                                 if (!e.target.value) {
-                                                    yakitNotify('error', '名称不能为空');
+                                                    yakitNotify("error", "名称不能为空")
                                                     return
                                                 }
-                                                onUpdateItem({ ...item, name: e.target.value })
+                                                onUpdateItem({...item, name: e.target.value})
                                             }}
                                             maxLength={20}
                                         />
@@ -971,7 +996,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                             />
                             {index > 0 && (
                                 <>
-                                    <Divider type='vertical' style={{ margin: 0 }} />
+                                    <Divider type='vertical' style={{margin: 0}} />
                                     <YakitPopover
                                         title={
                                             <div className={styles["cog-popover-heard"]}>
@@ -999,7 +1024,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                                     <YakitSwitch
                                                         checked={item.inheritVariables}
                                                         onChange={(checked) =>
-                                                            onUpdateItem({ ...item, inheritVariables: checked })
+                                                            onUpdateItem({...item, inheritVariables: checked})
                                                         }
                                                     />
                                                 </LabelNodeItem>
@@ -1010,7 +1035,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                                     <YakitSwitch
                                                         checked={item.inheritCookies}
                                                         onChange={(checked) =>
-                                                            onUpdateItem({ ...item, inheritCookies: checked })
+                                                            onUpdateItem({...item, inheritCookies: checked})
                                                         }
                                                     />
                                                 </LabelNodeItem>
@@ -1033,7 +1058,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                     </YakitPopover>
                                 </>
                             )}
-                            <Divider type='vertical' style={{ margin: 0 }} />
+                            <Divider type='vertical' style={{margin: 0}} />
                             <Tooltip title='前往Fuzzer配置'>
                                 <OutlineArrowcirclerightIcon
                                     className={classNames(styles["list-item-icon"], {
@@ -1043,7 +1068,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                         e.stopPropagation()
                                         if (disabled) return
                                         if (!item.pageId) {
-                                            yakitNotify('error', '请选择页面')
+                                            yakitNotify("error", "请选择页面")
                                         } else {
                                             onSelectSubMenuById(item.pageId)
                                         }
@@ -1066,7 +1091,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                             labelInValue
                             options={options}
                             onChange={(v) => {
-                                onUpdateItemPage({ ...item, pageId: v.value, pageName: v.label })
+                                onUpdateItemPage({...item, pageId: v.value, pageName: v.label})
                             }}
                             getPopupContainer={(dom) => dom}
                             disabled={disabled}
@@ -1082,16 +1107,23 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
     )
 })
 
-
 const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((props) => {
-    const { advancedConfigValue, droppedCount, responseInfo, disabled, onShowAll, currentSequenceItemName, currentSequenceItemPageName } = props
+    const {
+        advancedConfigValue,
+        droppedCount,
+        responseInfo,
+        disabled,
+        onShowAll,
+        currentSequenceItemName,
+        currentSequenceItemPageName
+    } = props
     const {
         onlyOneResponse: httpResponse,
         successCount,
         failedCount
     } = responseInfo || {
         id: "0",
-        onlyOneResponse: { ...emptyFuzzer },
+        onlyOneResponse: {...emptyFuzzer},
         successFuzzer: [],
         failedFuzzer: [],
         successCount: 0,
@@ -1103,21 +1135,34 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
     const onlyOneResponse: boolean = useCreation(() => {
         return cachedTotal === 1
     }, [cachedTotal])
-    return (<div className={styles['sequence-response-heard']}>
-        <div className={styles['sequence-response-heard-left']}>
-            <span>
-                <span className={styles['sequence-response-heard-left-title']}>{currentSequenceItemName || ''}</span>
-                <span className={styles['sequence-response-heard-left-subTitle']}>{currentSequenceItemPageName || ''}</span>
-            </span>
+    return (
+        <div className={styles["sequence-response-heard"]}>
+            <div className={styles["sequence-response-heard-left"]}>
+                <span>
+                    <span className={styles["sequence-response-heard-left-title"]}>
+                        {currentSequenceItemName || ""}
+                    </span>
+                    <span className={styles["sequence-response-heard-left-subTitle"]}>
+                        {currentSequenceItemPageName || ""}
+                    </span>
+                </span>
 
-            <FuzzerExtraShow droppedCount={droppedCount} advancedConfigValue={advancedConfigValue || defaultAdvancedConfigValue} onlyOneResponse={onlyOneResponse} httpResponse={httpResponse} />
+                <FuzzerExtraShow
+                    droppedCount={droppedCount}
+                    advancedConfigValue={advancedConfigValue || defaultAdvancedConfigValue}
+                    onlyOneResponse={onlyOneResponse}
+                    httpResponse={httpResponse}
+                />
+            </div>
+            <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()}>
+                展示全部响应
+            </YakitButton>
         </div>
-        <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()}>展示全部响应</YakitButton>
-    </div>)
+    )
 })
 
 const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => {
-    const { requestInfo, responseInfo, loading, extractedMap } = props
+    const {requestInfo, responseInfo, loading, extractedMap} = props
     const {
         id: responseInfoId,
         onlyOneResponse: httpResponse,
@@ -1127,17 +1172,17 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         failedCount
     } = responseInfo || {
         id: "0",
-        onlyOneResponse: { ...emptyFuzzer },
+        onlyOneResponse: {...emptyFuzzer},
         successFuzzer: [],
         failedFuzzer: [],
         successCount: 0,
         failedCount: 0
     }
-    const { request, advancedConfigValue, pageId } = requestInfo || {
+    const {request, advancedConfigValue, pageId} = requestInfo || {
         request: "",
-        advancedConfigValue: { ...defaultAdvancedConfigValue }
+        advancedConfigValue: {...defaultAdvancedConfigValue}
     }
-    const [requestHttp, setRequestHttp] = useState<string>('')
+    const [requestHttp, setRequestHttp] = useState<string>("")
     const [showSuccess, setShowSuccess] = useState(true)
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [affixSearch, setAffixSearch] = useState<string>("")
@@ -1161,10 +1206,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         return cachedTotal === 1
     }, [cachedTotal])
 
-    const {
-        getPageNodeInfoByPageId,
-        updatePageNodeInfoByPageId,
-    } = usePageNode()
+    const {getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode()
 
     useEffect(() => {
         if (!pageId) return
@@ -1183,41 +1225,44 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
 
     const onSetRequestHttp = useMemoizedFn((i: string) => {
         setRequestHttp(i)
-        onUpdatePageInfo(i, pageId || '')
+        onUpdatePageInfo(i, pageId || "")
     })
-    const onUpdatePageInfo = useDebounceFn((value: string, pId: string) => {
-        if (!pId) return
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId)
-        if (!nodeInfo) return
-        const { currentItem } = nodeInfo
-        if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
-            if (value === currentItem.pageParamsInfo.webFuzzerPageInfo.request) return
-            const newCurrentItem: PageNodeItemProps = {
-                ...currentItem,
-                pageParamsInfo: {
-                    webFuzzerPageInfo: {
-                        ...currentItem.pageParamsInfo.webFuzzerPageInfo,
-                        request: value
+    const onUpdatePageInfo = useDebounceFn(
+        (value: string, pId: string) => {
+            if (!pId) return
+            const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId)
+            if (!nodeInfo) return
+            const {currentItem} = nodeInfo
+            if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
+                if (value === currentItem.pageParamsInfo.webFuzzerPageInfo.request) return
+                const newCurrentItem: PageNodeItemProps = {
+                    ...currentItem,
+                    pageParamsInfo: {
+                        webFuzzerPageInfo: {
+                            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                            request: value
+                        }
                     }
                 }
+                updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId, {...newCurrentItem})
             }
-            updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId, { ...newCurrentItem })
-        }
-    }, { wait: 200 }).run
+        },
+        {wait: 200}
+    ).run
     return (
         <>
             <ResizeCardBox
                 firstMinSize={380}
                 secondMinSize={480}
                 isShowDefaultLineStyle={false}
-                style={{ overflow: "hidden" }}
+                style={{overflow: "hidden"}}
                 firstNodeProps={{
                     title: "Request"
                 }}
                 secondNodeProps={{
                     title: (
                         <>
-                            <span style={{ marginRight: 8 }}>Responses</span>
+                            <span style={{marginRight: 8}}>Responses</span>
                             <SecondNodeTitle
                                 cachedTotal={cachedTotal}
                                 onlyOneResponse={onlyOneResponse}
@@ -1250,7 +1295,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                             successFuzzer={successFuzzer}
                             secondNodeSize={secondNodeSize}
                             query={query}
-                            setQuery={(q) => setQuery({ ...q })}
+                            setQuery={(q) => setQuery({...q})}
                             sendPayloadsType='fuzzerSequence'
                         />
                     )
@@ -1276,19 +1321,19 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
                         setHotPatchCode={setHotPatchCode}
                         setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                        selectId="sequence"
-                        rangeId="sequence"
+                        selectId='sequence'
+                        rangeId='sequence'
                     />
                 }
                 secondNode={
-                    <div ref={secondNodeRef} style={{ height: "100%", overflow: "hidden" }}>
+                    <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                         {onlyOneResponse ? (
                             <ResponseViewer
                                 fuzzerResponse={httpResponse}
                                 defaultResponseSearch={defaultResponseSearch}
                                 webFuzzerValue={httpResponse.ResponseRaw}
                                 showMatcherAndExtraction={false}
-                                setShowMatcherAndExtraction={() => { }}
+                                setShowMatcherAndExtraction={() => {}}
                                 matcherValue={{
                                     filterMode: "matchers",
                                     hitColor: "",
@@ -1300,7 +1345,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                                 }}
                                 defActiveKey={""}
                                 defActiveType={"matchers"}
-                                onSaveMatcherAndExtraction={() => { }}
+                                onSaveMatcherAndExtraction={() => {}}
                             />
                         ) : (
                             <>
@@ -1342,4 +1387,3 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         </>
     )
 })
-
