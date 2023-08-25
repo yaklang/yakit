@@ -581,6 +581,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
 
+    useEffect(() => {
+        if (inViewport) onUpdateRequest(_, {type: "config"})
+    }, [inViewport])
+
     const onUpdateRequest = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         if (res.type === "config" && inViewport) {
             const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
