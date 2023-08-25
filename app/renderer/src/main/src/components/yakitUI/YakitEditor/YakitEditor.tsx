@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {useDebounceFn, useGetState, useKeyPress, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useKeyPress, useMemoizedFn, useThrottleFn} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 // 编辑器 注册
@@ -28,7 +28,6 @@ import {YakitSystem} from "@/yakitGVDefine"
 import cloneDeep from "lodash/cloneDeep"
 import {convertKeyboard, keySortHandle} from "./editorUtils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import debounce from "lodash/debounce"
 
 import classNames from "classnames"
 import styles from "./YakitEditor.module.scss"
@@ -37,9 +36,6 @@ import {queryYakScriptList} from "@/pages/yakitStore/network"
 import {YakScript} from "@/pages/invoker/schema"
 import {CodecType} from "@/pages/codec/CodecPage"
 import {failed} from "@/utils/notification"
-import {editor} from "monaco-editor";
-import IModelDecoration = editor.IModelDecoration;
-import {throttle} from "echarts";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -432,6 +428,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
      * editor编辑器的额外渲染功能:
      * 1、每行的换行符进行可视字符展示
      */
+    const pasteWarning = useThrottleFn(()=>{
+        failed("粘贴过快，请稍后再试")
+    }, {wait: 500})
     useEffect(() => {
         if (!editor) {
             return
@@ -452,7 +451,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const current = new Date().getTime();
                 const currentInterval = current - lastPasteTime;
                 if (currentInterval < pasteLimitInterval) {
-                    failed("粘贴过快，请稍后再试")
+                    pasteWarning.run()
                 } else {
                     lastPasteTime = current;
                     editor.trigger('keyboard', 'editor.action.clipboardPasteAction', {});
@@ -530,7 +529,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 current = model.deltaDecorations(current, generateDecorations())
             })
             current = model.deltaDecorations(current, generateDecorations())
-            return editor.removeDecorations(current)
+            return ()=>{
+                try {
+                    editor.dispose()
+                } catch (e) {
+
+                }
+            }
         }
     }, [editor])
 
