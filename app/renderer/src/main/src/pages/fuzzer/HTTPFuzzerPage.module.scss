@@ -1,3 +1,4 @@
+@use "./HTTPFuzzerPageShare.module.scss";
 .http-fuzzer-body {
     display: flex;
     height: 100%;
@@ -59,16 +60,16 @@
             gap: 8px;
         }
     }
-    .fuzzer-secondNode-extra {
-        display: flex;
-        align-items: center;
-        height: 24px;
-        gap: 8px;
-    }
-    .second-node-title {
-        display: inline-flex;
-        align-items: center;
-    }
+}
+.second-node-title {
+    display: inline-flex;
+    align-items: center;
+}
+.fuzzer-secondNode-extra {
+    display: flex;
+    align-items: center;
+    height: 24px;
+    gap: 8px;
 }
 
 .second-node-search-content {

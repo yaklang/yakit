@@ -229,7 +229,6 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                                 <div
                                     className={`${(col && classNameWidth[col]) || ""} ${classNameRow || ""}`}
                                     key={ele[rowKey || "Id"] + "--" + index}
-                                    id='123'
                                 >
                                     {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0)}
                                 </div>

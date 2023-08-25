@@ -23,7 +23,6 @@ interface StoreProps {
     userInfo: UserInfoProps
     setStoreUserInfo: (info: UserInfoProps) => void
 }
-
 export const useStore = create<StoreProps>((set, get) => ({
     userInfo: {
         isLogin: false,

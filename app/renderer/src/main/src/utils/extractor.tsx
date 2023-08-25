@@ -1,37 +1,38 @@
-import React, {useEffect, useRef, useState} from "react"
-import {FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {showModal} from "@/utils/showModal"
-import {YakEditor} from "@/utils/editors"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {useDebounceEffect, useGetState, useMap} from "ahooks"
-import {editor} from "monaco-editor"
-import {Alert, Button, Divider, Popconfirm, Space, Tag, Typography} from "antd"
-import {AutoCard} from "@/components/AutoCard"
-import {failed, info, yakitFailed} from "@/utils/notification"
-import {randomString} from "@/utils/randomUtil"
-import {ExecResult} from "@/pages/invoker/schema"
-import {ResizeBox} from "@/components/ResizeBox"
-import {saveABSFileToOpen} from "@/utils/openWebsite"
-import {SelectOne} from "@/utils/inputUtil"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {RegexpInput} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
+import React, { useEffect, useRef, useState } from "react"
+import { FuzzerResponse } from "@/pages/fuzzer/HTTPFuzzerPage"
+import { showModal } from "@/utils/showModal"
+import { YakEditor } from "@/utils/editors"
+import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str"
+import { useDebounceEffect, useGetState, useMap } from "ahooks"
+import { editor } from "monaco-editor"
+import { Alert, Button, Divider, Popconfirm, Space, Tag, Typography } from "antd"
+import { AutoCard } from "@/components/AutoCard"
+import { failed, info, yakitFailed } from "@/utils/notification"
+import { randomString } from "@/utils/randomUtil"
+import { ExecResult } from "@/pages/invoker/schema"
+import { ResizeBox } from "@/components/ResizeBox"
+import { saveABSFileToOpen } from "@/utils/openWebsite"
+import { SelectOne } from "@/utils/inputUtil"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { RegexpInput } from "@/pages/mitm/MITMRule/MITMRuleFromModal"
 import styles from "./extractor.module.scss"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 
-const {Text} = Typography
+const { Text } = Typography
 
 export interface WebFuzzerResponseExtractorProp {
     responses: FuzzerResponse[]
+    sendPayloadsType: string
 }
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp> = (props) => {
-    const {responses} = props
+    const { responses, sendPayloadsType, } = props
     const sampleResponse = responses[0]
     const [editor, setEditor] = useGetState<editor.IStandaloneCodeEditor>()
     const [selected, setSelected] = useGetState<string>("")
@@ -97,7 +98,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                     Data: StringToUint8Array(getResponseStr()),
                     Selected: StringToUint8Array(selected)
                 })
-                .then((e: {PrefixRegexp: string; SuffixRegexp: string; SelectedRegexp: string}) => {
+                .then((e: { PrefixRegexp: string; SuffixRegexp: string; SelectedRegexp: string }) => {
                     setPrefix(e.PrefixRegexp)
                     setSuffix(e.SuffixRegexp)
                     setMatchedRegexp(e.SelectedRegexp)
@@ -107,9 +108,9 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                 })
         },
         [selected],
-        {wait: 500}
+        { wait: 500 }
     )
-    const [extractedMap, {setAll}] = useMap<string, string>()
+    const [extractedMap, { setAll }] = useMap<string, string>()
     useEffect(() => {
         if (!_token) {
             return
@@ -118,7 +119,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
         const extractedCache: string[] = []
         let extractedCountLastUpdated = 0
         let extractedMap = new Map<string, string>()
-        ipcRenderer.on(`${token}-data`, async (e, data: {Extracted: Uint8Array; Token: string}) => {
+        ipcRenderer.on(`${token}-data`, async (e, data: { Extracted: Uint8Array; Token: string }) => {
             const item = extractedMap.get(data.Token)
             if (item) {
                 extractedMap.set(data.Token, item + "," + Uint8ArrayToString(data.Extracted))
@@ -163,7 +164,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
     }, [_token])
 
     return (
-        <Space style={{width: "100%", padding: 24}} direction={"vertical"}>
+        <Space style={{ width: "100%", padding: 24 }} direction={"vertical"}>
             <YakitSpin spinning={loading}>
                 <AutoCard
                     size={"small"}
@@ -212,7 +213,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                             )
                                             .finally(() => {
                                                 if (number === responses.length - 1) {
-                                                    ipcRenderer.invoke("ExtractData", {End: true}, getToken())
+                                                    ipcRenderer.invoke("ExtractData", { End: true }, getToken())
                                                 }
                                             })
                                     })
@@ -224,26 +225,26 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                     }
                 >
                     {mode === "regexp-between" && (
-                        <Space direction={"vertical"} style={{width: "100%", justifyContent: "center"}}>
+                        <Space direction={"vertical"} style={{ width: "100%", justifyContent: "center" }}>
                             <div className={styles["space-item"]}>
                                 <span>前缀(正则)：</span>
-                                <div style={{flex: 1, maxWidth: "90%"}}>
+                                <div style={{ flex: 1, maxWidth: "90%" }}>
                                     <RegexpInput
                                         initialTagShow={true}
                                         regexp={prefix}
                                         onSure={setPrefix}
-                                        onSave={() => {}}
+                                        onSave={() => { }}
                                     />
                                 </div>
                             </div>
                             <div className={styles["space-item"]}>
                                 <span>后缀(正则)：</span>
-                                <div style={{flex: 1, maxWidth: "90%"}}>
+                                <div style={{ flex: 1, maxWidth: "90%" }}>
                                     <RegexpInput
                                         initialTagShow={true}
                                         regexp={suffix}
                                         onSure={setSuffix}
-                                        onSave={() => {}}
+                                        onSave={() => { }}
                                     />
                                 </div>
                             </div>
@@ -261,22 +262,22 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                         </Space>
                     )}
                     {mode === "regexp" && (
-                        <Space direction={"vertical"} style={{width: "100%"}}>
+                        <Space direction={"vertical"} style={{ width: "100%" }}>
                             <div className={styles["space-item"]}>
                                 <span>自动提取正则：</span>
-                                <div style={{flex: 1, maxWidth: "90%"}}>
+                                <div style={{ flex: 1, maxWidth: "90%" }}>
                                     <RegexpInput
                                         initialTagShow={true}
                                         regexp={matchedRegexp}
                                         onSure={setMatchedRegexp}
-                                        onSave={() => {}}
+                                        onSave={() => { }}
                                     />
                                 </div>
                             </div>
                         </Space>
                     )}
                 </AutoCard>
-                <div style={{height: 400}}>
+                <div style={{ height: 400 }}>
                     <ResizeBox
                         firstNode={
                             <YakEditor
@@ -322,7 +323,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                             onClick={() => {
                                                 saveABSFileToOpen("webfuzzer-extract-data.txt", extracted.join("\n"))
                                             }}
-                                            style={{marginLeft: 6}}
+                                            style={{ marginLeft: 6 }}
                                         >
                                             下载文件
                                         </YakitButton>
@@ -332,7 +333,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                                 type='text'
                                                 onClick={() => {
                                                     ipcRenderer
-                                                        .invoke("send-extracted-to-table", {extractedMap})
+                                                        .invoke("send-extracted-to-table", { type: sendPayloadsType, extractedMap })
                                                         .then(() => {
                                                             info("数据发送成功")
                                                         })
@@ -346,7 +347,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                         )}
                                     </>
                                 }
-                                bodyStyle={{margin: 0, padding: 0}}
+                                bodyStyle={{ margin: 0, padding: 0 }}
                             >
                                 <YakEditor
                                     readOnly={true}

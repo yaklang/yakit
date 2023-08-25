@@ -1,5 +1,5 @@
 import Icon from "@ant-design/icons"
-import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
+import { CustomIconComponentProps } from "@ant-design/icons/lib/components/Icon"
 import React from "react"
 
 interface IconProps extends CustomIconComponentProps {
@@ -658,7 +658,7 @@ const SolidBug = () => (
     <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <mask
             id='mask0_175_7009'
-            style={{maskType: "alpha"}}
+            style={{ maskType: "alpha" }}
             maskUnits='userSpaceOnUse'
             x='0'
             y='0'
@@ -4790,4 +4790,20 @@ const SolidToleft = () => (
  */
 export const SolidToleftIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidToleft} {...props} />
+}
+
+const SolidSwitchConfiguration = () => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fillRule="evenodd" clipRule="evenodd" d="M2 6.29412C2 4.47483 3.47483 3 5.29412 3H14.7059C16.5252 3 18 4.47483 18 6.29412C18 8.11341 16.5252 9.58824 14.7059 9.58824H5.29412C3.47483 9.58824 2 8.11341 2 6.29412ZM5.29412 3.94118C3.99462 3.94118 2.94118 4.99462 2.94118 6.29412C2.94118 7.59361 3.99462 8.64706 5.29412 8.64706H14.7059C16.0054 8.64706 17.0588 7.59361 17.0588 6.29412C17.0588 4.99462 16.0054 3.94118 14.7059 3.94118H5.29412Z" fill="currentColor" />
+        <path d="M7.17647 6.29412C7.17647 7.33371 6.33371 8.17647 5.29412 8.17647C4.25452 8.17647 3.41176 7.33371 3.41176 6.29412C3.41176 5.25452 4.25452 4.41176 5.29412 4.41176C6.33371 4.41176 7.17647 5.25452 7.17647 6.29412Z" fill="currentColor" />
+        <path fillRule="evenodd" clipRule="evenodd" d="M2 13.8235C2 12.0042 3.47483 10.5294 5.29412 10.5294H14.7059C16.5252 10.5294 18 12.0042 18 13.8235C18 15.6428 16.5252 17.1176 14.7059 17.1176H5.29412C3.47483 17.1176 2 15.6428 2 13.8235ZM14.7059 15.7059C15.7455 15.7059 16.5882 14.8631 16.5882 13.8235C16.5882 12.7839 15.7455 11.9412 14.7059 11.9412C13.6663 11.9412 12.8235 12.7839 12.8235 13.8235C12.8235 14.8631 13.6663 15.7059 14.7059 15.7059Z" fill="currentColor" />
+    </svg>
+
+)
+
+/**
+ * @description  Icon/Solid/switch 配置
+ */
+export const SolidSwitchConfigurationIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidSwitchConfiguration} {...props} />
 }

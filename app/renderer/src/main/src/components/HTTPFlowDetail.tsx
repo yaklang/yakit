@@ -169,7 +169,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             ipcRenderer.removeListener("fetch-send-to-tab", onCloseDetails)
         }
     }, [])
-
     return (
         <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
             {flow ? (

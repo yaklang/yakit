@@ -2,6 +2,7 @@
 
 $colors: global.$colors;
 $keyColor: map-keys($colors);
+
 @for $c from 1 through length($keyColor) {
     $name: nth($keyColor, $c);
     $currentColor: map-get($colors, $name);
@@ -18,6 +19,7 @@ $keyColor: map-keys($colors);
             border-top: 2px solid map-get($currentColor, "backgroundColor") !important;
         }
     }
+
     .tab-menu-sub-group-#{"" + $name} {
         &::before {
             content: "";
@@ -29,9 +31,11 @@ $keyColor: map-keys($colors);
             border-top: 2px solid map-get($currentColor, "backgroundColor");
         }
     }
+
     .tab-menu-sub-group-name-#{"" + $name} {
         background-color: map-get($currentColor, "backgroundColor");
     }
+
     .tab-menu-sub-group-number-#{"" + $name} {
         color: map-get($currentColor, "backgroundColor");
     }
@@ -58,6 +62,7 @@ $keyColor: map-keys($colors);
     position: absolute;
     height: 0;
 }
+
 .white-link {
     @extend .fake-content;
     border-color: #fff;
@@ -75,6 +80,7 @@ $keyColor: map-keys($colors);
 
 .dragging {
     background-color: #fff;
+
     &::before {
         @extend .white-link;
         bottom: -1px;
@@ -90,8 +96,10 @@ $keyColor: map-keys($colors);
     cursor: pointer;
     border-radius: 4px;
 }
+
 .base-operate-icon {
     @extend .base-show-icon;
+
     &:hover {
         background-color: var(--yakit-background-color);
     }
@@ -114,6 +122,7 @@ $keyColor: map-keys($colors);
     font-size: 12px;
     overflow: hidden;
     height: 100%;
+
     .tab-menu-first {
         display: flex;
         flex-wrap: nowrap;
@@ -123,18 +132,22 @@ $keyColor: map-keys($colors);
 
         overflow-x: auto;
         overflow-y: hidden;
+
         // 下面是滚动条的样式
         &::-webkit-scrollbar {
             display: none;
         }
+
         &::before {
             @extend .grey-link;
             top: 0;
         }
+
         &::after {
             @extend .grey-link;
             bottom: 0;
         }
+
         .tab-menu-first-item {
             display: flex;
             height: 24px;
@@ -158,6 +171,7 @@ $keyColor: map-keys($colors);
             &:hover {
                 @extend .dragging;
             }
+
             .tab-menu-item-verbose-wrapper {
                 @extend .flex-align-center;
                 justify-content: space-between;
@@ -165,26 +179,31 @@ $keyColor: map-keys($colors);
                 overflow: hidden;
                 padding-left: 8px;
                 flex: 1;
+
                 .tab-menu-item-verbose {
                     @extend .flex-align-center;
                     overflow: hidden;
                 }
+
                 span {
                     white-space: nowrap;
                     overflow: hidden;
                     min-width: 12px;
                 }
             }
+
             .remove-icon {
                 @extend .base-operate-icon;
                 height: 16px;
                 width: 16px;
+
                 svg {
                     height: 12px;
                     width: 12px;
                 }
             }
         }
+
         .tab-menu-first-item-active {
             background-color: #fff;
             color: var(--yakit-header-color);
@@ -192,6 +211,7 @@ $keyColor: map-keys($colors);
             border-top-width: 0;
             border-bottom-width: 0;
             min-width: fit-content;
+
             &::before {
                 @extend .primary-link;
                 top: 0;
@@ -199,6 +219,7 @@ $keyColor: map-keys($colors);
                 animation: showActive 0.2s linear;
                 border-top-width: 2px;
             }
+
             &::after {
                 @extend .white-link;
                 height: 2px;
@@ -206,32 +227,38 @@ $keyColor: map-keys($colors);
                 z-index: 1;
             }
         }
+
         .tab-menu-first-item-dragging {
             @extend .dragging;
         }
+
         .tab-menu-item-fixed {
             padding-left: 8px;
             max-width: 60px;
             min-width: 40px;
         }
     }
+
     .tab-menu-sub-content {
         display: flex;
         flex: 1;
         overflow: hidden;
         flex-direction: column;
+
         .tab-menu-sub-body {
             display: flex;
             overflow: hidden;
             width: 100%;
             background-color: var(--yakit-card-background-color);
             position: relative;
+
             &::after {
                 @extend .fake-content;
                 bottom: 0;
                 border-color: var(--yakit-border-color);
             }
         }
+
         .tab-menu-sub {
             display: flex;
             align-items: center;
@@ -243,6 +270,7 @@ $keyColor: map-keys($colors);
             overflow-y: hidden;
             overflow-x: auto;
             scroll-behavior: smooth;
+
             // 下面是滚动条的样式
             &::-webkit-scrollbar {
                 display: none;
@@ -252,6 +280,7 @@ $keyColor: map-keys($colors);
                 display: flex;
                 border-radius: 4px;
                 position: relative;
+
                 .tab-menu-sub-group-name {
                     display: flex;
                     align-items: center;
@@ -268,6 +297,7 @@ $keyColor: map-keys($colors);
                     white-space: nowrap;
                     flex-shrink: 0;
                     z-index: 1;
+
                     .tab-menu-sub-group-number {
                         border-radius: 8px;
                         padding: 2px 6px;
@@ -279,6 +309,7 @@ $keyColor: map-keys($colors);
                         justify-content: center;
                     }
                 }
+
                 .tab-menu-sub-group-name-retract {
                     border-radius: 4px;
                 }
@@ -289,9 +320,11 @@ $keyColor: map-keys($colors);
                     width: auto;
                     max-width: 100%;
                 }
+
                 .tab-menu-sub-group-children-motion {
                     transition: width 0.2s linear;
                 }
+
                 .tab-menu-sub-group-children-hidden {
                     width: 0;
 
@@ -299,6 +332,7 @@ $keyColor: map-keys($colors);
                         min-width: initial;
                         padding: 0;
                     }
+
                     .tab-menu-item-verbose-wrapper {
                         padding-left: 0;
                         gap: 0;
@@ -310,7 +344,17 @@ $keyColor: map-keys($colors);
         .tab-menu-sub-width {
             max-width: 100%;
         }
+
+        .render-sub-page {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
     }
+
     .outline-plus-icon {
         @extend .base-operate-icon;
         width: 32px;
@@ -318,11 +362,13 @@ $keyColor: map-keys($colors);
         flex-shrink: 0;
         border-radius: 0;
         user-select: none;
+
         svg {
             width: 16px;
             height: 16px;
         }
     }
+
     .outline-chevron-double-left {
         @extend .base-operate-icon;
         background-color: var(--yakit-card-background-color);
@@ -334,10 +380,12 @@ $keyColor: map-keys($colors);
         position: fixed;
         left: 0;
         z-index: 11;
+
         svg {
             width: 12px;
             height: 12px;
         }
+
         &::after {
             @extend .grey-link;
             height: 1px;
@@ -345,6 +393,7 @@ $keyColor: map-keys($colors);
             z-index: 2;
         }
     }
+
     .outline-chevron-double-right {
         @extend .base-operate-icon;
         background-color: var(--yakit-card-background-color);
@@ -357,10 +406,12 @@ $keyColor: map-keys($colors);
         position: absolute;
         right: 32px;
         z-index: 11;
+
         svg {
             width: 12px;
             height: 12px;
         }
+
         &::after {
             @extend .grey-link;
             height: 1px;
@@ -368,10 +419,12 @@ $keyColor: map-keys($colors);
             z-index: 2;
         }
     }
+
     .outline-chevron-double-display-none {
         display: none;
     }
 }
+
 .tab-menu-sub-item {
     display: flex;
     height: 32px;
@@ -392,12 +445,15 @@ $keyColor: map-keys($colors);
     font-size: 12px;
     transition: min-width 0.1s linear, padding 0.1s linear;
     flex-basis: fit-content;
+
     &:hover {
         @extend .dragging;
     }
+
     span {
         min-width: 16px;
     }
+
     &::after {
         content: "";
         height: 16px;
@@ -408,6 +464,7 @@ $keyColor: map-keys($colors);
         position: absolute;
         right: 0;
     }
+
     .tab-menu-item-verbose-wrapper {
         @extend .flex-align-center;
         justify-content: space-between;
@@ -416,33 +473,40 @@ $keyColor: map-keys($colors);
         padding-left: 8px;
         flex: 1;
         transition: padding-left 0.1s linear;
+
         .tab-menu-item-verbose {
             @extend .flex-align-center;
             overflow: hidden;
         }
     }
+
     .remove-icon {
         @extend .base-operate-icon;
         height: 20px;
         width: 20px;
         display: none;
+
         svg {
             height: 16px;
             width: 16px;
         }
     }
+
     .remove-show-icon {
         display: flex;
     }
+
     .document-text-icon {
         @extend .base-show-icon;
         height: 16px;
         width: 16px;
+
         svg {
             height: 16px;
             width: 16px;
         }
     }
+
     .tab-menu-sub-item-line {
         width: 100%;
         height: 2px;
@@ -453,13 +517,16 @@ $keyColor: map-keys($colors);
         z-index: 2;
     }
 }
+
 .tab-menu-sub-item-active {
     background-color: #fff;
     color: var(--yakit-primary-5);
     min-width: fit-content;
+
     .document-text-icon {
         color: var(--yakit-primary-5);
     }
+
     &::before {
         content: "";
         width: 100%;
@@ -471,6 +538,7 @@ $keyColor: map-keys($colors);
         z-index: 1;
     }
 }
+
 .tab-menu-sub-item-dragging {
     @extend .dragging;
     max-width: 150px;
@@ -490,6 +558,7 @@ $keyColor: map-keys($colors);
 .right-menu-item {
     @extend .flex-align-center;
     gap: 12px;
+
     .item-color-block {
         @include item-color(16px);
     }
@@ -498,12 +567,14 @@ $keyColor: map-keys($colors);
 .toolTip-overlay {
     padding-bottom: 4px;
     max-width: initial;
+
     :global {
         .ant-tooltip-arrow {
             display: none;
         }
     }
 }
+
 .group-right-click-show-content {
     display: inline-flex;
     flex-direction: column;
@@ -511,22 +582,27 @@ $keyColor: map-keys($colors);
     justify-content: center;
     padding-bottom: 2px;
     width: 232px;
+
     .show-content-heard {
         padding: 8px 8px 0px 8px;
     }
+
     .color-list {
         @extend .flex-align-center;
         padding: 8px 0;
         gap: 8px;
+
         .color-list-item {
             @include item-color(20px);
             @extend .flex-align-center;
             justify-content: center;
             cursor: pointer;
+
             .check-icon {
                 @extend .flex-align-center;
                 justify-content: center;
                 color: #fff;
+
                 svg {
                     width: 16px;
                     height: 16px;
@@ -540,6 +616,7 @@ $keyColor: map-keys($colors);
     display: flex;
     flex-direction: column;
     gap: 8px;
+
     .close-group-check {
         @extend .flex-align-center;
         gap: 12px;
@@ -552,6 +629,7 @@ $keyColor: map-keys($colors);
     0% {
         opacity: 0.5;
     }
+
     100% {
         opacity: 1;
     }

@@ -1,0 +1,102 @@
+@use "../HTTPFuzzerPageShare.module.scss" as HTTPFuzzerPageShare;
+// --------------------- start-----------------------
+.web-fuzzer {
+    @extend .display-flex-center;
+    flex: 1;
+    overflow: hidden;
+    .web-fuzzer-tab {
+        border-right: 1px solid var(--yakit-border-color);
+        background: #f0f1f3;
+        width: 24px;
+        height: 100%;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--yakit-body-text-color);
+        }
+        &-item {
+            @extend .display-column-center;
+            padding: 12px 4px;
+            align-items: flex-start;
+            gap: 4px;
+            color: var(--yakit-header-color);
+            cursor: pointer;
+            background-color: #f0f1f3;
+        }
+        &-item-active {
+            color: #fff;
+            background-color: var(--yakit-primary-5);
+            svg {
+                color: #fff;
+            }
+        }
+        &-label {
+            font-weight: 600;
+            line-height: 16px;
+            font-size: 12px;
+            writing-mode: vertical-rl;
+            text-orientation: sideways-right;
+            transform: rotate(180deg);
+        }
+    }
+    .web-fuzzer-tab-content {
+        @extend .display-column-center;
+        flex: 1;
+        overflow: hidden;
+        height: 100%;
+    }
+}
+
+.yakit-modal-content {
+    @extend .display-column-center;
+    gap: 24px;
+    padding: 24px;
+    &-heard {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        &-body {
+            @extend .display-column-center;
+            gap: 8px;
+            &-title {
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 20px;
+                color: var(--yakit-header-color);
+            }
+            &-subTitle {
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px;
+                color: var(--yakit-body-text-color);
+                &-tip {
+                    color: var(--yakit-helper-text-color);
+                }
+            }
+        }
+    }
+    .yakit-modal-content-body {
+        display: flex;
+        flex: 1;
+        border-radius: 8px;
+        border: 1px solid var(--yakit-border-color);
+        video{
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        &-video {
+            width: 100%;
+            position: relative;
+        }
+    }
+    .remove-icon {
+        @include HTTPFuzzerPageShare.base-icon-card;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        color: var(--yakit-body-text-color);
+    }
+}

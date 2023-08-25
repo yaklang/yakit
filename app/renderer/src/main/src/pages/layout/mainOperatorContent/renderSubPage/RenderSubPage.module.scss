@@ -1,0 +1,22 @@
+.page-body {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    // overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.fuzzer-sequence-list {
+    &-item {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        display: flex;
+        flex: 1;
+        z-index: 10;
+    }
+}

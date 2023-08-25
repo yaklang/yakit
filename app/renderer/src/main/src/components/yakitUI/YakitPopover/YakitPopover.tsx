@@ -20,7 +20,7 @@ export const YakitPopover: React.FC<YakitPopoverProp> = React.memo((props) => {
     return (
         <Popover
             {...resePopover}
-            overlayClassName={classNames(styles[`yakit-popover-${direction}-wrapper`], {
+            overlayClassName={classNames(styles['yakit-popover-wrapper'],styles[`yakit-popover-${direction}-wrapper`], {
                 [overlayClassName || ""]: !!overlayClassName
             })}
             placement={placement}

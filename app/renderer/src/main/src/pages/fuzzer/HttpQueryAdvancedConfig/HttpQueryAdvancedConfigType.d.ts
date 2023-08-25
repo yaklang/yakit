@@ -73,7 +73,9 @@ export interface AdvancedConfigValueProps {
 export interface FuzzerParamItem {
     Key: string
     Value: string
-    Type?: string
+    Type: string
+    /**前端判断用 */
+    typeChecked?:boolean
 }
 
 export interface HttpQueryAdvancedConfigProps {

@@ -121,7 +121,7 @@ export const matcherTypeList = [
     {label: "正则表达式", value: "regex"},
     {label: "状态码", value: "status_code"},
     {label: "十六进制", value: "binary"},
-    {label: "表达式", value: "nuclei-dsl"}
+    {label: "表达式", value: "expr"}
 ]
 
 export const extractorTypeList = [
@@ -817,7 +817,7 @@ const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps
                 <LabelNodeItem label={""}>
                     <div className={styles["add-matcher"]}>
                         <div className={styles["divider"]}/>
-                        <YakitButton type='text' icon={<PlusIcon />} onClick={() => onAddGroup()}>
+                        <YakitButton type='text' icon={<PlusIcon />} style={{ justifyContent: 'flex-start' }} onClick={() => onAddGroup()}>
                             添加匹配内容
                         </YakitButton>
                     </div>
@@ -864,12 +864,10 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
             })}
             style={{paddingTop: 8}}
         >
-            <Collapse
+            <YakitCollapse
                 activeKey={activeKey}
                 onChange={(key) => setActiveKey(key as string)}
                 accordion
-                ghost
-                expandIcon={(e) => (e.isActive ? <ChevronDownIcon/> : <ChevronRightIcon/>)}
                 className={styles["matcher-extraction-collapse"]}
             >
                 {extractor.extractorList.map((extractorItem, index) => (
@@ -961,7 +959,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                         />
                     </YakitPanel>
                 ))}
-            </Collapse>
+            </YakitCollapse>
         </div>
     )
 })
@@ -1051,15 +1049,19 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
     )
 })
 
-const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) => {
+export const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) => {
     const {column} = props
     return (
         <div
-            className={classNames(styles["label-node"], {
-                [styles["label-node-column"]]: column
-            })}
+            className={classNames(
+                styles["label-node"],
+                {
+                    [styles["label-node-column"]]: column
+                },
+                props.className
+            )}
         >
-            <span className={styles["label"]}>{props.label}</span>
+            <span className={classNames(styles["label"], props.labelClassName)}>{props.label}</span>
             {props.children}
         </div>
     )

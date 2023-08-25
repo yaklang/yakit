@@ -1,3 +1,11 @@
+.yakit-popover-wrapper{
+    :global{
+        .ant-popover-title{
+            padding: 8px 12px 8px 12px;
+            line-height: 16px;
+        }
+    }
+}
 .yakit-popover-top-wrapper {
     :global {
         .ant-popover-arrow {

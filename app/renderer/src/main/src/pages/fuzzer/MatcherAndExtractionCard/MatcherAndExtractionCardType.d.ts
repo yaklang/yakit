@@ -75,6 +75,8 @@ export interface labelNodeItemProps {
     label: string
     children: ReactNode
     column?:boolean
+    className?:string
+    labelClassName?:string
 }
 
 export interface MatcherItemProps extends MatcherItemAndExtractorItemProps {

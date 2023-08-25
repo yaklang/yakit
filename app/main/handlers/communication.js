@@ -122,4 +122,23 @@ module.exports = (win, getClient) => {
     ipcMain.handle("send-open-matcher-and-extraction", (e, params) => {
         win.webContents.send("fetch-open-matcher-and-extraction", params)
     })
+
+    // 设置webFuzzer type ,
+    ipcMain.handle("send-webFuzzer-setType", (e, params) => {
+        win.webContents.send("fetch-webFuzzer-setType", params)
+    })
+
+    // 新建组 onAddGroup
+    ipcMain.handle("send-add-group", (e, params) => {
+        win.webContents.send("fetch-add-group", params)
+    })
+
+    //
+    ipcMain.handle("send-open-subMenu-item", (e, params) => {
+        win.webContents.send("fetch-open-subMenu-item", params)
+    })
+    
+    ipcMain.handle("send-ref-webFuzzer-request", (e, params) => {
+        win.webContents.send("fetch-ref-webFuzzer-request", params)
+    })
 }

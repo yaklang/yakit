@@ -106,8 +106,8 @@ export const FuzzerResponseTableEx: React.FC<FuzzerResponseTableProp> = React.me
         return <>
             <a onClick={() => {
                 const res = content.filter(i => i.UUID === v);
-                if ((res || []).length > 0 && props.onSendToWebFuzzer) {
-                    analyzeFuzzerResponse(res[0], props.onSendToWebFuzzer, index, content)
+                if ((res || []).length > 0) {
+                    analyzeFuzzerResponse(res[0], index, content)
                 }
             }}>详情</a>
         </>
