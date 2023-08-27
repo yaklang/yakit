@@ -1,8 +1,10 @@
 import React, {useEffect, useState} from "react";
 import {AutoCard} from "@/components/AutoCard";
-import {HTTPPacketEditor, YakEditor} from "@/utils/editors";
 import {MONACO_SPEC_WEBFUZZER_REQUEST} from "@/pages/debugMonaco/monaco_WebfuzzerRequestTokenProvider";
 import {info} from "@/utils/notification";
+import {SelectOne} from "@/utils/inputUtil";
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
+import {YakURLTree} from "@/pages/yakURLTree/YakURLTree";
 
 export interface DebugMonacoEditorPageProp {
 
@@ -21,8 +23,9 @@ a=1&b=2 Content-Length: a
 {{null(1)}}
 `)
     const [languageType, setLangType] = useState(MONACO_SPEC_WEBFUZZER_REQUEST);
+    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree">("fs-tree");
 
-    useEffect(()=>{
+    useEffect(() => {
         if (!languageType) {
             setLangType(MONACO_SPEC_WEBFUZZER_REQUEST)
             return
@@ -31,8 +34,24 @@ a=1&b=2 Content-Length: a
     }, [languageType])
 
     return <div style={{height: "100%"}}>
-        <AutoCard title={"插件调试器"} size={"small"} bodyStyle={{padding: 0}}>
-            <YakEditor value={value} type={"http"}/>
+        <AutoCard
+            title={<SelectOne label={"调试组件"} data={[
+                {value: "http-monaco-editor", text: "HTTP 数据包编辑器"},
+                {value: "fs-tree", text: "文件系统树"},
+            ]} formItemStyle={{margin: 0}} value={mode} setValue={setMode}/>}
+            size={"small"} bodyStyle={{padding: 0}}
+        >
+            {
+                (() => {
+                    switch (mode) {
+                        case "http-monaco-editor":
+                            return <YakitEditor value={value} type={"http"}/>
+                        case "fs-tree":
+                            return <YakURLTree/>
+                    }
+                    return <div>NO PLUGIN DEMO</div>
+                })()
+            }
         </AutoCard>
     </div>
 };
