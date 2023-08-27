@@ -113,6 +113,8 @@ import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
+import {WebShellViewer} from "@/pages/webShell/WebShellViewer";
+import { FuzzerParamItem, AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps
@@ -216,7 +218,10 @@ export enum YakitRoute {
     //新版codec
     Beta_Codec = "beta-codec",
     // 插件管理
-    Plugin_Audit = "plugin-audit"
+    Plugin_Audit = "plugin-audit",
+    // WebShell 管理
+    Beta_WebShellManager = "beta-webshell-manager",
+
 }
 /**
  * @description 页面路由对应的页面信息
@@ -298,6 +303,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-codec": {label: "新版codec"},
     "plugin-audit": {label: "插件管理"},
     "**beta-debug-traffic-analize": {label: "流量分析"}
+    "beta-webshell-manager": {label: "WebShell 管理"},
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -337,7 +343,9 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_ConfigNetwork,
     YakitRoute.Beta_DebugTrafficAnalize,
     YakitRoute.Beta_Codec,
-    YakitRoute.Plugin_Audit
+    YakitRoute.Plugin_Audit,
+    YakitRoute.Beta_WebShellManager,
+
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -621,6 +629,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                     <PluginManage />
                 </OnlineJudgment>
             )
+        case YakitRoute.Beta_WebShellManager:
+            return <WebShellViewer/>
         default:
             return <div />
     }

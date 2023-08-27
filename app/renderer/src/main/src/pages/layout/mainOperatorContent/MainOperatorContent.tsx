@@ -588,6 +588,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**config-network") openMenuPage({route: YakitRoute.Beta_ConfigNetwork})
             if (type === "**beta-codec") openMenuPage({route: YakitRoute.Beta_Codec})
             if (type === "**beta-debug-traffic-analize") openMenuPage({route: YakitRoute.Beta_DebugTrafficAnalize})
+            if (type === "**webshell-manager") openMenuPage({ route: YakitRoute.Beta_WebShellManager })
+
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
                 if (flag === 0) {
