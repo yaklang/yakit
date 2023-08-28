@@ -1,13 +1,22 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Form} from "antd";
+import {Button, Form, Space} from "antd";
 import {FromLayoutProps, YakScriptCreatorFormProp, YakScriptFormContent} from "@/pages/invoker/YakScriptCreator";
 import {WebShellDetail} from "@/pages/webShell/models";
-import {useCreation, useGetState} from "ahooks";
+import {useCreation, useDebounceEffect, useGetState, useMemoizedFn} from "ahooks";
 import {InputItem} from "@/utils/inputUtil";
 import {YakScript} from "@/pages/invoker/schema";
 import {SelectItem} from "@/utils/SelectItem";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss";
+import styles from "@/pages/layout/publicMenu/MenuCodec.module.scss";
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
+import classNames from "classnames";
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
+import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts";
+import {useWatch} from "antd/lib/form/Form";
+import {InformationCircleIcon} from "@/assets/newIcon";
+import {failed, info, yakitInfo} from "@/utils/notification";
 
 
 export const RemarkDetail = ({remark}) => {
@@ -30,6 +39,8 @@ export interface WebShellCreatorFormProp {
     isCreate?: boolean
 }
 
+const {ipcRenderer} = window.require("electron")
+
 export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) => {
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
@@ -45,6 +56,26 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
 
     const [modified, setModified] = useState<WebShellDetail | undefined>(props.modified)
 
+    const [createLoading, setCreateLoading] = useState<boolean>(false)
+
+    const createWebShell = useMemoizedFn(() => {
+        setCreateLoading(true)
+        console.log("createWebShell ", params)
+        ipcRenderer.invoke("CreateWebShell", params).then((data: WebShellDetail) => {
+            yakitInfo("创建 WebShell 成功")
+            setParams(data)
+            if (data) {
+                props.onCreated && props.onCreated(data)
+                props.onChanged && props.onChanged(data)
+            }
+        }).catch((err) => {
+            failed(`创建 WebShell 失败: ${err}`)
+        }).finally(() => {
+            setTimeout(() => {
+                setCreateLoading(false)
+            }, 200)
+        })
+    })
     return (
         <div>
             < Form {...fromLayout}>
@@ -54,6 +85,13 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
                     modified={modified}
                     setParamsLoading={setParamsLoading}
                 />
+                <Form.Item colon={false} label={" "}>
+                    <Space>
+                        <Button type='primary' onClick={createWebShell} loading={createLoading}>
+                            保存
+                        </Button>
+                    </Space>
+                </Form.Item>
             </Form>
         </div>
 
@@ -72,6 +110,45 @@ interface WebShellFormContentProps {
 const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
     const {params, modified, setParams, setParamsLoading, isShowAuthor = true, disabled} = props
     const [showSecret, setShowSecret] = useState(false);
+    const [headersStr, setHeadersStr] = useState<string>("")
+    const [headers, setHeaders] = useState<{
+        Key: string,
+        Value: string
+    }[]>([])
+
+    useEffect(() => {
+        // 如果 params.ShellScript 是空的，那么就设置它为 "jsp"
+        if (!params.ShellScript) {
+            setParams({...params, ShellScript: "jsp"});
+        }
+        if (!params.ShellType) {
+            setParams({...params, ShellType: "behinder"});
+        }
+    }, []);
+    useDebounceEffect(() => {
+        if (params.Url === '') {
+            // 如果 URL 是空字符串，那么就直接更新 params
+            return;
+        }
+
+        try {
+            // 尝试解析 URL
+            const url = new URL(params.Url);
+
+            // 获取 URL 的文件扩展名
+            const urlPath = url.pathname;
+            const extension = urlPath.split('.').pop();
+
+            // 如果文件扩展名是我们支持的脚本类型之一，那么就更新 ShellScript 的值
+            const scriptTypes = ['jsp', 'jspx', 'php', 'asp', 'aspx'];
+            if (extension && scriptTypes.includes(extension)) {
+                setParams({...params, ShellScript: extension, Url: params.Url});
+            }
+        } catch (error) {
+            // 如果解析 URL 失败，那么就处理错误
+            console.error(`Invalid URL: ${params.Url}`);
+        }
+    }, [params.Url]);
     return (
         <>
             <Form.Item label={"Shell 类型"} required={true}>
@@ -109,18 +186,17 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                 </YakitSelect>
             </Form.Item>
             <InputItem
-                label={"参数"}
-                setValue={(Pass) => setParams({...params, Pass})}
-                value={params.Pass}
+                label={"密钥"}
+                setValue={(SecretKey) => setParams({...params, SecretKey})}
+                value={params.SecretKey}
                 disable={disabled}
             />
-
             {showSecret && (
                 <>
                     <InputItem
-                        label={"密钥"}
-                        setValue={(SecretKey) => setParams({...params, SecretKey})}
-                        value={params.SecretKey}
+                        label={"密码"}
+                        setValue={(Pass) => setParams({...params, Pass})}
+                        value={params.Pass}
                         disable={disabled}
                     />
                     <Form.Item label={"加密模式"}>
@@ -137,6 +213,60 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                 </>
             )}
 
+            <Form.Item label={"Headers"} name='headers' initialValue={[]}>
+                <div className={styles["menu-codec-wrapper"]}>
+                    <div className={styles["input-textarea-wrapper"]}>
+                        <YakitInput.TextArea
+                            className={styles["input-textarea-body"]}
+                            value={headersStr}
+                            onChange={(e) => {
+                                setHeadersStr(e.target.value);
+                                const lines = e.target.value.split('\n');
+                                const newHeaders = lines.map(line => {
+                                    const [key, ...rest] = line.split(':');
+                                    const value = rest.join(':').trim();
+                                    return {Key: key.trim(), Value: value};
+                                });
+                                setHeaders(newHeaders);
+                            }}
+                            spellCheck={false}
+                            placeholder={"自定义请求头,例如: User-Agent: Yakit/1.0.0"}
+                        />
+                        <div className={styles["input-textarea-copy"]}>
+                            <CopyComponents
+                                className={classNames(styles["copy-icon-style"], {[styles["copy-icon-ban"]]: !headersStr})}
+                                copyText={headersStr}
+                                iconColor={!!headersStr ? "#85899e" : "#ccd2de"}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </Form.Item>
+
+            <Form.Item
+                label={"设置代理"}
+                name='proxy'
+            >
+                <YakitSelect
+                    allowClear
+                    options={[
+                        {
+                            label: "http://127.0.0.1:8080",
+                            value: "http://127.0.0.1:8080"
+                        },
+                        {
+                            label: "http://127.0.0.1:8083",
+                            value: "http://127.0.0.1:8083"
+                        }, {
+                            label: "http://127.0.0.1:9999",
+                            value: "http://127.0.0.1:9999"
+                        }
+                    ]}
+                    placeholder='请输入...'
+                    mode='tags'
+                    maxTagCount={3}
+                />
+            </Form.Item>
 
             <InputItem
                 label={"备注"}

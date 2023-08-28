@@ -390,7 +390,7 @@ service Yak {
   rpc YsoDump(YsoBytesObject)returns(YsoDumpResponse);
 
   // WebShell
-  rpc CreateWebShell(WebShell) returns (Empty);
+  rpc CreateWebShell(WebShell) returns (WebShell);
   rpc DeleteWebShell(DeleteWebShellRequest) returns (Empty);
   rpc UpdateWebShellById(UpdateWebShellRequest) returns (Empty);
   rpc QueryWebShells(QueryWebShellsRequest) returns (QueryWebShellsResponse);
