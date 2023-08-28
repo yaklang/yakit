@@ -1067,7 +1067,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
                 if (newMultipleNodeList.length === 0) return
-                console.log("multipleNodeList", multipleNodeList)
+                // console.log("multipleNodeList", multipleNodeList)
                 const webFuzzerPage = {
                     routeKey: key,
                     verbose: tabName,

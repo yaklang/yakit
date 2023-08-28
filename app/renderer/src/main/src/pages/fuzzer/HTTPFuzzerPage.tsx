@@ -261,7 +261,9 @@ export interface FuzzerRequestProps {
     HitColor?: string
     InheritVariables?: boolean
     InheritCookies?: boolean
+    /**@name 序列化的item唯一key */
     FuzzerIndex?: string
+    /**@name fuzzer Tab的唯一key */
     FuzzerTabIndex?: string
 }
 
@@ -807,12 +809,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
             RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
             HotPatchCode: hotPatchCode,
-            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter
+            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
+            FuzzerTabIndex: props.id
         }
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
+        console.log('httpParams',httpParams)
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
@@ -1090,12 +1094,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const cachedTotal = successFuzzer.length + failedFuzzer.length
     const [currentPage, setCurrentPage] = useState<number>(0)
     const [total, setTotal] = useState<number>()
+    /**获取上一个/下一个 */
     const getList = useMemoizedFn((pageInt: number) => {
         setLoading(true)
+        const params={
+            FuzzerTabIndex: props.id,
+            Pagination: {Page: pageInt, Limit: 1}
+        }
+        console.log('params',params)
         ipcRenderer
-            .invoke("QueryHistoryHTTPFuzzerTaskEx", {
-                Pagination: {Page: pageInt, Limit: 1}
-            })
+            .invoke("QueryHistoryHTTPFuzzerTaskEx",params)
             .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
@@ -1453,7 +1461,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     />
                                     <ChevronRightIcon
                                         className={classNames(styles["chevron-icon"], {
-                                            [styles["chevron-icon-disable"]]: currentPage == total || !total
+                                            [styles["chevron-icon-disable"]]: currentPage === Number(total) || !total
                                         })}
                                         onClick={() => onNextPage()}
                                     />

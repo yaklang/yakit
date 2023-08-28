@@ -624,7 +624,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
                     InheritCookies: item.inheritCookies,
                     InheritVariables: item.inheritVariables,
-                    FuzzerIndex: item.id
+                    FuzzerIndex: item.id,
+                    FuzzerTabIndex:item.pageId
                 }
                 setRequest(item.id, webFuzzerPageInfo.advancedConfigValue)
                 httpParams.push(httpParamsItem)
