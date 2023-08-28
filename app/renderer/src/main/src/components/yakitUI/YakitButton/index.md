@@ -26,10 +26,11 @@
 
 按钮的属性说明如下：
 
-| 属性    | 说明                  | 类型    | 默认值  | 备注                          |
-| ------- | --------------------- | ------- | ------- | ----------------------------- |
-| type    | 按钮类型              | string  | primary | -                             |
-| colors  | 按钮颜色              | primary | -       | -                             |
-| size    | 按钮尺寸              | string  | default | -                             |
-| isHover | hover伪类样式是否常驻 | boolean | false   | -                             |
-| rest    | 其余属性              | object  | -       | 这些属性参考ant-button组件API |
+| 属性     | 说明                   | 类型    | 默认值  | 备注                          |
+| -------- | ---------------------- | ------- | ------- | ----------------------------- |
+| type     | 按钮类型               | string  | primary | -                             |
+| colors   | 按钮颜色               | primary | -       | -                             |
+| size     | 按钮尺寸               | string  | default | -                             |
+| isHover  | hover伪类样式是否常驻  | boolean | false   | -                             |
+| isActive | active伪类样式是否常驻 | boolean | false   | -                             |
+| rest     | 其余属性               | object  | -       | 这些属性参考ant-button组件API |

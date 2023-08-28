@@ -1,5 +1,5 @@
-import React, { useMemo } from "react"
-import { Button, ButtonProps } from "antd"
+import React, {useMemo} from "react"
+import {Button, ButtonProps} from "antd"
 
 import styles from "./yakitButton.module.scss"
 import classNames from "classnames"
@@ -7,13 +7,14 @@ import classNames from "classnames"
 export interface YakitButtonProp extends Omit<ButtonProps, "size" | "type"> {
     type?: "primary" | "secondary2" | "outline1" | "outline2" | "text" | "text2"
     colors?: "success" | "danger" | "primary"
-    size?: "small" | 'middle' | "large" | "max"
+    size?: "small" | "middle" | "large" | "max"
     isHover?: boolean
+    isActive?: boolean
 }
 
 /** @name Yakit 主题按钮组件 */
 export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
-    const { size, type, colors, isHover, children, className, ...resePopover } = props
+    const {size, type, colors, isHover, isActive, children, className, ...resePopover} = props
 
     const typeClass = useMemo(() => {
         if (type === "secondary2") return "yakit-button-secondary2"
@@ -46,7 +47,8 @@ export const YakitButton: React.FC<YakitButtonProp> = React.memo((props) => {
                 styles[typeClass],
                 styles[colorClass || ""],
                 styles[sizeClass],
-                { [styles["yakit-hover-button"]]: !!isHover },
+                {[styles["yakit-hover-button"]]: !!isHover},
+                {[styles["yakit-active-button"]]: !!isActive},
                 className || ""
             )}
         >
