@@ -201,15 +201,27 @@
         max-width: 120px;
     }
 }
+.http-fuzzer-range-editor-body {
+    display: flex;
+    align-items: center;
+    box-shadow: 0px 2px 4px 0px rgba(133, 137, 158, 0.2);
+    border: 0.5px solid #eaecf3;
+    border-radius: 6px;
+    .range-click-editor-menu {
+        box-shadow: none;
+        border: 0;
+        border-radius: 6px 0 0 6px;
+    }
+}
 .http-fuzzer-range-editor {
     position: relative;
     width: 152px;
     .http-fuzzer-range-editor-simple {
         flex-shrink: 0;
         background-color: #ffffff;
-        border-radius: 6px;
-        border: 0.5px solid #eaecf3;
-        box-shadow: 0px 2px 4px 0px rgba(133, 137, 158, 0.2);
+        border-radius: 0 6px 6px 0;
+        // border: 0.5px solid #eaecf3;
+        // box-shadow: 0px 2px 4px 0px rgba(133, 137, 158, 0.2);
         padding: 2px;
         .show-box {
             display: flex;

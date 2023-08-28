@@ -1,24 +1,29 @@
-import React, { ReactElement, useEffect, useMemo, useRef, useState } from "react"
-import { IMonacoEditor, NewHTTPPacketEditor, NewHTTPPacketEditorProp } from "@/utils/editors"
-import { NewEditorSelectRange } from "@/components/NewEditorSelectRange"
-import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str"
-import { HTTPFuzzerClickEditorMenu, HTTPFuzzerRangeEditorMenu } from "../HTTPFuzzerEditorMenu"
-import { insertFileFuzzTag, insertTemporaryFileFuzzTag } from "../InsertFileFuzzTag"
-import { QueryFuzzerLabelResponseProps, StringFuzzer } from "../StringFuzzer"
-import { monacoEditorWrite } from "../fuzzerTemplates"
-import { OtherMenuListProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import { callCopyToClipboard } from "@/utils/basic"
-import { execCodec } from "@/utils/encodec"
-import { WEB_FUZZ_HOTPATCH_CODE, WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, copyAsUrl, showDictsAndSelect } from "../HTTPFuzzerPage"
-import styles from './WebFuzzerNewEditor.module.scss'
-import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import { setRemoteValue } from "@/utils/kv"
-import { useMemoizedFn } from "ahooks"
-import { HTTPFuzzerHotPatch } from "../HTTPFuzzerHotPatch"
-import { Modal } from "antd"
-import { yakitNotify } from "@/utils/notification"
+import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
+import {IMonacoEditor, NewHTTPPacketEditor, NewHTTPPacketEditorProp} from "@/utils/editors"
+import {NewEditorSelectRange} from "@/components/NewEditorSelectRange"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import {HTTPFuzzerClickEditorMenu, HTTPFuzzerRangeEditorMenu} from "../HTTPFuzzerEditorMenu"
+import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "../InsertFileFuzzTag"
+import {QueryFuzzerLabelResponseProps, StringFuzzer} from "../StringFuzzer"
+import {monacoEditorWrite} from "../fuzzerTemplates"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {callCopyToClipboard} from "@/utils/basic"
+import {execCodec} from "@/utils/encodec"
+import {
+    WEB_FUZZ_HOTPATCH_CODE,
+    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
+    copyAsUrl,
+    showDictsAndSelect
+} from "../HTTPFuzzerPage"
+import styles from "./WebFuzzerNewEditor.module.scss"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {setRemoteValue} from "@/utils/kv"
+import {useMemoizedFn} from "ahooks"
+import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
+import {Modal} from "antd"
+import {yakitNotify} from "@/utils/notification"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 export interface CountDirectionProps {
     x?: string
@@ -49,7 +54,18 @@ export interface WebFuzzerNewEditorProps {
     setHotPatchCodeWithParamGetter: (s: string) => void
 }
 export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => {
-    const { refreshTrigger, request, setRequest, selectId, rangeId, isHttps, hotPatchCode, hotPatchCodeWithParamGetter, setHotPatchCode, setHotPatchCodeWithParamGetter } = props;
+    const {
+        refreshTrigger,
+        request,
+        setRequest,
+        selectId,
+        rangeId,
+        isHttps,
+        hotPatchCode,
+        hotPatchCodeWithParamGetter,
+        setHotPatchCode,
+        setHotPatchCodeWithParamGetter
+    } = props
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
@@ -82,23 +98,23 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => 
         return {
             insertLabelTag: {
                 menu: [
-                    { type: "divider" },
+                    {type: "divider"},
                     {
                         key: "insert-label-tag",
                         label: "插入标签/字典",
                         children: [
-                            { key: "insert-nullbyte", label: "插入空字节标签: {{hexd(00)}}" },
-                            { key: "insert-temporary-file-tag", label: "插入临时字典" },
-                            { key: "insert-intruder-tag", label: "插入模糊测试字典标签" },
-                            { key: "insert-hotpatch-tag", label: "插入热加载标签" },
-                            { key: "insert-fuzzfile-tag", label: "插入文件标签" }
+                            {key: "insert-nullbyte", label: "插入空字节标签: {{hexd(00)}}"},
+                            {key: "insert-temporary-file-tag", label: "插入临时字典"},
+                            {key: "insert-intruder-tag", label: "插入模糊测试字典标签"},
+                            {key: "insert-hotpatch-tag", label: "插入热加载标签"},
+                            {key: "insert-fuzzfile-tag", label: "插入文件标签"}
                         ]
                     }
                 ],
                 onRun: (editor, key) => {
                     switch (key) {
                         case "insert-nullbyte":
-                            editor.trigger("keyboard", "type", { text: "{{hexd(00)}}" })
+                            editor.trigger("keyboard", "type", {text: "{{hexd(00)}}"})
                             return
                         case "insert-temporary-file-tag":
                             insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
@@ -122,20 +138,20 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => 
             },
             copyURL: {
                 menu: [
-                    { key: "copy-as-url", label: "复制为 URL" },
-                    { key: "copy-as-curl", label: "复制 curl 命令" }
+                    {key: "copy-as-url", label: "复制为 URL"},
+                    {key: "copy-as-curl", label: "复制 curl 命令"}
                 ],
                 onRun: (editor, key) => {
                     switch (key) {
                         case "copy-as-url":
-                            copyAsUrl({ Request: request, IsHTTPS: isHttps })
+                            copyAsUrl({Request: request, IsHTTPS: isHttps})
                             return
                         case "copy-as-curl":
                             execCodec("packet-to-curl", request, undefined, undefined, undefined, [
-                                { Key: "https", Value: isHttps ? "true" : "" }
+                                {Key: "https", Value: isHttps ? "true" : ""}
                             ]).then((data) => {
                                 callCopyToClipboard(data)
-                                yakitNotify('info', "复制到剪贴板")
+                                yakitNotify("info", "复制到剪贴板")
                             })
                             return
                     }
@@ -151,7 +167,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => 
             footer: null,
             subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
             content: (
-                <div style={{ padding: 24 }}>
+                <div style={{padding: 24}}>
                     <StringFuzzer
                         advanced={true}
                         disableBasicMode={true}
@@ -201,10 +217,9 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => 
                     close={() => close()}
                     insert={(v: QueryFuzzerLabelResponseProps) => {
                         if (v.Label) {
-                            reqEditor && reqEditor.trigger("keyboard", "type", { text: v.Label })
+                            reqEditor && reqEditor.trigger("keyboard", "type", {text: v.Label})
                         } else if (v.DefaultDescription === "插入本地文件") {
-                            reqEditor &&
-                                insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
+                            reqEditor && insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
                         }
                         close()
                     }}
@@ -222,41 +237,52 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => 
                     insert={(fun: any) => {
                         if (reqEditor) {
                             const selectedText =
-                                reqEditor
-                                    .getModel()
-                                    ?.getValueInRange(reqEditor.getSelection() as any) || ""
+                                reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any) || ""
                             if (selectedText.length > 0) {
                                 ipcRenderer
                                     .invoke("QueryFuzzerLabel", {})
-                                    .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
-                                        const { Data } = data
+                                    .then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+                                        const {Data} = data
                                         let newSelectedText: string = selectedText
                                         if (Array.isArray(Data) && Data.length > 0) {
                                             // 选中项是否存在于标签中
-                                            let isHave: boolean = Data.map(
-                                                (item) => item.Label
-                                            ).includes(selectedText)
+                                            let isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
                                             if (isHave) {
                                                 newSelectedText = selectedText.replace(/{{|}}/g, "")
                                             }
                                         }
                                         const text: string = fun(newSelectedText)
-                                        reqEditor.trigger("keyboard", "type", { text })
+                                        reqEditor.trigger("keyboard", "type", {text})
                                     })
                             }
                         }
                     }}
                     replace={(text: string) => {
                         if (reqEditor) {
-                            reqEditor.trigger("keyboard", "type", { text })
+                            reqEditor.trigger("keyboard", "type", {text})
                             closeFizzRangeWidget()
                         }
                     }}
                     rangeValue={
-                        (reqEditor &&
-                            reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
-                        ""
+                        (reqEditor && reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) || ""
                     }
+                    hTTPFuzzerClickEditorMenuProps={{
+                        editorInfo: editorInfo,
+                        close: () => closeFizzRangeWidget(),
+                        insert: (v: QueryFuzzerLabelResponseProps) => {
+                            if (v.Label) {
+                                reqEditor && reqEditor.trigger("keyboard", "type", { text: v.Label })
+                            } else if (v.DefaultDescription === "插入本地文件") {
+                                reqEditor &&
+                                    insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
+                            }
+                            closeFizzRangeWidget()
+                        },
+                        addLabel: () => {
+                            closeFizzRangeWidget()
+                            onInsertYakFuzzer()
+                        }
+                    }}
                 />
             )}
         />
