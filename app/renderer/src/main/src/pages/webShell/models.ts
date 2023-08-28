@@ -11,6 +11,7 @@ export interface WebShellDetail {
     Tag: string[];
     Proxy: string;
     Headers: { [key: string]: string };
+    Remark: string;
     CreatedAt: number;
     UpdatedAt: number;
 }

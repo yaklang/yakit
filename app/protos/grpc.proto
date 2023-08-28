@@ -2479,8 +2479,9 @@ message WebShell {
   //    Proxy
   string Proxy = 11;
   map<string, string> Headers = 12;
-  int64 CreatedAt = 13;
-  int64 UpdatedAt = 14;
+  string Remark =13;
+  int64 CreatedAt = 14;
+  int64 UpdatedAt = 15;
 }
 message WebShellRequest {
   int64 Id = 1;
