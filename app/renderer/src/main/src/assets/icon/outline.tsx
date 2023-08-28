@@ -4,7 +4,7 @@ import React from "react"
 
 interface IconProps extends CustomIconComponentProps {
     onClick: (e: React.MouseEvent) => void
-    ref?:any
+    ref?: any
 }
 
 const OutlineChrome = () => (
@@ -4913,4 +4913,40 @@ const OutlineExit = () => (
  */
 export const OutlineExitIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineExit} {...props} />
+}
+
+const OutlinePayload = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_17364_13205'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='16'
+            height='16'
+        >
+            <rect width='16' height='16' fill='currentColor' />
+        </mask>
+        <g mask='url(#mask0_17364_13205)'>
+            <rect x='2.6665' y='2' width='10.6667' height='12' rx='2' stroke='currentColor' />
+            <path
+                d='M5.3335 2V7.17153C5.3335 7.24587 5.41173 7.29422 5.47822 7.26097L6.62211 6.68903C6.65026 6.67495 6.6834 6.67495 6.71155 6.68903L7.85544 7.26097C7.92193 7.29422 8.00016 7.24587 8.00016 7.17153V2'
+                stroke='currentColor'
+                strokeLinecap='square'
+            />
+            <path
+                d='M2.6665 12.6668C2.6665 11.9304 3.26346 11.3335 3.99984 11.3335H13.3332V12.0002C13.3332 13.1047 12.4377 14.0002 11.3332 14.0002H3.99984C3.26346 14.0002 2.6665 13.4032 2.6665 12.6668V12.6668Z'
+                stroke='currentColor'
+            />
+            <rect x='2.6665' y='2' width='10.6667' height='12' rx='2' stroke='currentColor' />
+        </g>
+    </svg>
+)
+/**
+ * @description  Icon/Outline/Payload
+ * WebFuzzer 页面中下载下来的，图标库中没有这个图标  2023.8.28
+ */
+export const OutlinePayloadIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlinePayload} {...props} />
 }

@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactNode, useContext, useEffect, useMemo, useRef, useState} from "react"
 import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider} from "antd"
 import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -105,6 +105,7 @@ import {execCodec} from "@/utils/encodec"
 import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
+import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -559,7 +560,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // editor Response
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
-
+    const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
+    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
     // second Node
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
@@ -576,6 +578,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const {getPageNodeInfoByPageId} = usePageNode()
 
+    useEffect(() => {
+        getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
+            .then((data) => {
+                setShowResponseInfoSecondEditor(data === "false" ? false : true)
+            })
+            .catch(() => {
+                setShowResponseInfoSecondEditor(true)
+            })
+    }, [])
     useEffect(() => {
         ipcRenderer.on("fetch-ref-webFuzzer-request", onUpdateRequest)
         return () => {
@@ -1592,6 +1603,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 query={query}
                                 setQuery={(q) => setQuery({...q})}
                                 sendPayloadsType='fuzzer'
+                                setShowExtra={setShowExtra}
+                                showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                                setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                             />
                         )
                     }}
@@ -1698,6 +1712,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     system={props.system}
                                     showMatcherAndExtraction={showMatcherAndExtraction}
                                     setShowMatcherAndExtraction={setShowMatcherAndExtraction}
+                                    showExtra={showExtra}
+                                    setShowExtra={setShowExtra}
                                     matcherValue={{
                                         hitColor: advancedConfigValue.hitColor || "red",
                                         matchersCondition: advancedConfigValue.matchersCondition || "and",
@@ -1720,6 +1736,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         })
                                     }}
                                     webFuzzerValue={StringToUint8Array(request)}
+                                    showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                                    setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                                 />
                             ) : (
                                 <>
@@ -1815,6 +1833,9 @@ interface SecondNodeExtraProps {
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
     sendPayloadsType: string
     size?: YakitButtonProp["size"]
+    setShowExtra: (b: boolean) => void
+    showResponseInfoSecondEditor: boolean
+    setShowResponseInfoSecondEditor: (b: boolean) => void
 }
 
 /**
@@ -1833,7 +1854,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         query,
         setQuery,
         sendPayloadsType,
-        size = "small"
+        size = "small",
+        setShowExtra,
+        showResponseInfoSecondEditor,
+        setShowResponseInfoSecondEditor
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -1857,14 +1881,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         })
     }, [query])
 
-    const onViewExecResults = useMemoizedFn(() => {
-        showYakitModal({
-            title: "提取结果",
-            width: "60%",
-            footer: <></>,
-            content: <ExtractionResultsContent list={rsp.ExtractedResults} />
-        })
-    })
+    // const onViewExecResults = useMemoizedFn(() => {
+    //     showYakitModal({
+    //         title: "提取结果",
+    //         width: "60%",
+    //         footer: <></>,
+    //         content: <ExtractionResultsContent list={rsp.ExtractedResults} />
+    //     })
+    // })
 
     if (onlyOneResponse) {
         const searchNode = (
@@ -1899,8 +1923,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         showResponseViaResponseRaw(rsp.ResponseRaw || "")
                     }}
                 />
-                {rsp.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0 && (
-                    <YakitButton type='outline2' size={size} onClick={() => onViewExecResults()}>
+                {((rsp.Payloads && rsp.Payloads.length > 0) ||
+                    rsp.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0) && (
+                    <YakitButton type='outline2' size={size} onClick={() => setShowExtra(true)}>
                         查看提取结果
                     </YakitButton>
                 )}
@@ -1913,6 +1938,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 >
                     详情
                 </YakitButton>
+                <Tooltip title={showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"}>
+                    <OutlineAnnotationIcon
+                        className={classNames(styles["annotation-icon"], {
+                            [styles["annotation-icon-active"]]: showResponseInfoSecondEditor
+                        })}
+                        onClick={() => setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)}
+                    />
+                </Tooltip>
             </div>
         )
     }
@@ -2207,12 +2240,17 @@ interface ResponseViewerProps {
     system?: string
     showMatcherAndExtraction: boolean
     setShowMatcherAndExtraction: (b: boolean) => void
+    showExtra: boolean
+    setShowExtra: (b: boolean) => void
     matcherValue: MatcherValueProps
     extractorValue: ExtractorValueProps
     defActiveKey: string
     defActiveType: MatchingAndExtraction
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
     webFuzzerValue?: Uint8Array
+
+    showResponseInfoSecondEditor: boolean
+    setShowResponseInfoSecondEditor: (b: boolean) => void
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
@@ -2222,14 +2260,18 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             defaultResponseSearch,
             showMatcherAndExtraction,
             setShowMatcherAndExtraction,
+            showExtra,
+            setShowExtra,
             extractorValue,
             matcherValue,
             defActiveKey,
             defActiveType,
-            onSaveMatcherAndExtraction
+            onSaveMatcherAndExtraction,
+            showResponseInfoSecondEditor,
+            setShowResponseInfoSecondEditor
         } = props
         const [reason, setReason] = useState<string>("未知原因")
-        const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
+
         const [activeKey, setActiveKey] = useState<string>("")
         const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
@@ -2245,17 +2287,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 let r = "未知原因"
                 r = fuzzerResponse!.Reason
                 setReason(r)
+                setShowExtra(
+                    (fuzzerResponse.Payloads && fuzzerResponse.Payloads.length > 0) ||
+                        fuzzerResponse.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0
+                )
             } catch (e) {}
         }, [fuzzerResponse])
-        useEffect(() => {
-            getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
-                .then((data) => {
-                    setShowResponseInfoSecondEditor(data === "false" ? false : true)
-                })
-                .catch(() => {
-                    setShowResponseInfoSecondEditor(true)
-                })
-        }, [])
+
         const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
             return {
                 overlayWidgetv: {
@@ -2281,8 +2319,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 p.secondRatio = "50%"
                 p.firstRatio = "50%"
             }
+            if (showExtra) {
+                p.firstRatio = "80%"
+                p.secondRatio = "20%"
+            }
             return p
-        }, [showMatcherAndExtraction])
+        }, [showMatcherAndExtraction, showExtra])
+        const show = useMemo(() => showMatcherAndExtraction || showExtra, [showMatcherAndExtraction, showExtra])
         const extraEditorProps = useCreation(() => {
             const overlayWidget = {
                 onAddOverlayWidget: (editor, isShow) => onAddOverlayWidget(editor, fuzzerResponse, isShow)
@@ -2293,8 +2336,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             <>
                 <YakitResizeBox
                     isVer={true}
-                    lineStyle={{display: !showMatcherAndExtraction ? "none" : ""}}
-                    firstNodeStyle={{padding: !showMatcherAndExtraction ? 0 : undefined}}
+                    lineStyle={{display: !show ? "none" : "", background: "#f0f2f5"}}
+                    firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
                     firstNode={
                         <NewEditorSelectRange
                             defaultSearchKeyword={defaultResponseSearch}
@@ -2341,9 +2384,6 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                 )
                             }
                             readOnly={true}
-                            // onAddOverlayWidget={(editor, isShow) => {
-                            //     onAddOverlayWidget(editor, fuzzerResponse, isShow)
-                            // }}
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
                             webFuzzerValue={props.webFuzzerValue}
@@ -2363,27 +2403,99 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         />
                     }
                     secondNode={
-                        showMatcherAndExtraction ? (
-                            <MatcherAndExtraction
-                                ref={ref}
-                                onClose={() => setShowMatcherAndExtraction(false)}
-                                onSave={onSaveMatcherAndExtraction}
-                                httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
-                                matcherValue={matcherValue}
-                                extractorValue={extractorValue}
-                                defActiveKey={activeKey}
-                                defActiveType={activeType}
-                            />
-                        ) : (
-                            <></>
-                        )
+                        <>
+                            {showMatcherAndExtraction ? (
+                                <MatcherAndExtraction
+                                    ref={ref}
+                                    onClose={() => setShowMatcherAndExtraction(false)}
+                                    onSave={onSaveMatcherAndExtraction}
+                                    httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
+                                    matcherValue={matcherValue}
+                                    extractorValue={extractorValue}
+                                    defActiveKey={activeKey}
+                                    defActiveType={activeType}
+                                />
+                            ) : (
+                                <></>
+                            )}
+                            {showExtra ? (
+                                <ResponseViewerSecondNode
+                                    fuzzerResponse={fuzzerResponse}
+                                    onClose={() => setShowExtra(false)}
+                                />
+                            ) : (
+                                <></>
+                            )}
+                        </>
                     }
-                    secondNodeStyle={{display: showMatcherAndExtraction ? "" : "none", padding: 0}}
+                    secondNodeStyle={{display: show ? "" : "none", padding: 0}}
                     lineDirection='bottom'
-                    secondMinSize={300}
+                    secondMinSize={showMatcherAndExtraction ? 300 : 100}
                     {...ResizeBoxProps}
                 />
             </>
         )
     })
 )
+
+interface ResponseViewerSecondNodeProps {
+    fuzzerResponse: FuzzerResponse
+    onClose: () => void
+}
+type tabType = "payload" | "extractContent"
+const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.memo((props) => {
+    const {fuzzerResponse, onClose} = props
+    const [type, setType] = useState<tabType>("payload")
+    const option = useMemo(() => {
+        return [
+            {
+                icon: <OutlinePayloadIcon />,
+                value: "payload",
+                label: "Payload"
+            },
+            {
+                icon: <OutlineBeakerIcon />,
+                value: "extractContent",
+                label: "提取内容"
+            }
+        ]
+    }, [])
+    return (
+        <div className={styles["payload-extract-content"]}>
+            <div className={styles["payload-extract-content-heard"]}>
+                <div className={styles["payload-extract-content-heard-tab"]}>
+                    {option.map((item) => (
+                        <div
+                            key={item.value}
+                            className={classNames(styles["payload-extract-content-heard-tab-item"], {
+                                [styles["payload-extract-content-heard-tab-item-active"]]: type === item.value
+                            })}
+                            onClick={() => {
+                                setType(item.value as tabType)
+                            }}
+                        >
+                            <span className={styles["tab-icon"]}>{item.icon}</span>
+                            {item.label}
+                        </div>
+                    ))}
+                </div>
+                <YakitButton type='text2' icon={<OutlineXIcon />} size='small' onClick={() => onClose()} />
+            </div>
+            <div className={styles["payload-extract-content-body"]} style={{display: type === "payload" ? "" : "none"}}>
+                {fuzzerResponse.Payloads?.map((item) => `${item}${(<br />)}`)}
+                {fuzzerResponse.Payloads?.length === 0 && "暂无"}
+            </div>
+            <div
+                className={styles["payload-extract-content-body"]}
+                style={{display: type === "extractContent" ? "" : "none"}}
+            >
+                {fuzzerResponse.ExtractedResults.map((item) => (
+                    <p>
+                        {item.Key}:{item.Value}
+                    </p>
+                ))}
+                {fuzzerResponse.ExtractedResults?.length === 0 && "暂无"}
+            </div>
+        </div>
+    )
+})

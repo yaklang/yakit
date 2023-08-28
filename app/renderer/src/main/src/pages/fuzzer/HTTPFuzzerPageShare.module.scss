@@ -61,6 +61,16 @@
     @extend %base-icon;
 }
 
+@mixin base-icon-card-size {
+    @extend %base-icon;
+    width: 20px;
+    height: 20px;
+    svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
 @mixin circle-number {
     @extend %circle-number;
 }

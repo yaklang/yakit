@@ -1,4 +1,4 @@
-@use "./HTTPFuzzerPageShare.module.scss";
+@use "./HTTPFuzzerPageShare.module.scss" as HTTPFuzzerPageShare;
 .http-fuzzer-body {
     display: flex;
     height: 100%;
@@ -70,6 +70,14 @@
     align-items: center;
     height: 24px;
     gap: 8px;
+    .annotation-icon {
+        @include HTTPFuzzerPageShare.base-icon-card-size;
+        color: var(--ui-icon-color);
+    }
+    .annotation-icon-active {
+        background-color: var(--yakit-background-color);
+        color: var(--yakit-primary-5);
+    }
 }
 
 .second-node-search-content {
@@ -233,4 +241,52 @@
     padding: 24px;
     max-height: 60vh;
     overflow-y: auto;
+}
+
+.payload-extract-content {
+    @extend .display-column-center;
+    background-color: var(--yakit-border-color);
+    flex: 1;
+    height: 100%;
+    justify-content: flex-start;
+    &-heard {
+        @extend .display-flex-center;
+        justify-content: space-between;
+        background: var(--yakit-disable-text-color);
+        padding-right: 8px;
+        color: var(--yakit-header-color);
+        border-top: 1px solid #fff;
+        border-bottom: 1px solid #fff;
+        &-tab {
+            @extend .display-flex-center;
+            align-items: center;
+            &-item {
+                @extend .display-flex-center;
+                padding: 4px 12px;
+                gap: 4px;
+                border-right: 1px solid #fff;
+                cursor: pointer;
+                .tab-icon {
+                    width: 16px;
+                    height: 16px;
+                    color: var(--yakit-body-text-color);
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+            }
+            &-item-active {
+                background-color: var(--yakit-primary-5);
+                color: #fff;
+                .tab-icon {
+                    color: #fff;
+                }
+            }
+        }
+    }
+    &-body {
+        padding: 12px 0px 12px 12px;
+        overflow-y: auto;
+    }
 }
