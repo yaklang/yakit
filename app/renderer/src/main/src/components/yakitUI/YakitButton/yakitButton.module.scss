@@ -12,6 +12,11 @@
         color: var(--ui-text-inverse-color);
         border-color: fetch-color($type, "color-4");
     }
+    &.yakit-active-button {
+        background: fetch-color($type, "color-6");
+        color: var(--ui-text-inverse-color);
+        border-color: fetch-color($type, "color-6");
+    }
 
     &:focus {
         background: fetch-color($type, "color-5");
@@ -56,6 +61,14 @@
         border-color: fetch-color($type, "color-1");
         svg {
             color: fetch-color($type, "color-4");
+        }
+    }
+    &.yakit-active-button {
+        background: fetch-color($type, "color-1");
+        color: fetch-color($type, "color-6");
+        border-color: fetch-color($type, "color-1");
+        svg {
+            color: fetch-color($type, "color-6");
         }
     }
 
@@ -113,6 +126,11 @@
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-4");
     }
+    &.yakit-active-button {
+        background: fetch-color($type, "color-1");
+        color: fetch-color($type, "color-6");
+        border-color: fetch-color($type, "color-6");
+    }
 
     &:focus {
         background: transparent;
@@ -144,7 +162,7 @@
 @mixin generateOutline2($type) {
     --button-wave-shadow-color: #{fetch-color($type, "color-2")};
 
-    background: transparent;
+    background: var(--ui-background-color);
     color: var(--ui-text-color);
     border-color: var(--yakit-border-color);
     svg {
@@ -152,16 +170,24 @@
     }
 
     &.yakit-hover-button {
-        background: transparent;
+        background: var(--ui-background-color);
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-4");
         svg {
             color: fetch-color($type, "color-4");
         }
     }
+    &.yakit-active-button {
+        background: var(--ui-background-color);
+        color: fetch-color($type, "color-6");
+        border-color: fetch-color($type, "color-6");
+        svg {
+            color: fetch-color($type, "color-6");
+        }
+    }
 
     &:focus {
-        background: transparent;
+        background: var(--ui-background-color);
         color: var(--ui-text-color);
         border-color: var(--yakit-border-color);
         svg {
@@ -169,7 +195,7 @@
         }
     }
     &:hover {
-        background: transparent;
+        background: var(--ui-background-color);
         color: fetch-color($type, "color-4");
         border-color: fetch-color($type, "color-4");
         svg {
@@ -177,7 +203,7 @@
         }
     }
     &:active {
-        background: transparent;
+        background: var(--ui-background-color);
         color: fetch-color($type, "color-6");
         border-color: fetch-color($type, "color-6");
         svg {
@@ -185,7 +211,7 @@
         }
     }
     &[disabled] {
-        background: transparent;
+        background: var(--ui-background-color);
         color: var(--yakit-disable-text-color);
         border-color: var(--yakit-border-color);
         svg {
@@ -193,7 +219,7 @@
         }
     }
     &[disabled]:hover {
-        background: transparent;
+        background: var(--ui-background-color);
         color: var(--yakit-disable-text-color);
         border-color: var(--yakit-border-color);
         svg {
@@ -212,6 +238,11 @@
     &.yakit-hover-button {
         background: transparent;
         color: fetch-color($type, "color-4");
+        border-color: transparent;
+    }
+    &.yakit-active-button {
+        background: transparent;
+        color: fetch-color($type, "color-6");
         border-color: transparent;
     }
 
@@ -258,6 +289,14 @@
         border-color: var(--yakit-background-color);
         svg {
             color: var(--ui-icon-color);
+        }
+    }
+    &.yakit-active-button {
+        background: var(--yakit-background-color);
+        color: fetch-color($type, "color-5");
+        border-color: var(--yakit-background-color);
+        svg {
+            color: fetch-color($type, "color-5");
         }
     }
 
@@ -319,12 +358,16 @@
     }
 
     &:global(.ant-btn-icon-only) {
-        padding: 3px;
+        padding: 2px;
+        svg {
+            width: 14px;
+            height: 14px;
+        }
     }
 }
 .yakit-button-size {
     height: 24px;
-    padding: 4px 8px;
+    padding: 3px 8px;
     font-weight: 500;
     font-size: 12px;
     & > :global(.anticon + span),
@@ -333,8 +376,8 @@
     }
 
     svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
     }
 
     &:global(.ant-btn-icon-only) {
@@ -352,21 +395,21 @@
     }
 
     svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
     }
 
     &:global(.ant-btn-icon-only) {
-        padding: 4px;
+        padding: 3px;
         svg {
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
         }
     }
 }
 .yakit-button-max-size {
     height: 32px;
-    padding: 6px 12px;
+    padding: 5px 12px;
     font-weight: 500;
     font-size: 14px;
     & > :global(.anticon + span),
@@ -375,12 +418,12 @@
     }
 
     svg {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
     }
 
     &:global(.ant-btn-icon-only) {
-        padding: 6px;
+        padding: 5px;
     }
 }
 .yakit-button {
@@ -399,6 +442,9 @@
         animation:
             fadeEffect 2s cubic-bezier(0.08, 0.82, 0.17, 1),
             waveEffect 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
+    }
+    &:global(.ant-btn .anticon) {
+        display: flex;
     }
 }
 
