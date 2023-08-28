@@ -17,7 +17,7 @@ const {ipcRenderer} = window.require("electron")
 
 
 export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
-    const [params, setParams] = useState<QueryWebShellRequest>({})
+    const [params, setParams] = useState<QueryWebShellRequest>(defQueryWebShellRequest)
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [loading, setLoading] = useState(false)
     const [available, setAvailable] = useState(false)
@@ -54,7 +54,11 @@ export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
 
 export interface QueryWebShellRequest {
     Pagination?: PaginationSchema
+    Tag: string
+}
 
+export const defQueryWebShellRequest: QueryWebShellRequest = {
+    Tag: ""
 }
 
 interface WebShellQueryProp {
@@ -66,7 +70,7 @@ interface WebShellQueryProp {
 
 const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
     const {advancedQuery, setAdvancedQuery} = props
-    const [params, setParams] = useState<QueryWebShellRequest>(props.defaultParams || {})
+    const [params, setParams] = useState<QueryWebShellRequest>(props.defaultParams || defQueryWebShellRequest)
     useEffect(() => {
         if (!props.onChange) {
             return
@@ -79,7 +83,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
             <div className={styles["cve-query"]}>
                 <div className={styles["cve-query-heard"]}>
                     <span>高级查询</span>
-                    <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery} />
+                    <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery}/>
                 </div>
                 <div className={styles["cve-query-body"]}>
                     <div className={styles["cve-query-text"]}>
@@ -87,7 +91,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                         <span
                             className={styles["cve-query-resetting"]}
                             onClick={() => {
-                                setParams({})
+                                setParams(defQueryWebShellRequest)
                             }}
                         >
                         重置

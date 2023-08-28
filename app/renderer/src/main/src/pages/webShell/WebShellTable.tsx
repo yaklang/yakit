@@ -1,24 +1,36 @@
-import React, {useMemo, useState} from 'react';
-import {QueryWebShellRequest} from "@/pages/webShell/WebShellViewer";
-import {CVEInspect} from "@/pages/cve/CVEInspect";
+import React, {useEffect, useMemo, useState} from 'react';
+import {defQueryWebShellRequest, QueryWebShellRequest} from "@/pages/webShell/WebShellViewer";
 import {ResizeBox} from "@/components/ResizeBox";
 import {WebShellDetail} from "@/pages/webShell/models";
-import {CVEDetail} from "@/pages/cve/models";
 import styles from "@/pages/cve/CVETable.module.scss";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {formatDate, formatTimestamp} from "@/utils/timeUtil";
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext";
-import {RefreshIcon} from "@/assets/newIcon";
+import {
+    ArrowCircleRightSvgIcon,
+    ChromeFrameSvgIcon,
+    IconSolidCodeIcon,
+    RefreshIcon,
+    SMViewGridAddIcon
+} from "@/assets/newIcon";
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize";
-import {QueryCVERequest} from "@/pages/cve/CVEViewer";
 import {Divider} from 'antd';
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType";
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
-import {useDebounceFn, useMemoizedFn} from 'ahooks';
-import classNames from 'classnames';
+import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from 'ahooks';
 import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema";
+import {CVEDetail} from "@/pages/cve/models";
+import {defQueryCVERequest} from "@/pages/cve/CVEViewer";
+import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss";
+import {showResponseViaResponseRaw} from "@/components/ShowInBrowser";
+import {yakitNotify} from "@/utils/notification";
+import {showDrawer, showModal} from "@/utils/showModal";
+import {HTTPFlow, onExpandHTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable";
+import {ConfigEngineProxy} from "@/utils/ConfigEngineProxy";
+import {analyzeFuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage";
+import {RemarkDetail, WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
 
 export interface WebShellManagerProp {
     available: boolean
@@ -27,12 +39,16 @@ export interface WebShellManagerProp {
     setAdvancedQuery: (b: boolean) => void
 }
 
+const {ipcRenderer} = window.require("electron")
+
+function emptyWebshell() {
+    return {} as WebShellDetail
+}
 
 export const WebShellTable: React.FC<WebShellManagerProp> = React.memo((props) => {
     const {available, advancedQuery, setAdvancedQuery} = props
     const [selected, setSelected] = useState<string>("")
-    const [webshell, setWebShell] = useState<WebShellDetail>({} as WebShellDetail)
-
+    const [webshell, setWebShell] = useState<WebShellDetail>(emptyWebshell)
 
     return (
         <>
@@ -87,6 +103,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
     const [params, setParams] = useState<QueryWebShellRequest>({...props.filter})
 
     const [data, setData] = useState<WebShellDetail[]>([])
+    const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)
 
     const [searchType, setSearchType] = useState<string>("")
 
@@ -99,12 +116,15 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             {
                 title: "ID",
                 dataKey: "ID",
-                width: 50
+                width: 50,
+                render: (_, i: WebShellDetail) => (
+                    i.Id
+                )
             },
             {
                 title: "状态",
                 dataKey: "Status",
-                width: 70,
+                width: 60,
                 render: (_, i: WebShellDetail) => (
                     i.Status ? "🟢" : "🔴"
                 )
@@ -118,18 +138,51 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                 title: "Type",
                 dataKey: "Type",
                 width: 70,
-                render: (text: string) =>
+                render: (_, i: WebShellDetail) =>
                     <YakitTag color='bluePurple'>
-                        {text}
+                        {i.ShellScript}
                     </YakitTag>
             },
             {
-                title: "影响产品",
-                dataKey: "Product",
+                title: "OS",
+                dataKey: "Os",
+                width: 70,
             },
             {
-                title: "漏洞级别",
-                dataKey: "BaseCVSSv2Score",
+                title: "Tag",
+                dataKey: "Tag",
+                render: (_, i: WebShellDetail) =>
+                    i.Tag ?
+                        <YakitTag color='bluePurple'>
+                            {i.Tag}
+                        </YakitTag> : null
+            },
+            {
+                title: "备注",
+                dataKey: "Remark",
+                render: (_, i: WebShellDetail) => (
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                        <div style={{overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                            {i.Remark}
+                        </div>
+                        {i.Remark && (
+                            <YakitButton
+                                type='primary'
+                                onClick={() => {
+                                    let m = showModal({
+                                        title: "备注",
+                                        width: "60%",
+                                        content: <RemarkDetail remark={i.Remark}/>,
+                                        modalAfterClose: () => m && m.destroy(),
+                                    })
+                                }}
+                                size={"small"}
+                            >
+                                详情
+                            </YakitButton>
+                        )}
+                    </div>
+                )
             },
             {
                 title: "添加时间",
@@ -139,19 +192,86 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                     sorterKey: "created_at",
                     sorter: true
                 }
+            },
+            {
+                title: "操作",
+                dataKey: "action",
+                width: 80,
+                fixed: "right",
+                render: (_, info: WebShellDetail) => {
+                    if (!info.Id) return <></>
+                    return (
+                        <div className={style["action-btn-group"]}>
+                            <IconSolidCodeIcon
+                                className={style["icon-style"]}
+                                onClick={() => {
+                                    let m = showDrawer({
+                                        title: "WebShell 编辑",
+                                        width: "80%",
+                                        content: <div><h1>Codec</h1></div>
+                                    })
+                                }}
+                            />
+                            <div className={style["divider-style"]}></div>
+
+                            <ArrowCircleRightSvgIcon
+                                className={style["icon-style"]}
+                                onClick={(e) => {
+                                    let m = showDrawer({
+                                        width: "80%",
+                                        content: <div> em </div>
+                                    })
+                                    //     m.destroy()
+                                }}
+                            />
+                        </div>
+                    )
+                }
             }
+
         ]
     }, [])
     const onRowClick = useMemoizedFn((record: WebShellDetail) => {
         setSelected(record.Id) // 更新当前选中的行
-        // setCVE(record)
+        setWebShell(record)
     })
     const [pagination, setPagination] = useState<PaginationSchema>({
         ...genDefaultPagination(20, 1),
         OrderBy: "created_at",
         Order: "desc"
     })
+
+
     const [total, setTotal] = useState(0)
+
+    useEffect(() => {
+        if (advancedQuery) return
+        setParams({
+            ...defQueryWebShellRequest,
+            Tag: params.Tag
+        })
+        setTimeout(() => {
+            update(1)
+        }, 100)
+    }, [advancedQuery])
+
+    useEffect(() => {
+        if (advancedQuery) {
+            setParams({
+                ...props.filter,
+                Tag: params.Tag
+            })
+        }
+    }, [props.filter, advancedQuery])
+
+    useDebounceEffect(
+        () => {
+            update(1)
+        },
+        [params],
+        {wait: 200}
+    )
+
     const update = useMemoizedFn(
         (page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
             const paginationProps = {
@@ -160,10 +280,35 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                 Limit: limit || pagination.Limit
             }
             setLoading(true)
-
+            const finalParams = {
+                ...params,
+                ...(extraParam ? extraParam : {}),
+                Pagination: paginationProps
+            }
+            ipcRenderer.invoke("QueryWebShells", finalParams)
+                .then((r: QueryGeneralResponse<WebShellDetail>) => {
+                    const d = Number(paginationProps.Page) === 1 ? r.Data : data.concat(r.Data)
+                    setData(d)
+                    setPagination(r.Pagination)
+                    setTotal(r.Total)
+                    if (Number(paginationProps.Page) === 1) {
+                        setIsRefresh(!isRefresh)
+                    }
+                })
+                .finally(() => setTimeout(() => setLoading(false), 300))
         }
     )
+
+    useUpdateEffect(() => {
+        if (dataBaseUpdateVisible) return
+        update(1)
+    }, [dataBaseUpdateVisible])
+
     const [currentSelectItem, setCurrentSelectItem] = useState<WebShellDetail>()
+    useEffect(() => {
+        if (!selected) return
+        setCurrentSelectItem(WebShell)
+    }, [selected])
     const onTableChange = useDebounceFn(
         (page: number, limit: number, sorter: SortProps, filter: any) => {
             setParams({
@@ -181,6 +326,8 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
         },
         {wait: 500}
     ).run
+
+    console.log("currentSelectItem ", currentSelectItem)
     return (
 
         <div className={styles["cve-list"]}>
@@ -241,25 +388,22 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                                             type='primary'
                                             onClick={() => {
                                                 // setDataBaseUpdateVisible(true)
-                                                showByRightContext({
-                                                    data: [
-                                                        {label: "只更新最新数据", key: "update-latest-data"},
-                                                        {label: "全量更新", key: "update-full-data"}
-                                                    ],
-                                                    onClick: (e) => {
-                                                        console.log("showByRightContext onClick ", e)
-                                                    }
+                                                let m = showModal({
+                                                    title: "添加 Shell",
+                                                    width: "60%",
+                                                    content: <WebShellCreatorForm />,
+                                                    modalAfterClose: () => m && m.destroy(),
                                                 })
                                             }}
                                         >
-                                            <RefreshIcon/>
-                                            数据库更新
+                                            <SMViewGridAddIcon/>
+                                            添加 Shell
                                         </YakitButton>
                                     </div>
                                 </div>
                             }
                             isRefresh={isRefresh}
-                            renderKey='WebShell'
+                            renderKey='Id'
                             data={data}
                             loading={loading}
                             enableDrag={true}
@@ -273,6 +417,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                             }}
                             currentSelectItem={currentSelectItem}
                             onChange={onTableChange}
+                            isShowTotal={true}
                         />
                     </>
                 ) : (
