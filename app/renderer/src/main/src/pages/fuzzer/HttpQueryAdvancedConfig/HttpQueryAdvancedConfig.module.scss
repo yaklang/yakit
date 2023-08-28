@@ -10,7 +10,7 @@
     background-color: var(--yakit-card-background-color);
 
     :global {
-        .ant-collapse>.ant-collapse-item>.ant-collapse-header {
+        .ant-collapse > .ant-collapse-item > .ant-collapse-header {
             padding: 8px 12px;
             align-items: center;
             line-height: 16px;
@@ -24,7 +24,7 @@
             margin-left: 8px;
         }
 
-        .ant-collapse-content>.ant-collapse-content-box {
+        .ant-collapse-content > .ant-collapse-content-box {
             padding: 12px;
         }
 
@@ -33,7 +33,7 @@
             height: 16px;
         }
 
-        .ant-collapse-ghost>.ant-collapse-item {
+        .ant-collapse-ghost > .ant-collapse-item {
             border-bottom: 1px solid var(--yakit-border-color);
 
             &:last-child {
@@ -113,7 +113,7 @@
         border-bottom: 0 !important;
 
         :global {
-            .ant-collapse-content>.ant-collapse-content-box {
+            .ant-collapse-content > .ant-collapse-content-box {
                 padding: 12px 0 0;
             }
         }
@@ -128,7 +128,7 @@
         color: var(--yakit-helper-text-color);
 
         :global {
-            .ant-collapse-item>.ant-collapse-header {
+            .ant-collapse-item > .ant-collapse-header {
                 height: 24px;
                 padding: 0 0 0 12px !important;
             }
@@ -137,11 +137,11 @@
                 color: var(--yakit-body-text-color);
             }
 
-            .ant-collapse-content>.ant-collapse-content-box {
+            .ant-collapse-content > .ant-collapse-content-box {
                 padding: 0 0 12px 12px;
             }
 
-            .ant-collapse-item>.ant-collapse-content>.ant-collapse-content-box {
+            .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
                 padding-top: 6px !important;
             }
         }
@@ -163,12 +163,13 @@
 
             .variable-list-remove {
                 display: none;
+                @include HTTPFuzzerPageShare.base-icon-card;
+                color: var(--yakit-danger-5);
 
                 &:hover {
-                    background: var(--yakit-background-color);
+                    color: var(--yakit-danger-5);
                 }
             }
-
             .variable-fuzzer-tag {
                 color: var(--yakit-header-color);
                 font-size: 12px;
@@ -351,7 +352,7 @@
         }
     }
 
-    .matchersList-item+.matchersList-item {
+    .matchersList-item + .matchersList-item {
         margin-top: 4px;
     }
 
