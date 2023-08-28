@@ -16,7 +16,7 @@ import {
     SMViewGridAddIcon
 } from "@/assets/newIcon";
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize";
-import {Divider} from 'antd';
+import {Button, Divider, Space, Tooltip} from 'antd';
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType";
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
 import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from 'ahooks';
@@ -31,6 +31,7 @@ import {HTTPFlow, onExpandHTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTab
 import {ConfigEngineProxy} from "@/utils/ConfigEngineProxy";
 import {analyzeFuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage";
 import {RemarkDetail, WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
+import { ReloadOutlined } from '@ant-design/icons';
 
 export interface WebShellManagerProp {
     available: boolean
@@ -327,7 +328,16 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
         {wait: 500}
     ).run
 
-    console.log("currentSelectItem ", currentSelectItem)
+    const refList = useMemoizedFn(() => {
+        setParams({
+            Tag : "",
+            Pagination: genDefaultPagination(20)
+        })
+        setTimeout(() => {
+            update()
+        }, 10)
+    })
+
     return (
 
         <div className={styles["cve-list"]}>
@@ -348,7 +358,18 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                                             </div>
                                         )}
                                         <div className={styles["cve-list-title"]}>WebShell 管理</div>
-
+                                        <Space>
+                                            <Tooltip title='刷新会重置所有查询条件'>
+                                                <Button
+                                                    size={"small"}
+                                                    type={"link"}
+                                                    onClick={() => {
+                                                        refList()
+                                                    }}
+                                                    icon={<RefreshIcon/>}
+                                                />
+                                            </Tooltip>
+                                        </Space>
                                     </div>
                                     <div className={styles["cve-list-title-extra"]}>
                                         <YakitCombinationSearch
