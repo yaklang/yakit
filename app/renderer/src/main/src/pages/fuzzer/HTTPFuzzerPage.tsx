@@ -1939,11 +1939,15 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     详情
                 </YakitButton>
                 <Tooltip title={showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"}>
-                    <OutlineAnnotationIcon
-                        className={classNames(styles["annotation-icon"], {
-                            [styles["annotation-icon-active"]]: showResponseInfoSecondEditor
-                        })}
-                        onClick={() => setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)}
+                    <YakitButton
+                        type='text2'
+                        size='small'
+                        icon={
+                            <OutlineAnnotationIcon
+                                onClick={() => setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)}
+                            />
+                        }
+                        isActive={showResponseInfoSecondEditor}
                     />
                 </Tooltip>
             </div>

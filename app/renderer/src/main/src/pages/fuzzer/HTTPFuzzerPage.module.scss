@@ -70,14 +70,6 @@
     align-items: center;
     height: 24px;
     gap: 8px;
-    .annotation-icon {
-        @include HTTPFuzzerPageShare.base-icon-card-size;
-        color: var(--ui-icon-color);
-    }
-    .annotation-icon-active {
-        background-color: var(--yakit-background-color);
-        color: var(--yakit-primary-5);
-    }
 }
 
 .second-node-search-content {
@@ -249,12 +241,12 @@
     flex: 1;
     height: 100%;
     justify-content: flex-start;
+    color: var(--yakit-header-color);
     &-heard {
         @extend .display-flex-center;
         justify-content: space-between;
         background: var(--yakit-disable-text-color);
         padding-right: 8px;
-        color: var(--yakit-header-color);
         border-top: 1px solid #fff;
         border-bottom: 1px solid #fff;
         &-tab {
