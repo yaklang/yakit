@@ -816,7 +816,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
-        console.log('httpParams',httpParams)
+        console.log("httpParams", httpParams)
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
@@ -955,6 +955,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             lastUpdateCount = 0
             setTimeout(() => {
                 setLoading(false)
+                getTotal()
             }, 500)
         })
 
@@ -1097,13 +1098,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     /**获取上一个/下一个 */
     const getList = useMemoizedFn((pageInt: number) => {
         setLoading(true)
-        const params={
+        const params = {
             FuzzerTabIndex: props.id,
             Pagination: {Page: pageInt, Limit: 1}
         }
-        console.log('params',params)
         ipcRenderer
-            .invoke("QueryHistoryHTTPFuzzerTaskEx",params)
+            .invoke("QueryHistoryHTTPFuzzerTaskEx", params)
             .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
@@ -1126,8 +1126,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         getList(currentPage - 1)
     })
     const onNextPage = useMemoizedFn(() => {
-        if (!total) return
-        if (currentPage == total) {
+        if (!Number(total)) return
+        if (currentPage >= Number(total)) {
             return
         }
         setCurrentPage(currentPage + 1)
@@ -1141,6 +1141,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const getTotal = useMemoizedFn(() => {
         ipcRenderer
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
+                FuzzerTabIndex: props.id,
                 Pagination: {Page: 1, Limit: 1}
             })
             .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
@@ -1376,11 +1377,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     <HTTPFuzzerHistorySelector
                                         currentSelectId={currentSelectId}
                                         onSelect={(e, page) => {
-                                            setCurrentPage(page)
+                                            // setCurrentPage(page)
                                             loadHistory(e)
                                         }}
                                         onDeleteAllCallback={() => {
-                                            setCurrentPage(0)
+                                            // setCurrentPage(0)
                                             getTotal()
                                         }}
                                     />
@@ -1461,7 +1462,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     />
                                     <ChevronRightIcon
                                         className={classNames(styles["chevron-icon"], {
-                                            [styles["chevron-icon-disable"]]: currentPage === Number(total) || !total
+                                            [styles["chevron-icon-disable"]]:
+                                                currentPage >= Number(total) || !Number(total)
                                         })}
                                         onClick={() => onNextPage()}
                                     />
