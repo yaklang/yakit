@@ -1899,6 +1899,7 @@ message HistoryHTTPFuzzerTasksResponse {
 message QueryHistoryHTTPFuzzerTaskExParams {
   Paging Pagination = 1;
   string Keyword = 2;
+  string FuzzerTabIndex =3;
 }
 
 message ExecutePacketYakScriptParams {
