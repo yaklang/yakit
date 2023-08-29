@@ -125,7 +125,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             {
                 title: "状态",
                 dataKey: "Status",
-                width: 60,
+                width: 50,
                 render: (_, i: WebShellDetail) => (
                     i.Status ? "🟢" : "🔴"
                 )
@@ -133,6 +133,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             {
                 title: "URL",
                 dataKey: "Url",
+                width: 160,
                 render: (_, i: WebShellDetail) => i.Url
             },
             {
@@ -161,6 +162,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             {
                 title: "备注",
                 dataKey: "Remark",
+                width: 100,
                 render: (_, i: WebShellDetail) => (
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                         <div style={{overflow: 'hidden', textOverflow: 'ellipsis'}}>
@@ -353,7 +355,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                                     <div className={styles["cve-list-title-left"]}>
                                         {!advancedQuery && (
                                             <div className={styles["cve-list-title-query"]}>
-                                                <span className={styles["cve-list-title-query-text"]}>高级查询</span>
+                                                <span className={styles["cve-list-title-query-text"]}>高级设置</span>
                                                 <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery}/>
                                             </div>
                                         )}

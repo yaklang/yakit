@@ -1,6 +1,7 @@
 import {yakitFailed} from "@/utils/notification";
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin";
 import styles from "@/pages/cve/CVETable.module.scss";
+import fuzzerStyles from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss";
 import React, {useEffect, useState} from "react";
 import {useMemoizedFn} from "ahooks";
 import {PaginationSchema} from "@/pages/invoker/schema";
@@ -80,22 +81,14 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
 
     return (
         <>
-            <div className={styles["cve-query"]}>
-                <div className={styles["cve-query-heard"]}>
-                    <span>高级查询</span>
-                    <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery}/>
+            <div className={fuzzerStyles["http-query-advanced-config"]}>
+                <div className={fuzzerStyles["advanced-config-heard"]}>
+                    <span>高级设置</span>
+                    <YakitSwitch wrapperClassName={fuzzerStyles["btn-padding-right-0"]} checked={advancedQuery} onChange={setAdvancedQuery}/>
                 </div>
                 <div className={styles["cve-query-body"]}>
                     <div className={styles["cve-query-text"]}>
-                        <span>CVE 查询条件</span>
-                        <span
-                            className={styles["cve-query-resetting"]}
-                            onClick={() => {
-                                setParams(defQueryWebShellRequest)
-                            }}
-                        >
-                        重置
-                    </span>
+                        <span>编解码配置</span>
                     </div>
                     <div className={styles["cve-query-item"]}>
                         <div>利用路径</div>
