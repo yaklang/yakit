@@ -770,10 +770,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [props.isHttps, props.isGmTLS, props.request])
 
-    const onSetFuzzerAdvancedConfig=useMemoizedFn(()=>{
+    const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
         onSetAdvancedConfig(!advancedConfig)
     })
-    
+
     const refreshRequest = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
     })
@@ -1313,7 +1313,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [successFuzzer])
 
     const [exportData, setExportData] = useState<FuzzerResponse[]>([])
-   
+
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
