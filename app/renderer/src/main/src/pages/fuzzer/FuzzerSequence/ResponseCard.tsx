@@ -30,7 +30,7 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
 
     const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
     const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
-    
+
     const [extractedMap, {setAll, reset}] = useMap<string, string>()
 
     const isShowRef = useRef<boolean>(false)
@@ -120,9 +120,9 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         setQuery={(q) => setQuery({...q})}
                         sendPayloadsType='allSequenceList'
                         size='middle'
-                        setShowExtra={setShowExtra}
-                        showResponseInfoSecondEditor={showResponseInfoSecondEditor}
-                        setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+                        setShowExtra={()=>{}}
+                        showResponseInfoSecondEditor={true}
+                        setShowResponseInfoSecondEditor={()=>{}}
                     />
                     <Divider type='vertical' style={{marginRight: 0}} />
                     <YakitButton onClick={() => setShowAllResponse()} type='text2' icon={<OutlineReplyIcon />}>
