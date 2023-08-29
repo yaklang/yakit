@@ -75,7 +75,7 @@ import {randomString} from "@/utils/randomUtil"
 import {getLocalValue, getRemoteValue} from "@/utils/kv"
 import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {ResizeCardBox} from "@/components/ResizeCardBox/ResizeCardBox"
-import {NewHTTPPacketEditor} from "@/utils/editors"
+import {HTTP_PACKET_EDITOR_Response_Info, NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
@@ -625,7 +625,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     InheritCookies: item.inheritCookies,
                     InheritVariables: item.inheritVariables,
                     FuzzerIndex: item.id,
-                    FuzzerTabIndex:item.pageId
+                    FuzzerTabIndex: item.pageId
                 }
                 setRequest(item.id, webFuzzerPageInfo.advancedConfigValue)
                 httpParams.push(httpParamsItem)
@@ -1194,6 +1194,9 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     const [hotPatchCode, setHotPatchCode] = useState<string>("")
     const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
 
+    const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
+    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
+
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
     // const [inViewport] = useInViewport(secondNodeRef)
@@ -1208,6 +1211,15 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     }, [cachedTotal])
 
     const {getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode()
+    useEffect(() => {
+        getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
+            .then((data) => {
+                setShowResponseInfoSecondEditor(data === "false" ? false : true)
+            })
+            .catch(() => {
+                setShowResponseInfoSecondEditor(true)
+            })
+    }, [])
 
     useEffect(() => {
         if (!pageId) return
@@ -1298,6 +1310,9 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                             query={query}
                             setQuery={(q) => setQuery({...q})}
                             sendPayloadsType='fuzzerSequence'
+                            setShowExtra={setShowExtra}
+                            showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                            setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                         />
                     )
                 }}
@@ -1347,6 +1362,10 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                                 defActiveKey={""}
                                 defActiveType={"matchers"}
                                 onSaveMatcherAndExtraction={() => {}}
+                                showExtra={showExtra}
+                                setShowExtra={setShowExtra}
+                                showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                                setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                             />
                         ) : (
                             <>

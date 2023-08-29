@@ -45,6 +45,7 @@ import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitProtoCheckbox} from "./YakitProtoCheckbox/YakitProtoCheckbox"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
+import { randomString } from "@/utils/randomUtil"
 const {RangePicker} = DatePicker
 
 /**
@@ -976,7 +977,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     />
                                 ))}
                             </div>
-                            <DndProvider backend={HTML5Backend}>
+                            <DndProvider backend={HTML5Backend} key={randomString(8)}>
                                 <div ref={wrapperRef} className={classNames(styles["virtual-table-list"])}>
                                     {columns.map((columnsItem, index) => (
                                         <ColRender
