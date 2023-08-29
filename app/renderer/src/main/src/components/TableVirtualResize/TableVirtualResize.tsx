@@ -980,7 +980,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     />
                                 ))}
                             </div>
-                            <DndProvider backend={HTML5Backend}>
+                            {/* <DndProvider backend={HTML5Backend}> */}
                                 <div ref={wrapperRef} className={classNames(styles["virtual-table-list"])}>
                                     {columns.map((columnsItem, index) => (
                                         <ColRender
@@ -1011,7 +1011,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         />
                                     ))}
                                 </div>
-                            </DndProvider>
+                            {/* </DndProvider> */}
                         </div>
                         <div
                             className={classNames(styles["virtual-table-list-pagination"])}
