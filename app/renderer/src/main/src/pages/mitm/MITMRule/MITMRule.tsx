@@ -710,6 +710,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             setVisible(false)
         }
     })
+    console.log("getContainer ",getContainer)
     return (
         <>
             <YakitDrawer
