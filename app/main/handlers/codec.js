@@ -55,6 +55,7 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
+                console.log(data)
                 resolve(data)
             })
         })

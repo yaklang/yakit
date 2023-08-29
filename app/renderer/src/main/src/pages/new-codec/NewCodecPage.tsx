@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { AutoCard } from "@/components/AutoCard";
-import { Avatar, Button, Form, Menu, Popconfirm, Progress, Space, Tag } from "antd";
+import {Avatar, Button, Dropdown, Form, Menu, Popconfirm, Progress, Select, Space, Tag} from "antd";
 import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str";
 import "./style.css"
 import { YakCodeEditor } from "@/utils/editors";
 import { DragPreviewImage, useDrag } from "react-dnd";
 import { YakExecutorParam } from "@/pages/invoker/YakExecutorParams";
-import { CodecType } from "@/pages/codec/CodecPage";
-import { YakScriptParam } from "@/pages/invoker/schema";
+import {YakScript, YakScriptParam} from "@/pages/invoker/schema";
 import { map } from "rxjs/operators";
 import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton";
 import { failed } from "@/utils/notification";
@@ -24,8 +23,22 @@ import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal";
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {useCreation, useDebounceEffect, useHover, useMemoizedFn, useThrottleFn} from "ahooks"
 import {EnhancedPrivateRouteMenuProps} from "@/pages/layout/HeardMenu/HeardMenuType";
+import style from "@/pages/customizeMenu/CustomizeMenu.module.scss";
+import {queryYakScriptList} from "@/pages/yakitStore/network";
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
+import {CodecPluginTemplate} from "@/pages/invoker/data/CodecPluginTemplate";
+import {values} from "@antv/util";
 export interface NewCodecPageProp {
 
+}
+
+interface CodecType {
+    key?: string
+    verbose: string
+    subTypes?: CodecType[]
+    params?: YakScriptParam[]
+    help?: React.ReactNode
+    isYakScript?: boolean
 }
 
 
@@ -228,10 +241,14 @@ interface work {
     CodecType: string
     Script: string
     PluginName: string
-    Params: YakExecutorParam[]
+    Params: encryptionParam[]
 }
 
 
+interface encryptionParam {
+    Key: string
+    Value: string
+}
 
 
 const { ipcRenderer } = window.require("electron");
@@ -245,29 +262,6 @@ const CodecCtx = createContext<{
 
 export const NewCodecPage: React.FC<NewCodecPageProp> = (props) => {
     const [openIndex, setOpenIndex] = useState(-1);
-    // const ctx = useContext(CodecCtx)
-    // const {workFlow,setWorkFlow} = ctx!
-    // const onDragEnd = useMemoizedFn((result) => {
-    //     if (result.destination.droppableId === "workList") {
-    //         if(result.source.droppableId === "workList"){
-    //             const [remove] = workFlow.splice(result.source.index, 1);
-    //             workFlow.splice(result.destination.index, 0, remove);
-    //             setWorkFlow(workFlow)
-    //         }
-    //         if(codecAllList[result.source.droppableId] !== undefined){
-    //             const type = codecAllList[result.source.droppableId].subTypes![result.source.index].key
-    //             const itemWork: work = {
-    //                 CodecType: type,
-    //                 Script: "",
-    //                 PluginName:"",
-    //                 Params: []
-    //             }
-    //             workFlow.splice(result.destination.index, 0,itemWork);
-    //             setWorkFlow(workFlow)
-    //         }
-    //     }
-    // })
-
 
     return  <Context>
         <div className="container">
@@ -285,7 +279,6 @@ export const NewCodecPage: React.FC<NewCodecPageProp> = (props) => {
 
     </Context>
 };
-
 
 
 //Context组件
@@ -319,13 +312,6 @@ const CodecTypeItem = ({ codecDate,listKey }) => {
     return <Menu selectedKeys={selectedKeys}>
         {codecDate.map((date, index) => (
 
-            // <Draggable key={index} draggableId={listKey} index={index}>
-            //     {(provided, snapshot) => (
-            //         <div
-            //             ref={provided.innerRef}
-            //             {...provided.draggableProps}
-            //             {...provided.dragHandleProps}
-            //         >
                         <Menu.Item
                             key={index}
                             onClick={() => {
@@ -341,10 +327,6 @@ const CodecTypeItem = ({ codecDate,listKey }) => {
                         }>
                             <span>{date.verbose}</span>
                         </Menu.Item>
-                //     </div>
-                // )}
-            // </Draggable>
-
 
         ))}
     </Menu>
@@ -353,16 +335,55 @@ const CodecTypeItem = ({ codecDate,listKey }) => {
 //WorkFlow Codec工作流
 const CodecWorkFlow = () => {
     const ctx = useContext(CodecCtx)
-    const { workFlow, setWorkFlow } = ctx!
+    const {workFlow,setWorkFlow} = ctx!
+    const onDragEnd = useMemoizedFn((result) => {
+        if (result.destination.droppableId === "workList") {
+            if(result.source.droppableId === "workList"){
+                const [remove] = workFlow.splice(result.source.index, 1);
+                workFlow.splice(result.destination.index, 0, remove);
+                setWorkFlow(workFlow)
+            }
+        }
+    })
+
 
     return (
-        <div className={menuStyle["second-menu"]}>
-            <div className={menuStyle["second-menu-list"]}>
-                {workFlow.map((item, index) => {
-                    return <CodecWork index={index} type={item.CodecType}></CodecWork>
-            })}
+        <DragDropContext onDragEnd={onDragEnd}>
+            <div className={menuStyle["second-menu"]}>
+                <div className={menuStyle["second-menu-list"]}>
+                    <Droppable droppableId = "workList">
+                    {(provided, snapshot) => (
+                        <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className={style["second-menu-drop"]}
+                            style={{marginBottom: 70}}
+                        >
+                            {workFlow.map((item, index) => (
+                                <Draggable
+                                    key={index}
+                                    draggableId={index.toString()}
+                                    index={index}
+                                >
+                                    {(provided, snapshot) => (
+                                        <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            key={index}
+                                        >
+                                        <CodecWork index={index} type={item.CodecType} isDragging={snapshot.isDragging}></CodecWork>
+                                        </div>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                    </Droppable>
+                </div>
             </div>
-        </div>
+        </DragDropContext>
     )
 }
 
@@ -370,42 +391,95 @@ const CodecWorkFlow = () => {
 interface workProps {
     type: string
     index: number
+    isDragging: boolean
+    verbose?:string
 }
 
+interface CodecPlugin{
+    value:string
+    label:string
+}
+
+
 const CodecWork: React.FC<workProps> = React.memo((props) => {
-    const ctx = useContext(CodecCtx)
-    const { type, index } = props
-    const verbose = AllTypeMap.get(type)
-    const { workFlow, setWorkFlow } = ctx!
-    const [visibleSubWork, setvisibleSubWork] = useState(false)
-    const [needCode, setNeedCode] = useState(false)
-    const [needParam, setNeedParam] = useState(false)
-    const [needPlugin,setNeedPlugin] = useState(false)
+    //常量定义
+    const { type, index,isDragging } = props
+    let verbose = AllTypeMap.get(type)
+    let needCode= false
+    let needParam= false
+    let needPlugin= false
+
 
     switch (type) {
         case 'custom-script':
-            setNeedCode(true)
-            break
+            verbose = "临时插件"
+            return <CustomWork isDragging={isDragging} verbose={verbose} index={index} type={type} ></CustomWork>
         case 'plugin':
-            setNeedPlugin(true)
-            break
+            verbose = "社区插件"
+            return <PluginWork isDragging={isDragging} verbose={verbose} index={index} type={type} ></PluginWork>
         default:
             if(type.includes("sm4") || type.includes("aes")) {
-                setNeedParam(true)
+                return <ParamsWork isDragging={isDragging} verbose={verbose} index={index} type={type} ></ParamsWork>
             }
+            return <DefaultWork isDragging={isDragging} verbose={verbose} index={index} type={type} ></DefaultWork>
     }
 
-
-    return (
+})
+//默认work
+const DefaultWork = (props:workProps) => {
+    const { verbose, index,isDragging } = props
+    const ctx = useContext(CodecCtx)
+    const { workFlow, setWorkFlow } = ctx!
+    return(
         <div className={menuStyle["second-menu-item-content"]}>
             <div
                 className={classNames(menuStyle["second-menu-item"], {
-                    [menuStyle["menu-item-drag"]]: false
+                    [menuStyle["menu-item-drag"]]: isDragging
                 })}
             >
                 <DragSortIcon
                     className={classNames({
-                        [menuStyle["content-icon-active"]]: true
+                        [menuStyle["content-icon-active"]]: isDragging
+                    })}
+                />
+
+                <div className={menuStyle["second-menu-label-body"]}>
+                    <div className={menuStyle["second-menu-label-content"]}>
+                        <span className={menuStyle["second-menu-label"]}>{verbose}</span>
+                    </div>
+                    <div className={menuStyle["second-menu-describe"]}>
+
+                    </div>
+                </div>
+                <YakitButton size="small" type="text2" icon={<RemoveIcon className={style['close-icon']} />} onClick={() => {
+                    const newWorkFlow = [...workFlow]
+                    newWorkFlow.splice(index, 1);
+                    setWorkFlow(newWorkFlow);
+                }} />
+            </div>
+        </div>
+    )
+}
+//自定义临时插件work
+const CustomWork = (props:workProps) => {
+    const { verbose, index,isDragging } = props
+    const [visibleSubWork, setvisibleSubWork] = useState(false)
+    const ctx = useContext(CodecCtx)
+    const { workFlow, setWorkFlow } = ctx!
+    if (workFlow[index].Script == null || workFlow[index].Script.trim().length === 0) {
+        workFlow[index].Script = CodecPluginTemplate
+    }
+    let customScript = workFlow[index].Script
+    return(
+        <div className={menuStyle["second-menu-item-content"]}>
+            <div
+                className={classNames(menuStyle["second-menu-item"], {
+                    [menuStyle["menu-item-drag"]]: isDragging
+                })}
+            >
+                <DragSortIcon
+                    className={classNames({
+                        [menuStyle["content-icon-active"]]: isDragging
                     })}
                 />
                 <YakitModal
@@ -413,33 +487,35 @@ const CodecWork: React.FC<workProps> = React.memo((props) => {
                     footer={null}
                     visible={visibleSubWork}
                     onCancel={() => setvisibleSubWork(false)}
+                    width= {800}
                 >
+
                     <div className={menuStyle["subMenu-edit-modal"]}>
                         <div className={menuStyle["subMenu-edit-modal-heard"]}>
-                            <div className={menuStyle["subMenu-edit-modal-title"]}>修改菜单名称</div>
+                            <div className={menuStyle["subMenu-edit-modal-title"]}>编写临时插件</div>
                             <div className={menuStyle["close-icon"]} onClick={() => setvisibleSubWork(false)}>
                                 <RemoveIcon />
                             </div>
                         </div>
-                        <div className={menuStyle["subMenu-edit-modal-body"]}>
-                            <YakitInput.TextArea
-                                autoSize={{ minRows: 3, maxRows: 3 }}
-                                showCount
-                                value={"test"}
-                                maxLength={50}
-                            />
+                        <div className={menuStyle["subMenu-edit-modal-body"]} >
+                            <div className="top" style={{height:600}}>
+                                <YakCodeEditor
+                                    noTitle={true}
+                                    language={"yak"}
+                                    originValue={Buffer.from(customScript, "utf8")}
+                                    hideSearch={true}
+                                    onChange={i => {customScript = Uint8ArrayToString(i, "utf8")}}
+                                    noHex={false}
+                                    noHeader={true}
+                                />
+
+                            </div>
                         </div>
                         <div className={menuStyle["subMenu-edit-modal-footer"]}>
-                            <YakitButton
-                                type='outline2'
-                                onClick={() => {
-                                    setvisibleSubWork(false)
-                                }}
-                            >
-                                取消
-                            </YakitButton>
                             <YakitButton type='primary' onClick={() => {
+                                workFlow[index].Script = customScript
                                 setvisibleSubWork(false)
+                                setWorkFlow(workFlow)
                             }} >
                                 确定
                             </YakitButton>
@@ -449,32 +525,293 @@ const CodecWork: React.FC<workProps> = React.memo((props) => {
                 <div className={menuStyle["second-menu-label-body"]}>
                     <div className={menuStyle["second-menu-label-content"]}>
                         <span className={menuStyle["second-menu-label"]}>{verbose}</span>
-                        { (needCode || needParam) &&(
-                            <PencilAltIcon
-                                className={menuStyle["second-menu-edit-icon"]}
-                                onClick={() => {
-                                    setvisibleSubWork(true)
-                                }}
-                            />
-                        )}
+                        <PencilAltIcon
+                            className={menuStyle["second-menu-edit-icon"]}
+                            onClick={() => {
+                                setvisibleSubWork(true)
+                            }}
+                        />
                     </div>
                     <div className={menuStyle["second-menu-describe"]}>
 
                     </div>
                 </div>
-                <div className={menuStyle["close-icon"]} onClick={() => {
+                <YakitButton size="small" type="text2" icon={<RemoveIcon className={style['close-icon']} />} onClick={() => {
                     const newWorkFlow = [...workFlow]
                     newWorkFlow.splice(index, 1);
                     setWorkFlow(newWorkFlow);
-                }}>
-                    <RemoveIcon />
-                </div>
+                }} />
             </div>
         </div>
     )
-})
+}
+
+//社区插件work
+const PluginWork = (props:workProps) => {
+    const { verbose, index,isDragging } = props
+    const ctx = useContext(CodecCtx)
+    const { workFlow, setWorkFlow } = ctx!
+    const [codecPlugin,setCodecPlugin] = useState<CodecPlugin[]>([])
+    if (codecPlugin.length === 0 ){
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                if (!total || total == 0) {
+                    return
+                }
+                setCodecPlugin(i.map((script) => {
+                    return {
+                        value: script.ScriptName,
+                        label: script.ScriptName,
+                    } as CodecPlugin
+                }))
+            }
+        )
+    }
+
+    return (
+        <div className={menuStyle["second-menu-item-content"]}>
+            <div
+                className={classNames(menuStyle["second-menu-item"], {
+                    [menuStyle["menu-item-drag"]]: isDragging
+                })}
+            >
+                <DragSortIcon
+                    className={classNames({
+                        [menuStyle["content-icon-active"]]: isDragging
+                    })}
+                />
+
+                <div className={menuStyle["second-menu-label-body"]}>
+                    <div className={menuStyle["second-menu-label-content"]}>
+                        <span className={menuStyle["second-menu-label"]}>{verbose}</span>
+                    </div>
+                    <div className={menuStyle["second-menu-describe"]}>
+                         <Select
+                            value={workFlow[index].PluginName}
+                            showSearch
+                            style={{ width: 200 }}
+                            // placeholder={workFlow[index].PluginName}
+                            optionFilterProp="children"
+                            filterOption={(input, option) => ((option?.label as string) ||"").includes(input)}
+                            filterSort={(optionA, optionB) =>
+                                ((optionA?.label  as string) || '').toLowerCase().localeCompare(((optionB?.label as string) || '').toLowerCase())
+                            }
+                            onSelect={(val)=>{
+                                workFlow[index].PluginName = val
+                            }}
+                            options={codecPlugin}
+                        />
+                    </div>
+                </div>
+                <YakitButton size="small" type="text2" icon={<RemoveIcon className={style['close-icon']} />} onClick={() => {
+                    const newWorkFlow = [...workFlow]
+                    newWorkFlow.splice(index, 1);
+                    setWorkFlow(newWorkFlow);
+                }} />
+            </div>
+        </div>
+    )
+}
+
+//需要参数的work
+
+const ParamsWork = (props:workProps) => {
+    const { verbose, index,isDragging ,type} = props
+    const ctx = useContext(CodecCtx)
+    const { workFlow, setWorkFlow } = ctx!
+    const [visibleSubWork, setvisibleSubWork] = useState(false)
+    const regexAesKey = "^(?:[0-9a-fA-F]{32}|[0-9a-fA-F]{48}|[0-9a-fA-F]{64})$"
+    const regexSm4Key = "^[0-9a-fA-F]{32}$"
+    let needIv = true
+    let checkKeyFunc = (_,value) => {}
+    let checkIvFunc = (_,value) => {}
 
 
+
+    const parts = type.split("-")
+    const alg = parts[0]
+    const mode = parts[1]
+
+    const checkFuncMaker = (reg:string,checkTarget:string)=>{
+        return (_,value) => {
+            const regex = new RegExp(reg)
+            if (!regex.test(value)){
+                return Promise.reject('不合法的'+checkTarget)
+            }
+            return Promise.resolve();
+        }
+    }
+
+    const getRegByModeAndAlg = (alg:string,mode:string) =>{
+        let len = "32"
+        switch (alg) {
+            case "aes":
+                len = "32"
+                break
+            case "sm4":
+                len = "32"
+        }
+        return "^[0-9a-fA-F]{"+len+"}$"
+    }
+
+    if(alg === "aes"){
+        checkKeyFunc = checkFuncMaker(regexAesKey,"key")
+    }else if (alg === "sm4" ){
+        checkKeyFunc = checkFuncMaker(regexSm4Key,"key")
+    }
+
+    switch (mode) {
+        case "ebc":
+            needIv = false
+            break
+        default:
+            checkIvFunc = checkFuncMaker(getRegByModeAndAlg(alg,mode),"iv")
+    }
+
+    //参数表单
+    const [form] = Form.useForm();
+    //表单布局
+    const formItemLayout = {
+        labelCol: { span: 8 },
+        wrapperCol: { span: 15 },
+    }
+    const formTailLayout = {
+        labelCol: { span: 8 },
+        wrapperCol: { span: 15, offset: 21 },
+    }
+
+    let data = {
+        key:"",
+        iv:""
+    }
+    for (let i = 0; i < workFlow[index].Params.length; i++) {
+        let param = workFlow[index].Params[i]
+        if (param.Key === "key"){
+            data.key = param.Value
+
+        }else if (param.Key === "iv"){
+            data.iv = param.Value
+        }
+    }
+    form.setFieldsValue(data)
+
+    //更新参数
+    const updateParams = ()=>{
+        form.validateFields().then(() => {
+            const values = form.getFieldsValue(['key','iv'])
+            console.log(values)
+            const newParams: encryptionParam[] = [];
+
+            newParams.push({
+                Key:"key",
+                Value:values.key
+            })
+
+            if(values.iv != undefined){
+                newParams.push({
+                    Key:"iv",
+                    Value:values.iv
+                })
+            }
+
+            workFlow[index].Params = newParams
+            setvisibleSubWork(false)
+            setWorkFlow(workFlow)
+            }).catch((error) => {});
+    }
+    return (<div className={menuStyle["second-menu-item-content"]}>
+        <div
+            className={classNames(menuStyle["second-menu-item"], {
+                [menuStyle["menu-item-drag"]]: isDragging
+            })}
+        >
+            <DragSortIcon
+                className={classNames({
+                    [menuStyle["content-icon-active"]]: isDragging
+                })}
+            />
+             <YakitModal
+                closable={false}
+                footer={null}
+                visible={visibleSubWork}
+                onCancel={() => setvisibleSubWork(false)}
+            >
+
+                <div className={menuStyle["subMenu-edit-modal"]}>
+                    <div className={menuStyle["subMenu-edit-modal-heard"]}>
+                        <div className={menuStyle["subMenu-edit-modal-title"]}>设置参数</div>
+                        <div className={menuStyle["close-icon"]} onClick={() => setvisibleSubWork(false)}>
+                            <RemoveIcon />
+                        </div>
+                    </div>
+
+                    <div className={menuStyle["subMenu-edit-modal-body"]}>
+                        <Form form={form} >
+                            <Form.Item
+                                {...formItemLayout}
+                                name="key"
+                                label="密钥（HEX 编码）"
+                                rules={[
+                                    {
+                                        required: true,
+                                    },
+                                    {
+                                        validator: checkKeyFunc
+                                    }
+                                ]}
+
+                            >
+                                <YakitInput placeholder="Please input your key"/>
+                            </Form.Item>
+                            {needIv &&
+                                <Form.Item
+                                    {...formItemLayout}
+                                    name="iv"
+                                    label="IV-初始块（HEX 编码）"
+                                    rules={[
+                                        {
+                                            required: true,
+                                        },
+                                        {
+                                            validator: checkIvFunc
+                                        }
+                                    ]}
+                                >
+                                    <YakitInput placeholder="Please input your iv" />
+                                </Form.Item>
+                            }
+                            <Form.Item {...formTailLayout}>
+                                <YakitButton type="primary" onClick={updateParams}>
+                                    设置
+                                </YakitButton>
+                            </Form.Item>
+                        </Form>
+                    </div>
+
+
+                </div>
+            </YakitModal>
+            <div className={menuStyle["second-menu-label-body"]}>
+                <div className={menuStyle["second-menu-label-content"]}>
+                    <span className={menuStyle["second-menu-label"]}>{verbose}</span>
+                    <PencilAltIcon
+                        className={menuStyle["second-menu-edit-icon"]}
+                        onClick={() => {
+                            setvisibleSubWork(true)
+                        }}
+                    />
+                </div>
+            </div>
+            <YakitButton size="small" type="text2" icon={<RemoveIcon className={style['close-icon']} />} onClick={() => {
+                const newWorkFlow = [...workFlow]
+                newWorkFlow.splice(index, 1);
+                setWorkFlow(newWorkFlow);
+            }} />
+        </div>
+    </div>
+)
+}
 
 //输入框
 const CodecEditor = () => {
@@ -503,6 +840,9 @@ const CodecEditor = () => {
 
 
     useEffect(() => {
+        if (text.length === 0){
+            setResult("")
+        }
         newCodec(text, workFlow)
     }, [text])
 
@@ -513,6 +853,7 @@ const CodecEditor = () => {
     return <div className="right">
         <div className="top">
             <YakCodeEditor
+                noMinimap={true}
                 noTitle={true}
                 language={"text"}
                 originValue={Buffer.from(text, "utf8")}
@@ -524,6 +865,7 @@ const CodecEditor = () => {
         </div>
         <div className="bottom">
             <YakCodeEditor
+                noMinimap={true}
                 noTitle={true}
                 language={"text"}
                 readOnly={true}
