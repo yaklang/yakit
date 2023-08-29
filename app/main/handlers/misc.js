@@ -575,4 +575,20 @@ module.exports = (win, getClient) => {
         let stream = getClient().DiagnoseNetworkDNS(params);
         handlerHelper.registerHandler(win, stream, streamDiagnoseNetworkDNSMap, token)
     })
+
+    // asyncRequestYakURL wrapper
+    const asyncRequestYakURL = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().RequestYakURL(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("RequestYakURL", async (e, params) => {
+        return await asyncRequestYakURL(params)
+    })
 }
