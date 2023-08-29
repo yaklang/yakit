@@ -133,7 +133,6 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             {
                 title: "URL",
                 dataKey: "Url",
-                width: 160,
                 render: (_, i: WebShellDetail) => i.Url
             },
             {
@@ -153,6 +152,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             {
                 title: "Tag",
                 dataKey: "Tag",
+                width: 80,
                 render: (_, i: WebShellDetail) =>
                     i.Tag ?
                         <YakitTag color='bluePurple'>
@@ -162,7 +162,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             {
                 title: "备注",
                 dataKey: "Remark",
-                width: 100,
+                width: 120,
                 render: (_, i: WebShellDetail) => (
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                         <div style={{overflow: 'hidden', textOverflow: 'ellipsis'}}>

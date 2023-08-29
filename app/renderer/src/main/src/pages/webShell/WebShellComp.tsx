@@ -90,9 +90,9 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
                 />
                 <Form.Item colon={false} label={" "}>
                     <Space>
-                        <Button type='primary' onClick={createWebShell} loading={createLoading}>
+                        <YakitButton onClick={createWebShell} loading={createLoading}>
                             保存
-                        </Button>
+                        </YakitButton>
                     </Space>
                 </Form.Item>
             </Form>
