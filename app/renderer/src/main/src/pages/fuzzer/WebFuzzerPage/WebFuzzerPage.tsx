@@ -47,7 +47,7 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
         if (key === "config") {
             ipcRenderer.invoke("send-ref-webFuzzer-request", {type: key})
         }
-    })
+    }) 
     return (
         <div className={styles["web-fuzzer"]}>
             <div className={styles["web-fuzzer-tab"]}>

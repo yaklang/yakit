@@ -70,6 +70,7 @@ import {MainOperatorContext} from "../MainContext"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
+import emiter from "@/utils/eventBus"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -1648,6 +1649,9 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }, [pageItem.multipleLength])
     const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         setType(res.type)
+        if(type===res.type&&res.type==='config'){
+            emiter.emit("onSetFuzzerAdvancedConfigShow")
+        }
     })
     /**页面聚焦 */
     const onFocusPage = useMemoizedFn(() => {

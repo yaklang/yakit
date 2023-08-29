@@ -106,6 +106,7 @@ import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNo
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
+import emiter from "@/utils/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -579,6 +580,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const {getPageNodeInfoByPageId} = usePageNode()
 
     useEffect(() => {
+        emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
+        return () => {
+            emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
+        }
+    }, [])
+
+    useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
             .then((data) => {
                 setShowResponseInfoSecondEditor(data === "false" ? false : true)
@@ -761,6 +769,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             resetResponse()
         }
     }, [props.isHttps, props.isGmTLS, props.request])
+
+    const onSetFuzzerAdvancedConfig=useMemoizedFn(()=>{
+        onSetAdvancedConfig(!advancedConfig)
+    })
+    
     const refreshRequest = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
     })
@@ -1300,6 +1313,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [successFuzzer])
 
     const [exportData, setExportData] = useState<FuzzerResponse[]>([])
+   
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
@@ -1351,12 +1365,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             发送请求
                         </YakitButton>
                     )}
-                    {!advancedConfig && (
+                    {/* {!advancedConfig && (
                         <div className={styles["display-flex"]}>
                             <span>高级配置</span>
                             <YakitSwitch checked={advancedConfig} onChange={onSetAdvancedConfig} />
                         </div>
-                    )}
+                    )} */}
                     <div className={styles["fuzzer-heard-force"]}>
                         <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
                         <YakitCheckbox
