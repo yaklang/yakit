@@ -980,7 +980,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     />
                                 ))}
                             </div>
-                            <DndProvider backend={HTML5Backend} key={randomString(8)}>
+                            <DndProvider backend={HTML5Backend}>
                                 <div ref={wrapperRef} className={classNames(styles["virtual-table-list"])}>
                                     {columns.map((columnsItem, index) => (
                                         <ColRender
