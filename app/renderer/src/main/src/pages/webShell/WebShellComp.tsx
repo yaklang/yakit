@@ -15,8 +15,11 @@ import classNames from "classnames";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts";
 import {useWatch} from "antd/lib/form/Form";
-import {InformationCircleIcon} from "@/assets/newIcon";
-import {failed, info, yakitInfo} from "@/utils/notification";
+import {AdjustmentsIcon, IconSolidCodeIcon, InformationCircleIcon} from "@/assets/newIcon";
+import {failed, success} from "@/utils/notification";
+import {RuleContent} from "@/pages/mitm/MITMRule/MITMRuleFromModal";
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
+import {YakEditor} from "@/utils/editors";
 
 
 export const RemarkDetail = ({remark}) => {
@@ -62,7 +65,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
         setCreateLoading(true)
         console.log("createWebShell ", params)
         ipcRenderer.invoke("CreateWebShell", params).then((data: WebShellDetail) => {
-            yakitInfo("创建 WebShell 成功")
+            success("创建 WebShell 成功")
             setParams(data)
             if (data) {
                 props.onCreated && props.onCreated(data)
@@ -212,6 +215,38 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                     </Form.Item>
                 </>
             )}
+            <Form.Item label={"编解码器"} name={"CustomCodec"}>
+                <YakitInput
+                    {...params}
+                    // value={rule}
+                    placeholder='可用右侧辅助工具，自动生成正则'
+                    addonAfter={
+                        <IconSolidCodeIcon className={styles["icon-adjustments"]} onClick={
+                            () => {
+                              const m=  showYakitModal(
+                                    {
+                                        title : '编解码器',
+                                        subTitle:"用户可用自定义编解码器",
+                                        onCancel:() => {
+                                            console.log("asfasfas")
+                                            m.destroy()
+                                        },
+                                        footer: null,
+                                        closable: true,
+                                        content: <YakEditor value={"xxxxx"}/>
+                                    }
+                                )
+                            }
+                        }
+                        />
+                    }
+                    onChange={(e) => {
+                        const {value} = e.target
+                        // setRule(value)
+                        // getRule(value)
+                    }}
+                />
+            </Form.Item>
 
             <Form.Item label={"Headers"} name='headers' initialValue={[]}>
                 <div className={styles["menu-codec-wrapper"]}>
