@@ -1,15 +1,17 @@
 import React, {useEffect, useState} from "react"
-import {Alert, Form, Space, Typography} from "antd"
+import {Alert, Form, Space, Tooltip, Typography} from "antd"
 import {failed, info} from "../../utils/notification"
-import {CheckOutlined} from "@ant-design/icons"
+import {CheckOutlined, CloseOutlined, CloudUploadOutlined} from "@ant-design/icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import style from "./MITMPage.module.scss"
 import {ChromeFrameSvgIcon, ChromeSvgIcon} from "@/assets/newIcon"
-import {getRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -35,15 +37,47 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         host: props.host ? props.host : "127.0.0.1",
         port: props.port ? props.port : 8083
     })
+    const [isSaveUserData, setSaveUserData] = useState<boolean>(true)
+    const [userDataDir, setUserDataDir] = useState<string>("")
+    const [userDataDirArr, setUserDataDirArr] = useState<string[]>([])
 
+    useEffect(() => {
+        ipcRenderer.invoke("getDefaultUserDataDir").then((e: string) => {
+            getRemoteValue("USER_DATA_DIR_ARR").then((data) => {
+                if (!data) {
+                    setUserDataDir(e)
+                    setUserDataDirArr([e])
+                    return
+                } else {
+                    const obj = JSON.parse(data)
+                    setSaveUserData(obj.isSaveUserData)
+                    setUserDataDir(obj.userDataDirArr[0])
+                    setUserDataDirArr(obj.userDataDirArr)
+                }
+            })
+        })
+    }, [])
+    // 数组去重
+    const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
     return (
         <Form
             labelCol={{span: 4}}
             wrapperCol={{span: 18}}
             onSubmitCapture={(e) => {
                 e.preventDefault()
+                let newParams: {host: string; port: number; chromePath?: string; userDataDir?: string} = {...params}
+                if (isSaveUserData) {
+                    let newUserDataDirArr = filterItem([userDataDir, ...userDataDirArr]).slice(0, 5)
+                    setRemoteValue(
+                        "USER_DATA_DIR_ARR",
+                        JSON.stringify({isSaveUserData: true, userDataDirArr: newUserDataDirArr})
+                    )
+                    newParams.userDataDir = userDataDir
+                } else {
+                    setRemoteValue("USER_DATA_DIR_ARR", JSON.stringify({isSaveUserData: false, userDataDirArr}))
+                }
+
                 getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
-                    let newParams: {host: string; port: number; chromePath?: string} = {...params}
                     if (setting) newParams.chromePath = JSON.parse(setting)
                     ipcRenderer
                         .invoke("LaunchChromeWithParams", newParams)
@@ -73,6 +107,47 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     />
                 </YakitInput.Group>
             </Form.Item>
+            <Form.Item label={" "} colon={false}>
+                <YakitCheckbox
+                    checked={isSaveUserData}
+                    onChange={(e) => {
+                        setSaveUserData(e.target.checked)
+                    }}
+                >
+                    保存用户数据
+                </YakitCheckbox>
+            </Form.Item>
+            {isSaveUserData && (
+                <Form.Item label={" "} colon={false} help={"如要打开新窗口，请设置新路径存储用户数据"}>
+                    <YakitAutoComplete
+                        style={{width: "calc(100% - 20px)"}}
+                        options={userDataDirArr.map((item) => ({label: item, value: item}))}
+                        placeholder='设置代理'
+                        value={userDataDir}
+                        onChange={(v) => {
+                            setUserDataDir(v)
+                        }}
+                    />
+                    <Tooltip title={"选择导出路径"}>
+                        <CloudUploadOutlined
+                            onClick={() => {
+                                ipcRenderer
+                                    .invoke("openDialog", {
+                                        title: "请选择文件夹",
+                                        properties: ["openDirectory"]
+                                    })
+                                    .then((data: any) => {
+                                        if (data.filePaths.length) {
+                                            let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                                            setUserDataDir(absolutePath)
+                                        }
+                                    })
+                            }}
+                            style={{position: "absolute", right: 0, top: 8, cursor: "pointer"}}
+                        />
+                    </Tooltip>
+                </Form.Item>
+            )}
             <Form.Item
                 colon={false}
                 label={" "}
@@ -105,7 +180,12 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     </Space>
                 }
             >
-                <YakitButton type='primary' htmlType='submit' size='large'>
+                <YakitButton
+                    type='primary'
+                    htmlType='submit'
+                    size='large'
+                    disabled={isSaveUserData === true && userDataDir.length === 0}
+                >
                     启动免配置 Chrome
                 </YakitButton>
             </Form.Item>
@@ -129,11 +209,12 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
         }
     }, [])
     const onSwitch = useMemoizedFn((c: boolean) => {
-        if (c) {
-            setChromeVisible(true)
-        } else {
-            onCloseChrome()
-        }
+        setChromeVisible(true)
+        // if (c) {
+        //     setChromeVisible(true)
+        // } else {
+        //     onCloseChrome()
+        // }
     })
     const onCloseChrome = useMemoizedFn(() => {
         ipcRenderer
@@ -148,13 +229,27 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
     return (
         <>
             {(isStartMITM && (
-                <YakitButton type='outline2' onClick={() => onSwitch(!started)}>
-                    {(started && <ChromeSvgIcon />) || (
-                        <ChromeFrameSvgIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />
+                <>
+                    <YakitButton type='outline2' onClick={() => onSwitch(!started)}>
+                        {(started && <ChromeSvgIcon />) || (
+                            <ChromeFrameSvgIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />
+                        )}
+                        免配置启动
+                        {started && <CheckOutlined style={{color: "var(--yakit-success-5)", marginLeft: 8}} />}
+                    </YakitButton>
+                    {started && (
+                        <Tooltip title={"关闭所有免配置 Chrome"}>
+                            <YakitButton
+                                type='outline2'
+                                onClick={() => {
+                                    onCloseChrome()
+                                }}
+                            >
+                                <CloseOutlined style={{color: "var(--yakit-success-5)"}} />
+                            </YakitButton>
+                        </Tooltip>
                     )}
-                    免配置启动
-                    {started && <CheckOutlined style={{color: "var(--yakit-success-5)", marginLeft: 8}} />}
-                </YakitButton>
+                </>
             )) || (
                 <YakitButton
                     type='outline2'
@@ -167,25 +262,27 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                     <span style={{marginLeft: 4}}>免配置启动</span>
                 </YakitButton>
             )}
-            <YakitModal
-                title='确定启动免配置 Chrome 参数'
-                visible={chromeVisible}
-                onCancel={() => setChromeVisible(false)}
-                closable={true}
-                width='50%'
-                footer={null}
-            >
-                <MITMChromeLauncher
-                    host={host}
-                    port={port}
-                    callback={(host, port) => {
-                        setChromeVisible(false)
-                        if (!isStartMITM) {
-                            if (onFished) onFished(host, port)
-                        }
-                    }}
-                />
-            </YakitModal>
+            {chromeVisible && (
+                <YakitModal
+                    title='确定启动免配置 Chrome 参数'
+                    visible={chromeVisible}
+                    onCancel={() => setChromeVisible(false)}
+                    closable={true}
+                    width='50%'
+                    footer={null}
+                >
+                    <MITMChromeLauncher
+                        host={host}
+                        port={port}
+                        callback={(host, port) => {
+                            setChromeVisible(false)
+                            if (!isStartMITM) {
+                                if (onFished) onFished(host, port)
+                            }
+                        }}
+                    />
+                </YakitModal>
+            )}
         </>
     )
 })
