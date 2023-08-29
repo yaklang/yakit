@@ -113,7 +113,6 @@ import { DebugMonacoEditorPage } from "@/pages/debugMonaco/DebugMonacoEditorPage
 import { WebsiteTreeViewer } from "@/pages/yakitStore/viewers/WebsiteTree"
 import { VulinboxManager } from "@/pages/vulinbox/VulinboxManager";
 import { DiagnoseNetworkPage } from "@/pages/diagnoseNetwork/DiagnoseNetworkPage";
-import { ConfigNetworkPage } from "@/pages/configNetwork/ConfigNetworkPage";
 import { WebFuzzerPage } from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import { ErrorBoundary } from "react-error-boundary"
@@ -273,7 +272,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, { label: string; describe?
     "beta-debug-monaco-editor": { label: "插件编辑器" },
     "beta-vulinbox-manager": { label: "Vulinbox 管理器", },
     "beta-diagnose-network": { label: "网络异常诊断" },
-    "beta-config-network": { label: "全局网络配置" },
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -538,8 +536,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <VulinboxManager />
         case YakitRoute.Beta_DiagnoseNetwork:
             return <DiagnoseNetworkPage />
-        case YakitRoute.Beta_ConfigNetwork:
-            return <ConfigNetworkPage />
         default:
             return <div />
     }
