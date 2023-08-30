@@ -1328,7 +1328,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 setLoading(true)
                                 const redirectRequestProps: RedirectRequestParams = {
                                     Request: requestRef.current,
-                                    Response: new Buffer(getFirstResponse().ResponseRaw).toString("utf8"),
+                                    Response: new Buffer(httpResponse.ResponseRaw).toString("utf8"),
                                     IsHttps: advancedConfigValue.isHttps,
                                     IsGmTLS: advancedConfigValue.isGmTLS,
                                     PerRequestTimeoutSeconds: advancedConfigValue.timeout,
