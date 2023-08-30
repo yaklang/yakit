@@ -59,7 +59,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const [loading, setLoading] = useState(false)
     const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(true)
     const [autoQuery, setAutoQuery] = useState(false)
-    const [isLocal, setIsLocal] = useState(false)
+    const [isLocal, setIsLocal] = useState(true)
     const [expandRows, setExpandRows] = useState<string[]>([])
     const [dnsLogType, setDnsLogType] = useState<"builtIn" | "custom">("builtIn")
     const DNS_LOG_PAGE_UPDATE_TOKEN_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_CACHE"
