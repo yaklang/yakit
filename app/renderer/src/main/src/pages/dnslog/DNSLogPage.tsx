@@ -350,7 +350,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         </Form.Item>
                         <Divider style={{top:6,margin:"0px 16px 0px 0px",height:"1em"}} type={"vertical"}/>
                         <Form.Item colon={false}>
-                            <YakitButton type='primary' htmlType='submit'>
+                            <YakitButton type='primary' htmlType='submit' loading={loading}>
                                 生成一个可用域名
                             </YakitButton>
                         </Form.Item>
@@ -381,7 +381,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         </Form.Item>
                         <Divider style={{top:6,margin:"0px 16px 0px 0px",height:"1em"}} type={"vertical"}/>
                         <Form.Item colon={false}>
-                            <YakitButton type='primary' htmlType='submit'>
+                            <YakitButton type='primary' htmlType='submit' loading={loading}>
                                 生成一个可用域名
                             </YakitButton>
                         </Form.Item>
