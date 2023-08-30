@@ -22,6 +22,7 @@ import {RuleExportAndImportButton} from "@/pages/mitm/MITMRule/MITMRule";
 import {useMemoizedFn} from "ahooks";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {WebShellDetail} from "@/pages/webShell/models";
+import {InputItem} from "@/utils/inputUtil";
 
 interface CustomCodecValueProps {
     customCodecList: string[]
@@ -243,31 +244,48 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                 secondNodeStyle={{paddingTop: 5}}
                 style={{"width": "50%"}}
             />
-
-            <Form
-                colon={false}
-                size='small'
-                labelCol={{span: 10}}
-                wrapperCol={{span: 14}}
-                style={{overflowY: "auto",width:"50%"}}
-            >
-                <Form.Item label={"脚本类型"}>
-                    <YakitSelect
-                        value={shellScript || "jsp"}
-                        onSelect={(val) => {
-                            setShellScript(val)
-                        }}
+            <YakitResizeBox
+                isVer={true}
+                freeze={false}
+                firstNodeStyle={{height: "50%"}}
+                firstNode={
+                    <Form
+                        labelCol={{span: 5}}
+                        wrapperCol={{span: 14}}
                     >
-                        <YakitSelect.Option value='jsp'>JSP</YakitSelect.Option>
-                        <YakitSelect.Option value='jspx'>JSPX</YakitSelect.Option>
-                        <YakitSelect.Option value='php'>PHP</YakitSelect.Option>
-                        <YakitSelect.Option value='asp'>ASP</YakitSelect.Option>
-                        <YakitSelect.Option value='aspx'>ASPX</YakitSelect.Option>
-                    </YakitSelect>
-                </Form.Item>
+                        <InputItem
+                            label={"名称"}
+                            required={true}
+                            // setValue={(Url) => setParams({...params, Url})}
+                            // value={params.Url}
+                            // disable={disabled}
+                        />
+                        <Form.Item label={"脚本类型"} name={"脚本类型"}>
+                            <YakitSelect
+                                value={shellScript || "jsp"}
+                                onSelect={(val) => {
+                                    setShellScript(val)
+                                }}
+                            >
+                                <YakitSelect.Option value='jsp'>JSP</YakitSelect.Option>
+                                <YakitSelect.Option value='jspx'>JSPX</YakitSelect.Option>
+                                <YakitSelect.Option value='php'>PHP</YakitSelect.Option>
+                                <YakitSelect.Option value='asp'>ASP</YakitSelect.Option>
+                                <YakitSelect.Option value='aspx'>ASPX</YakitSelect.Option>
+                            </YakitSelect>
+                        </Form.Item>
 
 
-            </Form>
+                    </Form>
+                }
+                secondNode={<YakEditor
+                    noMiniMap={true} type={"yak"}
+                    value={"xxxxxxxxxxxxxxxxxxxxxxxxx"} setValue={setCodeValue}
+                />}
+                secondNodeStyle={{paddingTop: 5}}
+                style={{"width": "50%"}}
+            />
+
 
         </div>
     )
