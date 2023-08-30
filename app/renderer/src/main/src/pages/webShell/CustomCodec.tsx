@@ -195,26 +195,43 @@ interface CustomEditorProps {
 }
 
 const defEncoder = `
-hijackHTTPRequest = func(isHttps, url, req, forward , drop) {
-    _, reqBody = poc.Split(req)
+Encoder = (func(reqBody) {
     jsonStr := '{"id":"1","body":{"user":"lucky"}}'
-    encodedData = codec.EncodeBase64(reqBody)
-    encodedData = str.ReplaceAll(encodedData, "+", "<")
-    encodedData = str.ReplaceAll(encodedData, "/", ">")
+    jsonStr = '{"go0p":"1",asdfakhj,"body":{"user":"lucky"}}'
+    encodedData := codec.EncodeBase64(reqBody)
+    //encodedData = strings.ReplaceAll(encodedData, "+", "<")
+    //encodedData = strings.ReplaceAll(encodedData, "/", ">")
+    encodedData = str.ReplaceAll(encodedData, "+", "go0p")
+    encodedData = str.ReplaceAll(encodedData, "/", "yakit")
     jsonStr = str.ReplaceAll(jsonStr, "lucky", encodedData)
-    res = poc.ReplaceBody(req,[]byte(jsonStr),false)
-    dump(res)
-    forward(res)
-}
+    return []byte(jsonStr)
+})
+`
+
+const defDecoder = `
+Decoder = (func(reqBody) {
+    jsonStr := '{"id":"1","body":{"user":"lucky"}}'
+    jsonStr = '{"go0p":"1",asdfakhj,"body":{"user":"lucky"}}'
+    encodedData := codec.EncodeBase64(reqBody)
+    //encodedData = strings.ReplaceAll(encodedData, "+", "<")
+    //encodedData = strings.ReplaceAll(encodedData, "/", ">")
+    encodedData = str.ReplaceAll(encodedData, "+", "go0p")
+    encodedData = str.ReplaceAll(encodedData, "/", "yakit")
+    jsonStr = str.ReplaceAll(jsonStr, "lucky", encodedData)
+    return []byte(jsonStr)
+})
 `
 
 const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
     const {enCoder, deCoder, onClose} = props
+    const [enCodeValue, setEnCodeValue] = useState<string>("")
+    const [deCodeValue, setDeCodeValue] = useState<string>("")
     const [codeValue, setCodeValue] = useState<string>("")
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
     useEffect(() => {
-        setCodeValue(enCoder || defEncoder)
+        setEnCodeValue(enCoder || defEncoder)
+        setDeCodeValue(deCoder || defDecoder)
         setRefreshTrigger(!refreshTrigger)
     }, [enCoder])
     const [shellScript, setShellScript] = useState<string>("")
@@ -234,12 +251,12 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                 firstNode={
                     <YakEditor
                         noMiniMap={true} type={"yak"}
-                        value={codeValue} setValue={setCodeValue}
+                        value={enCodeValue} setValue={setEnCodeValue}
                     />
                 }
                 secondNode={<YakEditor
                     noMiniMap={true} type={"yak"}
-                    value={"codeValue"} setValue={setCodeValue}
+                    value={deCodeValue} setValue={setDeCodeValue}
                 />}
                 secondNodeStyle={{paddingTop: 5}}
                 style={{"width": "50%"}}
