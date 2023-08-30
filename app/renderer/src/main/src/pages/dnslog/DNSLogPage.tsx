@@ -166,7 +166,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             .invoke("QuerySupportedDnsLogPlatforms", {})
             .then((rsp) => {
                 if (rsp && rsp.Platforms) {
-                    let newArr:string[] = ["dnstunnel.run", ...rsp.Platforms]
+                    let newArr:string[] = ["内置", ...rsp.Platforms]
                     setPlatforms(newArr)
                     getRemoteValue(DNS_LOG_PAGE_UPDATE_TOKEN_CACHE).then((data) => {
                         if(!data){
