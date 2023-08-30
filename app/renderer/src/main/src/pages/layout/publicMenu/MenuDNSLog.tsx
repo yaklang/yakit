@@ -4,7 +4,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ArrowNarrowRightIcon, ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {DNSLogEvent} from "@/pages/dnslog/DNSLogPage"
+import {DNSLogEvent, DNS_LOG_PAGE_UPDATE_TOKEN} from "@/pages/dnslog/DNSLogPage"
 import {yakitNotify} from "@/utils/notification"
 import {formatTime} from "@/utils/timeUtil"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -13,10 +13,17 @@ import {YakitRoute} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import styles from "./MenuDNSLog.module.scss"
+import { getRemoteValue } from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 
 interface MenuDNSLogProps {}
+
+interface UpdateTokenParams {
+    Addr: string
+    DNSMode: string
+    UseLocal: boolean
+}
 
 export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     const [token, setToken, getToken] = useGetState("")
@@ -65,10 +72,20 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     }, [])
 
     const [tokenLoading, setTokenLoading] = useState<boolean>(false)
-    const updateToken = useMemoizedFn(() => {
+
+    const updateToken = (params?:UpdateTokenParams) => {
+        let paramsObj:any = {
+            Addr:""
+        }
+        if(params){
+            paramsObj.Addr = params.Addr
+            paramsObj.DNSMode = params.DNSMode
+            paramsObj.UseLocal = params.UseLocal
+        }
+
         setTokenLoading(true)
         ipcRenderer
-            .invoke("RequireDNSLogDomain", {Addr: ""})
+            .invoke("RequireDNSLogDomain", paramsObj)
             .then((rsp: {Domain: string; Token: string}) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
@@ -85,6 +102,46 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                     setTokenLoading(false)
                 }, 100)
             })
+    }
+
+    const updateTokenByScript = (params) => {
+        setTokenLoading(true)
+        ipcRenderer
+            .invoke("RequireDNSLogDomainByScript", {ScriptName: params.ScriptName})
+            .then((rsp: {Domain: string; Token: string}) => {
+                setToken(rsp.Token)
+                setDomain(rsp.Domain)
+                setLastRecords([])
+                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord})
+            })
+            .catch((e) => {
+                yakitNotify("error", `error: ${e}`)
+                setToken("")
+                setDomain("")
+            })
+            .finally(() => {
+                setTimeout(() => setTokenLoading(false), 100)
+            })
+    }
+
+    const update = useMemoizedFn(() => {
+        getRemoteValue(DNS_LOG_PAGE_UPDATE_TOKEN).then((data) => {
+            if (!data) {
+                // 默认内置
+                updateToken()
+            }
+            else{
+                let obj = JSON.parse(data)
+                // 内置
+                if(obj.type==="builtIn"){
+                    updateToken(obj)
+                }
+                // 自定义
+                if(obj.type==="custom"){
+                    updateTokenByScript(obj)
+                }
+            }
+        })
     })
 
     useEffect(() => {
@@ -218,7 +275,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             <div className={styles["dnslog-generate-host"]}>
                 <div className={!!domain ? styles["generated-wrapper"] : styles["generate-wrapper"]}>
                     <div className={styles["title-style"]}>使用 Yakit 自带 DNSLog 反连服务</div>
-                    <YakitButton size='small' loading={tokenLoading} onClick={updateToken}>
+                    <YakitButton size='small' loading={tokenLoading} onClick={update}>
                         生成域名
                     </YakitButton>
                 </div>
