@@ -837,7 +837,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                         setValue={(enalbed) => {
                             let obj = {
                                 ...params, 
-                                Tags: enalbed? addTag(params.Tags, "custom-dnslog-platform"): removeTag(params.Tags, "custom-dnslog-platform"),
+                                Tags: enalbed? addTag(params.Tags === "null"?"":params.Tags, "custom-dnslog-platform"): removeTag(params.Tags, "custom-dnslog-platform"),
                                 Content:defParams.Content
                             }
                             if(enalbed){obj.Content = CustomDnsLogPlatformTemplate}
@@ -869,7 +869,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                         value={  
                             params.Tags && params.Tags.includes("allow-custom-http-packet-mutate") ? true : false
                         }
-                        setValue={(enalbed) => setParams({...params, Tags: enalbed? addTag(params.Tags, "allow-custom-http-packet-mutate"): removeTag(params.Tags, "allow-custom-http-packet-mutate")})}
+                        setValue={(enalbed) => setParams({...params, Tags: enalbed? addTag(params.Tags === "null"?"":params.Tags, "allow-custom-http-packet-mutate"): removeTag(params.Tags, "allow-custom-http-packet-mutate")})}
                         disabled={disabled}
                     />
                 </>
