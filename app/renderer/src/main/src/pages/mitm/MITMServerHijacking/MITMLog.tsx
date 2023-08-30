@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import emiter from "@/utils/eventBus";
+import emiter from "@/utils/eventBus/eventBus";
 import styles from "./MITMServerHijacking.module.scss"
 import {
     availableColors,

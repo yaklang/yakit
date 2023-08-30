@@ -5,41 +5,61 @@ import {YakitMenu, YakitMenuProp} from "./YakitMenu"
 
 import styles from "./showByRightContext.module.scss"
 
+const roundDown = (value: number) => {
+    return Math.floor(value)
+}
+
+const genX = (client, coordinate, target) => {
+    if (target + coordinate > client) {
+        return coordinate - target - 6
+    } else {
+        return coordinate + 6
+    }
+}
+const genY = (client, coordinate, target) => {
+    const heightDiff = target + coordinate - client
+    if (heightDiff <= -10) {
+        return coordinate + 6
+    }
+    if (heightDiff > -10 && coordinate > target + 6) {
+        return coordinate - target - 6
+    }
+    if (heightDiff > -10 && coordinate <= target + 6) {
+        return coordinate - heightDiff - 6
+    }
+}
+
 const ContextMenuId = "yakit-right-context"
 
 /**
  * @name 生成一个鼠标所在坐标位置的展示框(props默认为菜单组件，也可自行传递自定义组件)
  * @description x和y参数为可选参数，填写时将以x-y坐标位展示内容
  */
-export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number, y?: number,isForce?: boolean) => {
-    /** body展示的高度和宽度；表示body在浏览器内显示的区域高度和宽度 */
-    const clientHeight = document.body.clientHeight
-    const clientWidth = document.body.clientWidth
-
+export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number, y?: number, isForce?: boolean) => {
     let divExisted = document.getElementById(ContextMenuId)
 
-    if(isForce){
-        if(divExisted)divExisted.remove()
-        divExisted=null
+    if (isForce) {
+        if (divExisted) divExisted.remove()
+        divExisted = null
     }
-    
+
     const div: HTMLDivElement = divExisted ? (divExisted as HTMLDivElement) : document.createElement("div")
 
+    /** body展示的高度和宽度；表示body在浏览器内显示的区域高度和宽度 */
+    const clientHeight = roundDown(document.body.getBoundingClientRect().height || 0)
+    const clientWidth = roundDown(document.body.getBoundingClientRect().width || 0)
+    /** 鼠标坐标 */
     let left = x || coordinate.clientX
     let top = y || coordinate.clientY
+    /** 右键展示元素宽高 */
+    const divWidth = roundDown(div.getBoundingClientRect().height || 0)
+    const divHeight = roundDown(div.getBoundingClientRect().height || 0)
 
-    if (div.clientWidth > 0 && div.clientHeight > 0) {
-        if (div.clientHeight + top > clientHeight) {
-            top = top - div.clientHeight - 6
-        } else {
-            top = top + 6
-        }
-        // 右边宽度不够，向左边移动 reactNode 内容的宽度
-        if (div.clientWidth + left > clientWidth) {
-            left = left - div.clientWidth - 6
-        } else {
-            left = left + 6
-        }
+    if (divWidth > 0 && divHeight > 0) {
+        // y坐标计算
+        top = genY(clientHeight, top, divHeight)
+        // x坐标计算
+        left = genX(clientWidth, left, divWidth)
         div.style.left = `${left}px`
         div.style.top = `${top}px`
     } else {
@@ -61,18 +81,10 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
     }
 
     const offsetPosition = (width: number, height: number) => {
-        // 底部高度不够，向上移动 reactNode 内容的高度
-        if (height + top > clientHeight) {
-            top = top - height - 6
-        } else {
-            top = top + 6
-        }
-        // 右边宽度不够，向左边移动 reactNode 内容的宽度
-        if (width + left > clientWidth) {
-            left = left - width - 6
-        } else {
-            left = left + 6
-        }
+        // y坐标计算
+        top = genY(clientHeight, top, height)
+        // x坐标计算
+        left = genX(clientWidth, left, width)
         div.style.left = `${left}px`
         div.style.top = `${top}px`
     }

@@ -1,3 +1,5 @@
 .show-by-right-context-wrapper {
     padding: 4px;
+    max-height: calc(100vh - 10px);
+    overflow: hidden auto;
 }

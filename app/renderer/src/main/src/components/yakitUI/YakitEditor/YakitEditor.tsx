@@ -36,6 +36,7 @@ import {queryYakScriptList} from "@/pages/yakitStore/network"
 import {YakScript} from "@/pages/invoker/schema"
 import {CodecType} from "@/pages/codec/CodecPage"
 import {failed} from "@/utils/notification"
+import { randomString } from "@/utils/randomUtil"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -444,6 +445,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
             let current: string[] = []
 
+            /** 随机上下文ID */
+            const randomStr = randomString(10)
+            /** 对于需要自定义命令的快捷键生成对应的上下文ID */
+            let yakitEditor = editor.createContextKey(randomStr, false);
+            // @ts-ignore
+            yakitEditor.set(true)
             /* limited paste by interval */
             let lastPasteTime = 0;
             let pasteLimitInterval = 80;
@@ -456,7 +463,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     lastPasteTime = current;
                     editor.trigger('keyboard', 'editor.action.clipboardPasteAction', {});
                 }
-            })
+            }, randomStr)
 
             const generateDecorations = (): YakitIModelDecoration[] => {
                 // const text = model.getValue();

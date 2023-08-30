@@ -1,6 +1,6 @@
 import React, {Ref, useEffect, useState} from "react"
 import {Divider, Modal, notification, Typography} from "antd"
-import emiter from "@/utils/eventBus";
+import emiter from "@/utils/eventBus/eventBus";
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info, yakitNotify} from "@/utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
