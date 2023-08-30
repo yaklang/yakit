@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {Button, Card, Divider, Form, List, Popconfirm, Popover, Space, Tag, Tooltip} from "antd"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {ReloadOutlined, DeleteOutlined} from "@ant-design/icons"
@@ -59,9 +59,11 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     const [keyword, setKeyword] = useState("")
     const [total, setTotal] = useState(0)
     const [showAll, setShowAll] = useState<boolean>(false)
-    const page = paging.Page
-    const limit = paging.Limit
-
+    const page = useMemo(()=>paging.Page,[paging.Page])
+    const limit =useMemo(()=>paging.Limit,[paging.Limit])
+    useEffect(() => {
+        reload(1, limit)
+    }, [])
     const deleteAll = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer
@@ -90,9 +92,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
-    useEffect(() => {
-        reload(1, limit)
-    }, [])
+
     const onSwitchShowAll = useMemoizedFn((v) => {
         setShowAll(v)
         setTimeout(() => {
