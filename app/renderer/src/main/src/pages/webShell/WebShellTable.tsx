@@ -31,7 +31,7 @@ import {HTTPFlow, onExpandHTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTab
 import {ConfigEngineProxy} from "@/utils/ConfigEngineProxy";
 import {analyzeFuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage";
 import {RemarkDetail, WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
-import { ReloadOutlined } from '@ant-design/icons';
+import {ReloadOutlined} from '@ant-design/icons';
 
 export interface WebShellManagerProp {
     available: boolean
@@ -332,7 +332,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
 
     const refList = useMemoizedFn(() => {
         setParams({
-            Tag : "",
+            Tag: "",
             Pagination: genDefaultPagination(20)
         })
         setTimeout(() => {
@@ -414,7 +414,12 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                                                 let m = showModal({
                                                     title: "添加 Shell",
                                                     width: "60%",
-                                                    content: <WebShellCreatorForm />,
+                                                    content: <WebShellCreatorForm
+                                                        closeModal={() => {
+                                                            m && m.destroy()
+                                                            refList()
+                                                        }}
+                                                    />,
                                                     modalAfterClose: () => m && m.destroy(),
                                                 })
                                             }}
