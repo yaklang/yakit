@@ -212,6 +212,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
     })
     return (
         <NewEditorSelectRange
+            defaultHttps={isHttps}
             noHex={true}
             noHeader={true}
             refreshTrigger={refreshTrigger}

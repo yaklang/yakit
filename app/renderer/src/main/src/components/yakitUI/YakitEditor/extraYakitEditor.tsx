@@ -26,6 +26,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     noPacketModifier?: boolean
     extraEditorProps?: YakitEditorProps | any
     webFuzzerValue?: string
+    webFuzzerCallBack?: () => void
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -37,6 +38,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         contextMenu,
         readOnly,
         webFuzzerValue,
+        webFuzzerCallBack,
         ...restProps
     } = props
 
@@ -180,7 +182,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             info("数据包为空")
                             return
                         }
-                        newWebFuzzerTab(defaultHttps || false, text).finally(() => {})
+                        newWebFuzzerTab(defaultHttps || false, text).finally(() => {
+                            webFuzzerCallBack&&webFuzzerCallBack()
+                        })
                     } catch (e) {
                         failed("editor exec new-open-fuzzer failed")
                     }

@@ -446,12 +446,12 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                             size='small'
                             type={"link"}
                             onClick={() => {
-                                showModal({
+                                let m = showModal({
                                     width: "80%",
                                     title: "详情",
                                     content: (
                                         <div style={{overflow: "auto"}}>
-                                            <RiskDetails info={i}/>
+                                            <RiskDetails info={i} onClose={() => m.destroy()}/>
                                         </div>
                                     )
                                 })
@@ -786,10 +786,11 @@ interface RiskDetailsProp {
     shrink?: boolean
     quotedRequest?: string
     quotedResponse?: string
+    onClose?:()=>void
 }
 
 export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDetailsProp) => {
-    const {info, isShowTime = true, quotedRequest, quotedResponse} = props
+    const {info, isShowTime = true, quotedRequest, quotedResponse,onClose} = props
     const title = TitleColor.filter((item) => item.key.includes(info.Severity || ""))[0]
     const [shrink, setShrink] = useState(!!props.shrink)
     const [isHttps,setIsHttps] = useState<boolean>(false)
@@ -914,6 +915,9 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                                         originValue={info?.Request || new Uint8Array()}
                                         readOnly={true}
                                         noHeader={true}
+                                        webFuzzerCallBack={()=>{
+                                            onClose&&onClose()
+                                        }}
                                     />
                                 )}
                             </div>
@@ -931,6 +935,9 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                                         originValue={info?.Response || new Uint8Array()}
                                         readOnly={true}
                                         noHeader={true}
+                                        webFuzzerCallBack={()=>{
+                                            onClose&&onClose()
+                                        }}
                                     />
                                 )}
                             </div>
