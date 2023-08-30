@@ -1701,7 +1701,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     })
     /**快捷关闭或者新增 */
     const onKeyDown = useMemoizedFn((e: React.KeyboardEvent, subItem: MultipleNodeInfo) => {
-        e.stopPropagation()
         // 快捷键关闭
         if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()

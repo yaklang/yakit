@@ -315,9 +315,17 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
         ]
     }, [])
     const onRowClick = useMemoizedFn((record: CVEDetail) => {
-        setSelected(record.CVE) // 更新当前选中的行
-        setCVE(record)
+        if (record?.CVE !== currentSelectItem?.CVE) {
+            setCVE(record)
+            setSelected(record.CVE) // 更新当前选中的行
+        }
     })
+    const onSetCurrentRow = useDebounceFn(
+        (rowDate: CVEDetail) => {
+            onRowClick(rowDate)
+        },
+        {wait: 200}
+    ).run
     const onTableChange = useDebounceFn(
         (page: number, limit: number, sorter: SortProps, filter: any) => {
             setParams({
@@ -451,7 +459,6 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                     loading={loading}
                     enableDrag={true}
                     columns={columns}
-                    onRowClick={onRowClick}
                     pagination={{
                         page: pagination.Page,
                         limit: pagination.Limit,
@@ -460,6 +467,8 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                     }}
                     currentSelectItem={currentSelectItem}
                     onChange={onTableChange}
+                    onSetCurrentRow={onSetCurrentRow}
+                    useUpAndDown={true}
                 />
             ) : (
                 <>
