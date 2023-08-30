@@ -249,7 +249,7 @@ export const NewCodecPage: React.FC<NewCodecPageProp> = (props) => {
 
     return <Context>
         <div className={codecStyle["container"]}>
-            <div className={codecStyle["left"]}>
+            <div className={codecStyle["left"]} style={{overflow: "auto"}}>
                 {codecAllList.map((item, index) => (
                     <CodecTypeList key={index} dateItem={item.subTypes} title={item.verbose} isOpen={openIndex == index}
                                    onclick={() => (index == openIndex) ? setOpenIndex(-1) : setOpenIndex(index)}></CodecTypeList>
@@ -296,7 +296,6 @@ const CodecTypeItem = ({codecDate, listKey}) => {
     const {workFlow, setWorkFlow} = ctx!
     return <Menu selectedKeys={selectedKeys}>
         {codecDate.map((date, index) => (
-
             <Menu.Item
                 key={index}
                 onClick={() => {

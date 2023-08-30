@@ -1,11 +1,8 @@
 .container {
     display: flex;
-    height: 100vh;
+    height: 80vh;
 }
 
-.left .center{
-    overflow: auto;
-}
 
 
 .left {
