@@ -640,6 +640,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         bodyStyle={{ padding: 0 }}
                     >
                         <NewHTTPPacketEditor
+                            defaultHttps={currentSelectItem?.IsHTTPS}
                             isResponse={true}
                             readOnly={true}
                             hideSearch={true}

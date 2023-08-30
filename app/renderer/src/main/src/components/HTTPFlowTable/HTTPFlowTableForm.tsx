@@ -19,32 +19,33 @@ export interface HTTPFlowTableFormConfigurationProps {
     filterMode: "shield" | "show"
     hostName: string[]
     urlPath: string[]
-    fileSuffix:string[]
+    fileSuffix: string[]
     searchContentType: string
 }
 
 export interface HTTPFlowTableFromValue {
     filterMode: "shield" | "show"
-    urlPath:string[]
-    hostName:string[]
-    fileSuffix:string[]
+    urlPath: string[]
+    hostName: string[]
+    fileSuffix: string[]
     searchContentType: string
 }
 
 export enum HTTPFlowTableFormConsts {
-    HTTPFlowTableFilterMode = 'YAKIT_HTTPFlowTableFilterMode',
-    HTTPFlowTableHostName = 'YAKIT_HTTPFlowTableHostName',
-    HTTPFlowTableUrlPath = 'YAKIT_HTTPFlowTableUrlPath',
-    HTTPFlowTableFileSuffix = 'YAKIT_HTTPFlowTableFileSuffix',
-    HTTPFlowTableContentType = "YAKIT_HTTPFlowTableContentType",
+    HTTPFlowTableFilterMode = "YAKIT_HTTPFlowTableFilterMode",
+    HTTPFlowTableHostName = "YAKIT_HTTPFlowTableHostName",
+    HTTPFlowTableUrlPath = "YAKIT_HTTPFlowTableUrlPath",
+    HTTPFlowTableFileSuffix = "YAKIT_HTTPFlowTableFileSuffix",
+    HTTPFlowTableContentType = "YAKIT_HTTPFlowTableContentType"
 }
 
 export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigurationProps> = (props) => {
-    const {visible, setVisible, responseType, onSave, filterMode,hostName,urlPath, fileSuffix,searchContentType} = props
+    const {visible, setVisible, responseType, onSave, filterMode, hostName, urlPath, fileSuffix, searchContentType} =
+        props
     const [filterModeDef, setFilterModeDef] = useState<"shield" | "show">("shield")
-    const [hostNameDef,setHostNameDef] = useState<string[]>([])
-    const [urlPathDef,setUrlPathDef] = useState<string[]>([])
-    const [fileSuffixDef,setFileSuffixDef] = useState<string[]>([])
+    const [hostNameDef, setHostNameDef] = useState<string[]>([])
+    const [urlPathDef, setUrlPathDef] = useState<string[]>([])
+    const [fileSuffixDef, setFileSuffixDef] = useState<string[]>([])
     const [searchContentTypeDef, setSearchContentTypeDef] = useState<string[]>()
     const [form] = Form.useForm()
     // 获取默认值
@@ -62,7 +63,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         const searchType: string[] = contentType.length === 0 ? [] : contentType.split(",")
         setSearchContentTypeDef(searchType)
 
-        form.setFieldsValue({filterMode, hostName,urlPath,fileSuffix,searchContentType: searchType})
+        form.setFieldsValue({filterMode, hostName, urlPath, fileSuffix, searchContentType: searchType})
     }, [visible])
 
     /**
@@ -70,12 +71,12 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
      */
     const onSaveSetting = useMemoizedFn(() => {
         form.validateFields().then((formValue) => {
-            const {filterMode,urlPath=[],hostName=[],fileSuffix=[]} = formValue
+            const {filterMode, urlPath = [], hostName = [], fileSuffix = []} = formValue
             let searchContentType: string = (formValue.searchContentType || []).join(",")
-            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode,filterMode)
-            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName,JSON.stringify(hostName))
-            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath,JSON.stringify(urlPath))
-            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix,JSON.stringify(fileSuffix))
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode, filterMode)
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName, JSON.stringify(hostName))
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath, JSON.stringify(urlPath))
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix, JSON.stringify(fileSuffix))
             setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType, searchContentType)
             onSave({
                 filterMode: filterMode,
@@ -94,7 +95,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             hostName: hostNameDef,
             urlPath: urlPathDef,
             fileSuffix: fileSuffixDef,
-            searchContentType: searchContentTypeDef,
+            searchContentType: searchContentTypeDef
         }
         const newValue = {
             ...formValue
@@ -131,6 +132,10 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             setVisible(false)
         }
     })
+
+    const reset = () => {
+        form.resetFields()
+    }
     return (
         <YakitDrawer
             className={styles["http-flow-table-form-configuration"]}
@@ -174,29 +179,25 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                     />
                 </Form.Item>
                 <Form.Item label='Hostname' name='hostName'>
-                    <YakitSelect
-                        mode='tags'
-                    ></YakitSelect>
+                    <YakitSelect mode='tags'></YakitSelect>
                 </Form.Item>
                 <Form.Item
                     label='URL路径'
                     name='urlPath'
                     help={"可理解为 URI 匹配，例如 /main/index.php?a=123 或者 /*/index 或 /admin* "}
                 >
-                    <YakitSelect
-                        mode='tags'
-                    ></YakitSelect>
+                    <YakitSelect mode='tags'></YakitSelect>
                 </Form.Item>
                 <Form.Item label={"文件后缀"} name='fileSuffix'>
-                    <YakitSelect
-                        mode='tags'
-                    ></YakitSelect>
+                    <YakitSelect mode='tags'></YakitSelect>
                 </Form.Item>
                 <Form.Item label={"响应类型"} name='searchContentType'>
-                    <YakitSelect
-                        mode='tags'
-                        options={responseType}
-                    ></YakitSelect>
+                    <YakitSelect mode='tags' options={responseType}></YakitSelect>
+                </Form.Item>
+                <Form.Item label={" "} colon={false}>
+                    <YakitButton type='text' onClick={reset}>
+                        重置
+                    </YakitButton>
                 </Form.Item>
             </Form>
         </YakitDrawer>

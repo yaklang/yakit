@@ -1002,11 +1002,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 fizzSelectWidget.update()
                             } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
                                 fizzRangeWidget.update()
-                            } else if (selectedText.length === 0 && !readOnly) {
-                                closeFizzRangeWidget()
-                                // 展示点击的菜单
-                                selectId && editor.addContentWidget(fizzSelectWidget)
-                                fizzSelectWidget.isOpen = true
+                            } else if (selectedText.length === 0) {
+                                if(!readOnly){
+                                    closeFizzRangeWidget()
+                                    // 展示点击的菜单
+                                    selectId && editor.addContentWidget(fizzSelectWidget)
+                                    fizzSelectWidget.isOpen = true
+                                }
                             } else {
                                 closeFizzSelectWidget()
                                 // 展示选中的菜单

@@ -37,7 +37,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         host: props.host ? props.host : "127.0.0.1",
         port: props.port ? props.port : 8083
     })
-    const [isSaveUserData, setSaveUserData] = useState<boolean>(true)
+    const [isSaveUserData, setSaveUserData] = useState<boolean>(false)
     const [userDataDir, setUserDataDir] = useState<string>("")
     const [userDataDirArr, setUserDataDirArr] = useState<string[]>([])
 
@@ -128,7 +128,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                             setUserDataDir(v)
                         }}
                     />
-                    <Tooltip title={"选择导出路径"}>
+                    <Tooltip title={"选择存储路径"}>
                         <CloudUploadOutlined
                             onClick={() => {
                                 ipcRenderer
