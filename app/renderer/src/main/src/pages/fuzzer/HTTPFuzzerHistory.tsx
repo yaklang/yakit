@@ -17,11 +17,13 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 export interface HTTPFuzzerHistorySelectorProp {
     currentSelectId?: number
     onSelect: (i: number, page: number) => any
     onDeleteAllCallback: () => void
+    fuzzerTabIndex: string
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -50,12 +52,13 @@ export interface HTTPFuzzerTaskDetail {
 * */
 
 export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> = React.memo((props) => {
-    const {currentSelectId} = props
+    const {currentSelectId, fuzzerTabIndex} = props
     const [tasks, setTasks] = useState<HTTPFuzzerTaskDetail[]>([])
     const [loading, setLoading] = useState(false)
     const [paging, setPaging] = useState<PaginationSchema>({Limit: 10, Order: "desc", OrderBy: "created_at", Page: 1})
     const [keyword, setKeyword] = useState("")
     const [total, setTotal] = useState(0)
+    const [showAll, setShowAll] = useState<boolean>(false)
     const page = paging.Page
     const limit = paging.Limit
 
@@ -73,11 +76,13 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
 
     const reload = useMemoizedFn((pageInt: number, limitInt: number) => {
         setLoading(true)
+        const params = {
+            Pagination: {...paging, Page: pageInt, Limit: limitInt},
+            Keyword: keyword,
+            FuzzerTabIndex: showAll ? "" : fuzzerTabIndex
+        }
         ipcRenderer
-            .invoke("QueryHistoryHTTPFuzzerTaskEx", {
-                Pagination: {...paging, Page: pageInt, Limit: limitInt},
-                Keyword: keyword
-            })
+            .invoke("QueryHistoryHTTPFuzzerTaskEx", params)
             .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTasks(data.Data)
                 setTotal(data.Total)
@@ -88,7 +93,12 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     useEffect(() => {
         reload(1, limit)
     }, [])
-
+    const onSwitchShowAll = useMemoizedFn((v) => {
+        setShowAll(v)
+        setTimeout(() => {
+            reload(1, limit)
+        }, 200)
+    })
     return (
         <Card
             size={"small"}
@@ -111,7 +121,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                         }}
                         className='button-text-danger'
                     >
-                        <YakitButton type='text' size={"small"} colors="danger" icon={<DeleteOutlined />} />
+                        <YakitButton type='text' size={"small"} colors='danger' icon={<DeleteOutlined />} />
                     </YakitPopconfirm>
                 </Space>
             }
@@ -151,6 +161,10 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                     onSearch={() => reload(1, limit)}
                     onPressEnter={() => reload(1, limit)}
                 />
+                <span>
+                    查看全部
+                    <YakitSwitch checked={showAll} onChange={onSwitchShowAll} />
+                </span>
             </div>
             <Divider style={{marginTop: 10, marginBottom: 6}} />
             <List<HTTPFuzzerTaskDetail>
@@ -166,13 +180,9 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                     pageSizeOptions: ["5", "10", "20"],
                     onChange: (page: number, limit?: number) => {
                         reload(page, limit || 10)
-                        // dispatch({type: "updateParams", payload: {page, limit}})
-                        // submit(page, limit)
                     },
                     onShowSizeChange: (old, limit) => {
                         reload(page, limit || 10)
-                        // dispatch({type: "updateParams", payload: {page: 1, limit}})
-                        // submit(1, limit)
                     }
                 }}
                 renderItem={(detail: HTTPFuzzerTaskDetail, index: number) => {

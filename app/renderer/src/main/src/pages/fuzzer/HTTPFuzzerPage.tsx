@@ -1409,6 +1409,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             // setCurrentPage(0)
                                             getTotal()
                                         }}
+                                        fuzzerTabIndex={props.id}
                                     />
                                 </div>
                             }
@@ -1443,7 +1444,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         advancedConfigValue.filterMode === "onlyMatch"
                                             ? advancedConfigValue.hitColor
                                             : "",
-                                    Params: advancedConfigValue.params || []
+                                    Params: advancedConfigValue.params || [],
                                 }
                                 ipcRenderer
                                     .invoke("RedirectRequest", redirectRequestProps)
