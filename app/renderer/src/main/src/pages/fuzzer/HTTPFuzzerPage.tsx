@@ -2501,7 +2501,7 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
                 <YakitButton type='text2' icon={<OutlineXIcon />} size='small' onClick={() => onClose()} />
             </div>
             <div className={styles["payload-extract-content-body"]} style={{display: type === "payload" ? "" : "none"}}>
-                {fuzzerResponse.Payloads?.map((item) => `${item}${(<br />)}`)}
+                {fuzzerResponse.Payloads?.map((item) => <p>{item}</p>)}
                 {fuzzerResponse.Payloads?.length === 0 && "暂无"}
             </div>
             <div
