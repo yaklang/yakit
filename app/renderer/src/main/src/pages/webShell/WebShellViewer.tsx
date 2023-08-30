@@ -4,7 +4,7 @@ import styles from "@/pages/cve/CVETable.module.scss";
 import fuzzerStyles from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss";
 import React, {useEffect, useRef, useState} from "react";
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks";
-import {PaginationSchema} from "@/pages/invoker/schema";
+import {genDefaultPagination, PaginationSchema, QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema";
 import {WebShellTable} from "@/pages/webShell/WebShellTable";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {Divider, Form, Tooltip} from "antd";
@@ -24,7 +24,7 @@ const {YakitPanel} = YakitCollapse
 
 
 export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
-    const [params, setParams] = useState<QueryWebShellRequest>(defQueryWebShellRequest)
+    const [params, setParams] = useState<YakScript>()!
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [loading, setLoading] = useState(false)
     const [available, setAvailable] = useState(false)
@@ -43,14 +43,15 @@ export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
         <div className={styles["cve-viewer"]}>
             {available && advancedQuery && (
                 <WebShellQuery
-                    onChange={setParams}
-                    defaultParams={params}
+                    params={params}
+                    setParams={setParams}
+                    // onChange={setParams}
                     advancedQuery={advancedQuery}
                     setAdvancedQuery={setAdvancedQuery}
                 />
             )}
             <WebShellTable
-                filter={params}
+                // filter={params}
                 advancedQuery={advancedQuery}
                 setAdvancedQuery={setAdvancedQuery}
                 available={available}
@@ -69,6 +70,9 @@ export const defQueryWebShellRequest: QueryWebShellRequest = {
 }
 
 interface WebShellQueryProp {
+    params: YakScript
+    setParams: (y: YakScript) => void
+    modified?: YakScript | undefined
     defaultParams?: QueryWebShellRequest
     onChange?: (req: QueryWebShellRequest) => any
     advancedQuery: boolean //是否开启高级查询
@@ -76,14 +80,14 @@ interface WebShellQueryProp {
 }
 
 const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
-    const {advancedQuery, setAdvancedQuery} = props
-    const [params, setParams] = useState<QueryWebShellRequest>(props.defaultParams || defQueryWebShellRequest)
-    useEffect(() => {
-        if (!props.onChange) {
-            return
-        }
-        props.onChange(params)
-    }, [params])
+    const {params, setParams, modified, advancedQuery, setAdvancedQuery} = props
+    // const [params, setParams] = useState<QueryWebShellRequest>(props.defaultParams || defQueryWebShellRequest)
+    // useEffect(() => {
+    //     if (!props.onChange) {
+    //         return
+    //     }
+    //     props.onChange(params)
+    // }, [params])
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
     const onSwitchCollapse = useMemoizedFn((key) => {
@@ -274,6 +278,9 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
 
                 </Form>
                 <CustomCodecEditor
+                    params={params}
+                    setParams={setParams}
+                    modified={modified}
                     title={title}
                     visibleDrawer={visibleDrawer}
                     onClose={() => setVisibleDrawer(false)}
