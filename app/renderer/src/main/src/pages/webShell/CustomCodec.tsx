@@ -22,8 +22,18 @@ import {RuleExportAndImportButton} from "@/pages/mitm/MITMRule/MITMRule";
 import {useMemoizedFn} from "ahooks";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {WebShellDetail} from "@/pages/webShell/models";
-import {InputItem, SelectOne} from "@/utils/inputUtil";
+import {InputItem, ManyMultiSelectForString, SelectOne} from "@/utils/inputUtil";
 import {YakScript} from "@/pages/invoker/schema";
+import {MenuCodec} from "@/pages/layout/publicMenu/MenuCodec";
+import {MenuDNSLog} from "@/pages/layout/publicMenu/MenuDNSLog";
+import {YakitFeatureTabName} from "@/pages/yakitStore/viewers/base";
+import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType";
+import webFuzzerStyles from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage.module.scss";
+import {OutlineAdjustmentsIcon, OutlineCodeIcon, OutlineCollectionIcon, OutlineQrcodeIcon} from "@/assets/icon/outline";
+import {PageNodeItemProps} from "@/store/pageNodeInfo";
+import {YakitRoute} from "@/routes/newRoute";
+import {ResizeCardBox} from "@/components/ResizeCardBox/ResizeCardBox";
+import {SelectItem} from "@/utils/SelectItem";
 
 interface CustomCodecValueProps {
     customCodecList: string[]
@@ -112,16 +122,14 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
 )
 
 interface CustomCodecEditorProps {
-    params: YakScript
-    setParams: (y: YakScript) => void
-    modified?: YakScript | undefined
+
     title: string
     visibleDrawer: boolean
     onClose: () => void
 }
 
 export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((props) => {
-    const {params, setParams, modified, title, visibleDrawer, onClose} = props
+    const {title, visibleDrawer, onClose} = props
     const {tabMenuHeight} = useContext(MainOperatorContext)
     const heightDrawer = useMemo(() => {
         return tabMenuHeight - 40
@@ -135,6 +143,8 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
     const onExecute = useMemoizedFn(() => {
         console.log("onExecute")
     })
+    const [params, setParams] = useState<YakScript>({} as YakScript)
+    const [modified, setModified] = useState<YakScript | undefined>()
     return (
         <YakitDrawer
             placement='bottom'
@@ -185,9 +195,7 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
                 modified={modified}
                 enCoder={defEncoder}
                 deCoder={""}
-                // onClose={onClose}
             />
-
         </YakitDrawer>
     )
 })
@@ -199,6 +207,8 @@ interface CustomEditorProps {
     enCoder: string
     deCoder: string
     onClose?: () => void
+    // children?: ReactNode
+    type?: string
 }
 
 const defEncoder = `
@@ -229,6 +239,19 @@ Decoder = (func(reqBody) {
 })
 `
 
+const webFuzzerTabs = [
+    {
+        key: "enCoder",
+        label: "编码器",
+        icon: <OutlineCodeIcon/>
+    },
+    {
+        key: "deCoder",
+        label: "解码器",
+        icon: <OutlineQrcodeIcon/>
+    }
+]
+
 const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
     const {params, setParams, modified, enCoder, deCoder, onClose} = props
     const [enCodeValue, setEnCodeValue] = useState<string>("")
@@ -244,73 +267,85 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
     const [shellScript, setShellScript] = useState<string>("")
 
     useEffect(() => {
-        // 如果 params.ShellScript 是空的，那么就设置它为 "jsp"
+        console.log("shellScript", shellScript)
         if (!shellScript) {
+            console.log("!shellScript", shellScript)
             setShellScript("jsp");
         }
     }, []);
+
+    // 定义一个状态变量和一个设置这个状态变量的函数
+    const [selectedTab, setSelectedTab] = useState("enCoder");
+    const [disabled, setDisabled] = useState(false);
+// 定义一个处理点击事件的函数
+    const handleTabClick = (key: string) => {
+        setSelectedTab(key);
+    };
+
     return (
         <div className={matcherStyles["matching-extraction-resize-box"]} style={{display: 'flex'}}>
             <YakitResizeBox
-                isVer={true}
                 freeze={false}
-                firstNodeStyle={{height: "50%"}}
                 firstNode={
-                    <YakEditor
-                        noMiniMap={true} type={"yak"}
-                        value={enCodeValue} setValue={setEnCodeValue}
-                    />
+                    <>
+                        <div className={webFuzzerStyles["web-fuzzer"]} style={{"height": "100%"}}>
+                            <div className={webFuzzerStyles["web-fuzzer-tab"]}>
+                                {webFuzzerTabs.map((item) => (
+                                    <div
+                                        key={item.key}
+                                        className={classNames(webFuzzerStyles["web-fuzzer-tab-item"], {
+                                            [webFuzzerStyles["web-fuzzer-tab-item-active"]]: selectedTab === item.key
+                                        })}
+                                        onClick={() => {
+                                            handleTabClick(item.key)
+                                        }}
+                                    >
+                                        <span className={webFuzzerStyles["web-fuzzer-tab-label"]}>{item.label}</span>
+                                        {item.icon}
+                                    </div>
+                                ))}
+                            </div>
+                            <div
+                                className={classNames(webFuzzerStyles["web-fuzzer-tab-content"])}>
+                                {selectedTab === "enCoder" ? (
+                                    // 如果选中的 tab 是 "enCoder"，显示第一种内容
+                                    <YakEditor
+                                        type={"yak"} noMiniMap={true}
+                                        value={defEncoder}
+                                    />
+                                ) : (
+                                    // 如果选中的 tab 是 "deCoder"，显示第二种内容
+                                    <YakEditor
+                                        type={"yak"} noMiniMap={true}
+                                        value={defDecoder}
+                                    />
+                                )
+                                }
+                            </div>
+                        </div>
+                    </>
+
                 }
-                secondNode={<YakEditor
-                    noMiniMap={true} type={"yak"}
-                    value={deCodeValue} setValue={setDeCodeValue}
-                />}
-                secondNodeStyle={{paddingTop: 5}}
-                style={{"width": "50%"}}
-            />
-            <YakitResizeBox
-                isVer={true}
-                freeze={false}
-                firstNodeStyle={{height: "50%"}}
-                firstNode={
+                secondNode={
                     <Form
                         labelCol={{span: 5}}
                         wrapperCol={{span: 14}}
                     >
-                        <SelectOne
-                            disabled={!!modified}
-                            label={"模块类型"}
-                            data={[
-                                {value: "yak", text: "Yak 原生模块"},
-                                {value: "mitm", text: "MITM 模块"},
-                                {value: "packet-hack", text: "Packet 检查"},
-                                {value: "port-scan", text: "端口扫描插件"},
-                                {value: "codec", text: "Codec 模块"},
-                                {value: "nuclei", text: "nuclei Yaml模块"}
-                            ]}
-                            setValue={(Type) => {
-                                if (["packet-hack", "codec", "nuclei"].includes(Type))
-                                    setParams({
-                                        ...params,
-                                        Type,
-                                        IsGeneralModule: false
-                                    })
-                                else setParams({...params, Type})
-                            }}
-                            value={params.Type}
-                        />
                         <InputItem
                             label={"名称"}
                             required={true}
-                            // setValue={(Url) => setParams({...params, Url})}
-                            // value={params.Url}
-                            // disable={disabled}
+                            setValue={(ScriptName) => setParams({...params, ScriptName})}
+                            value={params.ScriptName}
+                            disable={disabled}
                         />
-                        <Form.Item label={"脚本类型"} name={"脚本类型"}>
+                        <Form.Item label={"脚本类型"} name={"脚本类型"} required={true}>
                             <YakitSelect
                                 value={shellScript || "jsp"}
                                 onSelect={(val) => {
                                     setShellScript(val)
+                                    selectedTab === "enCoder" ?
+                                        setParams({...params, Tags: [val, "packet-encoder"].join(",")}) :
+                                        setParams({...params, Tags: [val, "result-decoder"].join(",")})
                                 }}
                             >
                                 <YakitSelect.Option value='jsp'>JSP</YakitSelect.Option>
@@ -321,18 +356,33 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                             </YakitSelect>
                         </Form.Item>
 
+                        <InputItem
+                            label={"简要描述"}
+                            setValue={(Help) => setParams({...params, Help})}
+                            value={params.Help}
+                            disable={disabled}
+                        />
+                        <InputItem
+                            label={"作者"}
+                            setValue={(Author) => setParams({...params, Author})}
+                            value={params.Author}
+                            disable={disabled}
+                        />
+
+                        <ManyMultiSelectForString
+                            label={"Tags"}
+                            data={[]}
+                            mode={"tags"}
+                            setValue={(Tags) => setParams({...params, Tags})}
+                            value={params.Tags && params.Tags !== "null" ? params.Tags : ""}
+                            disabled={disabled}
+                        />
+
 
                     </Form>
                 }
-                secondNode={<YakEditor
-                    noMiniMap={true} type={"yak"}
-                    value={"xxxxxxxxxxxxxxxxxxxxxxxxx"} setValue={setCodeValue}
-                />}
-                secondNodeStyle={{paddingTop: 5}}
-                style={{"width": "50%"}}
+                secondNodeStyle={{paddingLeft: 5, paddingTop: 15}}
             />
-
-
         </div>
     )
 })
