@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { AutoCard } from "@/components/AutoCard";
 import {Avatar, Button, Dropdown, Form, Menu, Popconfirm, Progress, Select, Space, Tag} from "antd";
 import { StringToUint8Array, Uint8ArrayToString } from "@/utils/str";
-import "./style.css"
+import codecStyle from "./style.module.css";
 import { YakCodeEditor } from "@/utils/editors";
 import { DragPreviewImage, useDrag } from "react-dnd";
 import { YakExecutorParam } from "@/pages/invoker/YakExecutorParams";
@@ -27,7 +27,9 @@ import style from "@/pages/customizeMenu/CustomizeMenu.module.scss";
 import {queryYakScriptList} from "@/pages/yakitStore/network";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {CodecPluginTemplate} from "@/pages/invoker/data/CodecPluginTemplate";
-import {values} from "@antv/util";
+
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
+import MonacoEditor from "react-monaco-editor";
 export interface NewCodecPageProp {
 
 }
@@ -264,14 +266,14 @@ export const NewCodecPage: React.FC<NewCodecPageProp> = (props) => {
     const [openIndex, setOpenIndex] = useState(-1);
 
     return  <Context>
-        <div className="container">
-            <div className="left">
+        <div className={codecStyle["container"]}>
+            <div className={codecStyle["left"]}>
                 {codecAllList.map((item, index) => (
                     <CodecTypeList key={index} dateItem={item.subTypes} title={item.verbose} isOpen={openIndex == index} onclick={() => (index == openIndex) ? setOpenIndex(-1) : setOpenIndex(index)}></CodecTypeList>
                 ))}
             </div>
 
-            <div className="center" style={{ overflow: "auto" }}>
+            <div className={codecStyle["center"]} style={{ overflow: "auto" }}>
                 <CodecWorkFlow></CodecWorkFlow>
             </div>
             <CodecEditor></CodecEditor>
@@ -850,8 +852,8 @@ const CodecEditor = () => {
         newCodec(text, workFlow)
     }, [workFlow])
 
-    return <div className="right">
-        <div className="top">
+    return <div className={codecStyle["right"]}>
+        <div className={codecStyle["top"]}>
             <YakCodeEditor
                 noMinimap={true}
                 noTitle={true}
@@ -863,7 +865,7 @@ const CodecEditor = () => {
                 noHeader={true}
             />
         </div>
-        <div className="bottom">
+        <div className={codecStyle["bottom"]}>
             <YakCodeEditor
                 noMinimap={true}
                 noTitle={true}
