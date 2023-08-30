@@ -44,7 +44,7 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {CheckableTagProps} from "antd/lib/tag"
 import {YakitProtoSwitch} from "@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
-import { MainOperatorContext } from "@/pages/layout/MainContext"
+import { usePageNode } from "@/store/pageNodeInfo"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -124,7 +124,7 @@ export const colorSelectNode = (
 )
 
 export const MITMRule: React.FC<MITMRuleProp> = (props) => {
-    const {tabMenuHeight} = useContext(MainOperatorContext)
+    const {firstTabMenuBodyHeight} = usePageNode()
     const {visible, setVisible, getContainer, status} = props
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
@@ -146,8 +146,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [currentIndex, setCurrentIndex] = useState<number>()
 
     const heightDrawer = useMemo(() => {
-        return tabMenuHeight - 58
-    }, [tabMenuHeight])
+        return firstTabMenuBodyHeight - 58
+    }, [firstTabMenuBodyHeight])
 
     useEffect(() => {
         ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
