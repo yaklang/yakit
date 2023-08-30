@@ -321,6 +321,9 @@ const CodecWorkFlow = () => {
     const ctx = useContext(CodecCtx)
     const {workFlow, setWorkFlow} = ctx!
     const onDragEnd = useMemoizedFn((result) => {
+        if (!result?.destination){
+            return
+        }
         if (result.destination.droppableId === "workList") {
             if (result.source.droppableId === "workList") {
                 const [remove] = workFlow.splice(result.source.index, 1);
