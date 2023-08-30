@@ -35,7 +35,7 @@ import {ReloadOutlined} from '@ant-design/icons';
 
 export interface WebShellManagerProp {
     available: boolean
-    filter: QueryWebShellRequest
+    filter?: QueryWebShellRequest
     advancedQuery: boolean //是否开启高级查询
     setAdvancedQuery: (b: boolean) => void
 }
@@ -62,7 +62,7 @@ export const WebShellTable: React.FC<WebShellManagerProp> = React.memo((props) =
                         available={available}
                         advancedQuery={advancedQuery}
                         setAdvancedQuery={setAdvancedQuery}
-                        filter={props.filter}
+                        // filter={props.filter}
                         selected={selected}
                         setSelected={setSelected}
                         WebShell={webshell}
@@ -77,7 +77,7 @@ export const WebShellTable: React.FC<WebShellManagerProp> = React.memo((props) =
                     available={available}
                     advancedQuery={advancedQuery}
                     setAdvancedQuery={setAdvancedQuery}
-                    filter={props.filter}
+                    // filter={props.filter}
                     selected={selected}
                     setSelected={setSelected}
                     WebShell={webshell}
@@ -90,7 +90,7 @@ export const WebShellTable: React.FC<WebShellManagerProp> = React.memo((props) =
 
 interface WebShellTableListProps {
     available: boolean
-    filter: QueryWebShellRequest
+    filter?: QueryWebShellRequest
     selected: string
     setSelected: (s: string) => void
     advancedQuery: boolean //是否开启高级查询
@@ -101,7 +101,10 @@ interface WebShellTableListProps {
 
 const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) => {
     const {available, selected, setSelected, advancedQuery, setAdvancedQuery, WebShell, setWebShell} = props
-    const [params, setParams] = useState<QueryWebShellRequest>({...props.filter})
+    const [params, setParams] = useState<QueryWebShellRequest>({
+        Tag: "",
+        Pagination: genDefaultPagination(200)
+    })
 
     const [data, setData] = useState<WebShellDetail[]>([])
     const [dataBaseUpdateVisible, setDataBaseUpdateVisible] = useState<boolean>(false)

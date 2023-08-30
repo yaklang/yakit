@@ -22,7 +22,8 @@ import {RuleExportAndImportButton} from "@/pages/mitm/MITMRule/MITMRule";
 import {useMemoizedFn} from "ahooks";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {WebShellDetail} from "@/pages/webShell/models";
-import {InputItem} from "@/utils/inputUtil";
+import {InputItem, SelectOne} from "@/utils/inputUtil";
+import {YakScript} from "@/pages/invoker/schema";
 
 interface CustomCodecValueProps {
     customCodecList: string[]
@@ -111,14 +112,16 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
 )
 
 interface CustomCodecEditorProps {
-
+    params: YakScript
+    setParams: (y: YakScript) => void
+    modified?: YakScript | undefined
     title: string
     visibleDrawer: boolean
     onClose: () => void
 }
 
 export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((props) => {
-    const {title, visibleDrawer, onClose} = props
+    const {params, setParams, modified, title, visibleDrawer, onClose} = props
     const {tabMenuHeight} = useContext(MainOperatorContext)
     const heightDrawer = useMemo(() => {
         return tabMenuHeight - 40
@@ -177,7 +180,9 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
             }
         >
             <CustomEditor
-
+                params={params}
+                setParams={setParams}
+                modified={modified}
                 enCoder={defEncoder}
                 deCoder={""}
                 // onClose={onClose}
@@ -188,7 +193,9 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
 })
 
 interface CustomEditorProps {
-
+    params: YakScript
+    setParams: (y: YakScript) => void
+    modified?: YakScript | undefined
     enCoder: string
     deCoder: string
     onClose?: () => void
@@ -223,7 +230,7 @@ Decoder = (func(reqBody) {
 `
 
 const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
-    const {enCoder, deCoder, onClose} = props
+    const {params, setParams, modified, enCoder, deCoder, onClose} = props
     const [enCodeValue, setEnCodeValue] = useState<string>("")
     const [deCodeValue, setDeCodeValue] = useState<string>("")
     const [codeValue, setCodeValue] = useState<string>("")
@@ -243,7 +250,7 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
         }
     }, []);
     return (
-        <div className={matcherStyles["matching-extraction-resize-box"]} style={{ display: 'flex' }}>
+        <div className={matcherStyles["matching-extraction-resize-box"]} style={{display: 'flex'}}>
             <YakitResizeBox
                 isVer={true}
                 freeze={false}
@@ -270,6 +277,28 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                         labelCol={{span: 5}}
                         wrapperCol={{span: 14}}
                     >
+                        <SelectOne
+                            disabled={!!modified}
+                            label={"模块类型"}
+                            data={[
+                                {value: "yak", text: "Yak 原生模块"},
+                                {value: "mitm", text: "MITM 模块"},
+                                {value: "packet-hack", text: "Packet 检查"},
+                                {value: "port-scan", text: "端口扫描插件"},
+                                {value: "codec", text: "Codec 模块"},
+                                {value: "nuclei", text: "nuclei Yaml模块"}
+                            ]}
+                            setValue={(Type) => {
+                                if (["packet-hack", "codec", "nuclei"].includes(Type))
+                                    setParams({
+                                        ...params,
+                                        Type,
+                                        IsGeneralModule: false
+                                    })
+                                else setParams({...params, Type})
+                            }}
+                            value={params.Type}
+                        />
                         <InputItem
                             label={"名称"}
                             required={true}
