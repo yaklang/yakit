@@ -39,6 +39,7 @@ export interface WebShellCreatorFormProp {
     noClose?: boolean
     showButton?: boolean
     setScript?: (i: WebShellDetail) => any
+    closeModal?: () => void
     isCreate?: boolean
 }
 
@@ -55,6 +56,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
     const [fromLayout, setFromLayout] = useState<FromLayoutProps>(defFromLayout)
 
     const [params, setParams, getParams] = useGetState<WebShellDetail>(props.modified || {} as WebShellDetail)
+
     const [paramsLoading, setParamsLoading] = useState(false)
 
     const [modified, setModified] = useState<WebShellDetail | undefined>(props.modified)
@@ -71,6 +73,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
                 props.onCreated && props.onCreated(data)
                 props.onChanged && props.onChanged(data)
             }
+            props.closeModal && props.closeModal()
         }).catch((err) => {
             failed(`创建 WebShell 失败: ${err}`)
         }).finally(() => {
@@ -81,7 +84,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
     })
     return (
         <div>
-            < Form {...fromLayout}>
+            <Form {...fromLayout}>
                 <WebShellFormContent
                     params={params}
                     setParams={setParams}
@@ -91,7 +94,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
                 <Form.Item colon={false} label={" "}>
                     <Space>
                         <YakitButton onClick={createWebShell} loading={createLoading}>
-                            保存
+                            添加
                         </YakitButton>
                     </Space>
                 </Form.Item>
@@ -154,7 +157,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
     }, [params.Url]);
     return (
         <>
-            <Form.Item label={"Shell 类型"} required={true}>
+            <Form.Item label={"Shell 类型"} required={true} rules={[{required: true, message: "该项为必填"}]}>
                 <YakitSelect
                     value={params.ShellType || "behinder"}
                     onSelect={(val) => {
@@ -223,11 +226,11 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                     addonAfter={
                         <IconSolidCodeIcon className={styles["icon-adjustments"]} onClick={
                             () => {
-                              const m=  showYakitModal(
+                                const m = showYakitModal(
                                     {
-                                        title : '编解码器',
-                                        subTitle:"用户可用自定义编解码器",
-                                        onCancel:() => {
+                                        title: '编解码器',
+                                        subTitle: "用户可用自定义编解码器",
+                                        onCancel: () => {
                                             console.log("asfasfas")
                                             m.destroy()
                                         },
