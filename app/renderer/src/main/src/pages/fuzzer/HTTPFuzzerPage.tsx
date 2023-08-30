@@ -106,7 +106,7 @@ import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNo
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
-import emiter from "@/utils/eventBus"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 

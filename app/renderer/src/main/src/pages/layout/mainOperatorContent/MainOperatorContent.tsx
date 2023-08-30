@@ -70,7 +70,7 @@ import {MainOperatorContext} from "../MainContext"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
-import emiter from "@/utils/eventBus"
+import emiter from "@/utils/eventBus/eventBus"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
