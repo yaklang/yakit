@@ -2152,11 +2152,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     ) : (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
                             <span>录屏</span>
-                            <span className={styles["shortcut-keys"]}>
+                            {/* <span className={styles["shortcut-keys"]}>
                                 {system === "Darwin"
                                     ? `${MacKeyborad[17]} ${MacKeyborad[16]} X`
                                     : `${WinKeyborad[17]} ${WinKeyborad[16]} X`}
-                            </span>
+                            </span> */}
                         </div>
                     ),
                     key: "screenCap"
@@ -2165,17 +2165,19 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     label: (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
                             <span>截屏</span>
-                            {screenshotLoading ? (
+                            {screenshotLoading && (
                                 <div className={styles["icon-loading-wrapper"]} onClick={(e) => e.stopPropagation()}>
                                     <LoadingOutlined className={styles["icon-hover-style"]}/>
                                 </div>
-                            ) : (
-                                <span className={styles["shortcut-keys"]}>
-                                    {system === "Darwin"
-                                        ? `${MacKeyborad[17]} ${MacKeyborad[16]} B`
-                                        : `${WinKeyborad[17]} ${WinKeyborad[16]} B`}
-                                </span>
-                            )}
+                            ) 
+                            // : (
+                            //     <span className={styles["shortcut-keys"]}>
+                            //         {system === "Darwin"
+                            //             ? `${MacKeyborad[17]} ${MacKeyborad[16]} B`
+                            //             : `${WinKeyborad[17]} ${WinKeyborad[16]} B`}
+                            //     </span>
+                            // )
+                            }
                         </div>
                     ),
                     key: "screenshot"
