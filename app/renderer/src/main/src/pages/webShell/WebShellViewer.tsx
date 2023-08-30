@@ -24,7 +24,7 @@ const {YakitPanel} = YakitCollapse
 
 
 export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
-    const [params, setParams] = useState<YakScript>()!
+    const [params, setParams] = useState<QueryWebShellRequest>(defQueryWebShellRequest)
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [loading, setLoading] = useState(false)
     const [available, setAvailable] = useState(false)
@@ -43,9 +43,7 @@ export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
         <div className={styles["cve-viewer"]}>
             {available && advancedQuery && (
                 <WebShellQuery
-                    params={params}
-                    setParams={setParams}
-                    // onChange={setParams}
+                    onChange={setParams}
                     advancedQuery={advancedQuery}
                     setAdvancedQuery={setAdvancedQuery}
                 />
@@ -70,9 +68,6 @@ export const defQueryWebShellRequest: QueryWebShellRequest = {
 }
 
 interface WebShellQueryProp {
-    params: YakScript
-    setParams: (y: YakScript) => void
-    modified?: YakScript | undefined
     defaultParams?: QueryWebShellRequest
     onChange?: (req: QueryWebShellRequest) => any
     advancedQuery: boolean //是否开启高级查询
@@ -80,14 +75,14 @@ interface WebShellQueryProp {
 }
 
 const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
-    const {params, setParams, modified, advancedQuery, setAdvancedQuery} = props
-    // const [params, setParams] = useState<QueryWebShellRequest>(props.defaultParams || defQueryWebShellRequest)
-    // useEffect(() => {
-    //     if (!props.onChange) {
-    //         return
-    //     }
-    //     props.onChange(params)
-    // }, [params])
+    const { advancedQuery, setAdvancedQuery} = props
+    const [params, setParams] = useState<QueryWebShellRequest>(props.defaultParams || defQueryWebShellRequest)
+    useEffect(() => {
+        if (!props.onChange) {
+            return
+        }
+        props.onChange(params)
+    }, [params])
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
     const onSwitchCollapse = useMemoizedFn((key) => {
@@ -129,11 +124,11 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                         <YakitPanel
                             header={
                                 <div className={fuzzerStyles["matchers-panel"]}>
-                                    WebShell 编码器
+                                    数据包编解码器
                                     <div className={fuzzerStyles["matchers-number"]}>{customCodecList?.length}</div>
                                 </div>
                             }
-                            key='WebShell 编码器'
+                            key='数据包编解码器'
                             extra={
                                 <>
                                     <Divider type='vertical' style={{margin: 0}}/>
@@ -142,9 +137,9 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                         size='small'
                                         onClick={(e) => {
                                             e.stopPropagation()
-                                            setTitle("WebShell 编码器")
-                                            if (activeKey?.findIndex((ele) => ele === "WebShell 编码器") === -1) {
-                                                onSwitchCollapse([...activeKey, "WebShell 编码器"])
+                                            setTitle("数据包编解码器")
+                                            if (activeKey?.findIndex((ele) => ele === "数据包编解码器") === -1) {
+                                                onSwitchCollapse([...activeKey, "数据包编解码器"])
                                             }
                                             setVisibleDrawer(true)
                                             // onAddMatchingAndExtractionCard("extractors")
@@ -174,11 +169,11 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                         <YakitPanel
                             header={
                                 <div className={fuzzerStyles["matchers-panel"]}>
-                                    WebShell 解码器
+                                    回显编解码器
                                     <div className={fuzzerStyles["matchers-number"]}>{customCodecList?.length}</div>
                                 </div>
                             }
-                            key='WebShell 解码器'
+                            key='回显编解码器'
                             extra={
                                 <>
                                     <Divider type='vertical' style={{margin: 0}}/>
@@ -187,9 +182,9 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                         size='small'
                                         onClick={(e) => {
                                             e.stopPropagation()
-                                            setTitle("WebShell 解码器")
-                                            if (activeKey?.findIndex((ele) => ele === "WebShell 解码器") === -1) {
-                                                onSwitchCollapse([...activeKey, "WebShell 解码器"])
+                                            setTitle("回显编解码器")
+                                            if (activeKey?.findIndex((ele) => ele === "回显编解码器") === -1) {
+                                                onSwitchCollapse([...activeKey, "回显编解码器"])
                                             }
                                             setVisibleDrawer(true)
                                         }}
@@ -278,9 +273,6 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
 
                 </Form>
                 <CustomCodecEditor
-                    params={params}
-                    setParams={setParams}
-                    modified={modified}
                     title={title}
                     visibleDrawer={visibleDrawer}
                     onClose={() => setVisibleDrawer(false)}
