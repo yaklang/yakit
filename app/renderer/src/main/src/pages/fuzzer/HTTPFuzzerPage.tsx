@@ -16,7 +16,8 @@ import {
     useMemoizedFn,
     useSize,
     useThrottleFn,
-    useUpdateEffect
+    useUpdateEffect,
+    useWhyDidYouUpdate
 } from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
@@ -531,8 +532,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [advancedConfig, setAdvancedConfig] = useState(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
-    const [hotPatchCode, setHotPatchCode] = useState<string>("")
-    const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
+    // const [hotPatchCode, setHotPatchCode] = useState<string>("")
+    // const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
 
@@ -555,7 +556,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     /**/
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-    const [fuzzToken, setFuzzToken] = useState("")
 
     const [refreshTrigger, setRefreshTrigger] = useState(false)
 
@@ -644,7 +644,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setUpShareContent(JSON.parse(props.shareContent))
         }
     }, [props.shareContent])
-
+    const hotPatchCodeRef=useRef<string>('')
+    const hotPatchCodeWithParamGetterRef=useRef<string>('')
     useEffect(() => {
         getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
             if (!remoteData) {
@@ -783,7 +784,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setHistoryTask(undefined)
         setLoading(true)
         setDroppedCount(0)
-        ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
+        ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, tokenRef.current).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
                 .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
@@ -832,8 +833,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const httpParams: FuzzerRequestProps = {
             ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
             RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
-            HotPatchCode: hotPatchCode,
-            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
+            HotPatchCode: hotPatchCodeRef.current,
+            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
             FuzzerTabIndex: props.id
         }
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
@@ -843,7 +844,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-        ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
+        ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
@@ -890,12 +891,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-HTTPFuzzer", fuzzToken)
+        ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
     })
     const dCountRef = useRef<number>(0)
+    const tokenRef=useRef<string>(randomString(60))
     useEffect(() => {
-        const token = randomString(60)
-        setFuzzToken(token)
+        const token =tokenRef.current
 
         const dataToken = `${token}-data`
         const errToken = `${token}-error`
@@ -1074,8 +1075,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             content: (
                 <div className={styles["http-fuzzer-hotPatch"]}>
                     <HTTPFuzzerHotPatch
-                        initialHotPatchCode={hotPatchCode}
-                        initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                        initialHotPatchCode={hotPatchCodeRef.current}
+                        initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                         onInsert={(tag) => {
                             if (reqEditor) monacoEditorWrite(reqEditor, tag)
                             m.destroy()
@@ -1312,29 +1313,70 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [successFuzzer])
 
     const [exportData, setExportData] = useState<FuzzerResponse[]>([])
-
+    const onShowResponseMatcherAndExtraction = useMemoizedFn((activeType: MatchingAndExtraction, activeKey: string) => {
+        setShowMatcherAndExtraction(true)
+        setActiveType(activeType)
+        setActiveKey(activeKey)
+    })
+    const setHotPatchCode = useMemoizedFn((v: string) => {
+        hotPatchCodeRef.current = v
+    })
+    const setHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
+        hotPatchCodeWithParamGetterRef.current = v
+    })
+    const onSetRequest = useMemoizedFn((i: string) => {
+        setRequest(i)
+    })
+    useWhyDidYouUpdate(`HTTPFuzzerPage-${props.id}`, {
+        advancedConfigValue,
+        inViewport,
+        request,
+        advancedConfig,
+        redirectedResponse,
+        historyTask,
+        // hotPatchCode,
+        // hotPatchCodeWithParamGetter,
+        hotPatchCodeRef,
+        hotPatchCodeWithParamGetterRef,
+        affixSearch,
+        defaultResponseSearch,
+        currentSelectId,
+        refreshProxy,
+        droppedCount,
+        loading,
+        _firstResponse,
+        successFuzzer,
+        failedFuzzer,
+        _successCount,
+        _failedCount,
+        reqEditor,
+        tokenRef,
+        refreshTrigger,
+        showMatcherAndExtraction,
+        showSuccess,
+        query,
+        activeType,
+        activeKey
+    })
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
-            <HttpQueryAdvancedConfig
-                advancedConfigValue={{
-                    ...advancedConfigValue
-                }}
-                visible={advancedConfig}
-                setVisible={onSetAdvancedConfig}
-                onInsertYakFuzzer={onInsertYakFuzzer}
-                onValuesChange={(v) => onGetFormValue(v)}
-                refreshProxy={refreshProxy}
-                defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
-                outsideShowResponseMatcherAndExtraction={
-                    onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
-                }
-                onShowResponseMatcherAndExtraction={(activeType, activeKey) => {
-                    setShowMatcherAndExtraction(true)
-                    setActiveType(activeType)
-                    setActiveKey(activeKey)
-                }}
-                inViewportCurrent={inViewport}
-            />
+            <React.Suspense fallback={<>加载中...</>}>
+                <HttpQueryAdvancedConfig
+                    advancedConfigValue={advancedConfigValue}
+                    visible={advancedConfig}
+                    setVisible={onSetAdvancedConfig}
+                    onInsertYakFuzzer={onInsertYakFuzzer}
+                    onValuesChange={onGetFormValue}
+                    refreshProxy={refreshProxy}
+                    defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
+                    outsideShowResponseMatcherAndExtraction={
+                        onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
+                    }
+                    onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
+                    inViewportCurrent={inViewport}
+                    id={props.id}
+                />
+            </React.Suspense>
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
                     {loading ? (
@@ -1706,10 +1748,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <WebFuzzerNewEditor
                             refreshTrigger={refreshTrigger}
                             request={getRequest()}
-                            setRequest={(i) => setRequest(i)}
+                            setRequest={onSetRequest}
                             isHttps={advancedConfigValue.isHttps}
-                            hotPatchCode={hotPatchCode}
-                            hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                            hotPatchCode={hotPatchCodeRef.current}
+                            hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                             setHotPatchCode={setHotPatchCode}
                             setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
                             selectId='sequence'

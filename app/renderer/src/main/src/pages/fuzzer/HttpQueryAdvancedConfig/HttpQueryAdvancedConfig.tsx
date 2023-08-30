@@ -18,7 +18,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn,useWhyDidYouUpdate} from "ahooks"
 import {Form, Tooltip, Collapse, Space, Divider, Descriptions} from "antd"
 import {useWatch} from "antd/lib/form/Form"
 import React, {useState, useRef, useEffect, useMemo, ReactNode, useContext} from "react"
@@ -76,8 +76,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         inViewportCurrent
     } = props
 
-    const [retryActive, setRetryActive] = useState<string[]>(["重试条件"])
-
     const [proxyList, setProxyList] = useState<SelectOptionProps[]>([]) // 代理代表
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
@@ -91,8 +89,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const [form] = Form.useForm()
     const queryRef = useRef(null)
-    const [inViewport] = useInViewport(queryRef)
-
+    const [inViewport = false] = useInViewport(queryRef)
     const retry = useWatch("retry", form)
     const noRetry = useWatch("noRetry", form)
     const etcHosts = useWatch("etcHosts", form) || []
@@ -117,6 +114,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     useEffect(() => {
         ipcRenderer.on("fetch-open-matcher-and-extraction", openDrawer)
+        getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
+            try {
+                setTimeout(() => {
+                    setActiveKey(data ? JSON.parse(data) : "请求包配置")
+                }, 100)
+            } catch (error) {
+                yakitFailed("获取折叠面板的激活key失败:" + error)
+            }
+        })
         return () => {
             ipcRenderer.removeListener("fetch-open-matcher-and-extraction", openDrawer)
         }
@@ -143,20 +149,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             ...advancedConfigValue
         })
     }, [advancedConfigValue])
-    useEffect(() => {
-        let newRetryActive = retryActive
-        if (retry) {
-            newRetryActive = [...newRetryActive, "重试条件"]
-        } else {
-            newRetryActive = newRetryActive.filter((ele) => ele !== "重试条件")
-        }
-        if (noRetry) {
-            newRetryActive = [...newRetryActive, "不重试条件"]
-        } else {
-            newRetryActive = newRetryActive.filter((ele) => ele !== "不重试条件")
-        }
-        setRetryActive(newRetryActive)
-    }, [retry, noRetry])
 
     useEffect(() => {
         getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
@@ -296,6 +288,42 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             setType("extractors")
         }
     })
+    const retryActive: string[] = useMemo(() => {
+        let newRetryActive = ["重试条件"]
+        if (retry) {
+            newRetryActive = [...newRetryActive, "重试条件"]
+        } else {
+            newRetryActive = newRetryActive.filter((ele) => ele !== "重试条件")
+        }
+        if (noRetry) {
+            newRetryActive = [...newRetryActive, "不重试条件"]
+        } else {
+            newRetryActive = newRetryActive.filter((ele) => ele !== "不重试条件")
+        }
+        return newRetryActive
+    }, [retry, noRetry])
+    useWhyDidYouUpdate(`HttpQueryAdvancedConfig111-${props.id}`, {
+        ...props,
+        retryActive,
+        proxyList,
+        activeKey,
+        variableActiveKey,
+        visibleDrawer,
+        defActiveKey,
+        type,
+        httpResponse,
+        form,
+        inViewport,
+        retry,
+        noRetry,
+        etcHosts,
+        matchersList,
+        extractorList,
+        matchersCondition,
+        filterMode,
+        hitColor
+    })
+    console.count(props.id)
     return (
         <div className={styles["http-query-advanced-config"]} style={{ display: visible ? "" : "none" }} ref={queryRef}>
             {/* <div className={styles["advanced-config-heard"]}>
@@ -518,7 +546,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         <Collapse
                             ghost
                             activeKey={retryActive}
-                            onChange={(e) => setRetryActive(e as string[])}
                             expandIcon={(e) => (e.isActive ? <SolidChevronDownIcon /> : <SolidChevronRightIcon />)}
                             destroyInactivePanel={true}
                         >

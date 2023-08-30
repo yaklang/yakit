@@ -5,6 +5,7 @@
     flex-direction: column;
     min-width: 300px;
     max-width: 300px;
+    width: 300px;
     border-right: 1px solid var(--yakit-border-color);
     animation: show 0.5s linear;
     background-color: var(--yakit-card-background-color);
@@ -372,6 +373,12 @@
     }
 
     50% {
+        width: 100px;
+        opacity: 0.6;
+    }
+
+    70% {
+        width: 200px;
         opacity: 0.8;
     }
 
