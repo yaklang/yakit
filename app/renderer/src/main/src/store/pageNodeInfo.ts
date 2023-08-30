@@ -225,7 +225,7 @@ export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((se
         }
         node.pageNodeList = [...pageNodeList];
         newVal.set(key, { ...node })
-        console.log('removePageNodeInfoByPageId', newVal)
+        // console.log('removePageNodeInfoByPageId', newVal)
         set({
             ...get(),
             pageNode: newVal

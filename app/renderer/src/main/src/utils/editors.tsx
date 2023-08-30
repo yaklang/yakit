@@ -1270,7 +1270,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 size={"small"}
                 loading={props.loading}
                 bordered={props.bordered}
-                style={{height: "100%", width: "100%"}}
+                style={{height: "100%", width: "100%",backgroundColor:'#f0f2f5'}}
                 title={
                     !props.noHeader && (
                         <Space>

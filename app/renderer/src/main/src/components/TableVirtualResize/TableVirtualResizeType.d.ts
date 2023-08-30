@@ -222,6 +222,7 @@ export interface SelectSearchProps {
     value: string | string[]
     filterProps?: FilterProps
     onClose: () => void
+    onQuery: () => void
 }
 
 export interface FixedWidthProps {

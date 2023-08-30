@@ -27,11 +27,11 @@ import {EditorDetailInfoProps} from "@/components/NewEditorSelectRange"
 import {useThrottleFn} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 
-const directionStyle = (editorInfo,isCenter=true) => {
+const directionStyle = (editorInfo, isCenter = true) => {
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
-        if (direction.x === "middle"&&isCenter) {
+        if (direction.x === "middle" && isCenter) {
             obj.transform = "translate(-38%, 0px)"
         }
         if (direction.x === "right") {
@@ -49,6 +49,7 @@ export interface HTTPFuzzerClickEditorMenuProps {
     editorInfo?: EditorDetailInfoProps
     insert: (v: QueryFuzzerLabelResponseProps) => void
     addLabel: () => void
+    className?: string
 }
 
 export interface LabelDataProps {
@@ -211,15 +212,18 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         {wait: 200}
     ).run
     return (
-        <div className={styles["http-fuzzer-click-editor"]} onMouseLeave={()=>{
-            isMainEnter.current = false
-            setTimeout(()=>{
-                if(!isSimpleEnter.current&&!isDragging.current){
-                    setEnterSimple(false)
-                }
-            },100)
-        }}>
-            <div className={styles["http-fuzzer-click-editor-simple"]}>
+        <div
+            className={classNames(styles["http-fuzzer-click-editor"])}
+            onMouseLeave={() => {
+                isMainEnter.current = false
+                setTimeout(() => {
+                    if (!isSimpleEnter.current && !isDragging.current) {
+                        setEnterSimple(false)
+                    }
+                }, 100)
+            }}
+        >
+            <div className={classNames(styles["http-fuzzer-click-editor-simple"], props.className || "")}>
                 <div
                     className={styles["show-box"]}
                     onMouseEnter={() => {
@@ -245,15 +249,14 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     // 此处会引起拖拽卡死
                     onMouseLeave={() => {
                         isSimpleEnter.current = false
-                        setTimeout(()=>{
-                          if (!isDragging.current&&!isMainEnter.current) setEnterSimple(false)  
-                        },100)
-                        
+                        setTimeout(() => {
+                            if (!isDragging.current && !isMainEnter.current) setEnterSimple(false)
+                        }, 100)
                     }}
-                    onMouseEnter={()=>{
+                    onMouseEnter={() => {
                         isSimpleEnter.current = true
                     }}
-                    style={{...directionStyle(editorInfo,false)}}
+                    style={{...directionStyle(editorInfo, false)}}
                 >
                     <div className={styles["menu-header"]}>
                         <div className={styles["menu-header-left"]}>
@@ -261,15 +264,15 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                             <span className={styles["menu-header-left-count"]}>{labelData.length || ""}</span>
                         </div>
                         <div className={styles["menu-header-opt"]}>
-                            <YakitButton style={{paddingLeft: 2, paddingRight: 2}} type='text' onClick={() => addLabel()}>
+                            <YakitButton
+                                style={{paddingLeft: 2, paddingRight: 2}}
+                                type='text'
+                                onClick={() => addLabel()}
+                            >
                                 添加 <PlusOutlined />
                             </YakitButton>
                             <div className={styles["line"]}></div>
-                            <YakitButton
-                                type='text2'
-                                style={{color: "#85899E"}}
-                                onClick={() => reset()}
-                            >
+                            <YakitButton type='text2' style={{color: "#85899E"}} onClick={() => reset()}>
                                 复原
                             </YakitButton>
                         </div>
@@ -287,11 +290,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                 {(provided) => (
                                     <div {...provided.droppableProps} ref={provided.innerRef}>
                                         {labelData.map((item, index) => (
-                                            <Draggable
-                                                key={item?.Description}
-                                                draggableId={item.Id}
-                                                index={index}
-                                            >
+                                            <Draggable key={item?.Description} draggableId={item.Id} index={index}>
                                                 {(provided, snapshot) => {
                                                     // console.log("provided", provided.draggableProps.style)
                                                     return (
@@ -639,9 +638,10 @@ export interface HTTPFuzzerRangeEditorMenuProps {
     insert: (v: any) => void
     rangeValue: string
     replace?: (v: string) => void
+    hTTPFuzzerClickEditorMenuProps: HTTPFuzzerClickEditorMenuProps
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
-    const {editorInfo, insert, rangeValue, replace} = props
+    const {editorInfo, insert, rangeValue, replace, hTTPFuzzerClickEditorMenuProps} = props
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     // 菜单显示大小
     const [menuSize, setMenuSize] = useState<"middle" | "small">()
@@ -658,70 +658,78 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
     // 鼠标是否进入simple
     const isSimpleEnter = useRef<boolean>(false)
     return (
-        <div className={styles["http-fuzzer-range-editor"]}>
-            <div className={styles["http-fuzzer-range-editor-simple"]}>
-                <div className={styles["show-box"]}>
+        <div className={styles["http-fuzzer-range-editor-body"]} style={{display: "flex"}}>
+            <HTTPFuzzerClickEditorMenu
+                className={styles["range-click-editor-menu"]}
+                {...hTTPFuzzerClickEditorMenuProps}
+            />
+
+            <div className={styles["http-fuzzer-range-editor"]}>
+                <div className={styles["http-fuzzer-range-editor-simple"]}>
+                    <div className={styles["show-box"]}>
+                        <div className={styles["line"]}></div>
+                        <div
+                            className={styles["encode-box"]}
+                            onMouseEnter={() => {
+                                isMainEnter.current = true
+                                setSegmentedType("encode")
+                            }}
+                            onMouseLeave={() => {
+                                isMainEnter.current = false
+                                setTimeout(() => {
+                                    if (!isSimpleEnter.current) {
+                                        setSegmentedType(undefined)
+                                    }
+                                }, 100)
+                            }}
+                        >
+                            <IconSolidCodeIcon className={styles["tag"]} />
+                            <div className={styles["content"]}>编码</div>
+                            {segmentedType === "encode" ? (
+                                <ChevronUpIcon className={styles["up"]} />
+                            ) : (
+                                <ChevronDownIcon className={styles["down"]} />
+                            )}
+                        </div>
+                        <div className={styles["line"]}></div>
+                        <div
+                            className={styles["decode-box"]}
+                            onClick={() => {
+                                setSegmentedType("decode")
+                            }}
+                        >
+                            <IconSolidSparklesIcon className={styles[""]} />
+                            <div className={styles["content"]}>解码</div>
+                        </div>
+                    </div>
+                </div>
+                {segmentedType && (
                     <div
-                        className={styles["encode-box"]}
+                        style={{...directionStyle(editorInfo)}}
+                        className={classNames(styles["http-fuzzer-range-editor-menu"], {
+                            [styles["http-fuzzer-range-editor-menu-middle"]]: menuSize === "middle",
+                            [styles["http-fuzzer-range-editor-menu-small"]]: menuSize === "small"
+                        })}
+                        onMouseLeave={() => {
+                            isSimpleEnter.current = false
+                            setTimeout(() => {
+                                if (!isMainEnter.current) setSegmentedType(undefined)
+                            }, 100)
+                        }}
                         onMouseEnter={() => {
-                            isMainEnter.current = true
-                            setSegmentedType("encode")
-                        }}
-                        onMouseLeave={()=>{
-                            isMainEnter.current = false
-                            setTimeout(()=>{
-                                if(!isSimpleEnter.current){
-                                    setSegmentedType(undefined)
-                                }
-                            },100)
+                            isSimpleEnter.current = true
                         }}
                     >
-                        <IconSolidCodeIcon className={styles["tag"]} />
-                        <div className={styles["content"]}>编码</div>
-                        {segmentedType === "encode" ? (
-                            <ChevronUpIcon className={styles["up"]} />
-                        ) : (
-                            <ChevronDownIcon className={styles["down"]} />
-                        )}
+                        <div className={styles["menu-content"]}>
+                            {segmentedType === "encode" ? (
+                                <EncodeComponent insert={insert} />
+                            ) : (
+                                <DecodeComponent rangeValue={rangeValue} replace={replace} />
+                            )}
+                        </div>
                     </div>
-                    <div className={styles["line"]}></div>
-                    <div
-                        className={styles["decode-box"]}
-                        onClick={() => {
-                            setSegmentedType("decode")
-                        }}
-                    >
-                        <IconSolidSparklesIcon className={styles[""]} />
-                        <div className={styles["content"]}>解码</div>
-                    </div>
-                </div>
+                )}
             </div>
-            {segmentedType && (
-                <div
-                    style={{...directionStyle(editorInfo)}}
-                    className={classNames(styles["http-fuzzer-range-editor-menu"], {
-                        [styles["http-fuzzer-range-editor-menu-middle"]]: menuSize === "middle",
-                        [styles["http-fuzzer-range-editor-menu-small"]]: menuSize === "small"
-                    })}
-                    onMouseLeave={() => {
-                        isSimpleEnter.current = false
-                        setTimeout(()=>{
-                          if (!isMainEnter.current) setSegmentedType(undefined)
-                        },100)
-                    }}
-                    onMouseEnter={()=>{
-                        isSimpleEnter.current = true
-                    }}
-                >
-                    <div className={styles["menu-content"]}>
-                        {segmentedType === "encode" ? (
-                            <EncodeComponent insert={insert} />
-                        ) : (
-                            <DecodeComponent rangeValue={rangeValue} replace={replace} />
-                        )}
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

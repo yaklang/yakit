@@ -28,14 +28,21 @@
         }
     }
     .resize-card-icon {
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
         margin-left: 8px;
         cursor: pointer;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        &:hover {
+            background-color: var(--yakit-background-color);
+        }
         svg {
             color: var(--yakit-body-text-color);
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             &:hover {
                 color: var(--yakit-primary-4);
             }

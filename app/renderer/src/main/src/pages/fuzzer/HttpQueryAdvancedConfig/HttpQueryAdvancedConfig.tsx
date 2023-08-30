@@ -295,10 +295,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     })
     return (
         <div className={styles["http-query-advanced-config"]} style={{ display: visible ? "" : "none" }} ref={queryRef}>
-            <div className={styles["advanced-config-heard"]}>
+            {/* <div className={styles["advanced-config-heard"]}>
                 <span>高级配置</span>
                 <YakitSwitch wrapperClassName={styles["btn-padding-right-0"]} checked={visible} onChange={setVisible} />
-            </div>
+            </div> */}
             <Form
                 form={form}
                 colon={false}

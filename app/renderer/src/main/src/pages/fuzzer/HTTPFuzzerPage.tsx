@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactNode, useContext, useEffect, useMemo, useRef, useState} from "react"
 import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider} from "antd"
 import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -105,6 +105,8 @@ import {execCodec} from "@/utils/encodec"
 import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
+import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
+import emiter from "@/utils/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -261,7 +263,9 @@ export interface FuzzerRequestProps {
     HitColor?: string
     InheritVariables?: boolean
     InheritCookies?: boolean
+    /**@name 序列化的item唯一key */
     FuzzerIndex?: string
+    /**@name fuzzer Tab的唯一key */
     FuzzerTabIndex?: string
 }
 
@@ -557,7 +561,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // editor Response
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
-
+    const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
+    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
     // second Node
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
@@ -574,6 +579,22 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const {getPageNodeInfoByPageId} = usePageNode()
 
+    useEffect(() => {
+        emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
+        return () => {
+            emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
+        }
+    }, [])
+
+    useEffect(() => {
+        getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
+            .then((data) => {
+                setShowResponseInfoSecondEditor(data === "false" ? false : true)
+            })
+            .catch(() => {
+                setShowResponseInfoSecondEditor(true)
+            })
+    }, [])
     useEffect(() => {
         ipcRenderer.on("fetch-ref-webFuzzer-request", onUpdateRequest)
         return () => {
@@ -748,6 +769,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             resetResponse()
         }
     }, [props.isHttps, props.isGmTLS, props.request])
+
+    const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
+        onSetAdvancedConfig(!advancedConfig)
+    })
+
     const refreshRequest = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
     })
@@ -807,7 +833,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
             RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
             HotPatchCode: hotPatchCode,
-            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter
+            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
+            FuzzerTabIndex: props.id
         }
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
@@ -951,6 +978,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             lastUpdateCount = 0
             setTimeout(() => {
                 setLoading(false)
+                getTotal()
             }, 500)
         })
 
@@ -1090,12 +1118,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const cachedTotal = successFuzzer.length + failedFuzzer.length
     const [currentPage, setCurrentPage] = useState<number>(0)
     const [total, setTotal] = useState<number>()
+    /**获取上一个/下一个 */
     const getList = useMemoizedFn((pageInt: number) => {
         setLoading(true)
+        const params = {
+            FuzzerTabIndex: props.id,
+            Pagination: {Page: pageInt, Limit: 1}
+        }
         ipcRenderer
-            .invoke("QueryHistoryHTTPFuzzerTaskEx", {
-                Pagination: {Page: pageInt, Limit: 1}
-            })
+            .invoke("QueryHistoryHTTPFuzzerTaskEx", params)
             .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
@@ -1118,8 +1149,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         getList(currentPage - 1)
     })
     const onNextPage = useMemoizedFn(() => {
-        if (!total) return
-        if (currentPage == total) {
+        if (!Number(total)) return
+        if (currentPage >= Number(total)) {
             return
         }
         setCurrentPage(currentPage + 1)
@@ -1133,6 +1164,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const getTotal = useMemoizedFn(() => {
         ipcRenderer
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
+                FuzzerTabIndex: props.id,
                 Pagination: {Page: 1, Limit: 1}
             })
             .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
@@ -1280,6 +1312,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [successFuzzer])
 
     const [exportData, setExportData] = useState<FuzzerResponse[]>([])
+
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
@@ -1331,12 +1364,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             发送请求
                         </YakitButton>
                     )}
-                    {!advancedConfig && (
+                    {/* {!advancedConfig && (
                         <div className={styles["display-flex"]}>
                             <span>高级配置</span>
                             <YakitSwitch checked={advancedConfig} onChange={onSetAdvancedConfig} />
                         </div>
-                    )}
+                    )} */}
                     <div className={styles["fuzzer-heard-force"]}>
                         <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
                         <YakitCheckbox
@@ -1368,13 +1401,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     <HTTPFuzzerHistorySelector
                                         currentSelectId={currentSelectId}
                                         onSelect={(e, page) => {
-                                            setCurrentPage(page)
+                                            // setCurrentPage(page)
                                             loadHistory(e)
                                         }}
                                         onDeleteAllCallback={() => {
-                                            setCurrentPage(0)
+                                            // setCurrentPage(0)
                                             getTotal()
                                         }}
+                                        fuzzerTabIndex={props.id}
                                     />
                                 </div>
                             }
@@ -1409,7 +1443,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         advancedConfigValue.filterMode === "onlyMatch"
                                             ? advancedConfigValue.hitColor
                                             : "",
-                                    Params: advancedConfigValue.params || []
+                                    Params: advancedConfigValue.params || [],
                                 }
                                 ipcRenderer
                                     .invoke("RedirectRequest", redirectRequestProps)
@@ -1453,7 +1487,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     />
                                     <ChevronRightIcon
                                         className={classNames(styles["chevron-icon"], {
-                                            [styles["chevron-icon-disable"]]: currentPage == total || !total
+                                            [styles["chevron-icon-disable"]]:
+                                                currentPage >= Number(total) || !Number(total)
                                         })}
                                         onClick={() => onNextPage()}
                                     />
@@ -1582,6 +1617,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 query={query}
                                 setQuery={(q) => setQuery({...q})}
                                 sendPayloadsType='fuzzer'
+                                setShowExtra={setShowExtra}
+                                showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                                setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                             />
                         )
                     }}
@@ -1688,6 +1726,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     system={props.system}
                                     showMatcherAndExtraction={showMatcherAndExtraction}
                                     setShowMatcherAndExtraction={setShowMatcherAndExtraction}
+                                    showExtra={showExtra}
+                                    setShowExtra={setShowExtra}
                                     matcherValue={{
                                         hitColor: advancedConfigValue.hitColor || "red",
                                         matchersCondition: advancedConfigValue.matchersCondition || "and",
@@ -1710,6 +1750,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         })
                                     }}
                                     webFuzzerValue={StringToUint8Array(request)}
+                                    showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                                    setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                                 />
                             ) : (
                                 <>
@@ -1805,6 +1847,9 @@ interface SecondNodeExtraProps {
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
     sendPayloadsType: string
     size?: YakitButtonProp["size"]
+    setShowExtra: (b: boolean) => void
+    showResponseInfoSecondEditor: boolean
+    setShowResponseInfoSecondEditor: (b: boolean) => void
 }
 
 /**
@@ -1823,7 +1868,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         query,
         setQuery,
         sendPayloadsType,
-        size = "small"
+        size = "small",
+        setShowExtra,
+        showResponseInfoSecondEditor,
+        setShowResponseInfoSecondEditor
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -1847,14 +1895,14 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         })
     }, [query])
 
-    const onViewExecResults = useMemoizedFn(() => {
-        showYakitModal({
-            title: "提取结果",
-            width: "60%",
-            footer: <></>,
-            content: <ExtractionResultsContent list={rsp.ExtractedResults} />
-        })
-    })
+    // const onViewExecResults = useMemoizedFn(() => {
+    //     showYakitModal({
+    //         title: "提取结果",
+    //         width: "60%",
+    //         footer: <></>,
+    //         content: <ExtractionResultsContent list={rsp.ExtractedResults} />
+    //     })
+    // })
 
     if (onlyOneResponse) {
         const searchNode = (
@@ -1889,8 +1937,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         showResponseViaResponseRaw(rsp.ResponseRaw || "")
                     }}
                 />
-                {rsp.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0 && (
-                    <YakitButton type='outline2' size={size} onClick={() => onViewExecResults()}>
+                {((rsp.Payloads && rsp.Payloads.length > 0) ||
+                    rsp.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0) && (
+                    <YakitButton type='outline2' size={size} onClick={() => setShowExtra(true)}>
                         查看提取结果
                     </YakitButton>
                 )}
@@ -1903,6 +1952,18 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 >
                     详情
                 </YakitButton>
+                <Tooltip title={showResponseInfoSecondEditor ? "隐藏响应信息" : "显示响应信息"}>
+                    <YakitButton
+                        type='text2'
+                        size='small'
+                        icon={
+                            <OutlineAnnotationIcon
+                                onClick={() => setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)}
+                            />
+                        }
+                        isActive={showResponseInfoSecondEditor}
+                    />
+                </Tooltip>
             </div>
         )
     }
@@ -2197,12 +2258,17 @@ interface ResponseViewerProps {
     system?: string
     showMatcherAndExtraction: boolean
     setShowMatcherAndExtraction: (b: boolean) => void
+    showExtra: boolean
+    setShowExtra: (b: boolean) => void
     matcherValue: MatcherValueProps
     extractorValue: ExtractorValueProps
     defActiveKey: string
     defActiveType: MatchingAndExtraction
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
     webFuzzerValue?: Uint8Array
+
+    showResponseInfoSecondEditor: boolean
+    setShowResponseInfoSecondEditor: (b: boolean) => void
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
@@ -2212,14 +2278,18 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             defaultResponseSearch,
             showMatcherAndExtraction,
             setShowMatcherAndExtraction,
+            showExtra,
+            setShowExtra,
             extractorValue,
             matcherValue,
             defActiveKey,
             defActiveType,
-            onSaveMatcherAndExtraction
+            onSaveMatcherAndExtraction,
+            showResponseInfoSecondEditor,
+            setShowResponseInfoSecondEditor
         } = props
         const [reason, setReason] = useState<string>("未知原因")
-        const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
+
         const [activeKey, setActiveKey] = useState<string>("")
         const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
@@ -2235,17 +2305,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 let r = "未知原因"
                 r = fuzzerResponse!.Reason
                 setReason(r)
+                setShowExtra(
+                    (fuzzerResponse.Payloads && fuzzerResponse.Payloads.length > 0) ||
+                        fuzzerResponse.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0
+                )
             } catch (e) {}
         }, [fuzzerResponse])
-        useEffect(() => {
-            getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
-                .then((data) => {
-                    setShowResponseInfoSecondEditor(data === "false" ? false : true)
-                })
-                .catch(() => {
-                    setShowResponseInfoSecondEditor(true)
-                })
-        }, [])
+
         const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
             return {
                 overlayWidgetv: {
@@ -2271,8 +2337,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 p.secondRatio = "50%"
                 p.firstRatio = "50%"
             }
+            if (showExtra) {
+                p.firstRatio = "80%"
+                p.secondRatio = "20%"
+            }
             return p
-        }, [showMatcherAndExtraction])
+        }, [showMatcherAndExtraction, showExtra])
+        const show = useMemo(() => showMatcherAndExtraction || showExtra, [showMatcherAndExtraction, showExtra])
         const extraEditorProps = useCreation(() => {
             const overlayWidget = {
                 onAddOverlayWidget: (editor, isShow) => onAddOverlayWidget(editor, fuzzerResponse, isShow)
@@ -2283,8 +2354,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             <>
                 <YakitResizeBox
                     isVer={true}
-                    lineStyle={{display: !showMatcherAndExtraction ? "none" : ""}}
-                    firstNodeStyle={{padding: !showMatcherAndExtraction ? 0 : undefined}}
+                    lineStyle={{display: !show ? "none" : "", background: "#f0f2f5"}}
+                    firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
                     firstNode={
                         <NewEditorSelectRange
                             defaultSearchKeyword={defaultResponseSearch}
@@ -2331,9 +2402,6 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                 )
                             }
                             readOnly={true}
-                            // onAddOverlayWidget={(editor, isShow) => {
-                            //     onAddOverlayWidget(editor, fuzzerResponse, isShow)
-                            // }}
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
                             webFuzzerValue={props.webFuzzerValue}
@@ -2353,27 +2421,99 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         />
                     }
                     secondNode={
-                        showMatcherAndExtraction ? (
-                            <MatcherAndExtraction
-                                ref={ref}
-                                onClose={() => setShowMatcherAndExtraction(false)}
-                                onSave={onSaveMatcherAndExtraction}
-                                httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
-                                matcherValue={matcherValue}
-                                extractorValue={extractorValue}
-                                defActiveKey={activeKey}
-                                defActiveType={activeType}
-                            />
-                        ) : (
-                            <></>
-                        )
+                        <>
+                            {showMatcherAndExtraction ? (
+                                <MatcherAndExtraction
+                                    ref={ref}
+                                    onClose={() => setShowMatcherAndExtraction(false)}
+                                    onSave={onSaveMatcherAndExtraction}
+                                    httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
+                                    matcherValue={matcherValue}
+                                    extractorValue={extractorValue}
+                                    defActiveKey={activeKey}
+                                    defActiveType={activeType}
+                                />
+                            ) : (
+                                <></>
+                            )}
+                            {showExtra ? (
+                                <ResponseViewerSecondNode
+                                    fuzzerResponse={fuzzerResponse}
+                                    onClose={() => setShowExtra(false)}
+                                />
+                            ) : (
+                                <></>
+                            )}
+                        </>
                     }
-                    secondNodeStyle={{display: showMatcherAndExtraction ? "" : "none", padding: 0}}
+                    secondNodeStyle={{display: show ? "" : "none", padding: 0}}
                     lineDirection='bottom'
-                    secondMinSize={300}
+                    secondMinSize={showMatcherAndExtraction ? 300 : 100}
                     {...ResizeBoxProps}
                 />
             </>
         )
     })
 )
+
+interface ResponseViewerSecondNodeProps {
+    fuzzerResponse: FuzzerResponse
+    onClose: () => void
+}
+type tabType = "payload" | "extractContent"
+const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.memo((props) => {
+    const {fuzzerResponse, onClose} = props
+    const [type, setType] = useState<tabType>("payload")
+    const option = useMemo(() => {
+        return [
+            {
+                icon: <OutlinePayloadIcon />,
+                value: "payload",
+                label: "Payload"
+            },
+            {
+                icon: <OutlineBeakerIcon />,
+                value: "extractContent",
+                label: "提取内容"
+            }
+        ]
+    }, [])
+    return (
+        <div className={styles["payload-extract-content"]}>
+            <div className={styles["payload-extract-content-heard"]}>
+                <div className={styles["payload-extract-content-heard-tab"]}>
+                    {option.map((item) => (
+                        <div
+                            key={item.value}
+                            className={classNames(styles["payload-extract-content-heard-tab-item"], {
+                                [styles["payload-extract-content-heard-tab-item-active"]]: type === item.value
+                            })}
+                            onClick={() => {
+                                setType(item.value as tabType)
+                            }}
+                        >
+                            <span className={styles["tab-icon"]}>{item.icon}</span>
+                            {item.label}
+                        </div>
+                    ))}
+                </div>
+                <YakitButton type='text2' icon={<OutlineXIcon />} size='small' onClick={() => onClose()} />
+            </div>
+            <div className={styles["payload-extract-content-body"]} style={{display: type === "payload" ? "" : "none"}}>
+                {fuzzerResponse.Payloads?.map((item) => <p>{item}</p>)}
+                {fuzzerResponse.Payloads?.length === 0 && "暂无"}
+            </div>
+            <div
+                className={styles["payload-extract-content-body"]}
+                style={{display: type === "extractContent" ? "" : "none"}}
+            >
+                {fuzzerResponse.ExtractedResults.map((item) => (
+                    <p>
+                        {item.Key}:{item.Value}
+                    </p>
+                ))}
+                {fuzzerResponse.ExtractedResults?.length === 0 && "暂无"}
+            </div>
+        </div>
+    )
+})

@@ -45,6 +45,7 @@ import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitProtoCheckbox} from "./YakitProtoCheckbox/YakitProtoCheckbox"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
+import {randomString} from "@/utils/randomUtil"
 const {RangePicker} = DatePicker
 
 /**
@@ -742,12 +743,15 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 originalList={columnsItem?.filterProps?.filters || []}
                 onSelect={(v) => onSelectSearch(v, filterKey)}
                 value={filters[filterKey]}
-                onClose={() =>
+                onClose={() => {
                     setOpensPopover({
                         ...opensPopover,
                         [filterKey]: false
                     })
-                }
+                }}
+                onQuery={() => {
+                    if (onChangTable) onChangTable()
+                }}
             />
         )
     })
@@ -846,10 +850,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         </div>
     ))
 
-    const filterRef = useRef<any>()
-    useClickAway(() => {
-        setOpensPopover({})
-    }, [filterRef])
+    useEffect(() => {
+        if (Object.keys(opensPopover).filter((key) => opensPopover[key]).length === 0) {
+            if (onChangTable) onChangTable()
+        }
+    }, [opensPopover])
 
     const [mouseCellId, setMouseCellId] = useState<string | number>()
 
@@ -963,7 +968,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         setOpensPopover={setOpensPopover}
                                         opensPopover={opensPopover}
                                         onChangTable={onChangTable}
-                                        filterRef={filterRef}
                                         renderFilterPopover={renderFilterPopover}
                                         filters={filters}
                                         enableDrag={enableDrag}
@@ -976,7 +980,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     />
                                 ))}
                             </div>
-                            <DndProvider backend={HTML5Backend}>
+                            {/* <DndProvider backend={HTML5Backend}> */}
                                 <div ref={wrapperRef} className={classNames(styles["virtual-table-list"])}>
                                     {columns.map((columnsItem, index) => (
                                         <ColRender
@@ -1007,7 +1011,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         />
                                     ))}
                                 </div>
-                            </DndProvider>
+                            {/* </DndProvider> */}
                         </div>
                         <div
                             className={classNames(styles["virtual-table-list-pagination"])}
@@ -1050,7 +1054,6 @@ interface ColumnsItemRenderProps {
     setOpensPopover: (a: any) => void
     opensPopover: any
     onChangTable: () => void
-    filterRef: any
     renderFilterPopover: (
         columnsItem: ColumnsTypeProps,
         filterKey: string,
@@ -1081,7 +1084,6 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
         setOpensPopover,
         opensPopover,
         onChangTable,
-        filterRef,
         renderFilterPopover,
         filters,
         enableDrag,
@@ -1177,20 +1179,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                                 placement='bottom'
                                 trigger='click'
                                 content={
-                                    <div
-                                        className={styles["popover-content"]}
-                                        onMouseLeave={(e) => {
-                                            // INPUT 中文输入时 会触发 onMouseLeave
-                                            // @ts-ignore
-                                            if (e.target.nodeName === "INPUT") return
-                                            setOpensPopover({
-                                                ...opensPopover,
-                                                [filterKey]: false
-                                            })
-                                            if (onChangTable) onChangTable()
-                                        }}
-                                        ref={filterRef}
-                                    >
+                                    <div className={styles["popover-content"]}>
                                         {columnsItem?.filterProps?.filterRender
                                             ? columnsItem?.filterProps?.filterRender()
                                             : renderFilterPopover(
@@ -1202,6 +1191,12 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                                 }
                                 overlayClassName={styles["search-popover"]}
                                 visible={opensPopover[filterKey]}
+                                onVisibleChange={(v) => {
+                                    setOpensPopover({
+                                        ...opensPopover,
+                                        [filterKey]: v
+                                    })
+                                }}
                             >
                                 <div
                                     className={classNames(styles["virtual-table-filter"], {
@@ -1751,7 +1746,7 @@ export const TableVirtualResize = React.forwardRef(TableVirtualResizeFunction) a
 ) => ReturnType<typeof TableVirtualResizeFunction>
 
 export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
-    const {originalList, onSelect, value, filterProps, onClose} = props
+    const {originalList, onSelect, value, filterProps, onClose, onQuery} = props
     const {
         filterOptionRender,
         filtersSelectAll,
@@ -1886,10 +1881,14 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
 
     const onReset = useMemoizedFn(() => {
         onSelect([])
+        setTimeout(() => {
+            onQuery()
+        }, 200)
     })
 
     const onSure = useMemoizedFn(() => {
         onClose()
+        onQuery()
     })
 
     const renderMultiple = useMemoizedFn(() => {
