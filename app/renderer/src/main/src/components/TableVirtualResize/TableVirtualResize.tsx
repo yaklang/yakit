@@ -127,6 +127,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         if (size === "middle") return 32
         return 28
     }, [size])
+    const [tableIsIntersecting, setTableIsIntersecting] = useState<boolean>(false) // 表格是否在当前页面显示
     const [currentRow, setCurrentRow] = useState<T>()
     const [selectedRows, setSelectedRows] = useState<T[]>([])
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
@@ -175,15 +176,22 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [isRefresh])
 
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-        for (const entry of entries) {
+        entries.forEach((entry) => {
             const target = entry.target
             containerRefPosition.current = target.getBoundingClientRect()
-        }
+        })
+    })
+
+    const intersectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            setTableIsIntersecting(entry.isIntersecting)
+        })
     })
 
     useUpdateEffect(() => {
         if (containerRef.current) {
             resizeObserver.observe(containerRef.current)
+            intersectionObserver.observe(containerRef.current)
         }
     }, [containerRef.current, height])
 
@@ -243,7 +251,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        {},
+        { enabled: tableIsIntersecting },
         [data, currentRow, containerRef.current]
     )
     const upKey = useDebounceFn(
@@ -273,6 +281,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         "down",
         () => {
             if (!useUpAndDown) return
+            console.log(renderKey, '下移动')
             if (!setCurrentRow) return
             const dataLength = data.length
             if (dataLength <= 0) {
@@ -306,7 +315,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        {},
+        { enabled: tableIsIntersecting },
         [data, currentRow, containerRef.current]
     )
     const downKey = useDebounceFn(
@@ -873,7 +882,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         if (onMoveRowEnd) onMoveRowEnd()
     })
     return (
-        <div className={classNames(styles["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
+        <div className={classNames(styles["virtual-table"])} ref={tableRef} tabIndex={-1} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
                 onResize={(w, h) => {
                     if (!w || !h) {
