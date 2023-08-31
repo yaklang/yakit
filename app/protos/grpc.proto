@@ -194,6 +194,8 @@ service Yak {
   rpc IsMultipartFormDataRequest(FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
   rpc GenerateExtractRule(GenerateExtractRuleRequest) returns (GenerateExtractRuleResponse);
   rpc ExtractData(stream ExtractDataRequest) returns (stream ExtractDataResponse);
+  rpc ImportHTTPFuzzerTaskFromYaml(ImportHTTPFuzzerTaskFromYamlRequest) returns (ImportHTTPFuzzerTaskFromYamlResponse);
+  rpc ExportHTTPFuzzerTaskToYaml(ExportHTTPFuzzerTaskToYamlRequest) returns (ExportHTTPFuzzerTaskToYamlResponse);
 
   rpc SaveFuzzerLabel(SaveFuzzerLabelRequest) returns (Empty);
   rpc QueryFuzzerLabel(Empty) returns (QueryFuzzerLabelResponse);
@@ -524,6 +526,69 @@ service Yak {
   rpc GetGlobalNetworkConfig(GetGlobalNetworkConfigRequest) returns (GlobalNetworkConfig);
   rpc SetGlobalNetworkConfig(GlobalNetworkConfig) returns (Empty);
   rpc ResetGlobalNetworkConfig(ResetGlobalNetworkConfigRequest) returns (Empty);
+
+  rpc RequestYakURL(RequestYakURLParams) returns (RequestYakURLResponse);
+}
+
+message RequestYakURLParams {
+
+  // files:
+  // GET: means fetch details
+  // POST: means update
+  // PUT: means create
+  // DELETE: means delete
+  // HEAD: means check
+  string Method = 1;
+
+  YakURL Url = 2;
+
+  int64 Page = 3;
+  int64 PageSize = 4;
+}
+
+message YakURL {
+  // YakURL is abstract general fs loader system
+  // URL means schema://user:pass@location(:port)/path?query
+  string FromRaw = 1;
+  // means: file/webshell-.../directory
+  string Schema = 2;
+  string User = 3;
+  string Pass = 4;
+  string Location = 5;
+  string Path = 6;
+  repeated KVPair Query = 7;
+}
+
+message YakURLResource {
+  // file / bytes
+  string ResourceType = 1;
+  string VerboseType = 2;
+
+  // path filename
+  string ResourceName = 3;
+  string VerboseName = 4;
+
+  int64 Size = 5;
+  string SizeVerbose = 6;
+
+  // Modified
+  int64 ModifiedTimestamp = 8;
+
+  // General URL
+  string Path = 9;
+  string YakURLVerbose = 10;
+  YakURL Url = 11;
+
+  repeated KVPair Extra = 12;
+
+  bool HaveChildrenNodes = 13;
+}
+
+message RequestYakURLResponse {
+  int64 Page = 1;
+  int64 PageSize = 2;
+  int64 Total = 3;
+  repeated YakURLResource Resources = 4;
 }
 
 message PacketPrettifyHelperRequest {
@@ -1837,6 +1902,7 @@ message HistoryHTTPFuzzerTasksResponse {
 message QueryHistoryHTTPFuzzerTaskExParams {
   Paging Pagination = 1;
   string Keyword = 2;
+  string FuzzerTabIndex =3;
 }
 
 message ExecutePacketYakScriptParams {
@@ -2939,6 +3005,7 @@ message FuzzerParamItem {
   string Value = 2;
 
   // nuclei-dsl / raw
+  // fuzztag
   string Type = 3;
 }
 
@@ -3035,6 +3102,11 @@ message FuzzerRequest {
   // 如果没有的话，直接把整个 Request 传回去
   string FuzzerIndex = 41;
   string FuzzerTabIndex = 42;
+
+  // BatchTarget
+  // 继承透传给 HTTPPOOL 的参数，可以使用批量目标来发送
+  bool BatchTargetFile = 43;
+  bytes BatchTarget = 44;
 }
 
 message KVPair {
@@ -3207,6 +3279,13 @@ message QueryHTTPFlowRequest {
 
   string RuntimeId = 31;
   string FromPlugin = 32;
+  bool  Full = 33;
+
+  repeated string IncludePath = 34;
+  repeated string ExcludePath = 35;
+  repeated string IncludeSuffix = 36;
+  repeated string ExcludeSuffix = 37;
+  repeated string ExcludeContentType = 38;
 }
 
 message DeleteHTTPFlowRequest {
@@ -3662,4 +3741,18 @@ message CheckLicenseRequest {
 }
 message DefaultDnsServerResponse{
   repeated string DefaultDnsServer = 1;
+}
+message ImportHTTPFuzzerTaskFromYamlRequest {
+  string YamlContent = 1;
+}
+message ImportHTTPFuzzerTaskFromYamlResponse{
+  GeneralResponse Status = 1;
+  FuzzerRequests Requests = 2;
+}
+message ExportHTTPFuzzerTaskToYamlRequest{
+  FuzzerRequests Requests = 1;
+}
+message ExportHTTPFuzzerTaskToYamlResponse{
+  GeneralResponse Status = 1;
+  string YamlContent = 2;
 }

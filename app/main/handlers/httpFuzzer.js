@@ -459,4 +459,32 @@ module.exports = (win, getClient) => {
         let stream = getClient().DebugPlugin(params);
         handlerHelper.registerHandler(win, stream, streamDebugPluginMap, token)
     })
+    const asyncImportHTTPFuzzerTaskFromYaml = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ImportHTTPFuzzerTaskFromYaml(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ImportHTTPFuzzerTaskFromYaml", async (e, params) => {
+        return await asyncImportHTTPFuzzerTaskFromYaml(params)
+    })
+    const asyncExportHTTPFuzzerTaskToYaml = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ExportHTTPFuzzerTaskToYaml(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ExportHTTPFuzzerTaskToYaml", async (e, params) => {
+        return await asyncExportHTTPFuzzerTaskToYaml(params)
+    })
 }

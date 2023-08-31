@@ -1,12 +1,12 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider} from "antd"
+import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider, Input} from "antd"
 import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
 import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {failed, info, yakitFailed, yakitNotify} from "../../utils/notification"
+import {failed, info, yakitFailed, yakitInfo, yakitNotify} from "../../utils/notification"
 import {useCreation, useGetState, useInViewport, useMap, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
@@ -15,12 +15,14 @@ import {HackerPlugin} from "../hacker/HackerPlugin"
 import {fuzzerInfoProp} from "../MainOperator"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
 import {callCopyToClipboard} from "../../utils/basic"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
 import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "./InsertFileFuzzTag"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import styles from "./HTTPFuzzerPage.module.scss"
 import {ShareData} from "./components/ShareData"
+import {saveABSFile} from "@/utils/openWebsite"
 // import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {
     ChevronLeftIcon,
@@ -91,7 +93,7 @@ import {
     FUZZER_LABEL_LIST_NUMBER
 } from "./HTTPFuzzerEditorMenu"
 import {NewEditorSelectRange} from "../../components/NewEditorSelectRange"
-import {execCodec} from "@/utils/encodec";
+import {execCodec} from "@/utils/encodec"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -145,6 +147,7 @@ export interface HTTPFuzzerPageProp {
     system?: string
     fuzzerParams?: fuzzerInfoProp
     shareContent?: string
+    name?: string
     id: string
 }
 
@@ -290,10 +293,10 @@ function filterIsEmpty(f: FuzzResponseFilter): boolean {
     )
 }
 
-function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
+function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
     ipcRenderer
         .invoke("ExtractUrl", f)
-        .then((data: { Url: string }) => {
+        .then((data: {Url: string}) => {
             callCopyToClipboard(data.Url)
         })
         .catch((e) => {
@@ -400,13 +403,13 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         matchersCondition: "and",
         hitColor: "red",
         // 提取器
-        extractors: []
+        extractors: [],
+        ...props
     })
-
     // 缓存参数
     const [proxy, setProxy] = useState<string[]>([])
     const [dnsServers, setDNSServers] = useState<string[]>([])
-    const [etcHosts, setETCHosts] = useState<{ Key: string; Value: string }[]>([])
+    const [etcHosts, setETCHosts] = useState<{Key: string; Value: string}[]>([])
 
     const [request, setRequest, getRequest] = useGetState(
         props.fuzzerParams?.request || props.request || defaultPostTemplate
@@ -523,7 +526,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     useEffect(() => {
         // 常用标签默认存储
-        ipcRenderer.invoke("QueryFuzzerLabel").then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
+        ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
             if (Array.isArray(Data) && Data.length === 0) {
                 ipcRenderer.invoke("SaveFuzzerLabel", {
@@ -594,8 +597,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
             try {
                 setDNSServers(JSON.parse(e))
-            } catch (error) {
-            }
+            } catch (error) {}
         })
         getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
             if (!e) {
@@ -603,8 +605,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
             try {
                 setETCHosts(JSON.parse(e))
-            } catch (error) {
-            }
+            } catch (error) {}
         })
     }, [])
     useEffect(() => {
@@ -638,7 +639,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
-                .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
+                .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
                     setHistoryTask(data.OriginRequest)
                     setCurrentSelectId(id)
                 })
@@ -650,7 +651,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (showMatcherAndExtraction && responseViewerRef.current) {
             responseViewerRef.current
                 .validate()
-                .then((data: { matcher: MatcherValueProps; extractor: ExtractorValueProps }) => {
+                .then((data: {matcher: MatcherValueProps; extractor: ExtractorValueProps}) => {
                     setAdvancedConfigValue({
                         ...advancedConfigValue,
                         filterMode: data.matcher.filterMode || "drop",
@@ -669,19 +670,8 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             submitToHTTPFuzzer()
         }
     })
-    const submitToHTTPFuzzer = useMemoizedFn(() => {
-        resetResponse()
-        // 清楚历史任务的标记
-        setHistoryTask(undefined)
-
-        //  更新默认搜索
-        setDefaultResponseSearch(affixSearch)
-
-        setLoading(true)
-        setDroppedCount(0)
-
-        // FuzzerRequestProps
-        const httpParams: FuzzerRequestProps = {
+    const getCurrentRequestProp = useMemoizedFn(() => {
+        return {
             // Request: request,
             RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
             ForceFuzz: !!advancedConfigValue.forceFuzz,
@@ -727,6 +717,21 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             //提取器
             Extractors: advancedConfigValue.extractors
         }
+    })
+
+    const submitToHTTPFuzzer = useMemoizedFn(() => {
+        resetResponse()
+        // 清楚历史任务的标记
+        setHistoryTask(undefined)
+
+        //  更新默认搜索
+        setDefaultResponseSearch(affixSearch)
+
+        setLoading(true)
+        setDroppedCount(0)
+
+        // FuzzerRequestProps
+        const httpParams: FuzzerRequestProps = getCurrentRequestProp()
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
@@ -743,19 +748,19 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const preProxyList = remoteData
                     ? JSON.parse(remoteData)
                     : [
-                        {
-                            label: "http://127.0.0.1:7890",
-                            value: "http://127.0.0.1:7890"
-                        },
-                        {
-                            label: "http://127.0.0.1:8080",
-                            value: "http://127.0.0.1:8080"
-                        },
-                        {
-                            label: "http://127.0.0.1:8082",
-                            value: "http://127.0.0.1:8082"
-                        }
-                    ]
+                          {
+                              label: "http://127.0.0.1:7890",
+                              value: "http://127.0.0.1:7890"
+                          },
+                          {
+                              label: "http://127.0.0.1:8080",
+                              value: "http://127.0.0.1:8080"
+                          },
+                          {
+                              label: "http://127.0.0.1:8082",
+                              value: "http://127.0.0.1:8082"
+                          }
+                      ]
 
                 const list = [...proxyList, ...preProxyList]
                 const newProxyList: SelectOptionProps[] = []
@@ -885,7 +890,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
     const [extractedMap, {setAll, reset}] = useMap<string, string>()
     useEffect(() => {
-        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: { extractedMap: Map<string, string> }) => {
+        ipcRenderer.on("fetch-extracted-to-table", (e: any, data: {extractedMap: Map<string, string>}) => {
             setAll(data.extractedMap)
         })
         return () => {
@@ -1010,7 +1015,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
                 Pagination: {Page: pageInt, Limit: 1}
             })
-            .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
                     loadHistory(data.Data[0].BasicInfo.Id)
@@ -1049,7 +1054,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
                 Pagination: {Page: 1, Limit: 1}
             })
-            .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTotal(data.Total)
             })
     })
@@ -1118,7 +1123,20 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setAdvancedConfig(c)
         setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
     })
-
+    const exportYaml = useMemoizedFn(() => {
+        const reqParam = {Requests: {Concurrent: 1, Requests: [getCurrentRequestProp()]}}
+        return new Promise((resolve: (value: string) => void, reject) => {
+            ipcRenderer
+                .invoke("ExportHTTPFuzzerTaskToYaml", reqParam)
+                .then((data: {Status: {Ok: boolean; Reason: string}; YamlContent: string}) => {
+                    if (!data.Status?.Ok) {
+                        reject(data.Status?.Reason)
+                    } else {
+                        resolve(data.YamlContent)
+                    }
+                })
+        })
+    })
     const editorRightMenu: OtherMenuListProps = useMemo(() => {
         return {
             insertLabelTag: {
@@ -1164,7 +1182,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             copyURL: {
                 menu: [
                     {key: "copy-as-url", label: "复制为 URL"},
-                    {key: "copy-as-curl", label: "复制 curl 命令"},
+                    {key: "copy-as-curl", label: "复制 curl 命令"}
                 ],
                 onRun: (editor, key) => {
                     switch (key) {
@@ -1173,15 +1191,15 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             return
                         case "copy-as-curl":
                             execCodec("packet-to-curl", getRequest(), undefined, undefined, undefined, [
-                                {Key: "https", Value: advancedConfigValue.isHttps ? "true" : ""},
-                            ]).then(data => {
+                                {Key: "https", Value: advancedConfigValue.isHttps ? "true" : ""}
+                            ]).then((data) => {
                                 callCopyToClipboard(data)
                                 info("复制到剪贴板")
                             })
-                            return;
+                            return
                     }
                 }
-            },
+            }
         }
     }, [])
 
@@ -1221,7 +1239,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             onClick={() => {
                                 cancelCurrentHTTPFuzzer()
                             }}
-                            icon={<StopIcon className={styles["stop-icon"]}/>}
+                            icon={<StopIcon className={styles["stop-icon"]} />}
                             className='button-primary-danger'
                             danger={true}
                             type={"primary"}
@@ -1237,7 +1255,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 onValidateHTTPFuzzer()
                                 setCurrentPage(1)
                             }}
-                            icon={<PaperAirplaneIcon style={{height: 16}}/>}
+                            icon={<PaperAirplaneIcon style={{height: 16}} />}
                             type={"primary"}
                             size='large'
                         >
@@ -1247,7 +1265,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     {!advancedConfig && (
                         <div className={styles["display-flex"]}>
                             <span>高级配置</span>
-                            <YakitSwitch checked={advancedConfig} onChange={onSetAdvancedConfig}/>
+                            <YakitSwitch checked={advancedConfig} onChange={onSetAdvancedConfig} />
                         </div>
                     )}
                     <div className={styles["fuzzer-heard-force"]}>
@@ -1268,10 +1286,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             }
                         />
                     </div>
-                    <Divider type='vertical' style={{margin: 0, top: 1}}/>
+                    <Divider type='vertical' style={{margin: 0, top: 1}} />
                     <div className={styles["display-flex"]}>
-                        <ShareData module='fuzzer' getShareContent={getShareContent}/>
-                        <Divider type='vertical' style={{margin: "0 8px", top: 1}}/>
+                        <ShareData module='fuzzer' getShareContent={getShareContent} />
+                        <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
                         <Popover
                             trigger={"click"}
                             placement={"leftTop"}
@@ -1292,14 +1310,118 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </div>
                             }
                         >
-                            <YakitButton type='text' icon={<ClockIcon/>} style={{padding: "4px 0px"}}>
+                            <YakitButton type='text' icon={<ClockIcon />} style={{padding: "4px 0px"}}>
                                 历史
                             </YakitButton>
                         </Popover>
+                        <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
+                        <YakitButton
+                            type='text'
+                            style={{padding: "4px 0px"}}
+                            onClick={() => {
+                                showByRightContext({
+                                    width: 150,
+                                    data: [
+                                        {key: "import", label: "导入"},
+                                        {key: "export", label: "导出"}
+                                    ],
+                                    onClick: ({key}) => {
+                                        switch (key) {
+                                            case "import":
+                                                ipcRenderer
+                                                    .invoke("openDialog", {
+                                                        title: "请选择文件",
+                                                        properties: ["openFile"]
+                                                    })
+                                                    .then((data: any) => {
+                                                        if (data.filePaths.length) {
+                                                            let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
+                                                            return ipcRenderer.invoke(
+                                                                "fetch-file-content",
+                                                                absolutePath
+                                                            )
+                                                        } else {
+                                                            yakitFailed("获取Yaml路径失败")
+                                                        }
+                                                    })
+                                                    .then((content) => {
+                                                        return ipcRenderer.invoke("ImportHTTPFuzzerTaskFromYaml", {
+                                                            YamlContent: content
+                                                        })
+                                                    })
+                                                    .then(
+                                                        (data: {
+                                                            Status: {Ok: boolean; Reason: string}
+                                                            Requests: {
+                                                                Requests: FuzzerRequestProps[]
+                                                                Concurrent: number
+                                                            }
+                                                        }) => {
+                                                            if (!data.Status.Ok) {
+                                                                yakitFailed(`导入Yaml失败: ${data.Status.Reason}`)
+                                                                return
+                                                            }
+                                                            if (data.Requests.Requests.length == 1) {
+                                                                const reqProp = data.Requests.Requests[0]
+                                                                ipcRenderer
+                                                                    .invoke("send-to-tab", {
+                                                                        type: "fuzzer",
+                                                                        data: {
+                                                                            isHttps: reqProp.IsHTTPS,
+                                                                            isGmTLS: reqProp.IsGmTLS,
+                                                                            request: reqProp.RequestRaw,
+                                                                            allProp: reqProp
+                                                                        }
+                                                                    })
+                                                                    .then(() => {})
+                                                                    .catch((err) => {
+                                                                        yakitNotify(
+                                                                            "error",
+                                                                            "打开web fuzzer失败:" + err
+                                                                        )
+                                                                    })
+                                                                    .finally(() => {
+                                                                        setTimeout(() => {
+                                                                            setLoading(false)
+                                                                        }, 200)
+                                                                    })
+                                                            } else {
+                                                            }
+                                                        }
+                                                    )
+                                                    .catch((e) => {
+                                                        yakitFailed(`导入Yaml失败: ${e}`)
+                                                    })
+                                                break
+                                            case "export":
+                                                exportYaml()
+                                                    .then((yamlContent: string) => {
+                                                        saveABSFile(`${props.name || "temp"}.yaml`, yamlContent)
+                                                            .then(() => {
+                                                                yakitInfo("导出Yaml成功")
+                                                            })
+                                                            .catch((e) => {
+                                                                yakitFailed(`导出Yaml失败: ${e}`)
+                                                            })
+                                                    })
+                                                    .catch((e) => {
+                                                        console.log(`${e}`)
+                                                        if (!`${e}`.includes("user cancel")) {
+                                                            yakitFailed(`导出Yaml失败: ${e}`)
+                                                        }
+                                                    })
+                                                break
+                                        }
+                                    }
+                                })
+                            }}
+                        >
+                            导入 / 导出 Yaml
+                        </YakitButton>
                     </div>
                     {loading && (
                         <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
-                            <YakitSpin size={"small"} style={{width: "auto"}}/>
+                            <YakitSpin size={"small"} style={{width: "auto"}} />
                             sending packets
                         </div>
                     )}
@@ -1438,8 +1560,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         .catch((e) => {
                                                             failed(e.message)
                                                         })
-                                                        .finally(() => {
-                                                        })
+                                                        .finally(() => {})
                                                 }}
                                                 size={"small"}
                                             >
@@ -1459,7 +1580,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     />
                                                 </Form.Item>
                                                 <Form.Item name='Text'>
-                                                    <YakitInput size='small'/>
+                                                    <YakitInput size='small' />
                                                 </Form.Item>
                                                 <Form.Item style={{marginBottom: 8, marginTop: 8}}>
                                                     <YakitButton type={"primary"} htmlType={"submit"}>
@@ -1545,7 +1666,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             reqEditor && reqEditor.trigger("keyboard", "type", {text: v.Label})
                                         } else if (v.DefaultDescription === "插入本地文件") {
                                             reqEditor &&
-                                            insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
+                                                insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
                                         }
                                         close()
                                     }}
@@ -1568,7 +1689,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             if (selectedText.length > 0) {
                                                 ipcRenderer
                                                     .invoke("QueryFuzzerLabel", {})
-                                                    .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
+                                                    .then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
                                                         const {Data} = data
                                                         let newSelectedText: string = selectedText
                                                         if (Array.isArray(Data) && Data.length > 0) {
@@ -1735,7 +1856,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
             title: "提取结果",
             width: "60%",
             footer: <></>,
-            content: <ExtractionResultsContent list={rsp.ExtractedResults}/>
+            content: <ExtractionResultsContent list={rsp.ExtractedResults} />
         })
     })
 
@@ -1763,14 +1884,14 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                 {+(secondNodeSize?.width || 0) < 620 && (
                     <YakitPopover content={searchNode}>
                         <YakitButton
-                            icon={<SearchIcon/>}
+                            icon={<SearchIcon />}
                             size='small'
                             type='outline2'
                             className={styles["editor-cog-icon"]}
                         />
                     </YakitPopover>
                 )}
-                <Divider type='vertical' style={{margin: 0, top: 1}}/>
+                <Divider type='vertical' style={{margin: 0, top: 1}} />
                 <ChromeSvgIcon
                     className={styles["extra-chrome-btn"]}
                     onClick={() => {
@@ -1785,8 +1906,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                 <YakitButton
                     type='primary'
                     onClick={() => {
-                        analyzeFuzzerResponse(rsp, () => {
-                        })
+                        analyzeFuzzerResponse(rsp, () => {})
                     }}
                     size='small'
                 >
@@ -1837,7 +1957,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                         }}
                     >
                         <YakitButton
-                            icon={<SearchIcon/>}
+                            icon={<SearchIcon />}
                             size='small'
                             type='outline2'
                             className={classNames(styles["editor-cog-icon"], {
@@ -1886,8 +2006,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                                 <BodyLengthInputNumber
                                     ref={bodyLengthRef}
                                     query={bodyLength}
-                                    setQuery={() => {
-                                    }}
+                                    setQuery={() => {}}
                                     showFooter={false}
                                 />
                             </div>
@@ -1905,19 +2024,19 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                     }}
                 >
                     <YakitButton
-                        icon={<FilterIcon/>}
+                        icon={<FilterIcon />}
                         size='small'
                         type='outline2'
                         className={classNames(styles["editor-cog-icon"], {
                             [styles["active-icon"]]:
-                            (query?.StatusCode?.length || 0) > 0 ||
-                            query?.afterBodyLength ||
-                            query?.beforeBodyLength
+                                (query?.StatusCode?.length || 0) > 0 ||
+                                query?.afterBodyLength ||
+                                query?.beforeBodyLength
                         })}
                     />
                 </YakitPopover>
 
-                <Divider type='vertical' style={{margin: 0, top: 1}}/>
+                <Divider type='vertical' style={{margin: 0, top: 1}} />
                 <YakitButton
                     type='outline2'
                     size='small'
@@ -1972,7 +2091,7 @@ const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props) => {
                     footer={null}
                     closable={true}
                 >
-                    <WebFuzzerResponseExtractor responses={successFuzzer}/>
+                    <WebFuzzerResponseExtractor responses={successFuzzer} />
                 </YakitModal>
             </>
         )
@@ -2043,7 +2162,7 @@ export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
     const fizzOverlayWidget = {
         getDomNode() {
             const domNode = document.createElement("div")
-            ReactDOM.render(<EditorOverlayWidget rsp={rsp}/>, domNode)
+            ReactDOM.render(<EditorOverlayWidget rsp={rsp} />, domNode)
             return domNode
         },
         getId() {
@@ -2122,8 +2241,7 @@ const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 let r = "未知原因"
                 r = fuzzerResponse!.Reason
                 setReason(r)
-            } catch (e) {
-            }
+            } catch (e) {}
         }, [fuzzerResponse])
         useEffect(() => {
             getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)

@@ -137,6 +137,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     }, [gmTLS])
     useEffect(() => {
+        console.log(advancedConfigValue)
         form.setFieldsValue({
             ...advancedConfigValue
         })
@@ -161,13 +162,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             try {
                 setTimeout(() => {
                     setActiveKey(data ? JSON.parse(data) : "请求包配置")
-                }, 100);
+                }, 100)
             } catch (error) {
                 yakitFailed("获取折叠面板的激活key失败:" + error)
             }
         })
     }, [])
-
     useEffect(() => {
         // 代理数据 最近10条
         getRemoteValue(WEB_FUZZ_PROXY_LIST).then((remoteData) => {
@@ -1127,10 +1127,7 @@ const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
     return (
         <YakitPopover
             placement='right'
-            overlayClassName={classNames(
-                styles["matching-extraction-content"],
-                styles["terminal-popover"]
-            )}
+            overlayClassName={classNames(styles["matching-extraction-content"], styles["terminal-popover"])}
             content={
                 <div className={styles["terminal-popover-content"]} ref={popoverContentRef}>
                     {popoverContent}

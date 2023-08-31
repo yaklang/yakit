@@ -386,12 +386,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn((res: any) => {
-        const {isHttps, isGmTLS, request} = res || {}
+        const {isHttps, isGmTLS, request, allProp = {}} = res || {}
         if (request) {
             openMenuPage(
                 {route: YakitRoute.HTTPFuzzer},
                 {
                     params: {
+                        ...allProp,
                         isHttps: isHttps || false,
                         isGmTLS: isGmTLS || false,
                         request: request || "",
@@ -1101,6 +1102,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (subItem.groupChildren && subItem.groupChildren.length > 0) {
                 subItem.groupChildren.forEach((groupChildrenItem, groupIndex) => {
                     const haveGroupChildrenItem = fuzzerList.current.get(groupChildrenItem.id)
+                    console.log(haveGroupChildrenItem)
                     const newGroupChildrenItem: MultipleNodeInfo = {
                         ...haveGroupChildrenItem,
                         ...groupChildrenItem,

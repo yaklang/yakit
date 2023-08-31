@@ -1,7 +1,7 @@
-import React from "react";
-import { success } from "./notification";
+import React from "react"
+import {success} from "./notification"
 
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 export const openExternalWebsite = (u: string) => {
     ipcRenderer.invoke("shell-open-external", u)
@@ -25,21 +25,46 @@ export const saveABSFileToOpen = (name: string, data?: Uint8Array | string) => {
                 data: isArr ? new Buffer((data || []) as Uint8Array).toString() : data || ""
             })
             .then(() => {
-                success('下载完成')
+                success("下载完成")
                 ipcRenderer.invoke("open-specified-file", res.filePath)
             })
     })
 }
-
+export const saveABSFile = (name: string, data?: Uint8Array | string) => {
+    const isArr = Array.isArray(data)
+    return ipcRenderer.invoke("show-save-dialog", name).then((res) => {
+        return new Promise((resolve, reject) => {
+            if (res.canceled) {
+                reject("user cancel")
+            } else {
+                return ipcRenderer
+                    .invoke("write-file", {
+                        route: res.filePath,
+                        data: isArr ? new Buffer((data || []) as Uint8Array).toString() : data || ""
+                    })
+                    .then(() => {
+                        resolve(res.filePath)
+                    })
+                    .catch((e) => {
+                        reject(e)
+                    })
+            }
+        })
+    })
+}
 export interface ExternalUrlProp {
     url: string
     title?: React.ReactNode
 }
 
 export const ExternalUrl: React.FC<ExternalUrlProp> = (props) => {
-    return <a onClick={e => {
-        openExternalWebsite(props.url)
-    }}>
-        {props.title || props.url}
-    </a>
-};
+    return (
+        <a
+            onClick={(e) => {
+                openExternalWebsite(props.url)
+            }}
+        >
+            {props.title || props.url}
+        </a>
+    )
+}
