@@ -350,7 +350,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
             .map((ele) => ({
                 Key: ele.Key,
                 Value: ele.Value,
-                Type: ele.typeChecked ? "fuzztag" : ""
+                Type: ele.Type
             })),
         //匹配器
         Matchers: value.matchers,
@@ -453,7 +453,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     dnsServers: [],
     etcHosts: [],
     // 设置变量
-    params: [{Key: "", Value: "", Type: "", typeChecked: false}],
+    params: [{Key: "", Value: "", Type: ""}],
     // 匹配器
     filterMode: "drop",
     matchers: [],
@@ -509,7 +509,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         dnsServers: [],
         etcHosts: [],
         // 设置变量
-        params: [{Key: "", Value: "", Type: "", typeChecked: false}],
+        params: [{Key: "", Value: "", Type: ""}],
         // 匹配器
         filterMode: "onlyMatch",
         matchers: [],
