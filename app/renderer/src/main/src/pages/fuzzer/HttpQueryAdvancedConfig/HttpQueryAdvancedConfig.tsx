@@ -89,15 +89,18 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [form] = Form.useForm()
     const queryRef = useRef(null)
     const [inViewport = false] = useInViewport(queryRef)
-    const retry = useWatch("retry", form)
-    const noRetry = useWatch("noRetry", form)
-    const etcHosts = useWatch("etcHosts", form) || []
-    const gmTLS = useWatch("isGmTLS", form)
-    const matchersList = useWatch("matchers", form) || []
-    const extractorList = useWatch("extractors", form) || []
-    const matchersCondition = useWatch("matchersCondition", form)
-    const filterMode = useWatch("filterMode", form)
-    const hitColor = useWatch("hitColor", form) || "red"
+
+    const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
+    const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
+    const etcHosts = useMemo(() => advancedConfigValue.etcHosts || [], [advancedConfigValue.etcHosts])
+    const matchersList = useMemo(() => advancedConfigValue.matchers || [], [advancedConfigValue.matchers])
+    const extractorList = useMemo(() => advancedConfigValue.extractors || [], [advancedConfigValue.extractors])
+    const matchersCondition = useMemo(
+        () => advancedConfigValue.matchersCondition,
+        [advancedConfigValue.matchersCondition]
+    )
+    const filterMode = useMemo(() => advancedConfigValue.filterMode, [advancedConfigValue.filterMode])
+    const hitColor = useMemo(() => advancedConfigValue.hitColor || "red", [advancedConfigValue.hitColor])
 
     const heightDrawer = useMemo(() => {
         return firstTabMenuBodyHeight - 40
@@ -135,29 +138,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     })
 
     useEffect(() => {
-        if (gmTLS) {
-            onSetValue({
-                ...form.getFieldsValue(),
-                isHttps: true,
-                isGmTLS: true
-            })
-        }
-    }, [gmTLS])
-    useEffect(() => {
         form.setFieldsValue(advancedConfigValue)
     }, [advancedConfigValue])
-
-    useEffect(() => {
-        getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
-            try {
-                setTimeout(() => {
-                    setActiveKey(data ? JSON.parse(data) : "请求包配置")
-                }, 100)
-            } catch (error) {
-                yakitFailed("获取折叠面板的激活key失败:" + error)
-            }
-        })
-    }, [])
 
     useEffect(() => {
         // 代理数据 最近10条
@@ -189,6 +171,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...allFields}
+        if (newValue.isGmTLS) {
+            newValue.isHttps = true
+        }
         onValuesChange({
             ...newValue
         })
