@@ -520,7 +520,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         extractors: []
     })
 
-    const [advancedConfig, setAdvancedConfig] = useState<boolean>(true)
+    const [advancedConfig, setAdvancedConfig] = useState<boolean>(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
     const [affixSearch, setAffixSearch] = useState("")
