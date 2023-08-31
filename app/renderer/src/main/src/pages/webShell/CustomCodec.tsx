@@ -122,14 +122,15 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
 )
 
 interface CustomCodecEditorProps {
-
+    resultEnMode: boolean
+    packetEnMode: boolean
     title: string
     visibleDrawer: boolean
     onClose: () => void
 }
 
 export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((props) => {
-    const {title, visibleDrawer, onClose} = props
+    const {resultEnMode, packetEnMode, title, visibleDrawer, onClose} = props
     const {tabMenuHeight} = useContext(MainOperatorContext)
     const heightDrawer = useMemo(() => {
         return tabMenuHeight - 40
@@ -138,7 +139,7 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
         console.log("onOkImport")
     })
     const onSaveToDataBase = useMemoizedFn(() => {
-        console.log("onSaveToDataBase")
+        console.log("onSaveToDataBase", params)
     })
     const onExecute = useMemoizedFn(() => {
         console.log("onExecute")
@@ -152,6 +153,7 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
             onClose={() => onClose()}
             visible={visibleDrawer}
             mask={false}
+            destroyOnClose={true}
             style={{height: visibleDrawer ? heightDrawer : 0}}
             className={classNames(mitmStyles["mitm-rule-drawer"])}
             contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
@@ -193,8 +195,8 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
                 params={params}
                 setParams={setParams}
                 modified={modified}
-                enCoder={defEncoder}
-                deCoder={""}
+                resultEnMode={resultEnMode}
+                packetEnMode={packetEnMode}
             />
         </YakitDrawer>
     )
@@ -204,8 +206,8 @@ interface CustomEditorProps {
     params: YakScript
     setParams: (y: YakScript) => void
     modified?: YakScript | undefined
-    enCoder: string
-    deCoder: string
+    resultEnMode: boolean
+    packetEnMode: boolean
     onClose?: () => void
     // children?: ReactNode
     type?: string
@@ -253,17 +255,17 @@ const webFuzzerTabs = [
 ]
 
 const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
-    const {params, setParams, modified, enCoder, deCoder, onClose} = props
+    const {params, setParams, modified, packetEnMode, resultEnMode, onClose} = props
     const [enCodeValue, setEnCodeValue] = useState<string>("")
     const [deCodeValue, setDeCodeValue] = useState<string>("")
     const [codeValue, setCodeValue] = useState<string>("")
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
     useEffect(() => {
-        setEnCodeValue(enCoder || defEncoder)
-        setDeCodeValue(deCoder || defDecoder)
+        setEnCodeValue(enCodeValue || defEncoder)
+        setDeCodeValue(deCodeValue || defDecoder)
         setRefreshTrigger(!refreshTrigger)
-    }, [enCoder])
+    }, [enCodeValue])
     const [shellScript, setShellScript] = useState<string>("")
 
     useEffect(() => {
@@ -343,10 +345,11 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                                 value={shellScript || "jsp"}
                                 onSelect={(val) => {
                                     setShellScript(val)
-                                    selectedTab === "enCoder" ?
+                                    packetEnMode ?
                                         setParams({...params, Tags: [val, "packet-encoder"].join(",")}) :
                                         setParams({...params, Tags: [val, "result-decoder"].join(",")})
                                 }}
+                                autoClearSearchValue={true}
                             >
                                 <YakitSelect.Option value='jsp'>JSP</YakitSelect.Option>
                                 <YakitSelect.Option value='jspx'>JSPX</YakitSelect.Option>

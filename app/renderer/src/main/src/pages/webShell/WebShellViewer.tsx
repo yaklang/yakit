@@ -1,4 +1,3 @@
-import {yakitFailed} from "@/utils/notification";
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin";
 import styles from "@/pages/cve/CVETable.module.scss";
 import fuzzerStyles from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss";
@@ -8,7 +7,6 @@ import {genDefaultPagination, PaginationSchema, QueryYakScriptRequest, YakScript
 import {WebShellTable} from "@/pages/webShell/WebShellTable";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {Divider, Form, Tooltip} from "antd";
-import {FromLayoutProps} from "@/pages/invoker/YakScriptCreator";
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {HollowLightningBoltIcon, InformationCircleIcon, PlusSmIcon} from "@/assets/newIcon";
@@ -75,7 +73,7 @@ interface WebShellQueryProp {
 }
 
 const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
-    const { advancedQuery, setAdvancedQuery} = props
+    const {advancedQuery, setAdvancedQuery} = props
     const [params, setParams] = useState<QueryWebShellRequest>(props.defaultParams || defQueryWebShellRequest)
     useEffect(() => {
         if (!props.onChange) {
@@ -89,8 +87,9 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
         console.log("onSwitchCollapse ", key)
         setActiveKey(key)
     })
-
-    const [title, setTitle] = useState<string>("") // Collapse打开的key
+    const [title, setTitle] = useState<string>("")
+    const [packetEnMode, setPacketEnMode] = useState<boolean>(false) // Collapse打开的key
+    const [resultEnMode, setResultEnMode] = useState<boolean>(false) // Collapse打开的key
 
     const [customCodecList, setCustomCodecList] = useState<string[]>([])
 
@@ -138,9 +137,11 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             setTitle("数据包编解码器")
+                                            setResultEnMode(false)
                                             if (activeKey?.findIndex((ele) => ele === "数据包编解码器") === -1) {
                                                 onSwitchCollapse([...activeKey, "数据包编解码器"])
                                             }
+                                            setPacketEnMode(true)
                                             setVisibleDrawer(true)
                                             // onAddMatchingAndExtractionCard("extractors")
                                         }}
@@ -183,9 +184,11 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             setTitle("回显编解码器")
+                                            setPacketEnMode(false)
                                             if (activeKey?.findIndex((ele) => ele === "回显编解码器") === -1) {
                                                 onSwitchCollapse([...activeKey, "回显编解码器"])
                                             }
+                                            setResultEnMode(true)
                                             setVisibleDrawer(true)
                                         }}
                                         className={fuzzerStyles["btn-padding-right-0"]}
@@ -274,6 +277,8 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                 </Form>
                 <CustomCodecEditor
                     title={title}
+                    packetEnMode={packetEnMode}
+                    resultEnMode={resultEnMode}
                     visibleDrawer={visibleDrawer}
                     onClose={() => setVisibleDrawer(false)}
                 />
