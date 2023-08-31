@@ -520,15 +520,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         extractors: []
     })
 
-    // const [request, setRequest, getRequest] = useGetState(
-    //     props.fuzzerParams?.request || props.request || defaultPostTemplate
-    // )
-
     const [advancedConfig, setAdvancedConfig] = useState<boolean>(true)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
-    // const [hotPatchCode, setHotPatchCode] = useState<string>("")
-    // const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
 
@@ -573,14 +567,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const fuzzerRef = useRef<any>()
     const [inViewport = true] = useInViewport(fuzzerRef)
 
-    const {getPageNodeInfoByPageId} = usePageNode()
+    const hotPatchCodeRef = useRef<string>("")
+    const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
-    useEffect(() => {
-        emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
-        return () => {
-            emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
-        }
-    }, [])
+    const {getPageNodeInfoByPageId} = usePageNode()
 
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
@@ -590,11 +580,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .catch(() => {
                 setShowResponseInfoSecondEditor(true)
             })
-    }, [])
-    useEffect(() => {
+        getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
+            if (!remoteData) {
+                return
+            }
+            setHotPatchCode(`${remoteData}`)
+        })
+        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
+            if (!!remoteData) {
+                setHotPatchCodeWithParamGetter(`${remoteData}`)
+            }
+        })
+
         ipcRenderer.on("fetch-ref-webFuzzer-request", onUpdateRequest)
+        emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         return () => {
             ipcRenderer.removeListener("fetch-ref-webFuzzer-request", onUpdateRequest)
+            emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         }
     }, [])
 
@@ -641,32 +643,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setUpShareContent(JSON.parse(props.shareContent))
         }
     }, [props.shareContent])
-    const hotPatchCodeRef = useRef<string>("")
-    const hotPatchCodeWithParamGetterRef = useRef<string>("")
-    useEffect(() => {
-        getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
-            if (!remoteData) {
-                return
-            }
-            setHotPatchCode(`${remoteData}`)
-        })
-        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
-            if (!!remoteData) {
-                setHotPatchCodeWithParamGetter(`${remoteData}`)
-            }
-        })
-    }, [])
-    useEffect(() => {
-        /** 有分享内容按照分享内容中的 advancedConfig 为准 */
-        if (props.shareContent) return
-        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
-            if (c === "") {
-                setAdvancedConfig(true)
-            } else {
-                setAdvancedConfig(c === "true")
-            }
-        })
-    }, [])
 
     useEffect(() => {
         // 常用标签默认存储
@@ -716,6 +692,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const isSetCacheToAdvancedConfigValueRef = useRef<boolean>(false)
     useEffect(() => {
         if (props.shareContent) return
+        /** 有分享内容按照分享内容中的 advancedConfig 为准 */
+        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
+            if (c === "") {
+                setAdvancedConfig(true)
+            } else {
+                setAdvancedConfig(c === "true")
+            }
+        })
         getCacheData()
     }, [])
     const getCacheData = useMemoizedFn(async () => {
@@ -1248,37 +1232,35 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onSetRequest = useMemoizedFn((i: string) => {
         requestRef.current = i
     })
-    useWhyDidYouUpdate(`HTTPFuzzerPage-${props.id}`, {
-        advancedConfigValue,
-        inViewport,
-        requestRef,
-        advancedConfig,
-        redirectedResponse,
-        historyTask,
-        // hotPatchCode,
-        // hotPatchCodeWithParamGetter,
-        hotPatchCodeRef,
-        hotPatchCodeWithParamGetterRef,
-        affixSearch,
-        defaultResponseSearch,
-        currentSelectId,
-        refreshProxy,
-        droppedCount,
-        loading,
-        _firstResponse,
-        successFuzzer,
-        failedFuzzer,
-        _successCount,
-        _failedCount,
-        reqEditor,
-        tokenRef,
-        refreshTrigger,
-        showMatcherAndExtraction,
-        showSuccess,
-        query,
-        activeType,
-        activeKey
-    })
+    // useWhyDidYouUpdate(`HTTPFuzzerPage-${props.id}`, {
+    //     advancedConfigValue,
+    //     inViewport,
+    //     requestRef,
+    //     advancedConfig,
+    //     redirectedResponse,
+    //     historyTask,
+    //     hotPatchCodeRef,
+    //     hotPatchCodeWithParamGetterRef,
+    //     affixSearch,
+    //     defaultResponseSearch,
+    //     currentSelectId,
+    //     refreshProxy,
+    //     droppedCount,
+    //     loading,
+    //     _firstResponse,
+    //     successFuzzer,
+    //     failedFuzzer,
+    //     _successCount,
+    //     _failedCount,
+    //     reqEditor,
+    //     tokenRef,
+    //     refreshTrigger,
+    //     showMatcherAndExtraction,
+    //     showSuccess,
+    //     query,
+    //     activeType,
+    //     activeKey
+    // })
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <React.Suspense fallback={<>加载中...</>}>
