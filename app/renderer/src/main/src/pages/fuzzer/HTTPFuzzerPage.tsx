@@ -699,13 +699,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const proxyRef = useRef<string[]>([])
     const dnsServersRef = useRef<string[]>([])
     const etcHostsRef = useRef<KVPair[]>([])
-    const isSetCacheToAdvancedConfigValueRef = useRef<boolean>(false)
     useEffect(() => {
-        if (props.shareContent) return
-
         getCacheData()
     }, [])
     const getCacheData = useMemoizedFn(async () => {
+        if (props.shareContent) return
         try {
             const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
             const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
@@ -718,19 +716,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 !_.isEqual(dnsServersRef.current, advancedConfigValue.dnsServers) ||
                 !_.isEqual(etcHostsRef.current, advancedConfigValue.etcHosts)
             ) {
-                isSetCacheToAdvancedConfigValueRef.current = true
+                setAdvancedConfigValue({
+                    ...advancedConfigValue,
+                    proxy: proxyRef.current,
+                    dnsServers: dnsServersRef.current,
+                    etcHosts: etcHostsRef.current
+                })
             }
         } catch (error) {}
     })
-    useUpdateEffect(() => {
-        if (props.shareContent) return
-        setAdvancedConfigValue({
-            ...advancedConfigValue,
-            proxy: proxyRef.current,
-            dnsServers: dnsServersRef.current,
-            etcHosts: etcHostsRef.current
-        })
-    }, [isSetCacheToAdvancedConfigValueRef.current])
 
     useUpdateEffect(() => {
         if (props.shareContent) return
@@ -2144,8 +2138,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             <>
                 <YakitResizeBox
                     isVer={true}
-                    lineStyle={{display: !show ? "none" : ""}}
-                    firstNodeStyle={{padding: !show ? 0 : undefined}}
+                    lineStyle={{display: !show ? "none" : "", background: "#f0f2f5"}}
+                    firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
                     firstNode={
                         <NewEditorSelectRange
                             defaultSearchKeyword={defaultResponseSearch}

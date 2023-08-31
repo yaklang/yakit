@@ -22,10 +22,16 @@
             color: var(--yakit-header-color);
             cursor: pointer;
             background-color: #f0f1f3;
+            &:hover {
+                background-color: rgba(204, 210, 222, 0.5);
+            }
         }
         &-item-active {
             color: #fff;
             background-color: var(--yakit-primary-5);
+            &:hover {
+                background-color: var(--yakit-primary-4);
+            }
             svg {
                 color: #fff;
             }
@@ -83,7 +89,7 @@
         flex: 1;
         border-radius: 8px;
         border: 1px solid var(--yakit-border-color);
-        video{
+        video {
             object-fit: cover;
             border-radius: 8px;
         }
