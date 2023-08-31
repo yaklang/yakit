@@ -1,4 +1,4 @@
-import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactElement, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {IMonacoEditor, NewHTTPPacketEditor, NewHTTPPacketEditorProp} from "@/utils/editors"
 import {NewEditorSelectRange} from "@/components/NewEditorSelectRange"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
@@ -42,6 +42,7 @@ export interface EditorDetailInfoProps {
 }
 
 export interface WebFuzzerNewEditorProps {
+    ref?:any
     refreshTrigger: boolean
     request: string
     isHttps: boolean
@@ -53,7 +54,7 @@ export interface WebFuzzerNewEditorProps {
     setHotPatchCode: (s: string) => void
     setHotPatchCodeWithParamGetter: (s: string) => void
 }
-export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => {
+export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(React.forwardRef((props,ref) => {
     const {
         refreshTrigger,
         request,
@@ -67,6 +68,20 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => 
         setHotPatchCodeWithParamGetter
     } = props
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+
+    useImperativeHandle(ref, () => ({
+        reqEditor,
+        onInsertYakFuzzer,
+    }),[reqEditor])
+    useEffect(() => {
+        try {
+            if (!reqEditor) {
+                return
+            }
+        } catch (e) {
+            yakitNotify("error", "初始化 EOL CRLF 失败")
+        }
+    }, [reqEditor])
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
             title: "调试 / 插入热加载代码",
@@ -271,10 +286,9 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => 
                         close: () => closeFizzRangeWidget(),
                         insert: (v: QueryFuzzerLabelResponseProps) => {
                             if (v.Label) {
-                                reqEditor && reqEditor.trigger("keyboard", "type", { text: v.Label })
+                                reqEditor && reqEditor.trigger("keyboard", "type", {text: v.Label})
                             } else if (v.DefaultDescription === "插入本地文件") {
-                                reqEditor &&
-                                    insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
+                                reqEditor && insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
                             }
                             closeFizzRangeWidget()
                         },
@@ -287,4 +301,4 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = (props) => 
             )}
         />
     )
-}
+}))

@@ -544,7 +544,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [_failedCount, setFailedCount, getFailedCount] = useGetState(0)
 
     /**/
-    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
 
@@ -570,7 +569,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
-    const getPageNodeInfoByPageId=usePageNode(s=>s.getPageNodeInfoByPageId)
+    const getPageNodeInfoByPageId = usePageNode((s) => s.getPageNodeInfoByPageId)
 
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
@@ -1049,7 +1048,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         initialHotPatchCode={hotPatchCodeRef.current}
                         initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                         onInsert={(tag) => {
-                            if (reqEditor) monacoEditorWrite(reqEditor, tag)
+                            if (webFuzzerNewEditorRef.current.reqEditor)
+                                monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
                             m.destroy()
                         }}
                         onSaveCode={(code) => {
@@ -1144,50 +1144,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
     })
 
-    useEffect(() => {
-        try {
-            if (!reqEditor) {
-                return
-            }
-        } catch (e) {
-            failed("初始化 EOL CRLF 失败")
-        }
-    }, [reqEditor])
+    const webFuzzerNewEditorRef = useRef<any>()
     /**@description 插入 yak.fuzz 语法 */
     const onInsertYakFuzzer = useMemoizedFn(() => {
-        const m = showYakitModal({
-            title: "Fuzzer Tag 调试工具",
-            width: "70%",
-            footer: null,
-            subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
-            content: (
-                <div style={{padding: 24}}>
-                    <StringFuzzer
-                        advanced={true}
-                        disableBasicMode={true}
-                        insertCallback={(template: string) => {
-                            if (!template) {
-                                Modal.warn({
-                                    title: "Payload 为空 / Fuzz 模版为空"
-                                })
-                            } else {
-                                if (reqEditor && template) {
-                                    reqEditor.trigger("keyboard", "type", {
-                                        text: template
-                                    })
-                                } else {
-                                    Modal.error({
-                                        title: "BUG: 编辑器失效"
-                                    })
-                                }
-                                m.destroy()
-                            }
-                        }}
-                        close={() => m.destroy()}
-                    />
-                </div>
-            )
-        })
+        if (webFuzzerNewEditorRef.current) webFuzzerNewEditorRef.current.onInsertYakFuzzer()
     })
 
     /**
@@ -1532,86 +1492,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )
                     }}
                     firstNode={
-                        // <NewEditorSelectRange
-                        //     system={props.system}
-                        //     noHex={true}
-                        //     noHeader={true}
-                        //     refreshTrigger={refreshTrigger}
-                        //     hideSearch={true}
-                        //     bordered={false}
-                        //     noMinimap={true}
-                        //     utf8={true}
-                        //     originValue={StringToUint8Array(request)}
-                        //     contextMenu={editorRightMenu}
-                        //     onEditor={setReqEditor}
-                        //     onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
-                        //     editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
-                        //     selectId='monaco.fizz.select.widget'
-                        //     selectNode={(close, editorInfo) => (
-                        //         <HTTPFuzzerClickEditorMenu
-                        //             editorInfo={editorInfo}
-                        //             close={() => close()}
-                        //             insert={(v: QueryFuzzerLabelResponseProps) => {
-                        //                 if (v.Label) {
-                        //                     reqEditor && reqEditor.trigger("keyboard", "type", { text: v.Label })
-                        //                 } else if (v.DefaultDescription === "插入本地文件") {
-                        //                     reqEditor &&
-                        //                         insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
-                        //                 }
-                        //                 close()
-                        //             }}
-                        //             addLabel={() => {
-                        //                 close()
-                        //                 onInsertYakFuzzer()
-                        //             }}
-                        //         />
-                        //     )}
-                        //     rangeId='monaco.fizz.range.widget'
-                        //     rangeNode={(closeFizzRangeWidget, editorInfo) => (
-                        //         <HTTPFuzzerRangeEditorMenu
-                        //             editorInfo={editorInfo}
-                        //             insert={(fun: any) => {
-                        //                 if (reqEditor) {
-                        //                     const selectedText =
-                        //                         reqEditor
-                        //                             .getModel()
-                        //                             ?.getValueInRange(reqEditor.getSelection() as any) || ""
-                        //                     if (selectedText.length > 0) {
-                        //                         ipcRenderer
-                        //                             .invoke("QueryFuzzerLabel", {})
-                        //                             .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
-                        //                                 const { Data } = data
-                        //                                 let newSelectedText: string = selectedText
-                        //                                 if (Array.isArray(Data) && Data.length > 0) {
-                        //                                     // 选中项是否存在于标签中
-                        //                                     let isHave: boolean = Data.map(
-                        //                                         (item) => item.Label
-                        //                                     ).includes(selectedText)
-                        //                                     if (isHave) {
-                        //                                         newSelectedText = selectedText.replace(/{{|}}/g, "")
-                        //                                     }
-                        //                                 }
-                        //                                 const text: string = fun(newSelectedText)
-                        //                                 reqEditor.trigger("keyboard", "type", { text })
-                        //                             })
-                        //                     }
-                        //                 }
-                        //             }}
-                        //             replace={(text: string) => {
-                        //                 if (reqEditor) {
-                        //                     reqEditor.trigger("keyboard", "type", { text })
-                        //                     closeFizzRangeWidget()
-                        //                 }
-                        //             }}
-                        //             rangeValue={
-                        //                 (reqEditor &&
-                        //                     reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
-                        //                 ""
-                        //             }
-                        //         />
-                        //     )}
-                        // />
                         <WebFuzzerNewEditor
+                            ref={webFuzzerNewEditorRef}
                             refreshTrigger={refreshTrigger}
                             request={requestRef.current}
                             setRequest={onSetRequest}
@@ -2262,7 +2144,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             <>
                 <YakitResizeBox
                     isVer={true}
-                    lineStyle={{display: !show ? "none" : "",}}
+                    lineStyle={{display: !show ? "none" : ""}}
                     firstNodeStyle={{padding: !show ? 0 : undefined}}
                     firstNode={
                         <NewEditorSelectRange
@@ -2304,7 +2186,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                             }
                                             return undefined
                                         })()}
-                                        style={{height:'100%',backgroundColor:"#fff"}}
+                                        style={{height: "100%", backgroundColor: "#fff"}}
                                     >
                                         <>详细原因：{fuzzerResponse.Reason}</>
                                     </Result>
