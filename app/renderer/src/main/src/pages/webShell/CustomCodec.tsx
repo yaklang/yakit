@@ -235,7 +235,7 @@ const defPacketDecoder = `
 
 const defPayloadEncoder = `
 wsmPayloadEncoder = func(reqBody) {
-    retrun "yv66"
+    return "yv66"
 }
 
 `
@@ -359,7 +359,7 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                                         ) : (
                                             <YakEditor
                                                 type={"yak"} noMiniMap={true}
-                                                value={defPacketDecoder}
+                                                value={defPayloadDecoder}
                                             />
                                         )
                                 )
