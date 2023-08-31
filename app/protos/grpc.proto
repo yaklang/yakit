@@ -220,6 +220,7 @@ service Yak {
 
   // 编码解码
   rpc Codec(CodecRequest) returns (CodecResponse);
+  rpc NewCodec(CodecRequestFlow) returns (CodecResponse);
   rpc PacketPrettifyHelper(PacketPrettifyHelperRequest) returns (PacketPrettifyHelperResponse);
 
   // Payload 相关接口
@@ -349,11 +350,14 @@ service Yak {
   rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
   rpc GetCurrentYakBridgeLogServer(Empty) returns (YakDNSLogBridgeAddr);
   rpc RequireDNSLogDomain(YakDNSLogBridgeAddr) returns (DNSLogRootDomain);
+  rpc RequireDNSLogDomainByScript(RequireDNSLogDomainByScriptRequest) returns (DNSLogRootDomain);
   rpc QueryDNSLogByToken(QueryDNSLogByTokenRequest) returns (QueryDNSLogByTokenResponse);
+  rpc QueryDNSLogTokenByScript(RequireDNSLogDomainByScriptRequest) returns (QueryDNSLogByTokenResponse);
   rpc RequireICMPRandomLength(Empty) returns (RequireICMPRandomLengthResponse);
   rpc QueryICMPTrigger(QueryICMPTriggerRequest) returns (QueryICMPTriggerResponse);
   rpc RequireRandomPortToken(Empty) returns (RandomPortInfo);
   rpc QueryRandomPortTrigger(QueryRandomPortTriggerRequest) returns (RandomPortTriggerNotification);
+  rpc QuerySupportedDnsLogPlatforms(Empty) returns (QuerySupportedDnsLogPlatformsResponse);
 
   // 获取 Tags
   rpc GetAvailableYakScriptTags(Empty) returns (Fields);
@@ -562,6 +566,7 @@ message YakURLResource {
   string ResourceType = 1;
   string VerboseType = 2;
 
+  // path filename
   string ResourceName = 3;
   string VerboseName = 4;
 
@@ -1855,6 +1860,10 @@ message QueryICMPTriggerResponse {
   repeated ICMPTriggerNotification Notification = 1;
 }
 
+message QuerySupportedDnsLogPlatformsResponse{
+  repeated string Platforms = 1;
+}
+
 message ICMPTriggerNotification {
   int32 Size = 1;
   string CurrentRemoteAddr = 2;
@@ -1924,11 +1933,22 @@ message ExecuteBatchPacketYakScriptParams {
 message YakDNSLogBridgeAddr {
   string DNSLogAddr = 1;
   string DNSLogAddrSecret = 2;
+  string DNSMode = 3;
+  bool UseLocal = 4;
+  bool UseRemote = 5;
+}
+
+message RequireDNSLogDomainByScriptRequest {
+  string Token = 1;
+  string ScriptName = 2;
 }
 
 message QueryDNSLogByTokenRequest {
   string Token = 1;
   string DNSLogAddr = 2;
+  string DNSMode = 3;
+  bool UseLocal = 4;
+  bool UseRemote = 5;
 }
 
 message QueryDNSLogByTokenResponse {
@@ -2848,6 +2868,20 @@ message CodecRequest {
   bytes InputBytes = 6;
 }
 
+message CodecWork{
+  string CodecType = 1;
+  string Script = 2;
+  string PluginName = 3;
+  repeated ExecParamItem Params = 5;
+}
+
+message CodecRequestFlow{
+  string Text = 1;
+  bool Auto = 2;
+  repeated CodecWork WorkFlow = 3;
+  bytes InputBytes = 6;
+}
+
 message CodecResponse {
   string Result = 1;
 }
@@ -3002,6 +3036,7 @@ message FuzzerParamItem {
   string Value = 2;
 
   // nuclei-dsl / raw
+  // fuzztag
   string Type = 3;
 }
 
