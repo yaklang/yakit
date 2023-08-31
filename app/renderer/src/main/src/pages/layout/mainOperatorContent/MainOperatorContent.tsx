@@ -317,7 +317,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
 
-    const addPageNode=usePageNode(s=>s.addPageNode)
+    const addPageNode = usePageNode((s) => s.addPageNode)
 
     // 打开tab页面
     useEffect(() => {
@@ -871,19 +871,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPageNode,getPageNodeInfoByPageId,updatePageNodeInfoByPageId}=usePageNode(s=>({
-        setPageNode:s.setPageNode,
-        getPageNodeInfoByPageId:s.getPageNodeInfoByPageId,
-        updatePageNodeInfoByPageId:s.updatePageNodeInfoByPageId,
-    }),shallow)
+    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode(
+        (s) => ({
+            setPageNode: s.setPageNode,
+            getPageNodeInfoByPageId: s.getPageNodeInfoByPageId,
+            updatePageNodeInfoByPageId: s.updatePageNodeInfoByPageId
+        }),
+        shallow
+    )
     // web-fuzzer多开页面缓存数据
     const fuzzerList = useRef<Map<string, MultipleNodeInfo>>(new Map<string, MultipleNodeInfo>())
-    const proxyRef = useRef<string[]>()
-    const dnsServersRef = useRef<string[]>()
-    const etcHostsRef = useRef<KVPair[]>()
-    const isFetchFuzzerList = useCreation<boolean>(() => {
-        return !!(proxyRef.current && dnsServersRef.current && etcHostsRef.current)
-    }, [proxyRef.current, dnsServersRef.current, etcHostsRef.current])
+    const proxyRef = useRef<string[]>([])
+    const dnsServersRef = useRef<string[]>([])
+    const etcHostsRef = useRef<KVPair[]>([])
     useEffect(() => {
         // web-fuzzer页面更新缓存数据
         ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
@@ -906,14 +906,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
         }
     }, [])
-    useEffect(() => {
-        if (!isFetchFuzzerList) return
-        // 简易版不获取webFuzzer缓存
-        if (!isEnpriTraceAgent()) {
-            // 触发获取web-fuzzer的缓存
-            fetchFuzzerList()
-        }
-    }, [isFetchFuzzerList])
     /**
      * 因为页面数据变化更新fuzzer序列化
      * 组内的才有序列化
@@ -938,32 +930,29 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
 
     /**@description 获取Fuzzer默认缓存 */
-    const getFuzzerDefaultCache = useMemoizedFn(() => {
-        getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
-            if (!e) {
-                proxyRef.current = []
-                return
+    const getFuzzerDefaultCache = useMemoizedFn(async () => {
+        try {
+            const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
+            const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
+            const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
+           
+            const newProxy= proxy ? proxy.split(",") : []
+            const newDnsServers= dnsServers ? JSON.parse(dnsServers) : []
+            const newEtcHosts=  etcHosts ? JSON.parse(etcHosts) : []
+            if (
+                !_.isEqual(proxyRef.current, newProxy) ||
+                !_.isEqual(dnsServersRef.current, newDnsServers) ||
+                !_.isEqual(etcHostsRef.current, newEtcHosts)
+            ) {
+                proxyRef.current =newProxy
+                dnsServersRef.current = newDnsServers
+                etcHostsRef.current =newEtcHosts
             }
-            proxyRef.current = e ? e.split(",") : []
-        })
-        getRemoteValue(WEB_FUZZ_DNS_Server_Config).then((e) => {
-            if (!e) {
-                dnsServersRef.current = []
-                return
+            if (!isEnpriTraceAgent()) {
+                // 触发获取web-fuzzer的缓存
+                fetchFuzzerList()
             }
-            try {
-                dnsServersRef.current = JSON.parse(e)
-            } catch (error) {}
-        })
-        getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
-            if (!e) {
-                etcHostsRef.current = []
-                return
-            }
-            try {
-                etcHostsRef.current = JSON.parse(e)
-            } catch (error) {}
-        })
+        } catch (error) {}
     })
 
     // 定时向数据库保存web-fuzzer缓存数据
@@ -1005,6 +994,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     dnsServers: dnsServersRef.current || [],
                     etcHosts: etcHostsRef.current || []
                 }
+                console.log('defaultCache',defaultCache)
                 for (let index = 0; index < pLength; index++) {
                     const parentItem = multipleNodeList[index]
                     const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
@@ -1072,7 +1062,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
                 if (newMultipleNodeList.length === 0) return
-                // console.log("multipleNodeList", multipleNodeList)
+                console.log("multipleNodeList", multipleNodeList)
+                console.log("pageNodeInfo", pageNodeInfo)
                 const webFuzzerPage = {
                     routeKey: key,
                     verbose: tabName,
@@ -1340,7 +1331,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
         afterDeleteSubPage,
         afterUpdateSubItem
     } = props
-    const setFirstTabMenuBodyHeight=usePageNode(s=>s.setFirstTabMenuBodyHeight)
+    const setFirstTabMenuBodyHeight = usePageNode((s) => s.setFirstTabMenuBodyHeight)
     /** ---------- 拖拽排序 start ---------- */
     const onDragEnd = useMemoizedFn((result) => {
         if (!result.destination) {
@@ -1807,7 +1798,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     renderSubPage={flatSubPage}
                     route={pageItem.route}
                     pluginId={pageItem.pluginId || 0}
-                    selectSubMenuId={selectSubMenu.id||'0'}
+                    selectSubMenuId={selectSubMenu.id || "0"}
                 />
                 <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
             </div>
@@ -1865,27 +1856,33 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             exchangeOrderPageNodeByPageGroupId,
             setCurrentSelectGroup,
             removeCurrentSelectGroup
-        } = usePageNode((s)=>({
-            getPageNodeInfoByPageId:s.getPageNodeInfoByPageId,
-            addPageNode:s.addPageNode,
-            addPageNodeInfoByPageGroupId:s.addPageNodeInfoByPageGroupId,
-            removePageNodeInfoByPageId:s.removePageNodeInfoByPageId,
-            flatPageChildrenListAndRemoveGroupByPageGroupId:s.flatPageChildrenListAndRemoveGroupByPageGroupId,
-            setPageNodeInfoByPageGroupId:s.setPageNodeInfoByPageGroupId,
-            updatePageNodeInfoByPageId:s.updatePageNodeInfoByPageId,
-            removePageNodeByPageGroupId:s.removePageNodeByPageGroupId,
-            setPageNode:s.setPageNode,
-            getPageNodeInfoByPageGroupId:s.getPageNodeInfoByPageGroupId,
-            exchangeOrderPageNodeByPageGroupId:s.exchangeOrderPageNodeByPageGroupId,
-            setCurrentSelectGroup:s.setCurrentSelectGroup,
-            removeCurrentSelectGroup:s.removeCurrentSelectGroup,
-        }),shallow)
+        } = usePageNode(
+            (s) => ({
+                getPageNodeInfoByPageId: s.getPageNodeInfoByPageId,
+                addPageNode: s.addPageNode,
+                addPageNodeInfoByPageGroupId: s.addPageNodeInfoByPageGroupId,
+                removePageNodeInfoByPageId: s.removePageNodeInfoByPageId,
+                flatPageChildrenListAndRemoveGroupByPageGroupId: s.flatPageChildrenListAndRemoveGroupByPageGroupId,
+                setPageNodeInfoByPageGroupId: s.setPageNodeInfoByPageGroupId,
+                updatePageNodeInfoByPageId: s.updatePageNodeInfoByPageId,
+                removePageNodeByPageGroupId: s.removePageNodeByPageGroupId,
+                setPageNode: s.setPageNode,
+                getPageNodeInfoByPageGroupId: s.getPageNodeInfoByPageGroupId,
+                exchangeOrderPageNodeByPageGroupId: s.exchangeOrderPageNodeByPageGroupId,
+                setCurrentSelectGroup: s.setCurrentSelectGroup,
+                removeCurrentSelectGroup: s.removeCurrentSelectGroup
+            }),
+            shallow
+        )
 
-        const {addFuzzerSequenceList, removeFuzzerSequenceList, setSelectGroupId} = useFuzzerSequence((s)=>({
-            addFuzzerSequenceList:s.addFuzzerSequenceList,
-            removeFuzzerSequenceList:s.removeFuzzerSequenceList,
-            setSelectGroupId:s.setSelectGroupId,
-        }),shallow)
+        const {addFuzzerSequenceList, removeFuzzerSequenceList, setSelectGroupId} = useFuzzerSequence(
+            (s) => ({
+                addFuzzerSequenceList: s.addFuzzerSequenceList,
+                removeFuzzerSequenceList: s.removeFuzzerSequenceList,
+                setSelectGroupId: s.setSelectGroupId
+            }),
+            shallow
+        )
 
         useImperativeHandle(
             ref,

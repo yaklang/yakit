@@ -2263,8 +2263,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             <>
                 <YakitResizeBox
                     isVer={true}
-                    lineStyle={{display: !show ? "none" : "", background: "#f0f2f5"}}
-                    firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
+                    lineStyle={{display: !show ? "none" : "",}}
+                    firstNodeStyle={{padding: !show ? 0 : undefined}}
                     firstNode={
                         <NewEditorSelectRange
                             defaultSearchKeyword={defaultResponseSearch}
@@ -2305,6 +2305,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                             }
                                             return undefined
                                         })()}
+                                        style={{height:'100%',backgroundColor:"#fff"}}
                                     >
                                         <>详细原因：{fuzzerResponse.Reason}</>
                                     </Result>

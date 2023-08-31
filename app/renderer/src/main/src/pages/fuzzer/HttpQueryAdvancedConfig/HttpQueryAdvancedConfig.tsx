@@ -118,9 +118,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         ipcRenderer.on("fetch-open-matcher-and-extraction", openDrawer)
         getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
             try {
-                setTimeout(() => {
-                    setActiveKey(data ? JSON.parse(data) : "请求包配置")
-                }, 100)
+                // setTimeout(() => {
+                //     setActiveKey(data ? JSON.parse(data) : "请求包配置")
+                // }, 100)
+                setActiveKey(data ? JSON.parse(data) : "请求包配置")
             } catch (error) {
                 yakitFailed("获取折叠面板的激活key失败:" + error)
             }
