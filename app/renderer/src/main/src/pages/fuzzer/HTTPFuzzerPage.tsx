@@ -521,9 +521,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     // 缓存参数
-    const [proxy, setProxy] = useState<string[]>([])
-    const [dnsServers, setDNSServers] = useState<string[]>([])
-    const [etcHosts, setETCHosts] = useState<KVPair[]>([])
+    // const [proxy, setProxy] = useState<string[]>([])
+    // const [dnsServers, setDNSServers] = useState<string[]>([])
+    // const [etcHosts, setETCHosts] = useState<KVPair[]>([])
 
     // const [request, setRequest, getRequest] = useGetState(
     //     props.fuzzerParams?.request || props.request || defaultPostTemplate
@@ -573,10 +573,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
     const [activeKey, setActiveKey] = useState<string>("")
 
-    const requestRef=useRef<string>(props.fuzzerParams?.request || props.request || defaultPostTemplate)
+    const requestRef = useRef<string>(props.fuzzerParams?.request || props.request || defaultPostTemplate)
     const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
     const fuzzerRef = useRef<any>()
-    const [inViewport] = useInViewport(fuzzerRef)
+    const [inViewport = false] = useInViewport(fuzzerRef)
 
     const {getPageNodeInfoByPageId} = usePageNode()
 
@@ -614,7 +614,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const {currentItem} = nodeInfo
             const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request
             if (requestRef.current === newRequest) return
-            requestRef.current=newRequest || defaultPostTemplate
+            requestRef.current = newRequest || defaultPostTemplate
             refreshRequest()
         }
     })
@@ -645,8 +645,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setUpShareContent(JSON.parse(props.shareContent))
         }
     }, [props.shareContent])
-    const hotPatchCodeRef=useRef<string>('')
-    const hotPatchCodeWithParamGetterRef=useRef<string>('')
+    const hotPatchCodeRef = useRef<string>("")
+    const hotPatchCodeWithParamGetterRef = useRef<string>("")
     useEffect(() => {
         getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
             if (!remoteData) {
@@ -702,9 +702,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             return
         }
         if (historyTask.Request === "") {
-            requestRef.current=Uint8ArrayToString(historyTask.RequestRaw, "utf8")
+            requestRef.current = Uint8ArrayToString(historyTask.RequestRaw, "utf8")
         } else {
-            requestRef.current=historyTask.Request
+            requestRef.current = historyTask.Request
         }
         setAdvancedConfigValue({
             ...advancedConfigValue,
@@ -714,50 +714,39 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
         refreshRequest()
     }, [historyTask])
-
+    const proxyRef = useRef<string[]>([])
+    const dnsServersRef = useRef<string[]>([])
+    const etcHostsRef = useRef<KVPair[]>([])
+    const isSetCacheToAdvancedConfigValueRef = useRef<boolean>(false)
     useEffect(() => {
         if (props.shareContent) return
-        // 缓存全局参数(将fuzz参数的缓存从本地文件替换到引擎数据库内)
-        getLocalValue(WEB_FUZZ_PROXY).then((e) => {
-            if (e) {
-                setLocalValue(WEB_FUZZ_PROXY, "")
-                setRemoteValue(WEB_FUZZ_PROXY, `${e}`)
-                setProxy(e ? e.split(",") : [])
-            } else {
-                getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
-                    if (!e) {
-                        return
-                    }
-                    setProxy(e ? e.split(",") : [])
-                })
-            }
-        })
-        getRemoteValue(WEB_FUZZ_DNS_Server_Config).then((e) => {
-            if (!e) {
-                return
-            }
-            try {
-                setDNSServers(JSON.parse(e))
-            } catch (error) {}
-        })
-        getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
-            if (!e) {
-                return
-            }
-            try {
-                setETCHosts(JSON.parse(e))
-            } catch (error) {}
-        })
+        getCacheData()
     }, [])
-    useEffect(() => {
+    const getCacheData = useMemoizedFn(async () => {
+        const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
+        const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
+        const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
+        console.log('!_.isEqual(proxy, advancedConfigValue.proxy)',proxy,advancedConfigValue.proxy,_.isEqual(proxy, advancedConfigValue.proxy))
+        if (
+            !_.isEqual(proxy, advancedConfigValue.proxy) ||
+            !_.isEqual(dnsServers, advancedConfigValue.dnsServers) ||
+            !_.isEqual(etcHosts, advancedConfigValue.etcHosts)
+        ) {
+            // proxyRef.current=proxy
+            // dnsServersRef.current=dnsServers
+            // etcHostsRef.current=etcHosts
+            isSetCacheToAdvancedConfigValueRef.current = true
+        }
+    })
+    useUpdateEffect(() => {
         if (props.shareContent) return
         setAdvancedConfigValue({
             ...advancedConfigValue,
-            proxy,
-            dnsServers,
-            etcHosts
+            proxy: proxyRef.current,
+            dnsServers: dnsServersRef.current,
+            etcHosts: etcHostsRef.current
         })
-    }, [proxy, dnsServers, etcHosts])
+    }, [isSetCacheToAdvancedConfigValueRef.current])
 
     useEffect(() => {
         if (props.shareContent) return
@@ -767,7 +756,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             isGmTLS: !!props.isGmTLS
         })
         if (props.request) {
-            requestRef.current=props.request
+            requestRef.current = props.request
             resetResponse()
         }
     }, [props.isHttps, props.isGmTLS, props.request])
@@ -895,9 +884,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
     })
     const dCountRef = useRef<number>(0)
-    const tokenRef=useRef<string>(randomString(60))
+    const tokenRef = useRef<string>(randomString(60))
     useEffect(() => {
-        const token =tokenRef.current
+        const token = tokenRef.current
 
         const dataToken = `${token}-data`
         const errToken = `${token}-error`
@@ -1048,13 +1037,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 time: new Date().getTime().toString(),
                 isHttps: advancedConfigValue.isHttps,
                 actualHost: advancedConfigValue.actualHost,
-                request:requestRef.current,
+                request: requestRef.current,
                 id: props.id
             }
             const webFuzzerPageInfo: WebFuzzerPageInfoProps = {
                 pageId: props.id,
                 advancedConfigValue,
-                request:requestRef.current,
+                request: requestRef.current
             }
             ipcRenderer.invoke("send-fuzzer-setting-data", {
                 key: props.id || "",
@@ -1098,7 +1087,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const getShareContent = useMemoizedFn((callback) => {
         const params: ShareValueProps = {
             advancedConfig,
-            request:requestRef.current,
+            request: requestRef.current,
             advancedConfiguration: advancedConfigValue
         }
         callback(params)
@@ -1110,7 +1099,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         try {
             const newAdvancedConfigValue = {...advancedConfigValue, ...shareContent.advancedConfiguration}
             setAdvancedConfig(shareContent.advancedConfig)
-            requestRef.current=shareContent.request
+            requestRef.current = shareContent.request
             setAdvancedConfigValue(newAdvancedConfigValue)
         } catch (error) {
             yakitNotify("error", "获取的数据结构不是最新版,请分享人/被分享人更新版本")
@@ -1287,13 +1276,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     {key: "copy-as-curl", label: "复制 curl 命令"}
                 ],
                 onRun: (editor, key) => {
-                    console.log('requestRef.current',requestRef.current)
+                    console.log("requestRef.current", requestRef.current)
                     switch (key) {
                         case "copy-as-url":
                             copyAsUrl({Request: requestRef.current, IsHTTPS: advancedConfigValue.isHttps})
                             return
                         case "copy-as-curl":
-                            execCodec("packet-to-curl",requestRef.current, undefined, undefined, undefined, [
+                            execCodec("packet-to-curl", requestRef.current, undefined, undefined, undefined, [
                                 {Key: "https", Value: advancedConfigValue.isHttps ? "true" : ""}
                             ]).then((data) => {
                                 callCopyToClipboard(data)
@@ -1327,7 +1316,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         hotPatchCodeWithParamGetterRef.current = v
     })
     const onSetRequest = useMemoizedFn((i: string) => {
-        requestRef.current=i
+        requestRef.current = i
     })
     // useWhyDidYouUpdate(`HTTPFuzzerPage-${props.id}`, {
     //     advancedConfigValue,
@@ -1375,7 +1364,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
                     }
                     onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
-                    inViewportCurrent={inViewport}
+                    inViewportCurrent={inViewport === true}
                     id={props.id}
                 />
             </React.Suspense>
@@ -1487,7 +1476,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         advancedConfigValue.filterMode === "onlyMatch"
                                             ? advancedConfigValue.hitColor
                                             : "",
-                                    Params: advancedConfigValue.params || [],
+                                    Params: advancedConfigValue.params || []
                                 }
                                 ipcRenderer
                                     .invoke("RedirectRequest", redirectRequestProps)
@@ -1571,7 +1560,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         })
                                                         .then((e) => {
                                                             if (e?.Result) {
-                                                                requestRef.current=e.Result
+                                                                requestRef.current = e.Result
                                                                 if (v.Text.includes("https://")) {
                                                                     setAdvancedConfigValue({
                                                                         ...advancedConfigValue,

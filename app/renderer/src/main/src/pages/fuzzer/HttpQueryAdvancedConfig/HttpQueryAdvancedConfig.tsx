@@ -160,7 +160,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                               value: "http://127.0.0.1:8082"
                           }
                       ]
-                proxyListRef.current = newList
+                if (JSON.stringify(newList) !== JSON.stringify(proxyListRef.current)) {
+                    proxyListRef.current = newList
+                }
             } catch (error) {
                 yakitFailed("代理列表获取失败:" + error)
             }
