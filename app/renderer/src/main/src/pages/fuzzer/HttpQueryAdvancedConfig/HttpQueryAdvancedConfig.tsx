@@ -53,6 +53,7 @@ import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
 import {usePageNode} from "@/store/pageNodeInfo"
+import shallow from "zustand/shallow"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -61,7 +62,8 @@ export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
-    const {firstTabMenuBodyHeight} = usePageNode()
+    const firstTabMenuBodyHeight = usePageNode((state) => state.firstTabMenuBodyHeight)
+
     const {
         advancedConfigValue,
         visible,
@@ -286,28 +288,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const proxyList = useMemo(() => {
         return proxyListRef.current
     }, [proxyListRef.current])
-    // useWhyDidYouUpdate(`HttpQueryAdvancedConfig111-${props.id}`, {
-    //     ...props,
-    //     retryActive,
-    //     proxyList,
-    //     activeKey,
-    //     variableActiveKey,
-    //     visibleDrawer,
-    //     defActiveKey,
-    //     type,
-    //     httpResponse,
-    //     form,
-    //     inViewport,
-    //     retry,
-    //     noRetry,
-    //     etcHosts,
-    //     matchersList,
-    //     extractorList,
-    //     matchersCondition,
-    //     filterMode,
-    //     hitColor
-    // })
-    // console.count(props.id)
     return (
         <div
             className={classNames(styles["http-query-advanced-config"])}

@@ -124,7 +124,7 @@ export const colorSelectNode = (
 )
 
 export const MITMRule: React.FC<MITMRuleProp> = (props) => {
-    const {firstTabMenuBodyHeight} = usePageNode()
+    const firstTabMenuBodyHeight = usePageNode(s=>s.firstTabMenuBodyHeight)
     const {visible, setVisible, getContainer, status} = props
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])

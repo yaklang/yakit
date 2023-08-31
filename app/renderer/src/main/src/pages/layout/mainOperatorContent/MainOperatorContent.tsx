@@ -69,7 +69,8 @@ import {KVPair} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedCo
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
-import emiter from "@/utils/eventBus/eventBus"
+import emiter from "@/utils/eventBus"
+import shallow from "zustand/shallow"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -316,7 +317,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
 
-    const {addPageNode} = usePageNode()
+    const addPageNode=usePageNode(s=>s.addPageNode)
 
     // 打开tab页面
     useEffect(() => {
@@ -870,7 +871,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode()
+    const {setPageNode,getPageNodeInfoByPageId,updatePageNodeInfoByPageId}=usePageNode(s=>({
+        setPageNode:s.setPageNode,
+        getPageNodeInfoByPageId:s.getPageNodeInfoByPageId,
+        updatePageNodeInfoByPageId:s.updatePageNodeInfoByPageId,
+    }),shallow)
     // web-fuzzer多开页面缓存数据
     const fuzzerList = useRef<Map<string, MultipleNodeInfo>>(new Map<string, MultipleNodeInfo>())
     const proxyRef = useRef<string[]>()
@@ -1335,7 +1340,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
         afterDeleteSubPage,
         afterUpdateSubItem
     } = props
-    const {setFirstTabMenuBodyHeight} = usePageNode()
+    const setFirstTabMenuBodyHeight=usePageNode(s=>s.setFirstTabMenuBodyHeight)
     /** ---------- 拖拽排序 start ---------- */
     const onDragEnd = useMemoizedFn((result) => {
         if (!result.destination) {
@@ -1860,9 +1865,27 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             exchangeOrderPageNodeByPageGroupId,
             setCurrentSelectGroup,
             removeCurrentSelectGroup
-        } = usePageNode()
+        } = usePageNode((s)=>({
+            getPageNodeInfoByPageId:s.getPageNodeInfoByPageId,
+            addPageNode:s.addPageNode,
+            addPageNodeInfoByPageGroupId:s.addPageNodeInfoByPageGroupId,
+            removePageNodeInfoByPageId:s.removePageNodeInfoByPageId,
+            flatPageChildrenListAndRemoveGroupByPageGroupId:s.flatPageChildrenListAndRemoveGroupByPageGroupId,
+            setPageNodeInfoByPageGroupId:s.setPageNodeInfoByPageGroupId,
+            updatePageNodeInfoByPageId:s.updatePageNodeInfoByPageId,
+            removePageNodeByPageGroupId:s.removePageNodeByPageGroupId,
+            setPageNode:s.setPageNode,
+            getPageNodeInfoByPageGroupId:s.getPageNodeInfoByPageGroupId,
+            exchangeOrderPageNodeByPageGroupId:s.exchangeOrderPageNodeByPageGroupId,
+            setCurrentSelectGroup:s.setCurrentSelectGroup,
+            removeCurrentSelectGroup:s.removeCurrentSelectGroup,
+        }),shallow)
 
-        const {addFuzzerSequenceList, removeFuzzerSequenceList, setSelectGroupId} = useFuzzerSequence()
+        const {addFuzzerSequenceList, removeFuzzerSequenceList, setSelectGroupId} = useFuzzerSequence((s)=>({
+            addFuzzerSequenceList:s.addFuzzerSequenceList,
+            removeFuzzerSequenceList:s.removeFuzzerSequenceList,
+            setSelectGroupId:s.setSelectGroupId,
+        }),shallow)
 
         useImperativeHandle(
             ref,

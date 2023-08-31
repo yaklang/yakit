@@ -570,7 +570,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
-    const {getPageNodeInfoByPageId} = usePageNode()
+    const getPageNodeInfoByPageId=usePageNode(s=>s.getPageNodeInfoByPageId)
 
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
@@ -591,7 +591,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setHotPatchCodeWithParamGetter(`${remoteData}`)
             }
         })
-
+        /** 有分享内容按照分享内容中的 advancedConfig 为准 */
+        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
+            if (c === "") {
+                setAdvancedConfig(true)
+            } else {
+                setAdvancedConfig(c === "true")
+            }
+        })
         ipcRenderer.on("fetch-ref-webFuzzer-request", onUpdateRequest)
         emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         return () => {
@@ -601,9 +608,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
 
     useEffect(() => {
-        if (inViewport) onUpdateRequest(_, {type: "config"})
+        if (inViewport) {
+            onUpdateRequest(_, {type: "config"})
+        }
     }, [inViewport])
-
+    const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
+        if (inViewport) onSetAdvancedConfig(!advancedConfig)
+    })
     const onUpdateRequest = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         if (res.type === "config" && inViewport) {
             const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
@@ -692,14 +703,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const isSetCacheToAdvancedConfigValueRef = useRef<boolean>(false)
     useEffect(() => {
         if (props.shareContent) return
-        /** 有分享内容按照分享内容中的 advancedConfig 为准 */
-        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
-            if (c === "") {
-                setAdvancedConfig(true)
-            } else {
-                setAdvancedConfig(c === "true")
-            }
-        })
+
         getCacheData()
     }, [])
     const getCacheData = useMemoizedFn(async () => {
@@ -741,10 +745,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             resetResponse()
         }
     }, [props.isHttps, props.isGmTLS, props.request])
-
-    const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
-        onSetAdvancedConfig(!advancedConfig)
-    })
 
     const refreshRequest = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
@@ -1232,35 +1232,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onSetRequest = useMemoizedFn((i: string) => {
         requestRef.current = i
     })
-    // useWhyDidYouUpdate(`HTTPFuzzerPage-${props.id}`, {
-    //     advancedConfigValue,
-    //     inViewport,
-    //     requestRef,
-    //     advancedConfig,
-    //     redirectedResponse,
-    //     historyTask,
-    //     hotPatchCodeRef,
-    //     hotPatchCodeWithParamGetterRef,
-    //     affixSearch,
-    //     defaultResponseSearch,
-    //     currentSelectId,
-    //     refreshProxy,
-    //     droppedCount,
-    //     loading,
-    //     _firstResponse,
-    //     successFuzzer,
-    //     failedFuzzer,
-    //     _successCount,
-    //     _failedCount,
-    //     reqEditor,
-    //     tokenRef,
-    //     refreshTrigger,
-    //     showMatcherAndExtraction,
-    //     showSuccess,
-    //     query,
-    //     activeType,
-    //     activeKey
-    // })
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <React.Suspense fallback={<>加载中...</>}>

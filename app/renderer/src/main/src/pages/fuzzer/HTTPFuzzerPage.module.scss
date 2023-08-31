@@ -2,6 +2,11 @@
 .http-fuzzer-body {
     display: flex;
     height: 100%;
+    .http-query-advanced-config-body{
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
 }
 .http-fuzzer-page {
     height: 100%;

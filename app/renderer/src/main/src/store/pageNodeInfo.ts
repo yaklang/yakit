@@ -4,7 +4,7 @@
 
 import { AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import { YakitRoute } from "../routes/newRoute"
-import create, { useStore } from "zustand"
+import create from "zustand"
 import { subscribeWithSelector } from 'zustand/middleware'
 import { randomString } from "@/utils/randomUtil"
 

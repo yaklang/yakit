@@ -24,7 +24,7 @@ const webFuzzerTabs = [
     }
 ]
 export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
-    const {getCurrentSelectGroup} = usePageNode()
+    const getCurrentSelectGroup = usePageNode(s=>s.getCurrentSelectGroup)
 
     const onSwitchType = useMemoizedFn((key) => {
         if (!props.id) return
