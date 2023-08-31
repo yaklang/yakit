@@ -11,28 +11,23 @@ import {FuzzerSequenceListProps, useFuzzerSequence} from "@/store/fuzzerSequence
 
 export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
     (props) => {
-        const {renderSubPage, route, pluginId, selectSubMenuId} = props
-
-        const [pageRenderList, {set: setPageRenderList, get: getPageRenderList}] = useMap<string, boolean>(
-            new Map<string, boolean>()
-        )
-        useDebounceEffect(
-            () => {
-                if (getPageRenderList(selectSubMenuId)) return
-                // 控制渲染
-                setPageRenderList(selectSubMenuId, true)
-            },
-            [selectSubMenuId],
-            {wait: 100, leading: true}
-        )
+        const {renderSubPage, route, pluginId, selectSubMenuId = "0"} = props
+        const pageRenderListRef = useRef<Map<string, boolean>>(new Map<string, boolean>())
+        const pageRenderList = useMemo(() => {
+            if (selectSubMenuId === "0") return pageRenderListRef.current
+            pageRenderListRef.current.set(selectSubMenuId, true)
+            return pageRenderListRef.current
+        }, [selectSubMenuId])
+        // useWhyDidYouUpdate("RenderSubPage", {...props, pageRenderList, pageRenderListRef})
         return (
             <>
                 {renderSubPage.map((subItem, numberSub) => {
                     return (
-                        getPageRenderList(subItem.id) && (
+                        pageRenderList.get(subItem.id) && (
                             <React.Fragment key={subItem.id}>
                                 <div
                                     key={subItem.id}
+                                    id={subItem.id}
                                     tabIndex={selectSubMenuId === subItem.id ? 1 : -1}
                                     style={{
                                         display: selectSubMenuId === subItem.id ? "" : "none",
@@ -69,6 +64,7 @@ export const RenderSubPageItem: React.FC<RenderSubPageItemProps> = React.memo(
         return (
             <div
                 key={subItem.id}
+                id={subItem.id}
                 tabIndex={selectSubMenuId === subItem.id ? 1 : -1}
                 style={{
                     display: selectSubMenuId === subItem.id ? "" : "none",
@@ -170,7 +166,7 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
 
 const PageItem: React.FC<PageItemProps> = React.memo(
     (props) => {
-        useWhyDidYouUpdate("PageItem", {...props})
+        // useWhyDidYouUpdate("PageItem", {...props})
         return <RouteToPageItem {...props} />
     },
     (preProps, nextProps) => {

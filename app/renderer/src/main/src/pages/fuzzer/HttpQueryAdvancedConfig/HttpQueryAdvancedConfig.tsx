@@ -18,7 +18,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {useInViewport, useMemoizedFn,useWhyDidYouUpdate} from "ahooks"
+import {useInViewport, useMemoizedFn, useTrackedEffect, useWhyDidYouUpdate} from "ahooks"
 import {Form, Tooltip, Collapse, Space, Divider, Descriptions} from "antd"
 import {useWatch} from "antd/lib/form/Form"
 import React, {useState, useRef, useEffect, useMemo, ReactNode, useContext} from "react"
@@ -61,7 +61,6 @@ export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
-
     const {firstTabMenuBodyHeight} = usePageNode()
     const {
         advancedConfigValue,
@@ -145,9 +144,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     }, [gmTLS])
     useEffect(() => {
-        form.setFieldsValue({
-            ...advancedConfigValue
-        })
+        form.setFieldsValue(advancedConfigValue)
     }, [advancedConfigValue])
 
     useEffect(() => {
@@ -323,13 +320,39 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         filterMode,
         hitColor
     })
+    // useTrackedEffect(
+    //     (changes) => {
+    //       console.log('Index of changed dependencies: ', changes);
+    //     },
+    //     [
+    //         props,
+    //         retryActive,
+    //         proxyList,
+    //         activeKey,
+    //         variableActiveKey,
+    //         visibleDrawer,
+    //         defActiveKey,
+    //         type,
+    //         httpResponse,
+    //         form,
+    //         inViewport,
+    //         retry,
+    //         noRetry,
+    //         etcHosts,
+    //         matchersList,
+    //         extractorList,
+    //         matchersCondition,
+    //         filterMode,
+    //         hitColor
+    //     ],
+    //   );
     console.count(props.id)
     return (
-        <div className={styles["http-query-advanced-config"]} style={{ display: visible ? "" : "none" }} ref={queryRef}>
-            {/* <div className={styles["advanced-config-heard"]}>
-                <span>高级配置</span>
-                <YakitSwitch wrapperClassName={styles["btn-padding-right-0"]} checked={visible} onChange={setVisible} />
-            </div> */}
+        <div
+            className={classNames(styles["http-query-advanced-config"])}
+            style={{display: visible ? "" : "none"}}
+            ref={queryRef}
+        >
             <Form
                 form={form}
                 colon={false}

@@ -66,7 +66,6 @@ import HTTPFuzzerPage, {
     defaultAdvancedConfigValue
 } from "@/pages/fuzzer/HTTPFuzzerPage"
 import {KVPair} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {MainOperatorContext} from "../MainContext"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
@@ -1803,7 +1802,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     renderSubPage={flatSubPage}
                     route={pageItem.route}
                     pluginId={pageItem.pluginId || 0}
-                    selectSubMenuId={selectSubMenu.id}
+                    selectSubMenuId={selectSubMenu.id||'0'}
                 />
                 <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
             </div>

@@ -7,7 +7,7 @@
     max-width: 300px;
     width: 300px;
     border-right: 1px solid var(--yakit-border-color);
-    animation: show 0.5s linear;
+    animation: show 0.2s cubic-bezier(.12,.4,.29,1.46);
     background-color: var(--yakit-card-background-color);
 
     :global {
@@ -61,15 +61,6 @@
 
     .chevron-right-icon {
         color: var(--yakit-body-text-color);
-    }
-
-    .advanced-config-heard {
-        display: flex;
-        justify-content: space-between;
-        padding: 16px 12px 12px;
-        border-bottom: 1px solid var(--yakit-border-color);
-        height: 49px;
-        font-size: 12px;
     }
 
     .advanced-config-delay {
@@ -367,28 +358,16 @@
 }
 
 @keyframes show {
-    0% {
-        width: 0;
-        opacity: 0.4;
-    }
-
-    50% {
+    from {
         width: 100px;
-        opacity: 0.6;
+        min-width: 100px;
+        max-width: 100px;
+        opacity: 0.2;
     }
-
-    70% {
-        width: 200px;
-        opacity: 0.8;
-    }
-
-    90% {
+    to {
         width: 300px;
-        opacity: 0.9;
-    }
-
-    100% {
-        width: 300px;
+        min-width: 300px;
+        max-width: 300px;
         opacity: 1;
     }
 }
