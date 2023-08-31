@@ -122,15 +122,15 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
 )
 
 interface CustomCodecEditorProps {
-    resultEnMode: boolean
-    packetEnMode: boolean
+    resultMode: boolean
+    packetMode: boolean
     title: string
     visibleDrawer: boolean
     onClose: () => void
 }
 
 export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((props) => {
-    const {resultEnMode, packetEnMode, title, visibleDrawer, onClose} = props
+    const {resultMode, packetMode, title, visibleDrawer, onClose} = props
     const {tabMenuHeight} = useContext(MainOperatorContext)
     const heightDrawer = useMemo(() => {
         return tabMenuHeight - 40
@@ -195,26 +195,16 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
                 params={params}
                 setParams={setParams}
                 modified={modified}
-                resultEnMode={resultEnMode}
-                packetEnMode={packetEnMode}
+                resultMode={resultMode}
+                packetMode={packetMode}
             />
         </YakitDrawer>
     )
 })
 
-interface CustomEditorProps {
-    params: YakScript
-    setParams: (y: YakScript) => void
-    modified?: YakScript | undefined
-    resultEnMode: boolean
-    packetEnMode: boolean
-    onClose?: () => void
-    // children?: ReactNode
-    type?: string
-}
 
-const defEncoder = `
-Encoder = (func(reqBody) {
+const defPacketEncoder = `
+wsmPacketEncoder = func(reqBody) {
     jsonStr := '{"id":"1","body":{"user":"lucky"}}'
     jsonStr = '{"go0p":"1",asdfakhj,"body":{"user":"lucky"}}'
     encodedData := codec.EncodeBase64(reqBody)
@@ -224,11 +214,34 @@ Encoder = (func(reqBody) {
     encodedData = str.ReplaceAll(encodedData, "/", "yakit")
     jsonStr = str.ReplaceAll(jsonStr, "lucky", encodedData)
     return []byte(jsonStr)
-})
+}
 `
 
-const defDecoder = `
-Decoder = (func(reqBody) {
+const defPacketDecoder = `
+// 写在生成的 WebShell 代码中
+// 本质上这个函数是为了准确获取 payload 的值
+// 比如说，我的数据包编码器是给 payload 前面添加随机字符串
+// 那么这个函数就是为了减去随机的字符串获取 payload 的值
+// 比如 payload 是 "abcdef"，编码器给它加了 "Yakit"，
+// 数据包如下
+// POST /1.jsp HTTP/1.1
+// Content-Type: application/json
+// Host: www.example.com
+//
+// Yakitabcdef
+
+// 那这个解码器需要使用对应的 shell 语言来去掉 "Yakit"
+`
+
+const defPayloadEncoder = `
+wsmPayloadEncoder = func(reqBody) {
+    retrun "yv66"
+}
+
+`
+
+const defPayloadDecoder = `
+wsmPayloadDecoder = func(reqBody) {
     jsonStr := '{"id":"1","body":{"user":"lucky"}}'
     jsonStr = '{"go0p":"1",asdfakhj,"body":{"user":"lucky"}}'
     encodedData := codec.EncodeBase64(reqBody)
@@ -238,7 +251,7 @@ Decoder = (func(reqBody) {
     encodedData = str.ReplaceAll(encodedData, "/", "yakit")
     jsonStr = str.ReplaceAll(jsonStr, "lucky", encodedData)
     return []byte(jsonStr)
-})
+}
 `
 
 const webFuzzerTabs = [
@@ -254,18 +267,33 @@ const webFuzzerTabs = [
     }
 ]
 
+interface CustomEditorProps {
+    params: YakScript
+    setParams: (y: YakScript) => void
+    modified?: YakScript | undefined
+    resultMode: boolean
+    packetMode: boolean
+    onClose?: () => void
+    // children?: ReactNode
+    type?: string
+}
+
 const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
-    const {params, setParams, modified, packetEnMode, resultEnMode, onClose} = props
-    const [enCodeValue, setEnCodeValue] = useState<string>("")
-    const [deCodeValue, setDeCodeValue] = useState<string>("")
-    const [codeValue, setCodeValue] = useState<string>("")
+    const {params, setParams, modified, packetMode, resultMode, onClose} = props
+    const [enPacketValue, setEnPacketValue] = useState<string>("")
+    const [dePacketValue, setDePacketValue] = useState<string>("")
+
+    const [enPayloadValue, setEnPayloadValue] = useState<string>("")
+    const [dePayloadValue, setDePayloadValue] = useState<string>("")
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
     useEffect(() => {
-        setEnCodeValue(enCodeValue || defEncoder)
-        setDeCodeValue(deCodeValue || defDecoder)
+        setEnPacketValue(enPacketValue || defPacketEncoder)
+        setDePacketValue(dePacketValue || defPacketDecoder)
+        setEnPayloadValue(enPayloadValue || defPayloadEncoder)
+        setDePayloadValue(dePayloadValue || defPayloadDecoder)
         setRefreshTrigger(!refreshTrigger)
-    }, [enCodeValue])
+    }, [enPacketValue, dePacketValue, enPayloadValue, dePayloadValue])
     const [shellScript, setShellScript] = useState<string>("")
 
     useEffect(() => {
@@ -309,18 +337,31 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                             </div>
                             <div
                                 className={classNames(webFuzzerStyles["web-fuzzer-tab-content"])}>
-                                {selectedTab === "enCoder" ? (
-                                    // 如果选中的 tab 是 "enCoder"，显示第一种内容
-                                    <YakEditor
-                                        type={"yak"} noMiniMap={true}
-                                        value={defEncoder}
-                                    />
+                                {selectedTab === "enCoder" ? (packetMode ?
+                                        (
+                                            <YakEditor
+                                                type={"yak"} noMiniMap={true}
+                                                value={defPacketEncoder}
+                                            />
+                                        ) : (
+                                            <YakEditor
+                                                type={"yak"} noMiniMap={true}
+                                                value={defPayloadEncoder}
+                                            />
+                                        )
                                 ) : (
-                                    // 如果选中的 tab 是 "deCoder"，显示第二种内容
-                                    <YakEditor
-                                        type={"yak"} noMiniMap={true}
-                                        value={defDecoder}
-                                    />
+                                    packetMode ?
+                                        (
+                                            <YakEditor
+                                                type={"yak"} noMiniMap={true}
+                                                value={defPacketDecoder}
+                                            />
+                                        ) : (
+                                            <YakEditor
+                                                type={"yak"} noMiniMap={true}
+                                                value={defPacketDecoder}
+                                            />
+                                        )
                                 )
                                 }
                             </div>
@@ -345,7 +386,7 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                                 value={shellScript || "jsp"}
                                 onSelect={(val) => {
                                     setShellScript(val)
-                                    packetEnMode ?
+                                    packetMode ?
                                         setParams({...params, Tags: [val, "packet-encoder"].join(",")}) :
                                         setParams({...params, Tags: [val, "result-decoder"].join(",")})
                                 }}
