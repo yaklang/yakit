@@ -75,7 +75,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         inViewportCurrent
     } = props
 
-    const [proxyList, setProxyList] = useState<SelectOptionProps[]>([]) // 代理代表
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
@@ -140,29 +139,28 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     useEffect(() => {
         form.setFieldsValue(advancedConfigValue)
     }, [advancedConfigValue])
-
+    const proxyListRef = useRef<SelectOptionProps[]>([])
     useEffect(() => {
         // 代理数据 最近10条
         getRemoteValue(WEB_FUZZ_PROXY_LIST).then((remoteData) => {
             try {
-                setProxyList(
-                    remoteData
-                        ? JSON.parse(remoteData)
-                        : [
-                              {
-                                  label: "http://127.0.0.1:7890",
-                                  value: "http://127.0.0.1:7890"
-                              },
-                              {
-                                  label: "http://127.0.0.1:8080",
-                                  value: "http://127.0.0.1:8080"
-                              },
-                              {
-                                  label: "http://127.0.0.1:8082",
-                                  value: "http://127.0.0.1:8082"
-                              }
-                          ]
-                )
+                const newList = remoteData
+                    ? JSON.parse(remoteData)
+                    : [
+                          {
+                              label: "http://127.0.0.1:7890",
+                              value: "http://127.0.0.1:7890"
+                          },
+                          {
+                              label: "http://127.0.0.1:8080",
+                              value: "http://127.0.0.1:8080"
+                          },
+                          {
+                              label: "http://127.0.0.1:8082",
+                              value: "http://127.0.0.1:8082"
+                          }
+                      ]
+                proxyListRef.current = newList
             } catch (error) {
                 yakitFailed("代理列表获取失败:" + error)
             }
@@ -284,6 +282,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
         return newRetryActive
     }, [retry, noRetry])
+    const proxyList = useMemo(() => {
+        return proxyListRef.current
+    }, [proxyListRef.current])
     useWhyDidYouUpdate(`HttpQueryAdvancedConfig111-${props.id}`, {
         ...props,
         retryActive,
@@ -305,32 +306,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         filterMode,
         hitColor
     })
-    // useTrackedEffect(
-    //     (changes) => {
-    //       console.log('Index of changed dependencies: ', changes);
-    //     },
-    //     [
-    //         props,
-    //         retryActive,
-    //         proxyList,
-    //         activeKey,
-    //         variableActiveKey,
-    //         visibleDrawer,
-    //         defActiveKey,
-    //         type,
-    //         httpResponse,
-    //         form,
-    //         inViewport,
-    //         retry,
-    //         noRetry,
-    //         etcHosts,
-    //         matchersList,
-    //         extractorList,
-    //         matchersCondition,
-    //         filterMode,
-    //         hitColor
-    //     ],
-    //   );
     console.count(props.id)
     return (
         <div
