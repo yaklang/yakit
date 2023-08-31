@@ -994,7 +994,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     dnsServers: dnsServersRef.current || [],
                     etcHosts: etcHostsRef.current || []
                 }
-                console.log('defaultCache',defaultCache)
                 for (let index = 0; index < pLength; index++) {
                     const parentItem = multipleNodeList[index]
                     const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
@@ -1062,8 +1061,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
                 if (newMultipleNodeList.length === 0) return
-                console.log("multipleNodeList", multipleNodeList)
-                console.log("pageNodeInfo", pageNodeInfo)
+                // console.log("multipleNodeList", multipleNodeList)
+                // console.log("pageNodeInfo", pageNodeInfo)
                 const webFuzzerPage = {
                     routeKey: key,
                     verbose: tabName,

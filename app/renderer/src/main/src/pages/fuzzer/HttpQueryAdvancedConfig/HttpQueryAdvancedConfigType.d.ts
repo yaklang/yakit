@@ -92,7 +92,6 @@ export interface HttpQueryAdvancedConfigProps {
     /**@name  webfuzzer如果有响应信息,就在响应信息下方展示匹配器和提取器;需与outsideShowResponseMatcherAndExtraction配合使用*/
     onShowResponseMatcherAndExtraction?: (activeType: MatchingAndExtraction, activeKey: string) => void
     inViewportCurrent?: boolean
-    id:string
 }
 
 export interface KVPair {

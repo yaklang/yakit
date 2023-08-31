@@ -1247,7 +1247,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                     onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
                     inViewportCurrent={inViewport === true}
-                    id={props.id}
                 />
             </React.Suspense>
             <div className={styles["http-fuzzer-page"]}>
