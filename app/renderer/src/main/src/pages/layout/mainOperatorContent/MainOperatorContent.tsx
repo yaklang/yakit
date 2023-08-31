@@ -71,6 +71,7 @@ import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
 import shallow from "zustand/shallow"
+import { menuBodyHeight } from "@/pages/globalVariable"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -1330,7 +1331,6 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
         afterDeleteSubPage,
         afterUpdateSubItem
     } = props
-    const setFirstTabMenuBodyHeight = usePageNode((s) => s.setFirstTabMenuBodyHeight)
     /** ---------- 拖拽排序 start ---------- */
     const onDragEnd = useMemoizedFn((result) => {
         if (!result.destination) {
@@ -1365,7 +1365,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
             <ReactResizeDetector
                 onResize={(_, height) => {
                     if (!height) return
-                    setFirstTabMenuBodyHeight(height)
+                    menuBodyHeight.firstTabMenuBodyHeight=height
                 }}
                 handleWidth={true}
                 handleHeight={true}

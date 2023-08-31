@@ -44,7 +44,8 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {CheckableTagProps} from "antd/lib/tag"
 import {YakitProtoSwitch} from "@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
-import { usePageNode } from "@/store/pageNodeInfo"
+import {usePageNode} from "@/store/pageNodeInfo"
+import {menuBodyHeight} from "@/pages/globalVariable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -124,7 +125,6 @@ export const colorSelectNode = (
 )
 
 export const MITMRule: React.FC<MITMRuleProp> = (props) => {
-    const firstTabMenuBodyHeight = usePageNode(s=>s.firstTabMenuBodyHeight)
     const {visible, setVisible, getContainer, status} = props
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
@@ -146,8 +146,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [currentIndex, setCurrentIndex] = useState<number>()
 
     const heightDrawer = useMemo(() => {
-        return firstTabMenuBodyHeight - 58
-    }, [firstTabMenuBodyHeight])
+        return menuBodyHeight.firstTabMenuBodyHeight - 58
+    }, [menuBodyHeight.firstTabMenuBodyHeight])
 
     useEffect(() => {
         ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
@@ -701,8 +701,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                 className={styles["button-question"]}
                                 onClick={() => openExternalWebsite("https://www.yaklang.com/")}
                                 icon={<QuestionMarkCircleIcon />}
-                            > 
-                            </YakitButton>
+                            ></YakitButton>
                         </Tooltip>
                         <div onClick={() => onClose()} className={styles["icon-remove"]}>
                             <RemoveIcon />

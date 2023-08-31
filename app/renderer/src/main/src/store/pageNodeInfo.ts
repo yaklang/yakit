@@ -97,11 +97,8 @@ const getPageNodeInfoById = (pageNodeList: PageNodeItemProps[], id: string) => {
     return { parentItem, currentItem, index, subIndex }
 }
 interface PageNodeInfoProps {
-    firstTabMenuBodyHeight:number
     pageNode: Map<string, PageInfoProps>
     currentSelectGroup: Map<string, PageNodeItemProps>
-
-    setFirstTabMenuBodyHeight:(n:number)=>void
 
     getCurrentGroupAllTabName: (key) => string[]
     getCurrentSelectGroup: (key) => PageNodeItemProps | undefined
@@ -140,15 +137,8 @@ interface PageNodeInfoProps {
 }
 
 export const usePageNode = create<PageNodeInfoProps>()(subscribeWithSelector((set, get) => ({
-    firstTabMenuBodyHeight:0,
     pageNode: new Map(),
     currentSelectGroup: new Map(),
-    setFirstTabMenuBodyHeight: (height) => {
-        set({
-            ...get(),
-            firstTabMenuBodyHeight: height
-        })
-    },
     getCurrentGroupAllTabName: (key) => {
         const node = get().pageNode.get(key);
         if (!node) return []

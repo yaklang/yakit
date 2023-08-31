@@ -54,6 +54,7 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
 import {usePageNode} from "@/store/pageNodeInfo"
 import shallow from "zustand/shallow"
+import {menuBodyHeight} from "@/pages/globalVariable"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -62,8 +63,6 @@ export const WEB_FUZZ_PROXY_LIST = "WEB_FUZZ_PROXY_LIST"
 export const WEB_FUZZ_Advanced_Config_ActiveKey = "WEB_FUZZ_Advanced_Config_ActiveKey"
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
-    const firstTabMenuBodyHeight = usePageNode((state) => state.firstTabMenuBodyHeight)
-
     const {
         advancedConfigValue,
         visible,
@@ -103,8 +102,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const hitColor = useMemo(() => advancedConfigValue.hitColor || "red", [advancedConfigValue.hitColor])
 
     const heightDrawer = useMemo(() => {
-        return firstTabMenuBodyHeight - 40
-    }, [firstTabMenuBodyHeight])
+        return menuBodyHeight.firstTabMenuBodyHeight - 40
+    }, [menuBodyHeight.firstTabMenuBodyHeight])
 
     useEffect(() => {
         setHttpResponse(defaultHttpResponse)
