@@ -65,7 +65,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const {
         advancedConfigValue,
         visible,
-        setVisible,
         onInsertYakFuzzer,
         onValuesChange,
         refreshProxy,
@@ -87,7 +86,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const [form] = Form.useForm()
     const queryRef = useRef(null)
-    const [inViewport = false] = useInViewport(queryRef)
+    const [inViewport = true] = useInViewport(queryRef)
 
     const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
     const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
@@ -287,28 +286,28 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const proxyList = useMemo(() => {
         return proxyListRef.current
     }, [proxyListRef.current])
-    useWhyDidYouUpdate(`HttpQueryAdvancedConfig111-${props.id}`, {
-        ...props,
-        retryActive,
-        proxyList,
-        activeKey,
-        variableActiveKey,
-        visibleDrawer,
-        defActiveKey,
-        type,
-        httpResponse,
-        form,
-        inViewport,
-        retry,
-        noRetry,
-        etcHosts,
-        matchersList,
-        extractorList,
-        matchersCondition,
-        filterMode,
-        hitColor
-    })
-    console.count(props.id)
+    // useWhyDidYouUpdate(`HttpQueryAdvancedConfig111-${props.id}`, {
+    //     ...props,
+    //     retryActive,
+    //     proxyList,
+    //     activeKey,
+    //     variableActiveKey,
+    //     visibleDrawer,
+    //     defActiveKey,
+    //     type,
+    //     httpResponse,
+    //     form,
+    //     inViewport,
+    //     retry,
+    //     noRetry,
+    //     etcHosts,
+    //     matchersList,
+    //     extractorList,
+    //     matchersCondition,
+    //     filterMode,
+    //     hitColor
+    // })
+    // console.count(props.id)
     return (
         <div
             className={classNames(styles["http-query-advanced-config"])}
