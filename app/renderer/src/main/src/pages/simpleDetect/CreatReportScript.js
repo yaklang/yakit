@@ -390,7 +390,11 @@ if len(noPotentialRisks) == 0 {
     }
 
 }
-reportInstance.Raw({"type": "bar-graph", "data": [{"name": "严重漏洞", "value": loopholeCriticalLens}, {"name": "高危漏洞", "value": loopholeHighLens}, {"name": "中危漏洞", "value": loopholeWarningLens}, {"name": "低危漏洞", "value": loopholeLowLens}], "color": ["#f70208", "#f9c003", "#2ab150", "#5c9cd5"]})
+if loopholeCriticalLens > 0 || loopholeHighLens > 0 || loopholeWarningLens > 0 || loopholeLowLens > 0 {
+    reportInstance.Raw({"type": "bar-graph", "data": [{"name": "严重漏洞", "value": loopholeCriticalLens}, {"name": "高危漏洞", "value": loopholeHighLens}, {"name": "中危漏洞", "value": loopholeWarningLens}, {"name": "低危漏洞", "value": loopholeLowLens}], "color": ["#f70208", "#f9c003", "#2ab150", "#5c9cd5"]})
+} else {
+    reportInstance.Markdown("暂无数据")
+}
 
 reportInstance.Markdown("### 3.3.2 漏洞统计列表")
 
