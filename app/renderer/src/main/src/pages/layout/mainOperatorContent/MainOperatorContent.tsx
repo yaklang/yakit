@@ -69,7 +69,7 @@ import {KVPair} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedCo
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
-import emiter from "@/utils/eventBus"
+import emiter from "@/utils/eventBus/eventBus"
 import shallow from "zustand/shallow"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
