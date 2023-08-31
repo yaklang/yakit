@@ -817,6 +817,23 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                   rangeValue={
                                       (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
                                   }
+                                  hTTPFuzzerClickEditorMenuProps={readOnly?undefined:{
+                                    editorInfo: editorInfo.current,
+                                    close: () => closeFizzRangeWidget(),
+                                    insert: (v: QueryFuzzerLabelResponseProps) => {
+                                        if (v.Label) {
+                                            editor && editor.trigger("keyboard", "type", { text: v.Label })
+                                        } else if (v.DefaultDescription === "插入本地文件") {
+                                            editor &&
+                                                insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
+                                        }
+                                        closeFizzRangeWidget()
+                                    },
+                                    addLabel: () => {
+                                        closeFizzRangeWidget()
+                                        onInsertYakFuzzer(editor)
+                                    }
+                                }}
                               />,
                               domNode
                           )

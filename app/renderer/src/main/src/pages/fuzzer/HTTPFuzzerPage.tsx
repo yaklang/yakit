@@ -101,7 +101,6 @@ import {
     defaultLabel,
     FUZZER_LABEL_LIST_NUMBER
 } from "./HTTPFuzzerEditorMenu"
-import {NewEditorSelectRange} from "../../components/NewEditorSelectRange"
 import {execCodec} from "@/utils/encodec"
 import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
@@ -1533,8 +1532,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                             setHotPatchCode={setHotPatchCode}
                             setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                            selectId='sequence'
-                            rangeId='sequence'
                         />
                     }
                     secondNode={
@@ -2109,7 +2106,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             defActiveType,
             onSaveMatcherAndExtraction,
             showResponseInfoSecondEditor,
-            setShowResponseInfoSecondEditor
+            setShowResponseInfoSecondEditor,
             isHttps
         } = props
         const [reason, setReason] = useState<string>("未知原因")
@@ -2167,7 +2164,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             return p
         }, [showMatcherAndExtraction, showExtra])
         const show = useMemo(() => showMatcherAndExtraction || showExtra, [showMatcherAndExtraction, showExtra])
-        const extraEditorProps = useCreation(() => {
+        const otherEditorProps = useCreation(() => {
             const overlayWidget = {
                 onAddOverlayWidget: (editor, isShow) => onAddOverlayWidget(editor, fuzzerResponse, isShow)
             }

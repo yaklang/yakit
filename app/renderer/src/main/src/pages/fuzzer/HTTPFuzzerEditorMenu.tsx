@@ -654,7 +654,7 @@ export interface HTTPFuzzerRangeEditorMenuProps {
     insert: (v: any) => void
     rangeValue: string
     replace?: (v: string) => void
-    hTTPFuzzerClickEditorMenuProps: HTTPFuzzerClickEditorMenuProps
+    hTTPFuzzerClickEditorMenuProps?: HTTPFuzzerClickEditorMenuProps
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
     const {editorInfo, insert, rangeValue, replace, hTTPFuzzerClickEditorMenuProps} = props
@@ -675,10 +675,10 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
     const isSimpleEnter = useRef<boolean>(false)
     return (
         <div className={styles["http-fuzzer-range-editor-body"]} style={{display: "flex"}}>
-            <HTTPFuzzerClickEditorMenu
+            {hTTPFuzzerClickEditorMenuProps&&<HTTPFuzzerClickEditorMenu
                 className={styles["range-click-editor-menu"]}
                 {...hTTPFuzzerClickEditorMenuProps}
-            />
+            />}
 
             <div className={styles["http-fuzzer-range-editor"]}>
                 <div className={styles["http-fuzzer-range-editor-simple"]}>
