@@ -88,8 +88,8 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
         setActiveKey(key)
     })
     const [title, setTitle] = useState<string>("")
-    const [packetEnMode, setPacketEnMode] = useState<boolean>(false) // Collapse打开的key
-    const [resultEnMode, setResultEnMode] = useState<boolean>(false) // Collapse打开的key
+    const [packetMode, setPacketMode] = useState<boolean>(false) // Collapse打开的key
+    const [resultMode, setResultMode] = useState<boolean>(false) // Collapse打开的key
 
     const [customCodecList, setCustomCodecList] = useState<string[]>([])
 
@@ -137,11 +137,11 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             setTitle("数据包编解码器")
-                                            setResultEnMode(false)
+                                            setResultMode(false)
                                             if (activeKey?.findIndex((ele) => ele === "数据包编解码器") === -1) {
                                                 onSwitchCollapse([...activeKey, "数据包编解码器"])
                                             }
-                                            setPacketEnMode(true)
+                                            setPacketMode(true)
                                             setVisibleDrawer(true)
                                             // onAddMatchingAndExtractionCard("extractors")
                                         }}
@@ -184,11 +184,11 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             setTitle("回显编解码器")
-                                            setPacketEnMode(false)
+                                            setPacketMode(false)
                                             if (activeKey?.findIndex((ele) => ele === "回显编解码器") === -1) {
                                                 onSwitchCollapse([...activeKey, "回显编解码器"])
                                             }
-                                            setResultEnMode(true)
+                                            setResultMode(true)
                                             setVisibleDrawer(true)
                                         }}
                                         className={fuzzerStyles["btn-padding-right-0"]}
@@ -277,8 +277,8 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                 </Form>
                 <CustomCodecEditor
                     title={title}
-                    packetEnMode={packetEnMode}
-                    resultEnMode={resultEnMode}
+                    packetMode={packetMode}
+                    resultMode={resultMode}
                     visibleDrawer={visibleDrawer}
                     onClose={() => setVisibleDrawer(false)}
                 />
