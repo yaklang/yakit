@@ -2023,7 +2023,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
         const onSubMenuDragEnd = useMemoizedFn((result) => {
             try {
-                console.log("onSubMenuDragEnd", result)
+                // console.log("onSubMenuDragEnd", result)
                 const {droppableId: sourceDroppableId} = result.source
                 /**将拖拽item变为选中item ---------start---------  0817,暂时取消拖拽选中*/
                 // const { index, subIndex } = getPageItemById(subPage, result.draggableId)
