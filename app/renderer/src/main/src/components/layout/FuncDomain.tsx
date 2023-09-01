@@ -770,22 +770,6 @@ const GetUIOpSettingMenu = () => {
                 ]
             },
             {
-                key: "link",
-                label: "切换连接模式",
-                children: [
-                    {label: "本地", key: "local"},
-                    {label: "远程", key: "remote"}
-                ]
-            },
-            {
-                key: "refreshMenu",
-                label: "刷新菜单"
-            },
-            {
-                key: "settingMenu",
-                label: "配置菜单栏"
-            },
-            {
                 key: "system-manager",
                 label: "进程与缓存管理",
                 children: [{key: "invalidCache", label: "删除缓存数据"}]
