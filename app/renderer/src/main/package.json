@@ -5,8 +5,8 @@
     "dependencies": {
         "@ant-design/compatible": "^1.0.8",
         "@ant-design/icons": "latest",
-        "@ant-design/pro-layout": "^6.19.7",
         "@ant-design/pro-card": "^1.18.1",
+        "@ant-design/pro-layout": "^6.19.7",
         "@ant-design/pro-table": "^2.57.1",
         "@dnd-kit/core": "^4.0.1",
         "@testing-library/jest-dom": "^5.11.4",
@@ -61,7 +61,7 @@
         "react-error-overlay": "6.0.9",
         "react-hex-editor": "^0.3.0",
         "react-highlight-words": "^0.17.0",
-        "react-hotkeys-hook": "^3.4.4",
+        "react-hotkeys-hook": "^4.4.1",
         "react-infinite-scroll-component": "^6.1.0",
         "react-markdown": "^8.0.7",
         "react-monaco-editor": "^0.54.0",

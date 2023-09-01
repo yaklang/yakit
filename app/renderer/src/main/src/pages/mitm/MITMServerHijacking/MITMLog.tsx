@@ -561,6 +561,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                             limit: 50,
                             onChange: () => {}
                         }}
+                        useUpAndDown={true}
                     />
                 }
                 secondNode={

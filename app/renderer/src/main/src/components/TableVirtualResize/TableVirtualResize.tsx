@@ -128,6 +128,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         if (size === "middle") return 32
         return 28
     }, [size])
+    const [tableIsIntersecting, setTableIsIntersecting] = useState<boolean>(false) // 表格是否在当前页面显示
     const [currentRow, setCurrentRow] = useState<T>()
     const [selectedRows, setSelectedRows] = useState<T[]>([])
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
@@ -175,13 +176,26 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         scrollTo(0)
     }, [isRefresh])
 
+    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+        entries.forEach((entry) => {
+            const target = entry.target
+            containerRefPosition.current = target.getBoundingClientRect()
+        })
+    })
+
+    const intersectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            setTableIsIntersecting(entry.isIntersecting)
+        })
+    })
+
     useUpdateEffect(() => {
-        setTimeout(() => {
-            if (containerRef.current) {
-                containerRefPosition.current = containerRef.current.getBoundingClientRect()
-            }
-        }, 100)
+        if (containerRef.current) {
+            resizeObserver.observe(containerRef.current)
+            intersectionObserver.observe(containerRef.current)
+        }
     }, [containerRef.current, height])
+
     useDebounceEffect(
         () => {
             //为了出现滚动条以便于滚动加载
@@ -238,7 +252,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        {},
+        { enabled: tableIsIntersecting },
         [data, currentRow, containerRef.current]
     )
     const upKey = useDebounceFn(
@@ -251,7 +265,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 const dom = containerRef.current
                 //  长按up
                 // scrollTo(index) // 缓慢滑到
-                dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
+                if (dom) dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
                 return
             }
             const currentPosition: tablePosition = currentDom.getBoundingClientRect()
@@ -259,7 +273,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const inViewport =
                 currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
 
-            if (!inViewport) scrollTo(index)
+        if (!inViewport) scrollTo(index)
         },
         {wait: 100}
     ).run
@@ -301,7 +315,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        {},
+        { enabled: tableIsIntersecting },
         [data, currentRow, containerRef.current]
     )
     const downKey = useDebounceFn(
@@ -314,7 +328,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             if (!currentDom) {
                 //  长按up
                 // scrollTo(index)
-                dom.scrollTop = index * defItemHeight
+                if (dom) dom.scrollTop = index * defItemHeight
                 return
             }
 
@@ -872,7 +886,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         if (onMoveRowEnd) onMoveRowEnd()
     })
     return (
-        <div className={classNames(styles["virtual-table"])} ref={tableRef} onMouseMove={(e) => onMouseMoveLine(e)}>
+        <div className={classNames(styles["virtual-table"])} ref={tableRef} tabIndex={-1} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
                 onResize={(w, h) => {
                     if (!w || !h) {

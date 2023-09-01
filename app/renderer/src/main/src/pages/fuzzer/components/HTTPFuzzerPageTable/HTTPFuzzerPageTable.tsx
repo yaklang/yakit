@@ -544,6 +544,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }
     })
 
+    const onSetCurrentRow = useDebounceFn(
+        (rowDate: FuzzerResponse) => {
+            onRowClick(rowDate)
+        },
+        {wait: 200}
+    ).run
+
     const ResizeBoxProps = useCreation(() => {
         let p = {
             firstRatio: "50%",
@@ -599,8 +606,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         containerClassName={classNames(styles["table-container"], {
                             [styles["table-container-border"]]: currentSelectItem?.ResponseRaw
                         })}
-                        onRowClick={onRowClick}
                         currentSelectItem={currentSelectItem}
+                        onSetCurrentRow={onSetCurrentRow}
+                        useUpAndDown={true}
                     />
                 }
                 secondNode={
