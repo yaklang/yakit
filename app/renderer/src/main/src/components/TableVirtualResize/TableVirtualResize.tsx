@@ -281,7 +281,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         "down",
         () => {
             if (!useUpAndDown) return
-            console.log(renderKey, '下移动')
             if (!setCurrentRow) return
             const dataLength = data.length
             if (dataLength <= 0) {
