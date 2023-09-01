@@ -1,5 +1,7 @@
+import {ReactElement} from "react"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import {EditorMenuItemType} from "./EditorMenu"
+import { EditorDetailInfoProps } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 
 /** monaco-editor 相关接口 */
 export type YakitSelection = monacoEditor.Selection
@@ -58,6 +60,16 @@ export interface YakitEditorProps {
 
     /** @name 配置项-操作记录(拥有此项可记录字体大小及换行符) */
     editorOperationRecord?: string
+
+    /** 配置项-编辑器自带(点击/选中)菜单(菜单默显示插入标签/编解码) */
+    /** @name 配置项-是否显示编辑器自带(点击/选中)菜单(默认不显示) */
+    isShowSelectRangeMenu?: boolean
+    /** @name 配置项-菜单超出n行消失(默认3行) */
+    overLine?: number
+    /** @name 配置项-点击弹窗显示内容(默认为插入标签) */
+    selectNode?: (close: () => void, editorInfo?: EditorDetailInfoProps) => ReactElement
+    /** @name 配置项-选中弹窗显示内容(默认为编/解码-编辑器可读情况下为解码) */
+    rangeNode?: (close: () => void, editorInfo?: EditorDetailInfoProps) => ReactElement
 }
 
 /**

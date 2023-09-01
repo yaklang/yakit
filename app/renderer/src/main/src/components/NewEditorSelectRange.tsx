@@ -3,22 +3,9 @@ import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
 import {editor} from "monaco-editor"
 import {IMonacoEditor, NewHTTPPacketEditor, NewHTTPPacketEditorProp} from "@/utils/editors"
+import { CountDirectionProps, EditorDetailInfoProps } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 
-export interface CountDirectionProps {
-    x?: string
-    y?: string
-}
 
-export interface EditorDetailInfoProps {
-    direction: CountDirectionProps
-    top: number
-    bottom: number
-    left: number
-    right: number
-    focusX: number
-    focusY: number
-    lineHeight: number
-}
 
 export interface NewEditorSelectRangeProps extends NewHTTPPacketEditorProp {
     // 编辑器点击弹窗的唯一Id
@@ -46,7 +33,7 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
     }, [reqEditor])
 
     // 编辑器菜单
-    const editerMenuFun = (reqEditor: IMonacoEditor) => {
+    const editerMenuFun = (reqEditor: IMonacoEditor) => { 
         // 编辑器点击显示的菜单
         const fizzSelectWidget = {
             isOpen: false,
@@ -81,7 +68,7 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
         const fizzRangeWidget = {
             isOpen: false,
             getId: function () {
-                return "monaco.fizz.range.widget"
+                return rangeId || ""
             },
             getDomNode: function () {
                 // 将TSX转换为DOM节点
@@ -125,6 +112,10 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
             reqEditor.removeContentWidget(fizzRangeWidget)
         }
 
+        // 编辑器更新 关闭之前展示
+        closeFizzSelectWidget()
+        closeFizzRangeWidget()
+
         reqEditor?.getModel()?.pushEOL(editor.EndOfLineSequence.CRLF)
         reqEditor.onMouseMove((e) => {
             try {
@@ -146,8 +137,8 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                                target.detail : undefined
                 const lineHeight = reqEditor.getOption(monaco.editor.EditorOption.lineHeight)
                 if (
-                    detail !== "monaco.fizz.select.widget" &&
-                    detail !== "monaco.fizz.range.widget" &&
+                    detail !== selectId &&
+                    detail !== rangeId &&
                     downPosY.current &&
                     upPosY.current
                 ) {

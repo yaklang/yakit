@@ -23,11 +23,27 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
-import {EditorDetailInfoProps} from "@/components/NewEditorSelectRange"
 import {useThrottleFn} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 
-const directionStyle = (editorInfo, isCenter = true) => {
+export interface CountDirectionProps {
+    x?: string
+    y?: string
+}
+
+
+export interface EditorDetailInfoProps {
+    direction: CountDirectionProps
+    top: number
+    bottom: number
+    left: number
+    right: number
+    focusX: number
+    focusY: number
+    lineHeight: number
+}
+
+const directionStyle = (editorInfo,isCenter=true) => {
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
@@ -638,7 +654,7 @@ export interface HTTPFuzzerRangeEditorMenuProps {
     insert: (v: any) => void
     rangeValue: string
     replace?: (v: string) => void
-    hTTPFuzzerClickEditorMenuProps: HTTPFuzzerClickEditorMenuProps
+    hTTPFuzzerClickEditorMenuProps?: HTTPFuzzerClickEditorMenuProps
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
     const {editorInfo, insert, rangeValue, replace, hTTPFuzzerClickEditorMenuProps} = props
@@ -659,10 +675,10 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
     const isSimpleEnter = useRef<boolean>(false)
     return (
         <div className={styles["http-fuzzer-range-editor-body"]} style={{display: "flex"}}>
-            <HTTPFuzzerClickEditorMenu
+            {hTTPFuzzerClickEditorMenuProps&&<HTTPFuzzerClickEditorMenu
                 className={styles["range-click-editor-menu"]}
                 {...hTTPFuzzerClickEditorMenuProps}
-            />
+            />}
 
             <div className={styles["http-fuzzer-range-editor"]}>
                 <div className={styles["http-fuzzer-range-editor-simple"]}>

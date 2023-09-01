@@ -1093,6 +1093,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     editorOperationRecord?: string
     /**@name 外部控制WebFuzzer数据 */
     webFuzzerValue?: Uint8Array
+    /**@name 打开WebFuzzer的回调 */
+    webFuzzerCallBack?: ()=> void
 }
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
@@ -1477,6 +1479,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             webFuzzerValue={
                                 props.webFuzzerValue && new Buffer(props.webFuzzerValue).toString(getEncoding())
                             }
+                            webFuzzerCallBack={props.webFuzzerCallBack}
                             {...props.extraEditorProps}
                         />
                     )}

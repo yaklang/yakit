@@ -78,6 +78,9 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 yakitFailed("获取 MITM 过滤器失败:" + err)
             })
     })
+    const onClearFilters = () => {
+        filtersRef.current.clearFormValue()
+    }
     return (
         <YakitModal
             visible={visible}
@@ -89,6 +92,9 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             subTitle={
                 isStartMITM && (
                     <div className={styles["mitm-filters-subTitle"]}>
+                        <YakitButton type='text' onClick={() => onClearFilters()}>
+                            清除
+                        </YakitButton>
                         <YakitButton type='text' onClick={() => onResetFilters()}>
                             重置过滤器
                         </YakitButton>

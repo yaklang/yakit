@@ -1328,17 +1328,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                     )
                 }}
                 firstNode={
-                    // <NewHTTPPacketEditor
-                    //     noHex={true}
-                    //     noHeader={true}
-                    //     hideSearch={true}
-                    //     bordered={false}
-                    //     noMinimap={true}
-                    //     utf8={true}
-                    //     refreshTrigger={refreshTrigger}
-                    //     originValue={requestHttp}
-                    //     onChange={(i) => onSetRequestHttp(i)}
-                    // />
                     <WebFuzzerNewEditor
                         refreshTrigger={refreshTrigger}
                         request={requestHttp}
@@ -1348,8 +1337,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
                         setHotPatchCode={setHotPatchCode}
                         setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                        selectId='sequence'
-                        rangeId='sequence'
                     />
                 }
                 secondNode={

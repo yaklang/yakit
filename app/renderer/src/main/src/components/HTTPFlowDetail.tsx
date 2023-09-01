@@ -40,7 +40,6 @@ import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {NewEditorSelectRange} from "./NewEditorSelectRange"
 import {HTTPFuzzerRangeReadOnlyEditorMenu} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import {YakitRadioButtons} from "./yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "@/utils/prettifyPacket"
@@ -135,8 +134,6 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>()
     const [loading, setLoading] = useState(false)
-    const [requestEditor, setRequestEditor] = useState<IMonacoEditor>()
-    const [responseEditor, setResponseEditor] = useState<IMonacoEditor>()
 
     useEffect(() => {
         if (props.id <= 0) {
@@ -290,7 +287,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Col span={12}>
                                 <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
-                                        <NewEditorSelectRange
+                                        <NewHTTPPacketEditor
                                             readOnly={true}
                                             hideSearch={true}
                                             noHex={true}
@@ -298,22 +295,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             originValue={new Buffer(flow.Request)}
                                             defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
-                                            rangeId='http.flow.detail.request.read.only.widget'
-                                            rangeNode={(close, editorInfo) => (
-                                                <HTTPFuzzerRangeReadOnlyEditorMenu
-                                                    editorInfo={editorInfo}
-                                                    rangeValue={
-                                                        (requestEditor &&
-                                                            requestEditor
-                                                                .getModel()
-                                                                ?.getValueInRange(
-                                                                    requestEditor.getSelection() as any
-                                                                )) ||
-                                                        ""
-                                                    }
-                                                />
-                                            )}
-                                            onEditor={setRequestEditor}
+                                            extraEditorProps={{
+                                                isShowSelectRangeMenu:true
+                                            }}
                                         />
                                     </div>
                                 </Card>
@@ -321,7 +305,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             <Col span={12}>
                                 <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
                                     <div style={{height: 350}}>
-                                        <NewEditorSelectRange
+                                        <NewHTTPPacketEditor
                                             readOnly={true}
                                             hideSearch={true}
                                             noHex={true}
@@ -330,22 +314,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
                                             webFuzzerValue={new Buffer(flow.Request)}
-                                            rangeId='http.flow.detail.response.read.only.widget'
-                                            rangeNode={(close, editorInfo) => (
-                                                <HTTPFuzzerRangeReadOnlyEditorMenu
-                                                    editorInfo={editorInfo}
-                                                    rangeValue={
-                                                        (responseEditor &&
-                                                            responseEditor
-                                                                .getModel()
-                                                                ?.getValueInRange(
-                                                                    responseEditor.getSelection() as any
-                                                                )) ||
-                                                        ""
-                                                    }
-                                                />
-                                            )}
-                                            onEditor={setResponseEditor}
+                                            extraEditorProps={{
+                                                isShowSelectRangeMenu:true
+                                            }}
                                         />
                                     </div>
                                 </Card>
@@ -809,8 +780,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     }, [])
 
-    const [reqFirstEditor, setReqFirstEditor] = useState<IMonacoEditor>()
-    const [reqSecondEditor, setReqSecondEditor] = useState<IMonacoEditor>()
     return (
         <ResizeBox
             firstNode={() => {
@@ -821,7 +790,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     return <HTTPFlowForWebsocketViewer flow={flow} />
                 }
                 return (
-                    <NewEditorSelectRange
+                    <NewHTTPPacketEditor
                         originValue={flow?.Request || new Uint8Array()}
                         readOnly={true}
                         noLineNumber={true}
@@ -838,20 +807,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
                         defaultSearchKeyword={search}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_REQUEST'
-                        onEditor={setReqFirstEditor}
-                        rangeId='http.flow.detail.first.range.read.widget'
-                        rangeNode={(close, editorInfo) => (
-                            <HTTPFuzzerRangeReadOnlyEditorMenu
-                                editorInfo={editorInfo}
-                                rangeValue={
-                                    (reqFirstEditor &&
-                                        reqFirstEditor
-                                            .getModel()
-                                            ?.getValueInRange(reqFirstEditor.getSelection() as any)) ||
-                                    ""
-                                }
-                            />
-                        )}
+                        extraEditorProps={{
+                            isShowSelectRangeMenu:true
+                        }}
                     />
                 )
             }}
@@ -864,7 +822,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     return <WebsocketFrameHistory websocketHash={flow.WebsocketHash || ""} />
                 }
                 return (
-                    <NewEditorSelectRange
+                    <NewHTTPPacketEditor
                         contextMenu={flow?.RawResponseBodyBase64 ? responseEditorRightMenu : undefined}
                         title={
                             <Radio.Group
@@ -902,20 +860,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultHttps={props.defaultHttps}
                         webFuzzerValue={flow?.Request || new Uint8Array()}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE'
-                        onEditor={setReqSecondEditor}
-                        rangeId='http.flow.detail.second.range.read.widget'
-                        rangeNode={(close, editorInfo) => (
-                            <HTTPFuzzerRangeReadOnlyEditorMenu
-                                editorInfo={editorInfo}
-                                rangeValue={
-                                    (reqSecondEditor &&
-                                        reqSecondEditor
-                                            .getModel()
-                                            ?.getValueInRange(reqSecondEditor.getSelection() as any)) ||
-                                    ""
-                                }
-                            />
-                        )}
+                        extraEditorProps={{
+                            isShowSelectRangeMenu:true
+                        }}
                     />
                     // {
                     //     type==="render"&&prettifyPacketCode(new Buffer((flow?.Response || new Uint8Array())).toString("utf8"))

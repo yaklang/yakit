@@ -12,9 +12,15 @@ export interface YakQueryHTTPFlowRequest {
     HaveCommonParams?: boolean
     HaveBody?: boolean
     SearchContentType?: string
+    ExcludeContentType?: string[]
     Keyword?: string
     OnlyWebsocket?: boolean
+    IncludeInUrl?: string[]
     ExcludeInUrl?: string[]
+    IncludePath?: string[]
+    ExcludePath?: string[]
+    IncludeSuffix?: string[]
+    ExcludeSuffix?: string[]
     ExcludeId?: number[]
     Tags?: string[]
     HaveParamsTotal?: string

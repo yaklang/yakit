@@ -101,7 +101,6 @@ import {
     defaultLabel,
     FUZZER_LABEL_LIST_NUMBER
 } from "./HTTPFuzzerEditorMenu"
-import {NewEditorSelectRange} from "../../components/NewEditorSelectRange"
 import {execCodec} from "@/utils/encodec"
 import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
@@ -373,6 +372,43 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
             info("新开 WebFuzzer Tab")
         })
 }
+
+    /**@description 插入 yak.fuzz 语法 */
+export const onInsertYakFuzzer = (reqEditor:IMonacoEditor) => {
+        const m = showYakitModal({
+            title: "Fuzzer Tag 调试工具",
+            width: "70%",
+            footer: null,
+            subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
+            content: (
+                <div style={{padding: 24}}>
+                    <StringFuzzer
+                        advanced={true}
+                        disableBasicMode={true}
+                        insertCallback={(template: string) => {
+                            if (!template) {
+                                Modal.warn({
+                                    title: "Payload 为空 / Fuzz 模版为空"
+                                })
+                            } else {
+                                if (reqEditor && template) {
+                                    reqEditor.trigger("keyboard", "type", {
+                                        text: template
+                                    })
+                                } else {
+                                    Modal.error({
+                                        title: "BUG: 编辑器失效"
+                                    })
+                                }
+                                m.destroy()
+                            }
+                        }}
+                        close={() => m.destroy()}
+                    />
+                </div>
+            )
+        })
+    }
 
 const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
 
@@ -1139,10 +1175,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const webFuzzerNewEditorRef = useRef<any>()
-    /**@description 插入 yak.fuzz 语法 */
-    const onInsertYakFuzzer = useMemoizedFn(() => {
-        if (webFuzzerNewEditorRef.current) webFuzzerNewEditorRef.current.onInsertYakFuzzer()
-    })
 
     /**
      * @@description 获取高级配置中的Form values
@@ -1186,13 +1218,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onSetRequest = useMemoizedFn((i: string) => {
         requestRef.current = i
     })
+    const onInsertYakFuzzerFun = useMemoizedFn(() => {
+        if (webFuzzerNewEditorRef.current) onInsertYakFuzzer(webFuzzerNewEditorRef.current.reqEditor)
+    })
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <React.Suspense fallback={<>加载中...</>}>
                 <HttpQueryAdvancedConfig
                     advancedConfigValue={advancedConfigValue}
                     visible={advancedConfig}
-                    onInsertYakFuzzer={onInsertYakFuzzer}
+                    onInsertYakFuzzer={onInsertYakFuzzerFun}
                     onValuesChange={onGetFormValue}
                     refreshProxy={refreshProxy}
                     defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
@@ -1496,14 +1531,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                             setHotPatchCode={setHotPatchCode}
                             setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                            selectId='sequence'
-                            rangeId='sequence'
                         />
                     }
                     secondNode={
                         <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                             {onlyOneResponse ? (
                                 <ResponseViewer
+                                    isHttps={advancedConfigValue.isHttps}
                                     ref={responseViewerRef}
                                     fuzzerResponse={httpResponse}
                                     defaultResponseSearch={defaultResponseSearch}
@@ -2050,6 +2084,7 @@ interface ResponseViewerProps {
     defActiveType: MatchingAndExtraction
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
     webFuzzerValue?: Uint8Array
+    isHttps?: boolean
 
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
@@ -2070,13 +2105,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             defActiveType,
             onSaveMatcherAndExtraction,
             showResponseInfoSecondEditor,
-            setShowResponseInfoSecondEditor
+            setShowResponseInfoSecondEditor,
+            isHttps
         } = props
         const [reason, setReason] = useState<string>("未知原因")
 
         const [activeKey, setActiveKey] = useState<string>("")
         const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
-        const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
         useEffect(() => {
             setActiveKey(defActiveKey)
         }, [defActiveKey])
@@ -2128,7 +2163,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             return p
         }, [showMatcherAndExtraction, showExtra])
         const show = useMemo(() => showMatcherAndExtraction || showExtra, [showMatcherAndExtraction, showExtra])
-        const extraEditorProps = useCreation(() => {
+        const otherEditorProps = useCreation(() => {
             const overlayWidget = {
                 onAddOverlayWidget: (editor, isShow) => onAddOverlayWidget(editor, fuzzerResponse, isShow)
             }
@@ -2141,7 +2176,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     lineStyle={{display: !show ? "none" : "", background: "#f0f2f5"}}
                     firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
                     firstNode={
-                        <NewEditorSelectRange
+                        <NewHTTPPacketEditor
+                            defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
                             originValue={fuzzerResponse.ResponseRaw}
@@ -2190,19 +2226,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
                             webFuzzerValue={props.webFuzzerValue}
-                            rangeId='monaco.fizz.range.read.only.widget'
-                            rangeNode={(close, editorInfo) => (
-                                <HTTPFuzzerRangeReadOnlyEditorMenu
-                                    editorInfo={editorInfo}
-                                    rangeValue={
-                                        (reqEditor &&
-                                            reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
-                                        ""
-                                    }
-                                />
-                            )}
-                            onEditor={setReqEditor}
-                            {...extraEditorProps}
+                            extraEditorProps={{
+                                isShowSelectRangeMenu:true
+                            }}
+                            {...otherEditorProps}
                         />
                     }
                     secondNode={

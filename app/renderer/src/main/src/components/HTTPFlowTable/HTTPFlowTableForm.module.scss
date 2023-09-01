@@ -1,0 +1,29 @@
+.http-flow-table-form-configuration{
+    :global {
+        .ant-form-item-with-help .ant-form-item-explain {
+            font-size: 12px;
+            color: var(--yakit-helper-text-color);
+            line-height: 16px;
+            min-height: 16px;
+            margin-top: 2px;
+        }
+        .ant-form-item-control-input {
+            min-height: 28px;
+        }
+    }
+    .advanced-configuration-drawer-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .advanced-configuration-drawer-title-text {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--yakit-header-color);
+        }
+        .advanced-configuration-drawer-title-btns {
+            display: flex;
+            gap: 8px;
+        }
+    }
+}
