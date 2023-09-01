@@ -46,9 +46,7 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
         )
     },
     (preProps, nextProps) => {
-        const preIds = preProps.renderSubPage.map((ele) => ele.id)
-        const nextIds = nextProps.renderSubPage.map((ele) => ele.id)
-        if (preIds !== nextIds) {
+        if (preProps.renderSubPage.length !== nextProps.renderSubPage.length) {
             return false
         }
         if (preProps.selectSubMenuId !== nextProps.selectSubMenuId) {
