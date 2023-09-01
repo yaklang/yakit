@@ -812,35 +812,14 @@ const GetUIOpSettingMenu = () => {
                     key: "vulinbox-manager",
                     label: "(靶场)Vulinbox"
                 },
-                {
-                    key: "config-network",
-                    label: "全局网络配置"
-                },
             ]
         },
+        {type: "divider"},
         {
             key: "system-manager",
             label: "进程与缓存管理",
             children: [{key: "invalidCache", label: "删除缓存数据"}]
         },
-        {type: "divider"},
-        {
-            key: "reverse",
-            label: "全局反连"
-        },
-        {
-            key: "agent",
-            label: "系统代理"
-        },
-        {
-            key: "engineAgent",
-            label: "引擎扫描代理"
-        },
-        {
-            key: "engineVar",
-            label: "引擎环境变量"
-        },
-        {type: "divider"},
         {
             key: "plugin",
             label: "配置插件源",
@@ -865,21 +844,33 @@ const GetUIOpSettingMenu = () => {
                 {label: "远程", key: "remote"}
             ]
         },
+        {type: "divider"},
+        // {
+        //     key: "otherMode",
+        //     label: "其他操作",
+        //     children: [
+        //         {label: "管理员模式", key: "adminMode"},
+        //         {label: "旧版本迁移", key: "migrateLegacy"}
+        //     ]
+        // },
         {
-            key: "refreshMenu",
-            label: "刷新菜单"
-        },
-        {
-            key: "otherMode",
-            label: "其他操作",
+            key: "systemSet",
+            label: "系统设置",
             children: [
-                {label: "管理员模式", key: "adminMode"},
-                {label: "旧版本迁移", key: "migrateLegacy"}
+                { key: "reverse",label: "全局反连" },
+                { key: "agent",label: "系统代理" },
+                { key: "engineAgent",label: "引擎扫描代理" },
+                { key: "engineVar",label: "引擎环境变量" },
+                { key: "config-network", label: "全局网络配置" },
             ]
         },
         {
             key: "diagnose-network",
             label: "网络诊断"
+        },
+        {
+            key: "refreshMenu",
+            label: "刷新菜单"
         }
     ]
 }
