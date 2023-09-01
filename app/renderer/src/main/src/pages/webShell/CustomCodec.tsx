@@ -7,15 +7,9 @@ import {Button, Form, Tooltip} from "antd";
 import classNames from "classnames";
 import {TerminalPopover} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig";
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer";
-import {
-    defMatcherAndExtractionCode,
-    MatcherAndExtraction,
-    MatcherAndExtractionCard
-} from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard";
 import {MainOperatorContext} from "@/pages/layout/MainContext";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
-import {NewHTTPPacketEditor, YakEditor} from "@/utils/editors";
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str";
+import {YakEditor} from "@/utils/editors";
 import mitmStyles from "@/pages/mitm/MITMRule/MITMRule.module.scss";
 import {openExternalWebsite} from "@/utils/openWebsite";
 import {RuleExportAndImportButton} from "@/pages/mitm/MITMRule/MITMRule";
@@ -24,16 +18,10 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {WebShellDetail} from "@/pages/webShell/models";
 import {InputItem, ManyMultiSelectForString, SelectOne} from "@/utils/inputUtil";
 import {YakScript} from "@/pages/invoker/schema";
-import {MenuCodec} from "@/pages/layout/publicMenu/MenuCodec";
-import {MenuDNSLog} from "@/pages/layout/publicMenu/MenuDNSLog";
-import {YakitFeatureTabName} from "@/pages/yakitStore/viewers/base";
-import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType";
+
 import webFuzzerStyles from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage.module.scss";
 import {OutlineAdjustmentsIcon, OutlineCodeIcon, OutlineCollectionIcon, OutlineQrcodeIcon} from "@/assets/icon/outline";
-import {PageNodeItemProps} from "@/store/pageNodeInfo";
-import {YakitRoute} from "@/routes/newRoute";
-import {ResizeCardBox} from "@/components/ResizeCardBox/ResizeCardBox";
-import {SelectItem} from "@/utils/SelectItem";
+
 
 interface CustomCodecValueProps {
     customCodecList: string[]
@@ -286,6 +274,9 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
     const [enPayloadValue, setEnPayloadValue] = useState<string>("")
     const [dePayloadValue, setDePayloadValue] = useState<string>("")
 
+    const [packetCode, setPacketCode] = useState<string>("")
+    const [payloadCode, setPayloadCode] = useState<string>("")
+
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
     useEffect(() => {
         setEnPacketValue(enPacketValue || defPacketEncoder)
@@ -301,6 +292,10 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
         if (!shellScript) {
             console.log("!shellScript", shellScript)
             setShellScript("jsp");
+        }
+        if( !params.Content && params.Tags.includes("packet-encoder")) {
+            setEnPacketValue(params.Content)
+            setDePacketValue(params.Content)
         }
     }, []);
 
@@ -341,12 +336,12 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                                         (
                                             <YakEditor
                                                 type={"yak"} noMiniMap={true}
-                                                value={defPacketEncoder}
+                                                value={enPacketValue} setValue={setEnPacketValue}
                                             />
                                         ) : (
                                             <YakEditor
                                                 type={"yak"} noMiniMap={true}
-                                                value={defPayloadEncoder}
+                                                value={dePayloadValue} setValue={setDePayloadValue}
                                             />
                                         )
                                 ) : (
@@ -354,7 +349,7 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                                         (
                                             <YakEditor
                                                 type={"yak"} noMiniMap={true}
-                                                value={defPacketDecoder}
+                                                value={packetCode} setValue={setPacketCode}
                                             />
                                         ) : (
                                             <YakEditor
