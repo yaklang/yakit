@@ -1221,15 +1221,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onInsertYakFuzzerFun = useMemoizedFn(() => {
         if (webFuzzerNewEditorRef.current) onInsertYakFuzzer(webFuzzerNewEditorRef.current.reqEditor)
     })
-    const checkRedirect = useMemoizedFn(()=>{
-        for (let index = 0; index < httpResponse.Headers.length; index++) {
-            const element = httpResponse.Headers[index]
+    const checkRedirect = useMemo(()=>{
+        const arr = httpResponse?.Headers || []
+        for (let index = 0; index < arr.length; index++) {
+            const element = arr[index]
             if (element.Header === "Location"){
                 return true
             }
         }
         return false
-    })
+    },[httpResponse])
 
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -1332,7 +1333,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </div>
                     )}
 
-                    {onlyOneResponse && httpResponse.Ok && checkRedirect() &&(
+                    {onlyOneResponse && httpResponse.Ok && checkRedirect &&(
                         <YakitButton
                             onClick={() => {
                                 setLoading(true)
