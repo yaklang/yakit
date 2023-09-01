@@ -85,6 +85,7 @@ import {InheritLineIcon, InheritArrowIcon} from "./icon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {PencilAltIcon} from "@/assets/newIcon"
 import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
+import shallow from "zustand/shallow"
 // import { ResponseCard } from "./ResponseCard"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -168,7 +169,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
-    const {getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId, getCurrentSelectGroup} = usePageNode()
+    const {getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId, getCurrentSelectGroup} = usePageNode(
+        (state) => ({
+            getPageNodeInfoByPageGroupId: state.getPageNodeInfoByPageGroupId,
+            getPageNodeInfoByPageId: state.getPageNodeInfoByPageId,
+            getCurrentSelectGroup: state.getCurrentSelectGroup
+        }),
+        shallow
+    )
+
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
     useEffect(() => {
         ipcRenderer.on(
@@ -1210,7 +1219,9 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         return cachedTotal === 1
     }, [cachedTotal])
 
-    const {getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode()
+    const updatePageNodeInfoByPageId = usePageNode((s) => s.updatePageNodeInfoByPageId)
+    const getPageNodeInfoByPageId = usePageNode((s) => s.getPageNodeInfoByPageId)
+
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
             .then((data) => {

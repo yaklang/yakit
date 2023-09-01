@@ -2,6 +2,11 @@
 .http-fuzzer-body {
     display: flex;
     height: 100%;
+    .http-query-advanced-config-body {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
 }
 .http-fuzzer-page {
     height: 100%;
@@ -258,6 +263,9 @@
                 gap: 4px;
                 border-right: 1px solid #fff;
                 cursor: pointer;
+                &:hover {
+                    background-color: rgba(240, 241, 243, 0.5);
+                }
                 .tab-icon {
                     width: 16px;
                     height: 16px;
@@ -271,6 +279,9 @@
             &-item-active {
                 background-color: var(--yakit-primary-5);
                 color: #fff;
+                &:hover {
+                    background-color: var(--yakit-primary-4);
+                }
                 .tab-icon {
                     color: #fff;
                 }

@@ -116,6 +116,8 @@ import { DiagnoseNetworkPage } from "@/pages/diagnoseNetwork/DiagnoseNetworkPage
 import { ConfigNetworkPage } from "@/pages/configNetwork/ConfigNetworkPage";
 import { WebFuzzerPage } from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
+import { ErrorBoundary } from "react-error-boundary"
+import { PageItemProps } from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -378,12 +380,32 @@ export interface ComponentParams {
     recoverOnlineGroup?: string
     recoverTaskName?: string
 }
-export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, params?: ComponentParams) => ReactNode = (
-    key,
-    yakScriptId,
-    params
-) => {
-    switch (key) {
+
+function withRouteToPage(WrappedComponent) {
+    return function WithPage(props) {
+        return (
+            <ErrorBoundary
+                FallbackComponent={({error, resetErrorBoundary}) => {
+                    if (!error) {
+                        return <div>未知错误</div>
+                    }
+                    return (
+                        <div>
+                            <p>逻辑性崩溃，请关闭重试！</p>
+                            <pre>{error?.message}</pre>
+                        </div>
+                    )
+                }}
+            >
+                <WrappedComponent {...props} />
+            </ErrorBoundary>
+        )
+    }
+}
+
+export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
+    const {routeKey, yakScriptId, params} = props
+    switch (routeKey) {
         case YakitRoute.NewHome:
             return <NewHome />
         case YakitRoute.HTTPHacker:
@@ -525,6 +547,8 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
             return <div />
     }
 }
+
+export const RouteToPageItem=withRouteToPage(RouteToPage)
 
 /** @name 菜单中内定插件的插件名称(不是展示名称) */
 export enum ResidentPluginName {

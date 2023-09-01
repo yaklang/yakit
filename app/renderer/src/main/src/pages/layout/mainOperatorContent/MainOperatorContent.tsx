@@ -66,11 +66,12 @@ import HTTPFuzzerPage, {
     defaultAdvancedConfigValue
 } from "@/pages/fuzzer/HTTPFuzzerPage"
 import {KVPair} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {MainOperatorContext} from "../MainContext"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
+import shallow from "zustand/shallow"
+import { menuBodyHeight } from "@/pages/globalVariable"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -317,7 +318,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
 
-    const {addPageNode} = usePageNode()
+    const addPageNode = usePageNode((s) => s.addPageNode)
 
     // 打开tab页面
     useEffect(() => {
@@ -871,15 +872,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode()
+    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode(
+        (s) => ({
+            setPageNode: s.setPageNode,
+            getPageNodeInfoByPageId: s.getPageNodeInfoByPageId,
+            updatePageNodeInfoByPageId: s.updatePageNodeInfoByPageId
+        }),
+        shallow
+    )
     // web-fuzzer多开页面缓存数据
     const fuzzerList = useRef<Map<string, MultipleNodeInfo>>(new Map<string, MultipleNodeInfo>())
-    const proxyRef = useRef<string[]>()
-    const dnsServersRef = useRef<string[]>()
-    const etcHostsRef = useRef<KVPair[]>()
-    const isFetchFuzzerList = useCreation<boolean>(() => {
-        return !!(proxyRef.current && dnsServersRef.current && etcHostsRef.current)
-    }, [proxyRef.current, dnsServersRef.current, etcHostsRef.current])
+    const proxyRef = useRef<string[]>([])
+    const dnsServersRef = useRef<string[]>([])
+    const etcHostsRef = useRef<KVPair[]>([])
     useEffect(() => {
         // web-fuzzer页面更新缓存数据
         ipcRenderer.on("fetch-fuzzer-setting-data", (e, res: any) => {
@@ -902,14 +907,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
         }
     }, [])
-    useEffect(() => {
-        if (!isFetchFuzzerList) return
-        // 简易版不获取webFuzzer缓存
-        if (!isEnpriTraceAgent()) {
-            // 触发获取web-fuzzer的缓存
-            fetchFuzzerList()
-        }
-    }, [isFetchFuzzerList])
     /**
      * 因为页面数据变化更新fuzzer序列化
      * 组内的才有序列化
@@ -934,32 +931,29 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
 
     /**@description 获取Fuzzer默认缓存 */
-    const getFuzzerDefaultCache = useMemoizedFn(() => {
-        getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
-            if (!e) {
-                proxyRef.current = []
-                return
+    const getFuzzerDefaultCache = useMemoizedFn(async () => {
+        try {
+            const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
+            const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
+            const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
+           
+            const newProxy= proxy ? proxy.split(",") : []
+            const newDnsServers= dnsServers ? JSON.parse(dnsServers) : []
+            const newEtcHosts=  etcHosts ? JSON.parse(etcHosts) : []
+            if (
+                !_.isEqual(proxyRef.current, newProxy) ||
+                !_.isEqual(dnsServersRef.current, newDnsServers) ||
+                !_.isEqual(etcHostsRef.current, newEtcHosts)
+            ) {
+                proxyRef.current =newProxy
+                dnsServersRef.current = newDnsServers
+                etcHostsRef.current =newEtcHosts
             }
-            proxyRef.current = e ? e.split(",") : []
-        })
-        getRemoteValue(WEB_FUZZ_DNS_Server_Config).then((e) => {
-            if (!e) {
-                dnsServersRef.current = []
-                return
+            if (!isEnpriTraceAgent()) {
+                // 触发获取web-fuzzer的缓存
+                fetchFuzzerList()
             }
-            try {
-                dnsServersRef.current = JSON.parse(e)
-            } catch (error) {}
-        })
-        getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
-            if (!e) {
-                etcHostsRef.current = []
-                return
-            }
-            try {
-                etcHostsRef.current = JSON.parse(e)
-            } catch (error) {}
-        })
+        } catch (error) {}
     })
 
     // 定时向数据库保存web-fuzzer缓存数据
@@ -1011,7 +1005,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     for (let j = 0; j < cLength; j++) {
                         const childItem = childrenList[j]
                         const nodeItem: MultipleNodeInfo = {
-                            ...childItem,
+                            ...childItem
                         }
                         fuzzerList.current.set(nodeItem.id, {...nodeItem})
                         groupChildrenList.push({...nodeItem})
@@ -1040,7 +1034,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     } else {
                         multipleNodeListLength += 1
                         parentItem.params = {
-                            ...parentItem.params,
+                            ...parentItem.params
                         }
                     }
                     parentItem.groupChildren = groupChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId"))
@@ -1069,6 +1063,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
                 if (newMultipleNodeList.length === 0) return
                 // console.log("multipleNodeList", multipleNodeList)
+                // console.log("pageNodeInfo", pageNodeInfo)
                 const webFuzzerPage = {
                     routeKey: key,
                     verbose: tabName,
@@ -1257,33 +1252,26 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     return (
         <Content>
             <YakitSpin spinning={loading}>
-                <MainOperatorContext.Provider
-                    value={{
-                        pageCache,
-                        setPageCache,
-                        currentTabKey,
-                        setCurrentTabKey,
-                        tabMenuHeight,
-                        setTabMenuHeight,
-                        openMultipleMenuPage,
-                        afterDeleteFirstPage: onAfterDeleteFirstPage,
-                        afterDeleteSubPage: onAfterDeleteSubPage,
-                        afterUpdateSubItem: onAfterUpdateSubItem,
-                        onUpdateSubPage: onUpdateSubPage
+                <TabContent
+                    pageCache={pageCache}
+                    setPageCache={setPageCache}
+                    currentTabKey={currentTabKey}
+                    setCurrentTabKey={setCurrentTabKey}
+                    openMultipleMenuPage={openMultipleMenuPage}
+                    afterDeleteFirstPage={onAfterDeleteFirstPage}
+                    afterDeleteSubPage={onAfterDeleteSubPage}
+                    afterUpdateSubItem={onAfterUpdateSubItem}
+                    onUpdateSubPage={onUpdateSubPage}
+                    onRemove={(tabItem) => {
+                        const removeItem: OnlyPageCache = {
+                            menuName: tabItem.menuName,
+                            route: tabItem.route,
+                            pluginId: tabItem.pluginId,
+                            pluginName: tabItem.pluginName
+                        }
+                        onBeforeRemovePage(removeItem)
                     }}
-                >
-                    <TabContent
-                        onRemove={(tabItem) => {
-                            const removeItem: OnlyPageCache = {
-                                menuName: tabItem.menuName,
-                                route: tabItem.route,
-                                pluginId: tabItem.pluginId,
-                                pluginName: tabItem.pluginName
-                            }
-                            onBeforeRemovePage(removeItem)
-                        }}
-                    />
-                </MainOperatorContext.Provider>
+                />
             </YakitSpin>
             <YakitModal
                 visible={bugTestShow}
@@ -1331,9 +1319,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 })
 
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
-    const {pageCache, setPageCache, setTabMenuHeight} = useContext(MainOperatorContext)
-    const {onRemove} = props
-
+    const {
+        currentTabKey,
+        setCurrentTabKey,
+        afterDeleteFirstPage,
+        onRemove,
+        pageCache,
+        setPageCache,
+        onUpdateSubPage,
+        openMultipleMenuPage,
+        afterDeleteSubPage,
+        afterUpdateSubItem
+    } = props
     /** ---------- 拖拽排序 start ---------- */
     const onDragEnd = useMemoizedFn((result) => {
         if (!result.destination) {
@@ -1344,28 +1341,70 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
             setPageCache(menuList)
         }
     })
-
+    const onSetPageCache = useMemoizedFn((subMenuList: MultipleNodeInfo[], index: number) => {
+        try {
+            if (subMenuList.length > 0) {
+                pageCache[index].multipleNode = [...subMenuList]
+                // setSubPage([...subMenuList])
+                setPageCache([...pageCache])
+            } else {
+                const newPage = pageCache.filter((_, i) => i !== index)
+                // setSubPage([])
+                setPageCache([...newPage])
+                if (newPage.length > 0) {
+                    const activeTabItem = pageCache[index - 1]
+                    const key = routeConvertKey(activeTabItem.route, activeTabItem.pluginName)
+                    setCurrentTabKey(key)
+                }
+            }
+        } catch (error) {}
+    })
     /** ---------- 拖拽排序 end ---------- */
     return (
         <div className={styles["tab-menu"]}>
             <ReactResizeDetector
                 onResize={(_, height) => {
                     if (!height) return
-                    setTabMenuHeight(height)
+                    menuBodyHeight.firstTabMenuBodyHeight=height
                 }}
                 handleWidth={true}
                 handleHeight={true}
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <TabList onRemove={onRemove} onDragEnd={onDragEnd} />
-            <TabChildren />
+            <TabList
+                pageCache={pageCache}
+                setPageCache={setPageCache}
+                currentTabKey={currentTabKey}
+                setCurrentTabKey={setCurrentTabKey}
+                afterDeleteFirstPage={afterDeleteFirstPage}
+                onRemove={onRemove}
+                onDragEnd={onDragEnd}
+            />
+            <TabChildren
+                pageCache={pageCache}
+                currentTabKey={currentTabKey}
+                onUpdateSubPage={onUpdateSubPage}
+                openMultipleMenuPage={openMultipleMenuPage}
+                afterDeleteSubPage={afterDeleteSubPage}
+                afterUpdateSubItem={afterUpdateSubItem}
+                onSetPageCache={onSetPageCache}
+            />
         </div>
     )
 })
 
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
-    const {pageCache, currentTabKey} = useContext(MainOperatorContext)
+    const {
+        pageCache,
+        currentTabKey,
+        onUpdateSubPage,
+        openMultipleMenuPage,
+        afterDeleteSubPage,
+        afterUpdateSubItem,
+        onSetPageCache
+    } = props
+
     return (
         <>
             {pageCache.map((pageItem, index) => {
@@ -1387,7 +1426,17 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                                 <PageItem routeKey={pageItem.route} params={pageItem.params} />
                             </React.Suspense>
                         ) : (
-                            <SubTabList pageItem={pageItem} index={index} />
+                            <SubTabList
+                                pageCache={pageCache}
+                                currentTabKey={currentTabKey}
+                                onUpdateSubPage={onUpdateSubPage}
+                                openMultipleMenuPage={openMultipleMenuPage}
+                                afterDeleteSubPage={afterDeleteSubPage}
+                                afterUpdateSubItem={afterUpdateSubItem}
+                                pageItem={pageItem}
+                                index={index}
+                                onSetPageCache={onSetPageCache}
+                            />
                         )}
                     </div>
                 )
@@ -1397,9 +1446,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
 })
 
 const TabList: React.FC<TabListProps> = React.memo((props) => {
-    const {pageCache, setPageCache, currentTabKey, setCurrentTabKey, afterDeleteFirstPage} =
-        useContext(MainOperatorContext)
-    const {onDragEnd, onRemove} = props
+    const {pageCache, setPageCache, currentTabKey, setCurrentTabKey, afterDeleteFirstPage, onDragEnd, onRemove} = props
     const onRightClickOperation = useMemoizedFn((event: React.MouseEvent, index: number) => {
         const currentPageItem: PageCache = pageCache[index]
         showByRightContext(
@@ -1590,8 +1637,17 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
 })
 
 const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
-    const {pageCache, currentTabKey, onUpdateSubPage} = useContext(MainOperatorContext)
-    const {pageItem, index} = props
+    const {
+        pageItem,
+        index,
+        pageCache,
+        currentTabKey,
+        onUpdateSubPage,
+        openMultipleMenuPage,
+        afterDeleteSubPage,
+        afterUpdateSubItem,
+        onSetPageCache
+    } = props
     // webFuzzer 序列化
     const [type, setType] = useState<WebFuzzerType>("config")
 
@@ -1649,7 +1705,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }, [pageItem.multipleLength])
     const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         setType(res.type)
-        if(type===res.type&&res.type==='config'){
+        if (type === res.type && res.type === "config") {
             emiter.emit("onSetFuzzerAdvancedConfigShow")
         }
     })
@@ -1710,6 +1766,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setType("config")
         }
     })
+
     return (
         <div
             ref={tabsRef}
@@ -1720,22 +1777,27 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             tabIndex={0}
         >
             <SubTabs
+                currentTabKey={currentTabKey}
                 ref={subTabsRef}
                 onFocusPage={onFocusPage}
                 pageItem={pageItem}
-                index={index}
                 subPage={subPage}
                 setSubPage={setSubPage}
                 selectSubMenu={selectSubMenu}
                 setSelectSubMenu={setSelectSubMenu}
                 setType={setType}
+                openMultipleMenuPage={openMultipleMenuPage}
+                afterDeleteSubPage={afterDeleteSubPage}
+                afterUpdateSubItem={afterUpdateSubItem}
+                onUpdateSubPage={onUpdateSubPage}
+                onSetPageCache={(list) => onSetPageCache(list, index)}
             />
             <div className={styles["render-sub-page"]}>
                 <RenderSubPage
                     renderSubPage={flatSubPage}
                     route={pageItem.route}
                     pluginId={pageItem.pluginId || 0}
-                    selectSubMenuId={selectSubMenu.id}
+                    selectSubMenuId={selectSubMenu.id || "0"}
                 />
                 <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
             </div>
@@ -1746,16 +1808,20 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 const SubTabs: React.FC<SubTabsProps> = React.memo(
     React.forwardRef((props, ref) => {
         const {
-            openMultipleMenuPage,
-            pageCache,
-            setPageCache,
             currentTabKey,
-            setCurrentTabKey,
+            pageItem,
+            onFocusPage,
+            subPage,
+            setSubPage,
+            setType,
+            selectSubMenu,
+            setSelectSubMenu,
+            onSetPageCache,
+            openMultipleMenuPage,
+            onUpdateSubPage,
             afterDeleteSubPage,
-            afterUpdateSubItem,
-            onUpdateSubPage
-        } = useContext(MainOperatorContext)
-        const {pageItem, index, onFocusPage, subPage, setSubPage, setType, selectSubMenu, setSelectSubMenu} = props
+            afterUpdateSubItem
+        } = props
 
         //拖拽组件相关
         const [combineIds, setCombineIds] = useState<string[]>([]) //组合中的ids
@@ -1789,9 +1855,33 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             exchangeOrderPageNodeByPageGroupId,
             setCurrentSelectGroup,
             removeCurrentSelectGroup
-        } = usePageNode()
+        } = usePageNode(
+            (s) => ({
+                getPageNodeInfoByPageId: s.getPageNodeInfoByPageId,
+                addPageNode: s.addPageNode,
+                addPageNodeInfoByPageGroupId: s.addPageNodeInfoByPageGroupId,
+                removePageNodeInfoByPageId: s.removePageNodeInfoByPageId,
+                flatPageChildrenListAndRemoveGroupByPageGroupId: s.flatPageChildrenListAndRemoveGroupByPageGroupId,
+                setPageNodeInfoByPageGroupId: s.setPageNodeInfoByPageGroupId,
+                updatePageNodeInfoByPageId: s.updatePageNodeInfoByPageId,
+                removePageNodeByPageGroupId: s.removePageNodeByPageGroupId,
+                setPageNode: s.setPageNode,
+                getPageNodeInfoByPageGroupId: s.getPageNodeInfoByPageGroupId,
+                exchangeOrderPageNodeByPageGroupId: s.exchangeOrderPageNodeByPageGroupId,
+                setCurrentSelectGroup: s.setCurrentSelectGroup,
+                removeCurrentSelectGroup: s.removeCurrentSelectGroup
+            }),
+            shallow
+        )
 
-        const {addFuzzerSequenceList, removeFuzzerSequenceList, setSelectGroupId} = useFuzzerSequence()
+        const {addFuzzerSequenceList, removeFuzzerSequenceList, setSelectGroupId} = useFuzzerSequence(
+            (s) => ({
+                addFuzzerSequenceList: s.addFuzzerSequenceList,
+                removeFuzzerSequenceList: s.removeFuzzerSequenceList,
+                setSelectGroupId: s.setSelectGroupId
+            }),
+            shallow
+        )
 
         useImperativeHandle(
             ref,
@@ -2252,20 +2342,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         /** 更新pageCache和subPage，保证二级新开tab后顺序不变 */
         const onUpdatePageCache = useMemoizedFn((subMenuList: MultipleNodeInfo[]) => {
             try {
-                if (subMenuList.length > 0) {
-                    pageCache[index].multipleNode = [...subMenuList]
-                    // setSubPage([...subMenuList])
-                    setPageCache([...pageCache])
-                } else {
-                    const newPage = pageCache.filter((_, i) => i !== index)
-                    // setSubPage([])
-                    setPageCache([...newPage])
-                    if (newPage.length > 0) {
-                        const activeTabItem = pageCache[index - 1]
-                        const key = routeConvertKey(activeTabItem.route, activeTabItem.pluginName)
-                        setCurrentTabKey(key)
-                    }
-                }
+                onSetPageCache(subMenuList)
                 setTimeout(() => {
                     onScrollTabMenu()
                 }, 200)

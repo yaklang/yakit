@@ -1,7 +1,6 @@
-
-import React from "react";
-import { YakitRoute, ComponentParams } from "../../../routes/newRoute";
-import { RouteToPageProps } from '../publicMenu/PublicMenu'
+import React from "react"
+import {YakitRoute, ComponentParams} from "../../../routes/newRoute"
+import {RouteToPageProps} from "../publicMenu/PublicMenu"
 
 /**
  * @name 已打开页面的二级页面数据
@@ -81,12 +80,21 @@ export interface MainOperatorContentProps {
     routeKeyToLabel: Map<string, string>
 }
 
-
 /**
  * @description content 展示
  * @function onRemove 删除一级tab
-*/
+ */
 export interface TabContentProps {
+    pageCache: PageCache[]
+    setPageCache: (p: PageCache[]) => void
+    currentTabKey: YakitRoute | string
+    setCurrentTabKey: (s: YakitRoute | string) => void
+    openMultipleMenuPage: (route: RouteToPageProps) => void
+    afterDeleteFirstPage: (type: "all" | "other" | "single", page?: PageCache) => void
+    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
+    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
+    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
+
     onRemove: (p: PageCache) => vid
 }
 
@@ -94,6 +102,13 @@ export interface TabContentProps {
  * @description Tab Children 展示
  */
 export interface TabChildrenProps {
+    pageCache: PageCache[]
+    currentTabKey: YakitRoute | string
+    openMultipleMenuPage: (route: RouteToPageProps) => void
+    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
+    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
+    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
+    onSetPageCache: (m: MultipleNodeInfo[],i:number) => void
 }
 
 /**
@@ -116,10 +131,16 @@ export interface TabItemProps {
 
 /**
  * @description 一级tab
- * @function onDragEnd 一级tab拖拽 
+ * @function onDragEnd 一级tab拖拽
  * @function onRemove 删除一级tab
  */
 export interface TabListProps {
+    pageCache: PageCache[]
+    setPageCache: (p: PageCache[]) => void
+    currentTabKey: YakitRoute | string
+    setCurrentTabKey: (s: YakitRoute | string) => void
+    afterDeleteFirstPage: (type: "all" | "other" | "single", page?: PageCache) => void
+
     onDragEnd: (p: any) => void
     onRemove: (p: PageCache) => void
 }
@@ -127,21 +148,25 @@ export interface TabListProps {
 /**
  * @description 二级tab
  * @property pageItem  选中的一级tab详情
- * @property index  
+ * @property index
  */
 export interface SubTabListProps {
+    pageCache: PageCache[]
+    currentTabKey: YakitRoute | string
+    openMultipleMenuPage: (route: RouteToPageProps) => void
+    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
+    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
+    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
+    onSetPageCache: (m: MultipleNodeInfo[],i:number) => void
     pageItem: PageCache
     index: number
 }
 
 export interface SubTabsProps {
+    currentTabKey: YakitRoute | string
     ref: ?any
     pageItem: PageCache
-    index: number
-    // subPage: MultipleNodeInfo[]
-    // selectSubMenu: MultipleNodeInfo
-    // setSubPage: (m: MultipleNodeInfo[]) => void
-    // setSelectSubMenu: React.Dispatch<React.SetStateAction<MultipleNodeInfo>>
+    // index: number
     onFocusPage: () => void
 
     subPage: MultipleNodeInfo[]
@@ -149,6 +174,12 @@ export interface SubTabsProps {
     setSubPage: (m: MultipleNodeInfo[]) => void
     setSelectSubMenu: React.Dispatch<React.SetStateAction<MultipleNodeInfo>>
     setType: (w: WebFuzzerType) => void
+
+    openMultipleMenuPage: (route: RouteToPageProps) => void
+    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
+    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
+    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
+    onSetPageCache: (m: MultipleNodeInfo[]) => void
 }
 /**
  * @description 二级tab item
@@ -175,7 +206,7 @@ export interface SubTabItemProps {
  * @function onUnfoldAndCollapse 收起和展开事件
  * @function onGroupContextMenu 组的右键操作
  * @function dropType 组的拖拽Droppable的type
- * @function subPage 
+ * @function subPage
  */
 export interface SubTabGroupItemProps extends SubTabItemProps {
     onUnfoldAndCollapse: (subItem: MultipleNodeInfo) => void
@@ -184,8 +215,7 @@ export interface SubTabGroupItemProps extends SubTabItemProps {
     subPage: MultipleNodeInfo[]
 }
 
-
-export type OperateGroup = 'cancelGroup' | 'closeGroup' | 'closeOtherTabs'
+export type OperateGroup = "cancelGroup" | "closeGroup" | "closeOtherTabs"
 /**
  * @description 组的右键点击展示内容
  * @property groupItem  组详情
@@ -200,7 +230,7 @@ export interface GroupRightClickShowContentProps {
 /**
  * @description 组内拖拽克隆体
  * @property draggableId  拖拽id
- * @property subPage  
+ * @property subPage
  * @property selectSubMenu  选中的item
  */
 export interface DroppableCloneProps {
