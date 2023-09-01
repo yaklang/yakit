@@ -1175,10 +1175,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const webFuzzerNewEditorRef = useRef<any>()
-    /**@description 插入 yak.fuzz 语法 */
-    const onInsertYakFuzzer = useMemoizedFn(() => {
-        if (webFuzzerNewEditorRef.current) webFuzzerNewEditorRef.current.onInsertYakFuzzer()
-    })
 
     /**
      * @@description 获取高级配置中的Form values
@@ -1222,13 +1218,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onSetRequest = useMemoizedFn((i: string) => {
         requestRef.current = i
     })
+    const onInsertYakFuzzerFun = useMemoizedFn(() => {
+        if (webFuzzerNewEditorRef.current) onInsertYakFuzzer(webFuzzerNewEditorRef.current.reqEditor)
+    })
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <React.Suspense fallback={<>加载中...</>}>
                 <HttpQueryAdvancedConfig
                     advancedConfigValue={advancedConfigValue}
                     visible={advancedConfig}
-                    onInsertYakFuzzer={onInsertYakFuzzer}
+                    onInsertYakFuzzer={onInsertYakFuzzerFun}
                     onValuesChange={onGetFormValue}
                     refreshProxy={refreshProxy}
                     defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}

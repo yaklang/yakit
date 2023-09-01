@@ -1,6 +1,5 @@
 import React, {ReactElement, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {IMonacoEditor, NewHTTPPacketEditor, NewHTTPPacketEditorProp} from "@/utils/editors"
-import {NewEditorSelectRange} from "@/components/NewEditorSelectRange"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "../InsertFileFuzzTag"
 import {monacoEditorWrite} from "../fuzzerTemplates"
@@ -46,7 +45,6 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
 
     useImperativeHandle(ref, () => ({
         reqEditor,
-        onInsertYakFuzzer,
     }),[reqEditor])
     useEffect(() => {
         try {
