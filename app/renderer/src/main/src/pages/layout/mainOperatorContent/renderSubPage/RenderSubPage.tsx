@@ -93,40 +93,17 @@ export const RenderSubPageItem: React.FC<RenderSubPageItemProps> = React.memo(
 
 export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.memo((props) => {
     const {route, type, setType} = props
-    const [fuzzerSequenceList, setFuzzerSequenceList] = useState<FuzzerSequenceListProps[]>([])
-    const [selectGroupId, setSelectGroupId] = useState<string>("")
 
     const [pageSequenceRenderList, {set: setPageSequenceRenderList, get: getPageSequenceRenderList}] = useMap<
         string,
         boolean
     >(new Map<string, boolean>())
+    const fuzzerSequenceList=useFuzzerSequence((s)=>s.fuzzerSequenceList)
+    const selectGroupId=useFuzzerSequence((s)=>s.selectGroupId)
 
     useEffect(() => {
-        const unFuzzerSequenceList = useFuzzerSequence.subscribe(
-            (state) => state.fuzzerSequenceList,
-            (val) => {
-                setFuzzerSequenceList(val)
-            }
-        )
-        return () => {
-            unFuzzerSequenceList()
-        }
-    }, [])
-    useEffect(() => {
-        const unSelectGroupId = useFuzzerSequence.subscribe(
-            (state) => state.selectGroupId,
-            (val) => {
-                updateRender(val)
-                setSelectGroupId(val)
-            }
-        )
-        return () => {
-            unSelectGroupId()
-        }
-    }, [])
-    useEffect(() => {
         updateRender(selectGroupId)
-    }, [type])
+    }, [type,selectGroupId])
     const updateRender = useMemoizedFn((id: string) => {
         // 控制渲染
         if (getPageSequenceRenderList(id)) return

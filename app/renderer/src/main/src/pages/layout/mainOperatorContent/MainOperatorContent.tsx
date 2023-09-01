@@ -71,8 +71,7 @@ import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
 import shallow from "zustand/shallow"
-import { menuBodyHeight } from "@/pages/globalVariable"
-
+import {menuBodyHeight} from "@/pages/globalVariable"
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
 
@@ -936,18 +935,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
             const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
             const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
-           
-            const newProxy= proxy ? proxy.split(",") : []
-            const newDnsServers= dnsServers ? JSON.parse(dnsServers) : []
-            const newEtcHosts=  etcHosts ? JSON.parse(etcHosts) : []
+
+            const newProxy = proxy ? proxy.split(",") : []
+            const newDnsServers = dnsServers ? JSON.parse(dnsServers) : []
+            const newEtcHosts = etcHosts ? JSON.parse(etcHosts) : []
             if (
                 !_.isEqual(proxyRef.current, newProxy) ||
                 !_.isEqual(dnsServersRef.current, newDnsServers) ||
                 !_.isEqual(etcHostsRef.current, newEtcHosts)
             ) {
-                proxyRef.current =newProxy
+                proxyRef.current = newProxy
                 dnsServersRef.current = newDnsServers
-                etcHostsRef.current =newEtcHosts
+                etcHostsRef.current = newEtcHosts
             }
             if (!isEnpriTraceAgent()) {
                 // 触发获取web-fuzzer的缓存
@@ -1365,7 +1364,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
             <ReactResizeDetector
                 onResize={(_, height) => {
                     if (!height) return
-                    menuBodyHeight.firstTabMenuBodyHeight=height
+                    menuBodyHeight.firstTabMenuBodyHeight = height
                 }}
                 handleWidth={true}
                 handleHeight={true}
@@ -2100,13 +2099,18 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
             // 拖动的来源item是组时目的地item是游离页面，不合并
             if (sourceGroupChildrenLength > 0 && combineGroupChildrenLength === 0) return
-            const groupId = generateGroupId()
+
             if (sourceGroupChildrenLength > 0 && combineGroupChildrenLength > 0) {
                 // 拖动的来源item是组时目的地item也是组，合并  已经废弃
                 // const groupList = subPage[sourceIndex].groupChildren?.map((ele) => ({ ...ele, groupId })) || []
                 // subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(groupList)
                 // subPage[combineIndex].expand = true
+                return
             } else {
+                const groupId =
+                    sourceGroupChildrenLength > 0 || combineGroupChildrenLength > 0
+                        ? subPage[combineIndex].id
+                        : generateGroupId()
                 const dropItem: MultipleNodeInfo = {
                     ...subPage[sourceIndex],
                     groupId
@@ -2316,6 +2320,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 //     groupId: destinationGroupId
                 // }))
                 // subPage[destinationNumber].groupChildren?.splice(destinationIndex, 0, ...pageList)
+                return
             } else {
                 // 将拖拽的item添加到目的地的组内
 
@@ -2994,6 +2999,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     //如果拖拽的是一个组,则应该只能排序,不能组合
                     // setDropType(droppable)
                     // setSubDropType(droppableGroup)
+                    return
                 } else {
                     //如果拖拽的是一个item,可以排序也可以组合
                     setDropType(droppableGroup)
