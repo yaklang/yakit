@@ -279,6 +279,9 @@ for target,risks = range targetToRisks {
     riskLevel = "安全"
     
     for _, riskIns := range risks {
+        if riskIns.RiskType == "DNSLOG" {
+            continue
+        }
         if str.Contains(riskIns.Severity, "critical") {
             criticalCount++
             if parseBool(riskIns.IsPotential) {
