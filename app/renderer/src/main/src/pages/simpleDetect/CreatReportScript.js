@@ -498,7 +498,7 @@ for i, riskIns := range potentialRisks {
 }
 if len(potentialRisks) != 0 {
     
-    reportInstance.Markdown(sprintf("### 3.3.3 风险资产图"))
+    reportInstance.Markdown(sprintf("### 3.3.3 合规检测风险统计"))
     for _, gp := range cpp.ToGraphs(){
         aa = json.dumps(gp)
         reportInstance.Raw(aa)
