@@ -18,6 +18,38 @@ module.exports = {
             return await asyncRequireDNSLogDomain(params)
         })
 
+        const asyncRequireDNSLogDomainByScript = (params) => {
+            return new Promise((resolve, reject) => {
+                getClient().RequireDNSLogDomainByScript(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        }
+        ipcMain.handle("RequireDNSLogDomainByScript", async (e, params) => {
+            return await asyncRequireDNSLogDomainByScript(params)
+        })
+
+        // asyncQuerySupportedDnsLogPlatforms wrapper
+        const asyncQuerySupportedDnsLogPlatforms = (params) => {
+            return new Promise((resolve, reject) => {
+                getClient().QuerySupportedDnsLogPlatforms(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        }
+        ipcMain.handle("QuerySupportedDnsLogPlatforms", async (e, params) => {
+            return await asyncQuerySupportedDnsLogPlatforms(params)
+        })
+
+
         // asyncQueryDNSLogByToken wrapper
         const asyncQueryDNSLogByToken = (params) => {
             return new Promise((resolve, reject) => {
@@ -32,6 +64,21 @@ module.exports = {
         }
         ipcMain.handle("QueryDNSLogByToken", async (e, params) => {
             return await asyncQueryDNSLogByToken(params)
+        })
+
+        const asyncQueryDNSLogTokenByScript = (params) => {
+            return new Promise((resolve, reject) => {
+                getClient().QueryDNSLogTokenByScript(params, (err, data) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    resolve(data)
+                })
+            })
+        }
+        ipcMain.handle("QueryDNSLogTokenByScript", async (e, params) => {
+            return await asyncQueryDNSLogTokenByScript(params)
         })
 
         // dnslog-页面询问菜单是否已启用并发出获取参数请求

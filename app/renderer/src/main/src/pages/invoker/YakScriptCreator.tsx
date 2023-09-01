@@ -11,7 +11,7 @@ import {YakScriptRunner} from "./ExecYakScript"
 import {FullscreenOutlined, DeleteOutlined} from "@ant-design/icons"
 import {MITMPluginTemplate} from "./data/MITMPluginTamplate"
 import {PacketHackPluginTemplate} from "./data/PacketHackPluginTemplate"
-import {CodecPluginTemplate} from "./data/CodecPluginTemplate"
+import {CodecPluginTemplate, CustomDnsLogPlatformTemplate} from "./data/CodecPluginTemplate"
 import {PortScanPluginTemplate} from "./data/PortScanPluginTemplate"
 import {useCreation, useGetState, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
@@ -831,6 +831,20 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                         setValue={(EnablePluginSelector) => setParams({...params, EnablePluginSelector})}
                         disabled={disabled}
                     />
+                    <SwitchItem
+                        label='用于自定义 DNSLOG'
+                        value={params.Tags && params.Tags.includes("custom-dnslog-platform") ? true : false}
+                        setValue={(enalbed) => {
+                            let obj = {
+                                ...params, 
+                                Tags: enalbed? addTag(params.Tags === "null"?"":params.Tags, "custom-dnslog-platform"): removeTag(params.Tags, "custom-dnslog-platform"),
+                                Content:defParams.Content
+                            }
+                            if(enalbed){obj.Content = CustomDnsLogPlatformTemplate}
+                            setParams(obj)
+                        }}
+                        disabled={disabled}
+                    />
                     {params.EnablePluginSelector && (
                         <ManyMultiSelectForString
                             label={"联动插件类型"}
@@ -855,7 +869,7 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
                         value={  
                             params.Tags && params.Tags.includes("allow-custom-http-packet-mutate") ? true : false
                         }
-                        setValue={(enalbed) => setParams({...params, Tags: enalbed? addTag(params.Tags, "allow-custom-http-packet-mutate"): removeTag(params.Tags, "allow-custom-http-packet-mutate")})}
+                        setValue={(enalbed) => setParams({...params, Tags: enalbed? addTag(params.Tags === "null"?"":params.Tags, "allow-custom-http-packet-mutate"): removeTag(params.Tags, "allow-custom-http-packet-mutate")})}
                         disabled={disabled}
                     />
                 </>

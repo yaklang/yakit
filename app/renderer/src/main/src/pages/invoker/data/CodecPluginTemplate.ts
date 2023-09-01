@@ -13,3 +13,45 @@ handle = func(origin /*string*/) {
     return origin
 }
 `
+
+
+export const CustomDnsLogPlatformTemplate = `
+yakit.AutoInitYakit()
+
+requireDomain = func() {
+    packet = \`GET /xxx HTTP/1.1
+Host: target
+
+\`
+        rsp,req = poc.HTTPEx(
+            packet,
+            poc.https(true),
+            poc.timeout(10),
+            // poc.proxy("http://127.0.0.1:9999")
+
+        )~
+        _, body = poc.Split(rsp.RawPacket)
+        subdomain, token = "", ""
+        // 处理逻辑
+        return subdomain,token
+}
+
+getResults = func(token) {
+    packet = f\`GET / HTTP/1.1
+Host: target.com
+\`
+    rsp,req = poc.HTTPEx(
+            packet,
+            poc.https(true),
+            poc.timeout(10),
+            // poc.proxy("http://127.0.0.1:9999")
+        )~
+    _, body = poc.Split(rsp.RawPacket)
+    events = []
+    if len(body)> 0 {
+        // 处理逻辑
+        return events
+    }
+
+}
+`
