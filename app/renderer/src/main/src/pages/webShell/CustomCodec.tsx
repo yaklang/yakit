@@ -1,7 +1,14 @@
 import httpQueryStyles from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss";
 import matcherStyles from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtraction.module.scss";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
-import {HollowLightningBoltIcon, PlusIcon, QuestionMarkCircleIcon, RemoveIcon, TrashIcon} from "@/assets/newIcon";
+import {
+    HollowLightningBoltIcon,
+    PlusIcon,
+    QuestionMarkCircleIcon,
+    RemoveIcon,
+    TerminalIcon,
+    TrashIcon
+} from "@/assets/newIcon";
 import React, {ReactNode, useContext, useEffect, useMemo, useState} from "react";
 import {Button, Form, Tooltip} from "antd";
 import classNames from "classnames";
@@ -21,22 +28,22 @@ import {YakScript} from "@/pages/invoker/schema";
 
 import webFuzzerStyles from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage.module.scss";
 import {OutlineAdjustmentsIcon, OutlineCodeIcon, OutlineCollectionIcon, OutlineQrcodeIcon} from "@/assets/icon/outline";
+import {queryYakScriptList} from "@/pages/yakitStore/network";
+import {CodecType} from "@/pages/codec/CodecPage";
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
+import style from "@/pages/customizeMenu/CustomizeMenu.module.scss";
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover";
 
-
-interface CustomCodecValueProps {
-    customCodecList: string[]
-}
 
 interface CustomCodecListProps {
-    customCodecValue: CustomCodecValueProps
+    customCodecList: YakScript[]
     onAdd: () => void
     onRemove: (index: number) => void
     onEdit: (index: number) => void
 }
 
 export const CustomCodecList: React.FC<CustomCodecListProps> = React.memo((props) => {
-    const {customCodecValue, onAdd, onRemove, onEdit} = props
-    const {customCodecList} = customCodecValue
+    const {customCodecList, onAdd, onRemove, onEdit} = props
     return (
         <>
             <Form.Item name='customCodec' noStyle>
@@ -44,19 +51,19 @@ export const CustomCodecList: React.FC<CustomCodecListProps> = React.memo((props
                     <div className={httpQueryStyles["matchersList-item"]} key={`${item}-${index}`}>
                         <div className={httpQueryStyles["matchersList-item-heard"]}>
                             <span className={httpQueryStyles["item-number"]}>{index}</span>
-                            <span style={{"color": "#f69c5d"}}>{item}</span>
+                            <span style={{"color": "#f69c5d"}}>{item.ScriptName}</span>
                         </div>
                         <CustomCodecListItemOperate
                             onRemove={() => onRemove(index)}
                             onEdit={() => onEdit(index)}
                             popoverContent={
-                                <div>111111111111</div>
+                                <YakitEditor type={"yak"} value={item.Content} readOnly={true}/>
                             }
                         />
                     </div>
                 ))}
             </Form.Item>
-            {customCodecList?.length === 0 && (
+            {(
                 <Form.Item wrapperCol={{span: 24}}>
                     <YakitButton
                         type='outline2'
@@ -99,11 +106,18 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
                         }}
                     />
                 </Tooltip>
-                <TerminalPopover
-                    popoverContent={popoverContent}
-                    visiblePopover={visiblePopover}
-                    setVisiblePopover={setVisiblePopover}
-                />
+                {/*<TerminalPopover*/}
+                {/*    popoverContent={popoverContent}*/}
+                {/*    visiblePopover={visiblePopover}*/}
+                {/*    setVisiblePopover={setVisiblePopover}*/}
+                {/*/>*/}
+                <YakitPopover
+                    placement='topRight'
+                    overlayClassName={style["terminal-popover"]}
+                    content={popoverContent}
+                >
+                    <TerminalIcon className={style["plugin-local-icon"]}/>
+                </YakitPopover>
             </div>
         )
     }
@@ -134,6 +148,35 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
     })
     const [params, setParams] = useState<YakScript>({} as YakScript)
     const [modified, setModified] = useState<YakScript | undefined>()
+
+    // const searchForCodecFuzzerPlugin = useMemoizedFn(() => {
+    //     queryYakScriptList(
+    //         "yak",
+    //         (i: YakScript[], total) => {
+    //             if (!total || total == 0) {
+    //                 return
+    //             }
+    //             // setParams(i.map((script) => {
+    //             //     return {
+    //             //         key: script.ScriptName,
+    //             //         verbose: "CODEC 社区插件: " + script.ScriptName,
+    //             //         isYakScript: true,
+    //             //     } as CodecType
+    //             // }))
+    //         },
+    //         undefined,
+    //         10,
+    //         undefined,
+    //         undefined,
+    //         undefined,
+    //         undefined,
+    //         ["allow-custom-http-packet-mutate"],
+    //     )
+    // })
+    // useEffect(() => {
+    //     searchForCodecFuzzerPlugin()
+    // }, [])
+
     return (
         <YakitDrawer
             placement='bottom'
@@ -293,10 +336,10 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
             console.log("!shellScript", shellScript)
             setShellScript("jsp");
         }
-        if( !params.Content && params.Tags.includes("packet-encoder")) {
-            setEnPacketValue(params.Content)
-            setDePacketValue(params.Content)
-        }
+        // if(!params.Content && params.Tags.includes("packet-encoder")) {
+        //     setEnPacketValue(params.Content)
+        //     setDePacketValue(params.Content)
+        // }
     }, []);
 
     // 定义一个状态变量和一个设置这个状态变量的函数
@@ -382,8 +425,8 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                                 onSelect={(val) => {
                                     setShellScript(val)
                                     packetMode ?
-                                        setParams({...params, Tags: [val, "packet-encoder"].join(",")}) :
-                                        setParams({...params, Tags: [val, "result-decoder"].join(",")})
+                                        setParams({...params, Tags: [val, "webshell-packet-codec"].join(",")}) :
+                                        setParams({...params, Tags: [val, "webshell-payload-codec"].join(",")})
                                 }}
                                 autoClearSearchValue={true}
                             >
