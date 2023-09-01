@@ -2105,7 +2105,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 // const groupList = subPage[sourceIndex].groupChildren?.map((ele) => ({ ...ele, groupId })) || []
                 // subPage[combineIndex].groupChildren = (subPage[combineIndex].groupChildren || []).concat(groupList)
                 // subPage[combineIndex].expand = true
-                return
             } else {
                 const groupId =
                     sourceGroupChildrenLength > 0 || combineGroupChildrenLength > 0
@@ -2320,7 +2319,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 //     groupId: destinationGroupId
                 // }))
                 // subPage[destinationNumber].groupChildren?.splice(destinationIndex, 0, ...pageList)
-                return
             } else {
                 // 将拖拽的item添加到目的地的组内
 
@@ -3047,6 +3045,12 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     pageChildrenList: []
                 })
             })
+            //  -----兼容拖拽有问题导致的序列化选择数据没有更新的问题
+            const group = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
+            if (group) {
+                removePageNodeByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
+            }
+            //  -----兼容拖拽有问题导致的序列化选择数据没有更新的问题
             const newPageNodeList: PageNodeItemProps = {
                 // id: `${randomString(8)}-${index + 1}`,
                 id: "",
