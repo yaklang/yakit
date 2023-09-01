@@ -243,7 +243,10 @@ const CodecCtx = createContext<{
     setWorkFlow: (workFlow: work[]) => void,
 } | null>(null);
 
-
+/**
+ * @description 
+ * 前端建议(pr的审核建议): 后续的前端页面优化，可以不使用createContext API 就能实现相同功能
+ */
 export const NewCodecPage: React.FC<NewCodecPageProp> = (props) => {
     const [openIndex, setOpenIndex] = useState(-1);
 
