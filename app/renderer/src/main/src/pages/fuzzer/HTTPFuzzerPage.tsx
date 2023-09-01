@@ -107,6 +107,7 @@ import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
+import { forEachChild } from "typescript"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1221,6 +1222,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onInsertYakFuzzerFun = useMemoizedFn(() => {
         if (webFuzzerNewEditorRef.current) onInsertYakFuzzer(webFuzzerNewEditorRef.current.reqEditor)
     })
+    const checkRedirect = useMemoizedFn(()=>{
+        for (let index = 0; index < httpResponse.Headers.length; index++) {
+            const element = httpResponse.Headers[index]
+            if (element.Header === "Location"){
+                return true
+            }
+        }
+        return false
+    })
+
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <React.Suspense fallback={<>加载中...</>}>
@@ -1322,7 +1333,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </div>
                     )}
 
-                    {onlyOneResponse && getFirstResponse().Ok && (
+                    {onlyOneResponse && httpResponse.Ok && checkRedirect() &&(
                         <YakitButton
                             onClick={() => {
                                 setLoading(true)
