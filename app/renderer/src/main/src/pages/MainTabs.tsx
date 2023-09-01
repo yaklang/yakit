@@ -4,7 +4,6 @@ import {AutoSpin} from "../components/AutoSpin"
 import {DropdownMenu} from "../components/baseTemplate/DropdownMenu"
 import {CloseOutlined, EditOutlined} from "@ant-design/icons"
 import {isEnpriTraceAgent} from "@/utils/envfile"
-import {simpleDetectParams} from "@/store"
 import {useGetState} from "ahooks"
 import {NoPaddingRoute, YakitRoute} from "@/routes/newRoute"
 
@@ -13,19 +12,6 @@ import { MultipleNodeInfo } from "./layout/mainOperatorContent/MainOperatorConte
 
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
-
-interface InitTabIdProp {
-    children: ReactNode
-    id: string
-}
-const InitTabId: React.FC<InitTabIdProp> = (props) => {
-    useLayoutEffect(() => {
-        if (isEnpriTraceAgent()) {
-            simpleDetectParams.tabId = props.id
-        }
-    }, [])
-    return <>{props.children}</>
-}
 
 export interface MainTabsProp {
     currentTabKey: string
@@ -110,55 +96,6 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
         )
     }
 
-    // 简易企业版 根据任务状态控制颜色
-    const judgeTabColor = (verbose: string, id: string) => {
-        if (isEnpriTraceAgent()) {
-            let itemArr = getSimpleDetectTabsStatus().filter((item) => item.tabId === id)
-            if (itemArr.length > 0 && itemArr[0].tabId !== currentKey) {
-                let status = itemArr[0].status
-                let color = ""
-                switch (status) {
-                    case "run":
-                        color = "blue"
-                        break
-                    case "stop":
-                        color = "red"
-                        break
-                    case "success":
-                        color = "green"
-                        break
-                }
-                return <div style={{color}}>{verbose}</div>
-            }
-            return verbose
-        }
-        return verbose
-    }
-
-    useEffect(() => {
-        ipcRenderer.on("fetch-new-tabs-color", (e, data: SimpleDetectTabsProps) => {
-            let cacheData = [...getSimpleDetectTabsStatus()]
-            let isFind: boolean = cacheData.filter((item) => item.tabId === data.tabId).length > 0
-            if (isFind) {
-                cacheData = cacheData.map((item) => {
-                    if (item.tabId === data.tabId && item.status !== data.status) {
-                        return {
-                            tabId: data.tabId,
-                            status: data.status
-                        }
-                    }
-                    return item
-                })
-                setSimpleDetectTabsStatus(cacheData)
-            } else {
-                setSimpleDetectTabsStatus([...getSimpleDetectTabsStatus(), data])
-            }
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-new-tabs-color")
-        }
-    }, [])
-
     return (
         <AutoSpin spinning={loading}>
             <div
@@ -208,7 +145,7 @@ export const MainTabs: React.FC<MainTabsProp> = memo((props) => {
                             <TabPane
                                 forceRender={true}
                                 key={item.id}
-                                tab={judgeTabColor(item.verbose, item.id)}
+                                tab={item.verbose}
                                 closeIcon={
                                     <Space>
                                         <Popover
