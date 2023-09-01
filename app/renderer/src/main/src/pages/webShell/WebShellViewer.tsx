@@ -12,6 +12,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {HollowLightningBoltIcon, InformationCircleIcon, PlusSmIcon} from "@/assets/newIcon";
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber";
 import {CustomCodecEditor, CustomCodecList} from "@/pages/webShell/CustomCodec";
+import {CodecType} from "@/utils/encodec";
+import {queryYakScriptList} from "@/pages/yakitStore/network";
 
 
 export interface WebShellManagerViewerProp {
@@ -91,7 +93,8 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
     const [packetMode, setPacketMode] = useState<boolean>(false) // Collapse打开的key
     const [resultMode, setResultMode] = useState<boolean>(false) // Collapse打开的key
 
-    const [customCodecList, setCustomCodecList] = useState<string[]>([])
+    const [packetCodecs, setPacketCodecs] = useState<YakScript[]>([])
+    const [payloadCodecs, setPayloadCodecs] = useState<YakScript[]>([])
 
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
     const queryRef = useRef(null)
@@ -99,6 +102,51 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
     useEffect(() => {
         if (!inViewport) setVisibleDrawer(false)
     }, [inViewport])
+
+
+    const searchForCodecPacketCodecPlugin = useMemoizedFn(() => {
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                console.log("searchForCodecPacketCodecPlugin", i)
+
+                if (!total || total == 0) {
+                    return
+                }
+                setPacketCodecs(i)
+            },
+            undefined,
+            10,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            ["webshell-packet-codec"],
+        )
+    })
+    const searchForCodecPayloadCodecPlugin = useMemoizedFn(() => {
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                if (!total || total == 0) {
+                    return
+                }
+
+                setPayloadCodecs(i)
+            },
+            undefined,
+            10,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            ["webshell-payload-codec"],
+        )
+    })
+    useEffect(() => {
+        searchForCodecPacketCodecPlugin()
+        searchForCodecPayloadCodecPlugin()
+    }, [])
     return (
         <>
             <div className={fuzzerStyles["http-query-advanced-config"]}>
@@ -124,7 +172,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                             header={
                                 <div className={fuzzerStyles["matchers-panel"]}>
                                     数据包编解码器
-                                    <div className={fuzzerStyles["matchers-number"]}>{customCodecList?.length}</div>
+                                    <div className={fuzzerStyles["matchers-number"]}>{packetCodecs?.length}</div>
                                 </div>
                             }
                             key='数据包编解码器'
@@ -154,9 +202,15 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                             }
                         >
                             <CustomCodecList
-                                customCodecValue={{customCodecList}}
+                                customCodecList={packetCodecs}
                                 onAdd={() => {
-                                    console.log(1111)
+                                    setTitle("数据包编解码器")
+                                    setResultMode(false)
+                                    if (activeKey?.findIndex((ele) => ele === "数据包编解码器") === -1) {
+                                        onSwitchCollapse([...activeKey, "数据包编解码器"])
+                                    }
+                                    setPacketMode(true)
+                                    setVisibleDrawer(true)
                                 }}
                                 onRemove={() => {
                                     console.log(2222)
@@ -171,7 +225,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                             header={
                                 <div className={fuzzerStyles["matchers-panel"]}>
                                     回显编解码器
-                                    <div className={fuzzerStyles["matchers-number"]}>{customCodecList?.length}</div>
+                                    <div className={fuzzerStyles["matchers-number"]}>{packetCodecs?.length}</div>
                                 </div>
                             }
                             key='回显编解码器'
@@ -200,7 +254,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                             }
                         >
                             <CustomCodecList
-                                customCodecValue={{customCodecList}}
+                                customCodecList={payloadCodecs}
                                 onAdd={() => {
                                     console.log(1111)
                                 }}
