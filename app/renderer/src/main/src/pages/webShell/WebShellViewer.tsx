@@ -9,7 +9,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {Divider, Form, Tooltip} from "antd";
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
-import {HollowLightningBoltIcon, InformationCircleIcon, PlusSmIcon} from "@/assets/newIcon";
+import {HollowLightningBoltIcon, InformationCircleIcon, PlusSmIcon, SMViewGridAddIcon} from "@/assets/newIcon";
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber";
 import {CustomCodecEditor, CustomCodecList} from "@/pages/webShell/CustomCodec";
 import {CodecType} from "@/utils/encodec";
@@ -90,12 +90,14 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
         setActiveKey(key)
     })
     const [title, setTitle] = useState<string>("")
-    const [packetMode, setPacketMode] = useState<boolean>(false) // Collapse打开的key
-    const [resultMode, setResultMode] = useState<boolean>(false) // Collapse打开的key
+    const [packetMode, setPacketMode] = useState<boolean>(false)
+    const [resultMode, setResultMode] = useState<boolean>(false)
 
     const [packetCodecs, setPacketCodecs] = useState<YakScript[]>([])
     const [payloadCodecs, setPayloadCodecs] = useState<YakScript[]>([])
 
+    const [addAction, setAddAction] = useState<boolean>(false)
+    const [editAction, setEditAction] = useState<boolean>(false)
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
     const queryRef = useRef(null)
     const [inViewport] = useInViewport(queryRef)
@@ -103,6 +105,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
         if (!inViewport) setVisibleDrawer(false)
     }, [inViewport])
 
+    const [currCodec, setCurrCodec] = useState<YakScript>({} as YakScript)
 
     const searchForCodecPacketCodecPlugin = useMemoizedFn(() => {
         queryYakScriptList(
@@ -124,10 +127,12 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
             ["webshell-packet-codec"],
         )
     })
+    const [onchange, setOnchange] = useState<boolean>(false)
     const searchForCodecPayloadCodecPlugin = useMemoizedFn(() => {
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
+                console.log("searchForCodecPayloadCodecPlugin", i)
                 if (!total || total == 0) {
                     return
                 }
@@ -146,7 +151,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
     useEffect(() => {
         searchForCodecPacketCodecPlugin()
         searchForCodecPayloadCodecPlugin()
-    }, [])
+    }, [onchange])
     return (
         <>
             <div className={fuzzerStyles["http-query-advanced-config"]}>
@@ -185,38 +190,37 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             setTitle("数据包编解码器")
+                                            setEditAction(false)
                                             setResultMode(false)
                                             if (activeKey?.findIndex((ele) => ele === "数据包编解码器") === -1) {
                                                 onSwitchCollapse([...activeKey, "数据包编解码器"])
                                             }
+                                            setAddAction(true)
                                             setPacketMode(true)
                                             setVisibleDrawer(true)
                                             // onAddMatchingAndExtractionCard("extractors")
                                         }}
                                         className={fuzzerStyles["btn-padding-right-0"]}
                                     >
-                                        添加/调试
-                                        <HollowLightningBoltIcon/>
+                                        添加
+                                        <SMViewGridAddIcon/>
                                     </YakitButton>
                                 </>
                             }
                         >
                             <CustomCodecList
                                 customCodecList={packetCodecs}
-                                onAdd={() => {
-                                    setTitle("数据包编解码器")
-                                    setResultMode(false)
-                                    if (activeKey?.findIndex((ele) => ele === "数据包编解码器") === -1) {
-                                        onSwitchCollapse([...activeKey, "数据包编解码器"])
-                                    }
-                                    setPacketMode(true)
-                                    setVisibleDrawer(true)
-                                }}
                                 onRemove={() => {
                                     console.log(2222)
                                 }}
-                                onEdit={() => {
-                                    console.log(3333)
+                                onEdit={(index) => {
+                                    setResultMode(false)
+                                    setAddAction(false)
+                                    setTitle("数据包编解码器")
+                                    setCurrCodec(packetCodecs[index])
+                                    setVisibleDrawer(true)
+                                    setPacketMode(true)
+                                    setEditAction(true)
                                 }}
                             />
                         </YakitPanel>
@@ -225,7 +229,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                             header={
                                 <div className={fuzzerStyles["matchers-panel"]}>
                                     回显编解码器
-                                    <div className={fuzzerStyles["matchers-number"]}>{packetCodecs?.length}</div>
+                                    <div className={fuzzerStyles["matchers-number"]}>{payloadCodecs?.length}</div>
                                 </div>
                             }
                             key='回显编解码器'
@@ -238,31 +242,36 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             setTitle("回显编解码器")
+                                            setEditAction(false)
                                             setPacketMode(false)
                                             if (activeKey?.findIndex((ele) => ele === "回显编解码器") === -1) {
                                                 onSwitchCollapse([...activeKey, "回显编解码器"])
                                             }
                                             setResultMode(true)
+                                            setAddAction(true)
                                             setVisibleDrawer(true)
                                         }}
                                         className={fuzzerStyles["btn-padding-right-0"]}
                                     >
-                                        添加/调试
-                                        <HollowLightningBoltIcon/>
+                                        添加
+                                        <SMViewGridAddIcon/>
                                     </YakitButton>
                                 </>
                             }
                         >
                             <CustomCodecList
                                 customCodecList={payloadCodecs}
-                                onAdd={() => {
-                                    console.log(1111)
-                                }}
                                 onRemove={() => {
                                     console.log(2222)
                                 }}
-                                onEdit={() => {
-                                    console.log(3333)
+                                onEdit={(index) => {
+                                    setPacketMode(false)
+                                    setAddAction(false)
+                                    setTitle("回显编解码器")
+                                    setCurrCodec(payloadCodecs[index])
+                                    setEditAction(true)
+                                    setResultMode(true)
+                                    setVisibleDrawer(true)
                                 }}
                             />
                         </YakitPanel>
@@ -330,9 +339,15 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
 
                 </Form>
                 <CustomCodecEditor
+                    currCodec={currCodec}
+                    setCurrCodec={setCurrCodec}
                     title={title}
+                    addAction={addAction}
+                    editAction={editAction}
                     packetMode={packetMode}
                     resultMode={resultMode}
+                    onchange={onchange}
+                    setOnchange={setOnchange}
                     visibleDrawer={visibleDrawer}
                     onClose={() => setVisibleDrawer(false)}
                 />
