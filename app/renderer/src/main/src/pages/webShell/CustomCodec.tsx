@@ -20,7 +20,7 @@ import {YakEditor} from "@/utils/editors";
 import mitmStyles from "@/pages/mitm/MITMRule/MITMRule.module.scss";
 import {openExternalWebsite} from "@/utils/openWebsite";
 import {RuleExportAndImportButton} from "@/pages/mitm/MITMRule/MITMRule";
-import {useMemoizedFn} from "ahooks";
+import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {WebShellDetail} from "@/pages/webShell/models";
 import {InputItem, ManyMultiSelectForString, SelectOne} from "@/utils/inputUtil";
@@ -33,11 +33,13 @@ import {CodecType} from "@/pages/codec/CodecPage";
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import style from "@/pages/customizeMenu/CustomizeMenu.module.scss";
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover";
+import {failed, info, success, warn} from "@/utils/notification";
 
+const {ipcRenderer} = window.require("electron")
 
 interface CustomCodecListProps {
     customCodecList: YakScript[]
-    onAdd: () => void
+    onAdd?: () => void
     onRemove: (index: number) => void
     onEdit: (index: number) => void
 }
@@ -63,19 +65,19 @@ export const CustomCodecList: React.FC<CustomCodecListProps> = React.memo((props
                     </div>
                 ))}
             </Form.Item>
-            {(
-                <Form.Item wrapperCol={{span: 24}}>
-                    <YakitButton
-                        type='outline2'
-                        onClick={() => onAdd()}
-                        icon={<PlusIcon/>}
-                        className={httpQueryStyles["plus-button-bolck"]}
-                        block
-                    >
-                        添加
-                    </YakitButton>
-                </Form.Item>
-            )}
+            {/*{(*/}
+            {/*    <Form.Item wrapperCol={{span: 24}}>*/}
+            {/*        <YakitButton*/}
+            {/*            type='outline2'*/}
+            {/*            onClick={() => onAdd()}*/}
+            {/*            icon={<PlusIcon/>}*/}
+            {/*            className={httpQueryStyles["plus-button-bolck"]}*/}
+            {/*            block*/}
+            {/*        >*/}
+            {/*            添加*/}
+            {/*        </YakitButton>*/}
+            {/*    </Form.Item>*/}
+            {/*)}*/}
         </>
     )
 })
@@ -124,15 +126,33 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
 )
 
 interface CustomCodecEditorProps {
+    currCodec: YakScript
+    setCurrCodec: (y: YakScript) => void
     resultMode: boolean
     packetMode: boolean
+    addAction: boolean
+    editAction: boolean
+    onchange:boolean
+    setOnchange:(b:boolean) => void
     title: string
     visibleDrawer: boolean
     onClose: () => void
 }
 
 export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((props) => {
-    const {resultMode, packetMode, title, visibleDrawer, onClose} = props
+    const {
+        currCodec,
+        setCurrCodec,
+        addAction,
+        editAction,
+        resultMode,
+        packetMode,
+        onchange,
+        setOnchange,
+        title,
+        visibleDrawer,
+        onClose
+    } = props
     const {tabMenuHeight} = useContext(MainOperatorContext)
     const heightDrawer = useMemo(() => {
         return tabMenuHeight - 40
@@ -141,42 +161,38 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
         console.log("onOkImport")
     })
     const onSaveToDataBase = useMemoizedFn(() => {
-        console.log("onSaveToDataBase", params)
+        console.log("onSaveToDataBase", currCodec)
+        if (!currCodec.ScriptName) {
+            warn("请输入插件模块名!")
+            return
+        }
+        if (!currCodec.Content || currCodec.Tags.split(",").length != 2) {
+            warn("请输入插件内容/选择类型!")
+            return
+        }
+
+        ipcRenderer
+            .invoke("SaveYakScript", currCodec)
+            .then((data) => {
+                success(`创建 / 保存 ${title} 脚本成功`)
+                setCurrCodec(data)
+                setOnchange(true)
+                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+            })
+            .catch((e: any) => {
+                failed(`保存 Yak ${title} 失败: ${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    onClose()
+                }, 200)
+            })
     })
     const onExecute = useMemoizedFn(() => {
         console.log("onExecute")
     })
-    const [params, setParams] = useState<YakScript>({} as YakScript)
+
     const [modified, setModified] = useState<YakScript | undefined>()
-
-    // const searchForCodecFuzzerPlugin = useMemoizedFn(() => {
-    //     queryYakScriptList(
-    //         "yak",
-    //         (i: YakScript[], total) => {
-    //             if (!total || total == 0) {
-    //                 return
-    //             }
-    //             // setParams(i.map((script) => {
-    //             //     return {
-    //             //         key: script.ScriptName,
-    //             //         verbose: "CODEC 社区插件: " + script.ScriptName,
-    //             //         isYakScript: true,
-    //             //     } as CodecType
-    //             // }))
-    //         },
-    //         undefined,
-    //         10,
-    //         undefined,
-    //         undefined,
-    //         undefined,
-    //         undefined,
-    //         ["allow-custom-http-packet-mutate"],
-    //     )
-    // })
-    // useEffect(() => {
-    //     searchForCodecFuzzerPlugin()
-    // }, [])
-
     return (
         <YakitDrawer
             placement='bottom'
@@ -223,8 +239,10 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
             }
         >
             <CustomEditor
-                params={params}
-                setParams={setParams}
+                params={currCodec}
+                setParams={setCurrCodec}
+                addAction={addAction}
+                editAction={editAction}
                 modified={modified}
                 resultMode={resultMode}
                 packetMode={packetMode}
@@ -304,43 +322,65 @@ interface CustomEditorProps {
     modified?: YakScript | undefined
     resultMode: boolean
     packetMode: boolean
+    addAction: boolean
+    editAction: boolean
     onClose?: () => void
     // children?: ReactNode
     type?: string
 }
 
 const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
-    const {params, setParams, modified, packetMode, resultMode, onClose} = props
+    const {params, setParams, modified, addAction, editAction, packetMode, resultMode, onClose} = props
     const [enPacketValue, setEnPacketValue] = useState<string>("")
     const [dePacketValue, setDePacketValue] = useState<string>("")
 
     const [enPayloadValue, setEnPayloadValue] = useState<string>("")
     const [dePayloadValue, setDePayloadValue] = useState<string>("")
 
-    const [packetCode, setPacketCode] = useState<string>("")
-    const [payloadCode, setPayloadCode] = useState<string>("")
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
     useEffect(() => {
-        setEnPacketValue(enPacketValue || defPacketEncoder)
-        setDePacketValue(dePacketValue || defPacketDecoder)
-        setEnPayloadValue(enPayloadValue || defPayloadEncoder)
-        setDePayloadValue(dePayloadValue || defPayloadDecoder)
+        if (addAction) {
+            setEnPacketValue(defPacketEncoder)
+            setDePacketValue(defPacketDecoder)
+            setEnPayloadValue(defPayloadEncoder)
+            setDePayloadValue(defPayloadDecoder)
+        } else if (editAction) {
+            let codec = params.Content.split("##############################################")
+            console.log(codec)
+            if (packetMode && codec.length === 2) {
+                setEnPacketValue(codec[0])
+                setDePacketValue(codec[1])
+            }
+            if (resultMode && codec.length === 2) {
+                setEnPayloadValue(codec[0])
+                setDePayloadValue(codec[1])
+            }
+        }
         setRefreshTrigger(!refreshTrigger)
-    }, [enPacketValue, dePacketValue, enPayloadValue, dePayloadValue])
+    }, [])
+
+    useDebounceEffect(() => {
+        if (packetMode) {
+            setParams({
+                ...params,
+                Content: [enPacketValue, dePacketValue].join("\n##############################################")
+            });
+        } else {
+            setParams({
+                ...params,
+                Content: [enPayloadValue, dePayloadValue].join("\n##############################################")
+            });
+        }
+    }, [enPacketValue, dePacketValue, enPayloadValue, dePayloadValue]);
     const [shellScript, setShellScript] = useState<string>("")
 
     useEffect(() => {
-        console.log("shellScript", shellScript)
-        if (!shellScript) {
-            console.log("!shellScript", shellScript)
-            setShellScript("jsp");
+        let ss = params.Tags.split(",").filter((item) => item !== "webshell-packet-codec" && item !== "webshell-payload-codec").join(",");
+        if (ss) {
+            setShellScript(ss);
         }
-        // if(!params.Content && params.Tags.includes("packet-encoder")) {
-        //     setEnPacketValue(params.Content)
-        //     setDePacketValue(params.Content)
-        // }
-    }, []);
+    }, [shellScript]);
 
     // 定义一个状态变量和一个设置这个状态变量的函数
     const [selectedTab, setSelectedTab] = useState("enCoder");
@@ -375,32 +415,20 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                             </div>
                             <div
                                 className={classNames(webFuzzerStyles["web-fuzzer-tab-content"])}>
-                                {selectedTab === "enCoder" ? (packetMode ?
-                                        (
-                                            <YakEditor
-                                                type={"yak"} noMiniMap={true}
-                                                value={enPacketValue} setValue={setEnPacketValue}
-                                            />
-                                        ) : (
-                                            <YakEditor
-                                                type={"yak"} noMiniMap={true}
-                                                value={dePayloadValue} setValue={setDePayloadValue}
-                                            />
-                                        )
-                                ) : (
-                                    packetMode ?
-                                        (
-                                            <YakEditor
-                                                type={"yak"} noMiniMap={true}
-                                                value={packetCode} setValue={setPacketCode}
-                                            />
-                                        ) : (
-                                            <YakEditor
-                                                type={"yak"} noMiniMap={true}
-                                                value={defPayloadDecoder}
-                                            />
-                                        )
-                                )
+                                {
+                                    selectedTab === "enCoder" ? (
+                                        <YakEditor
+                                            key={selectedTab}
+                                            type={"yak"} value={packetMode ? enPacketValue : enPayloadValue}
+                                            setValue={packetMode ? setEnPacketValue : setEnPayloadValue}
+                                        />
+                                    ) : (
+                                        <YakEditor
+                                            key={selectedTab}
+                                            type={"yak"} value={packetMode ? dePacketValue : dePayloadValue}
+                                            setValue={packetMode ? setDePacketValue : setDePayloadValue}
+                                        />
+                                    )
                                 }
                             </div>
                         </div>
@@ -419,16 +447,15 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                             value={params.ScriptName}
                             disable={disabled}
                         />
-                        <Form.Item label={"脚本类型"} name={"脚本类型"} required={true}>
+                        <Form.Item label={"脚本类型"}>
                             <YakitSelect
-                                value={shellScript || "jsp"}
+                                value={shellScript}
                                 onSelect={(val) => {
                                     setShellScript(val)
                                     packetMode ?
                                         setParams({...params, Tags: [val, "webshell-packet-codec"].join(",")}) :
                                         setParams({...params, Tags: [val, "webshell-payload-codec"].join(",")})
                                 }}
-                                autoClearSearchValue={true}
                             >
                                 <YakitSelect.Option value='jsp'>JSP</YakitSelect.Option>
                                 <YakitSelect.Option value='jspx'>JSPX</YakitSelect.Option>
