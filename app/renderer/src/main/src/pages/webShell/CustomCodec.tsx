@@ -3,18 +3,16 @@ import matcherStyles from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExt
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {
     HollowLightningBoltIcon,
-    PlusIcon,
     QuestionMarkCircleIcon,
     RemoveIcon,
     TerminalIcon,
     TrashIcon
 } from "@/assets/newIcon";
 import React, {ReactNode, useContext, useEffect, useMemo, useState} from "react";
-import {Button, Form, Tooltip} from "antd";
+import {Form, Tooltip} from "antd";
 import classNames from "classnames";
-import {TerminalPopover} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig";
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer";
-import {MainOperatorContext} from "@/pages/layout/MainContext";
+
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {YakEditor} from "@/utils/editors";
 import mitmStyles from "@/pages/mitm/MITMRule/MITMRule.module.scss";
@@ -22,18 +20,17 @@ import {openExternalWebsite} from "@/utils/openWebsite";
 import {RuleExportAndImportButton} from "@/pages/mitm/MITMRule/MITMRule";
 import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
-import {WebShellDetail} from "@/pages/webShell/models";
 import {InputItem, ManyMultiSelectForString, SelectOne} from "@/utils/inputUtil";
 import {YakScript} from "@/pages/invoker/schema";
 
 import webFuzzerStyles from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage.module.scss";
 import {OutlineAdjustmentsIcon, OutlineCodeIcon, OutlineCollectionIcon, OutlineQrcodeIcon} from "@/assets/icon/outline";
-import {queryYakScriptList} from "@/pages/yakitStore/network";
-import {CodecType} from "@/pages/codec/CodecPage";
+
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import style from "@/pages/customizeMenu/CustomizeMenu.module.scss";
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover";
 import {failed, info, success, warn} from "@/utils/notification";
+import {menuBodyHeight} from "@/pages/globalVariable";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,6 +51,12 @@ export const CustomCodecList: React.FC<CustomCodecListProps> = React.memo((props
                         <div className={httpQueryStyles["matchersList-item-heard"]}>
                             <span className={httpQueryStyles["item-number"]}>{index}</span>
                             <span style={{"color": "#f69c5d"}}>{item.ScriptName}</span>
+                            <span className={httpQueryStyles["item-number"]}>
+                                {
+                                    item.Tags.split(",").filter((i) => i !== "webshell-packet-codec" && i !== "webshell-payload-codec").join(",")
+                                }
+                            </span>
+
                         </div>
                         <CustomCodecListItemOperate
                             onRemove={() => onRemove(index)}
@@ -132,8 +135,8 @@ interface CustomCodecEditorProps {
     packetMode: boolean
     addAction: boolean
     editAction: boolean
-    onchange:boolean
-    setOnchange:(b:boolean) => void
+    onchange: boolean
+    setOnchange: (b: boolean) => void
     title: string
     visibleDrawer: boolean
     onClose: () => void
@@ -153,10 +156,9 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
         visibleDrawer,
         onClose
     } = props
-    const {tabMenuHeight} = useContext(MainOperatorContext)
     const heightDrawer = useMemo(() => {
-        return tabMenuHeight - 40
-    }, [tabMenuHeight])
+        return menuBodyHeight.firstTabMenuBodyHeight - 40
+    }, [menuBodyHeight.firstTabMenuBodyHeight])
     const onOkImport = useMemoizedFn(() => {
         console.log("onOkImport")
     })
