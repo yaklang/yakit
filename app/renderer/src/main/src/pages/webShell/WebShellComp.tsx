@@ -20,6 +20,9 @@ import {failed, success} from "@/utils/notification";
 import {RuleContent} from "@/pages/mitm/MITMRule/MITMRuleFromModal";
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {YakEditor} from "@/utils/editors";
+import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
+import {queryYakScriptList} from "@/pages/yakitStore/network";
+import {getRemoteValue} from "@/utils/kv";
 
 
 export const RemarkDetail = ({remark}) => {
@@ -116,16 +119,18 @@ interface WebShellFormContentProps {
 const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
     const {params, modified, setParams, setParamsLoading, isShowAuthor = true, disabled} = props
     const [showSecret, setShowSecret] = useState(false);
+    const [showCodec, setShowCodec] = useState(false);
     const [headersStr, setHeadersStr] = useState<string>("")
     const [headers, setHeaders] = useState<{
         Key: string,
         Value: string
     }[]>([])
-
+    const [shellScript, setShellScript] = useState<string>("")
     useEffect(() => {
         // 如果 params.ShellScript 是空的，那么就设置它为 "jsp"
         if (!params.ShellScript) {
             setParams({...params, ShellScript: "jsp"});
+            setShellScript("jsp")
         }
         if (!params.ShellType) {
             setParams({...params, ShellType: "behinder"});
@@ -155,6 +160,72 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
             console.error(`Invalid URL: ${params.Url}`);
         }
     }, [params.Url]);
+
+    const [packetScriptList, setPacketScriptList] = useState<SelectOptionProps[]>([])
+    const [payloadScriptList, setPayloadScriptList] = useState<SelectOptionProps[]>([])
+    useEffect(() => {
+        console.log("shellScript", shellScript)
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                if (!total || total == 0) {
+                    setPacketScriptList([])
+                    return
+                }
+                const validItems = i.filter((item) => {
+                    const tags = item.Tags.split(",");
+                    return tags.length === 2 && tags.includes("webshell-packet-codec") && tags.includes(shellScript);
+                });
+
+                if (validItems.length === 0) {
+                    setPacketScriptList([]);
+                    return;
+                }
+
+                const scriptNames = validItems.map((item) => (
+                    {label: item.ScriptName, value: item.ScriptName}
+                ));
+                setPacketScriptList(scriptNames)
+            },
+            undefined,
+            10,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            ["webshell-packet-codec", shellScript]
+        )
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                if (!total || total == 0) {
+                    setPayloadScriptList([])
+                    return
+                }
+                const validItems = i.filter((item) => {
+                    const tags = item.Tags.split(",");
+                    return tags.length === 2 && tags.includes("webshell-payload-codec") && tags.includes(shellScript);
+                });
+
+                if (validItems.length === 0) {
+                    setPacketScriptList([]);
+                    return;
+                }
+
+                const scriptNames = validItems.map((item) => (
+                    {label: item.ScriptName, value: item.ScriptName}
+                ));
+                setPayloadScriptList(scriptNames)
+            },
+            undefined,
+            10,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            ["webshell-payload-codec", shellScript]
+        )
+    }, [shellScript])
     return (
         <>
             <Form.Item label={"Shell 类型"} required={true} rules={[{required: true, message: "该项为必填"}]}>
@@ -164,6 +235,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                         console.log(val)
                         setParams({...params, ShellType: val})
                         setShowSecret(val === "godzilla")
+                        setShowCodec(!(val === "godzilla"))
                     }}
                 >
                     <YakitSelect.Option value='behinder'>Behinder</YakitSelect.Option>
@@ -182,6 +254,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                     value={params.ShellScript || "jsp"}
                     onSelect={(val) => {
                         setParams({...params, ShellScript: val})
+                        setShellScript(val)
                     }}
                 >
                     <YakitSelect.Option value='jsp'>JSP</YakitSelect.Option>
@@ -218,39 +291,35 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                     </Form.Item>
                 </>
             )}
-            <Form.Item label={"编解码器"} name={"CustomCodec"}>
-                <YakitInput
-                    {...params}
-                    // value={rule}
-                    placeholder='可用右侧辅助工具，自动生成正则'
-                    addonAfter={
-                        <IconSolidCodeIcon className={styles["icon-adjustments"]} onClick={
-                            () => {
-                                const m = showYakitModal(
-                                    {
-                                        title: '编解码器',
-                                        subTitle: "用户可用自定义编解码器",
-                                        onCancel: () => {
-                                            console.log("asfasfas")
-                                            m.destroy()
-                                        },
-                                        footer: null,
-                                        closable: true,
-                                        content: <YakEditor value={"xxxxx"}/>
-                                    }
-                                )
-                            }
-                        }
+            {showCodec && (
+                <>
+                    <Form.Item label={"数据包编解码器"} name={"CustomPacketCodec"}>
+                        <YakitSelect
+                            showSearch
+                            options={packetScriptList}
+                            placeholder='请选择数据包编解码器...'
+                            value={""}
+                            onChange={(ScriptNames) => {
+                                setParams(ScriptNames)
+                            }}
+                            maxTagCount={10}
                         />
-                    }
-                    onChange={(e) => {
-                        const {value} = e.target
-                        // setRule(value)
-                        // getRule(value)
-                    }}
-                />
-            </Form.Item>
+                    </Form.Item>
 
+                    <Form.Item label={"回显编解码器"} name={"CustomPayloadCodec"}>
+                        <YakitSelect
+                            showSearch
+                            options={payloadScriptList}
+                            placeholder='请选择回显编解码器...'
+                            value={""}
+                            onChange={(ScriptNames) => {
+                                setParams(ScriptNames)
+                            }}
+                            maxTagCount={10}
+                        />
+                    </Form.Item>
+                </>
+            )}
             <Form.Item label={"Headers"} name='headers' initialValue={[]}>
                 <div className={styles["menu-codec-wrapper"]}>
                     <div className={styles["input-textarea-wrapper"]}>
