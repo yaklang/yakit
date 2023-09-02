@@ -254,11 +254,13 @@ criticalRisks = []
 highRisks = []
 warningRisks = []
 lowRisks = []
+secureRisks = []
 // 合规检查等级分类数组
 criticalPotentialRisks = []
 highPotentialRisks = []
 warningPotentialRisks = []
 lowPotentialRisks = []
+secureCountScaleRisks = []
 
 // 存活资产统计
 criticalCountScale = 0
@@ -277,11 +279,10 @@ for target,risks = range targetToRisks {
     lowCount = 0
     secureCount = 0
     riskLevel = "安全"
-    isRiskDnsLog = false
+    isRiskKye = []
     for _, riskIns := range risks {
-        if riskIns.RiskTypeVerbose == "DNSLOG"  {
-            isRiskDnsLog = true
-            break
+        if  riskIns.RiskType == "dnslog" || riskIns.RiskTypeVerbose == "DNSLOG" {
+            isRiskKye = append(isRiskKye, riskIns)
         }
         if str.Contains(riskIns.Severity, "critical") {
             criticalCount++
@@ -315,6 +316,14 @@ for target,risks = range targetToRisks {
                 lowRisks = append(lowRisks, riskIns)
             }
         }
+       if  str.Contains(riskIns.Severity, "info") && riskIns.RiskType != "dnslog"  {
+           secureCount++
+            if parseBool(riskIns.IsPotential) {
+                secureCountScaleRisks = append(secureCountScaleRisks, riskIns)
+            } else {
+                secureRisks = append(secureRisks, riskIns)
+            }
+       }
         
     }
   
@@ -327,15 +336,15 @@ for target,risks = range targetToRisks {
     } else if warningCount > 0 {
       riskLevel = "中危"
       warningCountScale = warningCountScale + 1
-    } else if warningCount > 0 {
+    } else if lowCount > 0 {
       riskLevel = "低风险"
       lowCountScale = lowCountScale + 1
-    } else {
+    } else if secureCount > 0 {
       secureCountScale = secureCountScale + 1
     }
     
     allCount = criticalCount +highCount + warningCount + lowCount
-    if !isRiskDnsLog {
+    if len(isRiskKye) == 0 {
         ipRisksStr = append(ipRisksStr, {
         "资产": {"value": target, "jump_link": target, "sort": 1},
         "风险等级": {"value": riskLevel, "sort": 2},
@@ -432,13 +441,14 @@ if len(noPotentialRisks) == 0 {
         if titleVerbose == "" {
             titleVerbose = info.Title
         }
-
-        _line = append(_line, {
-            "序号": { "value": index + 1, "sort": 1},
-            "网站地址": { "value": sprintf(\`%v:%v\`, info.IP, info.Port), "sort": 2},
-            "漏洞情况": { "value": titleVerbose, "sort": 3},
-            "威胁风险": { "value": level, "sort": 4}
-        })
+        if info.RiskTypeVerbose != "DNSLOG" {
+            _line = append(_line, {
+                "序号": { "value": index + 1, "sort": 1},
+                "网站地址": { "value": sprintf(\`%v:%v\`, info.IP, info.Port), "sort": 2},
+                "漏洞情况": { "value": titleVerbose, "sort": 3},
+                "威胁风险": { "value": level, "sort": 4}
+            })
+        }
     }
     potentialRisksList := json.dumps({ "type": "potential-risks-list", "data": _line })
     reportInstance.Raw(potentialRisksList)
