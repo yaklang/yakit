@@ -49,6 +49,7 @@ export interface WebShellCreatorFormProp {
 const {ipcRenderer} = window.require("electron")
 
 export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) => {
+    console.log(props)
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
             labelCol: {span: 5},
@@ -62,7 +63,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
 
     const [paramsLoading, setParamsLoading] = useState(false)
 
-    const [modified, setModified] = useState<WebShellDetail | undefined>(props.modified)
+    // const [modified, setModified] = useState<WebShellDetail | undefined>(props.modified)
 
     const [createLoading, setCreateLoading] = useState<boolean>(false)
 
@@ -91,13 +92,13 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
                 <WebShellFormContent
                     params={params}
                     setParams={setParams}
-                    modified={modified}
+                    // modified={modified}
                     setParamsLoading={setParamsLoading}
                 />
                 <Form.Item colon={false} label={" "}>
                     <Space>
                         <YakitButton onClick={createWebShell} loading={createLoading}>
-                            添加
+                            {props.isCreate ? "添加" : "修改"}
                         </YakitButton>
                     </Space>
                 </Form.Item>
@@ -132,8 +133,11 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
             setParams({...params, ShellScript: "jsp"});
             setShellScript("jsp")
         }
+        console.log("!params.ShellType", params.ShellType)
+
         if (!params.ShellType) {
             setParams({...params, ShellType: "behinder"});
+            setShowCodec(true)
         }
     }, []);
     useDebounceEffect(() => {
@@ -164,7 +168,6 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
     const [packetScriptList, setPacketScriptList] = useState<SelectOptionProps[]>([])
     const [payloadScriptList, setPayloadScriptList] = useState<SelectOptionProps[]>([])
     useEffect(() => {
-        console.log("shellScript", shellScript)
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {

@@ -14,4 +14,6 @@ export interface WebShellDetail {
     Remark: string;
     CreatedAt: number;
     UpdatedAt: number;
+    PacketScriptName:string
+    PayloadScriptName:string
 }
