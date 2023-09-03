@@ -1,0 +1,21 @@
+// 想了想，常用的一些样式类放这里吧
+// 比如内容单行、多行省略之类的，还有动画的注册
+
+html {
+    // 多行内容省略-行数
+    --yakit-ellipsis-row: 2;
+}
+
+// 单行内容省略
+.yakit-content-single-ellipsis {
+    white-space: nowrap;
+    word-wrap: normal;
+    text-overflow: ellipsis;
+}
+// 多行内容省略
+// 行数可通过设置 变量 --yakit-ellipsis-row 控制
+.yakit-content-multiLine-ellipsis {
+    display: -webkit-box;
+    -webkit-line-clamp: var(--yakit-ellipsis-row);
+    -webkit-box-orient: vertical;
+}
