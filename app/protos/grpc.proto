@@ -394,7 +394,7 @@ service Yak {
   // WebShell
   rpc CreateWebShell(WebShell) returns (WebShell);
   rpc DeleteWebShell(DeleteWebShellRequest) returns (Empty);
-  rpc UpdateWebShellById(UpdateWebShellRequest) returns (Empty);
+  rpc UpdateWebShellById(WebShell) returns (WebShell);
   rpc QueryWebShells(QueryWebShellsRequest) returns (QueryWebShellsResponse);
   rpc Ping(WebShellRequest) returns (WebShellResponse);
   rpc GetBasicInfo(WebShellRequest) returns (WebShellResponse);
@@ -2499,6 +2499,8 @@ message WebShell {
   string Remark =13;
   int64 CreatedAt = 14;
   int64 UpdatedAt = 15;
+  string PacketCodecName = 16;
+  string PayloadCodecName = 17;
 }
 message WebShellRequest {
   int64 Id = 1;

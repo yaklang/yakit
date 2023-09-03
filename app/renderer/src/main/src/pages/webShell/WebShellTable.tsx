@@ -2,15 +2,14 @@ import React, {useEffect, useMemo, useState} from 'react';
 import {defQueryWebShellRequest, QueryWebShellRequest} from "@/pages/webShell/WebShellViewer";
 import {ResizeBox} from "@/components/ResizeBox";
 import {WebShellDetail} from "@/pages/webShell/models";
-import styles from "@/pages/cve/CVETable.module.scss";
+import cveStyles from "@/pages/cve/CVETable.module.scss";
+import mitmStyles from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking.module.scss";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
-import {formatDate, formatTimestamp} from "@/utils/timeUtil";
+import {formatTimestamp} from "@/utils/timeUtil";
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext";
 import {
     ArrowCircleRightSvgIcon,
-    ChromeFrameSvgIcon,
     IconSolidCodeIcon,
     RefreshIcon,
     SMViewGridAddIcon
@@ -21,17 +20,21 @@ import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/Table
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
 import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from 'ahooks';
 import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema";
-import {CVEDetail} from "@/pages/cve/models";
-import {defQueryCVERequest} from "@/pages/cve/CVEViewer";
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss";
-import {showResponseViaResponseRaw} from "@/components/ShowInBrowser";
-import {yakitNotify} from "@/utils/notification";
 import {showDrawer, showModal} from "@/utils/showModal";
-import {HTTPFlow, onExpandHTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable";
-import {ConfigEngineProxy} from "@/utils/ConfigEngineProxy";
-import {analyzeFuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage";
 import {RemarkDetail, WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
-import {ReloadOutlined} from '@ant-design/icons';
+import {showByCustom} from "@/components/functionTemplate/showByContext";
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu";
+import {
+    availableColors,
+    CalloutColor,
+    onRemoveCalloutColor,
+    onSendToTab
+} from "@/components/HTTPFlowTable/HTTPFlowTable";
+import {execPacketScan} from "@/pages/packetScanner/PacketScanner";
+import {packetScanDefaultValue} from "@/pages/packetScanner/DefaultPacketScanGroup";
+import {callCopyToClipboard} from "@/utils/basic";
+import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser";
 
 export interface WebShellManagerProp {
     available: boolean
@@ -48,8 +51,8 @@ function emptyWebshell() {
 
 export const WebShellTable: React.FC<WebShellManagerProp> = React.memo((props) => {
     const {available, advancedQuery, setAdvancedQuery} = props
-    const [selected, setSelected] = useState<string>("")
-    const [webshell, setWebShell] = useState<WebShellDetail>(emptyWebshell)
+    const [selected, setSelected] = useState<WebShellDetail>(emptyWebshell)
+    // const [webshell, setWebShell] = useState<WebShellDetail>(emptyWebshell)
 
     return (
         <>
@@ -65,8 +68,8 @@ export const WebShellTable: React.FC<WebShellManagerProp> = React.memo((props) =
                         // filter={props.filter}
                         selected={selected}
                         setSelected={setSelected}
-                        WebShell={webshell}
-                        setWebShell={setWebShell}
+                        // WebShell={webshell}
+                        // setWebShell={setWebShell}
                     />
                 }
                 secondNode={
@@ -80,8 +83,8 @@ export const WebShellTable: React.FC<WebShellManagerProp> = React.memo((props) =
                     // filter={props.filter}
                     selected={selected}
                     setSelected={setSelected}
-                    WebShell={webshell}
-                    setWebShell={setWebShell}
+                    // WebShell={webshell}
+                    // setWebShell={setWebShell}
                 />
             )}
         </>
@@ -91,16 +94,17 @@ export const WebShellTable: React.FC<WebShellManagerProp> = React.memo((props) =
 interface WebShellTableListProps {
     available: boolean
     filter?: QueryWebShellRequest
-    selected: string
-    setSelected: (s: string) => void
+    selected: WebShellDetail
+    setSelected: (s: WebShellDetail) => void
     advancedQuery: boolean //是否开启高级查询
     setAdvancedQuery: (b: boolean) => void
-    WebShell: WebShellDetail
-    setWebShell: (shell: WebShellDetail) => void
+    // WebShell: WebShellDetail
+    // setWebShell: (shell: WebShellDetail) => void
 }
 
 const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) => {
-    const {available, selected, setSelected, advancedQuery, setAdvancedQuery, WebShell, setWebShell} = props
+    // const {available, selected, setSelected, advancedQuery, setAdvancedQuery, WebShell, setWebShell} = props
+    const {available, selected, setSelected, advancedQuery, setAdvancedQuery} = props
     const [params, setParams] = useState<QueryWebShellRequest>({
         Tag: "",
         Pagination: genDefaultPagination(200)
@@ -238,8 +242,9 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
         ]
     }, [])
     const onRowClick = useMemoizedFn((record: WebShellDetail) => {
-        setSelected(record.Id) // 更新当前选中的行
-        setWebShell(record)
+        setSelected(record) // 更新当前选中的行
+        // setWebShell(record)
+        console.log(record)
     })
     const [pagination, setPagination] = useState<PaginationSchema>({
         ...genDefaultPagination(20, 1),
@@ -313,7 +318,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
     const [currentSelectItem, setCurrentSelectItem] = useState<WebShellDetail>()
     useEffect(() => {
         if (!selected) return
-        setCurrentSelectItem(WebShell)
+        setCurrentSelectItem(selected)
     }, [selected])
     const onTableChange = useDebounceFn(
         (page: number, limit: number, sorter: SortProps, filter: any) => {
@@ -343,9 +348,62 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
         }, 10)
     })
 
+    const [isEdit, setIsEdit] = useState<boolean>(false)
+
+    const wsmMenuData = [
+        {key: "webshell-edit", label: "编辑"},
+        {key: "webshell-ping", label: "验证存活"},
+    ]
+    const wsmMenuSelect = useMemoizedFn((key: string) => {
+        if (!selected) return
+        switch (key) {
+            case "webshell-edit":
+                setIsEdit(true)
+                let m = showModal({
+                    title: "编辑 Shell",
+                    width: "60%",
+                    content: <WebShellCreatorForm
+                        closeModal={() => {
+                            m && m.destroy()
+                            refList()
+                        }}
+                        isCreate={false}
+                        modified={selected}
+                    />,
+                    modalAfterClose: () => m && m.destroy(),
+                })
+                break
+        }
+    })
+
+    const onRowContextMenu = (rowData: WebShellDetail, _, event: React.MouseEvent) => {
+        if (rowData) {
+            setSelected(rowData)
+        }
+        showByCustom(
+            {
+                reactNode: (
+                    <div className={mitmStyles["context-menu-custom"]}>
+                        <YakitMenu
+                            data={wsmMenuData}
+                            width={150}
+                            onClick={({key}) => {
+                                wsmMenuSelect(key)
+                            }}
+                        />
+                    </div>
+                ),
+                height: 266,
+                width: 158
+            },
+            event.clientX,
+            event.clientY
+        )
+    }
+
     return (
 
-        <div className={styles["cve-list"]}>
+        <div className={cveStyles["cve-list"]}>
             {
                 available ? (
                     <>
@@ -354,15 +412,15 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                             titleHeight={36}
                             size='middle'
                             renderTitle={
-                                <div className={styles["cve-list-title-body"]}>
-                                    <div className={styles["cve-list-title-left"]}>
+                                <div className={cveStyles["cve-list-title-body"]}>
+                                    <div className={cveStyles["cve-list-title-left"]}>
                                         {!advancedQuery && (
-                                            <div className={styles["cve-list-title-query"]}>
-                                                <span className={styles["cve-list-title-query-text"]}>高级设置</span>
+                                            <div className={cveStyles["cve-list-title-query"]}>
+                                                <span className={cveStyles["cve-list-title-query-text"]}>高级设置</span>
                                                 <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery}/>
                                             </div>
                                         )}
-                                        <div className={styles["cve-list-title"]}>WebShell 管理</div>
+                                        <div className={cveStyles["cve-list-title"]}>WebShell 管理</div>
                                         <Space>
                                             <Tooltip title='刷新会重置所有查询条件'>
                                                 <Button
@@ -376,7 +434,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                                             </Tooltip>
                                         </Space>
                                     </div>
-                                    <div className={styles["cve-list-title-extra"]}>
+                                    <div className={cveStyles["cve-list-title-extra"]}>
                                         <YakitCombinationSearch
                                             selectProps={{
                                                 size: "small"
@@ -422,6 +480,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                                                             m && m.destroy()
                                                             refList()
                                                         }}
+                                                        isCreate={true}
                                                     />,
                                                     modalAfterClose: () => m && m.destroy(),
                                                 })
@@ -446,6 +505,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                                 total,
                                 onChange: update
                             }}
+                            onRowContextMenu={onRowContextMenu}
                             currentSelectItem={currentSelectItem}
                             onChange={onTableChange}
                             isShowTotal={true}
