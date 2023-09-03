@@ -1,0 +1,242 @@
+.extra-header-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .divider-style {
+        width: 1px;
+        height: 16px;
+        background-color: #eaecf3;
+    }
+
+    .btn-group-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+}
+
+.func-filter-dropdown-menu {
+    border-radius: 4px;
+    padding: 8px 4px;
+    :global {
+        .ant-dropdown-menu-item {
+            color: var(--yakit-header-color);
+        }
+    }
+}
+
+.func-filter-divider-style {
+    width: 1px;
+    height: 12px;
+    background-color: #eaecf3;
+}
+
+.modify-author-modal-body {
+    padding: 24px;
+    :global {
+        .ant-form-item-label {
+            padding: 0;
+        }
+    }
+    .modify-author-hint-span {
+        color: #f28b44;
+    }
+}
+.modify-author-item-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    .img-style {
+        width: 24px;
+        height: 24px;
+        border-radius: 20px;
+        border: 1px solid #f8f8f8;
+        margin-right: 4px;
+    }
+}
+.reason-modal-body {
+    padding: 16px 24px 24px 24px;
+}
+
+.details-opt-wrapper {
+    .details-wrapper-item-opt {
+        width: 100%;
+        height: 46px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        border: 1px solid;
+        border-radius: 4px;
+        border-color: #eaecf3 transparent transparent transparent;
+        .opt-wrapper {
+            flex: 1 0 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .opt-info {
+                flex: 1 0 0;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                .img-style {
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 28px;
+                    border: 1px solid #f8f8f8;
+                }
+                .text-style {
+                    flex: 1 0 0;
+                    overflow: hidden;
+                    color: #31343f;
+                    font-size: 12px;
+                    line-height: 16px;
+                }
+            }
+            .opt-show {
+                width: 131px;
+                display: flex;
+                justify-content: right;
+                align-items: center;
+                gap: 8px;
+                .icon-style {
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                        color: #b4bbca;
+                    }
+                }
+            }
+        }
+    }
+    .details-opt-wrapper:hover {
+        .details-wrapper-item-opt {
+            background-color: #f0f1f3;
+            border-color: transparent;
+        }
+    }
+    .details-opt-wrapper:hover + .details-opt-wrapper {
+        .details-wrapper-item-opt {
+            border-color: transparent;
+        }
+    }
+
+    .details-wrapper-item-opt-active {
+        border-color: #fbc6a1;
+        background: rgba(242, 139, 68, 0.06);
+    }
+}
+.details-content-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding-top: 12px;
+    .plugin-info-wrapper {
+        width: 100%;
+        height: 100%;
+        padding: 0 12px;
+        overflow: hidden overlay;
+        .plugin-info-body {
+            margin-top: 12px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+            .plugin-modify-info {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                .modify-advice {
+                    padding: 12px;
+                    display: flex;
+                    gap: 8px;
+                    border-radius: 8px;
+                    background: linear-gradient(90deg, rgba(136, 99, 247, 0.1) 0%, rgba(247, 170, 99, 0.1) 100%);
+                    .advice-icon {
+                        svg {
+                            width: 24px;
+                            height: 24px;
+                            color: #ffb660;
+                        }
+                    }
+                    .advice-body {
+                        flex: 1 0 0;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                        .advice-content {
+                            width: 100%;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 4px;
+                            .content-title {
+                                height: 20px;
+                                color: #31343f;
+                                font-size: 14px;
+                                font-weight: 600;
+                                line-height: 20px;
+                            }
+                            .content-style {
+                                color: #85899e;
+                                font-size: 12px;
+                                line-height: 16px;
+                            }
+                        }
+                        .advice-user {
+                            display: flex;
+                            align-items: center;
+                            gap: 4px;
+
+                            color: #31343f;
+                            font-size: 12px;
+                            line-height: 16px;
+                        }
+                    }
+                }
+            }
+
+            .plugin-setting-info {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                margin-bottom: 24px;
+                .setting-header {
+                    height: 24px;
+                    color: var(--color-gray-text-04, #31343f);
+                    font-size: 16px;
+                    font-weight: 600;
+                    line-height: 24px;
+                }
+                .setting-body {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 24px;
+                }
+            }
+        }
+    }
+}
+
+.terminal-popover {
+    width: 429px;
+    padding-bottom: 4px;
+    padding-top: 4px;
+
+    :global {
+        .ant-popover-inner-content {
+            height: 40vh;
+            padding: 4px;
+        }
+
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+
+        .ant-popover-arrow {
+            left: 0;
+        }
+    }
+}

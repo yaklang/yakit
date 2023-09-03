@@ -78,5 +78,10 @@ export enum CodeGV {
     /** @name public版本菜单模式 */
     PublicMenuModeValue = "public",
     /** @name 菜单状态缓存 */
-    MenuExpand = "menu-expand"
+    MenuExpand = "menu-expand",
+
+    /** @name 插件信息-yak类型额外参数(用于自定义DNSLOG)对应tag值 */
+    PluginYakDNSLogSwitch = "custom-dnslog-platform",
+    /** @name 插件信息-codec类型额外参数(用于自定义HTTP数据包变形)对应tag值 */
+    PluginCodecHttpSwitch = "allow-custom-http-packet-mutate"
 }
