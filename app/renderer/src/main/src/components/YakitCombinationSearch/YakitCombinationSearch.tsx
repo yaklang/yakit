@@ -124,7 +124,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
         )
     })
     return (
-        <div className={classNames(styles["yakit-combination-search"], { wrapperClassName })}>
+        <div className={classNames(styles["yakit-combination-search"], wrapperClassName || "" )}>
             <Input.Group compact>
                 <YakitSelect
                     {...selectProps}

@@ -4,7 +4,7 @@ import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList
 import {LoadingOutlined} from "@ant-design/icons"
 import "./RollingLoadList.scss"
 
-interface RollingLoadListProps<T> {
+export interface RollingLoadListProps<T> {
     rowKey?: string
     data: T[]
     loadMoreData: () => void
