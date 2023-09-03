@@ -70,5 +70,10 @@ export enum CodeGV {
     /** @name 历史版本下载页面 */
     HistoricalVersion = "https://github.com/yaklang/yakit/releases",
     /** @name public版本菜单模式 */
-    PublicMenuModeValue = "public"
+    PublicMenuModeValue = "public",
+
+    /** @name 插件信息-yak类型额外参数(用于自定义DNSLOG)对应tag值 */
+    PluginYakDNSLogSwitch = "custom-dnslog-platform",
+    /** @name 插件信息-codec类型额外参数(用于自定义HTTP数据包变形)对应tag值 */
+    PluginCodecHttpSwitch = "allow-custom-http-packet-mutate"
 }
