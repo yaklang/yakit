@@ -386,13 +386,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn((res: any) => {
-        const {isHttps, isGmTLS, request, allProp = {}} = res || {}
+        const {isHttps, isGmTLS, request, allRequestProps = {}} = res || {}
         if (request) {
             openMenuPage(
                 {route: YakitRoute.HTTPFuzzer},
                 {
                     params: {
-                        ...allProp,
+                        allRequestProps: allRequestProps,
                         isHttps: isHttps || false,
                         isGmTLS: isGmTLS || false,
                         request: request || "",
@@ -648,7 +648,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             // 菜单在代码内的名字
             const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ""
             if (!menuName) return
-
             const filterPage = pageCache.filter((item) => item.route === route && item.menuName === menuName)
             // 单开页面
             if (SingletonPageRoute.includes(route)) {
@@ -1102,7 +1101,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (subItem.groupChildren && subItem.groupChildren.length > 0) {
                 subItem.groupChildren.forEach((groupChildrenItem, groupIndex) => {
                     const haveGroupChildrenItem = fuzzerList.current.get(groupChildrenItem.id)
-                    console.log(haveGroupChildrenItem)
                     const newGroupChildrenItem: MultipleNodeInfo = {
                         ...haveGroupChildrenItem,
                         ...groupChildrenItem,

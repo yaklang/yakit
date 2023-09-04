@@ -28,6 +28,7 @@ import {SelectOptionProps} from "../HTTPFuzzerPage"
 import styles from "./HttpQueryAdvancedConfig.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {StringToUint8Array} from "@/utils/str"
+import {useDebounce, useDebounceEffect} from "ahooks"
 import {
     ColorSelect,
     ExtractorItem,
@@ -137,11 +138,19 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     }, [gmTLS])
     useEffect(() => {
-        console.log(advancedConfigValue)
         form.setFieldsValue({
             ...advancedConfigValue
         })
     }, [advancedConfigValue])
+    // useDebounceEffect(
+    //     () => {
+    //         form.setFieldsValue({
+    //             ...advancedConfigValue
+    //         })
+    //     },
+    //     [advancedConfigValue],
+    //     {wait: 400, trailing: true, leading: true}
+    // )
     useEffect(() => {
         let newRetryActive = retryActive
         if (retry) {

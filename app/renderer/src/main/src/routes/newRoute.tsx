@@ -13,7 +13,7 @@ import {PortAssetTable} from "../pages/assetViewer/PortAssetPage"
 import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage"
 import {RiskPage} from "../pages/risks/RiskPage"
 import {DNSLogPage} from "../pages/dnslog/DNSLogPage"
-import {HTTPFuzzerPage} from "../pages/fuzzer/HTTPFuzzerPage"
+import {HTTPFuzzerPage, FuzzerRequestProps} from "../pages/fuzzer/HTTPFuzzerPage"
 import {fuzzerInfoProp} from "../pages/MainOperator"
 import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage"
 import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
@@ -115,7 +115,7 @@ import {WebsiteTreeViewer} from "@/pages/yakitStore/viewers/WebsiteTree"
 import {VulinboxManager} from "@/pages/vulinbox/VulinboxManager"
 import {DiagnoseNetworkPage} from "@/pages/diagnoseNetwork/DiagnoseNetworkPage"
 import {ConfigNetworkPage} from "@/pages/configNetwork/ConfigNetworkPage"
-
+import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
@@ -332,12 +332,14 @@ export const NoPaddingRoute: YakitRoute[] = [
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
 
+// 继承了webfuzzer的全部配置
 export interface ComponentParams {
     // Route.HTTPFuzzer 参数
     isHttps?: boolean
     isGmTLS?: boolean
     request?: string
     system?: string
+    allRequestProps?: FuzzerRequestProps
     // order?: string
     /**@param id 页面唯一标识id HTTPFuzzer必须要有的，其他页面可以不用 */
     id?: string
@@ -392,7 +394,7 @@ export const RouteToPage: (key: YakitRoute | string, yakScriptId?: number, param
         case YakitRoute.HTTPFuzzer:
             return (
                 <HTTPFuzzerPage
-                    {...params}
+                    allRequestProps={params?.allRequestProps}
                     isHttps={params?.isHttps}
                     isGmTLS={params?.isGmTLS}
                     request={params?.request}

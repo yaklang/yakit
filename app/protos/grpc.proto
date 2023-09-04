@@ -3107,6 +3107,8 @@ message FuzzerRequest {
   // 继承透传给 HTTPPOOL 的参数，可以使用批量目标来发送
   bool BatchTargetFile = 43;
   bytes BatchTarget = 44;
+  bool AfterRequested = 45;
+  bool StopAtFirstMatch = 46;
 }
 
 message KVPair {

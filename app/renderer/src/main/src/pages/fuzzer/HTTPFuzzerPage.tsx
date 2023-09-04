@@ -141,6 +141,7 @@ export interface RedirectRequestParams {
 }
 
 export interface HTTPFuzzerPageProp {
+    allRequestProps?: FuzzerRequestProps
     isHttps?: boolean
     isGmTLS?: boolean
     request?: string
@@ -555,6 +556,52 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             data: {isHttps: isHttps, isGmTLS: advancedConfigValue.isGmTLS, request: request}
         })
     })
+    useEffect(() => {
+        if (props.allRequestProps) {
+            const input = props.allRequestProps
+            setRequest(Uint8ArrayToString(input.RequestRaw))
+            setHotPatchCode(input.HotPatchCode)
+            setHotPatchCodeWithParamGetter(input.HotPatchCodeWithParamGetter)
+            setAdvancedConfigValue({
+                retry: input.RetryInStatusCode != "",
+                noRetry: input.RetryNotInStatusCode != "",
+                forceFuzz: input.ForceFuzz,
+                isHttps: input.IsHTTPS,
+                isGmTLS: input.IsGmTLS,
+                concurrent: input.Concurrent,
+                timeout: input.PerRequestTimeoutSeconds,
+                noFixContentLength: input.NoFixContentLength,
+                noSystemProxy: input.NoSystemProxy,
+                proxy: input.Proxy ? input.Proxy.split(",") : [],
+                actualHost: input.ActualAddr,
+                minDelaySeconds: input.DelayMinSeconds,
+                maxDelaySeconds: input.DelayMaxSeconds,
+                repeatTimes: input.RepeatTimes,
+                maxRetryTimes: input.MaxRetryTimes,
+                retryConfiguration: {
+                    statusCode: input.RetryInStatusCode || "",
+                    keyWord: ""
+                },
+                noRetryConfiguration: {
+                    statusCode: input.RetryNotInStatusCode || "",
+                    keyWord: ""
+                },
+                retryWaitSeconds: input.RetryWaitSeconds,
+                retryMaxWaitSeconds: input.RetryMaxWaitSeconds,
+                noFollowRedirect: input.NoFollowRedirect,
+                followJSRedirect: input.FollowJSRedirect,
+                redirectCount: input.RedirectTimes,
+                dnsServers: input.DNSServers,
+                etcHosts: input.EtcHosts,
+                params: input.Params,
+                matchers: input.Matchers,
+                matchersCondition: input.MatchersCondition as "and" | "or",
+                filterMode: input.HitColor ? "onlyMatch" : "match",
+                hitColor: input.HitColor || "",
+                extractors: input.Extractors
+            })
+        }
+    }, [])
     // 从历史记录中恢复
     useEffect(() => {
         if (!historyTask) {
@@ -670,7 +717,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             submitToHTTPFuzzer()
         }
     })
-    const getCurrentRequestProp = useMemoizedFn(() => {
+    const getGrpcRequest = useMemoizedFn(() => {
         return {
             // Request: request,
             RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
@@ -718,7 +765,6 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             Extractors: advancedConfigValue.extractors
         }
     })
-
     const submitToHTTPFuzzer = useMemoizedFn(() => {
         resetResponse()
         // 清楚历史任务的标记
@@ -731,7 +777,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setDroppedCount(0)
 
         // FuzzerRequestProps
-        const httpParams: FuzzerRequestProps = getCurrentRequestProp()
+        const httpParams: FuzzerRequestProps = getGrpcRequest()
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
@@ -1124,7 +1170,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
     })
     const exportYaml = useMemoizedFn(() => {
-        const reqParam = {Requests: {Concurrent: 1, Requests: [getCurrentRequestProp()]}}
+        const reqParam = {Requests: {Concurrent: 1, Requests: [getGrpcRequest()]}}
         return new Promise((resolve: (value: string) => void, reject) => {
             ipcRenderer
                 .invoke("ExportHTTPFuzzerTaskToYaml", reqParam)
@@ -1213,9 +1259,7 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <HttpQueryAdvancedConfig
-                advancedConfigValue={{
-                    ...advancedConfigValue
-                }}
+                advancedConfigValue={advancedConfigValue}
                 visible={advancedConfig}
                 setVisible={onSetAdvancedConfig}
                 onInsertYakFuzzer={onInsertYakFuzzer}
@@ -1367,10 +1411,10 @@ export const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                     .invoke("send-to-tab", {
                                                                         type: "fuzzer",
                                                                         data: {
-                                                                            isHttps: reqProp.IsHTTPS,
-                                                                            isGmTLS: reqProp.IsGmTLS,
-                                                                            request: reqProp.RequestRaw,
-                                                                            allProp: reqProp
+                                                                            request: Uint8ArrayToString(
+                                                                                reqProp.RequestRaw
+                                                                            ),
+                                                                            allRequestProps: reqProp
                                                                         }
                                                                     })
                                                                     .then(() => {})
