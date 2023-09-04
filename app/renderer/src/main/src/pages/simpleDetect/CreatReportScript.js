@@ -342,9 +342,10 @@ for target,risks = range targetToRisks {
     })
 }
 
-reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": secureCountScale}, {"name": "存活资产", "value": aliveHostCount, "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#ffffff"]})
+// reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": secureCountScale}, {"name": "存活资产", "value": aliveHostCount, "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#ffffff"]})
+reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": secureCountScale}, {"name": "风险资产", "value": len(ipRisksStr), "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#ffffff"]})
 
-reportInstance.Markdown("#### 资产汇总")
+reportInstance.Markdown("#### 风险资产汇总")
 if len(ipRisksStr) > 0 {
     ipRisksList := json.dumps({ "type": "risk-list", "data": ipRisksStr })
     reportInstance.Raw(ipRisksList)
@@ -419,12 +420,16 @@ if len(noPotentialRisks) == 0 {
         if str.Contains(info.Severity, "low") {
             level = "低危"
         }
-
+        
+        titleVerbose = info.TitleVerbose
+        if titleVerbose == "" {
+            titleVerbose = info.Title
+        }
 
         _line = append(_line, {
             "序号": { "value": index + 1, "sort": 1},
             "网站地址": { "value": sprintf(\`%v:%v\`, info.IP, info.Port), "sort": 2},
-            "漏洞情况": { "value": info.TitleVerbose, "sort": 3},
+            "漏洞情况": { "value": titleVerbose, "sort": 3},
             "威胁风险": { "value": level, "sort": 4}
         })
     }
@@ -604,11 +609,16 @@ func showReport(risks) {
         request, _ := codec.StrconvUnquote(riskIns.QuotedRequest)
         response, _ := codec.StrconvUnquote(riskIns.QuotedResponse)
         addr := sprintf(\`%v:%v\`, riskIns.Host, riskIns.Port)
+        
+        titleVerbose = riskIns.TitleVerbose
+        if titleVerbose == "" {
+            titleVerbose = riskIns.Title
+        }
         reportInstance.Raw({"type": "fix-list", "data": {
             "标题": {
                 "fold": true,
                 "sort": 1,
-                "value": riskIns.Title
+                "value": titleVerbose
             },
             "风险地址": {
                  "search": true,
@@ -725,12 +735,16 @@ func showCVEReport(risks, riskSeverity) {
             if customHasPrefix(cve.Parameter, "cpe") {
             \tparameter = cve.Parameter
             }
+            titleVerbose = cve.TitleVerbose
+            if titleVerbose == "" {
+                titleVerbose = cve.Title
+            }
             if cve.Severity == riskSeverity {
                cveResult = append(cveResult, {
                         "标题": {
                             "fold": true,
                             "sort": 1,
-                            "value": cve.Title
+                            "value": titleVerbose
                         },
                         "风险地址": {
                              "sort": 2,
