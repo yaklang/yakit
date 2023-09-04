@@ -35,6 +35,10 @@ import {execPacketScan} from "@/pages/packetScanner/PacketScanner";
 import {packetScanDefaultValue} from "@/pages/packetScanner/DefaultPacketScanGroup";
 import {callCopyToClipboard} from "@/utils/basic";
 import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser";
+import {failed, success} from "@/utils/notification";
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
+import {ExclamationCircleOutlined} from '@ant-design/icons';
+import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
 
 export interface WebShellManagerProp {
     available: boolean
@@ -132,7 +136,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             {
                 title: "状态",
                 dataKey: "Status",
-                width: 50,
+                width: 60,
                 render: (_, i: WebShellDetail) => (
                     i.Status ? "🟢" : "🔴"
                 )
@@ -349,38 +353,49 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
         }, 10)
     })
 
-    const [isEdit, setIsEdit] = useState<boolean>(false)
-
     const wsmMenuData = [
-        {key: "webshell-edit", label: "编辑"},
-        {key: "webshell-ping", label: "验证存活"},
-        {key: "webshell-delete", label: "删除"},
+        {
+            key: "webshell-curd", label: "Shell 操作",
+            children: [
+                {key: "webshell-curd-edit", label: "编辑"},
+                {key: "webshell-curd-copy", label: "复制 URL"},
+                {key: "webshell-curd-share", label: "分享"},
+                {key: "webshell-curd-delete", label: "删除"},
+            ]
+        },
+        {key: "webshell-feature-ping", label: "验证存活"},
     ]
     const wsmMenuSelect = useMemoizedFn((key: string) => {
         if (!selected) return
         switch (key) {
-            case "webshell-edit":
-                setIsEdit(true)
-                let m = showModal({
+            case "webshell-curd-edit":
+                const edit = showModal({
                     title: "编辑 Shell",
                     width: "60%",
                     content: <WebShellCreatorForm
                         closeModal={() => {
-                            m && m.destroy()
+                            edit && edit.destroy()
                             refList()
                         }}
                         isCreate={false}
                         modified={selected}
                     />,
-                    modalAfterClose: () => m && m.destroy(),
+                    modalAfterClose: () => edit && edit.destroy(),
                 })
                 break
-            case "webshell-delete":
-                const res = data.filter((item) => {
-                    return item.Id !== selected.Id
-                })
-                setData(res)
+            case "webshell-curd-delete":
+                deleteWebShell(selected.Id, selected.Url, refList)
                 break
+            case "webshell-curd-copy":
+                console.log("webshell-curd-copy")
+                break
+            case "webshell-curd-share":
+                console.log("webshell-curd-share")
+                break
+            case "webshell-feature-ping":
+                featurePing(selected.Id, refList)
+                break
+
         }
     })
 

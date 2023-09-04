@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react"
 import {Form, Space} from "antd";
 import {FromLayoutProps} from "@/pages/invoker/YakScriptCreator";
-import {WebShellDetail} from "@/pages/webShell/models";
+import {ShellScript, ShellType, WebShellDetail} from "@/pages/webShell/models";
 import {useCreation, useDebounceEffect, useGetState, useMemoizedFn} from "ahooks";
 import {InputItem} from "@/utils/inputUtil";
 import {YakScript} from "@/pages/invoker/schema";
@@ -40,7 +40,6 @@ export interface WebShellCreatorFormProp {
 const {ipcRenderer} = window.require("electron")
 
 export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) => {
-    console.log(props)
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
             labelCol: {span: 5},
@@ -58,11 +57,11 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
 
     const [createLoading, setCreateLoading] = useState<boolean>(false)
 
-    const createWebShell = useMemoizedFn(() => {
+    const createOrUpdateWebShell = useMemoizedFn(() => {
         setCreateLoading(true)
         console.log("createWebShell ", params)
-        ipcRenderer.invoke("CreateWebShell", params).then((data: WebShellDetail) => {
-            success("创建 WebShell 成功")
+        ipcRenderer.invoke(props.isCreate ? "CreateWebShell" : "UpdateWebShell", params).then((data: WebShellDetail) => {
+            success(props.isCreate ? "创建" : "编辑" + " WebShell 成功")
             setParams(data)
             if (data) {
                 props.onCreated && props.onCreated(data)
@@ -70,7 +69,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
             }
             props.closeModal && props.closeModal()
         }).catch((err) => {
-            failed(`创建 WebShell 失败: ${err}`)
+            failed(props.isCreate ? "创建" : "编辑" + ` WebShell 失败: ${err}`)
         }).finally(() => {
             setTimeout(() => {
                 setCreateLoading(false)
@@ -88,7 +87,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
                 />
                 <Form.Item colon={false} label={" "}>
                     <Space>
-                        <YakitButton onClick={createWebShell} loading={createLoading}>
+                        <YakitButton onClick={createOrUpdateWebShell} loading={createLoading}>
                             {props.isCreate ? "添加" : "修改"}
                         </YakitButton>
                     </Space>
@@ -109,7 +108,6 @@ interface WebShellFormContentProps {
 }
 
 const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
-    console.log(props)
     const {params, modified, setParams, setParamsLoading, isShowAuthor = true, disabled} = props
     const [showSecret, setShowSecret] = useState(false);
     const [showCodec, setShowCodec] = useState(false);
@@ -118,16 +116,15 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
     useEffect(() => {
         // 如果 params.ShellScript 是空的，那么就设置它为 "jsp"
         if (!params.ShellScript) {
-            setParams({...params, ShellScript: "jsp"});
-            setShellScript("jsp")
+            setParams({...params, ShellScript: ShellScript.JSP});
+            setShellScript(ShellScript.JSP)
         }
-        console.log("!params.ShellType", params.ShellType)
 
         if (!params.ShellType) {
-            setParams({...params, ShellType: "behinder"});
+            setParams({...params, ShellType: ShellType.Behinder});
             setShowCodec(true)
         } else {
-            setShowCodec(params.ShellType === "behinder")
+            setShowCodec(params.ShellType === ShellType.Behinder)
         }
 
         if (!params.Headers) {
@@ -154,10 +151,13 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
             const extension = urlPath.split('.').pop();
 
             // 如果文件扩展名是我们支持的脚本类型之一，那么就更新 ShellScript 的值
-            const scriptTypes = ['jsp', 'jspx', 'php', 'asp', 'aspx'];
-            if (extension && scriptTypes.includes(extension)) {
-                setShellScript(extension)
-                setParams({...params, ShellScript: extension, Url: params.Url});
+            const scriptTypes =Object.values(ShellScript);
+            if (extension) {
+                const lowerCaseExtension = extension.toUpperCase();
+                if (scriptTypes.includes(lowerCaseExtension as ShellScript)) {
+                    setShellScript(lowerCaseExtension);
+                    setParams({...params, ShellScript: lowerCaseExtension, Url: params.Url});
+                }
             }
         } catch (error) {
             // 如果解析 URL 失败，那么就处理错误
@@ -233,16 +233,15 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
         <>
             <Form.Item label={"Shell 类型"} required={true} rules={[{required: true, message: "该项为必填"}]}>
                 <YakitSelect
-                    value={params.ShellType || "behinder"}
+                    value={params.ShellType || ShellType.Behinder}
                     onSelect={(val) => {
-                        console.log(val)
                         setParams({...params, ShellType: val})
-                        setShowSecret(val === "godzilla")
-                        setShowCodec(!(val === "godzilla"))
+                        setShowSecret(val === ShellType.Godzilla)
+                        setShowCodec(!(val === ShellType.Godzilla))
                     }}
                 >
-                    <YakitSelect.Option value='behinder'>Behinder</YakitSelect.Option>
-                    <YakitSelect.Option value='godzilla'>Godzilla</YakitSelect.Option>
+                    <YakitSelect.Option value={ShellType.Behinder}>Behinder</YakitSelect.Option>
+                    <YakitSelect.Option value={ShellType.Godzilla}>Godzilla</YakitSelect.Option>
                 </YakitSelect>
             </Form.Item>
             <InputItem
@@ -254,17 +253,17 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
             />
             <Form.Item label={"脚本类型"}>
                 <YakitSelect
-                    value={params.ShellScript || "jsp"}
+                    value={params.ShellScript || ShellScript.JSP}
                     onSelect={(val) => {
                         setParams({...params, ShellScript: val})
                         setShellScript(val)
                     }}
                 >
-                    <YakitSelect.Option value='jsp'>JSP</YakitSelect.Option>
-                    <YakitSelect.Option value='jspx'>JSPX</YakitSelect.Option>
-                    <YakitSelect.Option value='php'>PHP</YakitSelect.Option>
-                    <YakitSelect.Option value='asp'>ASP</YakitSelect.Option>
-                    <YakitSelect.Option value='aspx'>ASPX</YakitSelect.Option>
+                    <YakitSelect.Option value={ShellScript.JSP}>JSP</YakitSelect.Option>
+                    <YakitSelect.Option value={ShellScript.JSPX}>JSPX</YakitSelect.Option>
+                    <YakitSelect.Option value={ShellScript.PHP}>PHP</YakitSelect.Option>
+                    <YakitSelect.Option value={ShellScript.ASP}>ASP</YakitSelect.Option>
+                    <YakitSelect.Option value={ShellScript.ASPX}>ASPX</YakitSelect.Option>
                 </YakitSelect>
             </Form.Item>
             <InputItem
@@ -296,7 +295,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
             )}
             {showCodec && (
                 <>
-                    <Form.Item label={"数据包编解码器"} >
+                    <Form.Item label={"数据包编解码器"}>
                         <YakitSelect
                             showSearch
                             options={packetScriptList}
@@ -309,7 +308,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                         />
                     </Form.Item>
 
-                    <Form.Item label={"回显编解码器"} >
+                    <Form.Item label={"回显编解码器"}>
                         <YakitSelect
                             showSearch
                             options={payloadScriptList}
