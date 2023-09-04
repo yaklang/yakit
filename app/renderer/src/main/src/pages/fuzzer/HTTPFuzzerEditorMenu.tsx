@@ -143,8 +143,10 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     const isMainEnter = useRef<boolean>(false)
     // 鼠标是否进入simple
     const isSimpleEnter = useRef<boolean>(false)
-    // 菜单显示大小
-    const [menuSize, setMenuSize] = useState<"middle" | "small">()
+    // 菜单显示宽度
+    const [menuWidth, setMenuWidth] = useState<number>()
+    // 菜单显示高度
+    const [menuHeight,setMenuHeight] = useState<number>()
     const getData = () => {
         ipcRenderer.invoke("QueryFuzzerLabel", {}).then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
@@ -154,11 +156,15 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             }
         })
     }
+
     useEffect(() => {
-        if (right - left < 570) {
-            setMenuSize("small")
-        } else if (right - left < 680) {
-            setMenuSize("middle")
+        if (right - left < 720)  {
+            let width:number = Math.floor((right-left)/2)
+            setMenuWidth(width)
+        }
+        if(bottom - top < 700){
+            let height:number = Math.floor((bottom-top)/2 - 30)
+            setMenuHeight(height)
         }
         getData()
     }, [])
@@ -258,10 +264,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             </div>
             {isEnterSimple && (
                 <div
-                    className={classNames(styles["http-fuzzer-click-editor-menu"], {
-                        [styles["http-fuzzer-click-editor-menu-middle"]]: menuSize === "middle",
-                        [styles["http-fuzzer-click-editor-menu-small"]]: menuSize === "small"
-                    })}
+                    className={classNames(styles["http-fuzzer-click-editor-menu"])}
                     // 此处会引起拖拽卡死
                     onMouseLeave={() => {
                         isSimpleEnter.current = false
@@ -272,12 +275,12 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     onMouseEnter={() => {
                         isSimpleEnter.current = true
                     }}
-                    style={{...directionStyle(editorInfo, false)}}
+                    style={{...directionStyle(editorInfo, false),maxHeight:menuHeight?menuHeight:350,width:menuWidth?menuWidth:360}}
                 >
                     <div className={styles["menu-header"]}>
                         <div className={styles["menu-header-left"]}>
                             常用标签
-                            <span className={styles["menu-header-left-count"]}>{labelData.length || ""}</span>
+                            {!(menuWidth&&menuWidth<220)&&<span className={styles["menu-header-left-count"]}>{labelData.length || ""}</span>}
                         </div>
                         <div className={styles["menu-header-opt"]}>
                             <YakitButton
@@ -308,7 +311,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                         {labelData.map((item, index) => (
                                             <Draggable key={item?.Description} draggableId={item.Id} index={index}>
                                                 {(provided, snapshot) => {
-                                                    // console.log("provided", provided.draggableProps.style)
+                                                    // console.log("provided", provided.draggableProps.style - top)
                                                     return (
                                                         <div
                                                             ref={provided.innerRef}
@@ -330,7 +333,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                 })}
                                                                 onClick={() => insertLabel(item)}
                                                             >
-                                                                <div className={styles["menu-list-item-info"]}>
+                                                                <div className={styles["menu-list-item-info"]} style={{maxWidth:menuWidth?(menuWidth-100):260}}>
                                                                     <DragSortIcon
                                                                         className={styles["drag-sort-icon"]}
                                                                     />
@@ -351,7 +354,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                             <div className={styles["title"]}>
                                                                                 {item.Description}
                                                                             </div>
-                                                                            {menuSize !== "small" && (
+                                                                            {(!menuWidth||menuWidth>250) && (
                                                                                 <div
                                                                                     className={classNames(
                                                                                         styles["sub-title"],
@@ -659,13 +662,18 @@ export interface HTTPFuzzerRangeEditorMenuProps {
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
     const {editorInfo, insert, rangeValue, replace, hTTPFuzzerClickEditorMenuProps} = props
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
-    // 菜单显示大小
-    const [menuSize, setMenuSize] = useState<"middle" | "small">()
+    // 菜单显示宽度
+    const [menuWidth, setMenuWidth] = useState<number>()
+    // 菜单显示高度
+    const [menuHeight,setMenuHeight] = useState<number>()
     useEffect(() => {
-        if (right - left < 570) {
-            setMenuSize("small")
-        } else if (right - left < 680) {
-            setMenuSize("middle")
+        if (right - left < 720)  {
+            let width:number = Math.floor((right-left)/2)
+            setMenuWidth(width)
+        }
+        if(bottom - top < 720){
+            let height:number = Math.floor((bottom-top)/2 - 30)
+            setMenuHeight(height)
         }
     }, [])
     const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
@@ -721,11 +729,8 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                 </div>
                 {segmentedType && (
                     <div
-                        style={{...directionStyle(editorInfo)}}
-                        className={classNames(styles["http-fuzzer-range-editor-menu"], {
-                            [styles["http-fuzzer-range-editor-menu-middle"]]: menuSize === "middle",
-                            [styles["http-fuzzer-range-editor-menu-small"]]: menuSize === "small"
-                        })}
+                        style={{...directionStyle(editorInfo),maxHeight:menuHeight?menuHeight:360,width:menuWidth?menuWidth:360}}
+                        className={classNames(styles["http-fuzzer-range-editor-menu"])}
                         onMouseLeave={() => {
                             isSimpleEnter.current = false
                             setTimeout(() => {
@@ -759,13 +764,18 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
     const {editorInfo, rangeValue} = props
     const [segmentedType, setSegmentedType] = useState<"decode">()
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
-    // 菜单显示大小
-    const [menuSize, setMenuSize] = useState<"middle" | "small">()
+    // 菜单显示宽度
+    const [menuWidth, setMenuWidth] = useState<number>()
+    // 菜单显示高度
+    const [menuHeight,setMenuHeight] = useState<number>()
     useEffect(() => {
-        if (right - left < 570) {
-            setMenuSize("small")
-        } else if (right - left < 680) {
-            setMenuSize("middle")
+        if (right - left < 720)  {
+            let width:number = Math.floor((right-left)/2)
+            setMenuWidth(width)
+        }
+        if(bottom - top < 500){
+            let height:number = Math.floor((bottom-top)/2 - 30)
+            setMenuHeight(height)
         }
     }, [])
     return (
@@ -780,11 +790,8 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
             </div>
             {segmentedType && (
                 <div
-                    style={directionStyle(editorInfo)}
-                    className={classNames(styles["http-fuzzer-range-read-only-editor-menu"], {
-                        [styles["http-fuzzer-range-read-only-editor-menu-middle"]]: menuSize === "middle",
-                        [styles["http-fuzzer-range-read-only-editor-menu-small"]]: menuSize === "small"
-                    })}
+                    style={{...directionStyle(editorInfo),maxHeight:menuHeight?menuHeight:250,width:menuWidth?menuWidth:360}}
+                    className={classNames(styles["http-fuzzer-range-read-only-editor-menu"])}
                     onMouseLeave={() => setSegmentedType(undefined)}
                 >
                     <DecodeComponent rangeValue={rangeValue} isReadOnly={true} />
