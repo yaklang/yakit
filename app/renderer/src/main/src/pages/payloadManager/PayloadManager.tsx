@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useCallback, useEffect, useRef, useState} from "react"
 import {
     Button,
     Col,
@@ -26,7 +26,7 @@ import {CopyToClipboard} from "react-copy-to-clipboard"
 import {AutoCard} from "../../components/AutoCard"
 
 import "./PayloadManager.css"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useGetState} from "ahooks"
 import {AutoSpin} from "../../components/AutoSpin"
 import {randomString} from "@/utils/randomUtil"
 import {UploadIcon} from "@/assets/icons"
@@ -540,7 +540,7 @@ export interface SavePayloadParams {
 }
 
 export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
-    const [params, setParams] = useState<SavePayloadParams>({
+    const [params, setParams, getParams] = useGetState<SavePayloadParams>({
         Group: "",
         Content: "",
         IsFile: false
@@ -625,7 +625,7 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                         value={params.Group ? [params.Group] : []}
                         onChange={(value) => {
                             const str = value.length === 0 ? "" : value.pop() || ""
-                            setParams({...params, Group: str})
+                            setParams({...getParams(), Group: str})
                         }}
                     >
                         {groups.map((item) => {
@@ -639,7 +639,7 @@ export const CreatePayloadGroup: React.FC<CreatePayloadGroupProp> = (props) => {
                 </Form.Item>
                 <Form.Item label={"字典内容"}>
                     <div style={{height: 300}}>
-                        <YakEditor setValue={(Content) => setParams({...params, Content})} value={params.Content} />
+                        <YakEditor setValue={(Content) => setParams({...getParams(), Content})} value={params.Content} />
                     </div>
                 </Form.Item>
                 <Form.Item colon={false} label={" "}>
