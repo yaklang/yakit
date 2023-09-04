@@ -951,7 +951,9 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                     [styles["drag-sort-disabled-icon"]]: disabled
                                 })}
                             />
-                            {item.name}
+                            <Tooltip title={item.name}>
+                                <span className='content-ellipsis'>{item.name}</span>
+                            </Tooltip>
                             <YakitPopover
                                 overlayClassName={styles["edit-name-popover"]}
                                 content={
@@ -965,17 +967,24 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                         <YakitInput
                                             defaultValue={item.name}
                                             value={name}
+                                            showCount
+                                            maxLength={20}
                                             onChange={(e) => {
-                                                setName(e.target.value)
+                                                const {value} = e.target
+                                                setName(value)
                                             }}
                                             onBlur={(e) => {
-                                                if (!e.target.value) {
+                                                const {value} = e.target
+                                                if (!value) {
                                                     yakitNotify("error", "名称不能为空")
                                                     return
                                                 }
-                                                onUpdateItem({...item, name: e.target.value})
+                                                if (value.length > 20) {
+                                                    yakitNotify("error", "不超过20个字符")
+                                                    return
+                                                }
+                                                onUpdateItem({...item, name: value})
                                             }}
-                                            maxLength={20}
                                         />
                                     </div>
                                 }
