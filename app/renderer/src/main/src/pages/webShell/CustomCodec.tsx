@@ -31,6 +31,7 @@ import style from "@/pages/customizeMenu/CustomizeMenu.module.scss";
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover";
 import {failed, info, success, warn} from "@/utils/notification";
 import {menuBodyHeight} from "@/pages/globalVariable";
+import {ShellScript} from "@/pages/webShell/models";
 
 const {ipcRenderer} = window.require("electron")
 
@@ -459,11 +460,11 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                                         setParams({...params, Tags: [val, "webshell-payload-codec"].join(",")})
                                 }}
                             >
-                                <YakitSelect.Option value='jsp'>JSP</YakitSelect.Option>
-                                <YakitSelect.Option value='jspx'>JSPX</YakitSelect.Option>
-                                <YakitSelect.Option value='php'>PHP</YakitSelect.Option>
-                                <YakitSelect.Option value='asp'>ASP</YakitSelect.Option>
-                                <YakitSelect.Option value='aspx'>ASPX</YakitSelect.Option>
+                                <YakitSelect.Option value={ShellScript.JSP}>JSP</YakitSelect.Option>
+                                <YakitSelect.Option value={ShellScript.JSPX}>JSPX</YakitSelect.Option>
+                                <YakitSelect.Option value={ShellScript.PHP}>PHP</YakitSelect.Option>
+                                <YakitSelect.Option value={ShellScript.ASP}>ASP</YakitSelect.Option>
+                                <YakitSelect.Option value={ShellScript.ASPX}>ASPX</YakitSelect.Option>
                             </YakitSelect>
                         </Form.Item>
 

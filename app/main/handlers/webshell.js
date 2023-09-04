@@ -34,9 +34,9 @@ module.exports = (win, getClient) => {
     })
 
     // UpdateWebShellById
-    const asyncUpdateWebShellById = (params) => {
+    const asyncUpdateWebShell = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().UpdateWebShellById(params, (err, data) => {
+            getClient().UpdateWebShell(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -45,8 +45,8 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    ipcMain.handle("UpdateWebShellById", async (e, params) => {
-        return await asyncUpdateWebShellById(params)
+    ipcMain.handle("UpdateWebShell", async (e, params) => {
+        return await asyncUpdateWebShell(params)
     })
 
     // QueryWebShells
