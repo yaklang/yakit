@@ -176,6 +176,19 @@
                 font-weight: 400;
                 line-height: 16px;
             }
+            :global {
+                .ant-collapse-header{
+                    .ant-collapse-header-text{
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
+                }
+
+                .ant-radio-button-wrapper{
+                    padding: 0px 8px;
+                }
+            }
         }
 
         .variable-item {

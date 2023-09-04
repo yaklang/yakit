@@ -323,7 +323,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 wrapperCol={{span: 14}}
                 style={{overflowY: "auto"}}
                 initialValues={{
-                    ...advancedConfigValue
+                    ...advancedConfigValue,
                 }}
             >
                 <div className={styles["advanced-config-extra-formItem"]}>
@@ -806,7 +806,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         const restValue = {
-                                            params: [{Key: "", Value: ""}]
+                                            params: [{Key: "", Value: "",Type:"raw"}]
                                         }
                                         onReset(restValue)
                                         setVariableActiveKey(["0"])
@@ -836,11 +836,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         const index = variables.findIndex((ele) => !ele || (!ele.Key && !ele.Value))
                                         if (index === -1) {
                                             form.setFieldsValue({
-                                                params: [...variables, {Key: "", Value: ""}]
+                                                params: [...variables, {Key: "", Value: "",Type:"raw"}]
                                             })
                                             onSetValue({
                                                 ...v,
-                                                params: [...variables, {Key: "", Value: ""}]
+                                                params: [...variables, {Key: "", Value: "",Type:"raw"}]
                                             })
                                             setVariableActiveKey([
                                                 ...(variableActiveKey || []),
@@ -864,7 +864,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     >
                         <Form.List name='params'>
                             {(fields, {add}) => {
-                                console.log("add",fields)
+                                // console.log("add",fields)
                                 return (
                                     <Collapse
                                         ghost
@@ -909,18 +909,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                             className={styles["variable-list-remove"]}
                                                         />
 
-                                                        <Form.Item name={[name,"Type"]} noStyle
-                                                                   wrapperCol={{span: 24}}>
+                                                        <Form.Item  noStyle wrapperCol={{span: 24}}>
                                                             <YakitRadioButtons
-                                                                value={"raw"}
-                                                                onChange={(aaaaa) => {
+                                                                defaultValue={"raw"}
+                                                                onChange={(e) => {
                                                                     // 获取当前表单的所有字段值
-                                                                    console.log(aaaaa)
                                                                     const v = form.getFieldsValue();
                                                                     const variables = v.params || []
-                                                                    console.log("key", key)
-                                                                    console.log("name", name)
-
+                                                                    variables[i].Type = e.target.value
+                                                                    console.log("variables",variables);
                                                                     console.log(variables)
                                                                     form.setFieldsValue({
                                                                         params: [...variables]
@@ -933,7 +930,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                                 buttonStyle='solid'
                                                                 options={variableModeOptions}
                                                                 size={"small"}
-                                                                style={{paddingLeft: "8px", paddingRight: "8px;"}}
                                                             />
                                                         </Form.Item>
                                                     </div>

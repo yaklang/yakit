@@ -509,7 +509,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         dnsServers: [],
         etcHosts: [],
         // 设置变量
-        params: [{Key: "", Value: "", Type: ""}],
+        params: [{Key: "", Value: "", Type: "raw"}],
         // 匹配器
         filterMode: "onlyMatch",
         matchers: [],
