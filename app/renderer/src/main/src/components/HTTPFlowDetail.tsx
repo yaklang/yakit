@@ -780,6 +780,24 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     }, [])
 
+    // 编辑器复制Url菜单项
+    const copyUrlMenuItem: OtherMenuListProps = useMemo(() => {
+        return {
+            copyUrl: {
+                menu: [
+                    {
+                        key: "copy-url",
+                        label: "复制URL"
+                    }
+                ],
+                onRun: (editor, key) => {
+                    callCopyToClipboard(flow?.Url || "")
+                },
+                order: -1
+            },
+        }
+    }, [flow?.Url])
+
     return (
         <ResizeBox
             firstNode={() => {
@@ -801,7 +819,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         hideSearch={true}
                         noHex={true}
                         noMinimap={true}
-                        contextMenu={flow?.RawRequestBodyBase64 ? requestEditorRightMenu : undefined}
+                        contextMenu={flow?.RawRequestBodyBase64 ? requestEditorRightMenu : { ...copyUrlMenuItem }}
                         // 这个为了解决不可见字符的问题
                         defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
                         extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
@@ -823,7 +841,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
-                        contextMenu={flow?.RawResponseBodyBase64 ? responseEditorRightMenu : undefined}
+                        contextMenu={flow?.RawResponseBodyBase64 ? responseEditorRightMenu : { ...copyUrlMenuItem }}
                         title={
                             <Radio.Group
                                 buttonStyle='solid'
