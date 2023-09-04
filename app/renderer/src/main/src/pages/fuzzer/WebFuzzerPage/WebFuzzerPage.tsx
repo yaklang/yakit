@@ -23,7 +23,7 @@ const webFuzzerTabs = [
         icon: <OutlineCollectionIcon />
     }
 ]
-export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
+const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const getCurrentSelectGroup = usePageNode((s) => s.getCurrentSelectGroup)
 
     const onSwitchType = useMemoizedFn((key) => {
@@ -73,3 +73,5 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
         </div>
     )
 })
+
+export default WebFuzzerPage
