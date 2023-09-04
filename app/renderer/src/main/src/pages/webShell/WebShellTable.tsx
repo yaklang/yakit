@@ -298,6 +298,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             }
             ipcRenderer.invoke("QueryWebShells", finalParams)
                 .then((r: QueryGeneralResponse<WebShellDetail>) => {
+                    console.log("QueryWebShells", r)
                     const d = Number(paginationProps.Page) === 1 ? r.Data : data.concat(r.Data)
                     setData(d)
                     setPagination(r.Pagination)

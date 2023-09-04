@@ -1,28 +1,19 @@
-import React, {useEffect, useRef, useState} from "react"
-import {Button, Form, Space} from "antd";
-import {FromLayoutProps, YakScriptCreatorFormProp, YakScriptFormContent} from "@/pages/invoker/YakScriptCreator";
+import React, {useEffect, useState} from "react"
+import {Form, Space} from "antd";
+import {FromLayoutProps} from "@/pages/invoker/YakScriptCreator";
 import {WebShellDetail} from "@/pages/webShell/models";
 import {useCreation, useDebounceEffect, useGetState, useMemoizedFn} from "ahooks";
 import {InputItem} from "@/utils/inputUtil";
 import {YakScript} from "@/pages/invoker/schema";
-import {SelectItem} from "@/utils/SelectItem";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
-import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss";
 import styles from "@/pages/layout/publicMenu/MenuCodec.module.scss";
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
-import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
+import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag";
 import classNames from "classnames";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
-import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts";
-import {useWatch} from "antd/lib/form/Form";
-import {AdjustmentsIcon, IconSolidCodeIcon, InformationCircleIcon} from "@/assets/newIcon";
 import {failed, success} from "@/utils/notification";
-import {RuleContent} from "@/pages/mitm/MITMRule/MITMRuleFromModal";
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
-import {YakEditor} from "@/utils/editors";
 import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
 import {queryYakScriptList} from "@/pages/yakitStore/network";
-import {getRemoteValue} from "@/utils/kv";
 
 
 export const RemarkDetail = ({remark}) => {
@@ -83,7 +74,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
         }).finally(() => {
             setTimeout(() => {
                 setCreateLoading(false)
-            }, 200)
+            }, 20)
         })
     })
     return (
@@ -118,14 +109,11 @@ interface WebShellFormContentProps {
 }
 
 const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
+    console.log(props)
     const {params, modified, setParams, setParamsLoading, isShowAuthor = true, disabled} = props
     const [showSecret, setShowSecret] = useState(false);
     const [showCodec, setShowCodec] = useState(false);
     const [headersStr, setHeadersStr] = useState<string>("")
-    const [headers, setHeaders] = useState<{
-        Key: string,
-        Value: string
-    }[]>([])
     const [shellScript, setShellScript] = useState<string>("")
     useEffect(() => {
         // 如果 params.ShellScript 是空的，那么就设置它为 "jsp"
@@ -138,6 +126,17 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
         if (!params.ShellType) {
             setParams({...params, ShellType: "behinder"});
             setShowCodec(true)
+        } else {
+            setShowCodec(params.ShellType === "behinder")
+        }
+
+        if (!params.Headers) {
+            setHeadersStr('');
+        } else {
+            const headersStr = Object.entries(params.Headers)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n');
+            setHeadersStr(headersStr);
         }
     }, []);
     useDebounceEffect(() => {
@@ -157,6 +156,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
             // 如果文件扩展名是我们支持的脚本类型之一，那么就更新 ShellScript 的值
             const scriptTypes = ['jsp', 'jspx', 'php', 'asp', 'aspx'];
             if (extension && scriptTypes.includes(extension)) {
+                setShellScript(extension)
                 setParams({...params, ShellScript: extension, Url: params.Url});
             }
         } catch (error) {
@@ -296,34 +296,34 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
             )}
             {showCodec && (
                 <>
-                    <Form.Item label={"数据包编解码器"} name={"CustomPacketCodec"}>
+                    <Form.Item label={"数据包编解码器"} >
                         <YakitSelect
                             showSearch
                             options={packetScriptList}
                             placeholder='请选择数据包编解码器...'
-                            value={""}
-                            onChange={(ScriptNames) => {
-                                setParams(ScriptNames)
+                            value={params.PacketCodecName}
+                            onChange={(PacketCodecName) => {
+                                setParams({...params, PacketCodecName})
                             }}
                             maxTagCount={10}
                         />
                     </Form.Item>
 
-                    <Form.Item label={"回显编解码器"} name={"CustomPayloadCodec"}>
+                    <Form.Item label={"回显编解码器"} >
                         <YakitSelect
                             showSearch
                             options={payloadScriptList}
                             placeholder='请选择回显编解码器...'
-                            value={""}
-                            onChange={(ScriptNames) => {
-                                setParams(ScriptNames)
+                            value={params.PayloadCodecName}
+                            onChange={(PayloadCodecName) => {
+                                setParams({...params, PayloadCodecName})
                             }}
                             maxTagCount={10}
                         />
                     </Form.Item>
                 </>
             )}
-            <Form.Item label={"Headers"} name='headers' initialValue={[]}>
+            <Form.Item label={"Headers"} initialValue={[]}>
                 <div className={styles["menu-codec-wrapper"]}>
                     <div className={styles["input-textarea-wrapper"]}>
                         <YakitInput.TextArea
@@ -332,12 +332,12 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                             onChange={(e) => {
                                 setHeadersStr(e.target.value);
                                 const lines = e.target.value.split('\n');
-                                const newHeaders = lines.map(line => {
+                                let newHeaders: { [key: string]: string } = {};
+                                lines.forEach(line => {
                                     const [key, ...rest] = line.split(':');
-                                    const value = rest.join(':').trim();
-                                    return {Key: key.trim(), Value: value};
+                                    newHeaders[key.trim()] = rest.join(':').trim();
                                 });
-                                setHeaders(newHeaders);
+                                setParams({...params, Headers: newHeaders});
                             }}
                             spellCheck={false}
                             placeholder={"自定义请求头,例如: User-Agent: Yakit/1.0.0"}
@@ -355,7 +355,6 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
 
             <Form.Item
                 label={"设置代理"}
-                name='proxy'
             >
                 <YakitSelect
                     allowClear
@@ -372,6 +371,10 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                             value: "http://127.0.0.1:9999"
                         }
                     ]}
+                    onSelect={(val) => {
+                        setParams({...params, Proxy: val})
+                    }}
+                    value={params.Proxy}
                     placeholder='请输入...'
                     mode='tags'
                     maxTagCount={3}
