@@ -354,6 +354,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
     const wsmMenuData = [
         {key: "webshell-edit", label: "编辑"},
         {key: "webshell-ping", label: "验证存活"},
+        {key: "webshell-delete", label: "删除"},
     ]
     const wsmMenuSelect = useMemoizedFn((key: string) => {
         if (!selected) return
@@ -373,6 +374,12 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                     />,
                     modalAfterClose: () => m && m.destroy(),
                 })
+                break
+            case "webshell-delete":
+                const res = data.filter((item) => {
+                    return item.Id !== selected.Id
+                })
+                setData(res)
                 break
         }
     })
