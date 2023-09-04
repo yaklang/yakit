@@ -749,7 +749,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     }, [flow?.Response, type])
 
-    const requestEditorRightMenu: OtherMenuListProps = useMemo(() => {
+    const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
+        if (!flow?.RawRequestBodyBase64) return {}
         return {
             copyRequestBase64Body: {
                 menu: [
@@ -763,8 +764,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
             }
         }
-    }, [])
-    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
+    }, [flow?.RawRequestBodyBase64])
+
+    const copyResponseBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
+        if (!flow?.RawResponseBodyBase64) return {}
         return {
             copyResponseBase64Body: {
                 menu: [
@@ -778,7 +781,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
             }
         }
-    }, [])
+    }, [flow?.RawResponseBodyBase64])
 
     // 编辑器复制Url菜单项
     const copyUrlMenuItem: OtherMenuListProps = useMemo(() => {
@@ -819,7 +822,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         hideSearch={true}
                         noHex={true}
                         noMinimap={true}
-                        contextMenu={flow?.RawRequestBodyBase64 ? requestEditorRightMenu : { ...copyUrlMenuItem }}
+                        contextMenu={{ ...copyRequestBase64BodyMenuItem, ...copyUrlMenuItem }}
                         // 这个为了解决不可见字符的问题
                         defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
                         extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
@@ -841,7 +844,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
-                        contextMenu={flow?.RawResponseBodyBase64 ? responseEditorRightMenu : { ...copyUrlMenuItem }}
+                        contextMenu={{ ...copyResponseBase64BodyMenuItem, ...copyUrlMenuItem }}
                         title={
                             <Radio.Group
                                 buttonStyle='solid'
