@@ -52,7 +52,6 @@ import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
-import {MainOperatorContext} from "@/pages/layout/MainContext"
 import {usePageNode} from "@/store/pageNodeInfo"
 import shallow from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
@@ -79,7 +78,6 @@ const variableModeOptions = [
 ]
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
-    const {tabMenuHeight} = useContext(MainOperatorContext)
     const {
         advancedConfigValue,
         visible,
@@ -914,8 +912,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                                     const v = form.getFieldsValue();
                                                                     const variables = v.params || []
                                                                     variables[i].Type = e.target.value
-                                                                    console.log("variables",variables);
-                                                                    console.log(variables)
+                                                                    // console.log("variables",variables);
                                                                     form.setFieldsValue({
                                                                         params: [...variables]
                                                                     })
