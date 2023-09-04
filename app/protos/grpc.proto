@@ -394,7 +394,7 @@ service Yak {
   // WebShell
   rpc CreateWebShell(WebShell) returns (WebShell);
   rpc DeleteWebShell(DeleteWebShellRequest) returns (Empty);
-  rpc UpdateWebShellById(WebShell) returns (WebShell);
+  rpc UpdateWebShell(WebShell) returns (WebShell);
   rpc QueryWebShells(QueryWebShellsRequest) returns (QueryWebShellsResponse);
   rpc Ping(WebShellRequest) returns (WebShellResponse);
   rpc GetBasicInfo(WebShellRequest) returns (WebShellResponse);
