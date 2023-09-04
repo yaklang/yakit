@@ -35,7 +35,7 @@ import type {SliderMarks} from "antd/es/slider"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {ScanPortForm, PortScanParams} from "../portscan/PortScanPage"
 import {ExecResult, YakScript} from "../invoker/schema"
-import {useStore, simpleDetectParams} from "@/store"
+import {useStore} from "@/store"
 import {DownloadOnlinePluginByTokenRequest, DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {OpenPortTableViewer} from "../portscan/PortTable"
 import {SimpleCardBox, StatusCardInfoProps} from "../yakitStore/viewers/base"
@@ -53,6 +53,7 @@ import {v4 as uuidv4} from "uuid"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoute} from "@/routes/newRoute"
 import {StartBruteParams} from "@/pages/brute/BrutePage"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
@@ -1188,6 +1189,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
 }
 
 export interface SimpleDetectProps {
+    tabId?: string
     Uid?: string
     BaseProgress?: number
     YakScriptOnlineGroup?: string
@@ -1212,7 +1214,7 @@ interface CacheReportParamsProps {
 }
 
 export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
-    const {Uid, BaseProgress, YakScriptOnlineGroup, TaskName} = props
+    const {tabId ,Uid, BaseProgress, YakScriptOnlineGroup, TaskName} = props
     // console.log("Uid-BaseProgress", Uid, BaseProgress, YakScriptOnlineGroup, TaskName)
     const [percent, setPercent] = useState(0)
     const [executing, setExecuting] = useState<boolean>(false)
@@ -1245,9 +1247,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     )
     // 缓存最新的报告参数 用于继续任务时生成报告
     const childRef = useRef<any>()
-
-    // 获取tabId用于变色
-    const [_, setTabId, getTabId] = useGetState<string>()
 
     // 是否拖动ResizeBox
     const isResize = useRef<boolean>(false)
@@ -1305,10 +1304,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     }, [executing, statusCards.length, showOldCard, oldRunParams])
 
     useEffect(() => {
-        setTabId(simpleDetectParams.tabId)
-    }, [])
-
-    useEffect(() => {
         if (BaseProgress !== undefined && BaseProgress > 0) {
             setPercent(BaseProgress)
         }
@@ -1344,7 +1339,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
     }, [Uid])
 
     useEffect(() => {
-        if (getTabId()) {
+        if (tabId) {
             let status = ""
             if (executing) {
                 status = "run"
@@ -1355,13 +1350,14 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
             if (percent === 1 && !executing) {
                 status = "success"
             }
+            let obj = {
+                tabId,
+                status
+            }
             !!status &&
-                ipcRenderer.invoke("refresh-tabs-color", {
-                    tabId: getTabId(),
-                    status
-                })
+                emiter.emit("simpleDetectTabEvent",JSON.stringify(obj))
         }
-    }, [percent, executing, getTabId()])
+    }, [percent, executing, tabId])
 
     const timelineItemProps = (infoState.messageState || [])
         .filter((i) => {

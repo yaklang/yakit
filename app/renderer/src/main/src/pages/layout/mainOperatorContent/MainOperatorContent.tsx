@@ -3212,9 +3212,28 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     })
 )
 
+interface SimpleTabInterface {
+    tabId: string
+    status: "run"|"stop"|"success"
+}
+
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     const {subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
+    const [tabStatus,setTabStatus] = useState<string>("")
+    useEffect(()=>{
+        emiter.on("simpleDetectTabEvent", onSimpleDetectTabEvent)
+        return () => {
+            emiter.off("simpleDetectTabEvent", onSimpleDetectTabEvent)
+        }
+    },[])
+    // 修改颜色
+    const onSimpleDetectTabEvent = useMemoizedFn((v) => {
+        const obj:SimpleTabInterface = JSON.parse(v)
+        if(obj.tabId === subItem.id){
+            setTabStatus(obj.status)
+        }
+    })
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index} type={dropType}>
             {(provided, snapshot) => {
@@ -3225,12 +3244,13 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         style={{
-                            ...itemStyle
+                            ...itemStyle,
                         }}
                         className={classNames(styles["tab-menu-sub-item"], {
                             [styles["tab-menu-sub-item-active"]]: isActive,
                             [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
-                            [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor
+                            [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor,
+                            [styles[`tab-menu-sub-item-${tabStatus}`]]: tabStatus.length>0,
                         })}
                         onClick={() => {
                             setSelectSubMenu(subItem)

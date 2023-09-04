@@ -342,7 +342,7 @@ export interface ComponentParams {
     request?: string
     system?: string
     // order?: string
-    /**@param id 页面唯一标识id HTTPFuzzer必须要有的，其他页面可以不用 */
+    /**@param id 页面唯一标识id HTTPFuzzer/SimpleDetect必须要有的，其他页面可以不用 */
     id?: string
     /**@param groupId HTTPFuzzer必须要有的，其他页面可以不用 */
     groupId?: string
@@ -523,6 +523,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.SimpleDetect:
             return (
                 <SimpleDetect
+                    tabId={params?.id || ""}
                     Uid={params?.recoverUid}
                     BaseProgress={params?.recoverBaseProgress}
                     YakScriptOnlineGroup={params?.recoverOnlineGroup}
