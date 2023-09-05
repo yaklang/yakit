@@ -8,7 +8,7 @@ import {
     ListLayoutOpt,
     ListShowContainer,
     OnlineExtraOperate,
-    PluginsList,
+    PluginsList, 
     TypeSelect,
     funcSearchType
 } from "../funcTemplate"
