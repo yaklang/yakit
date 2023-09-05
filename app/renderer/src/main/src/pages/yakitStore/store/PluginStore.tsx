@@ -1319,7 +1319,6 @@ const RemovePluginGroup: React.FC<SetPluginGroupProps> = (props) => {
 
     const [_, setSelectItem, getSelectItem] = useGetState<string[]>(selectItemType)
 
-    const typeList = ["基础扫描", "深度扫描", "弱口令", "网络设备扫描", "合规检测"]
     const submit = () => {
         let obj: PluginGroupPostProps = {
             groupName: []
@@ -1337,14 +1336,16 @@ const RemovePluginGroup: React.FC<SetPluginGroupProps> = (props) => {
             <div>编辑分组</div>
             <div style={{fontSize: 12, color: "gray", marginBottom: 10}}>已勾选的分组为当前所在分组</div>
             <div style={{display: "flex", justifyContent: "flex-start", flexWrap: "wrap"}}>
-                {typeList.map((item) => (
+                {pluginGroupArr.map((item) => (
                     <div
                         style={{
                             width: 130,
                             position: "relative",
                             margin: "0 20px 10px 0",
                             padding: "10px 22px",
-                            display: "inline-block",
+                            display: "flex",
+                            justifyContent:"center",
+                            alignItems:"center",
                             border: "1px solid rgba(0,0,0,.06)",
                             borderRadius: "2px",
                             textAlign: "center"
@@ -1384,7 +1385,7 @@ interface SetPluginGroupProps {
     onClose: () => void
     onRefList: () => void
 }
-
+const pluginGroupArr:string[] = ["基础扫描","操作系统类漏洞","WEB中间件漏洞","WEB应用漏洞","网络安全设备漏洞","OA产品漏洞","CMS产品漏洞", "弱口令", "CVE合规漏洞"]
 const AddPluginGroup: React.FC<SetPluginGroupProps> = (props) => {
     const {selectedRowKeysRecordOnline, isSelectAllOnline, queryOnline, onClose, onRefList} = props
     const [_, setGroupName, getGroupName] = useGetState<string[]>([])
@@ -1409,7 +1410,12 @@ const AddPluginGroup: React.FC<SetPluginGroupProps> = (props) => {
             <div>加入分组</div>
             <div style={{fontSize: 12, color: "gray"}}>可选择加入多个分组</div>
             <Checkbox.Group style={{width: "100%"}} onChange={onChange}>
-                <div style={{display: "flex", flexDirection: "row", marginTop: 10}}>
+                <Row>
+                    {pluginGroupArr.map((item)=><Col span={8} style={{marginTop: 10}}>
+                        <Checkbox value={item} key={item}>{item}</Checkbox>
+                    </Col>)}
+                </Row>
+                {/* <div style={{display: "flex", flexDirection: "row", marginTop: 10}}>
                     <div style={{paddingRight: 16}}>扫描模式</div>
                     <div style={{flex: 1}}>
                         <Row>
@@ -1437,7 +1443,7 @@ const AddPluginGroup: React.FC<SetPluginGroupProps> = (props) => {
                             </Col>
                         </Row>
                     </div>
-                </div>
+                </div> */}
             </Checkbox.Group>
             <div style={{textAlign: "center", marginTop: 10}}>
                 <Button
