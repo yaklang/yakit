@@ -13,6 +13,7 @@ export const exportHTTPFuzzerResponse = (responses: FuzzerResponse[]) => {
             "Request": {BytesValue: i.RequestRaw,},
             "Response": {BytesValue: i.ResponseRaw},
             "Payload": {StringValue: (i?.Payloads || []).join("|")},
+            "ExtractedResults": {StringValue: (i?.ExtractedResults || []).map((i)=>`${i.Key}: ${i.Value}`).join("|")},
         }
     }) as any)
 }
