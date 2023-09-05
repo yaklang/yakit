@@ -21,6 +21,7 @@ import {
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {
     useCreation,
+    useDebounceEffect,
     useDebounceFn,
     useHover,
     useInViewport,
@@ -86,6 +87,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {PencilAltIcon} from "@/assets/newIcon"
 import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 import shallow from "zustand/shallow"
+import {useFuzzerSequence} from "@/store/fuzzerSequence"
 // import { ResponseCard } from "./ResponseCard"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -139,11 +141,31 @@ const isEmptySequence = (list: SequenceProps[]) => {
 }
 
 const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
-    const {setType} = props
+    const { getPageNodeInfoByPageId, getCurrentSelectGroup} = usePageNode(
+        (state) => ({
+            getPageNodeInfoByPageId: state.getPageNodeInfoByPageId,
+            getCurrentSelectGroup: state.getCurrentSelectGroup
+        }),
+        shallow
+    )
+    const {queryFuzzerSequenceCacheDataByGroupId, updateFuzzerSequenceCacheData, addFuzzerSequenceCacheData} =
+        useFuzzerSequence(
+            (state) => ({
+                queryFuzzerSequenceCacheDataByGroupId: state.queryFuzzerSequenceCacheDataByGroupId,
+                updateFuzzerSequenceCacheData: state.updateFuzzerSequenceCacheData,
+                addFuzzerSequenceCacheData: state.addFuzzerSequenceCacheData
+            }),
+            shallow
+        )
+
+    const {setType, groupId: propsGroupId} = props
+
     const [loading, setLoading] = useState<boolean>(false)
 
     const [originSequenceList, setOriginSequenceList] = useState<SequenceProps[]>([])
-    const [sequenceList, setSequenceList] = useState<SequenceProps[]>([])
+    const [sequenceList, setSequenceList] = useState<SequenceProps[]>(
+        queryFuzzerSequenceCacheDataByGroupId(propsGroupId)
+    )
     const [errorIndex, setErrorIndex] = useState<number>(-1)
 
     const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
@@ -169,16 +191,19 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
-    const {getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId, getCurrentSelectGroup} = usePageNode(
-        (state) => ({
-            getPageNodeInfoByPageGroupId: state.getPageNodeInfoByPageGroupId,
-            getPageNodeInfoByPageId: state.getPageNodeInfoByPageId,
-            getCurrentSelectGroup: state.getCurrentSelectGroup
-        }),
-        shallow
-    )
-
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
+    useDebounceEffect(
+        () => {
+            const effectiveSequenceList = sequenceList.filter((ele) => ele.pageId)
+            if (effectiveSequenceList.length > 0) {
+                updateFuzzerSequenceCacheData(propsGroupId, effectiveSequenceList)
+            } else {
+                addFuzzerSequenceCacheData(propsGroupId, [])
+            }
+        },
+        [sequenceList],
+        {wait: 200}
+    )
     useEffect(() => {
         ipcRenderer.on(
             "fetch-extracted-to-table",
@@ -371,7 +396,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     })
     const getCurrentGroupSequence = useMemoizedFn(() => {
-        // const nodeInfo: PageNodeItemProps | undefined = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, props.groupId)
         const nodeInfo = getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
         if (!nodeInfo) return []
         const {pageChildrenList} = nodeInfo
@@ -391,15 +415,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     })
     const updateData = useThrottleFn(
         (fuzzerIndex: string) => {
-            // if (fuzzerIndex === "-1") {
-            //     onClearRef()
-            //     const newSequenceList = sequenceList.map((item) => ({
-            //         ...item,
-            //         disabled: false
-            //     }))
-            //     setSequenceList([...newSequenceList])
-            //     return
-            // }
             const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
             const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
             if (failedBuffer.length + successBuffer.length === 0) {

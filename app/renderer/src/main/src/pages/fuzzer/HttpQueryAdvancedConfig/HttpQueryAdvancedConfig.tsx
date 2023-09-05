@@ -633,7 +633,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 placeholder={"指定DNS服务器"}
                             />
                         </Form.Item>
-                        <Form.Item label={"Hosts配置"} name='etcHosts' initialValue={[]}>
+                        <Form.Item label={"Hosts配置"} name='etcHosts'>
                             <Space direction={"vertical"}>
                                 {(etcHosts || []).map((i, n) => (
                                     <YakitTag

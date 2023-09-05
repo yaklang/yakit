@@ -72,6 +72,7 @@ import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
 import shallow from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
+import {RemoteGV} from "@/yakitGV"
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
 
@@ -893,6 +894,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }),
         shallow
     )
+    const {initFuzzerSequenceCacheData} = useFuzzerSequence(
+        (s) => ({
+            initFuzzerSequenceCacheData: s.initFuzzerSequenceCacheData
+        }),
+        shallow
+    )
     // web-fuzzer多开页面缓存数据
     const fuzzerList = useRef<Map<string, MultipleNodeInfo>>(new Map<string, MultipleNodeInfo>())
     const proxyRef = useRef<string[]>([])
@@ -916,6 +923,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         })
         getFuzzerDefaultCache()
+        getFuzzerSequenceCache()
         return () => {
             ipcRenderer.removeAllListeners("fetch-fuzzer-setting-data")
         }
@@ -967,6 +975,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 fetchFuzzerList()
             }
         } catch (error) {}
+    })
+
+    const getFuzzerSequenceCache = useMemoizedFn(() => {
+        getRemoteProjectValue(RemoteGV.FuzzerSequenceCache).then((res: any) => {
+            try {
+                const cache = JSON.parse(res || "[]")
+                initFuzzerSequenceCacheData(cache)
+            } catch (error) {
+                yakitNotify("error", "webFuzzer序列化获取缓存数据解析失败:" + error)
+            }
+        })
     })
 
     // 定时向数据库保存web-fuzzer缓存数据
