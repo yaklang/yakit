@@ -24,7 +24,7 @@ import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss";
 import {showDrawer, showModal} from "@/utils/showModal";
 import {RemarkDetail, WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
 import {showByCustom} from "@/components/functionTemplate/showByContext";
-import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu";
+import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu";
 import {
     availableColors,
     CalloutColor,
@@ -363,6 +363,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                 {key: "webshell-curd-delete", label: "删除"},
             ]
         },
+        {type: "divider"},
         {key: "webshell-feature-ping", label: "验证存活"},
     ]
     const wsmMenuSelect = useMemoizedFn((key: string) => {
@@ -408,7 +409,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                 reactNode: (
                     <div className={mitmStyles["context-menu-custom"]}>
                         <YakitMenu
-                            data={wsmMenuData}
+                            data={wsmMenuData as YakitMenuItemProps[]}
                             width={150}
                             onClick={({key}) => {
                                 wsmMenuSelect(key)
