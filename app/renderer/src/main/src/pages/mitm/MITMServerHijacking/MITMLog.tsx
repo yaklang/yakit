@@ -41,6 +41,8 @@ import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {ResizeBox} from "@/components/ResizeBox"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -588,8 +590,57 @@ interface MITMLogHeardExtraProps {
 }
 export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((props) => {
     const {shieldData, cancleFilter} = props
+
+    const cleanMitmLogTableData = useMemoizedFn((params: { DeleteAll: boolean, Filter?: {} }) => {
+        ipcRenderer
+            .invoke("DeleteHTTPFlows", params)
+            .then(() => {
+                emiter.emit("cleanMitmLogEvent")
+            })
+            .catch((e: any) => {
+                yakitNotify('error', `历史记录删除失败: ${e}`)
+            })
+    })
+
     return (
         <div className={styles["mitm-log-heard"]}>
+            <YakitDropdownMenu
+                menu={{
+                    data: [
+                        {
+                            key: "resetId",
+                            label: "重置请求 ID"
+                        },
+                        {
+                            key: "noResetId",
+                            label: "不重置请求 ID"
+                        }
+                    ],
+                    onClick: ({key}) => {
+                        switch (key) {
+                            case "resetId":
+                                cleanMitmLogTableData({ DeleteAll: true })
+                                break
+                            case "noResetId":
+                                cleanMitmLogTableData({ Filter: {}, DeleteAll: false })
+                                break
+                            default:
+                                break
+                        }
+                    }
+                }}
+                dropdown={{
+                    trigger: ["click"],
+                    placement: "bottom"
+                }}
+            >
+                <YakitButton
+                    type='outline1'
+                    colors="danger"
+                >
+                    清空
+                </YakitButton>
+            </YakitDropdownMenu>
             <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} />
         </div>
     )
