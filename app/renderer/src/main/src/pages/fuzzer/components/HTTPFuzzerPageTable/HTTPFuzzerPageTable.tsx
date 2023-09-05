@@ -96,7 +96,7 @@ export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo(React.forwardRef((props, ref) => {
-    const { data, success, query, setQuery, isRefresh, extractedMap, isEnd, setExportData, isShowDebug } = props
+    const { data, success, query={}, setQuery, isRefresh, extractedMap, isEnd, setExportData, isShowDebug } = props
     const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
