@@ -23,16 +23,15 @@ const webFuzzerTabs = [
         icon: <OutlineCollectionIcon />
     }
 ]
-export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
-    const getCurrentSelectGroup = usePageNode(s=>s.getCurrentSelectGroup)
+const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
+    const getCurrentSelectGroup = usePageNode((s) => s.getCurrentSelectGroup)
 
     const onSwitchType = useMemoizedFn((key) => {
-        if (!props.id) return
         const nodeInfo: PageNodeItemProps | undefined = getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
-        if (!nodeInfo) {
+        if (props.id && !nodeInfo) {
             // 新建组
             onAddGroup(props.id)
-        } else if (nodeInfo.pageChildrenList.length === 0) {
+        } else if (props.id && nodeInfo&&nodeInfo.pageChildrenList.length === 0) {
             // 新建组
             onAddGroup(props.id)
         } else {
@@ -74,3 +73,5 @@ export const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) =>
         </div>
     )
 })
+
+export default WebFuzzerPage

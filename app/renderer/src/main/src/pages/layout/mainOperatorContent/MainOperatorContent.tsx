@@ -871,11 +871,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode(
+    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId,setCurrentSelectGroup} = usePageNode(
         (s) => ({
             setPageNode: s.setPageNode,
             getPageNodeInfoByPageId: s.getPageNodeInfoByPageId,
-            updatePageNodeInfoByPageId: s.updatePageNodeInfoByPageId
+            updatePageNodeInfoByPageId: s.updatePageNodeInfoByPageId,
+            setCurrentSelectGroup: s.setCurrentSelectGroup,
         }),
         shallow
     )
@@ -1084,6 +1085,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 setPageCache(oldPageCache)
                 setCurrentTabKey(key)
                 setPageNode(YakitRoute.HTTPFuzzer, pageNodeInfo)
+                const lastPage = pageNodeInfo.pageNodeList[pageNodeInfo.pageNodeList.length-1]
+                if(lastPage&&lastPage.pageChildrenList.length>0){
+                    // 最后一个是组的时候，需要设置当前选中组
+                    setCurrentSelectGroup(YakitRoute.HTTPFuzzer, lastPage.pageId)
+                }
             })
             .catch((e) => {})
             .finally(() => setTimeout(() => setLoading(false), 200))
