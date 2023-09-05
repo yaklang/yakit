@@ -796,7 +796,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 onRun: (editor, key) => {
                     callCopyToClipboard(flow?.Url || "")
                 },
-                order: -1
+                order: 14
             },
         }
     }, [flow?.Url])
