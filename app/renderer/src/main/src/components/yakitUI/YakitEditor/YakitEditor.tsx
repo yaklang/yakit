@@ -48,9 +48,9 @@ import {
     HTTPFuzzerRangeReadOnlyEditorMenu
 } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import {QueryFuzzerLabelResponseProps} from "@/pages/fuzzer/StringFuzzer"
-import {insertFileFuzzTag} from "@/pages/fuzzer/InsertFileFuzzTag"
+import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "@/pages/fuzzer/InsertFileFuzzTag"
 import {monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
-import {onInsertYakFuzzer} from "@/pages/fuzzer/HTTPFuzzerPage"
+import {onInsertYakFuzzer, showDictsAndSelect} from "@/pages/fuzzer/HTTPFuzzerPage"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -704,6 +704,22 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         const selectId: string = `monaco.fizz.select.widget-${uuidv4()}`
         // 编辑器选中弹窗的唯一Id
         const rangeId: string = `monaco.fizz.range.widget-${uuidv4()}`
+        // 插入标签
+        const insertLabelFun = (v: QueryFuzzerLabelResponseProps) => {
+            if (v.Label) {
+                editor && editor.trigger("keyboard", "type", {text: v.Label})
+            } else if (v.DefaultDescription === "插入本地文件") {
+                editor && insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
+            }
+            else if (v.DefaultDescription === "插入模糊测试字典标签"){
+                editor && showDictsAndSelect((i) => {
+                    monacoEditorWrite(editor, i, editor.getSelection())
+                })
+            }
+            else if (v.DefaultDescription === "插入临时字典"){
+                editor && insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
+            }
+        }
         // 编辑器点击显示的菜单
         const fizzSelectWidget = {
             isOpen: false,
@@ -723,11 +739,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             editorInfo={editorInfo.current}
                             close={() => closeFizzSelectWidget()}
                             insert={(v: QueryFuzzerLabelResponseProps) => {
-                                if (v.Label) {
-                                    editor && editor.trigger("keyboard", "type", {text: v.Label})
-                                } else if (v.DefaultDescription === "插入本地文件") {
-                                    editor && insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
-                                }
+                                insertLabelFun(v)
                                 closeFizzSelectWidget()
                             }}
                             addLabel={() => {
@@ -821,12 +833,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                     editorInfo: editorInfo.current,
                                     close: () => closeFizzRangeWidget(),
                                     insert: (v: QueryFuzzerLabelResponseProps) => {
-                                        if (v.Label) {
-                                            editor && editor.trigger("keyboard", "type", { text: v.Label })
-                                        } else if (v.DefaultDescription === "插入本地文件") {
-                                            editor &&
-                                                insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
-                                        }
+                                        insertLabelFun(v)
                                         closeFizzRangeWidget()
                                     },
                                     addLabel: () => {

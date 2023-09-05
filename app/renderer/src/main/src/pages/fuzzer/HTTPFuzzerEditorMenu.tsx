@@ -96,6 +96,14 @@ export const defaultLabel: LabelDataProps[] = [
         Label: "{{x(pass_top25)}}"
     },
     {
+        DefaultDescription: "插入模糊测试字典标签",
+        Description: "插入模糊测试字典标签"
+    },
+    {
+        DefaultDescription: "插入临时字典",
+        Description: "插入临时字典"
+    },
+    {
         DefaultDescription: "插入本地文件",
         Description: "插入本地文件"
     },
