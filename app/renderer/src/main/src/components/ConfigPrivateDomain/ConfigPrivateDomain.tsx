@@ -93,11 +93,15 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     }
                     setStoreUserInfo(user)
                     if (data?.next) {
-                        aboutLoginUpload(res.token)
+                        aboutLoginUpload(res.token) 
                         success("企业登录成功")
                         onCloseTab()
                         onClose && onClose()
                         onSuccee && onSuccee()
+                    }
+                    // 首次登录强制修改密码
+                    if (!res.loginTime){
+                        ipcRenderer.invoke("reset-password", {...res})
                     }
                 })
             })

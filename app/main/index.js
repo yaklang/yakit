@@ -90,9 +90,9 @@ const createWindow = () => {
         e.preventDefault()
     })
     // 录屏
-    globalShortcut.register("Control+Shift+X", (e) => {
-        win.webContents.send("open-screenCap-modal")
-    })
+    // globalShortcut.register("Control+Shift+X", (e) => {
+    //     win.webContents.send("open-screenCap-modal")
+    // })
 }
 
 app.whenReady().then(() => {
@@ -115,13 +115,13 @@ app.whenReady().then(() => {
             })
         })
 
-        globalShortcut.register("Control+Shift+b", () => {
-            screenshots.startCapture()
-            globalShortcut.register("esc", () => {
-                screenshots.endCapture()
-                globalShortcut.unregister("esc")
-            })
-        })
+        // globalShortcut.register("Control+Shift+b", () => {
+        //     screenshots.startCapture()
+        //     globalShortcut.register("esc", () => {
+        //         screenshots.endCapture()
+        //         globalShortcut.unregister("esc")
+        //     })
+        // })
         globalShortcut.register("Control+Shift+q", () => {
             screenshots.endCapture()
             globalShortcut.unregister("esc")

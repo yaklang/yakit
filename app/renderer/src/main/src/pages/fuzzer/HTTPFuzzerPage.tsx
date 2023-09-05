@@ -16,7 +16,8 @@ import {
     useMemoizedFn,
     useSize,
     useThrottleFn,
-    useUpdateEffect
+    useUpdateEffect,
+    useWhyDidYouUpdate
 } from "ahooks"
 import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
@@ -100,7 +101,6 @@ import {
     defaultLabel,
     FUZZER_LABEL_LIST_NUMBER
 } from "./HTTPFuzzerEditorMenu"
-import {NewEditorSelectRange} from "../../components/NewEditorSelectRange"
 import {execCodec} from "@/utils/encodec"
 import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
@@ -373,6 +373,43 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
         })
 }
 
+    /**@description 插入 yak.fuzz 语法 */
+export const onInsertYakFuzzer = (reqEditor:IMonacoEditor) => {
+        const m = showYakitModal({
+            title: "Fuzzer Tag 调试工具",
+            width: "70%",
+            footer: null,
+            subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
+            content: (
+                <div style={{padding: 24}}>
+                    <StringFuzzer
+                        advanced={true}
+                        disableBasicMode={true}
+                        insertCallback={(template: string) => {
+                            if (!template) {
+                                Modal.warn({
+                                    title: "Payload 为空 / Fuzz 模版为空"
+                                })
+                            } else {
+                                if (reqEditor && template) {
+                                    reqEditor.trigger("keyboard", "type", {
+                                        text: template
+                                    })
+                                } else {
+                                    Modal.error({
+                                        title: "BUG: 编辑器失效"
+                                    })
+                                }
+                                m.destroy()
+                            }
+                        }}
+                        close={() => m.destroy()}
+                    />
+                </div>
+            )
+        })
+    }
+
 const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
 
 export const emptyFuzzer: FuzzerResponse = {
@@ -519,20 +556,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         extractors: []
     })
 
-    // 缓存参数
-    const [proxy, setProxy] = useState<string[]>([])
-    const [dnsServers, setDNSServers] = useState<string[]>([])
-    const [etcHosts, setETCHosts] = useState<KVPair[]>([])
-
-    const [request, setRequest, getRequest] = useGetState(
-        props.fuzzerParams?.request || props.request || defaultPostTemplate
-    )
-
-    const [advancedConfig, setAdvancedConfig] = useState(false)
+    const [advancedConfig, setAdvancedConfig] = useState<boolean>(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
-    const [hotPatchCode, setHotPatchCode] = useState<string>("")
-    const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
 
@@ -554,10 +580,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [_failedCount, setFailedCount, getFailedCount] = useGetState(0)
 
     /**/
-    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-    const [fuzzToken, setFuzzToken] = useState("")
 
-    const [refreshTrigger, setRefreshTrigger] = useState(false)
+    const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
 
     // editor Response
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
@@ -573,18 +597,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
     const [activeKey, setActiveKey] = useState<string>("")
 
+    const requestRef = useRef<string>(props.fuzzerParams?.request || props.request || defaultPostTemplate)
     const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
     const fuzzerRef = useRef<any>()
-    const [inViewport] = useInViewport(fuzzerRef)
+    const [inViewport = true] = useInViewport(fuzzerRef)
 
-    const {getPageNodeInfoByPageId} = usePageNode()
+    const hotPatchCodeRef = useRef<string>("")
+    const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
-    useEffect(() => {
-        emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
-        return () => {
-            emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
-        }
-    }, [])
+    const getPageNodeInfoByPageId = usePageNode((s) => s.getPageNodeInfoByPageId)
 
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
@@ -594,26 +615,50 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .catch(() => {
                 setShowResponseInfoSecondEditor(true)
             })
-    }, [])
-    useEffect(() => {
+        getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
+            if (!remoteData) {
+                return
+            }
+            setHotPatchCode(`${remoteData}`)
+        })
+        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
+            if (!!remoteData) {
+                setHotPatchCodeWithParamGetter(`${remoteData}`)
+            }
+        })
+        /** 有分享内容按照分享内容中的 advancedConfig 为准 */
+        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
+            if (c === "") {
+                setAdvancedConfig(true)
+            } else {
+                setAdvancedConfig(c === "true")
+            }
+        })
         ipcRenderer.on("fetch-ref-webFuzzer-request", onUpdateRequest)
+        emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         return () => {
             ipcRenderer.removeListener("fetch-ref-webFuzzer-request", onUpdateRequest)
+            emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         }
     }, [])
 
     useEffect(() => {
-        if (inViewport) onUpdateRequest(_, {type: "config"})
+        if (inViewport) {
+            onUpdateRequest(_, {type: "config"})
+        }
     }, [inViewport])
-
+    const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
+        if (inViewport) onSetAdvancedConfig(!advancedConfig)
+    })
     const onUpdateRequest = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         if (res.type === "config" && inViewport) {
             const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
             if (!nodeInfo) return
             const {currentItem} = nodeInfo
             const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request
-            if (request === newRequest) return
-            setRequest(newRequest || defaultPostTemplate)
+            if (!newRequest) return
+            if (requestRef.current === newRequest) return
+            requestRef.current = newRequest || defaultPostTemplate
             refreshRequest()
         }
     })
@@ -646,31 +691,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [props.shareContent])
 
     useEffect(() => {
-        getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
-            if (!remoteData) {
-                return
-            }
-            setHotPatchCode(`${remoteData}`)
-        })
-        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
-            if (!!remoteData) {
-                setHotPatchCodeWithParamGetter(`${remoteData}`)
-            }
-        })
-    }, [])
-    useEffect(() => {
-        /** 有分享内容按照分享内容中的 advancedConfig 为准 */
-        if (props.shareContent) return
-        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
-            if (c === "") {
-                setAdvancedConfig(true)
-            } else {
-                setAdvancedConfig(c === "true")
-            }
-        })
-    }, [])
-
-    useEffect(() => {
         // 常用标签默认存储
         ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
@@ -700,9 +720,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             return
         }
         if (historyTask.Request === "") {
-            setRequest(Uint8ArrayToString(historyTask.RequestRaw, "utf8"))
+            requestRef.current = Uint8ArrayToString(historyTask.RequestRaw, "utf8")
         } else {
-            setRequest(historyTask.Request)
+            requestRef.current = historyTask.Request
         }
         setAdvancedConfigValue({
             ...advancedConfigValue,
@@ -712,52 +732,37 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
         refreshRequest()
     }, [historyTask])
-
+    const proxyRef = useRef<string[]>([])
+    const dnsServersRef = useRef<string[]>([])
+    const etcHostsRef = useRef<KVPair[]>([])
     useEffect(() => {
+        getCacheData()
+    }, [])
+    const getCacheData = useMemoizedFn(async () => {
         if (props.shareContent) return
-        // 缓存全局参数(将fuzz参数的缓存从本地文件替换到引擎数据库内)
-        getLocalValue(WEB_FUZZ_PROXY).then((e) => {
-            if (e) {
-                setLocalValue(WEB_FUZZ_PROXY, "")
-                setRemoteValue(WEB_FUZZ_PROXY, `${e}`)
-                setProxy(e ? e.split(",") : [])
-            } else {
-                getRemoteValue(WEB_FUZZ_PROXY).then((e) => {
-                    if (!e) {
-                        return
-                    }
-                    setProxy(e ? e.split(",") : [])
+        try {
+            const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
+            const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
+            const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
+            proxyRef.current = proxy ? proxy.split(",") : []
+            dnsServersRef.current = dnsServers ? JSON.parse(dnsServers) : []
+            etcHostsRef.current = etcHosts ? JSON.parse(etcHosts) : []
+            if (
+                !_.isEqual(proxyRef.current, advancedConfigValue.proxy) ||
+                !_.isEqual(dnsServersRef.current, advancedConfigValue.dnsServers) ||
+                !_.isEqual(etcHostsRef.current, advancedConfigValue.etcHosts)
+            ) {
+                setAdvancedConfigValue({
+                    ...advancedConfigValue,
+                    proxy: proxyRef.current,
+                    dnsServers: dnsServersRef.current,
+                    etcHosts: etcHostsRef.current
                 })
             }
-        })
-        getRemoteValue(WEB_FUZZ_DNS_Server_Config).then((e) => {
-            if (!e) {
-                return
-            }
-            try {
-                setDNSServers(JSON.parse(e))
-            } catch (error) {}
-        })
-        getRemoteValue(WEB_FUZZ_DNS_Hosts_Config).then((e) => {
-            if (!e) {
-                return
-            }
-            try {
-                setETCHosts(JSON.parse(e))
-            } catch (error) {}
-        })
-    }, [])
-    useEffect(() => {
-        if (props.shareContent) return
-        setAdvancedConfigValue({
-            ...advancedConfigValue,
-            proxy,
-            dnsServers,
-            etcHosts
-        })
-    }, [proxy, dnsServers, etcHosts])
+        } catch (error) {}
+    })
 
-    useEffect(() => {
+    useUpdateEffect(() => {
         if (props.shareContent) return
         setAdvancedConfigValue({
             ...advancedConfigValue,
@@ -765,14 +770,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             isGmTLS: !!props.isGmTLS
         })
         if (props.request) {
-            setRequest(props.request)
+            requestRef.current = props.request
             resetResponse()
         }
     }, [props.isHttps, props.isGmTLS, props.request])
-
-    const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
-        onSetAdvancedConfig(!advancedConfig)
-    })
 
     const refreshRequest = useMemoizedFn(() => {
         setRefreshTrigger(!refreshTrigger)
@@ -783,7 +784,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setHistoryTask(undefined)
         setLoading(true)
         setDroppedCount(0)
-        ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, fuzzToken).then(() => {
+        ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, tokenRef.current).then(() => {
             ipcRenderer
                 .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
                 .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
@@ -831,9 +832,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // FuzzerRequestProps
         const httpParams: FuzzerRequestProps = {
             ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
-            RequestRaw: Buffer.from(request, "utf8"), // StringToUint8Array(request, "utf8"),
-            HotPatchCode: hotPatchCode,
-            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetter,
+            RequestRaw: Buffer.from(requestRef.current, "utf8"), // StringToUint8Array(request, "utf8"),
+            HotPatchCode: hotPatchCodeRef.current,
+            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
             FuzzerTabIndex: props.id
         }
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
@@ -843,7 +844,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-        ipcRenderer.invoke("HTTPFuzzer", httpParams, fuzzToken)
+        ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
@@ -890,12 +891,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-HTTPFuzzer", fuzzToken)
+        ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
     })
     const dCountRef = useRef<number>(0)
+    const tokenRef = useRef<string>(randomString(60))
     useEffect(() => {
-        const token = randomString(60)
-        setFuzzToken(token)
+        const token = tokenRef.current
 
         const dataToken = `${token}-data`
         const errToken = `${token}-error`
@@ -1046,13 +1047,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 time: new Date().getTime().toString(),
                 isHttps: advancedConfigValue.isHttps,
                 actualHost: advancedConfigValue.actualHost,
-                request: getRequest(),
+                request: requestRef.current,
                 id: props.id
             }
             const webFuzzerPageInfo: WebFuzzerPageInfoProps = {
                 pageId: props.id,
                 advancedConfigValue,
-                request: getRequest()
+                request: requestRef.current
             }
             ipcRenderer.invoke("send-fuzzer-setting-data", {
                 key: props.id || "",
@@ -1064,7 +1065,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     ).run
     useUpdateEffect(() => {
         sendFuzzerSettingInfo()
-    }, [advancedConfigValue, request])
+    }, [advancedConfigValue])
 
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
@@ -1074,10 +1075,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             content: (
                 <div className={styles["http-fuzzer-hotPatch"]}>
                     <HTTPFuzzerHotPatch
-                        initialHotPatchCode={hotPatchCode}
-                        initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                        initialHotPatchCode={hotPatchCodeRef.current}
+                        initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                         onInsert={(tag) => {
-                            if (reqEditor) monacoEditorWrite(reqEditor, tag)
+                            if (webFuzzerNewEditorRef.current.reqEditor)
+                                monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
                             m.destroy()
                         }}
                         onSaveCode={(code) => {
@@ -1096,7 +1098,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const getShareContent = useMemoizedFn((callback) => {
         const params: ShareValueProps = {
             advancedConfig,
-            request: getRequest(),
+            request: requestRef.current,
             advancedConfiguration: advancedConfigValue
         }
         callback(params)
@@ -1108,7 +1110,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         try {
             const newAdvancedConfigValue = {...advancedConfigValue, ...shareContent.advancedConfiguration}
             setAdvancedConfig(shareContent.advancedConfig)
-            setRequest(shareContent.request)
+            requestRef.current = shareContent.request
             setAdvancedConfigValue(newAdvancedConfigValue)
         } catch (error) {
             yakitNotify("error", "获取的数据结构不是最新版,请分享人/被分享人更新版本")
@@ -1172,51 +1174,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             })
     })
 
-    useEffect(() => {
-        try {
-            if (!reqEditor) {
-                return
-            }
-        } catch (e) {
-            failed("初始化 EOL CRLF 失败")
-        }
-    }, [reqEditor])
-    /**@description 插入 yak.fuzz 语法 */
-    const onInsertYakFuzzer = useMemoizedFn(() => {
-        const m = showYakitModal({
-            title: "Fuzzer Tag 调试工具",
-            width: "70%",
-            footer: null,
-            subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
-            content: (
-                <div style={{padding: 24}}>
-                    <StringFuzzer
-                        advanced={true}
-                        disableBasicMode={true}
-                        insertCallback={(template: string) => {
-                            if (!template) {
-                                Modal.warn({
-                                    title: "Payload 为空 / Fuzz 模版为空"
-                                })
-                            } else {
-                                if (reqEditor && template) {
-                                    reqEditor.trigger("keyboard", "type", {
-                                        text: template
-                                    })
-                                } else {
-                                    Modal.error({
-                                        title: "BUG: 编辑器失效"
-                                    })
-                                }
-                                m.destroy()
-                            }
-                        }}
-                        close={() => m.destroy()}
-                    />
-                </div>
-            )
-        })
-    })
+    const webFuzzerNewEditorRef = useRef<any>()
 
     /**
      * @@description 获取高级配置中的Form values
@@ -1237,72 +1195,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
     })
 
-    const editorRightMenu: OtherMenuListProps = useMemo(() => {
-        return {
-            insertLabelTag: {
-                menu: [
-                    {type: "divider"},
-                    {
-                        key: "insert-label-tag",
-                        label: "插入标签/字典",
-                        children: [
-                            {key: "insert-nullbyte", label: "插入空字节标签: {{hexd(00)}}"},
-                            {key: "insert-temporary-file-tag", label: "插入临时字典"},
-                            {key: "insert-intruder-tag", label: "插入模糊测试字典标签"},
-                            {key: "insert-hotpatch-tag", label: "插入热加载标签"},
-                            {key: "insert-fuzzfile-tag", label: "插入文件标签"}
-                        ]
-                    }
-                ],
-                onRun: (editor, key) => {
-                    switch (key) {
-                        case "insert-nullbyte":
-                            editor.trigger("keyboard", "type", {text: "{{hexd(00)}}"})
-                            return
-                        case "insert-temporary-file-tag":
-                            insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
-                            return
-                        case "insert-intruder-tag":
-                            showDictsAndSelect((i) => {
-                                monacoEditorWrite(editor, i, editor.getSelection())
-                            })
-                            return
-                        case "insert-hotpatch-tag":
-                            hotPatchTrigger()
-                            return
-                        case "insert-fuzzfile-tag":
-                            insertFileFuzzTag((i) => monacoEditorWrite(editor, i))
-                            return
-
-                        default:
-                            break
-                    }
-                }
-            },
-            copyURL: {
-                menu: [
-                    {key: "copy-as-url", label: "复制为 URL"},
-                    {key: "copy-as-curl", label: "复制 curl 命令"}
-                ],
-                onRun: (editor, key) => {
-                    switch (key) {
-                        case "copy-as-url":
-                            copyAsUrl({Request: getRequest(), IsHTTPS: advancedConfigValue.isHttps})
-                            return
-                        case "copy-as-curl":
-                            execCodec("packet-to-curl", getRequest(), undefined, undefined, undefined, [
-                                {Key: "https", Value: advancedConfigValue.isHttps ? "true" : ""}
-                            ]).then((data) => {
-                                callCopyToClipboard(data)
-                                info("复制到剪贴板")
-                            })
-                            return
-                    }
-                }
-            }
-        }
-    }, [])
-
     const httpResponse: FuzzerResponse = useMemo(() => {
         return redirectedResponse ? redirectedResponse : getFirstResponse()
     }, [redirectedResponse, getFirstResponse()])
@@ -1312,29 +1204,52 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [successFuzzer])
 
     const [exportData, setExportData] = useState<FuzzerResponse[]>([])
+    const onShowResponseMatcherAndExtraction = useMemoizedFn((activeType: MatchingAndExtraction, activeKey: string) => {
+        setShowMatcherAndExtraction(true)
+        setActiveType(activeType)
+        setActiveKey(activeKey)
+    })
+    const setHotPatchCode = useMemoizedFn((v: string) => {
+        hotPatchCodeRef.current = v
+    })
+    const setHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
+        hotPatchCodeWithParamGetterRef.current = v
+    })
+    const onSetRequest = useMemoizedFn((i: string) => {
+        requestRef.current = i
+        sendFuzzerSettingInfo()
+    })
+    const onInsertYakFuzzerFun = useMemoizedFn(() => {
+        if (webFuzzerNewEditorRef.current) onInsertYakFuzzer(webFuzzerNewEditorRef.current.reqEditor)
+    })
+    const checkRedirect = useMemo(()=>{
+        const arr = httpResponse?.Headers || []
+        for (let index = 0; index < arr.length; index++) {
+            const element = arr[index]
+            if (element.Header === "Location"){
+                return true
+            }
+        }
+        return false
+    },[httpResponse])
 
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
-            <HttpQueryAdvancedConfig
-                advancedConfigValue={{
-                    ...advancedConfigValue
-                }}
-                visible={advancedConfig}
-                setVisible={onSetAdvancedConfig}
-                onInsertYakFuzzer={onInsertYakFuzzer}
-                onValuesChange={(v) => onGetFormValue(v)}
-                refreshProxy={refreshProxy}
-                defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
-                outsideShowResponseMatcherAndExtraction={
-                    onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
-                }
-                onShowResponseMatcherAndExtraction={(activeType, activeKey) => {
-                    setShowMatcherAndExtraction(true)
-                    setActiveType(activeType)
-                    setActiveKey(activeKey)
-                }}
-                inViewportCurrent={inViewport}
-            />
+            <React.Suspense fallback={<>加载中...</>}>
+                <HttpQueryAdvancedConfig
+                    advancedConfigValue={advancedConfigValue}
+                    visible={advancedConfig}
+                    onInsertYakFuzzer={onInsertYakFuzzerFun}
+                    onValuesChange={onGetFormValue}
+                    refreshProxy={refreshProxy}
+                    defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
+                    outsideShowResponseMatcherAndExtraction={
+                        onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
+                    }
+                    onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
+                    inViewportCurrent={inViewport === true}
+                />
+            </React.Suspense>
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
                     {loading ? (
@@ -1364,12 +1279,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             发送请求
                         </YakitButton>
                     )}
-                    {/* {!advancedConfig && (
-                        <div className={styles["display-flex"]}>
-                            <span>高级配置</span>
-                            <YakitSwitch checked={advancedConfig} onChange={onSetAdvancedConfig} />
-                        </div>
-                    )} */}
                     <div className={styles["fuzzer-heard-force"]}>
                         <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
                         <YakitCheckbox
@@ -1425,13 +1334,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </div>
                     )}
 
-                    {onlyOneResponse && getFirstResponse().Ok && (
+                    {onlyOneResponse && httpResponse.Ok && checkRedirect && (
                         <YakitButton
                             onClick={() => {
                                 setLoading(true)
                                 const redirectRequestProps: RedirectRequestParams = {
-                                    Request: request,
-                                    Response: new Buffer(getFirstResponse().ResponseRaw).toString("utf8"),
+                                    Request: requestRef.current,
+                                    Response: new Buffer(httpResponse.ResponseRaw).toString("utf8"),
                                     IsHttps: advancedConfigValue.isHttps,
                                     IsGmTLS: advancedConfigValue.isGmTLS,
                                     PerRequestTimeoutSeconds: advancedConfigValue.timeout,
@@ -1443,7 +1352,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         advancedConfigValue.filterMode === "onlyMatch"
                                             ? advancedConfigValue.hitColor
                                             : "",
-                                    Params: advancedConfigValue.params || [],
+                                    Params: advancedConfigValue.params || []
                                 }
                                 ipcRenderer
                                     .invoke("RedirectRequest", redirectRequestProps)
@@ -1496,7 +1405,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <PacketScanButton
                                     packetGetter={() => {
                                         return {
-                                            httpRequest: StringToUint8Array(request),
+                                            httpRequest: StringToUint8Array(requestRef.current),
                                             https: advancedConfigValue.isHttps
                                         }
                                     }}
@@ -1527,7 +1436,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         })
                                                         .then((e) => {
                                                             if (e?.Result) {
-                                                                setRequest(e.Result)
+                                                                requestRef.current = e.Result
                                                                 if (v.Text.includes("https://")) {
                                                                     setAdvancedConfigValue({
                                                                         ...advancedConfigValue,
@@ -1624,102 +1533,23 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         )
                     }}
                     firstNode={
-                        // <NewEditorSelectRange
-                        //     system={props.system}
-                        //     noHex={true}
-                        //     noHeader={true}
-                        //     refreshTrigger={refreshTrigger}
-                        //     hideSearch={true}
-                        //     bordered={false}
-                        //     noMinimap={true}
-                        //     utf8={true}
-                        //     originValue={StringToUint8Array(request)}
-                        //     contextMenu={editorRightMenu}
-                        //     onEditor={setReqEditor}
-                        //     onChange={(i) => setRequest(Uint8ArrayToString(i, "utf8"))}
-                        //     editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
-                        //     selectId='monaco.fizz.select.widget'
-                        //     selectNode={(close, editorInfo) => (
-                        //         <HTTPFuzzerClickEditorMenu
-                        //             editorInfo={editorInfo}
-                        //             close={() => close()}
-                        //             insert={(v: QueryFuzzerLabelResponseProps) => {
-                        //                 if (v.Label) {
-                        //                     reqEditor && reqEditor.trigger("keyboard", "type", { text: v.Label })
-                        //                 } else if (v.DefaultDescription === "插入本地文件") {
-                        //                     reqEditor &&
-                        //                         insertFileFuzzTag((i) => monacoEditorWrite(reqEditor, i), "file:line")
-                        //                 }
-                        //                 close()
-                        //             }}
-                        //             addLabel={() => {
-                        //                 close()
-                        //                 onInsertYakFuzzer()
-                        //             }}
-                        //         />
-                        //     )}
-                        //     rangeId='monaco.fizz.range.widget'
-                        //     rangeNode={(closeFizzRangeWidget, editorInfo) => (
-                        //         <HTTPFuzzerRangeEditorMenu
-                        //             editorInfo={editorInfo}
-                        //             insert={(fun: any) => {
-                        //                 if (reqEditor) {
-                        //                     const selectedText =
-                        //                         reqEditor
-                        //                             .getModel()
-                        //                             ?.getValueInRange(reqEditor.getSelection() as any) || ""
-                        //                     if (selectedText.length > 0) {
-                        //                         ipcRenderer
-                        //                             .invoke("QueryFuzzerLabel", {})
-                        //                             .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
-                        //                                 const { Data } = data
-                        //                                 let newSelectedText: string = selectedText
-                        //                                 if (Array.isArray(Data) && Data.length > 0) {
-                        //                                     // 选中项是否存在于标签中
-                        //                                     let isHave: boolean = Data.map(
-                        //                                         (item) => item.Label
-                        //                                     ).includes(selectedText)
-                        //                                     if (isHave) {
-                        //                                         newSelectedText = selectedText.replace(/{{|}}/g, "")
-                        //                                     }
-                        //                                 }
-                        //                                 const text: string = fun(newSelectedText)
-                        //                                 reqEditor.trigger("keyboard", "type", { text })
-                        //                             })
-                        //                     }
-                        //                 }
-                        //             }}
-                        //             replace={(text: string) => {
-                        //                 if (reqEditor) {
-                        //                     reqEditor.trigger("keyboard", "type", { text })
-                        //                     closeFizzRangeWidget()
-                        //                 }
-                        //             }}
-                        //             rangeValue={
-                        //                 (reqEditor &&
-                        //                     reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
-                        //                 ""
-                        //             }
-                        //         />
-                        //     )}
-                        // />
                         <WebFuzzerNewEditor
+                            ref={webFuzzerNewEditorRef}
                             refreshTrigger={refreshTrigger}
-                            request={getRequest()}
-                            setRequest={(i) => setRequest(i)}
+                            request={requestRef.current}
+                            setRequest={onSetRequest}
                             isHttps={advancedConfigValue.isHttps}
-                            hotPatchCode={hotPatchCode}
-                            hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                            hotPatchCode={hotPatchCodeRef.current}
+                            hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                             setHotPatchCode={setHotPatchCode}
                             setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                            selectId='sequence'
-                            rangeId='sequence'
                         />
                     }
                     secondNode={
                         <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                             {onlyOneResponse ? (
                                 <ResponseViewer
+                                    isHttps={advancedConfigValue.isHttps}
                                     ref={responseViewerRef}
                                     fuzzerResponse={httpResponse}
                                     defaultResponseSearch={defaultResponseSearch}
@@ -1749,7 +1579,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             extractors: extractor.extractorList
                                         })
                                     }}
-                                    webFuzzerValue={StringToUint8Array(request)}
+                                    webFuzzerValue={StringToUint8Array(requestRef.current)}
                                     showResponseInfoSecondEditor={showResponseInfoSecondEditor}
                                     setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                                 />
@@ -2266,6 +2096,7 @@ interface ResponseViewerProps {
     defActiveType: MatchingAndExtraction
     onSaveMatcherAndExtraction: (matcherValue: MatcherValueProps, extractorValue: ExtractorValueProps) => void
     webFuzzerValue?: Uint8Array
+    isHttps?: boolean
 
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
@@ -2286,13 +2117,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             defActiveType,
             onSaveMatcherAndExtraction,
             showResponseInfoSecondEditor,
-            setShowResponseInfoSecondEditor
+            setShowResponseInfoSecondEditor,
+            isHttps
         } = props
         const [reason, setReason] = useState<string>("未知原因")
 
         const [activeKey, setActiveKey] = useState<string>("")
         const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
-        const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
         useEffect(() => {
             setActiveKey(defActiveKey)
         }, [defActiveKey])
@@ -2344,7 +2175,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             return p
         }, [showMatcherAndExtraction, showExtra])
         const show = useMemo(() => showMatcherAndExtraction || showExtra, [showMatcherAndExtraction, showExtra])
-        const extraEditorProps = useCreation(() => {
+        const otherEditorProps = useCreation(() => {
             const overlayWidget = {
                 onAddOverlayWidget: (editor, isShow) => onAddOverlayWidget(editor, fuzzerResponse, isShow)
             }
@@ -2357,7 +2188,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     lineStyle={{display: !show ? "none" : "", background: "#f0f2f5"}}
                     firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
                     firstNode={
-                        <NewEditorSelectRange
+                        <NewHTTPPacketEditor
+                            defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
                             originValue={fuzzerResponse.ResponseRaw}
@@ -2396,6 +2228,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                             }
                                             return undefined
                                         })()}
+                                        style={{height: "100%", backgroundColor: "#fff"}}
                                     >
                                         <>详细原因：{fuzzerResponse.Reason}</>
                                     </Result>
@@ -2405,19 +2238,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             isAddOverlayWidget={showResponseInfoSecondEditor}
                             contextMenu={responseEditorRightMenu}
                             webFuzzerValue={props.webFuzzerValue}
-                            rangeId='monaco.fizz.range.read.only.widget'
-                            rangeNode={(close, editorInfo) => (
-                                <HTTPFuzzerRangeReadOnlyEditorMenu
-                                    editorInfo={editorInfo}
-                                    rangeValue={
-                                        (reqEditor &&
-                                            reqEditor.getModel()?.getValueInRange(reqEditor.getSelection() as any)) ||
-                                        ""
-                                    }
-                                />
-                            )}
-                            onEditor={setReqEditor}
-                            {...extraEditorProps}
+                            extraEditorProps={{
+                                isShowSelectRangeMenu:true
+                            }}
+                            {...otherEditorProps}
                         />
                     }
                     secondNode={

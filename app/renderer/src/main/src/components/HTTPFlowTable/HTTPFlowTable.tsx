@@ -53,6 +53,10 @@ import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {ShareModal} from "@/pages/fuzzer/components/ShareData"
 import { YakitRoute } from "@/routes/newRoute"
+import {useSize} from "ahooks"
+import { HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts, HTTPFlowTableFromValue } from "./HTTPFlowTableForm"
+import { YakitTag } from "../yakitUI/YakitTag/YakitTag"
+import { CheckedSvgIcon } from "../layout/icons"
 import { ExportSelect } from "../DataExport/DataExport"
 
 const {ipcRenderer} = window.require("electron")
@@ -752,6 +756,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const [exportTitle,setExportTitle] = useState<string[]>([])
 
+    const [drawerFormVisible,setDrawerFormVisible] = useState<boolean>(false)
+
+    // 高级筛选所选项
+    const [filterMode,setFilterMode] = useState<"shield"|"show">("shield")
+    const [hostName,setHostName] = useState<string[]>([])
+    const [urlPath,setUrlPath] = useState<string[]>([])
+    const [fileSuffix,setFileSuffix] = useState<string[]>([])
+    const [searchContentType,setSearchContentType] = useState<string>("")
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -771,6 +783,86 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     })
 
+    const size = useSize(ref)
+
+    // 初次进入页面 获取默认高级筛选项
+    useEffect(()=>{
+        // 筛选模式
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode).then((e) => {
+            if (!!e) {
+                setFilterMode(e)
+            }
+        })
+        // HostName
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName).then((e) => {
+            if (!!e) {
+                let hostName = JSON.parse(e)
+                setHostName(hostName)
+            }
+        })
+        // URL路径
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath).then((e) => {
+            if (!!e) {
+                let pathArr = JSON.parse(e)
+                setUrlPath(pathArr)
+            }
+        })
+        // 文件后缀
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix).then((e) => {
+            if (!!e) {
+                let fileSuffix = JSON.parse(e)
+                setFileSuffix(fileSuffix)
+            }
+        })
+        // 响应类型
+        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType).then((e) => {
+            if (!!e) {
+                const ContentType:string = e
+                setSearchContentType(ContentType)
+            }
+        })
+    },[])
+
+    useDebounceEffect(()=>{
+        let newParams = {...params}
+        // 屏蔽
+        if(filterMode==="shield"){
+            newParams = {
+                ...newParams,
+                SearchContentType:"",
+                ExcludeContentType:searchContentType.length===0?[]:searchContentType.split(","),
+                IncludeInUrl:[],
+                ExcludeInUrl:hostName,
+                IncludePath:[],
+                ExcludePath:urlPath,
+                IncludeSuffix:[],
+                ExcludeSuffix:fileSuffix
+            }
+        }
+        // 展示
+        else{
+            newParams = {
+                ...newParams,
+                SearchContentType:searchContentType,
+                ExcludeContentType:[],
+                IncludeInUrl:hostName,
+                ExcludeInUrl:[],
+                IncludePath:urlPath,
+                ExcludePath:[],
+                IncludeSuffix:fileSuffix,
+                ExcludeSuffix:[]
+            }
+        }
+        setParams(newParams)
+        setTimeout(() => {
+            update(1)
+        }, 10)
+    },[filterMode,hostName,urlPath,fileSuffix,searchContentType],{wait: 500})
+
+    const isFilter:boolean = useMemo(() => {
+        return hostName.length>0||urlPath.length>0||fileSuffix.length>0||searchContentType?.length>0
+    },[hostName,urlPath,fileSuffix,searchContentType])
+    
     // 向主页发送对比数据
     useEffect(() => {
         if (compareLeft.content) {
@@ -907,7 +999,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-
+            
             ipcRenderer
                 .invoke("QueryHTTPFlows", query)
                 .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1080,16 +1172,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }, 100)
     })
 
-    const onFilterSure = useMemoizedFn(() => {
-        setParams({
-            ...params,
-            Tags: tagsQuery,
-            SearchContentType: contentTypeQuery
-        })
-        setTimeout(() => {
-            update(1)
-        }, 50)
-    })
     const onSelectAll = (newSelectedRowKeys: string[], selected: HTTPFlow[], checked: boolean) => {
         setIsAllSelect(checked)
         setSelectedRowKeys(newSelectedRowKeys)
@@ -2197,8 +2279,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     </div>
                                 </div>
                                 <div className={style["http-history-table-right"]}>
+                                    <YakitButton type='text' onClick={() => {
+                                        setDrawerFormVisible(true)
+                                    }}>高级筛选</YakitButton>
+                                    {isFilter&&<YakitTag color={"success"}>
+                                        已配置
+                                        <CheckedSvgIcon style={{marginLeft: 8}}/>
+                                    </YakitTag>}
+                                    <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
                                     <div className={classNames(style["http-history-table-right-item"])}>
-                                        <div className={style["http-history-table-right-label"]}>协议类型</div>
+                                        {size?.width&&size?.width>1060&&<div className={style["http-history-table-right-label"]}>协议类型</div>}
                                         <YakitSelect
                                             size='small'
                                             value={params.IsWebsocket || ""}
@@ -2485,6 +2575,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     useUpAndDown={true}
                 />
             </div>
+
+            <HTTPFlowTableFormConfiguration
+                responseType={contentType}
+                visible={drawerFormVisible}
+                setVisible={setDrawerFormVisible}
+                onSave={(val) => {
+                    const {filterMode,hostName,urlPath,fileSuffix,searchContentType} = val
+                    setFilterMode(filterMode)
+                    setHostName(hostName)
+                    setUrlPath(urlPath)
+                    setFileSuffix(fileSuffix)
+                    setSearchContentType(searchContentType)
+                    setDrawerFormVisible(false)
+                }}
+                filterMode={filterMode}
+                hostName={hostName}
+                urlPath={urlPath}
+                fileSuffix={fileSuffix}
+                searchContentType={searchContentType}
+            />
+
         </div>
         // </AutoCard>
     )

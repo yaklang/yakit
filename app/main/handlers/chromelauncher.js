@@ -7,13 +7,20 @@ const homeDir = path.join(os.homedir(), "yakit-projects");
 const myUserDataDir = path.join(homeDir, 'chrome-profile');
 
 module.exports = (win, getClient) => {
+    // 启动的数量
+    let startNum = 0
+    // 启动的状态
     let started = false
     ipcMain.handle("IsChromeLaunched", async () => {
         return started
     })
 
+    ipcMain.handle("getDefaultUserDataDir", async () => {
+        return myUserDataDir
+    })
+
     ipcMain.handle("LaunchChromeWithParams", async (e, params) => {
-        const {port, host, chromePath} = params
+        const {port, host, chromePath,userDataDir} = params
         const portInt = parseInt(`${port}`)
         const hostRaw = `${host}`
         if (hostRaw === "undefined" || hostRaw.includes("/") || hostRaw.split(":").length > 1) {
@@ -26,7 +33,6 @@ module.exports = (win, getClient) => {
         //   --no-proxy-server ⊗	Don't use a proxy server, always make direct connections. Overrides any other proxy server flags that are passed. ↪
         let launchOpt = {
             startingUrl: "http://mitm", // 确保在启动时打开 chrome://newtab 页面。
-            userDataDir: myUserDataDir,
             chromeFlags: [
                 `--no-system-proxy-config-service`,  // 禁用系统代理配置服务。
                 `--proxy-bypass-list=<-loopback>`,   // 为代理设置回避列表，不代理回环地址。
@@ -71,14 +77,21 @@ module.exports = (win, getClient) => {
                 `--disable-features=ChromeWhatsNewUI,HttpsUpgrades,OptimizationHints`,  // 禁用特定的功能。
             ]
         }
+        if(userDataDir){
+            launchOpt["userDataDir"] = userDataDir
+        }
         if (chromePath) {
             launchOpt["chromePath"] = chromePath
         }
         return launch(launchOpt).then((chrome) => {
             chrome.process.on("exit", () => {
                 // 在这里执行您想要的操作，当所有chrome实例都关闭时
-                started = false
+                startNum -= 1
+                if(startNum<=0){
+                   started = false 
+                }
             })
+            startNum += 1 
             started = true
             return ""
         })
@@ -131,6 +144,7 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("StopAllChrome", async (e) => {
+        startNum = 0
         started = false
         return killAll()
     })

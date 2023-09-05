@@ -85,6 +85,7 @@ import {InheritLineIcon, InheritArrowIcon} from "./icon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {PencilAltIcon} from "@/assets/newIcon"
 import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
+import shallow from "zustand/shallow"
 // import { ResponseCard } from "./ResponseCard"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -168,7 +169,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
-    const {getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId, getCurrentSelectGroup} = usePageNode()
+    const {getPageNodeInfoByPageGroupId, getPageNodeInfoByPageId, getCurrentSelectGroup} = usePageNode(
+        (state) => ({
+            getPageNodeInfoByPageGroupId: state.getPageNodeInfoByPageGroupId,
+            getPageNodeInfoByPageId: state.getPageNodeInfoByPageId,
+            getCurrentSelectGroup: state.getCurrentSelectGroup
+        }),
+        shallow
+    )
+
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
     useEffect(() => {
         ipcRenderer.on(
@@ -942,7 +951,9 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                     [styles["drag-sort-disabled-icon"]]: disabled
                                 })}
                             />
-                            {item.name}
+                            <Tooltip title={item.name}>
+                                <span className='content-ellipsis'>{item.name}</span>
+                            </Tooltip>
                             <YakitPopover
                                 overlayClassName={styles["edit-name-popover"]}
                                 content={
@@ -956,17 +967,24 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                                         <YakitInput
                                             defaultValue={item.name}
                                             value={name}
+                                            showCount
+                                            maxLength={20}
                                             onChange={(e) => {
-                                                setName(e.target.value)
+                                                const {value} = e.target
+                                                setName(value)
                                             }}
                                             onBlur={(e) => {
-                                                if (!e.target.value) {
+                                                const {value} = e.target
+                                                if (!value) {
                                                     yakitNotify("error", "名称不能为空")
                                                     return
                                                 }
-                                                onUpdateItem({...item, name: e.target.value})
+                                                if (value.length > 20) {
+                                                    yakitNotify("error", "不超过20个字符")
+                                                    return
+                                                }
+                                                onUpdateItem({...item, name: value})
                                             }}
-                                            maxLength={20}
                                         />
                                     </div>
                                 }
@@ -1210,7 +1228,9 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         return cachedTotal === 1
     }, [cachedTotal])
 
-    const {getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode()
+    const updatePageNodeInfoByPageId = usePageNode((s) => s.updatePageNodeInfoByPageId)
+    const getPageNodeInfoByPageId = usePageNode((s) => s.getPageNodeInfoByPageId)
+
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
             .then((data) => {
@@ -1317,17 +1337,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                     )
                 }}
                 firstNode={
-                    // <NewHTTPPacketEditor
-                    //     noHex={true}
-                    //     noHeader={true}
-                    //     hideSearch={true}
-                    //     bordered={false}
-                    //     noMinimap={true}
-                    //     utf8={true}
-                    //     refreshTrigger={refreshTrigger}
-                    //     originValue={requestHttp}
-                    //     onChange={(i) => onSetRequestHttp(i)}
-                    // />
                     <WebFuzzerNewEditor
                         refreshTrigger={refreshTrigger}
                         request={requestHttp}
@@ -1337,8 +1346,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
                         setHotPatchCode={setHotPatchCode}
                         setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                        selectId='sequence'
-                        rangeId='sequence'
                     />
                 }
                 secondNode={

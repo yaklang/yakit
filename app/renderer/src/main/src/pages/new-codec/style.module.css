@@ -1,0 +1,37 @@
+.container {
+    display: flex;
+    height: 80vh;
+}
+
+
+
+.left {
+    width: 20%;
+    padding: 1em;
+    box-sizing: border-box;
+}
+.center {
+    width: 30%;
+    padding: 1em;
+    box-sizing: border-box;
+}
+
+.right {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    padding: 1em;
+    box-sizing: border-box;
+}
+
+
+.right .top, .right .bottom {
+    flex:1;
+    padding: 1em;
+    box-sizing: border-box;
+}
+
+.codec-item {
+    margin-bottom: 10px;
+}
+

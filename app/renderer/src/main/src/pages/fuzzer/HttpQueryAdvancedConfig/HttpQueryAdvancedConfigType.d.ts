@@ -81,7 +81,6 @@ export interface FuzzerParamItem {
 export interface HttpQueryAdvancedConfigProps {
     advancedConfigValue: AdvancedConfigValueProps
     visible: boolean
-    setVisible: (b: boolean) => void
     onInsertYakFuzzer: () => void
     onValuesChange: (v: AdvancedConfigValueProps) => void
     /**刷新设置代理的list */

@@ -16,6 +16,7 @@ import {showModal} from "@/utils/showModal"
 import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {failed, info, success, yakitFailed, warn} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
+import {ConfigNetworkPage} from "../configNetwork/ConfigNetworkPage"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitSettingCallbackType, YakitSystem, YaklangEngineMode} from "@/yakitGVDefine"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
@@ -273,6 +274,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     ])
     /** 修改密码弹框 */
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
+    /** 是否允许密码框关闭 */
+    const [passwordClose,setPasswordClose] = useState<boolean>(true)
     /** 上传数据弹框 */
     const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
 
@@ -455,6 +458,17 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
     }, [])
 
+    useEffect(() => {
+        // 强制修改密码
+        ipcRenderer.on("reset-password-callback", async (e) => {
+            setPasswordShow(true)
+            setPasswordClose(false)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("reset-password-callback")
+        }
+    }, [])
+
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
@@ -569,7 +583,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             if (key === "trust-list") {
                                                 openMenu({route: YakitRoute.TrustListPage})
                                             }
-                                            if (key === "set-password") setPasswordShow(true)
+                                            if (key === "set-password") {
+                                                setPasswordClose(true)
+                                                setPasswordShow(true)
+                                            }
                                             if (key === "upload-data") setUploadModalShow(true)
                                             if (key === "upload-yakit-ee") {
                                                 const m = showYakitModal({
@@ -650,6 +667,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)}/>}
             <Modal
                 visible={passwordShow}
+                closable={passwordClose}
                 title={"修改密码"}
                 destroyOnClose={true}
                 maskClosable={false}
@@ -752,22 +770,6 @@ const GetUIOpSettingMenu = () => {
                 ]
             },
             {
-                key: "link",
-                label: "切换连接模式",
-                children: [
-                    {label: "本地", key: "local"},
-                    {label: "远程", key: "remote"}
-                ]
-            },
-            {
-                key: "refreshMenu",
-                label: "刷新菜单"
-            },
-            {
-                key: "settingMenu",
-                label: "配置菜单栏"
-            },
-            {
                 key: "system-manager",
                 label: "进程与缓存管理",
                 children: [{key: "invalidCache", label: "删除缓存数据"}]
@@ -811,6 +813,10 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "vulinbox-manager",
                     label: "(靶场)Vulinbox"
+                },
+                {
+                    key: "new-codec",
+                    label: "新版Codec"
                 },
             ]
         },
@@ -994,7 +1000,20 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 addToTab("**diagnose-network")
                 return
             case "config-network":
-                addToTab("**config-network")
+                const y = showYakitModal({
+                    title: "全局网络配置",
+                    type: "white",
+                    footer: null,
+                    maskClosable: false,
+                    width:580,
+                    // onCancel: () => y.destroy(),
+                    content: <ConfigNetworkPage onClose={() => m.destroy()} />
+                })
+                return y
+                // addToTab("**config-network")
+                // return
+            case "new-codec":
+                addToTab("**beta-codec")
                 return
             case "invalidCache":
                 invalidCacheAndUserData()
@@ -2115,11 +2134,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     ) : (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
                             <span>录屏</span>
-                            <span className={styles["shortcut-keys"]}>
+                            {/* <span className={styles["shortcut-keys"]}>
                                 {system === "Darwin"
                                     ? `${MacKeyborad[17]} ${MacKeyborad[16]} X`
                                     : `${WinKeyborad[17]} ${WinKeyborad[16]} X`}
-                            </span>
+                            </span> */}
                         </div>
                     ),
                     key: "screenCap"
@@ -2128,17 +2147,19 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     label: (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
                             <span>截屏</span>
-                            {screenshotLoading ? (
+                            {screenshotLoading && (
                                 <div className={styles["icon-loading-wrapper"]} onClick={(e) => e.stopPropagation()}>
                                     <LoadingOutlined className={styles["icon-hover-style"]}/>
                                 </div>
-                            ) : (
-                                <span className={styles["shortcut-keys"]}>
-                                    {system === "Darwin"
-                                        ? `${MacKeyborad[17]} ${MacKeyborad[16]} B`
-                                        : `${WinKeyborad[17]} ${WinKeyborad[16]} B`}
-                                </span>
-                            )}
+                            ) 
+                            // : (
+                            //     <span className={styles["shortcut-keys"]}>
+                            //         {system === "Darwin"
+                            //             ? `${MacKeyborad[17]} ${MacKeyborad[16]} B`
+                            //             : `${WinKeyborad[17]} ${WinKeyborad[16]} B`}
+                            //     </span>
+                            // )
+                            }
                         </div>
                     ),
                     key: "screenshot"

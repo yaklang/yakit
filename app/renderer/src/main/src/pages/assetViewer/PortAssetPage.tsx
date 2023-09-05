@@ -765,14 +765,18 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     columns={columns}
                                     onRowContextMenu={onRowContextMenu}
                                     onSetCurrentRow={(val) => {
+                                        if (val?.Id !== currentSelectItem?.Id) {
+                                            setCurrentSelectItem(val)
+                                        }
+
                                         if (!currentSelectItem) {
                                             const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
                                             setScrollToIndex(index)
                                         }
-                                        setCurrentSelectItem(val)
                                     }}
                                     enableDrag={true}
                                     onChange={onTableChange}
+                                    useUpAndDown={true}
                                 />
                             </div>
                         </div>

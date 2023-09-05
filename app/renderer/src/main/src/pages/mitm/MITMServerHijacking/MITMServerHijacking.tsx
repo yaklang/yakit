@@ -83,15 +83,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             .catch((e: any) => {
                 notification["error"]({message: `停止中间人劫持失败：${e}`})
             })
-            .finally(() =>
-                    ipcRenderer
-                    .invoke("StopAllChrome")
-                    .then(() => {})
-                    .catch((e) => {
-                        failed(`关闭所有 Chrome 失败: ${e}`)
-                    })
-                    // setLoading(false)
-            )
+            .finally(() =>{
+                // setLoading(false)
+            })
     })
     return (
         <div className={style["mitm-server"]}>

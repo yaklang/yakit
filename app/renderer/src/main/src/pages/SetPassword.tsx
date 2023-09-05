@@ -44,13 +44,14 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
                 })
                 .then((result) => {
                     if(result.ok){
-                        success("密码修改成功")
+                        success("密码修改成功,请重新登录")
                         onCancel()
                         if(dynamicStatus.isDynamicStatus){
                             ipcRenderer.invoke("lougin-out-dynamic-control",{loginOut:true})
                         }
                         else{
-                          loginOut(userInfo)  
+                            loginOut(userInfo)
+                            ipcRenderer.invoke("ipc-sign-out")
                         }
                     }
                 })

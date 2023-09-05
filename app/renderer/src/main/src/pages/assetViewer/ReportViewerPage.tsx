@@ -100,7 +100,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
             reportId&&onClick({Id:reportId,Title:"",Hash:"",Owner:"",From:"",PublishedAt:0,JsonRaw:""})
         })
         return () => {
-            ipcRenderer.removeAllListeners("fetch-new-tabs-color")
+            ipcRenderer.removeAllListeners("fetch-simple-open-report")
         }
     },[])
 

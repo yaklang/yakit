@@ -288,4 +288,8 @@ module.exports = (win, getClient) => {
         win.webContents.send("edit-baseUrl-status", {ok: true, info: "更改成功"})
         win.webContents.send("refresh-new-home", {ok: true, info: "刷新成功"})
     })
+
+    ipcMain.handle("reset-password", (event, arg) => {
+        win.webContents.send("reset-password-callback")
+    })
 }

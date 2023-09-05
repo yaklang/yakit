@@ -254,11 +254,13 @@ criticalRisks = []
 highRisks = []
 warningRisks = []
 lowRisks = []
+secureRisks = []
 // 合规检查等级分类数组
 criticalPotentialRisks = []
 highPotentialRisks = []
 warningPotentialRisks = []
 lowPotentialRisks = []
+secureCountScaleRisks = []
 
 // 存活资产统计
 criticalCountScale = 0
@@ -277,8 +279,11 @@ for target,risks = range targetToRisks {
     lowCount = 0
     secureCount = 0
     riskLevel = "安全"
-    
+    isRiskKye = []
     for _, riskIns := range risks {
+        if  riskIns.RiskType == "dnslog" || riskIns.RiskTypeVerbose == "DNSLOG" {
+            isRiskKye = append(isRiskKye, riskIns)
+        }
         if str.Contains(riskIns.Severity, "critical") {
             criticalCount++
             if parseBool(riskIns.IsPotential) {
@@ -311,9 +316,17 @@ for target,risks = range targetToRisks {
                 lowRisks = append(lowRisks, riskIns)
             }
         }
+       if  str.Contains(riskIns.Severity, "info") && riskIns.RiskType != "dnslog"  {
+           secureCount++
+            if parseBool(riskIns.IsPotential) {
+                secureCountScaleRisks = append(secureCountScaleRisks, riskIns)
+            } else {
+                secureRisks = append(secureRisks, riskIns)
+            }
+       }
         
     }
-    
+  
     if criticalCount > 0 {
       riskLevel = "超危"
       criticalCountScale = criticalCountScale + 1
@@ -323,15 +336,16 @@ for target,risks = range targetToRisks {
     } else if warningCount > 0 {
       riskLevel = "中危"
       warningCountScale = warningCountScale + 1
-    } else if warningCount > 0 {
+    } else if lowCount > 0 {
       riskLevel = "低风险"
       lowCountScale = lowCountScale + 1
-    } else {
+    } else if secureCount > 0 {
       secureCountScale = secureCountScale + 1
     }
     
     allCount = criticalCount +highCount + warningCount + lowCount
-    ipRisksStr = append(ipRisksStr, {
+    if len(isRiskKye) == 0 {
+        ipRisksStr = append(ipRisksStr, {
         "资产": {"value": target, "jump_link": target, "sort": 1},
         "风险等级": {"value": riskLevel, "sort": 2},
         "严重风险": {"value": criticalCount, "color": "#8B0000", "sort": 3 },
@@ -340,11 +354,14 @@ for target,risks = range targetToRisks {
         "低风险": {"value": lowCount, "color": "#008000", "sort": 6 },
         "总计": {"value": allCount, "sort": 7}
     })
+    }
+    
 }
 
-reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": secureCountScale}, {"name": "存活资产", "value": aliveHostCount, "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#ffffff"]})
+// reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": secureCountScale}, {"name": "存活资产", "value": aliveHostCount, "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#ffffff"]})
+reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": secureCountScale}, {"name": "风险资产", "value": len(ipRisksStr), "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#ffffff"]})
 
-reportInstance.Markdown("#### 资产汇总")
+reportInstance.Markdown("#### 风险资产汇总")
 if len(ipRisksStr) > 0 {
     ipRisksList := json.dumps({ "type": "risk-list", "data": ipRisksStr })
     reportInstance.Raw(ipRisksList)
@@ -419,14 +436,19 @@ if len(noPotentialRisks) == 0 {
         if str.Contains(info.Severity, "low") {
             level = "低危"
         }
-
-
-        _line = append(_line, {
-            "序号": { "value": index + 1, "sort": 1},
-            "网站地址": { "value": sprintf(\`%v:%v\`, info.IP, info.Port), "sort": 2},
-            "漏洞情况": { "value": info.TitleVerbose, "sort": 3},
-            "威胁风险": { "value": level, "sort": 4}
-        })
+        
+        titleVerbose = info.TitleVerbose
+        if titleVerbose == "" {
+            titleVerbose = info.Title
+        }
+        if info.RiskTypeVerbose != "DNSLOG" {
+            _line = append(_line, {
+                "序号": { "value": index + 1, "sort": 1},
+                "网站地址": { "value": sprintf(\`%v:%v\`, info.IP, info.Port), "sort": 2},
+                "漏洞情况": { "value": titleVerbose, "sort": 3},
+                "威胁风险": { "value": level, "sort": 4}
+            })
+        }
     }
     potentialRisksList := json.dumps({ "type": "potential-risks-list", "data": _line })
     reportInstance.Raw(potentialRisksList)
@@ -493,7 +515,7 @@ for i, riskIns := range potentialRisks {
 }
 if len(potentialRisks) != 0 {
     
-    reportInstance.Markdown(sprintf("### 3.3.3 风险资产图"))
+    reportInstance.Markdown(sprintf("### 3.3.3 合规检查风险统计"))
     for _, gp := range cpp.ToGraphs(){
         aa = json.dumps(gp)
         reportInstance.Raw(aa)
@@ -604,11 +626,16 @@ func showReport(risks) {
         request, _ := codec.StrconvUnquote(riskIns.QuotedRequest)
         response, _ := codec.StrconvUnquote(riskIns.QuotedResponse)
         addr := sprintf(\`%v:%v\`, riskIns.Host, riskIns.Port)
+        
+        titleVerbose = riskIns.TitleVerbose
+        if titleVerbose == "" {
+            titleVerbose = riskIns.Title
+        }
         reportInstance.Raw({"type": "fix-list", "data": {
             "标题": {
                 "fold": true,
                 "sort": 1,
-                "value": riskIns.Title
+                "value": titleVerbose
             },
             "风险地址": {
                  "search": true,
@@ -725,12 +752,16 @@ func showCVEReport(risks, riskSeverity) {
             if customHasPrefix(cve.Parameter, "cpe") {
             \tparameter = cve.Parameter
             }
+            titleVerbose = cve.TitleVerbose
+            if titleVerbose == "" {
+                titleVerbose = cve.Title
+            }
             if cve.Severity == riskSeverity {
                cveResult = append(cveResult, {
                         "标题": {
                             "fold": true,
                             "sort": 1,
-                            "value": cve.Title
+                            "value": titleVerbose
                         },
                         "风险地址": {
                              "sort": 2,
