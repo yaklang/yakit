@@ -46,6 +46,8 @@
         height: 100%;
         border-right: 1px solid var(--yakit-border-color);
         background-color: var(--yakit-card-background-color);
+        width: 300px;
+        flex-shrink: 0;
 
         &-heard {
             @extend .display-space-between;
@@ -179,6 +181,7 @@
                     font-size: 12px;
                     font-weight: 500;
                     line-height: 16px;
+                    overflow: hidden;
                 }
 
                 &-extra {

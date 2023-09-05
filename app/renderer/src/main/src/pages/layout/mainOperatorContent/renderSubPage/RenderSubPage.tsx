@@ -5,9 +5,11 @@ import styles from "./RenderSubPage.module.scss"
 import {PageItemProps, RenderFuzzerSequenceProps, RenderSubPageItemProps, RenderSubPageProps} from "./RenderSubPageType"
 import {MultipleNodeInfo} from "../MainOperatorContentType"
 import FuzzerSequence from "@/pages/fuzzer/FuzzerSequence/FuzzerSequence"
-import {WebFuzzerPage} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {FuzzerSequenceListProps, useFuzzerSequence} from "@/store/fuzzerSequence"
+import {PageLoading} from "@ant-design/pro-layout"
+
+const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 
 export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
     (props) => {
@@ -98,12 +100,12 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
         string,
         boolean
     >(new Map<string, boolean>())
-    const fuzzerSequenceList=useFuzzerSequence((s)=>s.fuzzerSequenceList)
-    const selectGroupId=useFuzzerSequence((s)=>s.selectGroupId)
+    const fuzzerSequenceList = useFuzzerSequence((s) => s.fuzzerSequenceList)
+    const selectGroupId = useFuzzerSequence((s) => s.selectGroupId)
 
     useEffect(() => {
         updateRender(selectGroupId)
-    }, [type,selectGroupId])
+    }, [type, selectGroupId])
     const updateRender = useMemoizedFn((id: string) => {
         // 控制渲染
         if (getPageSequenceRenderList(id)) return
@@ -127,9 +129,11 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
                                     className={styles["fuzzer-sequence-list-item"]}
                                     style={{display: selectGroupId === ele.groupId ? "" : "none"}}
                                 >
-                                    <WebFuzzerPage type='sequence' groupId={ele.groupId}>
-                                        <FuzzerSequence groupId={ele.groupId} setType={setType} />
-                                    </WebFuzzerPage>
+                                    <React.Suspense fallback={<PageLoading />}>
+                                        <WebFuzzerPage type='sequence' groupId={ele.groupId}>
+                                            <FuzzerSequence groupId={ele.groupId} setType={setType} />
+                                        </WebFuzzerPage>
+                                    </React.Suspense>
                                 </div>
                             )
                     )}

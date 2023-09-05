@@ -1,48 +1,48 @@
-import React, { ReactNode, Suspense } from "react"
-import { YakExecutor } from "../pages/invoker/YakExecutor"
-import { ShellReceiverPage } from "../pages/shellReceiver/ShellReceiverPage"
-import { YakBatchExecutors } from "../pages/invoker/batch/YakBatchExecutors"
-import { PayloadManagerPage } from "../pages/payloadManager/PayloadManager"
-import { PortScanPage } from "../pages/portscan/PortScanPage"
-import { PluginOperator } from "../pages/yakitStore/PluginOperator"
-import { failed } from "../utils/notification"
-import { BrutePage } from "../pages/brute/BrutePage"
-import { DataCompare } from "../pages/compare/DataCompare"
-import { HTTPHistory } from "../components/HTTPHistory"
-import { PortAssetTable } from "../pages/assetViewer/PortAssetPage"
-import { DomainAssetPage } from "../pages/assetViewer/DomainAssetPage"
-import { RiskPage } from "../pages/risks/RiskPage"
-import { DNSLogPage } from "../pages/dnslog/DNSLogPage"
-import { fuzzerInfoProp } from "../pages/MainOperator"
-import { ICMPSizeLoggerPage } from "../pages/icmpsizelog/ICMPSizeLoggerPage"
-import { RandomPortLogPage } from "../pages/randomPortLog/RandomPortLogPage"
-import { ReportViewerPage } from "../pages/assetViewer/ReportViewerPage"
-import { BatchExecutorPageEx } from "../pages/invoker/batch/BatchExecutorPageEx"
-import { StartFacadeServerParams } from "../pages/reverseServer/ReverseServer_New"
+import React, {ReactNode, Suspense} from "react"
+import {YakExecutor} from "../pages/invoker/YakExecutor"
+import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
+import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors"
+import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager"
+import {PortScanPage} from "../pages/portscan/PortScanPage"
+import {PluginOperator} from "../pages/yakitStore/PluginOperator"
+import {failed} from "../utils/notification"
+import {BrutePage} from "../pages/brute/BrutePage"
+import {DataCompare} from "../pages/compare/DataCompare"
+import {HTTPHistory} from "../components/HTTPHistory"
+import {PortAssetTable} from "../pages/assetViewer/PortAssetPage"
+import {DomainAssetPage} from "../pages/assetViewer/DomainAssetPage"
+import {RiskPage} from "../pages/risks/RiskPage"
+import {DNSLogPage} from "../pages/dnslog/DNSLogPage"
+import {fuzzerInfoProp} from "../pages/MainOperator"
+import {ICMPSizeLoggerPage} from "../pages/icmpsizelog/ICMPSizeLoggerPage"
+import {RandomPortLogPage} from "../pages/randomPortLog/RandomPortLogPage"
+import {ReportViewerPage} from "../pages/assetViewer/ReportViewerPage"
+import {BatchExecutorPageEx} from "../pages/invoker/batch/BatchExecutorPageEx"
+import {StartFacadeServerParams} from "../pages/reverseServer/ReverseServer_New"
 import {
     ReadOnlyBatchExecutorByMenuItem,
     ReadOnlyBatchExecutorByRecoverUid
 } from "../pages/invoker/batch/ReadOnlyBatchExecutorByMenuItem"
-import { PacketScanner } from "@/pages/packetScanner/PacketScanner"
-import { AddYakitScript } from "@/pages/yakitStore/AddYakitScript/AddYakitScript"
-import { WebsocketFuzzer } from "@/pages/websocket/WebsocketFuzzer"
-import { WebsocketFlowHistory } from "@/pages/websocket/WebsocketFlowHistory"
-import { YakitPluginJournalDetails } from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginJournalDetails"
-import { OnlinePluginRecycleBin } from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
-import { JavaPayloadPage } from "@/pages/payloadGenerater/NewJavaPayloadPage"
-import { NewReverseServerPage } from "@/pages/reverseServer/NewReverseServerPage"
+import {PacketScanner} from "@/pages/packetScanner/PacketScanner"
+import {AddYakitScript} from "@/pages/yakitStore/AddYakitScript/AddYakitScript"
+import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
+import {WebsocketFlowHistory} from "@/pages/websocket/WebsocketFlowHistory"
+import {YakitPluginJournalDetails} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginJournalDetails"
+import {OnlinePluginRecycleBin} from "@/pages/yakitStore/OnlinePluginRecycleBin/OnlinePluginRecycleBin"
+import {JavaPayloadPage} from "@/pages/payloadGenerater/NewJavaPayloadPage"
+import {NewReverseServerPage} from "@/pages/reverseServer/NewReverseServerPage"
 import AccountAdminPage from "@/pages/loginOperationMenu/AccountAdminPage"
 import RoleAdminPage from "@/pages/loginOperationMenu/RoleAdminPage"
-import { HoleCollectPage } from "@/pages/loginOperationMenu/HoleCollectPage"
+import {HoleCollectPage} from "@/pages/loginOperationMenu/HoleCollectPage"
 import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
 import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
-import { TrustListPage } from "@/pages/loginOperationMenu/TrustListPage"
-import { SimpleDetect } from "@/pages/simpleDetect/SimpleDetect"
-import { EngineConsole } from "@/pages/engineConsole/EngineConsole"
-import { ChaosMakerPage } from "@/pages/chaosmaker/ChaosMaker"
-import { ScreenRecorderPage } from "@/pages/screenRecorder/ScreenRecorderPage"
-import { CVEViewer } from "@/pages/cve/CVEViewer"
-import { PageLoading } from "./PageLoading"
+import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
+import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
+import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
+import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker"
+import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
+import {CVEViewer} from "@/pages/cve/CVEViewer"
+import {PageLoading} from "./PageLoading"
 import {
     PrivateOutlineBasicCrawlerIcon,
     PrivateOutlineBatchPluginIcon,
@@ -104,24 +104,24 @@ import {
     PrivateSolidWebsiteTreeIcon,
     PrivateSolidWebsocketFuzzerIcon
 } from "./privateIcon"
-import { PluginStore } from "@/pages/yakitStore/store/PluginStore"
-import { PluginOwner } from "@/pages/yakitStore/owner/PluginOwner"
-import { PluginLocal } from "@/pages/yakitStore/local/PluginLocal"
-import { ControlAdminPage } from "@/pages/dynamicControl/DynamicControl"
-import { PluginDebuggerPage } from "@/pages/pluginDebugger/PluginDebuggerPage"
-import { DebugMonacoEditorPage } from "@/pages/debugMonaco/DebugMonacoEditorPage"
-import { WebsiteTreeViewer } from "@/pages/yakitStore/viewers/WebsiteTree"
-import { VulinboxManager } from "@/pages/vulinbox/VulinboxManager";
-import { DiagnoseNetworkPage } from "@/pages/diagnoseNetwork/DiagnoseNetworkPage";
-import { WebFuzzerPage } from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"
-import {NewCodecPage} from "@/pages/new-codec/NewCodecPage";
+import {PluginStore} from "@/pages/yakitStore/store/PluginStore"
+import {PluginOwner} from "@/pages/yakitStore/owner/PluginOwner"
+import {PluginLocal} from "@/pages/yakitStore/local/PluginLocal"
+import {ControlAdminPage} from "@/pages/dynamicControl/DynamicControl"
+import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage"
+import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"
+import {WebsiteTreeViewer} from "@/pages/yakitStore/viewers/WebsiteTree"
+import {VulinboxManager} from "@/pages/vulinbox/VulinboxManager"
+import {DiagnoseNetworkPage} from "@/pages/diagnoseNetwork/DiagnoseNetworkPage"
+import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
-import { ErrorBoundary } from "react-error-boundary"
-import { PageItemProps } from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
+import {ErrorBoundary} from "react-error-boundary"
+import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
+const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 
 /** 渲染端所有页面枚举 */
 export enum YakitRoute {
@@ -198,15 +198,15 @@ export enum YakitRoute {
     // 网络调试
     Beta_DiagnoseNetwork = "beta-diagnose-network",
     //新版codec
-    Beta_Codec = "beta-codec",
+    Beta_Codec = "beta-codec"
 }
 /**
  * @description 页面路由对应的页面信息
  * * label-页面名称
  * * describe(非必需)-页面描述语
  */
-export const YakitRouteToPageInfo: Record<YakitRoute, { label: string; describe?: string }> = {
-    "new-home": { label: "首页" },
+export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?: string}> = {
+    "new-home": {label: "首页"},
     httpHacker: {
         label: "MITM 交互式劫持",
         describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
@@ -215,27 +215,27 @@ export const YakitRouteToPageInfo: Record<YakitRoute, { label: string; describe?
         label: "Web Fuzzer",
         describe: "通过核心模糊测试标签语法，实现了对 Burpsuite 的 Repeater 和 Intruder 的完美整合"
     },
-    "websocket-fuzzer": { label: "Websocket Fuzzer" },
+    "websocket-fuzzer": {label: "Websocket Fuzzer"},
     codec: {
         label: "Codec",
         describe: "可对数据进行各种处理（包括加密、解密、反序列化、Json 处理等等），还可通过插件自定义数据处理方法"
     },
-    dataCompare: { label: "数据对比", describe: "将数据进行对比，快速识别不同处" },
+    dataCompare: {label: "数据对比", describe: "将数据进行对比，快速识别不同处"},
     "scan-port": {
         label: "端口/指纹扫描",
         describe: "对 IP、IP段、域名等端口进行 SYN、指纹检测、可编写插件进行检测、满足更个性化等需求"
     },
-    poc: { label: "专项漏洞检测", describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类" },
-    "plugin-op": { label: "插件" },
-    brute: { label: "弱口令检测", describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测" },
-    "plugin-store": { label: "插件商店", describe: "目前插件为6大类型，可根据需要灵活编写插件，支持从插件商店下载插件" },
-    "plugin-owner": { label: "我的插件" },
-    "plugin-local": { label: "本地插件" },
-    "batch-executor-page-ex": { label: "批量执行", describe: "自由选择需要的 POC 进行批量漏洞检测" },
-    dnslog: { label: "DNSLog", describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中" },
-    "icmp-sizelog": { label: "ICMP-SizeLog", describe: "使用 ping 携带特定长度数据包判定 ICMP 反连" },
-    "tcp-portlog": { label: "TCP-PortLog", describe: "使用未开放的随机端口来判定 TCP 反连" },
-    PayloadGenerater_New: { label: "Yso-Java Hack", describe: "配置序列化 Payload 或恶意类" },
+    poc: {label: "专项漏洞检测", describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类"},
+    "plugin-op": {label: "插件"},
+    brute: {label: "弱口令检测", describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"},
+    "plugin-store": {label: "插件商店", describe: "目前插件为6大类型，可根据需要灵活编写插件，支持从插件商店下载插件"},
+    "plugin-owner": {label: "我的插件"},
+    "plugin-local": {label: "本地插件"},
+    "batch-executor-page-ex": {label: "批量执行", describe: "自由选择需要的 POC 进行批量漏洞检测"},
+    dnslog: {label: "DNSLog", describe: "自动生成一个子域名，任何查询到这个子域名的 IP 被集合展示在列表中"},
+    "icmp-sizelog": {label: "ICMP-SizeLog", describe: "使用 ping 携带特定长度数据包判定 ICMP 反连"},
+    "tcp-portlog": {label: "TCP-PortLog", describe: "使用未开放的随机端口来判定 TCP 反连"},
+    PayloadGenerater_New: {label: "Yso-Java Hack", describe: "配置序列化 Payload 或恶意类"},
     ReverseServer_New: {
         label: "反连服务器",
         describe: "使用协议端口复用技术，同时在一个端口同时实现 HTTP / RMI / HTTPS 等协议的反连"
@@ -244,38 +244,38 @@ export const YakitRouteToPageInfo: Record<YakitRoute, { label: string; describe?
         label: "端口监听器",
         describe: "反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互"
     },
-    "db-http-request": { label: "History" },
-    "db-reports-results": { label: "报告" },
-    "db-risks": { label: "漏洞" },
-    "db-ports": { label: "端口" },
-    "db-domains": { label: "域名" },
-    "website-tree": { label: "网站树" },
-    cve: { label: "CVE 管理" },
-    yakScript: { label: "Yak Runner", describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类" },
+    "db-http-request": {label: "History"},
+    "db-reports-results": {label: "报告"},
+    "db-risks": {label: "漏洞"},
+    "db-ports": {label: "端口"},
+    "db-domains": {label: "域名"},
+    "website-tree": {label: "网站树"},
+    cve: {label: "CVE 管理"},
+    yakScript: {label: "Yak Runner", describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类"},
     "payload-manager": {
         label: "Payload",
         describe: "通过上传文件、手动删改等，自定义 Payload，可在爆破和 Web Fuzzer 中进行使用"
     },
-    "account-admin-page": { label: "用户管理" },
-    "role-admin-page": { label: "角色管理" },
-    "hole-collect-page": { label: "漏洞汇总" },
-    "license-admin-page": { label: "License管理" },
-    "trust-list-admin-page": { label: "用户管理" },
-    "plug-in-admin-page": { label: "插件权限" },
-    "control-admin-page": { label: "远程管理" },
-    "batch-executor-recover": { label: "继续任务：批量执行插件" },
-    "packet-scan-page": { label: "数据包扫描" },
-    "add-yakit-script": { label: "新建插件" },
-    "yakit-plugin-journal-details": { label: "插件修改详情" },
-    "online-plugin-recycle-bin": { label: "线上插件回收站" },
-    simpleDetect: { label: "安全检测" },
-    "screen-recorder-page": { label: "录屏管理" },
-    "db-chaosmaker": { label: "BAS实验室" },
-    "beta-debug-plugin": { label: "插件调试" },
-    "beta-debug-monaco-editor": { label: "插件编辑器" },
-    "beta-vulinbox-manager": { label: "Vulinbox 管理器", },
-    "beta-diagnose-network": { label: "网络异常诊断" },
-    "beta-codec":{label:"新版codec"}
+    "account-admin-page": {label: "用户管理"},
+    "role-admin-page": {label: "角色管理"},
+    "hole-collect-page": {label: "漏洞汇总"},
+    "license-admin-page": {label: "License管理"},
+    "trust-list-admin-page": {label: "用户管理"},
+    "plug-in-admin-page": {label: "插件权限"},
+    "control-admin-page": {label: "远程管理"},
+    "batch-executor-recover": {label: "继续任务：批量执行插件"},
+    "packet-scan-page": {label: "数据包扫描"},
+    "add-yakit-script": {label: "新建插件"},
+    "yakit-plugin-journal-details": {label: "插件修改详情"},
+    "online-plugin-recycle-bin": {label: "线上插件回收站"},
+    simpleDetect: {label: "安全检测"},
+    "screen-recorder-page": {label: "录屏管理"},
+    "db-chaosmaker": {label: "BAS实验室"},
+    "beta-debug-plugin": {label: "插件调试"},
+    "beta-debug-monaco-editor": {label: "插件编辑器"},
+    "beta-vulinbox-manager": {label: "Vulinbox 管理器"},
+    "beta-diagnose-network": {label: "网络异常诊断"},
+    "beta-codec": {label: "新版codec"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -342,7 +342,7 @@ export interface ComponentParams {
     request?: string
     system?: string
     // order?: string
-    /**@param id 页面唯一标识id HTTPFuzzer必须要有的，其他页面可以不用 */
+    /**@param id 页面唯一标识id HTTPFuzzer/SimpleDetect必须要有的，其他页面可以不用 */
     id?: string
     /**@param groupId HTTPFuzzer必须要有的，其他页面可以不用 */
     groupId?: string
@@ -373,7 +373,7 @@ export interface ComponentParams {
     YakScriptJournalDetailsId?: number
     // facade server参数
     facadeServerParams?: StartFacadeServerParams
-    classGeneraterParams?: { [key: string]: any }
+    classGeneraterParams?: {[key: string]: any}
     classType?: string
 
     // 简易企业版 - 安全检测
@@ -416,20 +416,19 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             )
         case YakitRoute.HTTPFuzzer:
             return (
-                <WebFuzzerPage
-                    type='config'
-                    id={params?.id || ""}
-                >
-                    <HTTPFuzzerPage
-                        isHttps={params?.isHttps}
-                        isGmTLS={params?.isGmTLS}
-                        request={params?.request}
-                        system={params?.system}
-                        id={params?.id || ""}
-                        fuzzerParams={params?.fuzzerParams}
-                        shareContent={params?.shareContent}
-                    />
-                </WebFuzzerPage>
+                <Suspense fallback={<PageLoading />}>
+                    <WebFuzzerPage type='config' id={params?.id || ""}>
+                        <HTTPFuzzerPage
+                            isHttps={params?.isHttps}
+                            isGmTLS={params?.isGmTLS}
+                            request={params?.request}
+                            system={params?.system}
+                            id={params?.id || ""}
+                            fuzzerParams={params?.fuzzerParams}
+                            shareContent={params?.shareContent}
+                        />
+                    </WebFuzzerPage>
+                </Suspense>
             )
         case YakitRoute.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
@@ -523,6 +522,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.SimpleDetect:
             return (
                 <SimpleDetect
+                    tabId={params?.id || ""}
                     Uid={params?.recoverUid}
                     BaseProgress={params?.recoverBaseProgress}
                     YakScriptOnlineGroup={params?.recoverOnlineGroup}
@@ -542,13 +542,13 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Beta_DiagnoseNetwork:
             return <DiagnoseNetworkPage />
         case YakitRoute.Beta_Codec:
-            return <NewCodecPage/>
+            return <NewCodecPage />
         default:
             return <div />
     }
 }
 
-export const RouteToPageItem=withRouteToPage(RouteToPage)
+export const RouteToPageItem = withRouteToPage(RouteToPage)
 
 /** @name 菜单中内定插件的插件名称(不是展示名称) */
 export enum ResidentPluginName {
@@ -682,7 +682,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
                     }
                 ]
             },
-            { page: YakitRoute.Codec, ...YakitRouteToPageInfo[YakitRoute.Codec] },
+            {page: YakitRoute.Codec, ...YakitRouteToPageInfo[YakitRoute.Codec]},
             {
                 page: YakitRoute.DataCompare,
                 ...YakitRouteToPageInfo[YakitRoute.DataCompare]
@@ -697,15 +697,15 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
                 page: YakitRoute.Mod_ScanPort,
                 ...YakitRouteToPageInfo[YakitRoute.Mod_ScanPort]
             },
-            { page: YakitRoute.PoC, ...YakitRouteToPageInfo[YakitRoute.PoC] },
-            { page: YakitRoute.Plugin_OP, label: "子域名收集", yakScripName: ResidentPluginName.SubDomainCollection },
+            {page: YakitRoute.PoC, ...YakitRouteToPageInfo[YakitRoute.PoC]},
+            {page: YakitRoute.Plugin_OP, label: "子域名收集", yakScripName: ResidentPluginName.SubDomainCollection},
             {
                 page: YakitRoute.Plugin_OP,
                 label: "基础爬虫",
                 yakScripName: ResidentPluginName.BasicCrawler,
                 describe: "通过爬虫可快速了解网站的整体架构"
             },
-            { page: YakitRoute.Plugin_OP, label: "空间引擎", yakScripName: ResidentPluginName.SpaceEngine },
+            {page: YakitRoute.Plugin_OP, label: "空间引擎", yakScripName: ResidentPluginName.SpaceEngine},
             {
                 page: undefined,
                 label: "爆破与未授权检测",
@@ -796,12 +796,12 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
                 page: YakitRoute.DB_HTTPHistory,
                 ...YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory]
             },
-            { page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report] },
-            { page: YakitRoute.DB_Risk, ...YakitRouteToPageInfo[YakitRoute.DB_Risk] },
-            { page: YakitRoute.DB_Ports, ...YakitRouteToPageInfo[YakitRoute.DB_Ports] },
-            { page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain] },
-            { page: YakitRoute.WebsiteTree, ...YakitRouteToPageInfo[YakitRoute.WebsiteTree] },
-            { page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE] }
+            {page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]},
+            {page: YakitRoute.DB_Risk, ...YakitRouteToPageInfo[YakitRoute.DB_Risk]},
+            {page: YakitRoute.DB_Ports, ...YakitRouteToPageInfo[YakitRoute.DB_Ports]},
+            {page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain]},
+            {page: YakitRoute.WebsiteTree, ...YakitRouteToPageInfo[YakitRoute.WebsiteTree]},
+            {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
         ]
     }
 ]
@@ -814,7 +814,7 @@ export const PublicCommonPlugins: PublicRouteMenuProps[] = [
         page: undefined,
         label: "子域名收集",
         children: ["crt子域名收集", "纯暴力子域名收集", "SEO综合查询", "被动子域名收集"].map((item) => {
-            return { page: YakitRoute.Plugin_OP, label: item, yakScripName: item }
+            return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
         })
     },
     {
@@ -832,7 +832,7 @@ export const PublicCommonPlugins: PublicRouteMenuProps[] = [
             "按行去重",
             "api提取"
         ].map((item) => {
-            return { page: YakitRoute.Plugin_OP, label: item, yakScripName: item }
+            return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
         })
     }
 ]

@@ -1065,7 +1065,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     ).run
     useUpdateEffect(() => {
         sendFuzzerSettingInfo()
-    }, [advancedConfigValue, requestRef.current])
+    }, [advancedConfigValue])
 
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
@@ -1217,6 +1217,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     const onSetRequest = useMemoizedFn((i: string) => {
         requestRef.current = i
+        sendFuzzerSettingInfo()
     })
     const onInsertYakFuzzerFun = useMemoizedFn(() => {
         if (webFuzzerNewEditorRef.current) onInsertYakFuzzer(webFuzzerNewEditorRef.current.reqEditor)
@@ -1333,7 +1334,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </div>
                     )}
 
-                    {onlyOneResponse && httpResponse.Ok && checkRedirect &&(
+                    {onlyOneResponse && httpResponse.Ok && checkRedirect && (
                         <YakitButton
                             onClick={() => {
                                 setLoading(true)

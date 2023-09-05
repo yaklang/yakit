@@ -871,11 +871,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId} = usePageNode(
+    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId,setCurrentSelectGroup} = usePageNode(
         (s) => ({
             setPageNode: s.setPageNode,
             getPageNodeInfoByPageId: s.getPageNodeInfoByPageId,
-            updatePageNodeInfoByPageId: s.updatePageNodeInfoByPageId
+            updatePageNodeInfoByPageId: s.updatePageNodeInfoByPageId,
+            setCurrentSelectGroup: s.setCurrentSelectGroup,
         }),
         shallow
     )
@@ -1084,6 +1085,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 setPageCache(oldPageCache)
                 setCurrentTabKey(key)
                 setPageNode(YakitRoute.HTTPFuzzer, pageNodeInfo)
+                const lastPage = pageNodeInfo.pageNodeList[pageNodeInfo.pageNodeList.length-1]
+                if(lastPage&&lastPage.pageChildrenList.length>0){
+                    // 最后一个是组的时候，需要设置当前选中组
+                    setCurrentSelectGroup(YakitRoute.HTTPFuzzer, lastPage.pageId)
+                }
             })
             .catch((e) => {})
             .finally(() => setTimeout(() => setLoading(false), 200))
@@ -3212,9 +3218,28 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     })
 )
 
+interface SimpleTabInterface {
+    tabId: string
+    status: "run"|"stop"|"success"
+}
+
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     const {subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
+    const [tabStatus,setTabStatus] = useState<string>("")
+    useEffect(()=>{
+        emiter.on("simpleDetectTabEvent", onSimpleDetectTabEvent)
+        return () => {
+            emiter.off("simpleDetectTabEvent", onSimpleDetectTabEvent)
+        }
+    },[])
+    // 修改颜色
+    const onSimpleDetectTabEvent = useMemoizedFn((v) => {
+        const obj:SimpleTabInterface = JSON.parse(v)
+        if(obj.tabId === subItem.id){
+            setTabStatus(obj.status)
+        }
+    })
     return (
         <Draggable key={subItem.id} draggableId={subItem.id} index={index} type={dropType}>
             {(provided, snapshot) => {
@@ -3225,12 +3250,13 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         style={{
-                            ...itemStyle
+                            ...itemStyle,
                         }}
                         className={classNames(styles["tab-menu-sub-item"], {
                             [styles["tab-menu-sub-item-active"]]: isActive,
                             [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
-                            [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor
+                            [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor,
+                            [styles[`tab-menu-sub-item-${tabStatus}`]]: tabStatus.length>0,
                         })}
                         onClick={() => {
                             setSelectSubMenu(subItem)

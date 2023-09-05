@@ -10,7 +10,8 @@ import {
     useScroll,
     useThrottleFn,
     useUpdateEffect,
-    useVirtualList
+    useVirtualList,
+    useInViewport
 } from "ahooks"
 import classNames from "classnames"
 import {
@@ -128,7 +129,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         if (size === "middle") return 32
         return 28
     }, [size])
-    const [tableIsIntersecting, setTableIsIntersecting] = useState<boolean>(false) // 表格是否在当前页面显示
     const [currentRow, setCurrentRow] = useState<T>()
     const [selectedRows, setSelectedRows] = useState<T[]>([])
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
@@ -183,16 +183,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         })
     })
 
-    const intersectionObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            setTableIsIntersecting(entry.isIntersecting)
-        })
-    })
-
     useUpdateEffect(() => {
         if (containerRef.current) {
             resizeObserver.observe(containerRef.current)
-            intersectionObserver.observe(containerRef.current)
         }
     }, [containerRef.current, height])
 
@@ -215,6 +208,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         if (!currentIndex) return
         scrollTo(currentIndex)
     }, [currentIndex])
+
+    const [inViewport] = useInViewport(containerRef)
 
     // 使用上箭头
     useHotkeys(
@@ -252,7 +247,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        { enabled: tableIsIntersecting },
+        { enabled: inViewport },
         [data, currentRow, containerRef.current]
     )
     const upKey = useDebounceFn(
@@ -315,7 +310,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }, 50)
             }
         },
-        { enabled: tableIsIntersecting },
+        { enabled: inViewport },
         [data, currentRow, containerRef.current]
     )
     const downKey = useDebounceFn(

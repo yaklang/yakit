@@ -544,7 +544,18 @@ $keyColor: map-keys($colors);
     max-width: 150px;
     background-color: #fff;
 }
-
+.tab-menu-sub-item-run{
+    color: #40a9ff;
+    font-weight: bold;
+}
+.tab-menu-sub-item-stop{
+    color: red;
+    font-weight: bold;
+}
+.tab-menu-sub-item-success{
+    color: rgb(82, 196, 26);
+    font-weight: bold;
+}
 .page-body {
     background-color: #fff;
     display: flex;
