@@ -76,7 +76,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
 
     const logRef = useRef(null)
     const [inViewport] = useInViewport(logRef)
-    const [cleanLogFlag, setCleanLogFlag] = useState(false) // 是否点击清楚按钮标识
 
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
@@ -186,10 +185,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         if (!inViewport) {
             return
         }
-        if (cleanLogFlag) {
-            setCleanLogFlag(false)
-            return
-        }
         const l = data.length
         const newParams = {
             ...params,
@@ -233,7 +228,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         () => {
             update()
         },
-        2000,
+        1000,
         {immediate: true}
     )
 
@@ -244,7 +239,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         const cleanLogTableData = () => {
             setLoading(true)
             setData([])
-            setCleanLogFlag(true)
         }
         emiter.on('cleanMitmLogEvent', cleanLogTableData)
         return () => {
