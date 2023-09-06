@@ -191,7 +191,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     <YakEditor
                         type={"http"}
                         value={params.Template}
-                        setValue={(Template) => setParams({...params, Template})}
+                        setValue={(Template) => setParams({ ...getParams(), Template })}
                     />
                 </div>
             </Form.Item>
@@ -258,7 +258,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     <YakEditor
                         type={"yak"}
                         value={params.HotPatchCode}
-                        setValue={(HotPatchCode) => setParams({...params, HotPatchCode})}
+                        setValue={(HotPatchCode) => setParams({ ...getParams(), HotPatchCode })}
                     />
                 </div>
             </Form.Item>
