@@ -904,23 +904,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                             className={styles["variable-list-remove"]}
                                                         />
 
-                                                        <Form.Item  noStyle wrapperCol={{span: 24}}>
+                                                        <Form.Item name={[name,'Type']} noStyle wrapperCol={{span: 24}}>
                                                             <YakitRadioButtons
-                                                                defaultValue={"raw"}
-                                                                onChange={(e) => {
-                                                                    // 获取当前表单的所有字段值
-                                                                    const v = form.getFieldsValue();
-                                                                    const variables = v.params || []
-                                                                    variables[i].Type = e.target.value
-                                                                    // console.log("variables",variables);
-                                                                    form.setFieldsValue({
-                                                                        params: [...variables]
-                                                                    })
-                                                                    onSetValue({
-                                                                        ...v,
-                                                                        params: [...variables]
-                                                                    })
-                                                                }}
                                                                 buttonStyle='solid'
                                                                 options={variableModeOptions}
                                                                 size={"small"}
