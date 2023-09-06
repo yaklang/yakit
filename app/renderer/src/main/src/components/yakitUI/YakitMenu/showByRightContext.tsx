@@ -52,7 +52,7 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
     let left = x || coordinate.clientX
     let top = y || coordinate.clientY
     /** 右键展示元素宽高 */
-    const divWidth = roundDown(div.getBoundingClientRect().height || 0)
+    const divWidth = roundDown(div.getBoundingClientRect().width || 0)
     const divHeight = roundDown(div.getBoundingClientRect().height || 0)
 
     if (divWidth > 0 && divHeight > 0) {
