@@ -23,9 +23,9 @@ module.exports = (win, getClient) => {
         win.webContents.send("fetch-send-to-packet-hack", params)
     })
     // 缓存fuzzer内数据和配置通信
-    ipcMain.handle("send-fuzzer-setting-data", async (e, params) => {
-        win.webContents.send("fetch-fuzzer-setting-data", params)
-    })
+    // ipcMain.handle("send-fuzzer-setting-data", async (e, params) => {
+    //     win.webContents.send("fetch-fuzzer-setting-data", params)
+    // })
     // 发送插件信息到YakRunning页面
     ipcMain.handle("send-to-yak-running", async (e, params) => {
         win.webContents.send("fetch-send-to-yak-running", params)

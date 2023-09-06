@@ -52,8 +52,6 @@ import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
-import {usePageNode} from "@/store/pageNodeInfo"
-import shallow from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
 
 const {ipcRenderer} = window.require("electron")

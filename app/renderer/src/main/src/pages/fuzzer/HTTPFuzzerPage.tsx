@@ -102,11 +102,12 @@ import {
     FUZZER_LABEL_LIST_NUMBER
 } from "./HTTPFuzzerEditorMenu"
 import {execCodec} from "@/utils/encodec"
-import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
+import shallow from "zustand/shallow"
+import { usePageInfo,PageNodeItemProps,WebFuzzerPageInfoProps } from "@/store/pageInfo"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -373,42 +374,42 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
         })
 }
 
-    /**@description 插入 yak.fuzz 语法 */
-export const onInsertYakFuzzer = (reqEditor:IMonacoEditor) => {
-        const m = showYakitModal({
-            title: "Fuzzer Tag 调试工具",
-            width: "70%",
-            footer: null,
-            subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
-            content: (
-                <div style={{padding: 24}}>
-                    <StringFuzzer
-                        advanced={true}
-                        disableBasicMode={true}
-                        insertCallback={(template: string) => {
-                            if (!template) {
-                                Modal.warn({
-                                    title: "Payload 为空 / Fuzz 模版为空"
+/**@description 插入 yak.fuzz 语法 */
+export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
+    const m = showYakitModal({
+        title: "Fuzzer Tag 调试工具",
+        width: "70%",
+        footer: null,
+        subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
+        content: (
+            <div style={{padding: 24}}>
+                <StringFuzzer
+                    advanced={true}
+                    disableBasicMode={true}
+                    insertCallback={(template: string) => {
+                        if (!template) {
+                            Modal.warn({
+                                title: "Payload 为空 / Fuzz 模版为空"
+                            })
+                        } else {
+                            if (reqEditor && template) {
+                                reqEditor.trigger("keyboard", "type", {
+                                    text: template
                                 })
                             } else {
-                                if (reqEditor && template) {
-                                    reqEditor.trigger("keyboard", "type", {
-                                        text: template
-                                    })
-                                } else {
-                                    Modal.error({
-                                        title: "BUG: 编辑器失效"
-                                    })
-                                }
-                                m.destroy()
+                                Modal.error({
+                                    title: "BUG: 编辑器失效"
+                                })
                             }
-                        }}
-                        close={() => m.destroy()}
-                    />
-                </div>
-            )
-        })
-    }
+                            m.destroy()
+                        }
+                    }}
+                    close={() => m.destroy()}
+                />
+            </div>
+        )
+    })
+}
 
 const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
 
@@ -605,7 +606,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
-    const getPageNodeInfoByPageId = usePageNode((s) => s.getPageNodeInfoByPageId)
+    const {queryPagesDataById,updatePagesDataCacheById}=usePageInfo((s)=>({
+        queryPagesDataById:s.queryPagesDataById,
+        updatePagesDataCacheById:s.updatePagesDataCacheById
+    }),shallow)
 
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
@@ -652,9 +656,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     const onUpdateRequest = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         if (res.type === "config" && inViewport) {
-            const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
-            if (!nodeInfo) return
-            const {currentItem} = nodeInfo
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+            if (!currentItem) return
             const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request
             if (!newRequest) return
             if (requestRef.current === newRequest) return
@@ -1055,17 +1058,37 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 advancedConfigValue,
                 request: requestRef.current
             }
-            ipcRenderer.invoke("send-fuzzer-setting-data", {
-                key: props.id || "",
-                param: JSON.stringify(info),
-                webFuzzerPageInfo: JSON.stringify(webFuzzerPageInfo)
-            })
+            // ipcRenderer.invoke("send-fuzzer-setting-data", {
+            //     key: props.id || "",
+            //     param: JSON.stringify(info),
+            //     webFuzzerPageInfo: JSON.stringify(webFuzzerPageInfo)
+            // })
+            onUpdateFuzzerSequenceDueToDataChanges(props.id || "", webFuzzerPageInfo)
         },
         {wait: 1000}
     ).run
     useUpdateEffect(() => {
         sendFuzzerSettingInfo()
     }, [advancedConfigValue])
+
+    /**
+     * 因为页面数据变化更新fuzzer序列化
+     */
+    const onUpdateFuzzerSequenceDueToDataChanges = useMemoizedFn((key: string, param: WebFuzzerPageInfoProps) => {
+        const currentItem: PageNodeItemProps|undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, key)
+        if(!currentItem)return
+        const newCurrentItem: PageNodeItemProps = {
+            ...currentItem,
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    pageId: param.pageId,
+                    advancedConfigValue: {...param.advancedConfigValue},
+                    request: param.request
+                }
+            }
+        }
+        updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+    })
 
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
@@ -1222,16 +1245,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onInsertYakFuzzerFun = useMemoizedFn(() => {
         if (webFuzzerNewEditorRef.current) onInsertYakFuzzer(webFuzzerNewEditorRef.current.reqEditor)
     })
-    const checkRedirect = useMemo(()=>{
+    const checkRedirect = useMemo(() => {
         const arr = httpResponse?.Headers || []
         for (let index = 0; index < arr.length; index++) {
             const element = arr[index]
-            if (element.Header === "Location"){
+            if (element.Header === "Location") {
                 return true
             }
         }
         return false
-    },[httpResponse])
+    }, [httpResponse])
 
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -2239,7 +2262,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             contextMenu={responseEditorRightMenu}
                             webFuzzerValue={props.webFuzzerValue}
                             extraEditorProps={{
-                                isShowSelectRangeMenu:true
+                                isShowSelectRangeMenu: true
                             }}
                             {...otherEditorProps}
                         />

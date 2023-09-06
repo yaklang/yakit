@@ -10,11 +10,10 @@ import debounce from "lodash/debounce"
 import {RemoteGV} from "@/yakitGV"
 
 interface FuzzerSequenceProps {
+    fuzzerList: FuzzerListProps[]
     fuzzerSequenceList: FuzzerSequenceListProps[]
     fuzzerSequenceCacheData: FuzzerSequenceCacheDataProps[]
-    selectGroupId: string
-
-    setSelectGroupId: (s: string) => void
+    
     addFuzzerSequenceList: (f: FuzzerSequenceListProps) => void
     /**删除 fuzzerSequenceList 的同时也会删除 fuzzerSequenceCacheData中的 groupId相同的数据*/
     removeFuzzerSequenceList: (f: FuzzerSequenceListProps) => void
@@ -26,6 +25,7 @@ interface FuzzerSequenceProps {
     removeFuzzerSequenceCacheData: (groupId: string) => void
 }
 
+export interface FuzzerListProps {}
 export interface FuzzerSequenceListProps {
     groupId: string
 }
@@ -37,17 +37,9 @@ export interface FuzzerSequenceCacheDataProps {
 
 export const useFuzzerSequence = create<FuzzerSequenceProps>()(
     subscribeWithSelector((set, get) => ({
+        fuzzerList: [],
         fuzzerSequenceList: [],
         fuzzerSequenceCacheData: [],
-        selectGroupId: "",
-        setSelectGroupId: (val) => {
-            const s = get()
-            if (!s) return
-            set({
-                ...s,
-                selectGroupId: val
-            })
-        },
         addFuzzerSequenceList: (val) => {
             const s = get()
             if (!s) return
@@ -126,3 +118,18 @@ const saveFuzzerSequenceCache = debounce((selectedState) => {
     // console.log("saveFuzzerSequenceCache", selectedState)
     setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(selectedState))
 }, 500)
+
+// /**
+//  *  @description 打开软化后这个订阅会一直存在，直到关闭软件;后续再看看优化方法
+//  */
+// const unFuzzerCacheData = useFuzzerSequence.subscribe(
+//     (state) => state.fuzzerList,
+//     (selectedState, previousSelectedState) => {
+//         saveFuzzerCache(selectedState)
+//     }
+// )
+
+// const saveFuzzerCache = debounce((selectedState) => {
+//     console.log("saveFuzzerCache", selectedState)
+//     // setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(selectedState))
+// }, 500)

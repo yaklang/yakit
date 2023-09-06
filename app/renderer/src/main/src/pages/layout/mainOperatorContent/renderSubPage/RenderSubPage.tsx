@@ -8,6 +8,7 @@ import FuzzerSequence from "@/pages/fuzzer/FuzzerSequence/FuzzerSequence"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {FuzzerSequenceListProps, useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageLoading} from "@ant-design/pro-layout"
+import { usePageInfo } from "@/store/pageInfo"
 
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 
@@ -101,7 +102,7 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
         boolean
     >(new Map<string, boolean>())
     const fuzzerSequenceList = useFuzzerSequence((s) => s.fuzzerSequenceList)
-    const selectGroupId = useFuzzerSequence((s) => s.selectGroupId)
+    const selectGroupId = usePageInfo((s) => s.selectGroupId.get(YakitRoute.HTTPFuzzer)||'')
 
     useEffect(() => {
         updateRender(selectGroupId)

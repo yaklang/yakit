@@ -50,13 +50,6 @@ import {
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {yakitNotify} from "@/utils/notification"
-import {
-    NodeInfoProps,
-    PageInfoProps,
-    PageNodeItemProps,
-    WebFuzzerPageInfoProps,
-    usePageNode
-} from "@/store/pageNodeInfo"
 import {YakitRoute} from "@/routes/newRoute"
 import {
     FuzzerExtraShow,
@@ -88,6 +81,7 @@ import {PencilAltIcon} from "@/assets/newIcon"
 import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 import shallow from "zustand/shallow"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
+import {PageNodeItemProps, WebFuzzerPageInfoProps, usePageInfo} from "@/store/pageInfo"
 // import { ResponseCard } from "./ResponseCard"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -141,10 +135,11 @@ const isEmptySequence = (list: SequenceProps[]) => {
 }
 
 const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
-    const { getPageNodeInfoByPageId, getCurrentSelectGroup} = usePageNode(
+    const {queryPagesDataById, selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (state) => ({
-            getPageNodeInfoByPageId: state.getPageNodeInfoByPageId,
-            getCurrentSelectGroup: state.getCurrentSelectGroup
+            queryPagesDataById: state.queryPagesDataById,
+            selectGroupId: state.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
+            getPagesDataByGroupId: state.getPagesDataByGroupId
         }),
         shallow
     )
@@ -219,7 +214,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     }, [])
 
     useEffect(() => {
-        const unSubPageNode = usePageNode.subscribe(
+        const unSubPageNode = usePageInfo.subscribe(
             (state) => {
                 const names = state.getCurrentGroupAllTabName(YakitRoute.HTTPFuzzer)
                 return names
@@ -389,16 +384,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     }, [])
     const getCurrentSequenceRequest = useMemoizedFn((pageId: string) => {
-        const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pageId)
-        if (nodeInfo) {
-            const {currentItem} = nodeInfo
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
+        if (currentItem) {
             return currentItem
         }
     })
     const getCurrentGroupSequence = useMemoizedFn(() => {
-        const nodeInfo = getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
-        if (!nodeInfo) return []
-        const {pageChildrenList} = nodeInfo
+        const pageChildrenList = getPagesDataByGroupId(YakitRoute.HTTPFuzzer, selectGroupId)
         return pageChildrenList || []
     })
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
@@ -1243,8 +1235,13 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         return cachedTotal === 1
     }, [cachedTotal])
 
-    const updatePageNodeInfoByPageId = usePageNode((s) => s.updatePageNodeInfoByPageId)
-    const getPageNodeInfoByPageId = usePageNode((s) => s.getPageNodeInfoByPageId)
+    const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            updatePagesDataCacheById: s.updatePagesDataCacheById
+        }),
+        shallow
+    )
 
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
@@ -1278,9 +1275,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     const onUpdatePageInfo = useDebounceFn(
         (value: string, pId: string) => {
             if (!pId) return
-            const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId)
-            if (!nodeInfo) return
-            const {currentItem} = nodeInfo
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pId)
+            if (!currentItem) return
             if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
                 if (value === currentItem.pageParamsInfo.webFuzzerPageInfo.request) return
                 const newCurrentItem: PageNodeItemProps = {
@@ -1292,7 +1288,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         }
                     }
                 }
-                updatePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, pId, {...newCurrentItem})
+                updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
             }
         },
         {wait: 200}
