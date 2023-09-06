@@ -166,6 +166,25 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             ipcRenderer.removeListener("fetch-send-to-tab", onCloseDetails)
         }
     }, [])
+
+    // 编辑器复制Url菜单项
+    const copyUrlMenuItem: OtherMenuListProps = useMemo(() => {
+        return {
+            copyUrl: {
+                menu: [
+                    {
+                        key: "copy-url",
+                        label: "复制URL"
+                    }
+                ],
+                onRun: (editor, key) => {
+                    callCopyToClipboard(flow?.Url || "")
+                },
+                order: 14
+            },
+        }
+    }, [flow?.Url])
+
     return (
         <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
             {flow ? (
@@ -298,6 +317,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             extraEditorProps={{
                                                 isShowSelectRangeMenu:true
                                             }}
+                                            contextMenu={{ ...copyUrlMenuItem }}
                                         />
                                     </div>
                                 </Card>
@@ -317,6 +337,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             extraEditorProps={{
                                                 isShowSelectRangeMenu:true
                                             }}
+                                            contextMenu={{ ...copyUrlMenuItem }}
                                         />
                                     </div>
                                 </Card>
