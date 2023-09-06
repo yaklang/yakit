@@ -57,3 +57,10 @@
         opacity: 0;
     }
 }
+.render-html-box{
+    height: 100%;
+    overflow: auto;
+    img{
+        max-width: 100%;
+    }
+}

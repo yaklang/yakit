@@ -24,7 +24,6 @@ import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
 import {HTTPPacketFuzzable} from "./HTTPHistory"
 import {AutoSpin} from "./AutoSpin"
-import {ResizeBox} from "./ResizeBox"
 import {Buffer} from "buffer"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {HTTPFlowForWebsocketViewer} from "@/pages/websocket/HTTPFlowForWebsocketViewer"
@@ -40,9 +39,8 @@ import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {HTTPFuzzerRangeReadOnlyEditorMenu} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
-import {YakitRadioButtons} from "./yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "@/utils/prettifyPacket"
+import { YakitResizeBox } from "./yakitUI/YakitResizeBox/YakitResizeBox"
+import { YakitButton } from "./yakitUI/YakitButton/YakitButton"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -563,15 +561,16 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     <Button.Group size={"small"}>
                                         {existedInfoType.map((i) => {
                                             return (
-                                                <Button
-                                                    type={infoType === i ? "primary" : "default"}
+                                                <YakitButton
+                                                    size="small"
+                                                    type={infoType === i ? "primary" : "outline2"}
                                                     onClick={() => {
                                                         setInfoType(i)
                                                     }}
                                                     key={i}
                                                 >
                                                     {infoTypeVerbose(i)}
-                                                </Button>
+                                                </YakitButton>
                                             )
                                         })}
                                     </Button.Group>
@@ -698,77 +697,6 @@ interface TypeOptionsProps {
 
 export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAndResponseProps> = React.memo((props) => {
     const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, loading} = props
-    const [type, setType] = useState<"response" | "beautify" | "render">("response")
-    const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
-    const [originValue, setOriginValue] = useState<Uint8Array>(new Uint8Array())
-    const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
-    const [responseLoading,setResponseLoading] = useState<boolean>(false)
-    useEffect(() => {
-        setType("response")
-        if (flow?.Response) {
-            formatPacketRender(flow.Response, (packet) => {
-                if (packet) {
-                    setTypeOptions([
-                        {
-                            value: "response",
-                            label: "响应"
-                        },
-                        {
-                            value: "beautify",
-                            label: "美化"
-                        },
-                        {
-                            value: "render",
-                            label: "渲染"
-                        }
-                    ])
-                } else {
-                    setTypeOptions([
-                        {
-                            value: "response",
-                            label: "响应"
-                        },
-                        {
-                            value: "beautify",
-                            label: "美化"
-                        }
-                    ])
-                }
-            })
-        }
-    }, [flow?.Response])
-
-    const beautifyCode = async(flow: HTTPFlow) => {
-        setResponseLoading(true)
-        let beautifyValue = await prettifyPacketCode(new Buffer(flow.Response).toString("utf8"))
-        setOriginValue(beautifyValue as Uint8Array)
-        setResponseLoading(false)
-    }
-
-    const renderCode = async(flow: HTTPFlow) => {
-        setResponseLoading(true)
-        let renderValue = await prettifyPacketRender(flow.Response)
-        setRenderHTML(
-            <div
-                className={styles["render-html-box"]}
-                dangerouslySetInnerHTML={{__html: renderValue as string}}
-            />
-        )
-        setOriginValue(new Uint8Array())
-        setResponseLoading(false)
-    }
-
-    useEffect(() => {
-        if (flow?.Response && type === "response") {
-            setOriginValue(flow.Response)
-        }else if (flow?.Response && type === "beautify") {
-            setTimeout(()=>{beautifyCode(flow)},200)
-        } else if (flow?.Response && type === "render") {
-            setTimeout(()=>{renderCode(flow)},200)
-        } else {
-            setOriginValue(new Uint8Array())
-        }
-    }, [flow?.Response, type])
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
         if (!flow?.RawRequestBodyBase64) return {}
@@ -823,7 +751,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     }, [flow?.Url])
 
     return (
-        <ResizeBox
+        <YakitResizeBox
             firstNode={() => {
                 if (flow === undefined) {
                     return <Empty description={"选择想要查看的 HTTP 记录请求"} />
@@ -866,18 +794,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 return (
                     <NewHTTPPacketEditor
                         contextMenu={{ ...copyResponseBase64BodyMenuItem, ...copyUrlMenuItem }}
-                        title={
-                            <Radio.Group
-                                buttonStyle='solid'
-                                optionType='button'
-                                size='small'
-                                value={type}
-                                onChange={(e) => {
-                                    setType(e.target.value)
-                                }}
-                                options={typeOptions}
-                            />
-                        }
                         extra={[
                             <Button
                                 className={styles["extra-chrome-btn"]}
@@ -892,9 +808,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isResponse={true}
                         noHex={true}
                         noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
-                        loading={responseLoading||loading}
-                        originValue={originValue}
-                        emptyOr={renderHtml}
+                        loading={loading}
+                        originValue={flow?.Response || new Uint8Array()}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
                         hideSearch={true}
