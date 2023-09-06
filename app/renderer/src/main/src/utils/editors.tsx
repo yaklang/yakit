@@ -21,7 +21,6 @@ import {
 import {HTTPPacketFuzzable} from "../components/HTTPHistory"
 import ReactResizeDetector from "react-resize-detector"
 
-import "./editors.scss"
 import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {Buffer} from "buffer"
 import {failed, info} from "./notification"
@@ -43,6 +42,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "./prettifyPacket"
 import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import styles from "./editors.module.scss"
+import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -356,7 +357,9 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                         refreshRate={30}
                     >
                         <div
-                            className={`${props.showLineBreaks ? "" : "monaco-editor-style"}`}
+                            className={classNames({
+                            [styles["monaco-editor-style"]]: !props.showLineBreaks
+                            }) }
                             style={{height: "100%", width: "100%", overflow: "hidden"}}
                         >
                             <MonacoEditor
@@ -1026,7 +1029,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     )}
                     {mode === "hex" && !empty && (
                         <HexEditor
-                            className={props.system === "Windows_NT" ? "hex-editor-style" : ""}
+                            className={classNames({[styles["hex-editor-style"]]: props.system === "Windows_NT"})}
                             showAscii={true}
                             data={hexValue}
                             showRowLabels={true}
@@ -1343,7 +1346,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const renderCode = async () => {
         setTypeLoading(true)
         let renderValue = await prettifyPacketRender(originValue)
-        setRenderHTML(<div className={"render-html-box"} dangerouslySetInnerHTML={{__html: renderValue as string}} />)
+        setRenderHTML(<div className={styles['render-html-box']} dangerouslySetInnerHTML={{__html: renderValue as string}} />)
         setTypeLoading(false)
     }
 
@@ -1366,7 +1369,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }, [originValue, type])
     
     return (
-        <div style={{width: "100%", height: "100%", overflow: "hidden"}}>
+        <div className={styles['new-http-packet-editor']}>
             <Card
                 className={"flex-card"}
                 size={"small"}
@@ -1377,7 +1380,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     !props.noHeader && (
                         <Space>
                             {!props.noTitle &&
-                                (!!props.title ? props.title : <span>{isResponse ? "Response" : "Request"}</span>)}
+                                (!!props.title ? props.title : <span style={{fontSize:12}}>{isResponse ? "Response" : "Request"}</span>)}
                             {!props.simpleMode ? (
                                 !props.noHex && (
                                     <SelectOne
@@ -1598,7 +1601,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     )}
                     {mode === "hex" && !empty && !renderHtml && (
                         <HexEditor
-                            className={props.system === "Windows_NT" ? "hex-editor-style" : ""}
+                            className={classNames({[styles["hex-editor-style"]]: props.system === "Windows_NT"})}
                             showAscii={true}
                             data={hexValue}
                             showRowLabels={true}

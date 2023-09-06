@@ -613,6 +613,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     }
                                 })()}
                                 editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
+                                isShowBeautifyRender={false}
                             />
                         </Col>
                     )}

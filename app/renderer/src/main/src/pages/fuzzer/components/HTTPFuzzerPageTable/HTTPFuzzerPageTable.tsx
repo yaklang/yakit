@@ -608,7 +608,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     />
                 }
                 secondNode={
-                    <YakitCard
+                        <NewHTTPPacketEditor
                         title={
                             <div className={styles["second-node-title-wrapper"]}>
                                 <span className={styles["second-node-title-text"]}>快速预览</span>
@@ -634,16 +634,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 </div>
                             </div>
                         }
-                        bordered={false}
-                        bodyStyle={{ padding: 0 }}
-                    >
-                        <NewHTTPPacketEditor
                             defaultHttps={currentSelectItem?.IsHTTPS}
                             isResponse={true}
                             readOnly={true}
                             hideSearch={true}
                             noHex={true}
-                            noHeader={true}
+                            // noHeader={true}
                             originValue={
                                 (currentSelectShowType === "request"
                                     ? currentSelectItem?.RequestRaw
@@ -659,7 +655,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 isShowSelectRangeMenu:true
                             }}
                         />
-                    </YakitCard>
                 }
                 {...ResizeBoxProps}
             />
