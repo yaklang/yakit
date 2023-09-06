@@ -359,7 +359,27 @@ for target,risks = range targetToRisks {
 }
 
 // reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": secureCountScale}, {"name": "存活资产", "value": aliveHostCount, "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#ffffff"]})
-reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": secureCountScale}, {"name": "风险资产", "value": len(ipRisksStr), "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#ffffff"]})
+
+aliveHostList = []
+aliveHostKey = 0
+for aliveHost = range aliveHost.QueryAliveHost(runtimeID) {
+    aliveHostKey = aliveHostKey + 1
+    aliveHostList = append(aliveHostList, {
+        "序号": { "value": aliveHostKey, "sort": 1},
+        "漏洞情况": { "value": aliveHost.IP, "sort": 2}
+    })
+}
+
+reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": aliveHostCount-len(ipRisksStr)}, {"name": "风险资产统计", "value": aliveHostCount, "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#43ab42", "#ffffff"]})
+reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "存活资产", "value": len(aliveHostList)}, {"name": "其他", "value": hostTotal-len(aliveHostList)}, {"name": "总资产", "value": hostTotal, "direction": "center"} ], "color": ["#43ab42", "#fbd438", "#ffffff"]})
+
+reportInstance.Markdown("#### 存活资产汇总")
+if len(aliveHostList) > 0 {
+    reportInstance.Markdown("存活资产列表会显示所有存活资产，如有漏洞与风险会展示在风险资产列表中，未在风险资产列表中出现则默认为安全。")
+    reportInstance.Raw( json.dumps({ "type": "potential-risks-list", "data": aliveHostList }))
+} else {
+    reportInstance.Markdown("暂无存活资产")
+}
 
 reportInstance.Markdown("#### 风险资产汇总")
 if len(ipRisksStr) > 0 {
@@ -455,22 +475,30 @@ if len(noPotentialRisks) == 0 {
 }
 
 showPotentialLine = []
+complianceRiskCriticalCount = 0
+complianceRiskHighCount = 0
+complianceRiskWarningCount = 0
+complianceRiskLowCount = 0
 cpp = cve.NewStatistics("PotentialPie")
 println(len(potentialRisks))
 for i, riskIns := range potentialRisks {
 
     level = "-"
-    if str.Contains(riskIns.Severity, "critical") { 
-        level = "严重" 
+    if str.Contains(riskIns.Severity, "critical") {
+        level = "严重"
+        complianceRiskCriticalCount ++
     }
-    if str.Contains(riskIns.Severity, "high") { 
-        level = "高危" 
+    if str.Contains(riskIns.Severity, "high") {
+        level = "高危"
+        complianceRiskHighCount ++
     }
     if str.Contains(riskIns.Severity, "warning") {
         level = "中危"
-     }
-    if str.Contains(riskIns.Severity, "low") { 
+        complianceRiskWarningCount ++
+    }
+    if str.Contains(riskIns.Severity, "low") {
         level = "低危"
+        complianceRiskLowCount ++
     }
     
     c = cve.GetCVE(riskIns.CVE)
@@ -528,6 +556,10 @@ if len(potentialRisks) != 0 {
         }
     }
     reportInstance.Markdown(sprintf("### 3.3.4 合规检查风险列表"))
+    
+    if(complianceRiskCriticalCount > 0 || complianceRiskHighCount > 0 || complianceRiskHighCount > 0 || complianceRiskWarningCount > 0) {
+        reportInstance.Raw({"type": "bar-graph", "title": "合规漏洞严重程度统计", "data": [{"name": "严重", "value": complianceRiskCriticalCount}, {"name": "高危", "value": complianceRiskHighCount}, {"name": "中危", "value": complianceRiskWarningCount}, {"name": "低危", "value": complianceRiskLowCount}], "color": ["#f70208", "#f9c003", "#2ab150", "#5c9cd5"]})
+    }
     reportInstance.Markdown(\`合规检查是根据多年的经验， 通过扫描检查出危险系统及组件的版本。合规检查风险不是会造成实际损失的漏洞，可跟技术人员评估后，决定是否升级系统版本。\`)
     reportInstance.Table(["CVE编号", "漏洞标题", "地址", "CWE类型", "漏洞级别"], showPotentialLine...)
 } else {
