@@ -741,14 +741,13 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const beautifyCode = async(flow: HTTPFlow) => {
         setResponseLoading(true)
         let beautifyValue = await prettifyPacketCode(new Buffer(flow.Response).toString("utf8"))
-        setResponseLoading(false)
         setOriginValue(beautifyValue as Uint8Array)
+        setResponseLoading(false)
     }
 
     const renderCode = async(flow: HTTPFlow) => {
         setResponseLoading(true)
         let renderValue = await prettifyPacketRender(flow.Response)
-        setResponseLoading(false)
         setRenderHTML(
             <div
                 className={styles["render-html-box"]}
@@ -756,15 +755,16 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             />
         )
         setOriginValue(new Uint8Array())
+        setResponseLoading(false)
     }
 
     useEffect(() => {
         if (flow?.Response && type === "response") {
             setOriginValue(flow.Response)
-        } else if (flow?.Response && type === "beautify") {
-            beautifyCode(flow)
+        }else if (flow?.Response && type === "beautify") {
+            setTimeout(()=>{beautifyCode(flow)},200)
         } else if (flow?.Response && type === "render") {
-            renderCode(flow)
+            setTimeout(()=>{renderCode(flow)},200)
         } else {
             setOriginValue(new Uint8Array())
         }

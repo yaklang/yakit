@@ -33,8 +33,17 @@ const safeRenderBody = (body: string, onFinished: (data: string) => any) => {
         yakitFailed(`Render Failed: ${e}`)
     }
 }
+const formatCode = async (rsp: PacketPrettifyHelperResponse, option, callback) => {
+    try {
+        const formattedCode = await prettier.format(Uint8ArrayToString(rsp.Body), option)
+        callback(formattedCode)
+    } catch (error) {
+        // 处理错误
+        callback()
+    }
+}
 
-const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: string) => any,) => {
+const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: string) => any) => {
     ipcRenderer
         .invoke("PacketPrettifyHelper", {
             Packet: StringToUint8Array(packet)
@@ -42,8 +51,9 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
         .then((rsp: PacketPrettifyHelperResponse) => {
             const contentType = rsp.ContentType.toLowerCase()
             if (contentType.includes("javascript")) {
-                prettier
-                    .format(Uint8ArrayToString(rsp.Body), {
+                formatCode(
+                    rsp,
+                    {
                         parser: "babel", // JavaScript代码使用 "babel" 解析器
                         printWidth: 80,
                         tabWidth: 2,
@@ -54,24 +64,31 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
                         trailingComma: "all",
                         bracketSpacing: true,
                         arrowParens: "avoid"
-                    })
-                    .then((value) => {
-                        ipcRenderer
-                            .invoke("PacketPrettifyHelper", {
-                                Packet: rsp.Packet,
-                                Body: StringToUint8Array(value),
-                                SetReplaceBody: true
-                            })
-                            .then((replacedRsp: PacketPrettifyHelperResponse) => {
-                                onFormatted(replacedRsp.Packet, value)
-                            })
-                            .catch((e) => {
-                                onFormatted(rsp.Packet, value)
-                            })
-                    })
+                    },
+                    (formattedCode) => {
+                        if (formattedCode) {
+                            // 处理格式化后的代码
+                            ipcRenderer
+                                .invoke("PacketPrettifyHelper", {
+                                    Packet: rsp.Packet,
+                                    Body: StringToUint8Array(formattedCode),
+                                    SetReplaceBody: true
+                                })
+                                .then((replacedRsp: PacketPrettifyHelperResponse) => {
+                                    onFormatted(replacedRsp.Packet, formattedCode)
+                                })
+                                .catch((e) => {
+                                    onFormatted(rsp.Packet, formattedCode)
+                                })
+                        } else {
+                            onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
+                        }
+                    }
+                )
             } else if (contentType.includes("json")) {
-                prettier
-                    .format(Uint8ArrayToString(rsp.Body), {
+                formatCode(
+                    rsp,
+                    {
                         parser: "json", // JavaScript代码使用 "babel" 解析器
                         printWidth: 80,
                         tabWidth: 2,
@@ -82,24 +99,30 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
                         trailingComma: "all",
                         bracketSpacing: true,
                         arrowParens: "avoid"
-                    })
-                    .then((value) => {
-                        ipcRenderer
-                            .invoke("PacketPrettifyHelper", {
-                                Packet: rsp.Packet,
-                                Body: StringToUint8Array(value),
-                                SetReplaceBody: true
-                            })
-                            .then((replacedRsp: PacketPrettifyHelperResponse) => {
-                                onFormatted(replacedRsp.Packet, value)
-                            })
-                            .catch((e) => {
-                                onFormatted(rsp.Packet, value)
-                            })
-                    })
+                    },
+                    (formattedCode) => {
+                        if (formattedCode) {
+                            ipcRenderer
+                                .invoke("PacketPrettifyHelper", {
+                                    Packet: rsp.Packet,
+                                    Body: StringToUint8Array(formattedCode),
+                                    SetReplaceBody: true
+                                })
+                                .then((replacedRsp: PacketPrettifyHelperResponse) => {
+                                    onFormatted(replacedRsp.Packet, formattedCode)
+                                })
+                                .catch((e) => {
+                                    onFormatted(rsp.Packet, formattedCode)
+                                })
+                        } else {
+                            onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
+                        }
+                    }
+                )
             } else if (contentType.includes("html")) {
-                prettier
-                    .format(Uint8ArrayToString(rsp.Body), {
+                formatCode(
+                    rsp,
+                    {
                         parser: "html", // HTML代码使用 "html" 解析器
                         printWidth: 80,
                         tabWidth: 2,
@@ -110,31 +133,34 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
                         trailingComma: "all",
                         bracketSpacing: true,
                         arrowParens: "avoid"
-                    })
-                    .then((value) => {
-                        ipcRenderer
-                            .invoke("PacketPrettifyHelper", {
-                                Packet: rsp.Packet,
-                                Body: StringToUint8Array(value),
-                                SetReplaceBody: true
-                            })
-                            .then((replacedRsp: PacketPrettifyHelperResponse) => {
-                                onFormatted(replacedRsp.Packet, value)
-                            })
-                            .catch((e) => {
-                                onFormatted(rsp.Packet, value)
-                            })
-                    })
-                    .catch((e) => {
-                        onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
-                    })
+                    },
+                    (formattedCode) => {
+                        if (formattedCode) {
+                            ipcRenderer
+                                .invoke("PacketPrettifyHelper", {
+                                    Packet: rsp.Packet,
+                                    Body: StringToUint8Array(formattedCode),
+                                    SetReplaceBody: true
+                                })
+                                .then((replacedRsp: PacketPrettifyHelperResponse) => {
+                                    onFormatted(replacedRsp.Packet, formattedCode)
+                                })
+                                .catch((e) => {
+                                    onFormatted(rsp.Packet, formattedCode)
+                                })
+                        } else {
+                            onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
+                        }
+                    }
+                )
             } else if (
                 contentType.includes("xml") ||
                 contentType.includes("soap") ||
                 Uint8ArrayToString(rsp.Body).trim().includes("<?xml version")
             ) {
-                prettier
-                    .format(Uint8ArrayToString(rsp.Body), {
+                formatCode(
+                    rsp,
+                    {
                         parser: "xml", // HTML代码使用 "html" 解析器
                         printWidth: 80,
                         tabWidth: 2,
@@ -145,24 +171,26 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
                         trailingComma: "all",
                         bracketSpacing: true,
                         arrowParens: "avoid"
-                    })
-                    .then((value) => {
-                        ipcRenderer
-                            .invoke("PacketPrettifyHelper", {
-                                Packet: rsp.Packet,
-                                Body: StringToUint8Array(value),
-                                SetReplaceBody: true
-                            })
-                            .then((replacedRsp: PacketPrettifyHelperResponse) => {
-                                onFormatted(replacedRsp.Packet, value)
-                            })
-                            .catch((e) => {
-                                onFormatted(rsp.Packet, value)
-                            })
-                    })
-                    .catch((e) => {
-                        onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
-                    })
+                    },
+                    (formattedCode) => {
+                        if (formattedCode) {
+                            ipcRenderer
+                                .invoke("PacketPrettifyHelper", {
+                                    Packet: rsp.Packet,
+                                    Body: StringToUint8Array(formattedCode),
+                                    SetReplaceBody: true
+                                })
+                                .then((replacedRsp: PacketPrettifyHelperResponse) => {
+                                    onFormatted(replacedRsp.Packet, formattedCode)
+                                })
+                                .catch((e) => {
+                                    onFormatted(rsp.Packet, formattedCode)
+                                })
+                        } else {
+                            onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
+                        }
+                    }
+                )
             } else if (rsp.IsImage) {
                 onFormatted(rsp.Packet, Uint8ArrayToString(rsp.Body))
             } else {
@@ -208,10 +236,9 @@ export const formatPacketRender = (packet: Uint8Array, onFormatted: (packet?: st
         .then((rsp: PacketPrettifyHelperResponse) => {
             const contentType = rsp.ContentType.toLowerCase()
             if (contentType.includes("html")) {
-                safeRenderBody(Uint8ArrayToString(rsp.Body),(data: string)=>{
+                safeRenderBody(Uint8ArrayToString(rsp.Body), (data: string) => {
                     onFormatted(data)
                 })
-               
             } else if (rsp.IsImage) {
                 onFormatted(Uint8ArrayToString(rsp.ImageHtmlTag))
             } else {
@@ -220,7 +247,7 @@ export const formatPacketRender = (packet: Uint8Array, onFormatted: (packet?: st
         })
 }
 
-export const prettifyPacketRender = (text:Uint8Array) => {
+export const prettifyPacketRender = (text: Uint8Array) => {
     return new Promise((resolve, reject) => {
         try {
             formatPacketRender(text, (packet) => {
