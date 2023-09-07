@@ -241,7 +241,6 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         const cleanLogTableData = () => {
             setLoading(true)
             setData([])
-            console.log('------------------------------');
         }
         emiter.on('cleanMitmLogEvent', cleanLogTableData)
         return () => {
