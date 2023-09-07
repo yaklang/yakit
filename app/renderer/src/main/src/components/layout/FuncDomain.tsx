@@ -777,7 +777,15 @@ const GetUIOpSettingMenu = () => {
             {
                 key: "diagnose-network",
                 label: "网络诊断"
-            }
+            },
+            {
+                key: "link",
+                label: "切换连接模式",
+                children: [
+                    {label: "本地", key: "local"},
+                    {label: "远程", key: "remote"}
+                ]
+            },
         ]
     }
     return [
