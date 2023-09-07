@@ -1253,7 +1253,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
             successTableRef.current.setFirstFull(true)
         }
         setIsRefresh(!isRefresh)
-        setQuery(undefined)
+        setQuery({})
     }, [responseInfoId])
 
     const onSetRequestHttp = useMemoizedFn((i: string) => {
@@ -1305,7 +1305,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                                 showSuccess={showSuccess}
                                 setShowSuccess={(v) => {
                                     setShowSuccess(v)
-                                    setQuery(undefined)
+                                    setQuery({})
                                 }}
                             />
                         </>

@@ -21,7 +21,7 @@ import {
 import styles from "./MainOperatorContent.module.scss"
 import {YakitRouteToPageInfo, YakitRoute, SingletonPageRoute, NoPaddingRoute, ComponentParams} from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
-import {useCreation, useGetState, useLongPress, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useCreation, useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
@@ -345,7 +345,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
             if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
             if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
-            if (type === "**beta-codec") openMenuPage({route:YakitRoute.Beta_Codec})
+            if (type === "**beta-codec") openMenuPage({route: YakitRoute.Beta_Codec})
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
                 if (flag === 0) {
@@ -871,12 +871,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId,setCurrentSelectGroup} = usePageNode(
+    const {setPageNode, getPageNodeInfoByPageId, updatePageNodeInfoByPageId, setCurrentSelectGroup} = usePageNode(
         (s) => ({
             setPageNode: s.setPageNode,
             getPageNodeInfoByPageId: s.getPageNodeInfoByPageId,
             updatePageNodeInfoByPageId: s.updatePageNodeInfoByPageId,
-            setCurrentSelectGroup: s.setCurrentSelectGroup,
+            setCurrentSelectGroup: s.setCurrentSelectGroup
         }),
         shallow
     )
@@ -1085,8 +1085,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 setPageCache(oldPageCache)
                 setCurrentTabKey(key)
                 setPageNode(YakitRoute.HTTPFuzzer, pageNodeInfo)
-                const lastPage = pageNodeInfo.pageNodeList[pageNodeInfo.pageNodeList.length-1]
-                if(lastPage&&lastPage.pageChildrenList.length>0){
+                const lastPage = pageNodeInfo.pageNodeList[pageNodeInfo.pageNodeList.length - 1]
+                if (lastPage && lastPage.pageChildrenList.length > 0) {
                     // 最后一个是组的时候，需要设置当前选中组
                     setCurrentSelectGroup(YakitRoute.HTTPFuzzer, lastPage.pageId)
                 }
@@ -1666,17 +1666,23 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
     const tabsRef = useRef(null)
     const subTabsRef = useRef<any>()
+    const [inViewport = true] = useInViewport(tabsRef)
 
     useEffect(() => {
-        ipcRenderer.on("fetch-webFuzzer-setType", onSetType)
+        if(currentTabKey===YakitRoute.HTTPFuzzer){
+            ipcRenderer.on("fetch-webFuzzer-setType", onSetType)
+        }
         ipcRenderer.on("fetch-add-group", onAddGroup)
         ipcRenderer.on("fetch-open-subMenu-item", onSelectSubMenuById)
+
         return () => {
-            ipcRenderer.removeListener("fetch-webFuzzer-setType", onSetType)
+            if(currentTabKey===YakitRoute.HTTPFuzzer){
+                ipcRenderer.removeListener("fetch-webFuzzer-setType", onSetType)
+            }
             ipcRenderer.removeListener("fetch-add-group", onAddGroup)
             ipcRenderer.removeListener("fetch-open-subMenu-item", onSelectSubMenuById)
         }
-    }, [])
+    }, [currentTabKey])
 
     useEffect(() => {
         // 处理外部新增一个二级tab
@@ -1709,6 +1715,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }
     }, [pageItem.multipleLength])
     const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
+        if (!inViewport) return
         setType(res.type)
         if (type === res.type && res.type === "config") {
             emiter.emit("onSetFuzzerAdvancedConfigShow")
@@ -1723,6 +1730,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }, 100)
     })
     const onAddGroup = useMemoizedFn((e, res: {pageId: string}) => {
+        if (!inViewport) return
         const {index} = getPageItemById(subPage, res.pageId)
         if (index === -1) return
         subTabsRef.current?.onNewGroup(subPage[index])
@@ -1762,6 +1770,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         return newData
     }, [subPage])
     const onSelectSubMenuById = useMemoizedFn((e, res: {pageId: string}) => {
+        if (!inViewport) return
         const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
         if (index === -1) return
         const newSubPage: MultipleNodeInfo = {...flatSubPage[index]}
@@ -3220,23 +3229,23 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
 interface SimpleTabInterface {
     tabId: string
-    status: "run"|"stop"|"success"
+    status: "run" | "stop" | "success"
 }
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     const {subItem, dropType, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
-    const [tabStatus,setTabStatus] = useState<string>("")
-    useEffect(()=>{
+    const [tabStatus, setTabStatus] = useState<string>("")
+    useEffect(() => {
         emiter.on("simpleDetectTabEvent", onSimpleDetectTabEvent)
         return () => {
             emiter.off("simpleDetectTabEvent", onSimpleDetectTabEvent)
         }
-    },[])
+    }, [])
     // 修改颜色
     const onSimpleDetectTabEvent = useMemoizedFn((v) => {
-        const obj:SimpleTabInterface = JSON.parse(v)
-        if(obj.tabId === subItem.id){
+        const obj: SimpleTabInterface = JSON.parse(v)
+        if (obj.tabId === subItem.id) {
             setTabStatus(obj.status)
         }
     })
@@ -3250,13 +3259,13 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         style={{
-                            ...itemStyle,
+                            ...itemStyle
                         }}
                         className={classNames(styles["tab-menu-sub-item"], {
                             [styles["tab-menu-sub-item-active"]]: isActive,
                             [styles["tab-menu-sub-item-dragging"]]: snapshot.isDragging,
                             [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor,
-                            [styles[`tab-menu-sub-item-${tabStatus}`]]: tabStatus.length>0,
+                            [styles[`tab-menu-sub-item-${tabStatus}`]]: tabStatus.length > 0
                         })}
                         onClick={() => {
                             setSelectSubMenu(subItem)
