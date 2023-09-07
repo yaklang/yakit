@@ -133,8 +133,4 @@ module.exports = (win, getClient) => {
     ipcMain.handle("send-open-subMenu-item", (e, params) => {
         win.webContents.send("fetch-open-subMenu-item", params)
     })
-    
-    ipcMain.handle("send-ref-webFuzzer-request", (e, params) => {
-        win.webContents.send("fetch-ref-webFuzzer-request", params)
-    })
 }

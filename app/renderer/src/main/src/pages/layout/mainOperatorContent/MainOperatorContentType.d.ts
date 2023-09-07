@@ -90,10 +90,6 @@ export interface TabContentProps {
     currentTabKey: YakitRoute | string
     setCurrentTabKey: (s: YakitRoute | string) => void
     openMultipleMenuPage: (route: RouteToPageProps) => void
-    afterDeleteFirstPage: (type: "all" | "other" | "single", page?: PageCache) => void
-    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
-    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
 
     onRemove: (p: PageCache) => vid
 }
@@ -105,9 +101,6 @@ export interface TabChildrenProps {
     pageCache: PageCache[]
     currentTabKey: YakitRoute | string
     openMultipleMenuPage: (route: RouteToPageProps) => void
-    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
-    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
     onSetPageCache: (m: MultipleNodeInfo[],i:number) => void
 }
 
@@ -139,8 +132,6 @@ export interface TabListProps {
     setPageCache: (p: PageCache[]) => void
     currentTabKey: YakitRoute | string
     setCurrentTabKey: (s: YakitRoute | string) => void
-    afterDeleteFirstPage: (type: "all" | "other" | "single", page?: PageCache) => void
-
     onDragEnd: (p: any) => void
     onRemove: (p: PageCache) => void
 }
@@ -154,9 +145,6 @@ export interface SubTabListProps {
     pageCache: PageCache[]
     currentTabKey: YakitRoute | string
     openMultipleMenuPage: (route: RouteToPageProps) => void
-    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
-    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
     onSetPageCache: (m: MultipleNodeInfo[],i:number) => void
     pageItem: PageCache
     index: number
@@ -176,9 +164,6 @@ export interface SubTabsProps {
     setType: (w: WebFuzzerType) => void
 
     openMultipleMenuPage: (route: RouteToPageProps) => void
-    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
-    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
     onSetPageCache: (m: MultipleNodeInfo[]) => void
 }
 /**

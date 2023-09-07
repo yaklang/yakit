@@ -638,24 +638,22 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setAdvancedConfig(c === "true")
             }
         })
-        ipcRenderer.on("fetch-ref-webFuzzer-request", onUpdateRequest)
         emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         return () => {
-            ipcRenderer.removeListener("fetch-ref-webFuzzer-request", onUpdateRequest)
             emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         }
     }, [])
 
     useEffect(() => {
         if (inViewport) {
-            onUpdateRequest(_, {type: "config"})
+            onUpdateRequest()
         }
     }, [inViewport])
     const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
         if (inViewport) onSetAdvancedConfig(!advancedConfig)
     })
-    const onUpdateRequest = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
-        if (res.type === "config" && inViewport) {
+    const onUpdateRequest = useMemoizedFn(() => {
+        if (inViewport) {
             const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
             if (!currentItem) return
             const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request

@@ -50,9 +50,6 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     })
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
-        if (key === "config") {
-            ipcRenderer.invoke("send-ref-webFuzzer-request", {type: key})
-        }
     })
     return (
         <div className={styles["web-fuzzer"]}>

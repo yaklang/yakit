@@ -5,8 +5,8 @@ import {subscribeWithSelector} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {yakitNotify} from "@/utils/notification"
-import { RemoteGV } from "@/yakitGV"
-import { setRemoteProjectValue } from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import {setRemoteProjectValue} from "@/utils/kv"
 
 /**
  * @description 页面暂存数据
@@ -76,17 +76,16 @@ interface PageInfoStoreProps {
     getCurrentGroupAllTabName: (key) => string[]
     /**获取当前选中组*/
     getCurrentSelectGroup: (key) => PageNodeItemProps | undefined
+    clearAllData:()=>void
 }
 const defPage: PageProps = {
     pageList: [],
     routeKey: "",
     singleNode: false
 }
-const defPagesMap: Map<string, PageProps> = new Map()
-defPagesMap.set(YakitRoute.HTTPFuzzer,defPage)
 export const usePageInfo = create<PageInfoStoreProps>()(
     subscribeWithSelector((set, get) => ({
-        pages: defPagesMap,
+        pages: new Map(),
         selectGroupId: new Map(),
         setPagesData: (key, values) => {
             const newVal = new Map().set(key, values)
@@ -99,7 +98,7 @@ export const usePageInfo = create<PageInfoStoreProps>()(
             const newVal = get().pages
             const current = newVal.get(key) || {...defPage}
             const groupList: PageNodeItemProps[] = current.pageList.filter((ele) => ele.pageGroupId !== groupId)
-            const newGroupList=  groupList.concat(list)
+            const newGroupList = groupList.concat(list)
             newVal.set(key, {
                 ...current,
                 pageList: newGroupList
@@ -202,6 +201,12 @@ export const usePageInfo = create<PageInfoStoreProps>()(
             const currentGroupId = selectGroupId.get(key)
             const currentPages: PageProps = pages.get(key) || {...defPage}
             return currentPages.pageList.find((ele) => ele.pageGroupId === currentGroupId)
+        },
+        clearAllData: () => {
+            set({
+                pages: new Map(),
+                selectGroupId: new Map()
+            })
         }
     }))
 )
@@ -217,34 +222,40 @@ try {
         }
     )
 
-    const saveFuzzerCache = debounce((selectedState: PageProps) => {
-        try {
-            const {pageList} = selectedState
-            const cache = pageList.map((ele) => {
-                const advancedConfigValue =
-                    ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
-                return {
-                    groupChildren: [],
-                    groupId: ele.pageGroupId,
-                    id: ele.pageId,
-                    params: {
-                        actualHost: advancedConfigValue.actualHost || "",
-                        id: ele.pageId,
-                        isHttps: advancedConfigValue.isHttps,
-                        request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate
-                    },
-                    sortFieId: ele.sortFieId,
-                    verbose: ele.pageName,
-                    expand:ele.expand,
-                    color:ele.color,
+    const saveFuzzerCache = debounce(
+        (selectedState: PageProps) => {
+            try {
+                const {pageList = []} = selectedState || {
+                    pageList: []
                 }
-            })
-            console.table(cache)
-            // console.log('selectedState',selectedState)
-            // console.log('saveFuzzerCache',cache)
-            setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache))
-        } catch (error) {
-            yakitNotify("error", "webFuzzer缓存数据失败:" + error)
-        }
-    }, 500)
+                const cache = pageList.map((ele) => {
+                    const advancedConfigValue =
+                        ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
+                    return {
+                        groupChildren: [],
+                        groupId: ele.pageGroupId,
+                        id: ele.pageId,
+                        params: {
+                            actualHost: advancedConfigValue.actualHost || "",
+                            id: ele.pageId,
+                            isHttps: advancedConfigValue.isHttps,
+                            request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate
+                        },
+                        sortFieId: ele.sortFieId,
+                        verbose: ele.pageName,
+                        expand: ele.expand,
+                        color: ele.color
+                    }
+                })
+                // console.table(cache)
+                // console.log("selectedState", selectedState)
+                // console.log("saveFuzzerCache", cache)
+                setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache))
+            } catch (error) {
+                yakitNotify("error", "webFuzzer缓存数据失败:" + error)
+            }
+        },
+        500,
+        {leading: true}
+    )
 } catch (error) {}

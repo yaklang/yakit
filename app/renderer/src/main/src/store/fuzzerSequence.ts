@@ -8,6 +8,7 @@ import create from "zustand"
 import {subscribeWithSelector} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {RemoteGV} from "@/yakitGV"
+import { yakitNotify } from "@/utils/notification"
 
 interface FuzzerSequenceProps {
     fuzzerList: FuzzerListProps[]
@@ -18,11 +19,16 @@ interface FuzzerSequenceProps {
     /**删除 fuzzerSequenceList 的同时也会删除 fuzzerSequenceCacheData中的 groupId相同的数据*/
     removeFuzzerSequenceList: (f: FuzzerSequenceListProps) => void
 
-    initFuzzerSequenceCacheData: (v: FuzzerSequenceCacheDataProps[]) => void
+    setFuzzerSequenceCacheData: (v: FuzzerSequenceCacheDataProps[]) => void
     queryFuzzerSequenceCacheDataByGroupId: (groupId: string) => SequenceProps[]
     addFuzzerSequenceCacheData: (groupId: string, v: SequenceProps[]) => void
     updateFuzzerSequenceCacheData: (groupId: string, v: SequenceProps[]) => void
     removeFuzzerSequenceCacheData: (groupId: string) => void
+    clearFuzzerSequenceCacheData: () => void
+    /**只保留传入的groupId的数据 */
+    onlySaveFuzzerSequenceCacheDataIncomingGroupId: (groupId: string) => void
+    /**删除组内的其他数据，只保留组内的传入id的数据 */
+    removeGroupOther: (groupId: string, id: string) => void
 }
 
 export interface FuzzerListProps {}
@@ -59,7 +65,7 @@ export const useFuzzerSequence = create<FuzzerSequenceProps>()(
                 fuzzerSequenceCacheData: s.fuzzerSequenceCacheData.filter((ele) => ele.groupId !== val.groupId)
             })
         },
-        initFuzzerSequenceCacheData: (values) => {
+        setFuzzerSequenceCacheData: (values) => {
             const s = get()
             if (!s) return
             set({
@@ -100,7 +106,43 @@ export const useFuzzerSequence = create<FuzzerSequenceProps>()(
                 })
             }
         },
-        removeFuzzerSequenceCacheData: (groupId) => {}
+        removeFuzzerSequenceCacheData: (groupId) => {
+            const newVal = get().fuzzerSequenceCacheData || []
+            const newPageList = newVal.filter((ele) => ele.groupId !== groupId)
+            set({
+                ...get(),
+                fuzzerSequenceCacheData: newPageList
+            })
+        },
+        clearFuzzerSequenceCacheData: () => {
+            set({
+                ...get(),
+                fuzzerSequenceCacheData: []
+            })
+        },
+        onlySaveFuzzerSequenceCacheDataIncomingGroupId: (groupId) => {
+            const newVal = get().fuzzerSequenceCacheData || []
+            const newPageList = newVal.filter((ele) => ele.groupId === groupId)
+            set({
+                ...get(),
+                fuzzerSequenceCacheData: newPageList
+            })
+        },
+        removeGroupOther: (groupId, id) => {
+            const newVal = get().fuzzerSequenceCacheData || []
+            const index = newVal.findIndex((ele) => ele.groupId === groupId)
+            if (index !== -1) {
+                const list = newVal[index].cacheData.filter((ele) => ele.pageId === id)
+                newVal[index] = {
+                    groupId,
+                    cacheData: list
+                }
+                set({
+                    ...get(),
+                    fuzzerSequenceCacheData: [...newVal]
+                })
+            }
+        }
     }))
 )
 try {
@@ -114,8 +156,15 @@ try {
         }
     )
 
-    const saveFuzzerSequenceCache = debounce((selectedState) => {
-        // console.log("saveFuzzerSequenceCache", selectedState)
-        setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(selectedState))
-    }, 500)
-} catch (error) {}
+    const saveFuzzerSequenceCache = debounce(
+        (selectedState) => {
+            // console.log("saveFuzzerSequenceCache", selectedState)
+            // console.table(selectedState)
+            setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(selectedState))
+        },
+        500,
+        {leading: true}
+    )
+} catch (error) {
+    yakitNotify("error", "webFuzzer序列化数据缓存数据失败:" + error)
+}

@@ -82,6 +82,7 @@ import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 import shallow from "zustand/shallow"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageNodeItemProps, WebFuzzerPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import { compareAsc } from "@/pages/yakitStore/viewers/base"
 // import { ResponseCard } from "./ResponseCard"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -178,6 +179,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
+    useEffect(()=>{
+
+        console.log('originSequenceList',originSequenceList)
+    },[originSequenceList])
     useDebounceEffect(
         () => {
             const effectiveSequenceList = sequenceList.filter((ele) => ele.pageId)
@@ -205,19 +210,22 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     }, [])
 
     useEffect(() => {
-        const unSubPageNode = usePageInfo.subscribe(
-            (state) => {
-                const names = state.getCurrentGroupAllTabName(YakitRoute.HTTPFuzzer)
-                return names
-            },
-            (selectedState, previousSelectedState) => {
-                onUpdateSequence()
+        if (inViewport) {
+            const unSubPageNode = usePageInfo.subscribe(
+                (state) => {
+                    const names = state.getCurrentGroupAllTabName(YakitRoute.HTTPFuzzer)
+                    return names
+                },
+                (selectedState, previousSelectedState) => {
+                    onUpdateSequence()
+                }
+            )
+            return () => {
+                unSubPageNode()
             }
-        )
-        return () => {
-            unSubPageNode()
         }
-    }, [])
+        
+    }, [inViewport])
 
     useUpdateEffect(() => {
         if (!loading) {
@@ -382,7 +390,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     })
     const getCurrentGroupSequence = useMemoizedFn(() => {
         const pageChildrenList = getPagesDataByGroupId(YakitRoute.HTTPFuzzer, selectGroupId)
-        return pageChildrenList || []
+        return pageChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId")) || []
     })
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
         if (inViewport && currentSequenceItem) set(currentSequenceItem?.id, extractedMap)
@@ -897,7 +905,6 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
     }, [item?.inheritVariables, item?.inheritCookies])
     const onSelectSubMenuById = useMemoizedFn((pageId: string) => {
         ipcRenderer.invoke("send-open-subMenu-item", {pageId})
-        ipcRenderer.invoke("send-ref-webFuzzer-request", {type: "config"})
     })
     return (
         <>
@@ -1282,7 +1289,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
             }
         },
-        {wait: 200}
+        {wait: 200, leading: true}
     ).run
     return (
         <>
