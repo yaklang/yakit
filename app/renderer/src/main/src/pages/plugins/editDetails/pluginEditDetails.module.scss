@@ -30,9 +30,21 @@
             align-items: center;
             gap: 8px;
             .script-name {
+                max-width: 30vw;
+                overflow: hidden;
                 color: #85899e;
                 font-size: 11px;
                 line-height: 16px;
+            }
+            @media screen and (min-width: 1281px) {
+                .script-name {
+                    max-width: 23vw;
+                }
+            }
+            @media screen and (max-width: 1280px) {
+                .script-name {
+                    max-width: 13vw;
+                }
             }
         }
     }
@@ -67,10 +79,35 @@
             align-items: center;
             gap: 8px;
         }
-        .extra-close {
-            padding: 2px;
-            display: flex;
-            align-items: center;
+        // 新建时的按钮媒体查询
+        .new-btn-content {
+            display: inline-flex;
+        }
+        .new-btn-icon {
+            display: none;
+        }
+        @media screen and (max-width: 950px) {
+            .new-btn-content {
+                display: none;
+            }
+            .new-btn-icon {
+                display: inline-flex;
+            }
+        }
+        // 编辑时的按钮媒体查询
+        .edit-btn-content {
+            display: inline-flex;
+        }
+        .edit-btn-icon {
+            display: none;
+        }
+        @media screen and (max-width: 1100px) {
+            .edit-btn-content {
+                display: none;
+            }
+            .edit-btn-icon {
+                display: inline-flex;
+            }
         }
     }
 }
@@ -358,4 +395,171 @@
     overflow: hidden;
     border-radius: 0 0 4px 4px;
     background-color: #f0f1f3;
+}
+
+// 插件同步&复制云端弹窗
+.plugin-sync-and-copy-body {
+    width: 100%;
+    .sycn-wrapper {
+        padding: 16px 24px 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .copy-header {
+        width: 100%;
+        padding: 8px 24px;
+        background: rgba(86, 201, 145, 0.1);
+        color: var(--color-secondary-green, #56c991);
+        font-size: 12px;
+        line-height: 16px;
+    }
+    .copy-wrapper {
+        padding: 16px 24px 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        .title-style {
+            color: #31343f;
+            font-size: 14px;
+            line-height: 24px;
+        }
+    }
+}
+
+// 插件基础检测
+.plugin-base-inspect-body {
+    width: 100%;
+    padding-left: 24px;
+    padding-right: 24px;
+    .header-wrapper {
+        width: 100%;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, rgba(136, 99, 247, 0.1) 0%, rgba(247, 170, 99, 0.1) 100%);
+        .title-style {
+            color: #31343f;
+            font-size: 12px;
+            line-height: 16px;
+        }
+        .header-body {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            .opt-content {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #85899e;
+                font-size: 12px;
+                line-height: 20px;
+                .content-order {
+                    width: 16px;
+                    height: 16px;
+                    padding: 2px 6px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border-radius: 8px;
+                    background: rgba(136, 99, 247, 0.2);
+                    color: #31343f;
+                    font-size: 10px;
+                }
+            }
+        }
+    }
+    .loading-wrapper {
+        padding-top: 16px;
+        padding-bottom: 24px;
+        .loading-body {
+            padding: 20px 12px 0px 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            .loading-icon {
+                height: 40px;
+            }
+        }
+        .loading-title {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            .title-style {
+                color: #31343f;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+            }
+            .subtitle-style {
+                color: #85899e;
+                font-size: 12px;
+                line-height: 16px;
+                .active-style {
+                    color: #f28b44;
+                }
+            }
+        }
+
+        .error-list {
+            .list-body {
+                max-height: 45vh;
+                overflow: hidden auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+                .list-opt {
+                    width: 100%;
+                    padding: 12px 16px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    border-radius: 4px;
+                    border: 1px solid #eaecf3;
+                    background: #f8f8f8;
+                    .opt-header {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        color: #85899e;
+                        font-size: 12px;
+                        font-weight: 600;
+                        line-height: 16px;
+                    }
+                    .opt-content {
+                        color: var(--color-gray-text-04, #31343f);
+                        font-size: 12px;
+                        line-height: 16px;
+                    }
+                }
+            }
+            .opt-danger {
+                padding: 20px 12px 0px 12px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 8px;
+                svg {
+                    width: 40px;
+                    height: 40px;
+                    color: #f6544a;
+                }
+                .content-style {
+                    color: #85899e;
+                    font-size: 14px;
+                    font-weight: 600;
+                    line-height: 20px;
+                }
+            }
+        }
+    }
 }
