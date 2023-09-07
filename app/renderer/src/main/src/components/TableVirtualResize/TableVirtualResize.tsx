@@ -169,7 +169,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         itemHeight: defItemHeight,
         overscan: 10
     })
-    
+
+    // console.log(123, data, list);
     useEffect(() => {
         setCurrentRow(currentSelectItem)
     }, [currentSelectItem])

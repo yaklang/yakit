@@ -6,6 +6,7 @@ import {
     CalloutColor,
     CompateData,
     getClassNameData,
+    filterData,
     HTTPFlow,
     HTTPFlowsFieldGroupResponse,
     HTTPFlowShield,
@@ -194,9 +195,10 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             .invoke("QueryHTTPFlows", {...newParams})
             .then((res: QueryGeneralResponse<HTTPFlow>) => {
                 // if (res?.Data.length === 0) return
-                let newData: HTTPFlow[] = getClassNameData(res?.Data || [])
-                    .concat(data || [])
-                    .filter((_, index) => index < 30)
+                let newData: HTTPFlow[] = getClassNameData(res?.Data || []).concat(data || [])
+                newData = filterData(newData, 'Id')
+                            .filter((_, index) => index < 30)
+                            .sort((a, b) => +b.Id - +a.Id)
                 setData(newData)
             })
             .finally(() => {
