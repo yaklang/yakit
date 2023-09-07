@@ -5,6 +5,8 @@ import {subscribeWithSelector} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {yakitNotify} from "@/utils/notification"
+import { RemoteGV } from "@/yakitGV"
+import { setRemoteProjectValue } from "@/utils/kv"
 
 /**
  * @description 页面暂存数据
@@ -26,6 +28,8 @@ export interface PageNodeItemProps {
     pageName: string
     pageParamsInfo: PageParamsInfoProps
     sortFieId: number
+    expand?: boolean
+    color?: string
     // pageChildrenList: PageNodeItemProps[]
 }
 
@@ -58,11 +62,7 @@ interface PageInfoStoreProps {
     addPagesDataCache: (key: string, v: PageNodeItemProps) => void
     /**更新缓存页面数据 */
     updatePagesDataCacheById: (key: string, v: PageNodeItemProps) => void
-    /**更新组的数据 */
-    updatePagesDataCacheByGroupId: (key: string,  v: PageNodeItemProps) => void
-    /** 删除页面缓存数据
-     *  @returns {PageNodeItemProps} 返回被删除的页面数据
-     */
+    /** 删除页面缓存数据*/
     removePagesDataCacheById: (key: string, id: string) => void
     /** 通过组id 删除组数据以及组下的页面缓存数据 */
     removePagesDataCacheByGroupId: (key: string, gId: string) => void
@@ -82,9 +82,11 @@ const defPage: PageProps = {
     routeKey: "",
     singleNode: false
 }
+const defPagesMap: Map<string, PageProps> = new Map()
+defPagesMap.set(YakitRoute.HTTPFuzzer,defPage)
 export const usePageInfo = create<PageInfoStoreProps>()(
     subscribeWithSelector((set, get) => ({
-        pages: new Map(),
+        pages: defPagesMap,
         selectGroupId: new Map(),
         setPagesData: (key, values) => {
             const newVal = new Map().set(key, values)
@@ -96,11 +98,11 @@ export const usePageInfo = create<PageInfoStoreProps>()(
         setPageNodeInfoByPageGroupId: (key, groupId, list) => {
             const newVal = get().pages
             const current = newVal.get(key) || {...defPage}
-            const groupList: PageNodeItemProps[] = current.pageList.filter((ele) => ele.pageGroupId === groupId)
-            groupList.concat(list)
+            const groupList: PageNodeItemProps[] = current.pageList.filter((ele) => ele.pageGroupId !== groupId)
+            const newGroupList=  groupList.concat(list)
             newVal.set(key, {
                 ...current,
-                pageList: groupList
+                pageList: newGroupList
             })
             set({
                 ...get(),
@@ -122,7 +124,7 @@ export const usePageInfo = create<PageInfoStoreProps>()(
             const current = newVal.get(key) || {...defPage}
             current.pageList.push(value)
             newVal.set(key, {
-                ...current,
+                ...current
             })
             set({
                 ...get(),
@@ -146,39 +148,18 @@ export const usePageInfo = create<PageInfoStoreProps>()(
                 })
             }
         },
-        updatePagesDataCacheByGroupId: (key, value) => {
-            const {pages} = get()
-            const current: PageProps = pages.get(key) || {...defPage}
-            let updateIndex: number = current.pageList.findIndex((ele) => ele.pageGroupId === value.pageGroupId)
-            if (updateIndex !== -1) {
-                current.pageList[updateIndex] = {
-                    ...value
-                }
-                const newVal = pages.set(key, {
-                    ...current
-                })
-                set({
-                    ...get(),
-                    pages: newVal
-                })
-            }
-        },
         removePagesDataCacheById: (key, id) => {
             const newVal = get().pages
             const current: PageProps = newVal.get(key) || {...defPage}
-            const index = current.pageList.findIndex((ele) => ele.pageId === id)
-            if (index !== -1) {
-                const removeItem = current.pageList[index]
-                current.pageList.splice(index, 1)
-                newVal.set(key, {...current})
-                set({
-                    ...get(),
-                    pages: {
-                        ...newVal
-                    }
-                })
-                return removeItem
-            }
+            const newPageList = current.pageList.filter((ele) => ele.pageId !== id)
+            newVal.set(key, {
+                ...current,
+                pageList: newPageList
+            })
+            set({
+                ...get(),
+                pages: newVal
+            })
         },
         removePagesDataCacheByGroupId: (key, gId) => {
             const newVal = get().pages
@@ -187,12 +168,10 @@ export const usePageInfo = create<PageInfoStoreProps>()(
             newVal.set(key, {
                 ...current,
                 pageList: newPageList
-            }) 
+            })
             set({
                 ...get(),
-                pages: {
-                    ...newVal
-                }
+                pages: newVal
             })
         },
         setCurrentSelectGroup: (key, groupId) => {},
@@ -227,40 +206,45 @@ export const usePageInfo = create<PageInfoStoreProps>()(
     }))
 )
 
-/**
- *  @description 打开软化后这个订阅会一直存在，直到关闭软件;后续再看看优化方法
- */
-const unFuzzerCacheData = usePageInfo.subscribe(
-    (state) => state.pages.get(YakitRoute.HTTPFuzzer),
-    (selectedState, previousSelectedState) => {
-        saveFuzzerCache(selectedState)
-    }
-)
+try {
+    /**
+     *  @description 打开软化后这个订阅会一直存在，直到关闭软件;后续再看看优化方法
+     */
+    const unFuzzerCacheData = usePageInfo.subscribe(
+        (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+        (selectedState, previousSelectedState) => {
+            saveFuzzerCache(selectedState)
+        }
+    )
 
-const saveFuzzerCache = debounce((selectedState: PageProps) => {
-    try {
-        const {pageList} = selectedState
-        const cache = pageList.map((ele) => {
-            const advancedConfigValue =
-                ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
-            return {
-                groupChildren: [],
-                groupId: ele.pageGroupId,
-                id: ele.pageId,
-                params: {
-                    actualHost: advancedConfigValue.actualHost || "",
+    const saveFuzzerCache = debounce((selectedState: PageProps) => {
+        try {
+            const {pageList} = selectedState
+            const cache = pageList.map((ele) => {
+                const advancedConfigValue =
+                    ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
+                return {
+                    groupChildren: [],
+                    groupId: ele.pageGroupId,
                     id: ele.pageId,
-                    isHttps: advancedConfigValue.isHttps,
-                    request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate
-                },
-                sortFieId: ele.sortFieId,
-                verbose: ele.pageName
-            }
-        })
-        console.table(cache)
-        // console.log('saveFuzzerCache',cache)
-        // setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(selectedState))
-    } catch (error) {
-        yakitNotify("error", "webFuzzer缓存数据失败:" + error)
-    }
-}, 500)
+                    params: {
+                        actualHost: advancedConfigValue.actualHost || "",
+                        id: ele.pageId,
+                        isHttps: advancedConfigValue.isHttps,
+                        request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate
+                    },
+                    sortFieId: ele.sortFieId,
+                    verbose: ele.pageName,
+                    expand:ele.expand,
+                    color:ele.color,
+                }
+            })
+            console.table(cache)
+            // console.log('selectedState',selectedState)
+            // console.log('saveFuzzerCache',cache)
+            setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache))
+        } catch (error) {
+            yakitNotify("error", "webFuzzer缓存数据失败:" + error)
+        }
+    }, 500)
+} catch (error) {}

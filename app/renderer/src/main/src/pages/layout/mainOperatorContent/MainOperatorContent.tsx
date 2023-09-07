@@ -257,27 +257,13 @@ const getItemStyle = (isDragging, draggableStyle) => {
     }
 }
 
-// const reorder = (list: any[], startIndex: number, endIndex: number) => {
-//     const result = Array.from(list)
-//     const [removed] = result.splice(startIndex, 1)
-//     result.splice(endIndex, 0, removed)
-//     return result
-// }
-/**数组元素交换位置 */
-const reorder = (arr, index1, index2) => {
-    // 检查索引是否有效
-    if (index1 < 0 || index1 >= arr.length || index2 < 0 || index2 >= arr.length) {
-        // console.error("索引无效")
-        return
-    }
-
-    // 交换元素位置
-    let temp = arr[index1]
-    arr[index1] = arr[index2]
-    arr[index2] = temp
-
-    return arr
+const reorder = (list: any[], startIndex: number, endIndex: number) => {
+    const result = Array.from(list)
+    const [removed] = result.splice(startIndex, 1)
+    result.splice(endIndex, 0, removed)
+    return result
 }
+
 /**
  * 获取二级菜单所有打开的tab标签页个数
  * @returns {number} total
@@ -818,7 +804,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             setCurrentTabKey(YakitRoute.Plugin_Local)
         }
         if (data.route === YakitRoute.HTTPFuzzer) {
-            // delFuzzerList(1) // 删除web-fuzzer页面缓存数据
+            const pages: PageProps = {
+                pageList: [],
+                routeKey: YakitRoute.HTTPFuzzer,
+                singleNode: false
+            }
+            setPagesData(YakitRoute.HTTPFuzzer, pages)
             removeSubscribeClose(YakitRoute.HTTPFuzzer)
         }
     })
@@ -1053,7 +1044,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                     request: nodeItem.params?.request || ""
                                 }
                             },
-                            sortFieId: nodeItem.sortFieId
+                            sortFieId: nodeItem.sortFieId,
+                            expand:nodeItem.expand,
+                            color:nodeItem.color,
                         })
                     }
                     if (cLength > 0) {
@@ -1083,15 +1076,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 request: parentItem.params?.request || ""
                             }
                         },
-                        sortFieId: parentItem.sortFieId
+                        sortFieId: parentItem.sortFieId,
+                        expand:parentItem.expand,
+                        color:parentItem.color,
                     })
                     // fuzzerList.current.set(parentItem.id, {...parentItem, groupChildren: []})
                 }
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
                 if (newMultipleNodeList.length === 0) return
-                // console.log("cache", cache)
                 // console.log("multipleNodeList", multipleNodeList)
-                console.log("pageNodeInfo", pageNodeInfo)
+                // console.log("pageNodeInfo", pageNodeInfo)
                 const webFuzzerPage = {
                     routeKey: key,
                     verbose: tabName,
@@ -1885,7 +1879,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             queryPagesDataById,
             getPagesDataByGroupId,
             updatePagesDataCacheById,
-            updatePagesDataCacheByGroupId,
             removeCurrentSelectGroupId,
             removePagesDataCacheById,
             setPageNodeInfoByPageGroupId,
@@ -1898,7 +1891,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 queryPagesDataById: s.queryPagesDataById,
                 getPagesDataByGroupId: s.getPagesDataByGroupId,
                 updatePagesDataCacheById: s.updatePagesDataCacheById,
-                updatePagesDataCacheByGroupId: s.updatePagesDataCacheByGroupId,
                 removeCurrentSelectGroupId: s.removeCurrentSelectGroupId,
                 removePagesDataCacheById: s.removePagesDataCacheById,
                 setPageNodeInfoByPageGroupId: s.setPageNodeInfoByPageGroupId,
@@ -2155,7 +2147,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             subPage.splice(sourceIndex, 1)
             onUpdatePageCache(subPage)
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                onUpdateSorting(subPage)
+                onAddGroupsAndThenSort(combineItem, subPage)
             }
         })
 
@@ -2213,7 +2205,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             const sourceItem = subPage[sourceIndex]
             const destinationItem = subPage[destinationIndex]
             const subMenuList: MultipleNodeInfo[] = reorder(subPage, sourceIndex, destinationIndex)
-
             setSubPage([...subMenuList])
             onUpdatePageCache(subMenuList)
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
@@ -2257,41 +2248,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 onExchangeOrderPages(YakitRoute.HTTPFuzzer, source, destination)
             }
         })
-        /**更新两个item的排序字段 */
-        const onExchangeOrderPages = useMemoizedFn(
-            (
-                key: YakitRoute | string,
-                source: {
-                    id: string
-                    sortFieId: number
-                },
-                destination: {
-                    id: string
-                    sortFieId: number
-                }
-            ) => {
-                const currentSource: PageNodeItemProps | undefined = queryPagesDataById(
-                    YakitRoute.HTTPFuzzer,
-                    source.id
-                )
-                const currentDestination: PageNodeItemProps | undefined = queryPagesDataById(
-                    YakitRoute.HTTPFuzzer,
-                    destination.id
-                )
-                if (currentSource) {
-                    updatePagesDataCacheById(key, {
-                        ...currentSource,
-                        sortFieId: source.sortFieId
-                    })
-                }
-                if (currentDestination) {
-                    updatePagesDataCacheById(key, {
-                        ...currentDestination,
-                        sortFieId: destination.sortFieId
-                    })
-                }
-            }
-        )
+
         /** @description 不同一个组间移动 从组A到组B */
         const movingBetweenDifferentGroups = useMemoizedFn((result) => {
             if (!result.destination) {
@@ -2533,7 +2490,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 afterDeleteSubPage("single", pageItem.route, removeItem)
             }
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                removePagesDataCacheById(YakitRoute.HTTPFuzzer, removeItem.id)
+                onUpdateSorting(subPage)
             }
         })
         /**
@@ -2622,20 +2579,18 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                     yakitNotify("error", "不能超过50个字符")
                                     return
                                 }
+
                                 const {index, subIndex} = getPageItemById(subPage, item.id)
                                 if (index === -1) return
                                 if (subIndex === -1) {
                                     // 当前情况说明item是游离的页面,没有在其他组内
-                                    // subPage[index].verbose = val
                                     subPage[index] = {...subPage[index], verbose: val}
                                     afterUpdateSubItem(pageItem, subPage[index])
                                     onUpdatePageCache(subPage)
-                                }
-                                if (subIndex !== -1) {
+                                } else {
                                     // 当前情况说明item在subPage[index]的组内
                                     const groupChildrenList = subPage[index].groupChildren || []
                                     if (groupChildrenList.length > 0) {
-                                        // groupChildrenList[subIndex].verbose = val
                                         groupChildrenList[subIndex] = {
                                             ...groupChildrenList[subIndex],
                                             verbose: val
@@ -2646,14 +2601,16 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                         }
                                         afterUpdateSubItem(pageItem, subPage[index])
                                         onUpdatePageCache(subPage)
-                                        if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                                            // 更新序列化数据
-                                            const updateItem = groupChildrenList[subIndex]
-                                            onUpdateFuzzerSequence(updateItem.id, updateItem)
-                                        }
                                     }
                                 }
-
+                                if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                                    // 更新序列化数据
+                                    const updateItem = {
+                                        ...item,
+                                        verbose: val
+                                    }
+                                    onUpdateFuzzerSequence(updateItem.id, updateItem)
+                                }
                                 m.destroy()
                             }}
                         />
@@ -2688,10 +2645,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             if (subIndex === -1) {
                 // 游离页面移动到新建组
                 subPage.splice(index, 1, newGroup)
-                if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                    // push新的序列表数据
-                    pushSequenceByGroupChildren(newGroup, index)
-                }
             } else {
                 // 组A移动到新建组
                 const groupChildren = subPage[index].groupChildren || []
@@ -2709,11 +2662,12 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     subPage.splice(index + 1, 0, newGroup)
                 }
                 if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                    pushSequenceByGroupChildren(newGroup, index) // 新建序列数据
-                    removePagesDataCacheById(YakitRoute.HTTPFuzzer, item.id) // 删除组A中的序列
-                    // 更新选中组内的childrenList
+                    // 更新选中组内的childrenList  好像有点问题
                     setSelectGroupId(YakitRoute.HTTPFuzzer, item.groupId)
                 }
+            }
+            if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                onAddGroupsAndThenSort(newGroup, subPage)
             }
             onUpdatePageCache([...subPage])
         })
@@ -2753,7 +2707,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
             onUpdatePageCache([...subPage])
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                addSequenceByPageGroupId(item, currentGroup.id, subPage[gIndex].groupChildren?.length || 0)
+                onUpdateSorting(subPage)
             }
         })
         /**从组中移出 */
@@ -2785,7 +2739,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             onUpdatePageCache([...subPage])
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                onRemoveGroupAndPushPageNode(newGroup)
+                onUpdateSorting(subPage)
             }
         })
 
@@ -2848,7 +2802,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                 item.id
                             )
                             if (current) {
-                                const groupList = [{...current}]
+                                const groupList = [{...current, sortFieId: 1}]
                                 setPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, item.groupId, groupList)
                             }
                         }
@@ -2913,6 +2867,58 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 onUpdateSorting(subPage)
             }
         })
+        /**更新两个item的排序字段 */
+        const onExchangeOrderPages = useMemoizedFn(
+            (
+                key: YakitRoute | string,
+                source: {
+                    id: string
+                    sortFieId: number
+                },
+                destination: {
+                    id: string
+                    sortFieId: number
+                }
+            ) => {
+                const currentSource: PageNodeItemProps | undefined = queryPagesDataById(
+                    YakitRoute.HTTPFuzzer,
+                    source.id
+                )
+                const currentDestination: PageNodeItemProps | undefined = queryPagesDataById(
+                    YakitRoute.HTTPFuzzer,
+                    destination.id
+                )
+                if (currentSource) {
+                    updatePagesDataCacheById(key, {
+                        ...currentSource,
+                        sortFieId: source.sortFieId
+                    })
+                }
+                if (currentDestination) {
+                    updatePagesDataCacheById(key, {
+                        ...currentDestination,
+                        sortFieId: destination.sortFieId
+                    })
+                }
+            }
+        )
+        /**先添加新组，再onUpdateSorting */
+        const onAddGroupsAndThenSort = useMemoizedFn((newGroup, subPage) => {
+            // 先添加新组，再onUpdateSorting
+            const newPageGroupNode: PageNodeItemProps = {
+                id: `${randomString(8)}-${newGroup.sortFieId}`,
+                routeKey: YakitRoute.HTTPFuzzer,
+                pageGroupId: "0",
+                pageId: newGroup.id,
+                pageName: newGroup.verbose,
+                pageParamsInfo: {},
+                sortFieId: newGroup.sortFieId,
+                expand:newGroup.expand,
+                color:newGroup.color,
+            }
+            addPagesDataCache(YakitRoute.HTTPFuzzer, newPageGroupNode)
+            onUpdateSorting(subPage)
+        })
         /**更新排序和组内的页面所属组id 所有二级菜单的排序 */
         const onUpdateSorting = useMemoizedFn((subPage: MultipleNodeInfo[]) => {
             const pageList: PageNodeItemProps[] = []
@@ -2928,7 +2934,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     })
                 }
                 const current: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, ele.id)
-                if (current) pageList.push({...current,pageGroupId: '0', sortFieId: index + 1})
+                if (current) {
+                    pageList.push({...current, pageGroupId: "0", sortFieId: index + 1})
+                }
             })
             const pages: PageProps = {
                 pageList: pageList,
@@ -2967,10 +2975,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             onUpdateSelectSubPage(groupItem)
             subPage.splice(index, 1)
             onUpdatePageCache([...subPage])
-
-            // 序列
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                removePagesDataCacheByGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
+                onUpdateSorting(subPage)
             }
         })
         /**@description 组的右键事件 关闭其他标签页 */
@@ -2986,13 +2992,19 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     onSetSelectSubMenu(groupItem)
                     onUpdatePageCache(newPage)
                     if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                        const currentList: PageNodeItemProps[] = getPagesDataByGroupId(
+                        const currentGroupList: PageNodeItemProps[] = getPagesDataByGroupId(
                             YakitRoute.HTTPFuzzer,
                             groupItem.id
                         )
-                        if (currentList) {
+                        const currentGroupItem: PageNodeItemProps | undefined = queryPagesDataById(
+                            YakitRoute.HTTPFuzzer,
+                            groupItem.id
+                        )
+
+                        if (currentGroupList && currentGroupItem) {
+                            const newPageList = currentGroupList.map((ele, index) => ({...ele, sortFieId: index + 1}))
                             let pageNodeInfo: PageProps = {
-                                pageList: currentList.map((ele, index) => ({...ele, sortFieId: index})),
+                                pageList: [...newPageList, {...currentGroupItem, sortFieId: 1}],
                                 routeKey: YakitRoute.HTTPFuzzer,
                                 singleNode: false
                             }
@@ -3053,6 +3065,16 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             if (index === -1) return
             subPage[index] = {...groupItem}
             onUpdatePageCache([...subPage])
+            let currentGroup: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, groupItem.id)
+            if (currentGroup) {
+                const newCurrentGroup={
+                    ...currentGroup,
+                    color:groupItem.color,
+                    expand:groupItem.expand,
+                    pageName:groupItem.verbose
+                }
+                updatePagesDataCacheById(YakitRoute.HTTPFuzzer,newCurrentGroup)
+            }
         })
         const onDragStart = useMemoizedFn((result) => {
             if (!result.source) return
@@ -3104,130 +3126,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             },
             {wait: 200}
         ).run
-
-        // ------------------- 序列化相关 start -------------------
-        /**
-         * @description 新建组时， 传入 groupItem ，新增序列化数据
-         * @param groupItem
-         */
-        const pushSequenceByGroupChildren = useMemoizedFn((groupItem: MultipleNodeInfo, groupCurrentIndex: number) => {
-            // 更新组内的页面排序和组id
-            const groupChildrenList = groupItem.groupChildren || []
-            groupChildrenList.forEach((nodeItem, index) => {
-                let currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, nodeItem.id)
-                if (currentItem) {
-                    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
-                        ...currentItem,
-                        pageGroupId: groupItem.id,
-                        sortFieId: index+1
-                    })
-                }
-            })
-            //更新组的排序
-            let currentGroup: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, groupItem.id)
-            if (currentGroup) {
-                updatePagesDataCacheByGroupId(YakitRoute.HTTPFuzzer, {
-                    ...currentGroup,
-                    sortFieId: groupCurrentIndex+1
-                })
-            } else {
-                const newPageNode: PageNodeItemProps = {
-                    id: `${randomString(8)}-${groupCurrentIndex}`,
-                    routeKey: YakitRoute.HTTPFuzzer,
-                    pageGroupId: "0",
-                    pageId: groupItem.id,
-                    pageName: groupItem.verbose,
-                    pageParamsInfo: {},
-                    sortFieId: groupCurrentIndex+1
-                }
-                addPagesDataCache(YakitRoute.HTTPFuzzer, newPageNode)
-            }
-            // const sequenceList: PageNodeItemProps[] = []
-            // const groupChildrenList = groupItem.groupChildren || []
-            // groupChildrenList.forEach((nodeItem, j) => {
-            //     const nodeInfo = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, nodeItem.id)
-            //     if (!nodeInfo) return
-            //     const {currentItem} = nodeInfo
-            //     sequenceList.push({
-            //         id: `${randomString(8)}-${j + 1}`,
-            //         routeKey: YakitRoute.HTTPFuzzer,
-            //         pageGroupId: nodeItem.groupId,
-            //         pageId: nodeItem.id,
-            //         pageName: nodeItem.verbose,
-            //         pageParamsInfo: currentItem.pageParamsInfo,
-            //         pageChildrenList: []
-            //     })
-            // })
-            // //  -----兼容拖拽有问题导致的序列化选择数据没有更新的问题
-            // const group = getPageNodeInfoByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
-            // if (group) {
-            //     removePageNodeByPageGroupId(YakitRoute.HTTPFuzzer, groupItem.id)
-            // }
-            // //  -----兼容拖拽有问题导致的序列化选择数据没有更新的问题
-            // const newPageNodeList: PageNodeItemProps = {
-            //     // id: `${randomString(8)}-${index + 1}`,
-            //     id: "",
-            //     routeKey: YakitRoute.HTTPFuzzer,
-            //     pageGroupId: groupItem.groupId,
-            //     pageId: groupItem.id,
-            //     pageName: groupItem.verbose,
-            //     pageParamsInfo: {
-            //         webFuzzerPageInfo: {
-            //             pageId: groupItem.id,
-            //             advancedConfigValue: {
-            //                 ...defaultAdvancedConfigValue
-            //             },
-            //             request: ""
-            //         }
-            //     },
-            //     pageChildrenList: sequenceList
-            // }
-            // addPageNode(YakitRoute.HTTPFuzzer, newPageNodeList)
-        })
-        /**
-         * 修改组A sourceItem的GroupId
-         */
-        const addSequenceByPageGroupId = useMemoizedFn(
-            (sourceItem: MultipleNodeInfo, destinationGroupId: string, destinationIndex: number) => {
-                let currentSource: PageNodeItemProps | undefined = queryPagesDataById(
-                    YakitRoute.HTTPFuzzer,
-                    sourceItem.id
-                )
-                if (currentSource) {
-                    currentSource.pageGroupId = destinationGroupId
-                    currentSource.sortFieId = destinationIndex + 1
-                    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {
-                        ...currentSource
-                    })
-                }
-            }
-        )
-        /**
-         * @description 从组内移除序列数据，并将移除的item变为游离的
-         */
-        const onRemoveGroupAndPushPageNode = useMemoizedFn((item: MultipleNodeInfo) => {
-            // removePageNodeInfoByPageId(YakitRoute.HTTPFuzzer, item.id)
-            // const newPageNode: PageNodeItemProps = {
-            //     id: "",
-            //     routeKey: YakitRoute.HTTPFuzzer,
-            //     pageGroupId: item.groupId,
-            //     pageId: item.id,
-            //     pageName: item.verbose,
-            //     pageParamsInfo: {
-            //         webFuzzerPageInfo: {
-            //             pageId: item.id,
-            //             advancedConfigValue: {
-            //                 ...defaultAdvancedConfigValue,
-            //                 ...item.params
-            //             },
-            //             request: item.params?.request || ""
-            //         }
-            //     },
-            //     pageChildrenList: []
-            // }
-            // addPageNode(YakitRoute.HTTPFuzzer, newPageNode)
-        })
-        // ------------------- 序列化相关 end -------------------
         const selectMenuGroupId = useMemo(() => {
             return selectSubMenu.groupId
         }, [selectSubMenu.groupId])

@@ -106,20 +106,11 @@ const getItemStyle = (isDragging, draggableStyle) => {
     }
 }
 
-/**数组元素交换位置 */
-const reorder = (arr, index1, index2) => {
-    // 检查索引是否有效
-    if (index1 < 0 || index1 >= arr.length || index2 < 0 || index2 >= arr.length) {
-        // console.error("索引无效")
-        return
-    }
-
-    // 交换元素位置
-    var temp = arr[index1]
-    arr[index1] = arr[index2]
-    arr[index2] = temp
-
-    return arr
+const reorder = (list: any[], startIndex: number, endIndex: number) => {
+    const result = Array.from(list)
+    const [removed] = result.splice(startIndex, 1)
+    result.splice(endIndex, 0, removed)
+    return result
 }
 
 const defaultPageParams: WebFuzzerPageInfoProps = {
