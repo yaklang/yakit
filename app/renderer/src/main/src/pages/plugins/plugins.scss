@@ -167,6 +167,9 @@
     .ant-radio-checked .ant-radio-inner {
         border-color: #f28b44;
     }
+    .ant-radio-checked::after {
+        border-color: #f28b44;
+    }
     .ant-radio-inner::after {
         background-color: #f28b44;
     }
