@@ -339,6 +339,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "online-plugin-recycle-bin") addOnlinePluginRecycleBin(data)
             if (type === "facade-server") addFacadeServer(data)
             if (type === "add-yak-running") addYakRunning(data)
+            if (type === "add-data-compare") addDataCompare(data)
             if (type === "**screen-recorder") openMenuPage({route: YakitRoute.ScreenRecorderPage})
             if (type === "**chaos-maker") openMenuPage({route: YakitRoute.DB_ChaosMaker})
             if (type === "**debug-plugin") openMenuPage({route: YakitRoute.Beta_DebugPlugin})
@@ -402,6 +403,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 params: {
                     wsRequest: res.request,
                     wsTls: res.tls
+                }
+            }
+        )
+    })
+    /** 数据对比*/
+    const addDataCompare =  useMemoizedFn((res: {leftData:string;rightData:string}) => {
+        openMenuPage(
+            {route: YakitRoute.DataCompare},
+            {
+                params: {
+                    leftData:res.leftData,
+                    rightData:res.rightData
                 }
             }
         )

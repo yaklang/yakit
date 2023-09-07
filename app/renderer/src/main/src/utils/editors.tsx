@@ -41,9 +41,10 @@ import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakit
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "./prettifyPacket"
-import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import styles from "./editors.module.scss"
 import classNames from "classnames"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -358,8 +359,8 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                     >
                         <div
                             className={classNames({
-                            [styles["monaco-editor-style"]]: !props.showLineBreaks
-                            }) }
+                                [styles["monaco-editor-style"]]: !props.showLineBreaks
+                            })}
                             style={{height: "100%", width: "100%", overflow: "hidden"}}
                         >
                             <MonacoEditor
@@ -1106,13 +1107,13 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
 }
 
 interface TypeOptionsProps {
-    value: string
+    value: "beautify" | "render"
     label: string
 }
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
     const isResponse = props.isResponse
-    const {originValue,isShowBeautifyRender = true} = props
+    const {originValue, isShowBeautifyRender = true} = props
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
             return "utf8"
@@ -1131,7 +1132,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const [noWordwrap, setNoWordwrap] = useState(false)
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
 
-    const [type, setType] = useState<"response" | "beautify" | "render">("response")
+    const [type, setType] = useState<"beautify" | "render">()
     const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
     const [showValue, setShowValue] = useState<Uint8Array>(originValue)
     const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
@@ -1287,16 +1288,12 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }, [props.defaultSearchKeyword, monacoEditor])
 
     useEffect(() => {
-        setType("response")
+        setType(undefined)
         if (originValue) {
             if (isResponse) {
                 formatPacketRender(originValue, (packet) => {
                     if (packet) {
                         setTypeOptions([
-                            {
-                                value: "response",
-                                label: "响应"
-                            },
                             {
                                 value: "beautify",
                                 label: "美化"
@@ -1309,10 +1306,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     } else {
                         setTypeOptions([
                             {
-                                value: "response",
-                                label: "响应"
-                            },
-                            {
                                 value: "beautify",
                                 label: "美化"
                             }
@@ -1321,10 +1314,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 })
             } else {
                 setTypeOptions([
-                    {
-                        value: "response",
-                        label: "响应"
-                    },
                     {
                         value: "beautify",
                         label: "美化"
@@ -1338,7 +1327,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         setTypeLoading(true)
         setRenderHTML(undefined)
         let beautifyValue = await prettifyPacketCode(new Buffer(originValue).toString("utf8"))
-        console.log("beautifyValue",beautifyValue);
         setShowValue(beautifyValue as Uint8Array)
         setTypeLoading(false)
     }
@@ -1346,30 +1334,29 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const renderCode = async () => {
         setTypeLoading(true)
         let renderValue = await prettifyPacketRender(originValue)
-        setRenderHTML(<div className={styles['render-html-box']} dangerouslySetInnerHTML={{__html: renderValue as string}} />)
+        setRenderHTML(
+            <div className={styles["render-html-box"]} dangerouslySetInnerHTML={{__html: renderValue as string}} />
+        )
         setTypeLoading(false)
     }
 
     useEffect(() => {
-        if (originValue && type === "response") {
-            console.log("response");
+        if (originValue && type === undefined) {
             setRenderHTML(undefined)
             setShowValue(originValue)
         } else if (originValue && type === "beautify") {
-            console.log("beautify");
             setTimeout(() => {
                 beautifyCode()
             }, 200)
         } else if (originValue && type === "render") {
-            console.log("render");
             setTimeout(() => {
                 renderCode()
             }, 200)
         }
     }, [originValue, type])
-    
+
     return (
-        <div className={styles['new-http-packet-editor']}>
+        <div className={styles["new-http-packet-editor"]}>
             <Card
                 className={"flex-card"}
                 size={"small"}
@@ -1378,9 +1365,13 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 style={{height: "100%", width: "100%", backgroundColor: "#f0f2f5"}}
                 title={
                     !props.noHeader && (
-                        <Space>
+                        <div style={{display: "flex", gap: 2}}>
                             {!props.noTitle &&
-                                (!!props.title ? props.title : <span style={{fontSize:12}}>{isResponse ? "Response" : "Request"}</span>)}
+                                (!!props.title ? (
+                                    props.title
+                                ) : (
+                                    <span style={{fontSize: 12}}>{isResponse ? "Response" : "Request"}</span>
+                                ))}
                             {!props.simpleMode ? (
                                 !props.noHex && (
                                     <SelectOne
@@ -1425,26 +1416,46 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     }}
                                 />
                             )}
-                        </Space>
+                        </div>
                     )
                 }
                 bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}
                 extra={
                     !props.noHeader && (
-                        <div style={{display:"flex",gap:2,alignItems:"center"}}>
+                        <div style={{display: "flex", gap: 2, alignItems: "center"}}>
                             {props.extra}
                             {isShowBeautifyRender && (
-                                <YakitRadioButtons
-                                    buttonStyle='solid'
-                                    optionType='button'
-                                    size='small'
-                                    value={type}
-                                    onChange={(e) => {
-                                        setType(e.target.value)
-                                    }}
-                                    options={typeOptions}
-                                />
+                                <div className={classNames(styles["type-options-checkable-tag"])}>
+                                    {typeOptions.map((item) => (
+                                        <YakitCheckableTag
+                                            key={item.value}
+                                            checked={type === item.value}
+                                            onChange={(checked) => {
+                                                console.log("checked", checked)
+                                                if (checked) {
+                                                    setType(item.value)
+                                                } else {
+                                                    setType(undefined)
+                                                }
+                                            }}
+                                        >
+                                            {item.label}
+                                        </YakitCheckableTag>
+                                    ))}
+                                </div>
                             )}
+                            {/* <YakitButton size={"small"} type={"primary"} onClick={() => {
+                                ipcRenderer
+                                .invoke("send-to-tab", {
+                                    type: "add-data-compare",
+                                    data: {
+                                        leftData:"3",
+                                        rightData:"2"
+                                    }
+                                })
+                            }}>
+                                对比
+                            </YakitButton> */}
                             {props.sendToWebFuzzer && props.readOnly && (
                                 <YakitButton
                                     size={"small"}

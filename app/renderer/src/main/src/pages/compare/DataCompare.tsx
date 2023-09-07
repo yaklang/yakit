@@ -12,12 +12,16 @@ interface textModelProps {
     language: string
 }
 
-
-export const DataCompare: React.FC = (props) => {
+interface DataCompareProps {
+    leftData?: string
+    rightData?: string
+}
+export const DataCompare: React.FC<DataCompareProps> = (props) => {
+    const {leftData,rightData} = props
     const [noWrap, setNoWrap] = useState<boolean>(false)
 
-    const [left, setLeft] = useState<string>("")
-    const [right, setRight] = useState<string>("")
+    const [left, setLeft] = useState<string>(leftData||"")
+    const [right, setRight] = useState<string>(rightData||"")
 
     const codeComparisonRef = useRef<any>(null)
     return (

@@ -379,6 +379,10 @@ export interface ComponentParams {
     // 简易企业版 - 安全检测
     recoverOnlineGroup?: string
     recoverTaskName?: string
+
+    // 数据对比
+    leftData?: string
+    rightData?: string
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -435,7 +439,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Codec:
             return <CodecPage />
         case YakitRoute.DataCompare:
-            return <DataCompare />
+            return <DataCompare leftData={params?.leftData} rightData={params?.rightData}/>
         case YakitRoute.Mod_ScanPort:
             return <PortScanPage sendTarget={params?.scanportParams} />
         case YakitRoute.PoC:

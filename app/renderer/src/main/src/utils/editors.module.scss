@@ -65,8 +65,8 @@
     :global {
         .ant-card-head {
             background-color: #ffffff;
-            height: 32px;
-            min-height: 32px;
+            height: 33px;
+            min-height: 33px;
             border-bottom: 1px solid var(--yakit-border-color);
             .ant-card-head-wrapper {
                 height: 100%;
@@ -83,6 +83,14 @@
         .flex-card {
             border: 1px solid var(--yakit-border-color);
             border-radius: 4px 0 0 4px;
+        }
+    }
+}
+.type-options-checkable-tag{
+    display: flex;
+    :global {
+        .ant-tag{
+            margin-right: 2px;
         }
     }
 }
