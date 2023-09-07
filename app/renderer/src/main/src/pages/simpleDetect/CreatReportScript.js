@@ -370,12 +370,21 @@ for aliveHost = range aliveHost.QueryAliveHost(runtimeID) {
     aliveHostKey = aliveHostKey + 1
     aliveHostList = append(aliveHostList, {
         "序号": { "value": aliveHostKey, "sort": 1},
-        "漏洞情况": { "value": aliveHost.IP, "sort": 2}
+        "存活资产": { "value": aliveHost.IP, "sort": 2}
     })
 }
+if len(aliveHostList) == 0 {
+    for _, host := range aliveHostCountList{
+        aliveHostKey = aliveHostKey + 1
+        aliveHostList = append(aliveHostList, {
+            "序号": { "value": aliveHostKey, "sort": 1},
+            "存活资产": { "value": host, "sort": 2}
+        })
+    }
+}
 
-reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": aliveHostCount-len(ipRisksStr)}, {"name": "存活资产统计", "value": aliveHostCount, "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#43ab42", "#ffffff"]})
-reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "存活资产", "value": len(aliveHostList)}, {"name": "其他", "value": hostTotal-len(aliveHostList)}, {"name": "总资产", "value": hostTotal, "direction": "center"} ], "color": ["#43ab42", "#bfbfbf", "#ffffff"]})
+reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "存活资产", "value": len(aliveHostList), "color": "#43ab42"}, {"name": "未知", "value": hostTotal-len(aliveHostList), "color": "#bfbfbf"}, {"name": "总资产", "value": hostTotal, "direction": "center", "color": "#ffffff"} ]})
+reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [{"name": "超危", "value": criticalCountScale, "color":"#f2637b"}, {"name": "高危", "value": highCountScale, "color":"#fbd438"}, {"name": "中危", "value": warningCountScale, "color": "#4ecb73"}, {"name": "低危", "value": lowCountScale, "color": "#59d4d4"}, {"name": "安全", "value": aliveHostCount-len(ipRisksStr), "color": "#43ab42"}, {"name": "存活资产统计", "value": aliveHostCount, "direction": "center", "color": "#ffffff"} ]})
 
 reportInstance.Markdown("#### 存活资产汇总")
 if len(aliveHostList) > 0 {
