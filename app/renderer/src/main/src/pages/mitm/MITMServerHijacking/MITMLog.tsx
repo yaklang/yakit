@@ -60,7 +60,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         SourceType: "mitm",
         Pagination: {...genDefaultPagination(), OrderBy: "created_at", Page: 1, Limit: 30}
     })
-    const [data, setData] = useState<HTTPFlow[]>([])
+    const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [loading, setLoading] = useState(true)
     const [statusCode, setStatusCode, getStatusCode] = useGetState<FiltersItemProps[]>([])
 
@@ -186,16 +186,16 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         if (!inViewport) {
             return
         }
-        const l = data.length
+        const l = getData().length
         const newParams = {
             ...params,
-            AfterId: l > 0 ? Math.ceil(data[0].Id) : undefined // 用于计算增量的
+            AfterId: l > 0 ? Math.ceil(getData()[0].Id) : undefined // 用于计算增量的
         }
         ipcRenderer
             .invoke("QueryHTTPFlows", {...newParams})
             .then((res: QueryGeneralResponse<HTTPFlow>) => {
                 // if (res?.Data.length === 0) return
-                let newData: HTTPFlow[] = getClassNameData(res?.Data || []).concat(data || [])
+                let newData: HTTPFlow[] = getClassNameData(res?.Data || []).concat(getData() || [])
                 newData = filterData(newData, 'Id')
                             .filter((_, index) => index < 30)
                             .sort((a, b) => +b.Id - +a.Id)
@@ -241,6 +241,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         const cleanLogTableData = () => {
             setLoading(true)
             setData([])
+            console.log('------------------------------');
         }
         emiter.on('cleanMitmLogEvent', cleanLogTableData)
         return () => {
