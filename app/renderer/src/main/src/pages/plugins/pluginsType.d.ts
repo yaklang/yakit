@@ -85,3 +85,20 @@ export interface PluginParamDataSelectProps {
     double?: boolean
     data: {label: string; value: string}[]
 }
+
+/** ---------- 插件详细信息 start ---------- */
+export interface PluginDataProps {
+    ScriptName: string
+    Type: string
+    Kind: string
+    Help?: string
+    Bug?: string
+    BugHelp?: string
+    BugFix?: string
+    BugCommnt?: string
+    Tags?: string
+    Params?: any[]
+    EnablePluginSelector?: boolean
+    PluginSelectorTypes?: string
+    content: string
+}
