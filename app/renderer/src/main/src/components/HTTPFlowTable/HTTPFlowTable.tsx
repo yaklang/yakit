@@ -676,6 +676,7 @@ export const getClassNameData = (resData: HTTPFlow[]) => {
 export const onConvertBodySizeByUnit = (length: number, unit: "B" | "K" | "M") => {
     switch (unit) {
         case "K":
+            console.log(111111111111);
             return Number(length) * 1024
         case "M":
             return Number(length) * 1024 * 1024
@@ -1385,7 +1386,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     size='small'
                                 >
                                     <YakitSelect value='B'>B</YakitSelect>
-                                    <YakitSelect value='k'>K</YakitSelect>
+                                    <YakitSelect value='K'>K</YakitSelect>
                                     <YakitSelect value='M'>M</YakitSelect>
                                 </YakitSelect>
                             }
