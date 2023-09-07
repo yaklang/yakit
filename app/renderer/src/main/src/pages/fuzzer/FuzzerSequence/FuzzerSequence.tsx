@@ -130,7 +130,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const {queryPagesDataById, selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (state) => ({
             queryPagesDataById: state.queryPagesDataById,
-            selectGroupId: state.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
+            selectGroupId: state.selectGroupId.get(YakitRoute.HTTPFuzzer)||'',
             getPagesDataByGroupId: state.getPagesDataByGroupId
         }),
         shallow
@@ -179,10 +179,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [inViewport] = useInViewport(fuzzerSequenceRef)
 
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
-    useEffect(()=>{
 
-        console.log('originSequenceList',originSequenceList)
-    },[originSequenceList])
     useDebounceEffect(
         () => {
             const effectiveSequenceList = sequenceList.filter((ele) => ele.pageId)
@@ -445,8 +442,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 ...currentResponse,
                 successCount: currentSuccessCount,
                 failedCount: currentFailedCount,
-                successFuzzer: successBuffer,
-                failedFuzzer: failedBuffer
+                successFuzzer: [...successBuffer],
+                failedFuzzer: [...failedBuffer]
             }
             setResponse(fuzzerIndex, newResponse)
         },
@@ -648,6 +645,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         })
         const newSequenceList = sequenceList.map((item) => ({...item, disabled: true}))
         setSequenceList([...newSequenceList])
+        console.log('HTTPFuzzerSequence',httpParams)
         ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
     })
     const onForcedStop = useMemoizedFn(() => {

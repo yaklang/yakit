@@ -8,7 +8,7 @@ import create from "zustand"
 import {subscribeWithSelector} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {RemoteGV} from "@/yakitGV"
-import { yakitNotify } from "@/utils/notification"
+import {yakitNotify} from "@/utils/notification"
 
 interface FuzzerSequenceProps {
     fuzzerList: FuzzerListProps[]
@@ -158,8 +158,7 @@ try {
 
     const saveFuzzerSequenceCache = debounce(
         (selectedState) => {
-            // console.log("saveFuzzerSequenceCache", selectedState)
-            // console.table(selectedState)
+            console.log("saveFuzzerSequenceCache", selectedState)
             setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(selectedState))
         },
         500,

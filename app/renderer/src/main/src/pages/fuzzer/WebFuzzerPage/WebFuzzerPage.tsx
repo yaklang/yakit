@@ -27,7 +27,7 @@ const webFuzzerTabs = [
 const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const {selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (s) => ({
-            selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
+            selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer)||'',
             getPagesDataByGroupId: s.getPagesDataByGroupId
         }),
         shallow

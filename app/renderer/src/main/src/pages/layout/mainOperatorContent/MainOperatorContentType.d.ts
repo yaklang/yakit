@@ -15,7 +15,7 @@ export interface MultipleNodeInfo extends MultipleNodeGroup {
     id: string
     verbose: string
     time?: string
-    params?: ComponentParams
+    pageParams?: ComponentParams
     sortFieId: number
 }
 /**
@@ -61,7 +61,7 @@ export interface PageCache {
     multipleNode: MultipleNodeInfo[] | any[]
     multipleLength?: number
     hideAdd?: boolean
-    params?: ComponentParams
+    pageParams?: ComponentParams
 }
 
 // 页面的唯一标识属性

@@ -610,7 +610,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         queryPagesDataById:s.queryPagesDataById,
         updatePagesDataCacheById:s.updatePagesDataCacheById
     }),shallow)
-
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
             .then((data) => {
@@ -1056,11 +1055,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 advancedConfigValue,
                 request: requestRef.current
             }
-            // ipcRenderer.invoke("send-fuzzer-setting-data", {
-            //     key: props.id || "",
-            //     param: JSON.stringify(info),
-            //     webFuzzerPageInfo: JSON.stringify(webFuzzerPageInfo)
-            // })
             onUpdateFuzzerSequenceDueToDataChanges(props.id || "", webFuzzerPageInfo)
         },
         {wait: 1000}
@@ -1075,6 +1069,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onUpdateFuzzerSequenceDueToDataChanges = useMemoizedFn((key: string, param: WebFuzzerPageInfoProps) => {
         const currentItem: PageNodeItemProps|undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, key)
         if(!currentItem)return
+        console.log('444')
         const newCurrentItem: PageNodeItemProps = {
             ...currentItem,
             pageParamsInfo: {

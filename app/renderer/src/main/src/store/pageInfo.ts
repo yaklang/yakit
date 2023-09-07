@@ -76,7 +76,7 @@ interface PageInfoStoreProps {
     getCurrentGroupAllTabName: (key) => string[]
     /**获取当前选中组*/
     getCurrentSelectGroup: (key) => PageNodeItemProps | undefined
-    clearAllData:()=>void
+    clearAllData: () => void
 }
 const defPage: PageProps = {
     pageList: [],
@@ -175,7 +175,7 @@ export const usePageInfo = create<PageInfoStoreProps>()(
         },
         setCurrentSelectGroup: (key, groupId) => {},
         setSelectGroupId: (key, val) => {
-            const {selectGroupId} = get()
+            const selectGroupId = get().selectGroupId
             selectGroupId.set(key, val)
             set({
                 ...get(),
@@ -184,11 +184,13 @@ export const usePageInfo = create<PageInfoStoreProps>()(
         },
         removeCurrentSelectGroupId: (key) => {
             const {selectGroupId} = get()
-            selectGroupId.delete(key)
-            set({
-                ...get(),
-                selectGroupId
-            })
+            if (selectGroupId.size > 0) {
+                selectGroupId.delete(key)
+                set({
+                    ...get(),
+                    selectGroupId
+                })
+            }
         },
         getCurrentGroupAllTabName: (key) => {
             const {selectGroupId, pages} = get()
@@ -235,11 +237,13 @@ try {
                         groupChildren: [],
                         groupId: ele.pageGroupId,
                         id: ele.pageId,
-                        params: {
+                        pageParams: {
                             actualHost: advancedConfigValue.actualHost || "",
                             id: ele.pageId,
                             isHttps: advancedConfigValue.isHttps,
-                            request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate
+                            request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
+                            params: advancedConfigValue.params,
+                            extractors: advancedConfigValue.extractors
                         },
                         sortFieId: ele.sortFieId,
                         verbose: ele.pageName,
@@ -247,9 +251,7 @@ try {
                         color: ele.color
                     }
                 })
-                // console.table(cache)
-                // console.log("selectedState", selectedState)
-                // console.log("saveFuzzerCache", cache)
+                console.log("saveFuzzerCache", cache)
                 setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache))
             } catch (error) {
                 yakitNotify("error", "webFuzzer缓存数据失败:" + error)

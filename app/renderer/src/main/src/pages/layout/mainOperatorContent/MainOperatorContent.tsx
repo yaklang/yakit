@@ -362,7 +362,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.HTTPFuzzer},
                 {
-                    params: {
+                    pageParams: {
                         isHttps: isHttps || false,
                         isGmTLS: isGmTLS || false,
                         request: request || "",
@@ -378,7 +378,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.WebsocketFuzzer},
             {
-                params: {
+                pageParams: {
                     wsRequest: res.request,
                     wsTls: res.tls
                 }
@@ -403,7 +403,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.Mod_ScanPort},
                 {
-                    params: {
+                    pageParams: {
                         scanportParams: URL
                     }
                 }
@@ -416,7 +416,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.Mod_Brute},
                 {
-                    params: {
+                    pageParams: {
                         bruteParams: URL
                     }
                 }
@@ -471,7 +471,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.BatchExecutorRecover},
             {
-                params: {
+                pageParams: {
                     recoverUid: task.Uid,
                     recoverBaseProgress: task.Percent
                 },
@@ -483,7 +483,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.SimpleDetect},
             {
-                params: {
+                pageParams: {
                     recoverUid: task.Uid,
                     recoverBaseProgress: task.Percent,
                     recoverOnlineGroup: task.YakScriptOnlineGroup,
@@ -498,7 +498,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.PacketScanPage},
                 {
-                    params: {
+                    pageParams: {
                         packetScan_FlowIds: httpFlows,
                         packetScan_Https: https,
                         packetScan_HttpRequest: request,
@@ -519,7 +519,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.YakitPluginJournalDetails},
             {
-                params: {
+                pageParams: {
                     YakScriptJournalDetailsId: res.YakScriptJournalDetailsId
                 },
                 hideAdd: true
@@ -536,7 +536,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.ReverseServer_New},
                 {
-                    params: {
+                    pageParams: {
                         facadeServerParams: facadeParams,
                         classGeneraterParams: classParam,
                         classType: classType
@@ -623,7 +623,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             nodeParams?: {
                 verbose?: string
                 hideAdd?: boolean
-                params?: ComponentParams
+                pageParams?: ComponentParams
             }
         ) => {
             const {route, pluginId = 0, pluginName = ""} = routeInfo
@@ -650,7 +650,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         route: route,
                         singleNode: true,
                         multipleNode: [],
-                        params: nodeParams?.params
+                        pageParams: nodeParams?.pageParams
                     }
                 ])
                 setCurrentTabKey(key)
@@ -675,8 +675,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     id: tabId,
                     verbose,
                     time,
-                    params: {
-                        ...nodeParams?.params,
+                    pageParams: {
+                        ...nodeParams?.pageParams,
                         id: tabId,
                         groupId: "0"
                     },
@@ -730,7 +730,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (route.route === YakitRoute.HTTPFuzzer) {
             // const time = new Date().getTime().toString()
             openMenuPage(route, {
-                params: {
+                pageParams: {
                     system: system
                     // order: time
                 }
@@ -963,7 +963,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     singleNode: false
                 }
                 let multipleNodeListLength: number = 0
-                const multipleNodeList = cache.filter((ele) => ele.groupId === "0")
+                const multipleNodeList:MultipleNodeInfo[] = cache.filter((ele) => ele.groupId === "0")
                 const pLength = multipleNodeList.length
                 const defaultCache = {
                     proxy: proxyRef.current || [],
@@ -971,15 +971,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     etcHosts: etcHostsRef.current || []
                 }
                 for (let index = 0; index < pLength; index++) {
-                    const parentItem = multipleNodeList[index]
+                    const parentItem:MultipleNodeInfo = multipleNodeList[index]
                     const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
                     const cLength = childrenList.length
                     const groupChildrenList: MultipleNodeInfo[] = []
 
                     // const pageNodeChildrenList: PageNodeItemProps[] = []
                     for (let j = 0; j < cLength; j++) {
-                        const childItem = childrenList[j]
-                        const nodeItem: MultipleNodeInfo = {
+                        const childItem:MultipleNodeInfo = childrenList[j]
+                        const nodeItem = {
                             ...childItem
                         }
                         // fuzzerList.current.set(nodeItem.id, {...nodeItem})
@@ -996,9 +996,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                     advancedConfigValue: {
                                         ...defaultAdvancedConfigValue,
                                         ...defaultCache,
-                                        ...nodeItem.params
+                                        ...nodeItem.pageParams,
+                                       
                                     },
-                                    request: nodeItem.params?.request || ""
+                                    request: nodeItem.pageParams?.request || ""
                                 }
                             },
                             sortFieId: nodeItem.sortFieId,
@@ -1010,13 +1011,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         multipleNodeListLength += cLength
                     } else {
                         multipleNodeListLength += 1
-                        parentItem.params = {
-                            ...parentItem.params
+                        parentItem.pageParams = {
+                            ...parentItem.pageParams
                         }
                     }
                     parentItem.groupChildren = groupChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId"))
-
-                    pageNodeInfo.pageList.push({
+                 
+                    const pageListItem={
                         id: `${randomString(8)}-${index + 1}`,
                         routeKey: YakitRoute.HTTPFuzzer,
                         pageGroupId: parentItem.groupId,
@@ -1028,20 +1029,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 advancedConfigValue: {
                                     ...defaultAdvancedConfigValue,
                                     ...defaultCache,
-                                    ...parentItem.params
+                                    ...parentItem.pageParams,
                                 },
-                                request: parentItem.params?.request || ""
+                                request: parentItem.pageParams?.request || ""
                             }
                         },
                         sortFieId: parentItem.sortFieId,
                         expand:parentItem.expand,
                         color:parentItem.color,
-                    })
+                    }
+                    console.log('pageListItem',pageListItem)
+                    pageNodeInfo.pageList.push({...pageListItem})
                     // fuzzerList.current.set(parentItem.id, {...parentItem, groupChildren: []})
                 }
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
                 if (newMultipleNodeList.length === 0) return
-                console.log("multipleNodeList", multipleNodeList)
+                // console.log("multipleNodeList", multipleNodeList)
                 console.log("pageNodeInfo", pageNodeInfo)
                 const webFuzzerPage = {
                     routeKey: key,
@@ -1087,9 +1090,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     pageId: node.id,
                     advancedConfigValue: {
                         ...defaultAdvancedConfigValue,
-                        ...node.params
+                        ...node.pageParams
                     },
-                    request: node.params?.request || ""
+                    request: node.pageParams?.request || ""
                 }
             },
             sortFieId: order
@@ -1270,7 +1273,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                     >
                         {pageItem.singleNode ? (
                             <React.Suspense fallback={<>loading page ...</>}>
-                                <PageItem routeKey={pageItem.route} params={pageItem.params} />
+                                <PageItem routeKey={pageItem.route} params={pageItem.pageParams} />
                             </React.Suspense>
                         ) : (
                             <SubTabList
@@ -1710,7 +1713,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             removeCurrentSelectGroupId,
             removePagesDataCacheById,
             setPageNodeInfoByPageGroupId,
-            removePagesDataCacheByGroupId,
             addPagesDataCache
         } = usePageInfo(
             (s) => ({
@@ -1722,7 +1724,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 removeCurrentSelectGroupId: s.removeCurrentSelectGroupId,
                 removePagesDataCacheById: s.removePagesDataCacheById,
                 setPageNodeInfoByPageGroupId: s.setPageNodeInfoByPageGroupId,
-                removePagesDataCacheByGroupId: s.removePagesDataCacheByGroupId,
                 addPagesDataCache: s.addPagesDataCache
             }),
             shallow
