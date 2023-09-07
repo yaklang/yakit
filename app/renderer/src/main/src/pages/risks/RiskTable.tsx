@@ -32,8 +32,6 @@ export interface QueryRisksParams extends QueryGeneralRequest {
     RiskType?: string
     Network?: string
     Severity?: string
-    OrderBy?: string
-    Order?: string
 }
 
 const {ipcRenderer} = window.require("electron")
