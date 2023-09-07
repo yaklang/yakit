@@ -83,15 +83,19 @@ export interface PluginDetailHeaderProps {
 // 插件基础信息组件
 export interface PluginModifyInfoProps {
     ref?: any
+    /** 是否为编辑状态 */
+    isEdit?: boolean
     /** 插件种类(漏洞|其他) */
     kind: string
     /** 插件基础信息 */
     data?: PluginBaseParamProps
+    /** tags改变时的回调事件 */
+    tagsCallback?: () => any
 }
 // 插件基础信息ref可用方法
 export interface PluginInfoRefProps {
     onGetValue: () => PluginBaseParamProps
-    onSubmit: () => Promise<PluginBaseParamProps>
+    onSubmit: () => Promise<PluginBaseParamProps | undefined>
 }
 
 // 插件配置信息组件
@@ -107,7 +111,7 @@ export interface PluginModifySettingProps {
 // 插件配置信息ref可用方法
 export interface PluginSettingRefProps {
     onGetValue: () => PluginSettingParamProps
-    onSubmit: () => Promise<PluginSettingParamProps>
+    onSubmit: () => Promise<PluginSettingParamProps | undefined>
 }
 
 // 新增|编辑插件参数信息组件
