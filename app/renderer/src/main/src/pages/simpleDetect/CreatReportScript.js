@@ -326,18 +326,22 @@ for target,risks = range targetToRisks {
        }
         
     }
-  
+    colorTag = ""
     if criticalCount > 0 {
       riskLevel = "超危"
+      colorTag = "#8B0000"
       criticalCountScale = criticalCountScale + 1
     } else if highCount > 0 {
       riskLevel = "高危"
+      colorTag = "#FF4500"
       highCountScale = highCountScale + 1
     } else if warningCount > 0 {
       riskLevel = "中危"
+      colorTag = "#FFA500"
       warningCountScale = warningCountScale + 1
     } else if lowCount > 0 {
       riskLevel = "低风险"
+      colorTag = "#008000"
       lowCountScale = lowCountScale + 1
     } else if secureCount > 0 {
       secureCountScale = secureCountScale + 1
@@ -347,7 +351,7 @@ for target,risks = range targetToRisks {
     if len(isRiskKye) == 0 {
         ipRisksStr = append(ipRisksStr, {
         "资产": {"value": target, "jump_link": target, "sort": 1},
-        "风险等级": {"value": riskLevel, "sort": 2},
+        "风险等级": {"value": riskLevel,"color": colorTag, "sort": 2},
         "严重风险": {"value": criticalCount, "color": "#8B0000", "sort": 3 },
         "高风险": {"value": highCount, "color": "#FF4500", "sort": 4 },
         "中风险": {"value": warningCount, "color": "#FFA500", "sort": 5 },
@@ -370,8 +374,8 @@ for aliveHost = range aliveHost.QueryAliveHost(runtimeID) {
     })
 }
 
-reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": aliveHostCount-len(ipRisksStr)}, {"name": "风险资产统计", "value": aliveHostCount, "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#43ab42", "#ffffff"]})
-reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "存活资产", "value": len(aliveHostList)}, {"name": "其他", "value": hostTotal-len(aliveHostList)}, {"name": "总资产", "value": hostTotal, "direction": "center"} ], "color": ["#43ab42", "#fbd438", "#ffffff"]})
+reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [{"name": "超危", "value": criticalCountScale}, {"name": "高危", "value": highCountScale}, {"name": "中危", "value": warningCountScale}, {"name": "低危", "value": lowCountScale}, {"name": "安全", "value": aliveHostCount-len(ipRisksStr)}, {"name": "存活资产统计", "value": aliveHostCount, "direction": "center"} ], "color": ["#f2637b", "#fbd438", "#4ecb73", "#59d4d4", "#39a1ff", "#43ab42", "#ffffff"]})
+reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "存活资产", "value": len(aliveHostList)}, {"name": "其他", "value": hostTotal-len(aliveHostList)}, {"name": "总资产", "value": hostTotal, "direction": "center"} ], "color": ["#43ab42", "#bfbfbf", "#ffffff"]})
 
 reportInstance.Markdown("#### 存活资产汇总")
 if len(aliveHostList) > 0 {
