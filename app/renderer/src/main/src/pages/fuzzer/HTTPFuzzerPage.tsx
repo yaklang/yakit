@@ -1754,8 +1754,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         )
         return (
             <div className={styles["fuzzer-secondNode-extra"]}>
-                {+(secondNodeSize?.width || 0) > 620 && searchNode}
-                {+(secondNodeSize?.width || 0) < 620 && (
+                {+(secondNodeSize?.width || 0) >= 610 && searchNode}
+                {+(secondNodeSize?.width || 0) < 610 && (
                     <YakitPopover content={searchNode}>
                         <YakitButton icon={<SearchIcon />} size={size} type='outline2' />
                     </YakitPopover>
@@ -1825,8 +1825,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         )
         return (
             <div className={styles["fuzzer-secondNode-extra"]}>
-                {+(secondNodeSize?.width || 0) > 620 && searchNode}
-                {+(secondNodeSize?.width || 0) < 620 && (
+                {+(secondNodeSize?.width || 0) >= 610 && searchNode}
+                {+(secondNodeSize?.width || 0) < 610 && (
                     <YakitPopover
                         content={searchNode}
                         onVisibleChange={(b) => {
