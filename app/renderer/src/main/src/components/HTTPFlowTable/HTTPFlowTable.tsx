@@ -1385,7 +1385,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     size='small'
                                 >
                                     <YakitSelect value='B'>B</YakitSelect>
-                                    <YakitSelect value='k'>K</YakitSelect>
+                                    <YakitSelect value='K'>K</YakitSelect>
                                     <YakitSelect value='M'>M</YakitSelect>
                                 </YakitSelect>
                             }
