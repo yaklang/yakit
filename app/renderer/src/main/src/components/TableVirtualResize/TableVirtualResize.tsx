@@ -561,6 +561,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     })
     const preScrollLeft = useRef<number>(0)
     const preScrollBottom = useRef<number>(0)
+    const prePage = useRef<number>(1)
     useScroll(containerRef, (val) => {
         return onScrollContainer()
     })
@@ -612,7 +613,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                         })
                     }
                     //向下滑动
-                    if (preScrollBottom.current > scrollBottom && scrollBottom <= (scrollToBottom || 300) && !hasMore) {
+                    if (
+                        preScrollBottom.current > scrollBottom 
+                        && scrollBottom <= (scrollToBottom || 300) 
+                        && !hasMore
+                        && prePage.current != pagination.page
+                    ) {
+                        prePage.current = Number(pagination.page)
                         pagination.onChange(Number(pagination.page) + 1, pagination.limit)
                     }
                 }
