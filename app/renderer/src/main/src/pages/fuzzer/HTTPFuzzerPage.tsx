@@ -107,7 +107,7 @@ import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import shallow from "zustand/shallow"
-import { usePageInfo,PageNodeItemProps,WebFuzzerPageInfoProps } from "@/store/pageInfo"
+import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -159,7 +159,6 @@ export interface HTTPFuzzerPageProp {
     isGmTLS?: boolean
     request?: string
     system?: string
-    fuzzerParams?: fuzzerInfoProp
     shareContent?: string
     id: string
 }
@@ -493,7 +492,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     // 设置变量
     params: [{Key: "", Value: "", Type: ""}],
     // 匹配器
-    filterMode: "drop",
+    filterMode: "onlyMatch",
     matchers: [],
     matchersCondition: "and",
     hitColor: "red",
@@ -502,61 +501,28 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
 }
 
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
-    const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>({
-        // 请求包配置
-        forceFuzz: true,
-        isHttps: props.fuzzerParams?.isHttps || props.isHttps || false,
-        isGmTLS: props.isGmTLS || false,
-        noFixContentLength: false,
-        noSystemProxy: false,
-        actualHost: props.fuzzerParams?.actualHost || "",
-        timeout: 30.0,
-        // 发包配置
-        concurrent: 20,
-        proxy: [],
-        minDelaySeconds: 0,
-        maxDelaySeconds: 0,
-        repeatTimes: 0,
-        // 重试配置
-        maxRetryTimes: 0,
-        retry: true,
-        noRetry: false,
-        retryConfiguration: {
-            statusCode: "",
-            keyWord: ""
-        },
-        noRetryConfiguration: {
-            statusCode: "",
-            keyWord: ""
-        },
-        retryWaitSeconds: 0,
-        retryMaxWaitSeconds: 0,
-        // 重定向配置
-        redirectCount: 3,
-        noFollowRedirect: true,
-        followJSRedirect: false,
-        redirectConfiguration: {
-            statusCode: "",
-            keyWord: ""
-        },
-        noRedirectConfiguration: {
-            statusCode: "",
-            keyWord: ""
-        },
-        // dns config
-        dnsServers: [],
-        etcHosts: [],
-        // 设置变量
-        params: [{Key: "", Value: "", Type: "raw"}],
-        // 匹配器
-        filterMode: "onlyMatch",
-        matchers: [],
-        matchersCondition: "and",
-        hitColor: "red",
-        // 提取器
-        extractors: []
+    const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            updatePagesDataCacheById: s.updatePagesDataCacheById
+        }),
+        shallow
+    )
+    const initWebFuzzerPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
+            return currentItem.pageParamsInfo.webFuzzerPageInfo
+        } else {
+            return {
+                pageId: props.id,
+                advancedConfigValue: defaultAdvancedConfigValue,
+                request: defaultPostTemplate
+            }
+        }
     })
-
+    const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
+        initWebFuzzerPageInfo().advancedConfigValue
+    ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
     const [advancedConfig, setAdvancedConfig] = useState<boolean>(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
@@ -598,7 +564,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
     const [activeKey, setActiveKey] = useState<string>("")
 
-    const requestRef = useRef<string>(props.fuzzerParams?.request || props.request || defaultPostTemplate)
+    const requestRef = useRef<string>(initWebFuzzerPageInfo().request)
     const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
     const fuzzerRef = useRef<any>()
     const [inViewport = true] = useInViewport(fuzzerRef)
@@ -606,10 +572,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
-    const {queryPagesDataById,updatePagesDataCacheById}=usePageInfo((s)=>({
-        queryPagesDataById:s.queryPagesDataById,
-        updatePagesDataCacheById:s.updatePagesDataCacheById
-    }),shallow)
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
             .then((data) => {
@@ -1043,13 +1005,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const sendFuzzerSettingInfo = useDebounceFn(
         () => {
             // 23.7.10 最新只保存 isHttps、actualHost和request
-            const info: fuzzerInfoProp = {
-                time: new Date().getTime().toString(),
-                isHttps: advancedConfigValue.isHttps,
-                actualHost: advancedConfigValue.actualHost,
-                request: requestRef.current,
-                id: props.id
-            }
             const webFuzzerPageInfo: WebFuzzerPageInfoProps = {
                 pageId: props.id,
                 advancedConfigValue,
@@ -1067,15 +1022,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      * 因为页面数据变化更新fuzzer序列化
      */
     const onUpdateFuzzerSequenceDueToDataChanges = useMemoizedFn((key: string, param: WebFuzzerPageInfoProps) => {
-        const currentItem: PageNodeItemProps|undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, key)
-        if(!currentItem)return
-        console.log('444')
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, key)
+        if (!currentItem) return
         const newCurrentItem: PageNodeItemProps = {
             ...currentItem,
             pageParamsInfo: {
                 webFuzzerPageInfo: {
                     pageId: param.pageId,
-                    advancedConfigValue: {...param.advancedConfigValue},
+                    advancedConfigValue: {
+                        ...param.advancedConfigValue
+                    },
                     request: param.request
                 }
             }

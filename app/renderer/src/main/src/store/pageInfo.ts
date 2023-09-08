@@ -1,7 +1,7 @@
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {YakitRoute} from "@/routes/newRoute"
 import create from "zustand"
-import {subscribeWithSelector} from "zustand/middleware"
+import {subscribeWithSelector, persist} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {yakitNotify} from "@/utils/notification"
@@ -84,133 +84,159 @@ const defPage: PageProps = {
     singleNode: false
 }
 export const usePageInfo = create<PageInfoStoreProps>()(
-    subscribeWithSelector((set, get) => ({
-        pages: new Map(),
-        selectGroupId: new Map(),
-        setPagesData: (key, values) => {
-            const newVal = new Map().set(key, values)
-            set({
-                ...get(),
-                pages: newVal
-            })
-        },
-        setPageNodeInfoByPageGroupId: (key, groupId, list) => {
-            const newVal = get().pages
-            const current = newVal.get(key) || {...defPage}
-            const groupList: PageNodeItemProps[] = current.pageList.filter((ele) => ele.pageGroupId !== groupId)
-            const newGroupList = groupList.concat(list)
-            newVal.set(key, {
-                ...current,
-                pageList: newGroupList
-            })
-            set({
-                ...get(),
-                pages: newVal
-            })
-        },
-        getPagesDataByGroupId: (key, groupId) => {
-            const {pages} = get()
-            const current = pages.get(key) || {...defPage}
-            return current.pageList.filter((ele) => ele.pageGroupId === groupId)
-        },
-        queryPagesDataById: (key, pageId) => {
-            const {pages} = get()
-            const current = pages.get(key) || {...defPage}
-            return current.pageList.find((ele) => ele.pageId === pageId)
-        },
-        addPagesDataCache: (key, value) => {
-            const newVal = get().pages
-            const current = newVal.get(key) || {...defPage}
-            current.pageList.push(value)
-            newVal.set(key, {
-                ...current
-            })
-            set({
-                ...get(),
-                pages: newVal
-            })
-        },
-        updatePagesDataCacheById: (key, value) => {
-            const {pages} = get()
-            const current: PageProps = pages.get(key) || {...defPage}
-            let updateIndex: number = current.pageList.findIndex((ele) => ele.pageId === value.pageId)
-            if (updateIndex !== -1) {
-                current.pageList[updateIndex] = {
-                    ...value
-                }
-                const newVal = pages.set(key, {
-                    ...current
-                })
-                set({
-                    ...get(),
-                    pages: newVal
-                })
-            }
-        },
-        removePagesDataCacheById: (key, id) => {
-            const newVal = get().pages
-            const current: PageProps = newVal.get(key) || {...defPage}
-            const newPageList = current.pageList.filter((ele) => ele.pageId !== id)
-            newVal.set(key, {
-                ...current,
-                pageList: newPageList
-            })
-            set({
-                ...get(),
-                pages: newVal
-            })
-        },
-        removePagesDataCacheByGroupId: (key, gId) => {
-            const newVal = get().pages
-            const current: PageProps = newVal.get(key) || {...defPage}
-            const newPageList = current.pageList.filter((ele) => ele.pageGroupId !== gId)
-            newVal.set(key, {
-                ...current,
-                pageList: newPageList
-            })
-            set({
-                ...get(),
-                pages: newVal
-            })
-        },
-        setCurrentSelectGroup: (key, groupId) => {},
-        setSelectGroupId: (key, val) => {
-            const selectGroupId = get().selectGroupId
-            selectGroupId.set(key, val)
-            set({
-                ...get(),
-                selectGroupId
-            })
-        },
-        removeCurrentSelectGroupId: (key) => {
-            const {selectGroupId} = get()
-            if (selectGroupId.size > 0) {
-                selectGroupId.delete(key)
-                set({
-                    ...get(),
-                    selectGroupId
-                })
-            }
-        },
-        getCurrentGroupAllTabName: (key) => {
-            const {selectGroupId, pages} = get()
-            const currentGroupId = selectGroupId.get(key)
-            const currentPages: PageProps = pages.get(key) || {...defPage}
-            return currentPages.pageList.filter((ele) => ele.pageGroupId === currentGroupId).map((ele) => ele.pageName)
-        },
-        getCurrentSelectGroup: (key) => {
-            const {selectGroupId, pages} = get()
-            const currentGroupId = selectGroupId.get(key)
-            const currentPages: PageProps = pages.get(key) || {...defPage}
-            return currentPages.pageList.find((ele) => ele.pageGroupId === currentGroupId)
-        },
-        clearAllData: () => {
-            set({
+    subscribeWithSelector(
+        persist(
+            (set, get) => ({
                 pages: new Map(),
-                selectGroupId: new Map()
-            })
-        }
-    }))
+                selectGroupId: new Map(),
+                setPagesData: (key, values) => {
+                    const newVal = new Map().set(key, values)
+                    set({
+                        ...get(),
+                        pages: newVal
+                    })
+                },
+                setPageNodeInfoByPageGroupId: (key, groupId, list) => {
+                    const newVal = get().pages
+                    const current = newVal.get(key) || {...defPage}
+                    const groupList: PageNodeItemProps[] = current.pageList.filter((ele) => ele.pageGroupId !== groupId)
+                    const newGroupList = groupList.concat(list)
+                    newVal.set(key, {
+                        ...current,
+                        pageList: newGroupList
+                    })
+                    set({
+                        ...get(),
+                        pages: newVal
+                    })
+                },
+                getPagesDataByGroupId: (key, groupId) => {
+                    const {pages} = get()
+                    const current = pages.get(key) || {...defPage}
+                    return current.pageList.filter((ele) => ele.pageGroupId === groupId)
+                },
+                queryPagesDataById: (key, pageId) => {
+                    const {pages} = get()
+                    const current = pages.get(key) || {...defPage}
+                    return current.pageList.find((ele) => ele.pageId === pageId)
+                },
+                addPagesDataCache: (key, value) => {
+                    const newVal = get().pages
+                    const current = newVal.get(key) || {...defPage}
+                    current.pageList.push(value)
+                    newVal.set(key, {
+                        ...current
+                    })
+                    set({
+                        ...get(),
+                        pages: newVal
+                    })
+                },
+                updatePagesDataCacheById: (key, value) => {
+                    const {pages} = get()
+                    const current: PageProps = pages.get(key) || {...defPage}
+                    let updateIndex: number = current.pageList.findIndex((ele) => ele.pageId === value.pageId)
+                    if (updateIndex !== -1) {
+                        current.pageList[updateIndex] = {
+                            ...value
+                        }
+                        const newVal = pages.set(key, {
+                            ...current
+                        })
+                        set({
+                            ...get(),
+                            pages: newVal
+                        })
+                    }
+                },
+                removePagesDataCacheById: (key, id) => {
+                    const newVal = get().pages
+                    const current: PageProps = newVal.get(key) || {...defPage}
+                    const newPageList = current.pageList.filter((ele) => ele.pageId !== id)
+                    newVal.set(key, {
+                        ...current,
+                        pageList: newPageList
+                    })
+                    set({
+                        ...get(),
+                        pages: newVal
+                    })
+                },
+                removePagesDataCacheByGroupId: (key, gId) => {
+                    const newVal = get().pages
+                    const current: PageProps = newVal.get(key) || {...defPage}
+                    const newPageList = current.pageList.filter((ele) => ele.pageGroupId !== gId)
+                    newVal.set(key, {
+                        ...current,
+                        pageList: newPageList
+                    })
+                    set({
+                        ...get(),
+                        pages: newVal
+                    })
+                },
+                setCurrentSelectGroup: (key, groupId) => {},
+                setSelectGroupId: (key, val) => {
+                    const selectGroupId = get().selectGroupId
+                    selectGroupId.set(key, val)
+                    set({
+                        ...get(),
+                        selectGroupId
+                    })
+                },
+                removeCurrentSelectGroupId: (key) => {
+                    const {selectGroupId} = get()
+                    if (selectGroupId.size > 0) {
+                        selectGroupId.delete(key)
+                        set({
+                            ...get(),
+                            selectGroupId
+                        })
+                    }
+                },
+                getCurrentGroupAllTabName: (key) => {
+                    const {selectGroupId, pages} = get()
+                    const currentGroupId = selectGroupId.get(key)
+                    const currentPages: PageProps = pages.get(key) || {...defPage}
+                    return currentPages.pageList
+                        .filter((ele) => ele.pageGroupId === currentGroupId)
+                        .map((ele) => ele.pageName)
+                },
+                getCurrentSelectGroup: (key) => {
+                    const {selectGroupId, pages} = get()
+                    const currentGroupId = selectGroupId.get(key)
+                    const currentPages: PageProps = pages.get(key) || {...defPage}
+                    return currentPages.pageList.find((ele) => ele.pageGroupId === currentGroupId)
+                },
+                clearAllData: () => {
+                    set({
+                        pages: new Map(),
+                        selectGroupId: new Map()
+                    })
+                }
+            }),
+            {
+                name: "page-info",
+                getStorage: () => sessionStorage,
+                serialize: (data) => {
+                    return JSON.stringify({
+                        ...data,
+                        state: {
+                            ...data.state,
+                            pages: Array.from(data.state.pages),
+                            selectGroupId: Array.from(data.state.selectGroupId)
+                        }
+                    })
+                },
+                deserialize: (value) => {
+                    const data = JSON.parse(value)
+                    data.state.pages = new Map(data.state.pages)
+                    data.state.selectGroupId = new Map(data.state.selectGroupId)
+                    return data
+                }
+            }
+        )
+    )
 )
 
 try {

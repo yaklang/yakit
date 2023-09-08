@@ -931,19 +931,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
     })
 
-    // 定时向数据库保存web-fuzzer缓存数据
-    // const saveFuzzerList = debounce(() => {
-    //     const historys: MultipleNodeInfo[] = []
-    //     fuzzerList.current.forEach((value) => {
-    //         if ((value?.params?.request || "").length < 1000000) historys.push(value)
-    //     })
-    //     // console.log("historys", historys)
-    //     // 简易版不设置webFuzzer缓存
-    //     if (!isEnpriTraceAgent()) {
-    //         setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(historys))
-    //     }
-    // }, 500)
-
     // 获取数据库中缓存的web-fuzzer页面信息
     const fetchFuzzerList = useMemoizedFn(() => {
         // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
@@ -956,7 +943,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
                 const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
                 const tabName = routeKeyToLabel.get(key) || menuName
-                // fuzzerList.current.clear()
                 let pageNodeInfo: PageProps = {
                     pageList: [],
                     routeKey: YakitRoute.HTTPFuzzer,
@@ -976,15 +962,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     const cLength = childrenList.length
                     const groupChildrenList: MultipleNodeInfo[] = []
 
-                    // const pageNodeChildrenList: PageNodeItemProps[] = []
                     for (let j = 0; j < cLength; j++) {
                         const childItem:MultipleNodeInfo = childrenList[j]
                         const nodeItem = {
                             ...childItem
                         }
-                        // fuzzerList.current.set(nodeItem.id, {...nodeItem})
                         groupChildrenList.push({...nodeItem})
-                        pageNodeInfo.pageList.push({
+                        const newNodeItem={
                             id: `${randomString(8)}-${j + 1}`,
                             routeKey: YakitRoute.HTTPFuzzer,
                             pageGroupId: nodeItem.groupId,
@@ -1005,7 +989,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             sortFieId: nodeItem.sortFieId,
                             expand:nodeItem.expand,
                             color:nodeItem.color,
-                        })
+                        }
+                        pageNodeInfo.pageList.push(newNodeItem)
                     }
                     if (cLength > 0) {
                         multipleNodeListLength += cLength
@@ -1038,14 +1023,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         expand:parentItem.expand,
                         color:parentItem.color,
                     }
-                    console.log('pageListItem',pageListItem)
                     pageNodeInfo.pageList.push({...pageListItem})
-                    // fuzzerList.current.set(parentItem.id, {...parentItem, groupChildren: []})
                 }
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
                 if (newMultipleNodeList.length === 0) return
                 // console.log("multipleNodeList", multipleNodeList)
-                console.log("pageNodeInfo", pageNodeInfo)
+                // console.log("pageNodeInfo", pageNodeInfo.pageList[2])
                 const webFuzzerPage = {
                     routeKey: key,
                     verbose: tabName,
@@ -1635,7 +1618,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setType("config")
         }
     })
-
     return (
         <div
             ref={tabsRef}
@@ -2026,7 +2008,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             onUpdatePageCache(subPage)
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                // push新组的序列表数据
                 onUpdateSorting(subPage)
                 setSelectGroupId(YakitRoute.HTTPFuzzer, combineItem.id)
             }
@@ -2152,13 +2133,16 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 ...sourceItem,
                 groupId: "0"
             }
-            setSelectSubMenu((s) => ({...s, groupId: "0"}))
+            if(selectSubMenu.id===sourceItem.id){
+                setSelectSubMenu((s) => ({...s, groupId: "0"}))
+            }
 
             // 将拖拽的item添加到目的地的组内
             subPage.splice(destinationIndex, 0, newSourceItem)
 
             // 如果组内的item为0 ,需要删除组
             if (sourceGroupChildrenList.length === 0) {
+                console.log('sourceGroupChildrenList',sourceGroupChildrenList)
                 const number = subPage.findIndex((ele) => ele.id === sourceGroupId)
                 subPage.splice(number, 1)
                 removePagesDataCacheById(YakitRoute.HTTPFuzzer, sourceItem.id)

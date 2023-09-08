@@ -38,7 +38,7 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
                                     }}
                                     className={styles["page-body"]}
                                 >
-                                    <PageItem routeKey={route} yakScriptId={+(pluginId || 0)} params={subItem.params} />
+                                    <PageItem routeKey={route} yakScriptId={+(pluginId || 0)} params={subItem.pageParams} />
                                 </div>
                             </React.Fragment>
                         )
@@ -52,41 +52,6 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
             return false
         }
         if (preProps.selectSubMenuId !== nextProps.selectSubMenuId) {
-            return false
-        }
-        return true
-    }
-)
-
-export const RenderSubPageItem: React.FC<RenderSubPageItemProps> = React.memo(
-    (props) => {
-        const {subItem, selectSubMenuId, route, pluginId} = props
-        return (
-            <div
-                key={subItem.id}
-                id={subItem.id}
-                tabIndex={selectSubMenuId === subItem.id ? 1 : -1}
-                style={{
-                    display: selectSubMenuId === subItem.id ? "" : "none",
-                    padding: NoPaddingRoute.includes(route) ? 0 : "8px 16px 13px 16px"
-                }}
-                className={styles["page-body"]}
-            >
-                <PageItem routeKey={route} yakScriptId={+(pluginId || 0)} params={subItem.params} />
-            </div>
-        )
-    },
-    (preProps, nextProps) => {
-        if (
-            preProps.selectSubMenuId !== nextProps.selectSubMenuId &&
-            preProps.selectSubMenuId === preProps.subItem.id
-        ) {
-            return false
-        }
-        if (
-            preProps.selectSubMenuId !== nextProps.selectSubMenuId &&
-            nextProps.selectSubMenuId === nextProps.subItem.id
-        ) {
             return false
         }
         return true

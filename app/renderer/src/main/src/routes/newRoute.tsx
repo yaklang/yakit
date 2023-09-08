@@ -348,7 +348,6 @@ export interface ComponentParams {
     id?: string
     /**@param groupId HTTPFuzzer必须要有的，其他页面可以不用 */
     groupId?: string
-    fuzzerParams?: fuzzerInfoProp
     params?:FuzzerParamItem[]
     extractors?:HTTPResponseExtractor[]
 
@@ -432,7 +431,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                             request={params?.request}
                             system={params?.system}
                             id={params?.id || ""}
-                            fuzzerParams={params?.fuzzerParams}
                             shareContent={params?.shareContent}
                         />
                     </WebFuzzerPage>

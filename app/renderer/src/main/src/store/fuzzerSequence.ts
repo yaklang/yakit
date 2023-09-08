@@ -5,7 +5,7 @@
 import {SequenceProps} from "@/pages/fuzzer/FuzzerSequence/FuzzerSequenceType"
 import {setRemoteProjectValue} from "@/utils/kv"
 import create from "zustand"
-import {subscribeWithSelector} from "zustand/middleware"
+import {subscribeWithSelector, persist} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {RemoteGV} from "@/yakitGV"
 import {yakitNotify} from "@/utils/notification"
@@ -42,108 +42,116 @@ export interface FuzzerSequenceCacheDataProps {
 }
 
 export const useFuzzerSequence = create<FuzzerSequenceProps>()(
-    subscribeWithSelector((set, get) => ({
-        fuzzerList: [],
-        fuzzerSequenceList: [],
-        fuzzerSequenceCacheData: [],
-        addFuzzerSequenceList: (val) => {
-            const s = get()
-            if (!s) return
-            const isHave = s.fuzzerSequenceList.filter((ele) => ele.groupId === val.groupId).length > 0
-            if (isHave) return
-            set({
-                ...s,
-                fuzzerSequenceList: [...s.fuzzerSequenceList, val]
-            })
-        },
-        removeFuzzerSequenceList: (val) => {
-            const s = get()
-            if (!s) return
-            set({
-                ...s,
-                fuzzerSequenceList: s.fuzzerSequenceList.filter((ele) => ele.groupId !== val.groupId),
-                fuzzerSequenceCacheData: s.fuzzerSequenceCacheData.filter((ele) => ele.groupId !== val.groupId)
-            })
-        },
-        setFuzzerSequenceCacheData: (values) => {
-            const s = get()
-            if (!s) return
-            set({
-                ...s,
-                fuzzerSequenceCacheData: values
-            })
-        },
-        queryFuzzerSequenceCacheDataByGroupId: (groupId) => {
-            const cacheDataList = get().fuzzerSequenceCacheData
-            const queryCacheData = cacheDataList.find((ele) => ele.groupId === groupId)
-            return queryCacheData ? queryCacheData.cacheData : []
-        },
-        addFuzzerSequenceCacheData: (groupId, values) => {
-            let allCacheList = get().fuzzerSequenceCacheData
-            let index = allCacheList.findIndex((ele) => ele.groupId === groupId)
-            if (index === -1) {
-                allCacheList = [
-                    ...allCacheList,
-                    {
-                        groupId,
-                        cacheData: values
+    subscribeWithSelector(
+        persist(
+            (set, get) => ({
+                fuzzerList: [],
+                fuzzerSequenceList: [],
+                fuzzerSequenceCacheData: [],
+                addFuzzerSequenceList: (val) => {
+                    const s = get()
+                    if (!s) return
+                    const isHave = s.fuzzerSequenceList.filter((ele) => ele.groupId === val.groupId).length > 0
+                    if (isHave) return
+                    set({
+                        ...s,
+                        fuzzerSequenceList: [...s.fuzzerSequenceList, val]
+                    })
+                },
+                removeFuzzerSequenceList: (val) => {
+                    const s = get()
+                    if (!s) return
+                    set({
+                        ...s,
+                        fuzzerSequenceList: s.fuzzerSequenceList.filter((ele) => ele.groupId !== val.groupId),
+                        fuzzerSequenceCacheData: s.fuzzerSequenceCacheData.filter((ele) => ele.groupId !== val.groupId)
+                    })
+                },
+                setFuzzerSequenceCacheData: (values) => {
+                    const s = get()
+                    if (!s) return
+                    set({
+                        ...s,
+                        fuzzerSequenceCacheData: values
+                    })
+                },
+                queryFuzzerSequenceCacheDataByGroupId: (groupId) => {
+                    const cacheDataList = get().fuzzerSequenceCacheData
+                    const queryCacheData = cacheDataList.find((ele) => ele.groupId === groupId)
+                    return queryCacheData ? queryCacheData.cacheData : []
+                },
+                addFuzzerSequenceCacheData: (groupId, values) => {
+                    let allCacheList = get().fuzzerSequenceCacheData
+                    let index = allCacheList.findIndex((ele) => ele.groupId === groupId)
+                    if (index === -1) {
+                        allCacheList = [
+                            ...allCacheList,
+                            {
+                                groupId,
+                                cacheData: values
+                            }
+                        ]
+                        set({
+                            ...get(),
+                            fuzzerSequenceCacheData: [...allCacheList]
+                        })
                     }
-                ]
-                set({
-                    ...get(),
-                    fuzzerSequenceCacheData: [...allCacheList]
-                })
-            }
-        },
-        updateFuzzerSequenceCacheData: (groupId, cacheList) => {
-            const allCacheList = get().fuzzerSequenceCacheData
-            let index = allCacheList.findIndex((ele) => ele.groupId === groupId)
-            if (index !== -1) {
-                allCacheList[index].cacheData = [...cacheList]
-                set({
-                    ...get(),
-                    fuzzerSequenceCacheData: [...allCacheList]
-                })
-            }
-        },
-        removeFuzzerSequenceCacheData: (groupId) => {
-            const newVal = get().fuzzerSequenceCacheData || []
-            const newPageList = newVal.filter((ele) => ele.groupId !== groupId)
-            set({
-                ...get(),
-                fuzzerSequenceCacheData: newPageList
-            })
-        },
-        clearFuzzerSequenceCacheData: () => {
-            set({
-                ...get(),
-                fuzzerSequenceCacheData: []
-            })
-        },
-        onlySaveFuzzerSequenceCacheDataIncomingGroupId: (groupId) => {
-            const newVal = get().fuzzerSequenceCacheData || []
-            const newPageList = newVal.filter((ele) => ele.groupId === groupId)
-            set({
-                ...get(),
-                fuzzerSequenceCacheData: newPageList
-            })
-        },
-        removeGroupOther: (groupId, id) => {
-            const newVal = get().fuzzerSequenceCacheData || []
-            const index = newVal.findIndex((ele) => ele.groupId === groupId)
-            if (index !== -1) {
-                const list = newVal[index].cacheData.filter((ele) => ele.pageId === id)
-                newVal[index] = {
-                    groupId,
-                    cacheData: list
+                },
+                updateFuzzerSequenceCacheData: (groupId, cacheList) => {
+                    const allCacheList = get().fuzzerSequenceCacheData
+                    let index = allCacheList.findIndex((ele) => ele.groupId === groupId)
+                    if (index !== -1) {
+                        allCacheList[index].cacheData = [...cacheList]
+                        set({
+                            ...get(),
+                            fuzzerSequenceCacheData: [...allCacheList]
+                        })
+                    }
+                },
+                removeFuzzerSequenceCacheData: (groupId) => {
+                    const newVal = get().fuzzerSequenceCacheData || []
+                    const newPageList = newVal.filter((ele) => ele.groupId !== groupId)
+                    set({
+                        ...get(),
+                        fuzzerSequenceCacheData: newPageList
+                    })
+                },
+                clearFuzzerSequenceCacheData: () => {
+                    set({
+                        ...get(),
+                        fuzzerSequenceCacheData: []
+                    })
+                },
+                onlySaveFuzzerSequenceCacheDataIncomingGroupId: (groupId) => {
+                    const newVal = get().fuzzerSequenceCacheData || []
+                    const newPageList = newVal.filter((ele) => ele.groupId === groupId)
+                    set({
+                        ...get(),
+                        fuzzerSequenceCacheData: newPageList
+                    })
+                },
+                removeGroupOther: (groupId, id) => {
+                    const newVal = get().fuzzerSequenceCacheData || []
+                    const index = newVal.findIndex((ele) => ele.groupId === groupId)
+                    if (index !== -1) {
+                        const list = newVal[index].cacheData.filter((ele) => ele.pageId === id)
+                        newVal[index] = {
+                            groupId,
+                            cacheData: list
+                        }
+                        set({
+                            ...get(),
+                            fuzzerSequenceCacheData: [...newVal]
+                        })
+                    }
                 }
-                set({
-                    ...get(),
-                    fuzzerSequenceCacheData: [...newVal]
-                })
+            }),
+            {
+                name: "fuzzer-sequence",
+                getStorage: () => sessionStorage
             }
-        }
-    }))
+        )
+    )
 )
 try {
     /**

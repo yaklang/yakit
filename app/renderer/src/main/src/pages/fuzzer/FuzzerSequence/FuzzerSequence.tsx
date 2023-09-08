@@ -463,6 +463,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         useMemoizedFn(() => {
             if (loading || !inViewport) return
             const pageChildrenList = getCurrentGroupSequence()
+            console.log('pageChildrenList',pageChildrenList)
             if (pageChildrenList.length === 0) {
                 if (setType) setType("config")
                 return
