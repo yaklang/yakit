@@ -1244,8 +1244,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         if (props.readOnly) {
             return
         }
-        setStrValue(Uint8ArrayToString(showValue, getEncoding()))
-        setHexValue(new Uint8Array(showValue))
+        setStrValue(Uint8ArrayToString(originValue, getEncoding()))
+        setHexValue(new Uint8Array(originValue))
     }, [props.refreshTrigger])
 
     useEffect(() => {
