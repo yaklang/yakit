@@ -945,7 +945,7 @@ const GetUIOpSettingMenu = () => {
                     label: "运行节点"
                 },
                 {
-                    key: "webshell-manaer",
+                    key: "webshell-manager",
                     label: "WebShell 管理"
                 },
             ]
