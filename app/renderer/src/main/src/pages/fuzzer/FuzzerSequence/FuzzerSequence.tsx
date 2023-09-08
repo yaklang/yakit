@@ -82,7 +82,7 @@ import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 import shallow from "zustand/shallow"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageNodeItemProps, WebFuzzerPageInfoProps, usePageInfo} from "@/store/pageInfo"
-import { compareAsc } from "@/pages/yakitStore/viewers/base"
+import {compareAsc} from "@/pages/yakitStore/viewers/base"
 // import { ResponseCard } from "./ResponseCard"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -130,7 +130,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const {queryPagesDataById, selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (state) => ({
             queryPagesDataById: state.queryPagesDataById,
-            selectGroupId: state.selectGroupId.get(YakitRoute.HTTPFuzzer)||'',
+            selectGroupId: state.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
             getPagesDataByGroupId: state.getPagesDataByGroupId
         }),
         shallow
@@ -221,7 +221,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 unSubPageNode()
             }
         }
-        
     }, [inViewport])
 
     useUpdateEffect(() => {
@@ -1203,7 +1202,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         request: "",
         advancedConfigValue: {...defaultAdvancedConfigValue}
     }
-    const [requestHttp, setRequestHttp] = useState<string>("")
     const [showSuccess, setShowSuccess] = useState(true)
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [affixSearch, setAffixSearch] = useState<string>("")
@@ -1219,9 +1217,9 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
 
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
-    // const [inViewport] = useInViewport(secondNodeRef)
 
     const successTableRef = useRef<any>()
+    const requestHttpRef = useRef<string>(request)
 
     const cachedTotal: number = useCreation(() => {
         return failedCount + successCount
@@ -1250,7 +1248,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
 
     useEffect(() => {
         if (!pageId) return
-        setRequestHttp(request)
+        requestHttpRef.current = request
         setRefreshTrigger(!refreshTrigger)
     }, [pageId, request])
 
@@ -1264,7 +1262,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     }, [responseInfoId])
 
     const onSetRequestHttp = useMemoizedFn((i: string) => {
-        setRequestHttp(i)
+        requestHttpRef.current = i
         onUpdatePageInfo(i, pageId || "")
     })
     const onUpdatePageInfo = useDebounceFn(
@@ -1345,7 +1343,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                 firstNode={
                     <WebFuzzerNewEditor
                         refreshTrigger={refreshTrigger}
-                        request={requestHttp}
+                        request={requestHttpRef.current}
                         setRequest={(i) => onSetRequestHttp(i)}
                         isHttps={advancedConfigValue.isHttps}
                         hotPatchCode={hotPatchCode}
