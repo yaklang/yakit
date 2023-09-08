@@ -941,7 +941,7 @@ const GetUIOpSettingMenu = () => {
                     label: "运行节点"
                 },
                 {
-                    key: "webshell-manaer",
+                    key: "webshell-manager",
                     label: "WebShell 管理"
                 },
             ]
@@ -1126,8 +1126,8 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "new-codec":
                 addToTab("**beta-codec")
                 return
-            case "webshell-manaer":
-                addToTab("**webshell-manaer")
+            case "webshell-manager":
+                addToTab("**webshell-manager")
                 return
             case "invalidCache":
                 invalidCacheAndUserData(temporaryProjectId, setTemporaryProjectId)
