@@ -169,6 +169,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         itemHeight: defItemHeight,
         overscan: 10
     })
+
     useEffect(() => {
         setCurrentRow(currentSelectItem)
     }, [currentSelectItem])
@@ -343,15 +344,15 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             document.removeEventListener("mousedown", handleShiftMousedown)
         }
     }, [isRightClickBatchOperate])
-    useEffect(() => {
-        if (pagination.page == 1) {
+    useUpdateEffect(() => {
+        if (pagination.page == 1 && pagination.total == 0) {
             scrollTo(0)
             setScroll({
                 ...scroll,
                 scrollBottom: 0
             })
         }
-    }, [pagination.page])
+    }, [pagination.page, pagination.total])
     useDeepCompareEffect(() => {
         const newColumns = props.columns.map((ele) => {
             const defColumnItem = columns.find((c) => c.dataKey === ele.dataKey)
@@ -1024,7 +1025,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                         </div>
                         <div
                             className={classNames(styles["virtual-table-list-pagination"])}
-                            style={{display: scroll.scrollBottom < 10 ? "" : "none"}}
+                            style={{display: scroll.scrollBottom <= 10 ? "" : "none"}}
                         >
                             {loading && !(pagination?.total == data.length) && (
                                 <div className={classNames(styles["pagination-loading"])}>
@@ -1317,7 +1318,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                 })
             }}
         >
-            {list.map((item, number) => {
+            {list.length !== 0 && list.map((item, number) => {
                 return (
                     <React.Fragment key={`${item.data[renderKey]}-${colIndex}` || number}>
                         {(colIndex === 0 && (

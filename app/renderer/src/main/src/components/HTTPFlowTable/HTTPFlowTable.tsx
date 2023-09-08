@@ -669,6 +669,19 @@ export const getClassNameData = (resData: HTTPFlow[]) => {
     }
     return newData
 }
+
+export const filterData = (filterArr: HTTPFlow[], key: keyof HTTPFlow) => {
+    const uniqueData: HTTPFlow[] = []
+    const idSet = new Set<HTTPFlow[keyof HTTPFlow]>()
+    filterArr.forEach(item => {
+        if (!idSet.has(item[key])) {
+            idSet.add(item[key])
+            uniqueData.push(item)
+        }
+    })
+    return uniqueData
+}
+
 /**
  * @description 根据单位转为对应的值
  * @returns {number}

@@ -2,7 +2,7 @@ import React, {Ref, useEffect, useState} from "react"
 import {Divider, Modal, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus";
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
-import {failed, info, yakitNotify} from "@/utils/notification"
+import {failed, info} from "@/utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useGetState, useLatest, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
@@ -14,11 +14,9 @@ import {MITMResponse, MITMServer} from "@/pages/mitm/MITMPage"
 import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import style from "./MITMServerHijacking.module.scss"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {QuitIcon} from "@/assets/newIcon"
 import classNames from "classnames"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -61,17 +59,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             })
         }
     }, [props.enableInitialMITMPlugin, props.defaultPlugins])
-
-    const cleanMitmLogTableData = useMemoizedFn((params: { DeleteAll: boolean, Filter?: {} }) => {
-        ipcRenderer
-            .invoke("DeleteHTTPFlows", params)
-            .then(() => {
-                emiter.emit("cleanMitmLogEvent")
-            })
-            .catch((e: any) => {
-                yakitNotify('error', `历史记录删除失败: ${e}`)
-            })
-    })
 
     const stop = useMemoizedFn(() => {
         // setLoading(true)
@@ -131,45 +118,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     {/*</YakitButton>*/}
                     <div className={style["mitm-server-chrome"]}>
                         <ChromeLauncherButton isStartMITM={true} host={host} port={port} />
-                    </div>
-                    <div className={style["empty-button"]}>
-                        <YakitDropdownMenu
-                            menu={{
-                                data: [
-                                    {
-                                        key: "resetId",
-                                        label: "重置请求 ID"
-                                    },
-                                    {
-                                        key: "noResetId",
-                                        label: "不重置请求 ID"
-                                    }
-                                ],
-                                onClick: ({key}) => {
-                                    switch (key) {
-                                        case "resetId":
-                                            cleanMitmLogTableData({ DeleteAll: true })
-                                            break
-                                        case "noResetId":
-                                            cleanMitmLogTableData({ Filter: {}, DeleteAll: false })
-                                            break
-                                        default:
-                                            break
-                                    }
-                                }
-                            }}
-                            dropdown={{
-                                trigger: ["click"],
-                                placement: "bottom"
-                            }}
-                        >
-                            <YakitButton
-                                type='outline1'
-                                colors="danger"
-                            >
-                                清空
-                            </YakitButton>
-                        </YakitDropdownMenu>
                     </div>
                     <div className={style["mitm-server-quit-icon"]}>
                         <QuitIcon onClick={() => stop()} />

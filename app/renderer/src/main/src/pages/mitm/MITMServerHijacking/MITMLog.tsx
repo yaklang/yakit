@@ -6,6 +6,7 @@ import {
     CalloutColor,
     CompateData,
     getClassNameData,
+    filterData,
     HTTPFlow,
     HTTPFlowsFieldGroupResponse,
     HTTPFlowShield,
@@ -41,6 +42,8 @@ import {execPacketScan} from "@/pages/packetScanner/PacketScanner"
 import {HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {ResizeBox} from "@/components/ResizeBox"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -57,7 +60,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         SourceType: "mitm",
         Pagination: {...genDefaultPagination(), OrderBy: "created_at", Page: 1, Limit: 30}
     })
-    const [data, setData] = useState<HTTPFlow[]>([])
+    const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [loading, setLoading] = useState(true)
     const [statusCode, setStatusCode, getStatusCode] = useGetState<FiltersItemProps[]>([])
 
@@ -183,18 +186,19 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
         if (!inViewport) {
             return
         }
-        const l = data.length
+        const l = getData().length
         const newParams = {
             ...params,
-            AfterId: l > 0 ? Math.ceil(data[0].Id) : undefined // 用于计算增量的
+            AfterId: l > 0 ? Math.ceil(getData()[0].Id) : undefined // 用于计算增量的
         }
         ipcRenderer
             .invoke("QueryHTTPFlows", {...newParams})
             .then((res: QueryGeneralResponse<HTTPFlow>) => {
                 // if (res?.Data.length === 0) return
-                let newData: HTTPFlow[] = getClassNameData(res?.Data || [])
-                    .concat(data || [])
-                    .filter((_, index) => index < 30)
+                let newData: HTTPFlow[] = getClassNameData(res?.Data || []).concat(getData() || [])
+                newData = filterData(newData, 'Id')
+                            .filter((_, index) => index < 30)
+                            .sort((a, b) => +b.Id - +a.Id)
                 setData(newData)
             })
             .finally(() => {
@@ -588,8 +592,57 @@ interface MITMLogHeardExtraProps {
 }
 export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((props) => {
     const {shieldData, cancleFilter} = props
+
+    const cleanMitmLogTableData = useMemoizedFn((params: { DeleteAll: boolean, Filter?: {} }) => {
+        ipcRenderer
+            .invoke("DeleteHTTPFlows", params)
+            .then(() => {
+                emiter.emit("cleanMitmLogEvent")
+            })
+            .catch((e: any) => {
+                yakitNotify('error', `历史记录删除失败: ${e}`)
+            })
+    })
+
     return (
         <div className={styles["mitm-log-heard"]}>
+            <YakitDropdownMenu
+                menu={{
+                    data: [
+                        {
+                            key: "resetId",
+                            label: "重置请求 ID"
+                        },
+                        {
+                            key: "noResetId",
+                            label: "不重置请求 ID"
+                        }
+                    ],
+                    onClick: ({key}) => {
+                        switch (key) {
+                            case "resetId":
+                                cleanMitmLogTableData({ DeleteAll: true })
+                                break
+                            case "noResetId":
+                                cleanMitmLogTableData({ Filter: {}, DeleteAll: false })
+                                break
+                            default:
+                                break
+                        }
+                    }
+                }}
+                dropdown={{
+                    trigger: ["click"],
+                    placement: "bottom"
+                }}
+            >
+                <YakitButton
+                    type='outline1'
+                    colors="danger"
+                >
+                    清空
+                </YakitButton>
+            </YakitDropdownMenu>
             <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} />
         </div>
     )
