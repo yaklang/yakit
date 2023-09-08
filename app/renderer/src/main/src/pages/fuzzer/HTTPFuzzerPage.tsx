@@ -490,7 +490,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     dnsServers: [],
     etcHosts: [],
     // 设置变量
-    params: [{Key: "", Value: "", Type: ""}],
+    params: [{Key: "", Value: "", Type: "raw"}],
     // 匹配器
     filterMode: "onlyMatch",
     matchers: [],
@@ -1012,7 +1012,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
             onUpdateFuzzerSequenceDueToDataChanges(props.id || "", webFuzzerPageInfo)
         },
-        {wait: 1000}
+        {wait: 500}
     ).run
     useUpdateEffect(() => {
         sendFuzzerSettingInfo()

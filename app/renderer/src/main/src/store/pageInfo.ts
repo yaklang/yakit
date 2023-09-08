@@ -77,6 +77,7 @@ interface PageInfoStoreProps {
     /**获取当前选中组*/
     getCurrentSelectGroup: (key) => PageNodeItemProps | undefined
     clearAllData: () => void
+    clearDataByRoute: (key: string) => void
 }
 const defPage: PageProps = {
     pageList: [],
@@ -213,6 +214,15 @@ export const usePageInfo = create<PageInfoStoreProps>()(
                         pages: new Map(),
                         selectGroupId: new Map()
                     })
+                },
+                clearDataByRoute: (key) => {
+                    const {selectGroupId, pages} = get()
+                    selectGroupId.delete(key)
+                    pages.delete(key)
+                    set({
+                        pages: new Map(pages),
+                        selectGroupId: new Map(selectGroupId)
+                    })
                 }
             }),
             {
@@ -277,7 +287,8 @@ try {
                         color: ele.color
                     }
                 })
-                console.log("saveFuzzerCache", cache)
+                // console.log("saveFuzzerCache", cache)
+                // console.table(pageList)
                 setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache))
             } catch (error) {
                 yakitNotify("error", "webFuzzer缓存数据失败:" + error)

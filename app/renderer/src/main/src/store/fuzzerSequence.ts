@@ -11,7 +11,6 @@ import {RemoteGV} from "@/yakitGV"
 import {yakitNotify} from "@/utils/notification"
 
 interface FuzzerSequenceProps {
-    fuzzerList: FuzzerListProps[]
     fuzzerSequenceList: FuzzerSequenceListProps[]
     fuzzerSequenceCacheData: FuzzerSequenceCacheDataProps[]
 
@@ -24,7 +23,7 @@ interface FuzzerSequenceProps {
     addFuzzerSequenceCacheData: (groupId: string, v: SequenceProps[]) => void
     updateFuzzerSequenceCacheData: (groupId: string, v: SequenceProps[]) => void
     removeFuzzerSequenceCacheData: (groupId: string) => void
-    clearFuzzerSequenceCacheData: () => void
+    clearFuzzerSequence: () => void
     /**只保留传入的groupId的数据 */
     onlySaveFuzzerSequenceCacheDataIncomingGroupId: (groupId: string) => void
     /**删除组内的其他数据，只保留组内的传入id的数据 */
@@ -45,7 +44,6 @@ export const useFuzzerSequence = create<FuzzerSequenceProps>()(
     subscribeWithSelector(
         persist(
             (set, get) => ({
-                fuzzerList: [],
                 fuzzerSequenceList: [],
                 fuzzerSequenceCacheData: [],
                 addFuzzerSequenceList: (val) => {
@@ -116,10 +114,10 @@ export const useFuzzerSequence = create<FuzzerSequenceProps>()(
                         fuzzerSequenceCacheData: newPageList
                     })
                 },
-                clearFuzzerSequenceCacheData: () => {
+                clearFuzzerSequence: () => {
                     set({
-                        ...get(),
-                        fuzzerSequenceCacheData: []
+                        fuzzerSequenceCacheData: [],
+                        fuzzerSequenceList: []
                     })
                 },
                 onlySaveFuzzerSequenceCacheDataIncomingGroupId: (groupId) => {
@@ -166,8 +164,9 @@ try {
 
     const saveFuzzerSequenceCache = debounce(
         (selectedState) => {
-            console.log("saveFuzzerSequenceCache", selectedState)
-            setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(selectedState))
+            const sequenceCache = selectedState.filter((ele) => ele.cacheData.length > 0)
+            // console.log("saveFuzzerSequenceCache", sequenceCache)
+            setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(sequenceCache))
         },
         500,
         {leading: true}
