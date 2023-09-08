@@ -989,7 +989,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 Order: sortRef.current.order,
                 OrderBy: sortRef.current.orderBy || "id"
             }
-            if (!noLoading) setLoading(true)
+            // if (!noLoading) setLoading(true)
 
             const l = data.length
             const query = {
