@@ -200,7 +200,9 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
         (page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
             const paginationProps = {
                 Page: page || 1,
-                Limit: limit || pagination.Limit
+                Limit: limit || pagination.Limit,
+                OrderBy: "created_at",
+                Order: "desc"
             }
             setLoading(true)
             ipcRenderer
