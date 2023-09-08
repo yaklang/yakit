@@ -676,7 +676,6 @@ export const getClassNameData = (resData: HTTPFlow[]) => {
 export const onConvertBodySizeByUnit = (length: number, unit: "B" | "K" | "M") => {
     switch (unit) {
         case "K":
-            console.log(111111111111);
             return Number(length) * 1024
         case "M":
             return Number(length) * 1024 * 1024
