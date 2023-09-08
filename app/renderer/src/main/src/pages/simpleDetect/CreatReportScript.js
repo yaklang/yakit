@@ -366,7 +366,7 @@ for target,risks = range targetToRisks {
 
 aliveHostList = []
 aliveHostKey = 0
-for aliveHost = range aliveHost.QueryAliveHost(runtimeID) {
+for aliveHost = range db.QueryAliveHost(runtimeID) {
     aliveHostKey = aliveHostKey + 1
     aliveHostList = append(aliveHostList, {
         "序号": { "value": aliveHostKey, "sort": 1},
