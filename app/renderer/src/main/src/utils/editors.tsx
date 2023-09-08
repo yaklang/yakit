@@ -1290,9 +1290,22 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     useEffect(() => {
         setType(undefined)
         if (originValue) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(Uint8ArrayToString(originValue));
+            const mb = bytes.length / 1024 /1024
+            // 0.5mb 及以下内容才可美化
             if (isResponse) {
                 formatPacketRender(originValue, (packet) => {
                     if (packet) {
+                        if(mb > 0.5){
+                            setTypeOptions([
+                                {
+                                    value: "render",
+                                    label: "渲染"
+                                }
+                            ])
+                            return
+                        }
                         setTypeOptions([
                             {
                                 value: "beautify",
@@ -1304,6 +1317,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             }
                         ])
                     } else {
+                        if(mb > 0.5) return
                         setTypeOptions([
                             {
                                 value: "beautify",
@@ -1313,6 +1327,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     }
                 })
             } else {
+                if(mb > 0.5) return
                 setTypeOptions([
                     {
                         value: "beautify",
@@ -1431,7 +1446,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                             key={item.value}
                                             checked={type === item.value}
                                             onChange={(checked) => {
-                                                console.log("checked", checked)
                                                 if (checked) {
                                                     setType(item.value)
                                                 } else {
