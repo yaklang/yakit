@@ -1863,7 +1863,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
         const onSubMenuDragEnd = useMemoizedFn((result) => {
             try {
-                console.log("onSubMenuDragEnd", result)
+                // console.log("onSubMenuDragEnd", result)
                 const {droppableId: sourceDroppableId} = result.source
                 /** 合并组   ---------start--------- */
                 if (result.combine) {
@@ -2071,7 +2071,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 }
                 onExchangeOrderPages(YakitRoute.HTTPFuzzer, source, destination)
                 const sequenceList = queryFuzzerSequenceCacheDataByGroupId(groupId)
-                console.log("sequenceList", sequenceList)
             }
         })
 
@@ -2151,7 +2150,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
             // 如果组内的item为0 ,需要删除组
             if (sourceGroupChildrenList.length === 0) {
-                console.log("sourceGroupChildrenList", sourceGroupChildrenList)
                 const number = subPage.findIndex((ele) => ele.id === sourceGroupId)
                 subPage.splice(number, 1)
                 removePagesDataCacheById(YakitRoute.HTTPFuzzer, sourceItem.id)
