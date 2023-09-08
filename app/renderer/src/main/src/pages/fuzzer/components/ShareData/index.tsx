@@ -27,7 +27,7 @@ export const ShareData: React.FC<ShareDataProps> = (props) => {
     const getValue = useMemoizedFn(() => {
         getShareContent((content) => {
             const m = showYakitModal({
-                title: "导入分享数据",
+                title: "分享数据包 ID",
                 content: <ShareModal module={module} shareContent={JSON.stringify(content)} />,
                 footer: null
             })

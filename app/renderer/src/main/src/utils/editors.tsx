@@ -21,7 +21,6 @@ import {
 import {HTTPPacketFuzzable} from "../components/HTTPHistory"
 import ReactResizeDetector from "react-resize-detector"
 
-import "./editors.scss"
 import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {Buffer} from "buffer"
 import {failed, info} from "./notification"
@@ -39,7 +38,13 @@ import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import IModelDecoration = editor.IModelDecoration
 import {OtherMenuListProps, YakitEditorProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "./prettifyPacket"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import styles from "./editors.module.scss"
+import classNames from "classnames"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -147,8 +152,8 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             let current: string[] = []
 
             const applyContentLength = () => {
-                const text = model.getValue();
-                const match = /\nContent-Length:\s*?\d+/.exec(text);
+                const text = model.getValue()
+                const match = /\nContent-Length:\s*?\d+/.exec(text)
                 if (!match) {
                     return
                 }
@@ -270,7 +275,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             const allContent = model.getValue()
             ipcRenderer
                 .invoke("YaklangCompileAndFormat", {Code: allContent})
-                .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
+                .then((e: {Errors: YakStaticAnalyzeErrorResult[]; Code: string}) => {
                     console.info(e)
                     if (e.Code !== "") {
                         model.setValue(e.Code)
@@ -306,7 +311,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             if (props.type === "yak") {
                 ipcRenderer
                     .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
-                    .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
+                    .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
                             // console.info(markers)
@@ -353,7 +358,9 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                         refreshRate={30}
                     >
                         <div
-                            className={`${props.showLineBreaks ? "" : "monaco-editor-style"}`}
+                            className={classNames({
+                                [styles["monaco-editor-style"]]: !props.showLineBreaks
+                            })}
                             style={{height: "100%", width: "100%", overflow: "hidden"}}
                         >
                             <MonacoEditor
@@ -742,7 +749,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <YakitButton
                                     size={"small"}
                                     type={"primary"}
-                                    icon={<ThunderboltFilled/>}
+                                    icon={<ThunderboltFilled />}
                                     onClick={() => {
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: "fuzzer",
@@ -763,7 +770,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 <YakitButton
                                     size={"small"}
                                     type={noWordwrap ? "text" : "primary"}
-                                    icon={<EnterOutlined/>}
+                                    icon={<EnterOutlined />}
                                     onClick={() => {
                                         setNoWordwrap(!noWordwrap)
                                     }}
@@ -804,7 +811,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                     <YakitButton
                                                         size={"small"}
                                                         type={"text"}
-                                                        icon={<FullscreenOutlined/>}
+                                                        icon={<FullscreenOutlined />}
                                                         onClick={() => {
                                                             showDrawer({
                                                                 title: "全屏",
@@ -828,7 +835,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                         label='是否显示换行符'
                                                         style={{marginBottom: 4, lineHeight: "16px"}}
                                                     >
-                                                        <Switch
+                                                        <YakitSwitch
                                                             checked={showLineBreaks}
                                                             onChange={(checked) => {
                                                                 setRemoteValue(
@@ -849,7 +856,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     overlayInnerStyle={{width: 300}}
                                     visible={popoverVisible}
                                 >
-                                    <YakitButton icon={<SettingOutlined/>} type={"text"} size={"small"}/>
+                                    <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
                                 </Popover>
                             )}
                         </Space>
@@ -885,7 +892,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                         contextMenuGroupId: "auto-suggestion",
                                         keybindings: [
                                             (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |
-                                            monaco.KeyCode.KeyR
+                                                monaco.KeyCode.KeyR
                                         ],
                                         id: "new-web-fuzzer-tab",
                                         run: (e) => {
@@ -941,7 +948,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 if (props.readOnly && props.originValue) {
                                                     ipcRenderer
                                                         .invoke("GetHTTPPacketBody", {PacketRaw: props.originValue})
-                                                        .then((bytes: { Raw: Uint8Array }) => {
+                                                        .then((bytes: {Raw: Uint8Array}) => {
                                                             saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                                         })
                                                         .catch((e) => {
@@ -960,7 +967,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                                 }
                                                 ipcRenderer
                                                     .invoke("GetHTTPPacketBody", {Packet: text})
-                                                    .then((bytes: { Raw: Uint8Array }) => {
+                                                    .then((bytes: {Raw: Uint8Array}) => {
                                                         saveABSFileToOpen("packet-body.txt", bytes.Raw)
                                                     })
                                             } catch (e) {
@@ -1023,7 +1030,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                     )}
                     {mode === "hex" && !empty && (
                         <HexEditor
-                            className={props.system === "Windows_NT" ? "hex-editor-style" : ""}
+                            className={classNames({[styles["hex-editor-style"]]: props.system === "Windows_NT"})}
                             showAscii={true}
                             data={hexValue}
                             showRowLabels={true}
@@ -1094,11 +1101,19 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     /**@name 外部控制WebFuzzer数据 */
     webFuzzerValue?: Uint8Array
     /**@name 打开WebFuzzer的回调 */
-    webFuzzerCallBack?: ()=> void
+    webFuzzerCallBack?: () => void
+    /**@name 是否显示美化/渲染TYPE(默认显示) */
+    isShowBeautifyRender?: boolean
+}
+
+interface TypeOptionsProps {
+    value: "beautify" | "render"
+    label: string
 }
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
     const isResponse = props.isResponse
+    const {originValue, isShowBeautifyRender = true} = props
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
             return "utf8"
@@ -1107,8 +1122,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         return "utf8" // 默认还是 UTF8 吧，不然识别不了
     }
     const [mode, setMode] = useState("text")
-    const [strValue, setStrValue] = useState(Uint8ArrayToString(props.originValue, getEncoding()))
-    const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array(props.originValue))
+    const [strValue, setStrValue] = useState(Uint8ArrayToString(originValue, getEncoding()))
+    const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array(originValue))
     const [searchValue, setSearchValue] = useState("")
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
     const [fontSize, setFontSize] = useState<undefined | number>()
@@ -1116,6 +1131,12 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([])
     const [noWordwrap, setNoWordwrap] = useState(false)
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
+
+    const [type, setType] = useState<"beautify" | "render">()
+    const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
+    const [showValue, setShowValue] = useState<Uint8Array>(originValue)
+    const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
+    const [typeLoading, setTypeLoading] = useState<boolean>(false)
 
     // 操作系统类型
     const [system, setSystem] = useState<string>()
@@ -1206,15 +1227,15 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }, [monacoEditor, props.isAddOverlayWidget])
     useEffect(() => {
         if (props.readOnly) {
-            const value = Uint8ArrayToString(props.originValue, getEncoding())
+            const value = Uint8ArrayToString(showValue, getEncoding())
             setStrValue(value)
-            setHexValue(new Uint8Array(props.originValue))
+            setHexValue(new Uint8Array(showValue))
         }
         if (props.readOnly && monacoEditor) {
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
         }
     }, [
-        props.originValue,
+        showValue,
         props.readOnly
         // monacoEditor,
     ])
@@ -1223,8 +1244,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         if (props.readOnly) {
             return
         }
-        setStrValue(Uint8ArrayToString(props.originValue, getEncoding()))
-        setHexValue(new Uint8Array(props.originValue))
+        setStrValue(Uint8ArrayToString(showValue, getEncoding()))
+        setHexValue(new Uint8Array(showValue))
     }, [props.refreshTrigger])
 
     useEffect(() => {
@@ -1235,7 +1256,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         props.onChange && props.onChange(new Buffer(hexValue))
     }, [hexValue])
 
-    const empty = !!props.emptyOr && props.originValue.length == 0
+    const empty = !!props.emptyOr && originValue.length == 0
 
     // 如果这个不为空的话，默认直接打开搜索功能
     useEffect(() => {
@@ -1265,19 +1286,107 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             console.info("加载默认搜索字符串失败", props.defaultSearchKeyword)
         }
     }, [props.defaultSearchKeyword, monacoEditor])
+
+    useEffect(() => {
+        setType(undefined)
+        if (originValue) {
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(Uint8ArrayToString(originValue));
+            const mb = bytes.length / 1024 /1024
+            // 0.5mb 及以下内容才可美化
+            if (isResponse) {
+                formatPacketRender(originValue, (packet) => {
+                    if (packet) {
+                        if(mb > 0.5){
+                            setTypeOptions([
+                                {
+                                    value: "render",
+                                    label: "渲染"
+                                }
+                            ])
+                            return
+                        }
+                        setTypeOptions([
+                            {
+                                value: "beautify",
+                                label: "美化"
+                            },
+                            {
+                                value: "render",
+                                label: "渲染"
+                            }
+                        ])
+                    } else {
+                        if(mb > 0.5) return
+                        setTypeOptions([
+                            {
+                                value: "beautify",
+                                label: "美化"
+                            }
+                        ])
+                    }
+                })
+            } else {
+                if(mb > 0.5) return
+                setTypeOptions([
+                    {
+                        value: "beautify",
+                        label: "美化"
+                    }
+                ])
+            }
+        }
+    }, [originValue])
+
+    const beautifyCode = async () => {
+        setTypeLoading(true)
+        setRenderHTML(undefined)
+        let beautifyValue = await prettifyPacketCode(new Buffer(originValue).toString("utf8"))
+        setShowValue(beautifyValue as Uint8Array)
+        setTypeLoading(false)
+    }
+
+    const renderCode = async () => {
+        setTypeLoading(true)
+        let renderValue = await prettifyPacketRender(originValue)
+        setRenderHTML(
+            <div className={styles["render-html-box"]} dangerouslySetInnerHTML={{__html: renderValue as string}} />
+        )
+        setTypeLoading(false)
+    }
+
+    useEffect(() => {
+        if (originValue && type === undefined) {
+            setRenderHTML(undefined)
+            setShowValue(originValue)
+        } else if (originValue && type === "beautify") {
+            setTimeout(() => {
+                beautifyCode()
+            }, 200)
+        } else if (originValue && type === "render") {
+            setTimeout(() => {
+                renderCode()
+            }, 200)
+        }
+    }, [originValue, type])
+
     return (
-        <div style={{width: "100%", height: "100%", overflow: "hidden"}}>
+        <div className={styles["new-http-packet-editor"]}>
             <Card
                 className={"flex-card"}
                 size={"small"}
-                loading={props.loading}
+                loading={props.loading || typeLoading}
                 bordered={props.bordered}
-                style={{height: "100%", width: "100%",backgroundColor:'#f0f2f5'}}
+                style={{height: "100%", width: "100%", backgroundColor: "#f0f2f5"}}
                 title={
                     !props.noHeader && (
-                        <Space>
+                        <div style={{display: "flex", gap: 2}}>
                             {!props.noTitle &&
-                                (!!props.title ? props.title : <span>{isResponse ? "Response" : "Request"}</span>)}
+                                (!!props.title ? (
+                                    props.title
+                                ) : (
+                                    <span style={{fontSize: 12}}>{isResponse ? "Response" : "Request"}</span>
+                                ))}
                             {!props.simpleMode ? (
                                 !props.noHex && (
                                     <SelectOne
@@ -1322,19 +1431,50 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     }}
                                 />
                             )}
-                        </Space>
+                        </div>
                     )
                 }
                 bodyStyle={{padding: 0, width: "100%", display: "flex", flexDirection: "column", overflow: "hidden"}}
                 extra={
                     !props.noHeader && (
-                        <Space size={2}>
+                        <div style={{display: "flex", gap: 2, alignItems: "center"}}>
                             {props.extra}
+                            {isShowBeautifyRender && (
+                                <div className={classNames(styles["type-options-checkable-tag"])}>
+                                    {typeOptions.map((item) => (
+                                        <YakitCheckableTag
+                                            key={item.value}
+                                            checked={type === item.value}
+                                            onChange={(checked) => {
+                                                if (checked) {
+                                                    setType(item.value)
+                                                } else {
+                                                    setType(undefined)
+                                                }
+                                            }}
+                                        >
+                                            {item.label}
+                                        </YakitCheckableTag>
+                                    ))}
+                                </div>
+                            )}
+                            {/* <YakitButton size={"small"} type={"primary"} onClick={() => {
+                                ipcRenderer
+                                .invoke("send-to-tab", {
+                                    type: "add-data-compare",
+                                    data: {
+                                        leftData:"3",
+                                        rightData:"2"
+                                    }
+                                })
+                            }}>
+                                对比
+                            </YakitButton> */}
                             {props.sendToWebFuzzer && props.readOnly && (
-                                <Button
+                                <YakitButton
                                     size={"small"}
                                     type={"primary"}
-                                    icon={<ThunderboltFilled/>}
+                                    icon={<ThunderboltFilled />}
                                     onClick={() => {
                                         ipcRenderer.invoke("send-to-tab", {
                                             type: "fuzzer",
@@ -1343,19 +1483,19 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                 isHttps: props.defaultHttps || false,
                                                 request: props.defaultPacket
                                                     ? props.defaultPacket
-                                                    : Uint8ArrayToString(props.originValue, "utf8")
+                                                    : Uint8ArrayToString(originValue, "utf8")
                                             }
                                         })
                                     }}
                                 >
                                     FUZZ
-                                </Button>
+                                </YakitButton>
                             )}
                             <Tooltip title={"不自动换行"}>
-                                <Button
+                                <YakitButton
                                     size={"small"}
-                                    type={noWordwrap ? "link" : "primary"}
-                                    icon={<EnterOutlined/>}
+                                    type={noWordwrap ? "text" : "primary"}
+                                    icon={<EnterOutlined />}
                                     onClick={() => {
                                         setNoWordwrap(!noWordwrap)
                                     }}
@@ -1384,6 +1524,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                             {text: "中", value: 16},
                                                             {text: "大", value: 20}
                                                         ]}
+                                                        oldTheme={false}
                                                         value={fontSize}
                                                         setValue={(size) => {
                                                             setRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE, `${size}`)
@@ -1392,10 +1533,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                     />
                                                 )}
                                                 <Form.Item label={"全屏"} style={{marginBottom: 4}}>
-                                                    <Button
+                                                    <YakitButton
                                                         size={"small"}
-                                                        type={"link"}
-                                                        icon={<FullscreenOutlined/>}
+                                                        type={"text"}
+                                                        icon={<FullscreenOutlined />}
                                                         onClick={() => {
                                                             showDrawer({
                                                                 title: "全屏",
@@ -1419,7 +1560,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                         label='是否显示换行符'
                                                         style={{marginBottom: 4, lineHeight: "16px"}}
                                                     >
-                                                        <Switch
+                                                        <YakitSwitch
                                                             checked={showLineBreaks}
                                                             onChange={(checked) => {
                                                                 setRemoteValue(
@@ -1440,29 +1581,29 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     overlayInnerStyle={{width: 300}}
                                     visible={popoverVisible}
                                 >
-                                    <Button icon={<SettingOutlined/>} type={"link"} size={"small"}/>
+                                    <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
                                 </Popover>
                             )}
                             {props.extraEnd}
-                        </Space>
+                        </div>
                     )
                 }
             >
                 <div style={{flex: 1, overflow: "hidden"}}>
                     {empty && props.emptyOr}
-                    {mode === "text" && !empty && (
+                    {renderHtml}
+                    {mode === "text" && !empty && !renderHtml && (
                         <HTTPPacketYakitEditor
                             theme={props.theme}
                             noLineNumber={props.noLineNumber}
                             lineNumbersMinChars={props.lineNumbersMinChars}
                             noMiniMap={props.noMinimap}
                             type={props.language || (isResponse ? "html" : "http")}
-                            originValue={props.originValue}
+                            originValue={showValue}
                             value={
-                                props.readOnly && props.originValue.length > 0
-                                    ? new Buffer(props.originValue).toString(getEncoding())
+                                props.readOnly && showValue.length > 0
+                                    ? new Buffer(showValue).toString(getEncoding())
                                     : strValue
-                                // Uint8ArrayToString(props.originValue, getEncoding()) : strValue
                             }
                             readOnly={props.readOnly}
                             setValue={setStrValue}
@@ -1483,9 +1624,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             {...props.extraEditorProps}
                         />
                     )}
-                    {mode === "hex" && !empty && (
+                    {mode === "hex" && !empty && !renderHtml && (
                         <HexEditor
-                            className={props.system === "Windows_NT" ? "hex-editor-style" : ""}
+                            className={classNames({[styles["hex-editor-style"]]: props.system === "Windows_NT"})}
                             showAscii={true}
                             data={hexValue}
                             showRowLabels={true}

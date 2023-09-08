@@ -45,7 +45,7 @@
     position: absolute;
     margin-top: 2px;
     width: 360px;
-    max-height: 350px;
+    // max-height: 350px;
     border: 1px solid #eaecf3;
     border-radius: 4px;
     padding: 0 0 6px 0;
@@ -64,6 +64,9 @@
             padding: 0px 12px;
             font-weight: 500;
             font-size: 12px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
             &-count {
                 background-color: #f0f1f3;
                 color: #85899e;
@@ -108,7 +111,6 @@
             &-info {
                 display: flex;
                 align-items: center;
-                max-width: 260px;
                 .input {
                     margin-left: 12px;
                 }
@@ -189,18 +191,6 @@
         }
     }
 }
-.http-fuzzer-click-editor-menu-middle {
-    width: 300px;
-    .menu-list-item-info {
-        max-width: 200px;
-    }
-}
-.http-fuzzer-click-editor-menu-small {
-    width: 220px;
-    .menu-list-item-info {
-        max-width: 120px;
-    }
-}
 .http-fuzzer-range-editor-body {
     display: flex;
     align-items: center;
@@ -274,7 +264,7 @@
 .http-fuzzer-range-editor-menu {
     position: absolute;
     margin-top: 2px;
-    width: 360px;
+    // width: 360px;
     border: 1px solid #eaecf3;
     border-radius: 4px;
     padding: 8px 4px 6px 4px;
@@ -282,7 +272,7 @@
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
-    max-height: 360px;
+    // max-height: 360px;
     overflow: auto;
     .menu-content {
         flex: 1;
@@ -318,12 +308,6 @@
             }
         }
     }
-}
-.http-fuzzer-range-editor-menu-middle {
-    width: 300px;
-}
-.http-fuzzer-range-editor-menu-small {
-    width: 220px;
 }
 .http-fuzzer-read-editor {
     position: relative;
@@ -377,8 +361,8 @@
 .http-fuzzer-range-read-only-editor-menu {
     position: absolute;
     margin-top: 2px;
-    width: 360px;
-    max-height: 250px;
+    // width: 360px;
+    // max-height: 250px;
     border: 1px solid #eaecf3;
     border-radius: 4px;
     padding: 8px 4px 6px 4px;
@@ -387,12 +371,6 @@
     flex-direction: column;
     background-color: #ffffff;
     overflow: hidden;
-}
-.http-fuzzer-range-read-only-editor-menu-middle {
-    width: 300px;
-}
-.http-fuzzer-range-read-only-editor-menu-small {
-    width: 220px;
 }
 .decode-box {
     display: flex;

@@ -284,123 +284,144 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     return (
         <AutoCard
             title={
-                <Space>
-                    DNSLog
-                    <div style={{color: "#999"}}>使用 {getReleaseEditionName()} 自带的 DNSLog 反连服务</div>
-                </Space>
+                <div>
+                    <Space>
+                        DNSLog
+                        <div style={{color: "#999"}}>使用 {getReleaseEditionName()} 自带的 DNSLog 反连服务</div>
+                    </Space>
+                    <div
+                        style={{
+                            display: "flex",
+                            gap: 16,
+                            paddingTop: 12,
+                            borderRadius: 4,
+                        }}
+                    >
+                        <YakitRadioButtons
+                            value={dnsLogType}
+                            onChange={(e) => {
+                                setToken("")
+                                setDomain("")
+                                setDnsLogType(e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    value: "builtIn",
+                                    label: "内置"
+                                },
+                                {
+                                    value: "custom",
+                                    label: "自定义"
+                                }
+                            ]}
+                        />
+                        {dnsLogType === "builtIn" && (
+                            <Form
+                                onSubmitCapture={(e) => {
+                                    e.preventDefault()
+                                    updateToken()
+                                }}
+                                layout='inline'
+                                size={"small"}
+                            >
+                                <Form.Item label={<span>内置DNSLog</span>}>
+                                    <YakitSelect
+                                        showSearch
+                                        placeholder='请选择...'
+                                        optionFilterProp='children'
+                                        value={selectedMode}
+                                        onChange={(value) => setSelectedMode(value)} // 保存选中的值
+                                        style={{width: 240}}
+                                        size='small'
+                                    >
+                                        {platforms.map((item, index) => (
+                                            <Option key={index} value={item}>
+                                                {item}
+                                            </Option>
+                                        ))}
+                                    </YakitSelect>
+                                </Form.Item>
+                                <Form.Item
+                                    style={{
+                                        marginBottom: 0,
+                                        marginRight: 10 // 添加右侧间隔
+                                    }}
+                                    label={"使用本地"}
+                                >
+                                    <YakitSwitch checked={isLocal} onChange={setIsLocal} />
+                                </Form.Item>
+                                <Divider
+                                    style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
+                                    type={"vertical"}
+                                />
+                                <Form.Item colon={false}>
+                                    <YakitButton
+                                        type='primary'
+                                        htmlType='submit'
+                                        loading={loading}
+                                    >
+                                        生成一个可用域名
+                                    </YakitButton>
+                                </Form.Item>
+                            </Form>
+                        )}
+                        {dnsLogType === "custom" && (
+                            <Form
+                                layout='inline'
+                                onSubmitCapture={(e) => {
+                                    e.preventDefault()
+                                    updateTokenByScript()
+                                }}
+                                size={"small"}
+                            >
+                                <Form.Item label={<span>DNSLog插件</span>}>
+                                    <YakitSelect
+                                        showSearch
+                                        options={scriptNamesList}
+                                        placeholder='请选择...'
+                                        size='small'
+                                        value={params}
+                                        onChange={(ScriptNames) => {
+                                            setParams(ScriptNames)
+                                        }}
+                                        maxTagCount={10}
+                                        style={{width: 240}}
+                                    />
+                                </Form.Item>
+                                <Divider
+                                    style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
+                                    type={"vertical"}
+                                />
+                                <Form.Item colon={false}>
+                                    <YakitButton
+                                        type='primary'
+                                        htmlType='submit'
+                                        loading={loading}
+                                    >
+                                        生成一个可用域名
+                                    </YakitButton>
+                                </Form.Item>
+                            </Form>
+                        )}
+                    </div>
+                    {token !== "" && (
+                        <Alert
+                            style={{marginTop:12}}
+                            type={"success"}
+                            message={
+                                <div>
+                                    当前激活域名为 <CopyableField noCopy={false} text={tokenDomain} />
+                                </div>
+                            }
+                        />
+                    )}
+                </div>
             }
             bordered={false}
             style={{overflowY: "auto"}}
         >
             <Space direction={"vertical"} style={{width: "100%"}}>
-                <div style={{display:"flex",gap:16,background:"#fafafa",padding:12,borderRadius:4,marginBottom:8}}>
-                <YakitRadioButtons
-                    value={dnsLogType}
-                    onChange={(e) => {
-                        setToken("")
-                        setDomain("")
-                        setDnsLogType(e.target.value)
-                    }}
-                    buttonStyle='solid'
-                    options={[
-                        {
-                            value: "builtIn",
-                            label: "内置"
-                        },
-                        {
-                            value: "custom",
-                            label: "自定义"
-                        }
-                    ]}
-                />
-                {dnsLogType === "builtIn" && (
-                    <Form
-                        onSubmitCapture={(e) => {
-                            e.preventDefault()
-                            updateToken()
-                        }}
-                        layout='inline'
-                        size={"small"}
-                    >
-                        <Form.Item label={<span>内置DNSLog</span>}>
-                            <YakitSelect
-                                showSearch
-                                placeholder='请选择...'
-                                optionFilterProp='children'
-                                value={selectedMode}
-                                onChange={(value) => setSelectedMode(value)} // 保存选中的值
-                                style={{width: 240}}
-                                size='small'
-                            >
-                                {platforms.map((item, index) => (
-                                    <Option key={index} value={item}>
-                                        {item}
-                                    </Option>
-                                ))}
-                            </YakitSelect>
-                        </Form.Item>
-                        <Form.Item
-                            style={{
-                                marginBottom: 0,
-                                marginRight: 10 // 添加右侧间隔
-                            }}
-                            label={"使用本地"}
-                        >
-                            <YakitSwitch checked={isLocal} onChange={setIsLocal} />
-                        </Form.Item>
-                        <Divider style={{top:6,margin:"0px 16px 0px 0px",height:"1em"}} type={"vertical"}/>
-                        <Form.Item colon={false}>
-                            <YakitButton type='primary' htmlType='submit' loading={loading}>
-                                生成一个可用域名
-                            </YakitButton>
-                        </Form.Item>
-                    </Form>
-                )}
-                {dnsLogType === "custom" && (
-                    <Form
-                        layout='inline'
-                        onSubmitCapture={(e) => {
-                            e.preventDefault()
-                            updateTokenByScript()
-                        }}
-                        size={"small"}
-                    >
-                        <Form.Item label={<span>DNSLog插件</span>}>
-                            <YakitSelect
-                                showSearch
-                                options={scriptNamesList}
-                                placeholder='请选择...'
-                                size='small'
-                                value={params}
-                                onChange={(ScriptNames) => {
-                                    setParams(ScriptNames)
-                                }}
-                                maxTagCount={10}
-                                style={{width: 240}}
-                            />
-                        </Form.Item>
-                        <Divider style={{top:6,margin:"0px 16px 0px 0px",height:"1em"}} type={"vertical"}/>
-                        <Form.Item colon={false}>
-                            <YakitButton type='primary' htmlType='submit' loading={loading}>
-                                生成一个可用域名
-                            </YakitButton>
-                        </Form.Item>
-                    </Form>
-                )}
-                </div>
-                
-                
-                {token !== "" && (
-                    <Alert
-                        type={"success"}
-                        message={
-                            <div>
-                                当前激活域名为 <CopyableField noCopy={false} text={tokenDomain} />
-                            </div>
-                        }
-                    />
-                )}
-
                 <Form size={"small"} layout='inline'>
                     <div style={{display: "flex", justifyContent: "space-between", width: "100%"}}>
                         <div style={{display: "flex"}}>
