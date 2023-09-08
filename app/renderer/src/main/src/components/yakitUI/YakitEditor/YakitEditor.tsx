@@ -691,6 +691,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     const downPosY = useRef<number>()
     const upPosY = useRef<number>()
+    const onScrollTop = useRef<number>()
     // 编辑器信息(长宽等)
     const editorInfo = useRef<any>()
     useEffect(() => {
@@ -1006,6 +1007,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             // 鼠标位于编辑器右半部分
                             countDirection.x = "right"
                         }
+                        
                         editorInfo.current = {
                             direction: countDirection,
                             top,
@@ -1014,7 +1016,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             right,
                             focusX,
                             focusY,
-                            lineHeight: height
+                            lineHeight: height,
+                            scrollTop:onScrollTop.current
                         }
 
                         upPosY.current = posy
@@ -1051,6 +1054,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 }
             }
         })
+        editor.onDidScrollChange((e)=>{
+            const { scrollTop } = e
+            onScrollTop.current = scrollTop
+        })
+
         // 监听光标移动
         editor.onDidChangeCursorPosition((e) => {
             closeFizzRangeWidget()

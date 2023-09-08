@@ -41,6 +41,7 @@ export interface EditorDetailInfoProps {
     focusX: number
     focusY: number
     lineHeight: number
+    scrollTop: number
 }
 
 const directionStyle = (editorInfo,isCenter=true) => {
@@ -139,7 +140,7 @@ export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
 export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps> = (props) => {
     const {close, editorInfo, insert, addLabel} = props
 
-    const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
+    const {direction, top = 0, left = 0, bottom = 0, right = 0, scrollTop = 0} = editorInfo || {}
     const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
     const [selectLabel, setSelectLabel] = useState<string>()
     const [inputValue, setInputValue] = useState<string>()
@@ -319,7 +320,6 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                         {labelData.map((item, index) => (
                                             <Draggable key={item?.Description} draggableId={item.Id} index={index}>
                                                 {(provided, snapshot) => {
-                                                    // console.log("provided", provided.draggableProps.style - top)
                                                     return (
                                                         <div
                                                             ref={provided.innerRef}
@@ -328,7 +328,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                             style={{
                                                                 ...provided.draggableProps.style,
                                                                 top: provided.draggableProps.style?.top
-                                                                    ? provided.draggableProps.style?.top - top
+                                                                    ? provided.draggableProps.style?.top - top + scrollTop
                                                                     : "none",
                                                                 left: provided.draggableProps.style?.top
                                                                     ? provided.draggableProps.style?.left - left - 60
