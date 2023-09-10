@@ -87,7 +87,7 @@ export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
                             }
 
                             requestYakURLList(originData.Url, rsp => {
-                                const newNodes: TreeNode[] = rsp.Resources.map((i, index) => ({
+                        const newNodes: TreeNode[] = rsp.Resources.map((i, index) => ({
                                     title: i.VerboseName,
                                     key: `${node.key}-${index}`,
                                     data: i,

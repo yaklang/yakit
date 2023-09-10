@@ -6,7 +6,6 @@ const {ipcRenderer} = window.require("electron");
 
 export const requestYakURLList = (url: YakURL, onResponse?: (response: RequestYakURLResponse) => any, onError?: (e) => any) => {
     url.Query = url.Query || []
-    url.Query.push({Key: "op", Value: "list"})
     return ipcRenderer.invoke("RequestYakURL", {
         Url: url,
         Method: "GET",

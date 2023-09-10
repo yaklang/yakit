@@ -589,6 +589,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**beta-codec") openMenuPage({route: YakitRoute.Beta_Codec})
             if (type === "**beta-debug-traffic-analize") openMenuPage({route: YakitRoute.Beta_DebugTrafficAnalize})
             if (type === "**webshell-manager") openMenuPage({ route: YakitRoute.Beta_WebShellManager })
+            if (type === "**webshell-opt") addWebShellOpt(data)
 
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
@@ -619,6 +620,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.removeAllListeners("fetch-send-to-tab")
         }
     }, [])
+
+    const addWebShellOpt = useMemoizedFn((res: any) => {
+        const {Id} = res || {}
+        if (Id) {
+            openMenuPage(
+                {route: YakitRoute.Beta_WebShellOpt},
+                {
+                    params: {
+                        webshellInfo: res,
+                    },
+                    hideAdd: true
+                }
+            )
+        }
+    })
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn((res: any) => {
@@ -640,7 +656,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
-    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean; request: Uint8Array}) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array }) => {
         openMenuPage(
             {route: YakitRoute.WebsocketFuzzer},
             {

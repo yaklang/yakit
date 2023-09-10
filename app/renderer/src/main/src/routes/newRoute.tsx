@@ -114,6 +114,8 @@ import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
 import {WebShellViewer} from "@/pages/webShell/WebShellViewer";
+import {WebShellDetail} from "@/pages/webShell/models";
+import {WebShellDetailOpt} from "@/pages/webShell/WebShellDetailOpt";
 import { FuzzerParamItem, AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {
     FuzzerParamItem,
@@ -221,7 +223,7 @@ export enum YakitRoute {
     Plugin_Audit = "plugin-audit",
     // WebShell 管理
     Beta_WebShellManager = "beta-webshell-manager",
-
+    Beta_WebShellOpt = "beta-webshell-opt",
 }
 /**
  * @description 页面路由对应的页面信息
@@ -304,6 +306,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "plugin-audit": {label: "插件管理"},
     "**beta-debug-traffic-analize": {label: "流量分析"}
     "beta-webshell-manager": {label: "WebShell 管理"},
+    "beta-webshell-opt": {label: "WebShell 实例"},
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -438,8 +441,12 @@ export interface ComponentParams {
     // 新建插件
     moduleType?: string
     content?: string
+
     // 编辑插件
     editPluginId?: number
+
+    // webshell info
+    webshellInfo?: WebShellDetail
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -631,6 +638,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             )
         case YakitRoute.Beta_WebShellManager:
             return <WebShellViewer/>
+        case YakitRoute.Beta_WebShellOpt:
+            return <WebShellDetailOpt id={params?.id} webshellInfo={params?.webshellInfo}/>
         default:
             return <div />
     }
