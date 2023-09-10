@@ -145,18 +145,17 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
         try {
             // 尝试解析 URL
             const url = new URL(params.Url);
-
             // 获取 URL 的文件扩展名
             const urlPath = url.pathname;
             const extension = urlPath.split('.').pop();
 
             // 如果文件扩展名是我们支持的脚本类型之一，那么就更新 ShellScript 的值
-            const scriptTypes =Object.values(ShellScript);
+            const scriptTypes = Object.values(ShellScript);
             if (extension) {
-                const lowerCaseExtension = extension.toUpperCase();
-                if (scriptTypes.includes(lowerCaseExtension as ShellScript)) {
-                    setShellScript(lowerCaseExtension);
-                    setParams({...params, ShellScript: lowerCaseExtension, Url: params.Url});
+                const upperCaseExtension = extension.toUpperCase();
+                if (scriptTypes.includes(upperCaseExtension as ShellScript)) {
+                    setShellScript(upperCaseExtension);
+                    setParams({...params, ShellScript: upperCaseExtension, Url: params.Url});
                 }
             }
         } catch (error) {
@@ -167,67 +166,41 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
 
     const [packetScriptList, setPacketScriptList] = useState<SelectOptionProps[]>([])
     const [payloadScriptList, setPayloadScriptList] = useState<SelectOptionProps[]>([])
+    const handleQueryYakScriptList = (tag: string, setScriptList: Function) => {
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                if (!total || total == 0) {
+                    setScriptList([])
+                    return
+                }
+                const validItems = i.filter((item) => {
+                    const tags = item.Tags.split(",").map(tag => tag.toLowerCase());
+                    return tags.length === 2 && tags.includes(tag) && tags.includes(shellScript.toLowerCase());
+                });
+
+                if (validItems.length === 0) {
+                    setScriptList([]);
+                    return;
+                }
+
+                const scriptNames = validItems.map((item) => (
+                    {label: item.ScriptName, value: item.ScriptName}
+                ));
+                setScriptList(scriptNames)
+            },
+            undefined,
+            10,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            [tag, shellScript]
+        )
+    }
     useEffect(() => {
-        queryYakScriptList(
-            "codec",
-            (i: YakScript[], total) => {
-                if (!total || total == 0) {
-                    setPacketScriptList([])
-                    return
-                }
-                const validItems = i.filter((item) => {
-                    const tags = item.Tags.split(",");
-                    return tags.length === 2 && tags.includes("webshell-packet-codec") && tags.includes(shellScript);
-                });
-
-                if (validItems.length === 0) {
-                    setPacketScriptList([]);
-                    return;
-                }
-
-                const scriptNames = validItems.map((item) => (
-                    {label: item.ScriptName, value: item.ScriptName}
-                ));
-                setPacketScriptList(scriptNames)
-            },
-            undefined,
-            10,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            ["webshell-packet-codec", shellScript]
-        )
-        queryYakScriptList(
-            "codec",
-            (i: YakScript[], total) => {
-                if (!total || total == 0) {
-                    setPayloadScriptList([])
-                    return
-                }
-                const validItems = i.filter((item) => {
-                    const tags = item.Tags.split(",");
-                    return tags.length === 2 && tags.includes("webshell-payload-codec") && tags.includes(shellScript);
-                });
-
-                if (validItems.length === 0) {
-                    setPacketScriptList([]);
-                    return;
-                }
-
-                const scriptNames = validItems.map((item) => (
-                    {label: item.ScriptName, value: item.ScriptName}
-                ));
-                setPayloadScriptList(scriptNames)
-            },
-            undefined,
-            10,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            ["webshell-payload-codec", shellScript]
-        )
+        handleQueryYakScriptList("webshell-packet-codec", setPacketScriptList);
+        handleQueryYakScriptList("webshell-payload-codec", setPayloadScriptList);
     }, [shellScript])
     return (
         <>
@@ -352,33 +325,12 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                 </div>
             </Form.Item>
 
-            <Form.Item
+            <InputItem
                 label={"设置代理"}
-            >
-                <YakitSelect
-                    allowClear
-                    options={[
-                        {
-                            label: "http://127.0.0.1:8080",
-                            value: "http://127.0.0.1:8080"
-                        },
-                        {
-                            label: "http://127.0.0.1:8083",
-                            value: "http://127.0.0.1:8083"
-                        }, {
-                            label: "http://127.0.0.1:9999",
-                            value: "http://127.0.0.1:9999"
-                        }
-                    ]}
-                    onSelect={(val) => {
-                        setParams({...params, Proxy: val})
-                    }}
-                    value={params.Proxy}
-                    placeholder='请输入...'
-                    mode='tags'
-                    maxTagCount={3}
-                />
-            </Form.Item>
+                setValue={(Proxy) => setParams({...params, Proxy})}
+                value={params.Proxy}
+                disable={disabled}
+            />
 
             <InputItem
                 label={"备注"}

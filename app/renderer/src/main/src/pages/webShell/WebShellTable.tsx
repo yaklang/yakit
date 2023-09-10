@@ -12,7 +12,7 @@ import {
     ArrowCircleRightSvgIcon,
     IconSolidCodeIcon,
     RefreshIcon,
-    SMViewGridAddIcon
+    SMViewGridAddIcon, TrashIcon
 } from "@/assets/newIcon";
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize";
 import {Button, Divider, Space, Tooltip} from 'antd';
@@ -39,6 +39,8 @@ import {failed, success} from "@/utils/notification";
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {ExclamationCircleOutlined} from '@ant-design/icons';
 import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
+import {addToTab} from "@/pages/MainTabs";
+import {YakitRoute} from "@/routes/newRoute";
 
 export interface WebShellManagerProp {
     available: boolean
@@ -219,11 +221,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                             <IconSolidCodeIcon
                                 className={style["icon-style"]}
                                 onClick={() => {
-                                    let m = showDrawer({
-                                        title: "WebShell 编辑",
-                                        width: "80%",
-                                        content: <div><h1>Codec</h1></div>
-                                    })
+
                                 }}
                             />
                             <div className={style["divider-style"]}></div>
@@ -231,11 +229,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                             <ArrowCircleRightSvgIcon
                                 className={style["icon-style"]}
                                 onClick={(e) => {
-                                    let m = showDrawer({
-                                        width: "80%",
-                                        content: <div> em </div>
-                                    })
-                                    //     m.destroy()
+                                    addToTab("**webshell-opt", info)
                                 }}
                             />
                         </div>
@@ -360,11 +354,12 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                 {key: "webshell-curd-edit", label: "编辑"},
                 {key: "webshell-curd-copy", label: "复制 URL"},
                 {key: "webshell-curd-share", label: "分享"},
-                {key: "webshell-curd-delete", label: "删除"},
+                {key: "webshell-curd-delete", label: "删除", itemIcon: <TrashIcon/>},
             ]
         },
         {type: "divider"},
         {key: "webshell-feature-ping", label: "验证存活"},
+        {key: "webshell-feature-file_tree", label: "验证存活"},
     ]
     const wsmMenuSelect = useMemoizedFn((key: string) => {
         if (!selected) return
@@ -396,7 +391,6 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             case "webshell-feature-ping":
                 featurePing(selected.Id, refList)
                 break
-
         }
     })
 
