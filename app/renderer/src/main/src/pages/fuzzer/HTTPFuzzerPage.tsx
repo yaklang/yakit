@@ -106,7 +106,7 @@ import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
-import shallow from "zustand/shallow"
+import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 
 const {ipcRenderer} = window.require("electron")
@@ -617,7 +617,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (inViewport) onSetAdvancedConfig(!advancedConfig)
     })
     const onUpdateRequest = useMemoizedFn(() => {
-        if (!inViewport)return
+        if (!inViewport) return
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
         if (!currentItem) return
         const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request

@@ -4,8 +4,8 @@
 
 import {SequenceProps} from "@/pages/fuzzer/FuzzerSequence/FuzzerSequenceType"
 import {setRemoteProjectValue} from "@/utils/kv"
-import create from "zustand"
-import {subscribeWithSelector, persist} from "zustand/middleware"
+import {create} from "zustand"
+import {subscribeWithSelector, persist, createJSONStorage} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {RemoteGV} from "@/yakitGV"
 import {yakitNotify} from "@/utils/notification"
@@ -163,7 +163,7 @@ export const useFuzzerSequence = create<FuzzerSequenceProps>()(
             }),
             {
                 name: "fuzzer-sequence",
-                getStorage: () => sessionStorage
+                storage: createJSONStorage(() => sessionStorage)
             }
         )
     )

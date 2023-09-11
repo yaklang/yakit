@@ -8,7 +8,7 @@ import {YakitRoute} from "@/routes/newRoute"
 import "video-react/dist/video-react.css" // import css
 import {yakitNotify} from "@/utils/notification"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
-import shallow from "zustand/shallow"
+import {shallow} from "zustand/shallow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -27,7 +27,7 @@ const webFuzzerTabs = [
 const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const {selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (s) => ({
-            selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer)||'',
+            selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
             getPagesDataByGroupId: s.getPagesDataByGroupId
         }),
         shallow

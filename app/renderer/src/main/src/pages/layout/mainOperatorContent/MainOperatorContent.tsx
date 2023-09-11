@@ -21,7 +21,15 @@ import {
 import styles from "./MainOperatorContent.module.scss"
 import {YakitRouteToPageInfo, YakitRoute, SingletonPageRoute, NoPaddingRoute, ComponentParams} from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
-import {useCreation, useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import {
+    useCreation,
+    useGetState,
+    useInViewport,
+    useLongPress,
+    useMemoizedFn,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
@@ -65,7 +73,7 @@ import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
-import shallow from "zustand/shallow"
+import {shallow} from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
 import {RemoteGV} from "@/yakitGV"
 import {PageNodeItemProps, PageProps, usePageInfo} from "@/store/pageInfo"
@@ -387,13 +395,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
     /** 数据对比*/
-    const addDataCompare =  useMemoizedFn((res: {leftData:string;rightData:string}) => {
+    const addDataCompare = useMemoizedFn((res: {leftData: string; rightData: string}) => {
         openMenuPage(
             {route: YakitRoute.DataCompare},
             {
                 pageParams: {
-                    leftData:res.leftData,
-                    rightData:res.rightData
+                    leftData: res.leftData,
+                    rightData: res.rightData
                 }
             }
         )
@@ -760,7 +768,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const {getSubscribeClose, removeSubscribeClose} = useSubscribeClose()
     const {clearDataByRoute} = usePageInfo(
         (s) => ({
-            clearDataByRoute:s.clearDataByRoute
+            clearDataByRoute: s.clearDataByRoute
         }),
         shallow
     )
@@ -1277,10 +1285,10 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
         }),
         shallow
     )
-    const {clearAllData,clearDataByRoute} = usePageInfo(
+    const {clearAllData, clearDataByRoute} = usePageInfo(
         (s) => ({
             clearAllData: s.clearAllData,
-            clearDataByRoute:s.clearDataByRoute
+            clearDataByRoute: s.clearDataByRoute
         }),
         shallow
     )
@@ -1539,11 +1547,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setSelectSubMenu({...currentNode})
         }
     }, [pageItem.multipleLength])
-    useUpdateEffect(()=>{
-        if(type === "config"){
+    useUpdateEffect(() => {
+        if (type === "config") {
             emiter.emit("onRefWebFuzzer")
         }
-    },[type])
+    }, [type])
     const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         if (!inViewport) return
         setType(res.type)
@@ -1722,7 +1730,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 queryFuzzerSequenceCacheDataByGroupId: s.queryFuzzerSequenceCacheDataByGroupId,
                 updateFuzzerSequenceCacheData: s.updateFuzzerSequenceCacheData,
                 removeFuzzerSequenceCacheData: s.removeFuzzerSequenceCacheData,
-                removeWithinGroupDataById: s.removeWithinGroupDataById,
+                removeWithinGroupDataById: s.removeWithinGroupDataById
             }),
             shallow
         )
@@ -1968,8 +1976,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             subPage.splice(sourceIndex, 1)
             onUpdatePageCache(subPage)
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                setSelectGroupId(YakitRoute.HTTPFuzzer,combineItem.id)
-                addFuzzerSequenceList({groupId:combineItem.id})
+                setSelectGroupId(YakitRoute.HTTPFuzzer, combineItem.id)
+                addFuzzerSequenceList({groupId: combineItem.id})
                 onAddGroupsAndThenSort(combineItem, subPage)
             }
         })
@@ -1987,7 +1995,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
             const sourceItem = subPage[gIndex].groupChildren?.splice(sourceIndex, 1)
             if (!sourceItem) return
-            if (sourceItem.length<=0) return
+            if (sourceItem.length <= 0) return
             const combineIndex = subPage.findIndex((ele) => ele.id === combineDraggableId)
 
             if (combineIndex === -1) return
@@ -2019,11 +2027,11 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             onUpdatePageCache(subPage)
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                onAddGroupsAndThenSort(combineItem,subPage)
+                onAddGroupsAndThenSort(combineItem, subPage)
                 addFuzzerSequenceList({
                     groupId: combineItem.id
                 })
-                removeWithinGroupDataById(sourceItem[0].groupId,sourceItem[0].id)
+                removeWithinGroupDataById(sourceItem[0].groupId, sourceItem[0].id)
                 setSelectGroupId(YakitRoute.HTTPFuzzer, combineItem.id)
             }
         })
@@ -2140,7 +2148,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             // 将拖拽的item从来源地中删除
             const sourceNumber = subPage.findIndex((ele) => ele.id === sourceGroupId)
             if (sourceNumber === -1) return
-            const sourceGroupChildrenList:MultipleNodeInfo[] = subPage[sourceNumber].groupChildren || []
+            const sourceGroupChildrenList: MultipleNodeInfo[] = subPage[sourceNumber].groupChildren || []
             const sourceItem = sourceGroupChildrenList[sourceIndex] // 拖拽的item
             sourceGroupChildrenList.splice(sourceIndex, 1)
             subPage[sourceNumber].groupChildren = sourceGroupChildrenList
@@ -2166,7 +2174,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             onUpdatePageCache([...subPage])
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
-                removeWithinGroupDataById(sourceItem.groupId,newSourceItem.id)
+                removeWithinGroupDataById(sourceItem.groupId, newSourceItem.id)
                 onUpdateSorting(subPage)
             }
         })
@@ -2590,11 +2598,13 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
         })
         /**更新全局变量中得序列缓存数据 */
-        const onUpdateFuzzerSequenceCacheData=useMemoizedFn((item:MultipleNodeInfo)=>{
-            const sequenceCache=queryFuzzerSequenceCacheDataByGroupId(item.groupId).filter(ele=>ele.pageId!==item.id)
-            if(sequenceCache.length>0){
-                updateFuzzerSequenceCacheData(item.groupId,sequenceCache)
-            }else{
+        const onUpdateFuzzerSequenceCacheData = useMemoizedFn((item: MultipleNodeInfo) => {
+            const sequenceCache = queryFuzzerSequenceCacheDataByGroupId(item.groupId).filter(
+                (ele) => ele.pageId !== item.id
+            )
+            if (sequenceCache.length > 0) {
+                updateFuzzerSequenceCacheData(item.groupId, sequenceCache)
+            } else {
                 removeFuzzerSequenceCacheData(item.groupId)
             }
         })

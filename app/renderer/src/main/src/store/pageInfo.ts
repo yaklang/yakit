@@ -1,7 +1,7 @@
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {YakitRoute} from "@/routes/newRoute"
-import create from "zustand"
-import {subscribeWithSelector, persist} from "zustand/middleware"
+import {create} from "zustand"
+import {subscribeWithSelector, persist, StorageValue} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {yakitNotify} from "@/utils/notification"
@@ -228,28 +228,42 @@ export const usePageInfo = create<PageInfoStoreProps>()(
             }),
             {
                 name: "page-info",
-                getStorage: () => sessionStorage,
-                serialize: (data) => {
-                    return JSON.stringify({
-                        ...data,
-                        state: {
-                            ...data.state,
-                            pages: Array.from(data.state.pages),
-                            selectGroupId: Array.from(data.state.selectGroupId)
+                storage: {
+                    getItem: async (name: string) => {
+                        try {
+                            const str = sessionStorage.getItem(name)
+                            if (!str) return null
+                            const {state} = JSON.parse(str)
+                            return {
+                                state: {
+                                    ...state,
+                                    pages: new Map(state.pages),
+                                    selectGroupId: new Map(state.selectGroupId)
+                                }
+                            }
+                        } catch (error) {
+                            yakitNotify("error", "page-info解析数据错误:" + error)
+                            return null
                         }
-                    })
-                },
-                deserialize: (value) => {
-                    const data = JSON.parse(value)
-                    data.state.pages = new Map(data.state.pages)
-                    data.state.selectGroupId = new Map(data.state.selectGroupId)
-                    return data
+                    },
+                    setItem: async (name, value: StorageValue<PageInfoStoreProps>) => {
+                        const str = JSON.stringify({
+                            state: {
+                                ...value.state,
+                                pages: Array.from(value.state.pages.entries()),
+                                selectGroupId: Array.from(value.state.selectGroupId.entries())
+                            }
+                        })
+                        sessionStorage.setItem(name, str)
+                    },
+                    removeItem: async (name: string): Promise<void> => {
+                        sessionStorage.removeItem(name)
+                    }
                 }
             }
         )
     )
 )
-
 try {
     /**
      *  @description 打开软化后这个订阅会一直存在，直到关闭软件;后续再看看优化方法
@@ -298,4 +312,6 @@ try {
         500,
         {leading: true}
     )
-} catch (error) {}
+} catch (error) {
+    yakitNotify("error", "page-info缓存数据错误:" + error)
+}
