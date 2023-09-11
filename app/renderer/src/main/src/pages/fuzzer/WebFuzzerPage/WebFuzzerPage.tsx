@@ -3,13 +3,14 @@ import {WebFuzzerPageProps, WebFuzzerType} from "./WebFuzzerPageType"
 import styles from "./WebFuzzerPage.module.scss"
 import {OutlineAdjustmentsIcon, OutlineCollectionIcon, OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
-import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn, useDebounceFn} from "ahooks"
 import {YakitRoute} from "@/routes/newRoute"
 import "video-react/dist/video-react.css" // import css
 import {yakitNotify} from "@/utils/notification"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-
+import FuzzerContext from "./FuzzerContext"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 const webFuzzerTabs = [
@@ -50,15 +51,39 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     })
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
+        if (key === "config") {
+            ipcRenderer.invoke("send-ref-webFuzzer-request", {type: key})
+        }
     })
+    
+    const webFuzzerRef = useRef<any>(null)
+    const [inViewport] = useInViewport(webFuzzerRef)
+    const inViewportRef = useRef<boolean>(false)
+    useEffect(() => {
+        if (inViewport !== undefined) inViewportRef.current = inViewport
+    }, [inViewport])
+    const [advancedConfigShow, setAdvancedConfigShow] = useState<boolean>(true)
+    const debounceGetFuzzerAdvancedConfigShow = useDebounceFn((flag) => {
+        inViewportRef.current && setAdvancedConfigShow(flag)
+    }, { wait: 500 }).run
+    useEffect(() => {
+        emiter.on("onGetFuzzerAdvancedConfigShow", (flag) => {
+            debounceGetFuzzerAdvancedConfigShow(flag)
+        })
+        return () => {
+            emiter.off("onGetFuzzerAdvancedConfigShow")
+        }
+    }, [])
+
     return (
-        <div className={styles["web-fuzzer"]}>
+        <div className={styles["web-fuzzer"]} ref={webFuzzerRef}>
             <div className={styles["web-fuzzer-tab"]}>
                 {webFuzzerTabs.map((item) => (
                     <div
                         key={item.key}
                         className={classNames(styles["web-fuzzer-tab-item"], {
-                            [styles["web-fuzzer-tab-item-active"]]: props.type === item.key
+                            [styles["web-fuzzer-tab-item-active"]]: props.type === item.key,
+                            [styles["web-fuzzer-tab-item-advanced-config-unShow"]]: item.key === 'config' && !advancedConfigShow
                         })}
                         onClick={() => {
                             if (item.key === "sequence") {
@@ -73,7 +98,9 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                     </div>
                 ))}
             </div>
-            <div className={classNames(styles["web-fuzzer-tab-content"])}>{props.children}</div>
+            <FuzzerContext.Provider value={!!inViewport}>
+                <div className={classNames(styles["web-fuzzer-tab-content"])}>{props.children}</div>
+            </FuzzerContext.Provider>
         </div>
     )
 })
