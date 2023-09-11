@@ -7,6 +7,7 @@ import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HT
 import {yakitNotify} from "@/utils/notification"
 import {RemoteGV} from "@/yakitGV"
 import {setRemoteProjectValue} from "@/utils/kv"
+import cloneDeep from "lodash/cloneDeep"
 
 /**
  * @description 页面暂存数据
@@ -99,7 +100,7 @@ export const usePageInfo = create<PageInfoStoreProps>()(
                 },
                 setPageNodeInfoByPageGroupId: (key, groupId, list) => {
                     const newVal = get().pages
-                    const current = newVal.get(key) || {...defPage}
+                    const current = newVal.get(key) || cloneDeep(defPage)
                     const groupList: PageNodeItemProps[] = current.pageList.filter((ele) => ele.pageGroupId !== groupId)
                     const newGroupList = groupList.concat(list)
                     newVal.set(key, {
@@ -113,29 +114,29 @@ export const usePageInfo = create<PageInfoStoreProps>()(
                 },
                 getPagesDataByGroupId: (key, groupId) => {
                     const {pages} = get()
-                    const current = pages.get(key) || {...defPage}
+                    const current = pages.get(key) || cloneDeep(defPage)
                     return current.pageList.filter((ele) => ele.pageGroupId === groupId)
                 },
                 queryPagesDataById: (key, pageId) => {
                     const {pages} = get()
-                    const current = pages.get(key) || {...defPage}
+                    const current = pages.get(key) || cloneDeep(defPage)
                     return current.pageList.find((ele) => ele.pageId === pageId)
                 },
                 addPagesDataCache: (key, value) => {
                     const newVal = get().pages
-                    const current = newVal.get(key) || {...defPage}
+                    const current = newVal.get(key) || cloneDeep(defPage)
                     current.pageList.push(value)
                     newVal.set(key, {
                         ...current
                     })
                     set({
                         ...get(),
-                        pages: newVal
+                        pages: new Map(newVal)
                     })
                 },
                 updatePagesDataCacheById: (key, value) => {
                     const {pages} = get()
-                    const current: PageProps = pages.get(key) || {...defPage}
+                    const current: PageProps = pages.get(key) || cloneDeep(defPage)
                     let updateIndex: number = current.pageList.findIndex((ele) => ele.pageId === value.pageId)
                     if (updateIndex !== -1) {
                         current.pageList[updateIndex] = {
@@ -152,7 +153,7 @@ export const usePageInfo = create<PageInfoStoreProps>()(
                 },
                 removePagesDataCacheById: (key, id) => {
                     const newVal = get().pages
-                    const current: PageProps = newVal.get(key) || {...defPage}
+                    const current: PageProps = newVal.get(key) || cloneDeep(defPage)
                     const newPageList = current.pageList.filter((ele) => ele.pageId !== id)
                     newVal.set(key, {
                         ...current,
@@ -165,7 +166,7 @@ export const usePageInfo = create<PageInfoStoreProps>()(
                 },
                 removePagesDataCacheByGroupId: (key, gId) => {
                     const newVal = get().pages
-                    const current: PageProps = newVal.get(key) || {...defPage}
+                    const current: PageProps = newVal.get(key) || cloneDeep(defPage)
                     const newPageList = current.pageList.filter((ele) => ele.pageGroupId !== gId)
                     newVal.set(key, {
                         ...current,
@@ -198,7 +199,7 @@ export const usePageInfo = create<PageInfoStoreProps>()(
                 getCurrentGroupAllTabName: (key) => {
                     const {selectGroupId, pages} = get()
                     const currentGroupId = selectGroupId.get(key)
-                    const currentPages: PageProps = pages.get(key) || {...defPage}
+                    const currentPages: PageProps = pages.get(key) || cloneDeep(defPage)
                     return currentPages.pageList
                         .filter((ele) => ele.pageGroupId === currentGroupId)
                         .map((ele) => ele.pageName)
@@ -206,7 +207,7 @@ export const usePageInfo = create<PageInfoStoreProps>()(
                 getCurrentSelectGroup: (key) => {
                     const {selectGroupId, pages} = get()
                     const currentGroupId = selectGroupId.get(key)
-                    const currentPages: PageProps = pages.get(key) || {...defPage}
+                    const currentPages: PageProps = pages.get(key) || cloneDeep(defPage)
                     return currentPages.pageList.find((ele) => ele.pageGroupId === currentGroupId)
                 },
                 clearAllData: () => {

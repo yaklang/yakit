@@ -28,6 +28,8 @@ interface FuzzerSequenceProps {
     onlySaveFuzzerSequenceCacheDataIncomingGroupId: (groupId: string) => void
     /**删除组内的其他数据，只保留组内的传入id的数据 */
     removeGroupOther: (groupId: string, id: string) => void
+    /**通过传入id的数据，删除组内的数据 */
+    removeWithinGroupDataById: (groupId: string, id: string) => void
 }
 
 export interface FuzzerListProps {}
@@ -133,6 +135,21 @@ export const useFuzzerSequence = create<FuzzerSequenceProps>()(
                     const index = newVal.findIndex((ele) => ele.groupId === groupId)
                     if (index !== -1) {
                         const list = newVal[index].cacheData.filter((ele) => ele.pageId === id)
+                        newVal[index] = {
+                            groupId,
+                            cacheData: list
+                        }
+                        set({
+                            ...get(),
+                            fuzzerSequenceCacheData: [...newVal]
+                        })
+                    }
+                },
+                removeWithinGroupDataById: (groupId, id) => {
+                    const newVal = get().fuzzerSequenceCacheData || []
+                    const index = newVal.findIndex((ele) => ele.groupId === groupId)
+                    if (index !== -1) {
+                        const list = newVal[index].cacheData.filter((ele) => ele.pageId !== id)
                         newVal[index] = {
                             groupId,
                             cacheData: list
