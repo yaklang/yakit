@@ -21,7 +21,6 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
             pageRenderListRef.current.set(selectSubMenuId, true)
             return pageRenderListRef.current
         }, [selectSubMenuId])
-        // useWhyDidYouUpdate("RenderSubPage", {...props, pageRenderList, pageRenderListRef})
         return (
             <>
                 {renderSubPage.map((subItem, numberSub) => {

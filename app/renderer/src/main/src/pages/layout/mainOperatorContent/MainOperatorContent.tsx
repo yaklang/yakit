@@ -21,7 +21,7 @@ import {
 import styles from "./MainOperatorContent.module.scss"
 import {YakitRouteToPageInfo, YakitRoute, SingletonPageRoute, NoPaddingRoute, ComponentParams} from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
-import {useCreation, useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useCreation, useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
@@ -1539,6 +1539,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             setSelectSubMenu({...currentNode})
         }
     }, [pageItem.multipleLength])
+    useUpdateEffect(()=>{
+        if(type === "config"){
+            emiter.emit("onRefWebFuzzer")
+        }
+    },[type])
     const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         if (!inViewport) return
         setType(res.type)

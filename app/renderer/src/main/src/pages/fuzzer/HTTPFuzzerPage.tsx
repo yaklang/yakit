@@ -604,25 +604,27 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         }
     }, [])
-
     useEffect(() => {
         if (inViewport) {
             onUpdateRequest()
+            emiter.on("onRefWebFuzzer", onUpdateRequest)
+        }
+        return () => {
+            emiter.off("onRefWebFuzzer", onUpdateRequest)
         }
     }, [inViewport])
     const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
         if (inViewport) onSetAdvancedConfig(!advancedConfig)
     })
     const onUpdateRequest = useMemoizedFn(() => {
-        if (inViewport) {
-            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
-            if (!currentItem) return
-            const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request
-            if (!newRequest) return
-            if (requestRef.current === newRequest) return
-            requestRef.current = newRequest || defaultPostTemplate
-            refreshRequest()
-        }
+        if (!inViewport)return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        if (!currentItem) return
+        const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request
+        if (!newRequest) return
+        if (requestRef.current === newRequest) return
+        requestRef.current = newRequest || defaultPostTemplate
+        refreshRequest()
     })
 
     useEffect(() => {
@@ -1281,8 +1283,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <div style={{width: 400}}>
                                     <HTTPFuzzerHistorySelector
                                         currentSelectId={currentSelectId}
-                                        onSelect={(e, page,showAll) => {
-                                            if(!showAll)setCurrentPage(page)
+                                        onSelect={(e, page, showAll) => {
+                                            if (!showAll) setCurrentPage(page)
                                             loadHistory(e)
                                         }}
                                         onDeleteAllCallback={() => {
