@@ -705,12 +705,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                         pages.push({...eleItem})
                     })
-                    setPageCache([...pages])
-                    setCurrentTabKey(key)
+                    //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
                     if (route === YakitRoute.HTTPFuzzer) {
                         addFuzzerList(node.id, node, order)
                     }
+                    setPageCache([...pages])
+                    setCurrentTabKey(key)
                 } else {
+                    //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
+                    if (route === YakitRoute.HTTPFuzzer) {
+                        addFuzzerList(node.id, node, 1)
+                    }
                     setPageCache([
                         ...pageCache,
                         {
@@ -727,9 +732,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                     ])
                     setCurrentTabKey(key)
-                    if (route === YakitRoute.HTTPFuzzer) {
-                        addFuzzerList(node.id, node, 1)
-                    }
                 }
             }
         }
@@ -2020,7 +2022,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             // 拖拽后组内item===0,则删除该组
             if (subPage[gIndex].groupChildren?.length === 0) {
                 subPage.splice(gIndex, 1)
-                removePagesDataCacheById(YakitRoute.HTTPFuzzer, sourceItem[0].id)
                 removeFuzzerSequenceList({
                     groupId: sourceItem[0].groupId
                 })
@@ -2031,7 +2032,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 addFuzzerSequenceList({
                     groupId: combineItem.id
                 })
-                removeWithinGroupDataById(sourceItem[0].groupId, sourceItem[0].id)
                 setSelectGroupId(YakitRoute.HTTPFuzzer, combineItem.id)
             }
         })
@@ -2125,7 +2125,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             if (sourceGroupChildrenList.length === 0) {
                 // 组内的标签页为0时,删除该组
                 subPage.splice(sourceNumber, 1)
-                removePagesDataCacheById(YakitRoute.HTTPFuzzer, sourceItem.id)
                 removeFuzzerSequenceList({
                     groupId: sourceItem.id
                 })

@@ -171,7 +171,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "new-web-fuzzer-tab",
-                        label: "新建 WebFuzzer",
+                        label: "发送到 WebFuzzer",
                         keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
                     }
                 ],
