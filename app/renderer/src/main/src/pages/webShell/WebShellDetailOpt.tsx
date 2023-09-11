@@ -19,7 +19,7 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
                     {props.webshellInfo.Url}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"文件管理"} key={"fileOpt"}>
-                    <WebShellURLTreeAndTable />
+                    <WebShellURLTreeAndTable Id={props.webshellInfo.Id}/>
                 </Tabs.TabPane>
             </Tabs>
         </div>
