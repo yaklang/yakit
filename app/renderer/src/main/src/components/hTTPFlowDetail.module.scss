@@ -107,3 +107,12 @@
         }
     }
 }
+
+.type-options-checkable-tag{
+    display: flex;
+    :global {
+        .ant-tag{
+            margin-right: 2px;
+        }
+    }
+}
