@@ -9,6 +9,7 @@ import {subscribeWithSelector, persist, createJSONStorage} from "zustand/middlew
 import debounce from "lodash/debounce"
 import {RemoteGV} from "@/yakitGV"
 import {yakitNotify} from "@/utils/notification"
+import { createWithEqualityFn } from "zustand/traditional"
 
 interface FuzzerSequenceProps {
     fuzzerSequenceList: FuzzerSequenceListProps[]
@@ -42,7 +43,7 @@ export interface FuzzerSequenceCacheDataProps {
     cacheData: SequenceProps[]
 }
 
-export const useFuzzerSequence = create<FuzzerSequenceProps>()(
+export const useFuzzerSequence = createWithEqualityFn<FuzzerSequenceProps>()(
     subscribeWithSelector(
         persist(
             (set, get) => ({
@@ -166,7 +167,8 @@ export const useFuzzerSequence = create<FuzzerSequenceProps>()(
                 storage: createJSONStorage(() => sessionStorage)
             }
         )
-    )
+    ),
+    Object.is
 )
 try {
     /**

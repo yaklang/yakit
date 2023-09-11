@@ -8,6 +8,7 @@ import {yakitNotify} from "@/utils/notification"
 import {RemoteGV} from "@/yakitGV"
 import {setRemoteProjectValue} from "@/utils/kv"
 import cloneDeep from "lodash/cloneDeep"
+import {createWithEqualityFn} from "zustand/traditional"
 
 /**
  * @description 页面暂存数据
@@ -85,7 +86,7 @@ const defPage: PageProps = {
     routeKey: "",
     singleNode: false
 }
-export const usePageInfo = create<PageInfoStoreProps>()(
+export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     subscribeWithSelector(
         persist(
             (set, get) => ({
@@ -262,7 +263,8 @@ export const usePageInfo = create<PageInfoStoreProps>()(
                 }
             }
         )
-    )
+    ),
+    Object.is
 )
 try {
     /**
