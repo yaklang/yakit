@@ -12,6 +12,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -255,7 +256,14 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                     type='outline2'
                     size='large'
                     onClick={() => {
-                        setChromeVisible(true)
+                        const m = showYakitModal({
+                            title: "确认",
+                            content: <div style={{ padding: "12px 24px" }}>检测到开启了替换规则，可能会影响劫持，是否确认开启？</div>,
+                            onOk: () => {
+                                m.destroy()
+                                setChromeVisible(true)
+                            }
+                        })
                     }}
                 >
                     <ChromeFrameSvgIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />

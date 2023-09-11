@@ -117,7 +117,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-                const findOpenRepRule = newRules.find(item => (item.NoReplace || item.Drop || item.ExtraRepeat))
+                const findOpenRepRule = newRules.find(item => (!item.NoReplace || item.Drop || item.ExtraRepeat))
                 setOpenRepRuleFlag(findOpenRepRule !== undefined)
                 setRules(newRules)
             })
@@ -305,7 +305,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                     host,
                                     port
                                 }
-                                onStartMITM(values)
+                                execStartMITM(values)
                             }}
                         />
                         <YakitButton type='text' size='large' onClick={() => setAdvancedFormVisible(true)}>
