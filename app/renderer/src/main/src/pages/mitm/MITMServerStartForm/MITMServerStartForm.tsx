@@ -16,6 +16,7 @@ import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
 import ReactResizeDetector from "react-resize-detector"
 import {useWatch} from "antd/es/form/Form"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {inputHTTPFuzzerHostConfigItem} from "../../fuzzer//HTTPFuzzerHosts"
@@ -31,6 +32,7 @@ export interface MITMServerStartFormProp {
         downstreamProxy: string,
         enableInitialPlugin: boolean,
         enableHttp2: boolean,
+        openRepRuleFlag: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -55,7 +57,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [hostHistoryList, setHostHistoryList] = useState<string[]>([])
 
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
-
+    const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false)
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
 
@@ -115,6 +117,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                const findOpenRepRule = newRules.find(item => (item.NoReplace || item.Drop || item.ExtraRepeat))
+                setOpenRepRuleFlag(findOpenRepRule !== undefined)
                 setRules(newRules)
             })
             .catch((e) => yakitFailed("获取规则列表失败:" + e))
@@ -123,6 +127,21 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         props.setEnableInitialPlugin(checked)
     })
     const onStartMITM = useMemoizedFn((values) => {
+        // 开启替换规则
+        if (openRepRuleFlag) {
+            const m = showYakitModal({
+                title: "确认",
+                content: <div style={{ padding: "12px 24px" }}>检测到开启了替换规则，可能会影响劫持，是否确认开启？</div>,
+                onOk: () => {
+                    m.destroy()
+                    execStartMITM(values)
+                }
+            })
+            return
+        }
+        execStartMITM(values)
+    })
+    const execStartMITM = useMemoizedFn((values) => {
         // 获取高级配置的默认值
         const advancedFormValue = advancedFormRef.current?.getValue()
         let params = {
@@ -136,6 +155,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             params.downstreamProxy,
             params.enableInitialPlugin,
             params.enableHttp2,
+            openRepRuleFlag,
             params.certs,
             {
                 enableGMTLS: params.enableGMTLS,
