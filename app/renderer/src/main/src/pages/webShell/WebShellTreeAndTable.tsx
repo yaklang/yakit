@@ -1,32 +1,31 @@
 import {TreeNode, YakURLTree, YakURLTreeProp} from "@/pages/yakURLTree/YakURLTree";
 import React, {useEffect, useMemo, useState} from "react";
 import {ResizeBox} from "@/components/ResizeBox";
-import {WebShellDetail} from "@/pages/webShell/models";
 import cveStyles from "@/pages/cve/CVETable.module.scss";
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {
-    ArrowCircleRightSvgIcon,
-    IconSolidCodeIcon,
-    RefreshIcon,
-    SMViewGridAddIcon,
-    SolidDocumentTextIcon
+    RefreshIcon, TrashIcon,
 } from "@/assets/newIcon";
-import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch";
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
-import {showModal} from "@/utils/showModal";
-import {RemarkDetail, WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize";
 import {RequestYakURLResponse, YakURLResource} from "@/pages/yakURLTree/data";
 import {useDebounceFn, useMemoizedFn} from "ahooks";
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType";
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
 import {formatTimestamp} from "@/utils/timeUtil";
-import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss";
-import {addToTab} from "@/pages/MainTabs";
 import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema";
-import {QueryWebShellRequest} from "@/pages/webShell/WebShellViewer";
-import {Button, Space, Tooltip} from "antd";
+import {Button, Divider, Form, Space, Tooltip} from "antd";
 import {FileOutlined, FolderOpenOutlined} from "@ant-design/icons";
+import {InputItem} from "@/utils/inputUtil";
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
+import {WebShellDetail} from "@/pages/webShell/models";
+import {showByCustom} from "@/components/functionTemplate/showByContext";
+import mitmStyles from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking.module.scss";
+import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu";
+import {showModal} from "@/utils/showModal";
+import {WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
+import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
+import {requestYakURLList} from "@/pages/yakURLTree/netif";
 
 interface WebShellURLTreeAndTableProp {
 }
@@ -145,9 +144,78 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         }, 10)
     })
 
-    useEffect(() => {
-        console.log("setSelectedNode", selectedNode);
-    }, [selectedNode]);
+    const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?id=2&mode=list")
+
+    const fileMenuData = [
+        {
+            key: "file-curd", label: "文件操作",
+            children: [
+                {key: "file-curd-open", label: "打开"},
+                {key: "file-curd-edit", label: "编辑"},
+                {key: "file-curd-copy", label: "复制文件名"},
+                {key: "file-curd-delete", label: "删除", itemIcon: <TrashIcon/>},
+            ]
+        }
+    ]
+
+    const fileMenuSelect = useMemoizedFn((key: string) => {
+        if (!selected) return
+        switch (key) {
+            case "file-curd-open":
+                const url = selected.data!.Url
+                url.Query = url.Query.map(queryItem => {
+                    if (queryItem.Key === 'mode') {
+                        return { ...queryItem, Value: 'show' };  // 如果键是 'mode'，则将值改为 'show'
+                    } else {
+                        return queryItem;  // 否则保持原样
+                    }
+                });
+
+
+                requestYakURLList(url, rsp => {
+                    const content = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.Value || '';
+                    // 找到回显的结果，并将其值赋给 'content'
+                    console.log(content)
+                    const edit = showModal({
+                        title: "编辑 Shell",
+                        width: "60%",
+                        content: <YakitEditor
+                            type={"yak"}
+                            value={content}
+                        />,
+                        modalAfterClose: () => edit && edit.destroy(),
+                    });
+                });
+                break
+        }
+    })
+
+    const onRowContextMenu = (rowData: TreeNode, _, event: React.MouseEvent) => {
+        if (rowData) {
+            setSelected(rowData)
+        }
+        showByCustom(
+            {
+                reactNode: (
+                    <div className={mitmStyles["context-menu-custom"]}>
+                        <YakitMenu
+                            data={fileMenuData as YakitMenuItemProps[]}
+                            width={150}
+                            onClick={({key}) => {
+                                fileMenuSelect(key)
+                            }}
+                        />
+                    </div>
+                ),
+                height: 266,
+                width: 158
+            },
+            event.clientX,
+            event.clientY
+        )
+    }
+
+
 
     return (
         <ResizeBox
@@ -155,19 +223,31 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             firstRatio={'20%'}
             firstNode={
                 <YakURLTree
-                    onDataChange={(newData) => {
-                        // 在这里，你可以访问新的 `data` 的值
-                        // setTreeData(newData)
-                        console.log("WebShellURLTreeAndTable", newData)
-                        setData(newData)
-                        setTotal(newData.length)
-                    }}
-                    onNodeSelect={(node) => {
-                        console.log("setSelectedNode ", node)
-                        setSelectedNode(node)
-                    }}
+                    raw={currentPath}
+                    onDataChange={
+                        (newData) => {
+                            // 在这里，你可以访问新的 `data` 的值
+                            // setTreeData(newData)
+                            console.log("WebShellURLTreeAndTable", newData)
+                            setData(newData)
+                            setTotal(newData.length)
+                        }
+                    }
+                    onNodeSelect={
+                        (node) => {
+                            console.log("setSelectedNode ", node)
+                            setSelectedNode(node)
+                        }
+                    }
+                    onCurrentPath={
+                        (path) => {
+                            console.log("onCurrentPath ", path)
+                            setCurrentPath(path)
+                        }
+                    }
                 />
             }
+            secondNodeStyle={{height: "100%"}}
             secondNode={
                 <div className={cveStyles["cve-list"]}>
                     <TableVirtualResize<TreeNode>
@@ -177,7 +257,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                         renderTitle={
                             <div className={cveStyles["cve-list-title-body"]}>
                                 <div className={cveStyles["cve-list-title-left"]}>
-                                    <div className={cveStyles["cve-list-title"]}>文件管理</div>
+                                    <div className={cveStyles["cve-list-title"]}>文件列表</div>
                                     <Space>
                                         <Tooltip title='刷新会重置所有查询条件'>
                                             <Button
@@ -190,7 +270,31 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                             />
                                         </Tooltip>
                                     </Space>
+                                    <div className={cveStyles["cve-list-total"]}>
+                                        <span>Total</span>
+                                        <span className={cveStyles["cve-list-total-number"]}>{total}</span>
+                                    </div>
                                 </div>
+                                <div className={cveStyles["cve-list-title-extra"]} style={{width: "70%"}}>
+                                    <span style={{paddingRight: "5px"}}>Path:</span>
+                                    <YakitInput
+                                        onChange={(e) => setCurrentPath(e.target.value)}
+                                        value={currentPath}
+                                    />
+                                    <>
+                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
+                                        <YakitButton >你好</YakitButton>
+                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
+                                        <YakitButton >你好</YakitButton>
+                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
+                                        <YakitButton >你好</YakitButton>
+                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
+                                        <YakitButton >你好</YakitButton>
+                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
+                                        <YakitButton >你好</YakitButton>
+                                    </>
+                                </div>
+
                             </div>
                         }
                         isRefresh={isRefresh}
@@ -199,14 +303,14 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                         loading={loading}
                         enableDrag={true}
                         columns={columns}
-                        // onRowClick={onRowClick}
+                        onRowClick={onRowClick}
                         pagination={{
                             page: pagination.Page,
                             limit: pagination.Limit,
                             total,
                             onChange: update
                         }}
-                        // onRowContextMenu={onRowContextMenu}
+                        onRowContextMenu={onRowContextMenu}
                         currentSelectItem={currentSelectItem}
                         onChange={onTableChange}
                         isShowTotal={true}
