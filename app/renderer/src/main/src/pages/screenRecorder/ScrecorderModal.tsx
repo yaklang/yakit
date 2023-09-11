@@ -9,7 +9,7 @@ import {Form} from "antd"
 import classNames from "classnames"
 import React, {CSSProperties, ReactNode, useEffect, useState} from "react"
 import styles from "./ScrecorderModal.module.scss"
-import {Screen_Recorder_Framerate} from "./ScreenRecorderList"
+import {Screen_Recorder_Framerate,Screen_Recorder_CoefficientPTS} from "./ScreenRecorderList"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -64,10 +64,25 @@ export const FramerateData = [
     }
 ]
 
+export const CoefficientPTSData = [
+    {
+        value: 1,
+        label: "X1：1倍速"
+    },
+    {
+        value: 0.33,
+        label: "X3：3倍速"
+    },
+    {
+        value: 0.2,
+        label: "X5：5倍速"
+    },
+]
+
 export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props) => {
     const {onClose, token, onStartCallback, formStyle, footer, disabled} = props
     const [params, setParams] = useState<StartScrecorderParams>({
-        CoefficientPTS: 0,
+        CoefficientPTS: 1,
         DisableMouse: true, // 鼠标捕捉
         Framerate: "7", // 帧率
         ResolutionSize: "" // 分辨率
@@ -79,6 +94,11 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
                 Framerate: val || "7"
             })
         })
+        getRemoteValue(Screen_Recorder_CoefficientPTS).then((val) => {
+            form.setFieldsValue({
+                CoefficientPTS: +val || 1
+            })
+        })
     }, [])
 
     const onStart = useMemoizedFn((v) => {
@@ -88,6 +108,7 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
             DisableMouse: !v.DisableMouse
         }
         setRemoteValue(Screen_Recorder_Framerate, newValue.Framerate)
+        setRemoteValue(Screen_Recorder_CoefficientPTS, newValue.CoefficientPTS)
         ipcRenderer.invoke("StartScrecorder", newValue, token).then(() => {
             onStartCallback()
         })
@@ -116,6 +137,13 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
                     name='Framerate'
                 >
                     <YakitSelect options={FramerateData} disabled={disabled} />
+                </Form.Item>
+                <Form.Item
+                    label='倍速'
+                    help='直接录制倍速视频，免视频后期处理'
+                    name='CoefficientPTS'
+                >
+                    <YakitSelect options={CoefficientPTSData} disabled={disabled} />
                 </Form.Item>
                 <div className={styles["disable-mouse"]}>
                     <Form.Item noStyle valuePropName='checked' name='DisableMouse'>
