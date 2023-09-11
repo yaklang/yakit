@@ -1981,7 +1981,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             if (gIndex === -1) return
 
             const sourceItem = subPage[gIndex].groupChildren?.splice(sourceIndex, 1)
-            if (sourceItem?.length<=0) return
+            if (!sourceItem) return
+            if (sourceItem.length<=0) return
             const combineIndex = subPage.findIndex((ele) => ele.id === combineDraggableId)
 
             if (combineIndex === -1) return
