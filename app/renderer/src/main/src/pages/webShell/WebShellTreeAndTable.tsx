@@ -3,6 +3,7 @@ import React, {useEffect, useMemo, useState} from "react";
 import {ResizeBox} from "@/components/ResizeBox";
 import cveStyles from "@/pages/cve/CVETable.module.scss";
 import {
+    ChevronLeftIcon,
     RefreshIcon, TrashIcon,
 } from "@/assets/newIcon";
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize";
@@ -26,8 +27,10 @@ import {WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
 import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import {requestYakURLList} from "@/pages/yakURLTree/netif";
+import {goBack, showFile} from "@/pages/webShell/FileManager";
 
 interface WebShellURLTreeAndTableProp {
+    Id: string
 }
 
 export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (props) => {
@@ -108,6 +111,11 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         setCurrentSelectItem(selected)
     }, [selected])
 
+    useEffect(() => {
+        if (loading) return
+        setLoading(true)
+    }, [])
+
     const update = useMemoizedFn(
         (page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
             const paginationProps = {
@@ -144,7 +152,8 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         }, 10)
     })
 
-    const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?id=2&mode=list")
+    //     const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
+    const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Tools/Vuln/apache-tomcat-8.5.87/webapps/S2-032?mode=list&id=" + props.Id)
 
     const fileMenuData = [
         {
@@ -162,35 +171,13 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         if (!selected) return
         switch (key) {
             case "file-curd-open":
-                const url = selected.data!.Url
-                url.Query = url.Query.map(queryItem => {
-                    if (queryItem.Key === 'mode') {
-                        return { ...queryItem, Value: 'show' };  // 如果键是 'mode'，则将值改为 'show'
-                    } else {
-                        return queryItem;  // 否则保持原样
-                    }
-                });
-
-
-                requestYakURLList(url, rsp => {
-                    const content = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.Value || '';
-                    // 找到回显的结果，并将其值赋给 'content'
-                    console.log(content)
-                    const edit = showModal({
-                        title: "编辑 Shell",
-                        width: "60%",
-                        content: <YakitEditor
-                            type={"yak"}
-                            value={content}
-                        />,
-                        modalAfterClose: () => edit && edit.destroy(),
-                    });
-                });
+                showFile(selected.data!.Url, setLoading)
                 break
         }
     })
 
     const onRowContextMenu = (rowData: TreeNode, _, event: React.MouseEvent) => {
+        if (rowData.data?.HaveChildrenNodes) return
         if (rowData) {
             setSelected(rowData)
         }
@@ -214,7 +201,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             event.clientY
         )
     }
-
+    const [goBackTree, setGoBackTree] = useState<TreeNode[]>([]);
 
 
     return (
@@ -224,6 +211,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             firstNode={
                 <YakURLTree
                     raw={currentPath}
+                    goBackTree={goBackTree}
                     onDataChange={
                         (newData) => {
                             // 在这里，你可以访问新的 `data` 的值
@@ -231,6 +219,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                             console.log("WebShellURLTreeAndTable", newData)
                             setData(newData)
                             setTotal(newData.length)
+                            setLoading(false)
                         }
                     }
                     onNodeSelect={
@@ -261,10 +250,9 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                     <Space>
                                         <Tooltip title='刷新会重置所有查询条件'>
                                             <Button
-                                                size={"small"}
+                                                size={"middle"}
                                                 type={"link"}
                                                 onClick={() => {
-                                                    refList()
                                                 }}
                                                 icon={<RefreshIcon/>}
                                             />
@@ -276,23 +264,22 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                     </div>
                                 </div>
                                 <div className={cveStyles["cve-list-title-extra"]} style={{width: "70%"}}>
+                                    <Button size={"small"}
+                                            type={"link"}
+                                            onClick={() => {
+                                                // goBack(selected.data!.Url, setLoading, setGoBackTree)
+                                            }}
+                                            icon={<ChevronLeftIcon/>}
+                                    />
+                                    <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
                                     <span style={{paddingRight: "5px"}}>Path:</span>
                                     <YakitInput
                                         onChange={(e) => setCurrentPath(e.target.value)}
                                         value={currentPath}
                                     />
-                                    <>
-                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
-                                        <YakitButton >你好</YakitButton>
-                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
-                                        <YakitButton >你好</YakitButton>
-                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
-                                        <YakitButton >你好</YakitButton>
-                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
-                                        <YakitButton >你好</YakitButton>
-                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
-                                        <YakitButton >你好</YakitButton>
-                                    </>
+
+                                    <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
+
                                 </div>
 
                             </div>

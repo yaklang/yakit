@@ -873,8 +873,11 @@ message RequestYakURLParams {
 
   YakURL Url = 2;
 
-  int64 Page = 3;
-  int64 PageSize = 4;
+  bytes Body = 3; // 用于存储文件的内容
+  int64 Page = 4;
+
+  int64 PageSize = 5;
+
 }
 
 message YakURL {
