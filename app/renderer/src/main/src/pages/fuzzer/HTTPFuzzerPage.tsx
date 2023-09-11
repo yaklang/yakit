@@ -1281,12 +1281,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <div style={{width: 400}}>
                                     <HTTPFuzzerHistorySelector
                                         currentSelectId={currentSelectId}
-                                        onSelect={(e, page) => {
-                                            // setCurrentPage(page)
+                                        onSelect={(e, page,showAll) => {
+                                            if(!showAll)setCurrentPage(page)
                                             loadHistory(e)
                                         }}
                                         onDeleteAllCallback={() => {
-                                            // setCurrentPage(0)
+                                            setCurrentPage(0)
                                             getTotal()
                                         }}
                                         fuzzerTabIndex={props.id}
