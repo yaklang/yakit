@@ -391,7 +391,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.DataCompare},
             {
-                params: {
+                pageParams: {
                     leftData:res.leftData,
                     rightData:res.rightData
                 }
