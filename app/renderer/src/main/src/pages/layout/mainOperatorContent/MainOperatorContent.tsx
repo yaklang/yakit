@@ -1879,7 +1879,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
         const onSubMenuDragEnd = useMemoizedFn((result: DragDropContextResultProps) => {
             try {
-                console.log("onSubMenuDragEnd", result)
+                // console.log("onSubMenuDragEnd", result)
                 const {droppableId: sourceDroppableId} = result.source
                 /** 合并组   ---------start--------- */
                 if (result.combine) {
