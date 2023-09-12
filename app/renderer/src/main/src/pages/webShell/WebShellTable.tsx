@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {defQueryWebShellRequest, QueryWebShellRequest} from "@/pages/webShell/WebShellViewer";
 import {ResizeBox} from "@/components/ResizeBox";
-import {WebShellDetail} from "@/pages/webShell/models";
+import {ShellType, WebShellDetail} from "@/pages/webShell/models";
 import cveStyles from "@/pages/cve/CVETable.module.scss";
 import mitmStyles from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking.module.scss";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
@@ -41,6 +41,13 @@ import {ExclamationCircleOutlined} from '@ant-design/icons';
 import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
 import {addToTab} from "@/pages/MainTabs";
 import {YakitRoute} from "@/routes/newRoute";
+import {
+    DragonFailIcon,
+    DragonSuccessIcon,
+    RocketIcon,
+    ScorpioFailIcon,
+    ScorpioSuccessIcon
+} from "@/pages/webShell/icon";
 
 export interface WebShellManagerProp {
     available: boolean
@@ -138,15 +145,24 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             {
                 title: "状态",
                 dataKey: "Status",
-                width: 60,
+                width: 55,
                 render: (_, i: WebShellDetail) => (
-                    i.Status ? "🟢" : "🔴"
+                    i.ShellType === ShellType.Behinder ? (
+                            i.Status ? <ScorpioSuccessIcon/> : <ScorpioFailIcon/>
+                        ) :
+                        (i.Status ? <DragonSuccessIcon/> : <DragonFailIcon/>)
+
                 )
             },
             {
                 title: "URL",
                 dataKey: "Url",
-                render: (_, i: WebShellDetail) => i.Url
+                render: (_, i: WebShellDetail) => <>
+                    {i.Proxy.length > 0 ?
+                        <Space><Button size={"small"} type='link' icon={<RocketIcon/>}/>{i.Url} </Space> : i.Url}
+                </>
+
+
             },
             {
                 title: "Type",
