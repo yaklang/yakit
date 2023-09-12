@@ -20,7 +20,8 @@ interface ChromeLauncherButtonProp {
     host?: string
     port?: number
     onFished?: (host: string, port: number) => void
-    isStartMITM?: boolean
+    isStartMITM?: boolean,
+    repRuleFlag?: boolean
 }
 
 interface MITMChromeLauncherProp {
@@ -194,7 +195,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
 }
 
 const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((props: ChromeLauncherButtonProp) => {
-    const {isStartMITM, host, port, onFished} = props
+    const {isStartMITM, host, port, onFished, repRuleFlag = false} = props
     const [started, setStarted] = useState(false)
     const [chromeVisible, setChromeVisible] = useState(false)
 
@@ -228,31 +229,35 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
     })
 
     const clickChromeLauncher = useMemoizedFn(() => {
-        Modal.confirm({
-            title: "温馨提示",
-            icon: <ExclamationCircleOutlined />,
-            content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
-            okText: "确认",
-            cancelText: "取消",
-            closable: true,
-            centered: true,
-            closeIcon: (
-                <div
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        Modal.destroyAll()
-                    }}
-                    className='modal-remove-icon'
-                >
-                    <RemoveIcon />
-                </div>
-            ),
-            onOk: () => {
-                setChromeVisible(true)
-            },
-            cancelButtonProps: { size: "small", className: "modal-cancel-button" },
-            okButtonProps: { size: "small", className: "modal-ok-button" }
-        })
+        if (repRuleFlag) {
+            Modal.confirm({
+                title: "温馨提示",
+                icon: <ExclamationCircleOutlined />,
+                content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
+                okText: "确认",
+                cancelText: "取消",
+                closable: true,
+                centered: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className='modal-remove-icon'
+                    >
+                        <RemoveIcon />
+                    </div>
+                ),
+                onOk: () => {
+                    setChromeVisible(true)
+                },
+                cancelButtonProps: { size: "small", className: "modal-cancel-button" },
+                okButtonProps: { size: "small", className: "modal-ok-button" }
+            })
+            return
+        }
+        setChromeVisible(true)
     })
 
     return (

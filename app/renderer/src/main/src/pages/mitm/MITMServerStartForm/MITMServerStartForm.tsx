@@ -325,6 +325,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 }
                                 execStartMITM(values)
                             }}
+                            repRuleFlag={openRepRuleFlag}
                         />
                         <YakitButton type='text' size='large' onClick={() => setAdvancedFormVisible(true)}>
                             高级配置
