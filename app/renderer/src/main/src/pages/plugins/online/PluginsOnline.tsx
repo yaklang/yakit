@@ -17,8 +17,11 @@ interface PluginsOnlineHeardProps {}
 const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props) => {
     return (
         <div className={styles["plugin-online-heard"]}>
+            <div className={styles["plugin-online-heard-bg"]} />
             <div className={styles["plugin-online-heard-content"]}>
-                <div className={styles["plugin-online-heard-content-tip"]}>Hello everyone! 👋</div>
+                <div className={styles["plugin-online-heard-content-top"]}>
+                    <div className={styles["plugin-online-heard-content-top-tip"]}>Hello everyone! 👋</div>
+                </div>
             </div>
         </div>
     )
