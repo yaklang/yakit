@@ -153,8 +153,8 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         }, 10)
     })
 
-    const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
-    // const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Tools/Vuln/apache-tomcat-8.5.87/webapps/S2-032?mode=list&id=" + props.Id)
+    // const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
+    const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Tools/Vuln/apache-tomcat-8.5.87/webapps/S2-032?mode=list&id=" + props.Id)
 
     const fileMenuData = [
         {
