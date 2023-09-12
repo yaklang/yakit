@@ -2000,17 +2000,17 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 const newResult = {
                     combine: null,
                     destination: {
-                        droppableId: result.combine.droppableId,
+                        droppableId: combineDraggableId,
                         index: 0
                     },
                     draggableId: result.draggableId,
-                    mode: "FLUID",
-                    reason: "DROP",
+                    mode: "",
+                    reason: "",
                     source: {
                         droppableId,
                         index: sourceIndex
                     },
-                    type: "droppableGroup"
+                    type: ""
                 }
                 movingBetweenDifferentGroups(newResult)
                 return
@@ -3042,6 +3042,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     direction='horizontal'
                     isCombineEnabled={isCombineEnabled}
                     type={dropType}
+                    // isCombineEnabled={true}
+                    // type='droppable'
                 >
                     {(provided, snapshot) => {
                         return (
@@ -3078,6 +3080,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                                         onUnfoldAndCollapse={onUnfoldAndCollapse}
                                                         onGroupContextMenu={onGroupRightClickOperation}
                                                         dropType={subDropType}
+                                                        // dropType='droppable'
                                                     />
                                                 </React.Fragment>
                                             )
