@@ -3914,6 +3914,7 @@ message FuzzerRequest {
 message KVPair {
   string Key = 1;
   string Value = 2;
+  bytes ValueBytes = 3;
 }
 
 message FuzzerResponseFilter {

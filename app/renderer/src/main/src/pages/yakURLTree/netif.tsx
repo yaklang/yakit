@@ -4,11 +4,16 @@ import {yakitFailed} from "@/utils/notification";
 
 const {ipcRenderer} = window.require("electron");
 
-export const requestYakURLList = (url: YakURL, onResponse?: (response: RequestYakURLResponse) => any, onError?: (e) => any) => {
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
+
+
+export const requestYakURLList = (url: YakURL, method?: HttpMethod, body?: Uint8Array, onResponse?: (response: RequestYakURLResponse) => any, onError?: (e) => any) => {
+    if (!method) method = "GET"
     url.Query = url.Query || []
     return ipcRenderer.invoke("RequestYakURL", {
         Url: url,
-        Method: "GET",
+        Method: method,
+        Body: body,
     }).then((rsp: RequestYakURLResponse) => {
         if (onResponse) {
             onResponse(rsp)
