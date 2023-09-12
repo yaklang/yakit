@@ -232,7 +232,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
             title: "温馨提示",
             icon: <ExclamationCircleOutlined />,
             content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
-            okText: "确定",
+            okText: "确认",
             cancelText: "取消",
             closable: true,
             centered: true,
