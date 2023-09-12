@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Form, Space} from "antd"
+import {Form, Space, Modal} from "antd"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, ExtraMITMServerProps, MITMResponse} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
@@ -16,10 +17,10 @@ import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
 import ReactResizeDetector from "react-resize-detector"
 import {useWatch} from "antd/es/form/Form"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {inputHTTPFuzzerHostConfigItem} from "../../fuzzer//HTTPFuzzerHosts"
+import {RemoveIcon} from "@/assets/newIcon"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -129,13 +130,30 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const onStartMITM = useMemoizedFn((values) => {
         // 开启替换规则
         if (openRepRuleFlag) {
-            const m = showYakitModal({
-                title: "确认",
-                content: <div style={{ padding: "12px 24px" }}>检测到开启了替换规则，可能会影响劫持，是否确认开启？</div>,
+            Modal.confirm({
+                title: "温馨提示",
+                icon: <ExclamationCircleOutlined />,
+                content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
+                okText: "确定",
+                cancelText: "取消",
+                closable: true,
+                centered: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className='modal-remove-icon'
+                    >
+                        <RemoveIcon />
+                    </div>
+                ),
                 onOk: () => {
-                    m.destroy()
                     execStartMITM(values)
-                }
+                },
+                cancelButtonProps: { size: "small", className: "modal-cancel-button" },
+                okButtonProps: { size: "small", className: "modal-ok-button" }
             })
             return
         }
