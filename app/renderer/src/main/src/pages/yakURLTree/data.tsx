@@ -18,6 +18,7 @@ export interface YakURLResource {
 export interface YakURLKVPair {
     Key: string;
     Value: string;
+    ValueBytes: Uint8Array;
 }
 
 export interface YakURL {

@@ -1,5 +1,5 @@
 import {TreeNode, YakURLTree, YakURLTreeProp} from "@/pages/yakURLTree/YakURLTree";
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {ResizeBox} from "@/components/ResizeBox";
 import cveStyles from "@/pages/cve/CVETable.module.scss";
 import {
@@ -7,7 +7,7 @@ import {
     RefreshIcon, TrashIcon,
 } from "@/assets/newIcon";
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize";
-import {RequestYakURLResponse, YakURLResource} from "@/pages/yakURLTree/data";
+import {RequestYakURLResponse, YakURL, YakURLResource} from "@/pages/yakURLTree/data";
 import {useDebounceFn, useMemoizedFn} from "ahooks";
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType";
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
@@ -27,7 +27,8 @@ import {WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
 import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import {requestYakURLList} from "@/pages/yakURLTree/netif";
-import {goBack, showFile} from "@/pages/webShell/FileManager";
+import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
+import {yakitFailed} from "@/utils/notification";
 
 interface WebShellURLTreeAndTableProp {
     Id: string
@@ -148,12 +149,12 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             Resources: []
         })
         setTimeout(() => {
-            update()
+            setLoading(false)
         }, 10)
     })
 
-    //     const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
-    const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Tools/Vuln/apache-tomcat-8.5.87/webapps/S2-032?mode=list&id=" + props.Id)
+    const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
+    // const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Tools/Vuln/apache-tomcat-8.5.87/webapps/S2-032?mode=list&id=" + props.Id)
 
     const fileMenuData = [
         {
@@ -167,12 +168,104 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         }
     ]
 
+    const [yakUrl, setYakUrl] = useState<YakURL>({} as YakURL);
+
+    const [content, setContent] = useState<string>('');
+
+    const [shouldEdit, setShouldEdit] = useState(false);
+    const contentRef = useRef(content);
+
+    useEffect(() => {
+        if (shouldEdit && content) {
+            const edit = showYakitModal({
+                title: "编辑 Shell",
+                width: "60%",
+                onCancelText: "返回",
+                onOkText: "保存",
+                content: (
+                    <>
+                        <div style={{height: 500, overflow: "hidden"}}>
+                            <YakitEditor
+                                type={"text"}
+                                value={content}
+                                setValue={value => {
+                                    setContent(value);
+                                    contentRef.current = value;
+                                }}
+                            />
+                        </div>
+                        <Divider type='vertical' style={{margin: "5px 0px 0px 5px", top: 1}}/>
+                    </>
+                ),
+                onOk: () => {
+                    const newYakUrl = {...yakUrl};  // 创建一个新的对象，复制 yakUrl 的所有属性
+                    newYakUrl.Query = newYakUrl.Query.map(queryItem => {
+                        if (queryItem.Key === 'mode') {
+                            return {...queryItem, Value: 'append'};  // 如果键是 'mode'，则将值改为 'show'
+                        } else {
+                            return queryItem;  // 否则保持原样
+                        }
+                    });
+
+                    console.log("content: ", contentRef.current)  // 使用 ref 的值
+                    requestYakURLList(newYakUrl, "PUT", Buffer.from(contentRef.current)).then((r) => {
+                        console.log(r);
+                        edit.destroy();
+                    }).catch((e) => {
+                            yakitFailed(`更新失败: ${e}`);
+                        }
+                    );
+                    setShouldEdit(false);  // 在保存后重置 shouldEdit
+                    edit.destroy();
+                },
+                onCancel: () => {
+                    edit.destroy();
+                    setShouldEdit(false);  // 在保存后重置 shouldEdit
+                },
+
+                modalAfterClose: () => edit && edit.destroy(),
+            });
+            setShouldEdit(false); // 在弹出模态框后重置 shouldEdit
+        }
+
+    }, [content, shouldEdit]);
+
+    const showFile = (url: YakURL) => {
+        const newYakUrl = {...url};  // 创建一个新的对象，复制 yakUrl 的所有属性
+        console.log("newYakUrl", newYakUrl)
+        newYakUrl.Query = newYakUrl.Query.map(queryItem => {
+            if (queryItem.Key === 'mode') {
+                return {...queryItem, Value: 'show'};  // 如果键是 'mode'，则将值改为 'show'
+            } else {
+                return queryItem;  // 否则保持原样
+            }
+        });
+
+        requestYakURLList(newYakUrl, undefined, undefined).then(
+            (rsp) => {
+                const newContent = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.ValueBytes || '';
+                const contentStr = Buffer.from(newContent).toString()
+                console.log(contentStr);
+                setContent(contentStr);
+                setShouldEdit(true);  // 设置 shouldEdit 为 true
+            }
+        ).finally(() => {
+                setLoading(false);
+            }
+        );
+    }
+
     const fileMenuSelect = useMemoizedFn((key: string) => {
         if (!selected) return
         switch (key) {
             case "file-curd-open":
-                showFile(selected.data!.Url, setLoading)
+                const url = selected.data!.Url
+                console.log("selected.data!.Url ", selected.data!.Url)
+                setYakUrl(url);
+                showFile(url)
                 break
+            case "file-curd-edit":
+            // updateFile(selected.data!.Url, setLoading)
         }
     })
 
@@ -291,6 +384,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                         enableDrag={true}
                         columns={columns}
                         onRowClick={onRowClick}
+                        // onRowDoubleClick={onRowDoubleClick}
                         pagination={{
                             page: pagination.Page,
                             limit: pagination.Limit,
