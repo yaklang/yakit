@@ -348,7 +348,9 @@ export interface ComponentParams {
     id?: string
     /**@param groupId HTTPFuzzer必须要有的，其他页面可以不用 */
     groupId?: string
+    /**@name webFuzzer变量参数 */
     params?:FuzzerParamItem[]
+    /**@name webFuzzer提取器参数 */
     extractors?:HTTPResponseExtractor[]
 
     // Route.Mod_ScanPort 参数
