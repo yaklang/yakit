@@ -408,7 +408,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                         >
                             <YakitSelect
                                 options={CoefficientPTSData}
-                                style={{ width: 140 }}
+                                style={{ width: 120 }}
                                 size='small'
                                 disabled={screenRecorderInfo.isRecording}
                             />
