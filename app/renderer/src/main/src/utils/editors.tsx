@@ -1104,6 +1104,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     webFuzzerCallBack?: () => void
     /**@name 是否显示美化/渲染TYPE(默认显示) */
     isShowBeautifyRender?: boolean
+    /**@name 是否显示显示Extra默认项 */
+    showDefaultExtra?: boolean
 }
 
 interface TypeOptionsProps {
@@ -1113,7 +1115,7 @@ interface TypeOptionsProps {
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
     const isResponse = props.isResponse
-    const {originValue, isShowBeautifyRender = true} = props
+    const {originValue, isShowBeautifyRender = true,showDefaultExtra=true} = props
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
             return "utf8"
@@ -1491,6 +1493,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     FUZZ
                                 </YakitButton>
                             )}
+                            {showDefaultExtra&&<>
                             <Tooltip title={"不自动换行"}>
                                 <YakitButton
                                     size={"small"}
@@ -1584,6 +1587,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
                                 </Popover>
                             )}
+                            </>}
                             {props.extraEnd}
                         </div>
                     )
