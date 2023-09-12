@@ -51,6 +51,7 @@ import {QueryFuzzerLabelResponseProps} from "@/pages/fuzzer/StringFuzzer"
 import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "@/pages/fuzzer/InsertFileFuzzTag"
 import {monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
 import {onInsertYakFuzzer, showDictsAndSelect} from "@/pages/fuzzer/HTTPFuzzerPage"
+import { openExternalWebsite } from "@/utils/openWebsite"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -125,6 +126,17 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [fontsize, setFontsize] = useState<number>(fontSize)
+
+    // 阻止编辑器点击URL默认打开行为 自定义外部系统默认浏览器打开URL
+    useEffect(() => {
+        monaco.editor.registerLinkOpener({
+            open: (link) => {
+                // 在系统默认浏览器中打开链接
+                openExternalWebsite(link.toString())
+                return true
+            }
+        })
+    }, [])
 
     // 读取上次选择的字体大小/换行符
     useEffect(() => {
