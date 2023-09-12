@@ -478,7 +478,11 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         })
         setFlow(undefined)
         // 小于500K不走接口拿数据
-        if (selectedFlow?.BodySizeVerbose?.endsWith('B') || selectedFlow?.BodySizeVerbose?.endsWith('K') && Number(selectedFlow?.BodySizeVerbose?.slice(0, -1)) <= 500) {
+        if (
+            selectedFlow?.BodySizeVerbose == '0' ||
+            selectedFlow?.BodySizeVerbose?.endsWith('B') ||
+            selectedFlow?.BodySizeVerbose?.endsWith('K') && Number(selectedFlow?.BodySizeVerbose?.slice(0, -1)) <= 500
+        ) {
             setFlow(selectedFlow)
             queryMITMRuleExtractedData(selectedFlow)
             return
