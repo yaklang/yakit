@@ -3040,10 +3040,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 <Droppable
                     droppableId='droppable2'
                     direction='horizontal'
-                    // isCombineEnabled={isCombineEnabled}
-                    // type={dropType}
-                    isCombineEnabled={true}
-                    type='droppable'
+                    isCombineEnabled={isCombineEnabled}
+                    type={dropType}
                 >
                     {(provided, snapshot) => {
                         return (
@@ -3079,8 +3077,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                                         onContextMenu={onRightClickOperation}
                                                         onUnfoldAndCollapse={onUnfoldAndCollapse}
                                                         onGroupContextMenu={onGroupRightClickOperation}
-                                                        // dropType={subDropType}
-                                                        dropType='droppable'
+                                                        dropType={subDropType}
                                                     />
                                                 </React.Fragment>
                                             )
