@@ -895,7 +895,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extraEditorProps={{
                             isShowSelectRangeMenu:true
                         }}
-                        dataCompare={beforeResValue}
+                        dataCompare={{data:beforeResValue,leftTitle:"请求",rightTitle:"原始请求"}}
                     />
                 )
             }}
@@ -960,7 +960,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extraEditorProps={{
                             isShowSelectRangeMenu:true
                         }}
-                        dataCompare={beforeRspValue}
+                        dataCompare={{data:beforeRspValue,leftTitle:"响应",rightTitle:"原始响应"}}
                     />
                 )
             }}

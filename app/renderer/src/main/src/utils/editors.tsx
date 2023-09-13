@@ -44,6 +44,8 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import styles from "./editors.module.scss"
 import classNames from "classnames"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { DataCompareModal } from "@/pages/compare/DataCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1043,6 +1045,12 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
     )
 })
 
+interface DataCompareProps {
+    data: Uint8Array
+    leftTitle?: string
+    rightTitle?: string
+}
+
 export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     /** yakit-editor组件基础属性 */
     readOnly?: boolean
@@ -1105,7 +1113,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     /**@name 是否显示显示Extra默认项 */
     showDefaultExtra?: boolean
     /**@name 数据对比(默认无对比) */
-    dataCompare?: Uint8Array
+    dataCompare?: DataCompareProps
 }
 
 interface TypeOptionsProps {
@@ -1460,14 +1468,29 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     ))}
                                 </div>
                             )}
-                            {dataCompare&&dataCompare.length>0&&<YakitButton size={"small"} type={"primary"} onClick={() => {
-                                ipcRenderer
-                                .invoke("send-to-tab", {
-                                    type: "add-data-compare",
-                                    data: {
-                                        leftData:Uint8ArrayToString(showValue),
-                                        rightData:Uint8ArrayToString(dataCompare)
-                                    }
+                            {dataCompare&&dataCompare.data.length>0&&<YakitButton size={"small"} type={"primary"} onClick={() => {
+                                // ipcRenderer
+                                // .invoke("send-to-tab", {
+                                //     type: "add-data-compare",
+                                //     data: {
+                                //         leftData:Uint8ArrayToString(showValue),
+                                //         rightData:Uint8ArrayToString(dataCompare)
+                                //     }
+                                // })
+                                const m = showYakitModal({
+                                    title: null,
+                                    content: <DataCompareModal
+                                        onClose={()=>m.destroy()}
+                                        rightTitle={dataCompare.rightTitle}
+                                        leftTitle={dataCompare.leftTitle}
+                                        leftCode={Uint8ArrayToString(showValue)} 
+                                        rightCode={Uint8ArrayToString(dataCompare.data)} />,
+                                    onCancel:()=>{
+                                        m.destroy()
+                                    },
+                                    width:1000,
+                                    footer: null,
+                                    closable:false
                                 })
                             }}>
                                 对比

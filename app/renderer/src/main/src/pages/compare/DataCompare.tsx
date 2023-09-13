@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useRef, ReactNode, useImperativeHandle, Ref } from "react"
-import { PageHeader, Button, Space } from "antd"
+import React, { useEffect, useState, useRef, useImperativeHandle } from "react"
+import { Button, Space } from "antd"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import { AutoCard } from "../../components/AutoCard"
 import { LineConversionIcon } from "../../assets/icons"
-import { now } from "moment"
-
+import styles from "./DataCompare.module.scss";
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { RemoveIcon } from "@/assets/newIcon"
 const { ipcRenderer } = window.require("electron")
 
 interface textModelProps {
@@ -47,6 +48,46 @@ export const DataCompare: React.FC<DataCompareProps> = (props) => {
     )
 }
 
+interface DataCompareModalProps {
+    onClose: () => void
+    leftTitle?: string
+    leftCode: string
+    rightTitle?: string
+    rightCode: string
+}
+
+export const DataCompareModal : React.FC<DataCompareModalProps> = (props) => {
+    const {onClose,leftCode,rightCode,leftTitle,rightTitle} = props
+
+    return (
+        <div className={styles['data-compare-modal']}>
+            <div className={styles['header']}>
+                <div className={styles['title']}>代码对比</div>
+                <div className={styles['close']}>
+                   <RemoveIcon onClick={()=>onClose()}/> 
+                </div>
+            </div>
+            <div className={styles['content']}>
+                {leftTitle&&rightTitle&&<div className={styles['content-title']}>
+                    <div className={styles['content-title-left']}>
+                        {leftTitle}
+                    </div>
+                    <div className={styles['content-title-right']}>
+                        {rightTitle}
+                    </div>
+                </div>}
+                <div className={styles['code']}>
+                    <CodeComparison leftCode={leftCode} rightCode={rightCode} fontSize={12}/>  
+                </div>
+            </div>
+            {/* <div className={styles['footer']}>
+                <YakitButton type="outline2" onClick={()=>onClose()}>取消</YakitButton>
+                <YakitButton>合并</YakitButton>
+            </div> */}
+        </div>
+    )
+}
+
 interface CodeComparisonProps {
     noWrap?: boolean
     setNoWrap?: (b: boolean) => void
@@ -57,11 +98,11 @@ interface CodeComparisonProps {
     ref?: any
     originalEditable?: boolean
     readOnly?: boolean
+    fontSize?: number
 }
 
 export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((props, ref) => {
-    const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true,readOnly } = props;
-    const [token, setToken] = useState<string>("")
+    const { noWrap, setNoWrap, leftCode, setLeftCode, rightCode, setRightCode, originalEditable = true,readOnly,fontSize } = props;
     const diffDivRef = useRef(null)
     const monaco = monacoEditor.editor
     const diffEditorRef = useRef<monacoEditor.editor.IStandaloneDiffEditor>()
@@ -85,6 +126,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
             automaticLayout: true,
             wordWrap: isWrap ? "off" : "on",
             readOnly,
+            fontSize
         })
         if (setNoWrap) setNoWrap(!noWrap)
         setModelEditor({ content: leftCode, language: language }, { content: rightCode, language: language }, language)
@@ -119,10 +161,9 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
                     originalEditable,
                     automaticLayout: true,
                     wordWrap: noWrap ? "off" : "on",
-                    readOnly
+                    readOnly,
+                    fontSize
                 })
-
-                setToken(res.token)
 
                 if (!!res.info) {
                     const { info } = res

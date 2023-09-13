@@ -1,0 +1,61 @@
+.data-compare-modal {
+    height: 700px;
+    display: flex;
+    flex-direction: column;
+    .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 16px 24px 8px 24px;
+        .title {
+            color: #31343f;
+            font-family: PingFang HK;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: 20px;
+        }
+        .close {
+            svg {
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+                color: #85899e;
+            }
+            &:hover {
+                svg {
+                    color: var(--yakit-primary-4);
+                }
+            }
+        }
+    }
+
+    .content {
+        flex: 1;
+        padding: 0px 24px 24px;
+        display: flex;
+        flex-direction: column;
+        .content-title {
+            display: flex;
+            justify-content: space-between;
+            border-radius: 4px 4px 0px 0px;
+            border: 1px solid var(--yakit-border-color);
+            padding: 6px 12px;
+
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 16px;
+        }
+        .code {
+            flex: 1;
+        }
+    }
+    .footer {
+        padding: 24px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+}
