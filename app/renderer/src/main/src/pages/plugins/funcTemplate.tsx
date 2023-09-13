@@ -656,7 +656,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
     )
 })
 
-/** @name 用户头像(未完成,头像右下角带小icon) */
+/** @name 用户头像(头像右下角带小icon) */
 export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
     const {size = "middle", src, builtInIcon, icon} = props
     const [srcUrl, setSrcUrl] = useState<string>(src || YakitLogo)
