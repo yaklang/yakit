@@ -229,7 +229,8 @@ export const prettifyPacketCode = (text: string) => {
 
 // 渲染功能(Html + Image)
 export const formatPacketRender = (packet: Uint8Array, onFormatted: (packet?: string) => any) => {
-    ipcRenderer
+    if(packet.length>0){
+        ipcRenderer
         .invoke("PacketPrettifyHelper", {
             Packet: typeof packet == "string" ? StringToUint8Array(packet) : packet
         })
@@ -245,6 +246,7 @@ export const formatPacketRender = (packet: Uint8Array, onFormatted: (packet?: st
                 onFormatted()
             }
         })
+    }
 }
 
 export const prettifyPacketRender = (text: Uint8Array) => {

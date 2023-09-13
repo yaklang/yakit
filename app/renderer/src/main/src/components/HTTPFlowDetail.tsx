@@ -803,8 +803,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             handleGetHTTPFlowBare("request")
             handleGetHTTPFlowBare("response")
         }
-    },[isShowBeforeData])
-
+    },[isShowBeforeData,id])
+    
     useEffect(()=>{
         if(resType==="request"){
             setOriginResValue(beforeResValue)
