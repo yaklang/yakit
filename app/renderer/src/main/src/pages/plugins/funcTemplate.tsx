@@ -1,5 +1,6 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {
+    AuthorImgProps,
     FuncBtnProps,
     FuncFilterPopverProps,
     FuncSearchProps,
@@ -28,12 +29,22 @@ import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {formatDate} from "@/utils/timeUtil"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import ReactResizeDetector from "react-resize-detector"
-import {AuthorIcon, AuthorImg, pluginTypeToName} from "./baseTemplate"
+import {AuthorIcon, pluginTypeToName} from "./baseTemplate"
 import {PluginsGridCheckIcon} from "./icon"
 
 import styles from "./funcTemplate.module.scss"
 import classNames from "classnames"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {
+    SolidOfficialpluginIcon,
+    SolidYakitPluginIcon,
+    SolidPluginYakMitmIcon,
+    SolidPluginProtScanIcon,
+    SolidSparklesPluginIcon,
+    SolidDocumentSearchPluginIcon,
+    SolidCollectionPluginIcon
+} from "@/assets/icon/colors"
+import YakitLogo from "@/assets/yakitLogo.png"
 
 /** @name 标题栏的搜索选项组件 */
 export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
@@ -641,6 +652,63 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                     <div className={styles["extra-footer"]}>{extraFooter || null}</div>
                 </div>
             </div>
+        </div>
+    )
+})
+
+/** @name 用户头像(未完成,头像右下角带小icon) */
+export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
+    const {size = "middle", src, builtInIcon, icon} = props
+    const [srcUrl, setSrcUrl] = useState<string>(src || YakitLogo)
+
+    const imgClass = useMemo(() => {
+        if (size === "large") return styles["author-large-img-style"]
+        if (size === "small") return styles["author-small-img-style"]
+        return styles["author-middle-img-style"]
+    }, [size])
+    const imgBodyClass = useMemo(() => {
+        if (size === "large") return styles["author-large-img-body"]
+        if (size === "small") return styles["author-small-img-body"]
+        return styles["author-middle-img-body"]
+    }, [size])
+
+    const iconNode = useMemo(() => {
+        if (icon) return icon
+        switch (builtInIcon) {
+            case "official":
+                return <SolidOfficialpluginIcon />
+
+            case "yakit":
+                return <SolidYakitPluginIcon />
+
+            case "mitm":
+                return <SolidPluginYakMitmIcon />
+
+            case "port":
+                return <SolidPluginProtScanIcon />
+
+            case "sparkles":
+                return <SolidSparklesPluginIcon />
+
+            case "documentSearch":
+                return <SolidDocumentSearchPluginIcon />
+
+            case "collection":
+                return <SolidCollectionPluginIcon />
+
+            default:
+                break
+        }
+    }, [builtInIcon, icon])
+    const onErrorImg = useMemoizedFn((e) => {
+        if (e.type === "error") {
+            setSrcUrl(YakitLogo)
+        }
+    })
+    return (
+        <div className={imgBodyClass}>
+            <img className={imgClass} src={srcUrl} alt='' onError={onErrorImg} />
+            {iconNode && <div className={styles["author-img-mask"]}>{iconNode}</div>}
         </div>
     )
 })
