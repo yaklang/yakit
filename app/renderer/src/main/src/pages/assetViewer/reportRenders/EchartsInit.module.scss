@@ -28,10 +28,15 @@
         display: inline-block;
         flex: 1;
     }
+    @media only screen and (min-width: 1200px) {
+        .echarts-box-hollow-pie {
+          display: inline-block;
+          width: 50%;
+        }
+    }
     .echart-item.echart-item-hollow-pie {
         min-width: 400px;
         max-width: 600px;
-        /* margin-top: 40px; */
     }
     .echart-item.echart-item-multi-pie {
         min-width: 570px;

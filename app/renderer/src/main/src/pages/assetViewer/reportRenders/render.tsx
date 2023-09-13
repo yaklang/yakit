@@ -74,7 +74,7 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                     let obj = {name, value, color, title};
                     return <VerticalOptionBar content={obj} />
                 } else if (newData.type === "pie-graph") {
-                    return <HollowPie data={newData.data} color={newData.color} title={newData.title} />
+                    return <HollowPie data={newData.data} title={newData.title} />
                 } else if (newData.type === "fix-list") {
                     return <FoldHoleCard data={newData.data} />
                 } else {
