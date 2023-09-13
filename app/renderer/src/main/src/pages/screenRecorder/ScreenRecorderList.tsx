@@ -19,7 +19,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {FramerateData, ScrecorderModal} from "./ScrecorderModal"
+import {FramerateData, CoefficientPTSData, ScrecorderModal} from "./ScrecorderModal"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
@@ -79,6 +79,7 @@ interface QueryScreenRecordersProps {
     Keywords: string
 }
 export const Screen_Recorder_Framerate = "Screen_Recorder_Framerate"
+export const Screen_Recorder_CoefficientPTS = "Screen_Recorder_CoefficientPTS"
 export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     const [params, setParams] = useState<QueryScreenRecordersProps>({
         Keywords: ""
@@ -152,6 +153,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
     useEffect(() => {
         onRefresh()
         onSetFramerate()
+        onCoefficientPTS()
     }, [props.refreshTrigger, isShowScreenRecording])
     useUpdateEffect(() => {
         if (!screenRecorderInfo.isRecording) {
@@ -164,12 +166,20 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             }
         } else {
             onSetFramerate()
+            onCoefficientPTS()
         }
     }, [screenRecorderInfo.isRecording])
     const onSetFramerate = useMemoizedFn(() => {
         getRemoteValue(Screen_Recorder_Framerate).then((val) => {
             form.setFieldsValue({
                 Framerate: val || "7"
+            })
+        })
+    })
+    const onCoefficientPTS = useMemoizedFn(() => {
+        getRemoteValue(Screen_Recorder_CoefficientPTS).then((val) => {
+            form.setFieldsValue({
+                CoefficientPTS: +val || 1
             })
         })
     })
@@ -358,7 +368,8 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                         form={form}
                         initialValues={{
                             DisableMouse: true, // 鼠标捕捉
-                            Framerate: "7" // 帧率
+                            Framerate: "7", // 帧率
+                            CoefficientPTS: 1,
                         }}
                         onFinish={(v) => {
                             const newValue = {
@@ -366,6 +377,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                 DisableMouse: !v.DisableMouse
                             }
                             setRemoteValue(Screen_Recorder_Framerate, v.Framerate)
+                            setRemoteValue(Screen_Recorder_CoefficientPTS, v.CoefficientPTS)
                             if (screenRecorderInfo.isRecording) {
                                 ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
                             } else {
@@ -386,6 +398,17 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                             <YakitSelect
                                 options={FramerateData}
                                 style={{width: 120}}
+                                size='small'
+                                disabled={screenRecorderInfo.isRecording}
+                            />
+                        </Form.Item>
+                        <Form.Item
+                            label='倍速'
+                            name='CoefficientPTS'
+                        >
+                            <YakitSelect
+                                options={CoefficientPTSData}
+                                style={{ width: 120 }}
                                 size='small'
                                 disabled={screenRecorderInfo.isRecording}
                             />
