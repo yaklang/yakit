@@ -4,6 +4,14 @@
     justify-content: center;
 }
 
+.plugins-online{
+    display: flex;
+    flex-direction: column;
+}
+.plugins-online-overflow-hidden{
+    overflow: hidden;
+}
+
 .plugin-online-heard {
     // height: 446px;
     background: linear-gradient(180deg, rgba(136, 99, 247, 0.16) 0%, rgba(136, 99, 247, 0) 100%);
