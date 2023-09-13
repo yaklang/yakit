@@ -1106,6 +1106,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     isShowBeautifyRender?: boolean
     /**@name 是否显示显示Extra默认项 */
     showDefaultExtra?: boolean
+    /**@name 数据对比(默认无对比) */
+    dataCompare?: Uint8Array
 }
 
 interface TypeOptionsProps {
@@ -1115,7 +1117,7 @@ interface TypeOptionsProps {
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
     const isResponse = props.isResponse
-    const {originValue, isShowBeautifyRender = true,showDefaultExtra=true} = props
+    const {originValue, isShowBeautifyRender = true,showDefaultExtra=true,dataCompare} = props
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
             return "utf8"
@@ -1460,18 +1462,18 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     ))}
                                 </div>
                             )}
-                            {/* <YakitButton size={"small"} type={"primary"} onClick={() => {
+                            {dataCompare&&dataCompare.length>0&&<YakitButton size={"small"} type={"primary"} onClick={() => {
                                 ipcRenderer
                                 .invoke("send-to-tab", {
                                     type: "add-data-compare",
                                     data: {
-                                        leftData:"3",
-                                        rightData:"2"
+                                        leftData:Uint8ArrayToString(showValue),
+                                        rightData:Uint8ArrayToString(dataCompare)
                                     }
                                 })
                             }}>
                                 对比
-                            </YakitButton> */}
+                            </YakitButton>}
                             {props.sendToWebFuzzer && props.readOnly && (
                                 <YakitButton
                                     size={"small"}

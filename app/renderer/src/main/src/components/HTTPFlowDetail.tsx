@@ -895,6 +895,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extraEditorProps={{
                             isShowSelectRangeMenu:true
                         }}
+                        dataCompare={beforeResValue}
                     />
                 )
             }}
@@ -959,6 +960,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extraEditorProps={{
                             isShowSelectRangeMenu:true
                         }}
+                        dataCompare={beforeRspValue}
                     />
                     // {
                     //     type==="render"&&prettifyPacketCode(new Buffer((flow?.Response || new Uint8Array())).toString("utf8"))
