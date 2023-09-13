@@ -1,6 +1,5 @@
 import React, {ReactNode, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
-    AuthorImgProps,
     PluginAddParamModalProps,
     PluginDetailHeaderProps,
     PluginDetailsProps,
@@ -20,7 +19,7 @@ import {
     SolidFlagIcon
 } from "@/assets/icon/solid"
 import {FilterPanel} from "@/components/businessUI/FilterPanel/FilterPanel"
-import {FuncSearch} from "./funcTemplate"
+import {AuthorImg, FuncSearch} from "./funcTemplate"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
@@ -42,7 +41,9 @@ import {
     SolidPluginNucleiIcon,
     SolidPluginProtScanIcon,
     SolidPluginYakIcon,
-    SolidPluginYakMitmIcon
+    SolidPluginYakMitmIcon,
+    SolidSparklesPluginIcon,
+    SolidYakitPluginIcon
 } from "@/assets/icon/colors"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {Form, Space, Tooltip} from "antd"
@@ -190,18 +191,6 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
     )
 })
 
-/** @name 用户头像(未完成，头像右下角带小icon) */
-export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
-    const {size = "middle", src} = props
-
-    const imgClass = useMemo(() => {
-        if (size === "large") return ""
-        if (size === "small") return styles["author-small-img-style"]
-        return styles["author-img-style"]
-    }, [size])
-
-    return <img className={imgClass} src={src} />
-})
 /** @name 代表作者的图标ICON */
 export const AuthorIcon: React.FC<{}> = memo((props) => {
     return <div className={styles["author-icon-wrapper"]}>作者</div>
