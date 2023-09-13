@@ -64,6 +64,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     id={selected?.Id || 0}
                                     defaultHttps={selected?.IsHTTPS}
                                     sendToWebFuzzer={true}
+                                    selectedFlow={selected}
                                     // defaultHeight={detailHeight}
                                 />
                             </div>

@@ -58,6 +58,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     isBehind?: boolean
     fetchRequest?: (kind: number) => any
     search?: string
+    selectedFlow?: HTTPFlow
 }
 
 const {Text} = Typography
@@ -454,7 +455,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id} = props
+    const {id, selectedFlow} = props
     const [flow, setFlow] = useState<HTTPFlow>()
     const [isSelect, setIsSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState(false)
@@ -476,47 +477,22 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             setFold(is)
         })
         setFlow(undefined)
+        // 小于500K不走接口拿数据
+        if (
+            selectedFlow?.BodySizeVerbose == '0' ||
+            selectedFlow?.BodySizeVerbose?.endsWith('B') ||
+            selectedFlow?.BodySizeVerbose?.endsWith('K') && Number(selectedFlow?.BodySizeVerbose?.slice(0, -1)) <= 500
+        ) {
+            setFlow(selectedFlow)
+            queryMITMRuleExtractedData(selectedFlow)
+            return
+        }
         setLoading(true)
         ipcRenderer
             .invoke("GetHTTPFlowById", {Id: id})
             .then((i: HTTPFlow) => {
                 setFlow(i)
-                const existedExtraInfos: HTTPFlowInfoType[] = []
-                ipcRenderer
-                    .invoke("QueryMITMRuleExtractedData", {
-                        Pagination: {
-                            Order: "asc",
-                            OrderBy: "created_at",
-                            Page: 1,
-                            Limit: 1
-                        },
-                        HTTPFlowHash: i.Hash
-                    })
-                    .then((rsp: {Total: number}) => {
-                        if (rsp.Total > 0) {
-                            existedExtraInfos.push("rules")
-                        }
-                    })
-                    .catch((e) => {
-                        failed("获取规则提取数据失败")
-                    })
-                    .finally(() => {
-                        if ((i.Domains || []).length > 0 || (i.RootDomains || []).length > 0) {
-                            existedExtraInfos.push("domains")
-                        }
-
-                        if ((i.JsonObjects || []).length > 0) {
-                            existedExtraInfos.push("json")
-                        }
-
-                        if (existedExtraInfos.length > 0) {
-                            setInfoType(existedExtraInfos[0])
-                            setExistedInfoType([...existedExtraInfos])
-                        } else {
-                            setInfoType(undefined)
-                            setExistedInfoType([])
-                        }
-                    })
+                queryMITMRuleExtractedData(i)
             })
             .catch((e: any) => {
                 failed(`Query HTTPFlow failed: ${e}`)
@@ -528,6 +504,45 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             setExistedInfoType([])
         }
     }, [id])
+
+    const queryMITMRuleExtractedData = (i: HTTPFlow) => {
+        const existedExtraInfos: HTTPFlowInfoType[] = []
+        ipcRenderer
+            .invoke("QueryMITMRuleExtractedData", {
+                Pagination: {
+                    Order: "asc",
+                    OrderBy: "created_at",
+                    Page: 1,
+                    Limit: 1
+                },
+                HTTPFlowHash: i.Hash
+            })
+            .then((rsp: {Total: number}) => {
+                if (rsp.Total > 0) {
+                    existedExtraInfos.push("rules")
+                }
+            })
+            .catch((e) => {
+                failed("获取规则提取数据失败")
+            })
+            .finally(() => {
+                if ((i.Domains || []).length > 0 || (i.RootDomains || []).length > 0) {
+                    existedExtraInfos.push("domains")
+                }
+
+                if ((i.JsonObjects || []).length > 0) {
+                    existedExtraInfos.push("json")
+                }
+
+                if (existedExtraInfos.length > 0) {
+                    setInfoType(existedExtraInfos[0])
+                    setExistedInfoType([...existedExtraInfos])
+                } else {
+                    setInfoType(undefined)
+                    setExistedInfoType([])
+                }
+            })
+    }
 
     useEffect(() => {
         if (!infoType) {
