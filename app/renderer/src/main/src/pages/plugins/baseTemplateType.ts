@@ -52,13 +52,6 @@ export interface PluginDetailsProps<T> {
     children: ReactNode
 }
 
-export interface AuthorImgProps {
-    /** 图片展示直径尺寸 */
-    size?: "middle" | "small" | "large"
-    /** 图片src */
-    src: string
-}
-
 export interface PluginDetailHeaderProps {
     /** 插件名称 */
     pluginName: string
