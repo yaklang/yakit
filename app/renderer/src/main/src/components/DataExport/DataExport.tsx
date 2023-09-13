@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, ButtonProps, Modal, Space, Tag, Pagination, Checkbox, Row, Col} from "antd"
+import {LoadingOutlined} from "@ant-design/icons"
 import {export_json_to_excel, CellSetting} from "./toExcel"
 import {failed} from "../../utils/notification"
 import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "../../pages/invoker/schema"
@@ -20,7 +21,8 @@ interface ExportExcelProps {
     text?: string
     openModal?: boolean
     newUI?: boolean
-    newUIType?: YakitButtonProp["type"]
+    newUIType?: YakitButtonProp["type"],
+    textUILoadingFlag?: boolean
 }
 
 interface resProps {
@@ -48,7 +50,8 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         text,
         openModal = false,
         newUI = false,
-        newUIType = "outline2"
+        newUIType = "outline2",
+        textUILoadingFlag = false
     } = props
     const [loading, setLoading] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
@@ -145,7 +148,12 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                     {text || "导出Excel"}
                 </YakitButton>
             ) : (
-                <span onClick={() => toExcel()}>{text || "导出Excel"}</span>
+                <>
+                    <span onClick={() => toExcel()}>
+                        {text || "导出Excel"}
+                    </span>
+                    {textUILoadingFlag && loading && <LoadingOutlined spin={loading} style={{ marginLeft: 5 }} />}
+                </>
             )}
             <Modal title='数据导出' visible={visible} onCancel={() => setVisible(false)} footer={null}>
                 {/* <p>

@@ -315,6 +315,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                                                                     showButton={false}
                                                                     getData={getData}
                                                                     btnProps={{size: "small"}}
+                                                                    textUILoadingFlag={true}
                                                                 />
                                                             </Menu.Item>
                                                         </Menu>
