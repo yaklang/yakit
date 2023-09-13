@@ -10,6 +10,10 @@ import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {Divider} from "antd"
 import classNames from "classnames"
 import {useMemoizedFn} from "ahooks"
+import {openExternalWebsite} from "@/utils/openWebsite"
+import card1 from "./card1.png"
+import card2 from "./card2.png"
+import card3 from "./card3.png"
 
 interface PluginsOnlineProps {}
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
@@ -21,6 +25,20 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
     )
 })
 
+const cardImg = [
+    {
+        imgUrl: card1,
+        link: "https://yaklang.com/products/intro/"
+    },
+    {
+        imgUrl: card2,
+        link: "https://yaklang.com/products/intro/"
+    },
+    {
+        imgUrl: card3,
+        link: "https://space.bilibili.com/437503777"
+    }
+]
 interface PluginsOnlineHeardProps {}
 const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props) => {
     return (
@@ -35,6 +53,16 @@ const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props)
                     </div>
                     <YakitCombinationSearchCircle />
                 </div>
+            </div>
+            <div className={styles["plugin-online-heard-card"]}>
+                {cardImg.map((ele) => (
+                    <img
+                        className={styles["plugin-online-heard-card-img"]}
+                        src={ele.imgUrl}
+                        alt=''
+                        onClick={() => openExternalWebsite(ele.link)}
+                    />
+                ))}
             </div>
         </div>
     )
