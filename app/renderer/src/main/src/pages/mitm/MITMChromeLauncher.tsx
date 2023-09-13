@@ -1,13 +1,13 @@
 import React, {useEffect, useState} from "react"
-import {Alert, Form, Space, Tooltip, Typography} from "antd"
+import {Alert, Form, Space, Tooltip, Typography, Modal} from "antd"
 import {failed, info} from "../../utils/notification"
-import {CheckOutlined, CloseOutlined, CloudUploadOutlined} from "@ant-design/icons"
+import {CheckOutlined, CloseOutlined, CloudUploadOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import style from "./MITMPage.module.scss"
-import {ChromeFrameSvgIcon, ChromeSvgIcon} from "@/assets/newIcon"
+import {ChromeFrameSvgIcon, ChromeSvgIcon, RemoveIcon} from "@/assets/newIcon"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -20,7 +20,8 @@ interface ChromeLauncherButtonProp {
     host?: string
     port?: number
     onFished?: (host: string, port: number) => void
-    isStartMITM?: boolean
+    isStartMITM?: boolean,
+    repRuleFlag?: boolean
 }
 
 interface MITMChromeLauncherProp {
@@ -194,7 +195,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
 }
 
 const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((props: ChromeLauncherButtonProp) => {
-    const {isStartMITM, host, port, onFished} = props
+    const {isStartMITM, host, port, onFished, repRuleFlag = false} = props
     const [started, setStarted] = useState(false)
     const [chromeVisible, setChromeVisible] = useState(false)
 
@@ -226,6 +227,39 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                 failed(`关闭所有 Chrome 失败: ${e}`)
             })
     })
+
+    const clickChromeLauncher = useMemoizedFn(() => {
+        if (repRuleFlag) {
+            Modal.confirm({
+                title: "温馨提示",
+                icon: <ExclamationCircleOutlined />,
+                content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
+                okText: "确认",
+                cancelText: "取消",
+                closable: true,
+                centered: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className='modal-remove-icon'
+                    >
+                        <RemoveIcon />
+                    </div>
+                ),
+                onOk: () => {
+                    setChromeVisible(true)
+                },
+                cancelButtonProps: { size: "small", className: "modal-cancel-button" },
+                okButtonProps: { size: "small", className: "modal-ok-button" }
+            })
+            return
+        }
+        setChromeVisible(true)
+    })
+
     return (
         <>
             {(isStartMITM && (
@@ -254,9 +288,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                 <YakitButton
                     type='outline2'
                     size='large'
-                    onClick={() => {
-                        setChromeVisible(true)
-                    }}
+                    onClick={clickChromeLauncher}
                 >
                     <ChromeFrameSvgIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />
                     <span style={{marginLeft: 4}}>免配置启动</span>

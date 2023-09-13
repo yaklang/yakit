@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Form, Space} from "antd"
+import {Form, Space, Modal} from "antd"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, ExtraMITMServerProps, MITMResponse} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
@@ -19,6 +20,7 @@ import {useWatch} from "antd/es/form/Form"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {inputHTTPFuzzerHostConfigItem} from "../../fuzzer//HTTPFuzzerHosts"
+import {RemoveIcon} from "@/assets/newIcon"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -31,6 +33,7 @@ export interface MITMServerStartFormProp {
         downstreamProxy: string,
         enableInitialPlugin: boolean,
         enableHttp2: boolean,
+        openRepRuleFlag: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -55,7 +58,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [hostHistoryList, setHostHistoryList] = useState<string[]>([])
 
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
-
+    const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false)
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
 
@@ -115,6 +118,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                const findOpenRepRule = newRules.find(item => (!item.NoReplace || item.Drop || item.ExtraRepeat))
+                setOpenRepRuleFlag(findOpenRepRule !== undefined)
                 setRules(newRules)
             })
             .catch((e) => yakitFailed("获取规则列表失败:" + e))
@@ -123,6 +128,38 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         props.setEnableInitialPlugin(checked)
     })
     const onStartMITM = useMemoizedFn((values) => {
+        // 开启替换规则
+        if (openRepRuleFlag) {
+            Modal.confirm({
+                title: "温馨提示",
+                icon: <ExclamationCircleOutlined />,
+                content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
+                okText: "确认",
+                cancelText: "取消",
+                closable: true,
+                centered: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className='modal-remove-icon'
+                    >
+                        <RemoveIcon />
+                    </div>
+                ),
+                onOk: () => {
+                    execStartMITM(values)
+                },
+                cancelButtonProps: { size: "small", className: "modal-cancel-button" },
+                okButtonProps: { size: "small", className: "modal-ok-button" }
+            })
+            return
+        }
+        execStartMITM(values)
+    })
+    const execStartMITM = useMemoizedFn((values) => {
         // 获取高级配置的默认值
         const advancedFormValue = advancedFormRef.current?.getValue()
         let params = {
@@ -136,6 +173,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             params.downstreamProxy,
             params.enableInitialPlugin,
             params.enableHttp2,
+            openRepRuleFlag,
             params.certs,
             {
                 enableGMTLS: params.enableGMTLS,
@@ -285,8 +323,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                     host,
                                     port
                                 }
-                                onStartMITM(values)
+                                execStartMITM(values)
                             }}
+                            repRuleFlag={openRepRuleFlag}
                         />
                         <YakitButton type='text' size='large' onClick={() => setAdvancedFormVisible(true)}>
                             高级配置

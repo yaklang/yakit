@@ -247,6 +247,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             enableInitialPlugin,
             plugins,
             enableHttp2,
+            openRepRuleFlag,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -259,6 +260,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             let tip = ""
             if (downstreamProxy) {
                 tip += `下游代理:${downstreamProxy}`
+            }
+            if (openRepRuleFlag) {
+                tip += '|启用替换规则'
             }
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
@@ -343,6 +347,7 @@ interface MITMServerProps {
         enableInitialPlugin: boolean,
         defaultPlugins: string[],
         enableHttp2: boolean,
+        openRepRuleFlag: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -389,6 +394,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             downstreamProxy,
             enableInitialPlugin,
             enableHttp2,
+            openRepRuleFlag,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -400,6 +406,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     enableInitialPlugin,
                     enableInitialPlugin ? checkList : [],
                     enableHttp2,
+                    openRepRuleFlag,
                     certs,
                     extra
                 )
