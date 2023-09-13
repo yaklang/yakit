@@ -1,3 +1,9 @@
+%display-row-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .plugin-online-heard {
     height: 446px;
     background: linear-gradient(180deg, rgba(136, 99, 247, 0.16) 0%, rgba(136, 99, 247, 0) 100%);
@@ -25,6 +31,11 @@
     &-content {
         z-index: 2;
         &-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+
             &-tip {
                 display: flex;
                 padding: 4px 12px;
@@ -36,7 +47,80 @@
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px;
+                width: fit-content;
             }
+            &-title {
+                color: var(--ui-text-color);
+                text-align: center;
+                font-size: 32px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 40px; /* 125% */
+            }
+            &-subTitle {
+                color: var(--yakit-body-text-color);
+                text-align: center;
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 20px;
+            }
+        }
+    }
+}
+
+.yakit-combination-search-circle {
+    display: flex;
+    gap: 16px;
+    height: 40px;
+    width: 520px;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 20px;
+    padding-left: 4px;
+    &-select-wrapper {
+        width: 100px;
+        flex-shrink: 0;
+        :global {
+            .ant-select-selector {
+                padding-right: 0;
+            }
+            .ant-select-arrow {
+                right: 0;
+            }
+        }
+    }
+    &-line {
+        height: 20px;
+        border-right: 1px solid var(--yakit-border-color);
+    }
+    &-input {
+        padding: 0;
+    }
+    &-input-wrapper {
+        input::placeholder {
+            color: var(--yakit-disable-text-color);
+        }
+    }
+    &-icon {
+        width: 40px;
+        height: 40px;
+        @extend %display-row-center;
+        flex-shrink: 0;
+        background-color: var(--yakit-primary-5);
+        color: #fff;
+        border-radius: 0 20px 20px 0;
+        cursor: pointer;
+        &:hover {
+            background-color: var(--yakit-primary-4);
+        }
+        &:focus,
+        &:active {
+            background-color: var(--yakit-primary-6);
+        }
+        svg {
+            width: 20px;
+            height: 20px;
         }
     }
 }
