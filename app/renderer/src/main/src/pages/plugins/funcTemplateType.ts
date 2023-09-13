@@ -141,3 +141,17 @@ export interface GridLayoutOptProps {
     /** 点击该展示项的回调 */
     onClick?: () => any
 }
+
+
+type AuthorImgType = "official" | "yakit" | "mitm" | "port" | "sparkles" | "documentSearch" | "collection"
+export interface AuthorImgProps {
+    /** 图片展示直径尺寸 */
+    size?: "middle" | "small" | "large"
+    /** 图片src */
+    src?: string
+    /** 右下角icon,传AuthorImgType类型为内置的icon */
+    builtInIcon?: AuthorImgType
+    /** 右下角icon 自己传组件 */
+    icon?: ReactNode
+}
+
