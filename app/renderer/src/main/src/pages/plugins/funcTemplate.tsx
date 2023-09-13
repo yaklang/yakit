@@ -167,7 +167,7 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
     )
 })
 
-const funcSearchType: {value: string; label: string}[] = [
+export const funcSearchType: {value: string; label: string}[] = [
     {value: "user", label: "按作者"},
     {value: "keyword", label: "关键字"}
 ]
