@@ -888,7 +888,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                 ...(props.actions || []),
                                 ...[
                                     {
-                                        label: "新建 WebFuzzer",
+                                        label: "发送到 WebFuzzer",
                                         contextMenuGroupId: "auto-suggestion",
                                         keybindings: [
                                             (system === "Darwin" ? monaco.KeyMod.WinCtrl : monaco.KeyMod.CtrlCmd) |

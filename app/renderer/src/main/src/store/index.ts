@@ -1,6 +1,6 @@
 import { ResultObjProps } from "@/pages/dynamicControl/DynamicControl"
 import {API} from "@/services/swagger/resposeType"
-import create from "zustand"
+import {create} from "zustand"
 
 export interface UserInfoProps {
     isLogin: boolean

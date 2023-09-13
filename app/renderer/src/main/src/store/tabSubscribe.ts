@@ -3,7 +3,7 @@
  */
 
 import {YakitModalConfirmProps} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import create from "zustand"
+import {create} from "zustand"
 export interface YakitSecondaryConfirmProps extends Omit<YakitModalConfirmProps, "onOk"> {
     onOk: (m) => void
 }

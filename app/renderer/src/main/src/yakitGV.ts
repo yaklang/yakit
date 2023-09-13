@@ -58,7 +58,11 @@ export enum RemoteGV {
     /** @name chat-cs聊天记录 */
     ChatCSStorage = "chat-cs-storage",
     /** @name 是否已了解chat-cs功能 */
-    KnowChatCS = "know-chat-cs"
+    KnowChatCS = "know-chat-cs",
+     /** @name webFuzzer页面以及每个页面的数据缓存字段 */
+    FuzzerCache="fuzzer-list-cache",
+    /** @name webFuzzer序列的缓存字段 */
+    FuzzerSequenceCache = "fuzzer_sequence_cache"
 }
 
 /** 项目逻辑全局变量 */

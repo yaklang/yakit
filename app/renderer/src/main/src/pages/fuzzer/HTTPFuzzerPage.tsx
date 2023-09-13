@@ -102,11 +102,12 @@ import {
     FUZZER_LABEL_LIST_NUMBER
 } from "./HTTPFuzzerEditorMenu"
 import {execCodec} from "@/utils/encodec"
-import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
+import {shallow} from "zustand/shallow"
+import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -158,7 +159,6 @@ export interface HTTPFuzzerPageProp {
     isGmTLS?: boolean
     request?: string
     system?: string
-    fuzzerParams?: fuzzerInfoProp
     shareContent?: string
     id: string
 }
@@ -373,42 +373,42 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
         })
 }
 
-    /**@description 插入 yak.fuzz 语法 */
-export const onInsertYakFuzzer = (reqEditor:IMonacoEditor) => {
-        const m = showYakitModal({
-            title: "Fuzzer Tag 调试工具",
-            width: "70%",
-            footer: null,
-            subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
-            content: (
-                <div style={{padding: 24}}>
-                    <StringFuzzer
-                        advanced={true}
-                        disableBasicMode={true}
-                        insertCallback={(template: string) => {
-                            if (!template) {
-                                Modal.warn({
-                                    title: "Payload 为空 / Fuzz 模版为空"
+/**@description 插入 yak.fuzz 语法 */
+export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
+    const m = showYakitModal({
+        title: "Fuzzer Tag 调试工具",
+        width: "70%",
+        footer: null,
+        subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
+        content: (
+            <div style={{padding: 24}}>
+                <StringFuzzer
+                    advanced={true}
+                    disableBasicMode={true}
+                    insertCallback={(template: string) => {
+                        if (!template) {
+                            Modal.warn({
+                                title: "Payload 为空 / Fuzz 模版为空"
+                            })
+                        } else {
+                            if (reqEditor && template) {
+                                reqEditor.trigger("keyboard", "type", {
+                                    text: template
                                 })
                             } else {
-                                if (reqEditor && template) {
-                                    reqEditor.trigger("keyboard", "type", {
-                                        text: template
-                                    })
-                                } else {
-                                    Modal.error({
-                                        title: "BUG: 编辑器失效"
-                                    })
-                                }
-                                m.destroy()
+                                Modal.error({
+                                    title: "BUG: 编辑器失效"
+                                })
                             }
-                        }}
-                        close={() => m.destroy()}
-                    />
-                </div>
-            )
-        })
-    }
+                            m.destroy()
+                        }
+                    }}
+                    close={() => m.destroy()}
+                />
+            </div>
+        )
+    })
+}
 
 const ALLOW_MULTIPART_DATA_ALERT = "ALLOW_MULTIPART_DATA_ALERT"
 
@@ -490,9 +490,9 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     dnsServers: [],
     etcHosts: [],
     // 设置变量
-    params: [{Key: "", Value: "", Type: ""}],
+    params: [{Key: "", Value: "", Type: "raw"}],
     // 匹配器
-    filterMode: "drop",
+    filterMode: "onlyMatch",
     matchers: [],
     matchersCondition: "and",
     hitColor: "red",
@@ -501,61 +501,28 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
 }
 
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
-    const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>({
-        // 请求包配置
-        forceFuzz: true,
-        isHttps: props.fuzzerParams?.isHttps || props.isHttps || false,
-        isGmTLS: props.isGmTLS || false,
-        noFixContentLength: false,
-        noSystemProxy: false,
-        actualHost: props.fuzzerParams?.actualHost || "",
-        timeout: 30.0,
-        // 发包配置
-        concurrent: 20,
-        proxy: [],
-        minDelaySeconds: 0,
-        maxDelaySeconds: 0,
-        repeatTimes: 0,
-        // 重试配置
-        maxRetryTimes: 0,
-        retry: true,
-        noRetry: false,
-        retryConfiguration: {
-            statusCode: "",
-            keyWord: ""
-        },
-        noRetryConfiguration: {
-            statusCode: "",
-            keyWord: ""
-        },
-        retryWaitSeconds: 0,
-        retryMaxWaitSeconds: 0,
-        // 重定向配置
-        redirectCount: 3,
-        noFollowRedirect: true,
-        followJSRedirect: false,
-        redirectConfiguration: {
-            statusCode: "",
-            keyWord: ""
-        },
-        noRedirectConfiguration: {
-            statusCode: "",
-            keyWord: ""
-        },
-        // dns config
-        dnsServers: [],
-        etcHosts: [],
-        // 设置变量
-        params: [{Key: "", Value: "", Type: "raw"}],
-        // 匹配器
-        filterMode: "onlyMatch",
-        matchers: [],
-        matchersCondition: "and",
-        hitColor: "red",
-        // 提取器
-        extractors: []
+    const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            updatePagesDataCacheById: s.updatePagesDataCacheById
+        }),
+        shallow
+    )
+    const initWebFuzzerPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
+            return currentItem.pageParamsInfo.webFuzzerPageInfo
+        } else {
+            return {
+                pageId: props.id,
+                advancedConfigValue: defaultAdvancedConfigValue,
+                request: defaultPostTemplate
+            }
+        }
     })
-
+    const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
+        initWebFuzzerPageInfo().advancedConfigValue
+    ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
     const [advancedConfig, setAdvancedConfig] = useState<boolean>(false)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [historyTask, setHistoryTask] = useState<HistoryHTTPFuzzerTask>()
@@ -597,15 +564,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [activeType, setActiveType] = useState<MatchingAndExtraction>("matchers")
     const [activeKey, setActiveKey] = useState<string>("")
 
-    const requestRef = useRef<string>(props.fuzzerParams?.request || props.request || defaultPostTemplate)
+    const requestRef = useRef<string>(initWebFuzzerPageInfo().request)
     const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
     const fuzzerRef = useRef<any>()
     const [inViewport = true] = useInViewport(fuzzerRef)
 
     const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
-
-    const getPageNodeInfoByPageId = usePageNode((s) => s.getPageNodeInfoByPageId)
 
     useEffect(() => {
         getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
@@ -634,33 +599,32 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setAdvancedConfig(c === "true")
             }
         })
-        ipcRenderer.on("fetch-ref-webFuzzer-request", onUpdateRequest)
         emiter.on("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         return () => {
-            ipcRenderer.removeListener("fetch-ref-webFuzzer-request", onUpdateRequest)
             emiter.off("onSetFuzzerAdvancedConfigShow", onSetFuzzerAdvancedConfig)
         }
     }, [])
-
     useEffect(() => {
         if (inViewport) {
-            onUpdateRequest(_, {type: "config"})
+            onUpdateRequest()
+            emiter.on("onRefWebFuzzer", onUpdateRequest)
+        }
+        return () => {
+            emiter.off("onRefWebFuzzer", onUpdateRequest)
         }
     }, [inViewport])
     const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
         if (inViewport) onSetAdvancedConfig(!advancedConfig)
     })
-    const onUpdateRequest = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
-        if (res.type === "config" && inViewport) {
-            const nodeInfo: NodeInfoProps | undefined = getPageNodeInfoByPageId(YakitRoute.HTTPFuzzer, props.id)
-            if (!nodeInfo) return
-            const {currentItem} = nodeInfo
-            const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request
-            if (!newRequest) return
-            if (requestRef.current === newRequest) return
-            requestRef.current = newRequest || defaultPostTemplate
-            refreshRequest()
-        }
+    const onUpdateRequest = useMemoizedFn(() => {
+        if (!inViewport) return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        if (!currentItem) return
+        const newRequest = currentItem.pageParamsInfo.webFuzzerPageInfo?.request
+        if (!newRequest) return
+        if (requestRef.current === newRequest) return
+        requestRef.current = newRequest || defaultPostTemplate
+        refreshRequest()
     })
 
     useEffect(() => {
@@ -1043,29 +1007,39 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const sendFuzzerSettingInfo = useDebounceFn(
         () => {
             // 23.7.10 最新只保存 isHttps、actualHost和request
-            const info: fuzzerInfoProp = {
-                time: new Date().getTime().toString(),
-                isHttps: advancedConfigValue.isHttps,
-                actualHost: advancedConfigValue.actualHost,
-                request: requestRef.current,
-                id: props.id
-            }
             const webFuzzerPageInfo: WebFuzzerPageInfoProps = {
                 pageId: props.id,
                 advancedConfigValue,
                 request: requestRef.current
             }
-            ipcRenderer.invoke("send-fuzzer-setting-data", {
-                key: props.id || "",
-                param: JSON.stringify(info),
-                webFuzzerPageInfo: JSON.stringify(webFuzzerPageInfo)
-            })
+            onUpdateFuzzerSequenceDueToDataChanges(props.id || "", webFuzzerPageInfo)
         },
-        {wait: 1000}
+        {wait: 500}
     ).run
     useUpdateEffect(() => {
         sendFuzzerSettingInfo()
     }, [advancedConfigValue])
+
+    /**
+     * 因为页面数据变化更新fuzzer序列化
+     */
+    const onUpdateFuzzerSequenceDueToDataChanges = useMemoizedFn((key: string, param: WebFuzzerPageInfoProps) => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, key)
+        if (!currentItem) return
+        const newCurrentItem: PageNodeItemProps = {
+            ...currentItem,
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    pageId: param.pageId,
+                    advancedConfigValue: {
+                        ...param.advancedConfigValue
+                    },
+                    request: param.request
+                }
+            }
+        }
+        updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+    })
 
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
@@ -1222,16 +1196,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onInsertYakFuzzerFun = useMemoizedFn(() => {
         if (webFuzzerNewEditorRef.current) onInsertYakFuzzer(webFuzzerNewEditorRef.current.reqEditor)
     })
-    const checkRedirect = useMemo(()=>{
+    const checkRedirect = useMemo(() => {
         const arr = httpResponse?.Headers || []
         for (let index = 0; index < arr.length; index++) {
             const element = arr[index]
-            if (element.Header === "Location"){
+            if (element.Header === "Location") {
                 return true
             }
         }
         return false
-    },[httpResponse])
+    }, [httpResponse])
 
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -1309,12 +1283,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <div style={{width: 400}}>
                                     <HTTPFuzzerHistorySelector
                                         currentSelectId={currentSelectId}
-                                        onSelect={(e, page) => {
-                                            // setCurrentPage(page)
+                                        onSelect={(e, page, showAll) => {
+                                            if (!showAll) setCurrentPage(page)
                                             loadHistory(e)
                                         }}
                                         onDeleteAllCallback={() => {
-                                            // setCurrentPage(0)
+                                            setCurrentPage(0)
                                             getTotal()
                                         }}
                                         fuzzerTabIndex={props.id}
@@ -2239,7 +2213,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             contextMenu={responseEditorRightMenu}
                             webFuzzerValue={props.webFuzzerValue}
                             extraEditorProps={{
-                                isShowSelectRangeMenu:true
+                                isShowSelectRangeMenu: true
                             }}
                             {...otherEditorProps}
                         />

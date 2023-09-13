@@ -15,7 +15,7 @@ export interface MultipleNodeInfo extends MultipleNodeGroup {
     id: string
     verbose: string
     time?: string
-    params?: ComponentParams
+    pageParams?: ComponentParams
     sortFieId: number
 }
 /**
@@ -61,7 +61,7 @@ export interface PageCache {
     multipleNode: MultipleNodeInfo[] | any[]
     multipleLength?: number
     hideAdd?: boolean
-    params?: ComponentParams
+    pageParams?: ComponentParams
 }
 
 // 页面的唯一标识属性
@@ -90,10 +90,6 @@ export interface TabContentProps {
     currentTabKey: YakitRoute | string
     setCurrentTabKey: (s: YakitRoute | string) => void
     openMultipleMenuPage: (route: RouteToPageProps) => void
-    afterDeleteFirstPage: (type: "all" | "other" | "single", page?: PageCache) => void
-    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
-    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
 
     onRemove: (p: PageCache) => vid
 }
@@ -105,10 +101,7 @@ export interface TabChildrenProps {
     pageCache: PageCache[]
     currentTabKey: YakitRoute | string
     openMultipleMenuPage: (route: RouteToPageProps) => void
-    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
-    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
-    onSetPageCache: (m: MultipleNodeInfo[],i:number) => void
+    onSetPageCache: (m: MultipleNodeInfo[], i: number) => void
 }
 
 /**
@@ -139,8 +132,6 @@ export interface TabListProps {
     setPageCache: (p: PageCache[]) => void
     currentTabKey: YakitRoute | string
     setCurrentTabKey: (s: YakitRoute | string) => void
-    afterDeleteFirstPage: (type: "all" | "other" | "single", page?: PageCache) => void
-
     onDragEnd: (p: any) => void
     onRemove: (p: PageCache) => void
 }
@@ -154,10 +145,7 @@ export interface SubTabListProps {
     pageCache: PageCache[]
     currentTabKey: YakitRoute | string
     openMultipleMenuPage: (route: RouteToPageProps) => void
-    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
-    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
-    onSetPageCache: (m: MultipleNodeInfo[],i:number) => void
+    onSetPageCache: (m: MultipleNodeInfo[], i: number) => void
     pageItem: PageCache
     index: number
 }
@@ -176,9 +164,6 @@ export interface SubTabsProps {
     setType: (w: WebFuzzerType) => void
 
     openMultipleMenuPage: (route: RouteToPageProps) => void
-    afterDeleteSubPage: (type: "other" | "single", r: YakitRoute | string, subItem: MultipleNodeInfo) => void
-    afterUpdateSubItem: (page: PageCache, subItem: MultipleNodeInfo) => void
-    onUpdateSubPage: (page: PageCache, subItems: MultipleNodeInfo[]) => void
     onSetPageCache: (m: MultipleNodeInfo[]) => void
 }
 /**
@@ -237,4 +222,23 @@ export interface DroppableCloneProps {
     draggableId: string
     subPage: MultipleNodeInfo[]
     selectSubMenu: MultipleNodeInfo
+}
+/**
+ * @description DragDropContext组件拖拽后回调事件的result
+ * @property combine 合并 draggableId：与拖拽合并的item的id  droppableId:与拖拽合并的item的id所属于的拖拽区域id
+ * @property destination 拖拽目的地 droppableId：与拖拽目的地的item的id  index：落地的位置(数组下标)
+ * @property draggableId droppableId：拖拽的id
+ * @property mode 模式：FLUID(默认) 具体看官网
+ * @property reason
+ * @property source droppableId：droppableId:拖拽的id所属于的拖拽区域id
+ * @property type 可用于仅接受指定的类。总是从定义它们的继承type。 例如，如果您使用type=“person”，那么它将只允许将类型“person”的放到自身上。type=‘task’的将不能被拖放到type为‘person’的上。如果没有提供类型，它将被设置为“DEFAULT”
+ */
+export interface DragDropContextResultProps {
+    combine: {draggableId: string; droppableId: string} | null
+    destination: {droppableId: string; index: number} | null
+    draggableId: string
+    mode: string
+    reason: string
+    source: {droppableId: string; index: number}
+    type: string
 }

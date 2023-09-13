@@ -3,7 +3,7 @@
  */
 
 import { randomString } from "@/utils/randomUtil"
-import create from "zustand"
+import {create} from "zustand"
 
 interface ScreenRecorderProps {
     screenRecorderInfo: ScreenRecorderInfoProps

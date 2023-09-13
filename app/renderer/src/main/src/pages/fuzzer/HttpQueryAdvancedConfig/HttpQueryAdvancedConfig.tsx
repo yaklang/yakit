@@ -52,8 +52,6 @@ import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
-import {usePageNode} from "@/store/pageNodeInfo"
-import shallow from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
 
 const {ipcRenderer} = window.require("electron")
@@ -633,7 +631,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 placeholder={"指定DNS服务器"}
                             />
                         </Form.Item>
-                        <Form.Item label={"Hosts配置"} name='etcHosts' initialValue={[]}>
+                        <Form.Item label={"Hosts配置"} name='etcHosts'>
                             <Space direction={"vertical"}>
                                 {(etcHosts || []).map((i, n) => (
                                     <YakitTag

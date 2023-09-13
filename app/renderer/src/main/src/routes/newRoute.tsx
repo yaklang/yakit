@@ -117,6 +117,8 @@ import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
+import { FuzzerParamItem } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import { HTTPResponseExtractor } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -346,7 +348,10 @@ export interface ComponentParams {
     id?: string
     /**@param groupId HTTPFuzzer必须要有的，其他页面可以不用 */
     groupId?: string
-    fuzzerParams?: fuzzerInfoProp
+    /**@name webFuzzer变量参数 */
+    params?:FuzzerParamItem[]
+    /**@name webFuzzer提取器参数 */
+    extractors?:HTTPResponseExtractor[]
 
     // Route.Mod_ScanPort 参数
     scanportParams?: string
@@ -428,7 +433,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                             request={params?.request}
                             system={params?.system}
                             id={params?.id || ""}
-                            fuzzerParams={params?.fuzzerParams}
                             shareContent={params?.shareContent}
                         />
                     </WebFuzzerPage>

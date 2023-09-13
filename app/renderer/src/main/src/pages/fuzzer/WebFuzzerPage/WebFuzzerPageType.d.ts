@@ -9,7 +9,6 @@ export interface WebFuzzerPageProps {
     // isGmTLS?: boolean
     // request?: string
     // system?: string
-    // fuzzerParams?: fuzzerInfoProp
     // shareContent?: string
     id?: string
     groupId?: string

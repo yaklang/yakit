@@ -21,7 +21,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 export interface HTTPFuzzerHistorySelectorProp {
     currentSelectId?: number
-    onSelect: (i: number, page: number) => any
+    onSelect: (i: number, page: number,showAll:boolean) => any
     onDeleteAllCallback: () => void
     fuzzerTabIndex: string
 }
@@ -55,12 +55,12 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     const {currentSelectId, fuzzerTabIndex} = props
     const [tasks, setTasks] = useState<HTTPFuzzerTaskDetail[]>([])
     const [loading, setLoading] = useState(false)
-    const [paging, setPaging] = useState<PaginationSchema>({Limit: 10, Order: "desc", OrderBy: "created_at", Page: 1})
+    const [paging, setPaging] = useState<PaginationSchema>({Limit: 10, Order: "", OrderBy: "", Page: 1})
     const [keyword, setKeyword] = useState("")
     const [total, setTotal] = useState(0)
     const [showAll, setShowAll] = useState<boolean>(false)
-    const page = useMemo(()=>paging.Page,[paging.Page])
-    const limit =useMemo(()=>paging.Limit,[paging.Limit])
+    const page = useMemo(() => paging.Page, [paging.Page])
+    const limit = useMemo(() => paging.Limit, [paging.Limit])
     useEffect(() => {
         reload(1, limit)
     }, [])
@@ -219,7 +219,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                                     onClick={(e) => {
                                         e.preventDefault()
                                         const page = (paging.Page - 1) * 10 + index + 1
-                                        props.onSelect(i.Id, page)
+                                        props.onSelect(i.Id, page,showAll)
                                     }}
                                     bordered={false}
                                 >

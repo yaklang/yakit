@@ -8,6 +8,7 @@ import FuzzerSequence from "@/pages/fuzzer/FuzzerSequence/FuzzerSequence"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
 import {FuzzerSequenceListProps, useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageLoading} from "@ant-design/pro-layout"
+import {usePageInfo} from "@/store/pageInfo"
 
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 
@@ -20,7 +21,6 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
             pageRenderListRef.current.set(selectSubMenuId, true)
             return pageRenderListRef.current
         }, [selectSubMenuId])
-        // useWhyDidYouUpdate("RenderSubPage", {...props, pageRenderList, pageRenderListRef})
         return (
             <>
                 {renderSubPage.map((subItem, numberSub) => {
@@ -37,9 +37,8 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
                                     }}
                                     className={styles["page-body"]}
                                 >
-                                    <PageItem routeKey={route} yakScriptId={+(pluginId || 0)} params={subItem.params} />
+                                    <PageItem routeKey={route} yakScriptId={+(pluginId || 0)} params={subItem.pageParams} />
                                 </div>
-                                {/* <RenderSubPageItem subItem={subItem} selectSubMenuId={selectSubMenuId} route={route} pluginId={pluginId} /> */}
                             </React.Fragment>
                         )
                     )
@@ -58,41 +57,6 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
     }
 )
 
-export const RenderSubPageItem: React.FC<RenderSubPageItemProps> = React.memo(
-    (props) => {
-        const {subItem, selectSubMenuId, route, pluginId} = props
-        return (
-            <div
-                key={subItem.id}
-                id={subItem.id}
-                tabIndex={selectSubMenuId === subItem.id ? 1 : -1}
-                style={{
-                    display: selectSubMenuId === subItem.id ? "" : "none",
-                    padding: NoPaddingRoute.includes(route) ? 0 : "8px 16px 13px 16px"
-                }}
-                className={styles["page-body"]}
-            >
-                <PageItem routeKey={route} yakScriptId={+(pluginId || 0)} params={subItem.params} />
-            </div>
-        )
-    },
-    (preProps, nextProps) => {
-        if (
-            preProps.selectSubMenuId !== nextProps.selectSubMenuId &&
-            preProps.selectSubMenuId === preProps.subItem.id
-        ) {
-            return false
-        }
-        if (
-            preProps.selectSubMenuId !== nextProps.selectSubMenuId &&
-            nextProps.selectSubMenuId === nextProps.subItem.id
-        ) {
-            return false
-        }
-        return true
-    }
-)
-
 export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.memo((props) => {
     const {route, type, setType} = props
 
@@ -101,7 +65,7 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
         boolean
     >(new Map<string, boolean>())
     const fuzzerSequenceList = useFuzzerSequence((s) => s.fuzzerSequenceList)
-    const selectGroupId = useFuzzerSequence((s) => s.selectGroupId)
+    const selectGroupId = usePageInfo((s) => s.selectGroupId.get(YakitRoute.HTTPFuzzer) || "")
 
     useEffect(() => {
         updateRender(selectGroupId)

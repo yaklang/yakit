@@ -4,10 +4,11 @@ import styles from "./WebFuzzerPage.module.scss"
 import {OutlineAdjustmentsIcon, OutlineCollectionIcon, OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
-import {NodeInfoProps, PageNodeItemProps, usePageNode} from "@/store/pageNodeInfo"
 import {YakitRoute} from "@/routes/newRoute"
 import "video-react/dist/video-react.css" // import css
 import {yakitNotify} from "@/utils/notification"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -24,14 +25,20 @@ const webFuzzerTabs = [
     }
 ]
 const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
-    const getCurrentSelectGroup = usePageNode((s) => s.getCurrentSelectGroup)
+    const {selectGroupId, getPagesDataByGroupId} = usePageInfo(
+        (s) => ({
+            selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
+            getPagesDataByGroupId: s.getPagesDataByGroupId
+        }),
+        shallow
+    )
 
     const onSwitchType = useMemoizedFn((key) => {
-        const nodeInfo: PageNodeItemProps | undefined = getCurrentSelectGroup(YakitRoute.HTTPFuzzer)
-        if (props.id && !nodeInfo) {
+        const pageChildrenList: PageNodeItemProps[] = getPagesDataByGroupId(YakitRoute.HTTPFuzzer, selectGroupId)
+        if (props.id && !pageChildrenList) {
             // 新建组
             onAddGroup(props.id)
-        } else if (props.id && nodeInfo&&nodeInfo.pageChildrenList.length === 0) {
+        } else if (props.id && pageChildrenList.length === 0) {
             // 新建组
             onAddGroup(props.id)
         } else {
@@ -43,10 +50,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     })
     const onSetType = useMemoizedFn((key: WebFuzzerType) => {
         ipcRenderer.invoke("send-webFuzzer-setType", {type: key})
-        if (key === "config") {
-            ipcRenderer.invoke("send-ref-webFuzzer-request", {type: key})
-        }
-    }) 
+    })
     return (
         <div className={styles["web-fuzzer"]}>
             <div className={styles["web-fuzzer-tab"]}>
