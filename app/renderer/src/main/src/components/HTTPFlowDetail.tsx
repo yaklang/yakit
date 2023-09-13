@@ -962,9 +962,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         dataCompare={beforeRspValue}
                     />
-                    // {
-                    //     type==="render"&&prettifyPacketCode(new Buffer((flow?.Response || new Uint8Array())).toString("utf8"))
-                    // }
                 )
             }}
             secondMinSize={300}

@@ -15,7 +15,6 @@ import {
     execAutoDecode,
     MonacoEditorActions,
     MonacoEditorCodecActions,
-    MonacoEditorFullCodecActions,
     MonacoEditorMutateHTTPRequestActions
 } from "./encodec"
 import {HTTPPacketFuzzable} from "../components/HTTPHistory"
@@ -1020,7 +1019,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     ...MonacoEditorCodecActions
                                 ],
                                 ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions),
-                                ...(props.noPacketModifier ? [] : MonacoEditorFullCodecActions)
                             ].filter((i) => !!i)}
                             editorDidMount={(editor) => {
                                 setMonacoEditor(editor)
