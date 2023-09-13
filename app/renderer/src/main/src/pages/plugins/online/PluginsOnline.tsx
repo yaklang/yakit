@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useState, useRef} from "react"
 import {PluginManage} from "../manage/PluginManage"
 import styles from "./PluginsOnline.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -9,7 +9,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {Divider} from "antd"
 import classNames from "classnames"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useInViewport} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import card1 from "./card1.png"
 import card2 from "./card2.png"
@@ -17,9 +17,18 @@ import card3 from "./card3.png"
 
 interface PluginsOnlineProps {}
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
+    const pluginsOnlineHeardRef = useRef<any>()
+    const [inViewport = true] = useInViewport(pluginsOnlineHeardRef)
     return (
-        <div>
-            <PluginsOnlineHeard />
+        <div
+            className={classNames(styles["plugins-online"], {
+                [styles["plugins-online-overflow-hidden"]]: !inViewport
+            })}
+        >
+            <div style={{display: inViewport ? "" : "none"}} ref={pluginsOnlineHeardRef}>
+                <PluginsOnlineHeard />
+            </div>
+
             <PluginManage />
         </div>
     )
