@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from "react"
 import * as echarts from "echarts"
 import styles from "./EchartsInit.module.scss"
 import classNames from "classnames"
+import { useSize } from "ahooks"
 
 interface VerticalOptionBarProps {
     content: any
@@ -9,6 +10,8 @@ interface VerticalOptionBarProps {
 
 export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
     const {content} = props
+    const ref = useRef(null);
+    const size = useSize(ref);
     const chartRef = useRef(null)
     const optionRef = useRef<any>({
         title: {
@@ -111,9 +114,9 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
         return () => {
             myChart.dispose()
         }
-    }, [])
+    }, [size?.width])
     return (
-        <div className={styles["echarts-box"]}>
+        <div className={styles["echarts-box"]} ref={ref}>
             <div className={classNames(styles["echart-item"], styles["echart-item-vertical-bar"])} ref={chartRef}></div>
         </div>
     )
@@ -122,6 +125,8 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
 // 堆叠柱状图
 export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
     const {content} = props
+    const ref = useRef(null);
+    const size = useSize(ref);
     const chartRef = useRef(null)
     const optionRef = useRef<any>({
         title: {
@@ -260,9 +265,9 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
         return () => {
             myChart.dispose()
         }
-    }, [])
+    }, [size?.width])
     return (
-        <div className={styles["echarts-box"]}>
+        <div className={styles["echarts-box"]} ref={ref}>
             <div
                 className={classNames(styles["echart-item"], styles["echart-item-stacked-vertical-bar"])}
                 ref={chartRef}
@@ -272,13 +277,14 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
 }
 
 interface HollowPieProps {
-    data: {name: any; value: any; direction?: string}[]
-    color?: string[]
+    data: {name: any; value: any; color: string; direction?: string}[]
     title?: string
 }
 // 空心圆环
 export const HollowPie: React.FC<HollowPieProps> = (props) => {
-    const {data, color, title} = props
+    const {data, title} = props
+    const ref = useRef(null);
+    const size = useSize(ref);
     const newData = data.filter((item) => item.direction != "center" && item.value !== 0)
     const centerData = data.filter((item) => item.direction === "center") || [{name: "资产", value: 0}]
     const chartRef = useRef(null)
@@ -402,7 +408,7 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
             }
         }
         optionRef.current.series[0].data = newData || []
-        optionRef.current.series[0].color = color || []
+        optionRef.current.series[0].color = (newData || []).map((item)=>item.color);
         optionRef.current.title.text = centerData[0].name
         optionRef.current.graphic[0].style.text = title || ""
         optionRef.current.title.subtext = [`{text|${centerData[0].value}}{small|台}`]
@@ -412,9 +418,9 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
         return () => {
             myChart.dispose()
         }
-    }, [])
+    }, [size?.width])
     return (
-        <div className={styles["echarts-box"]}>
+        <div className={classNames(styles["echarts-box"],styles["echarts-box-hollow-pie"])} ref={ref}>
             <div className={classNames(styles["echart-item"], styles["echart-item-hollow-pie"])} ref={chartRef}></div>
         </div>
     )
@@ -435,6 +441,8 @@ interface MultiPieProps {
 // 多层饼环
 export const MultiPie: React.FC<MultiPieProps> = (props) => {
     const {name_verbose, name, data} = props.content
+    const ref = useRef(null);
+    const size = useSize(ref);
     const chartRef = useRef(null)
     const optionRef = useRef<any>({
         title: {
@@ -585,9 +593,9 @@ export const MultiPie: React.FC<MultiPieProps> = (props) => {
         return () => {
             myChart.dispose()
         }
-    }, [])
+    }, [size?.width])
     return (
-        <div className={styles["echarts-box"]}>
+        <div className={styles["echarts-box"]} ref={ref}>
             <div className={classNames(styles["echart-item"], styles["echart-item-multi-pie"])} ref={chartRef}></div>
         </div>
     )
@@ -603,6 +611,8 @@ interface DetailsProps {
 // 南丁格尔玫瑰图
 export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
     const {name_verbose, name, data} = props.content
+    const ref = useRef(null);
+    const size = useSize(ref);
     const [details, setDetails] = useState<DetailsProps>()
     const chartRef = useRef(null)
     const optionRef = useRef<any>({
@@ -747,11 +757,11 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
                 myChart.dispose()
             }
         }
-    }, [])
+    }, [size?.width])
     return (
         <>
             {Array.isArray(data) && (
-                <div className={styles["echarts-box"]}>
+                <div className={styles["echarts-box"]} ref={ref}>
                     <div
                         className={classNames(styles["echart-item"], styles["echart-item-nightingle-rose"])}
                         ref={chartRef}
