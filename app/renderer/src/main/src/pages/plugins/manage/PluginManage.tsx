@@ -1,7 +1,6 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {
     ApplicantIcon,
-    AuthorImg,
     PluginDetailHeader,
     PluginDetails,
     PluginEditorDiff,
@@ -12,6 +11,7 @@ import {
     statusTag
 } from "../baseTemplate"
 import {
+    AuthorImg,
     FuncBtn,
     FuncFilterPopver,
     FuncSearch,
@@ -22,7 +22,13 @@ import {
     TypeSelect
 } from "../funcTemplate"
 import {TypeSelectOpt} from "../funcTemplateType"
-import {SolidBadgecheckIcon, SolidBanIcon, SolidChevrondownIcon, SolidFlagIcon} from "@/assets/icon/solid"
+import {
+    SolidBadgecheckIcon,
+    SolidBanIcon,
+    SolidChevrondownIcon,
+    SolidFlagIcon,
+    SolidFloatwinIcon
+} from "@/assets/icon/solid"
 import {
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
@@ -439,10 +445,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <PluginModifyInfo
-                                                ref={modifyForm}
-                                                kind='bug'
-                                            />
+                                            <PluginModifyInfo ref={modifyForm} kind='bug' />
                                         </div>
 
                                         <div className={styles["plugin-setting-info"]}>
