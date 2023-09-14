@@ -211,6 +211,15 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     }
                 },
                 {
+                    title: "延迟(ms)",
+                    dataKey: "DurationMs",
+                    width: 100,
+                    sorterProps: {
+                        sorter: true
+                    },
+                    render: (v) => (v ? <div style={{ color: DurationMsToColor(v) }}>{`${v}`}</div> : "-")
+                },
+                {
                     title: "Payloads",
                     dataKey: "Payloads",
                     width: 300,
@@ -279,15 +288,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     }
                 },
 
-                {
-                    title: "延迟(ms)",
-                    dataKey: "DurationMs",
-                    width: 100,
-                    sorterProps: {
-                        sorter: true
-                    },
-                    render: (v) => (v ? <div style={{ color: DurationMsToColor(v) }}>{`${v}`}</div> : "-")
-                },
                 {
                     title: "Content-Type",
                     dataKey: "ContentType",
