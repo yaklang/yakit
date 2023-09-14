@@ -1,4 +1,4 @@
-import React, {useState, useRef} from "react"
+import React, {useState, useRef, useMemo, useEffect} from "react"
 import {PluginManage} from "../manage/PluginManage"
 import styles from "./PluginsOnline.module.scss"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -6,19 +6,23 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {funcSearchType} from "../funcTemplate"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlineSearchIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {Divider} from "antd"
 import classNames from "classnames"
-import {useMemoizedFn, useInViewport} from "ahooks"
+import {useMemoizedFn, useInViewport, useEventListener} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import card1 from "./card1.png"
 import card2 from "./card2.png"
 import card3 from "./card3.png"
+import qrCode from "./qrCode.png"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 
 interface PluginsOnlineProps {}
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
     const pluginsOnlineHeardRef = useRef<any>()
     const [inViewport = true] = useInViewport(pluginsOnlineHeardRef)
+
     return (
         <div
             className={classNames(styles["plugins-online"], {
@@ -36,20 +40,36 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
 
 const cardImg = [
     {
+        id: "1",
         imgUrl: card1,
-        link: "https://yaklang.com/products/intro/"
+        link: "https://yaklang.com/products/intro/",
+        isQRCode: false
     },
     {
+        id: "2",
         imgUrl: card2,
-        link: "https://yaklang.com/products/intro/"
+        link: "https://yaklang.com/products/intro/",
+        isQRCode: true
     },
     {
+        id: "3",
         imgUrl: card3,
-        link: "https://space.bilibili.com/437503777"
+        link: "https://space.bilibili.com/437503777",
+        isQRCode: false
     }
 ]
 interface PluginsOnlineHeardProps {}
 const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props) => {
+    const [visibleQRCode, setVisibleQRCode] = useState<boolean>(false)
+    const [codeUrl, setCodeUrl] = useState<string>("")
+    const onImgClick = useMemoizedFn((ele) => {
+        if (ele.isQRCode) {
+            setCodeUrl(ele.link)
+            setVisibleQRCode(true)
+        } else {
+            openExternalWebsite(ele.link)
+        }
+    })
     return (
         <div className={styles["plugin-online-heard"]}>
             <div className={styles["plugin-online-heard-bg"]} />
@@ -66,13 +86,34 @@ const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props)
             <div className={styles["plugin-online-heard-card"]}>
                 {cardImg.map((ele) => (
                     <img
+                        key={ele.id}
                         className={styles["plugin-online-heard-card-img"]}
                         src={ele.imgUrl}
                         alt=''
-                        onClick={() => openExternalWebsite(ele.link)}
+                        onClick={() => onImgClick(ele)}
                     />
                 ))}
             </div>
+            <YakitModal visible={visibleQRCode} title={null} footer={null} centered={true} width={368}>
+                <div className={styles["yakit-modal-code"]}>
+                    <div className={styles["yakit-modal-code-heard"]}>
+                        <div className={styles["yakit-modal-code-heard-title"]}>
+                            <SolidYakCattleNoBackColorIcon className={styles["yakit-modal-code-heard-title-icon"]} />
+                            <span className={styles["yakit-modal-code-heard-title-text"]}>Yak Project</span>
+                        </div>
+                        <div
+                            className={styles["yakit-modal-code-heard-remove"]}
+                            onClick={() => setVisibleQRCode(false)}
+                        >
+                            <OutlineXIcon />
+                        </div>
+                    </div>
+                    <div className={styles["yakit-modal-code-content"]}>
+                        <img alt='' src={qrCode} className={styles["yakit-modal-code-content-url"]} />
+                        <span className={styles["yakit-modal-code-content-tip"]}>微信扫码关注公众号</span>
+                    </div>
+                </div>
+            </YakitModal>
         </div>
     )
 })
