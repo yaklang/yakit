@@ -897,7 +897,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         dataCompare={{
                             rightCode: beforeResValue,
-                            leftCode: resType === "request" ? originResValue : undefined,
+                            leftCode: resType === "request" ? (flow?.Request || new Uint8Array()) : undefined,
                             leftTitle: "请求",
                             rightTitle: "原始请求"
                         }}
@@ -970,7 +970,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         dataCompare={{
                             rightCode: beforeRspValue,
-                            leftCode: rspType === "response" ? originRspValue : undefined,
+                            leftCode: rspType === "response" ? (flow?.Response || new Uint8Array()) : undefined,
                             leftTitle: "响应",
                             rightTitle: "原始响应"
                         }}
