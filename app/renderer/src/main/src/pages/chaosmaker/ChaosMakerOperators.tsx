@@ -64,9 +64,12 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
     })
 
     useEffect(() => {
-        setInterval(() => {
+        const id = setInterval(() => {
             updateAvailableAddrs()
         }, 5000)
+        return () => {
+            clearInterval(id)
+        }
     }, [])
 
     useEffect(() => {
