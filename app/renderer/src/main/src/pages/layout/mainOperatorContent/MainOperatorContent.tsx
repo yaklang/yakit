@@ -951,6 +951,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     // 获取数据库中缓存的web-fuzzer页面信息
     const fetchFuzzerList = useMemoizedFn(() => {
+        try {
         // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
         if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1) return
         setLoading(true)
@@ -1075,6 +1076,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             })
             .catch((e) => {})
             .finally(() => setTimeout(() => setLoading(false), 200))
+        } catch (error) {
+            yakitNotify("error", "fetchFuzzerList失败:" + error)
+        }
     })
     // 新增缓存数据
     /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose */

@@ -66,8 +66,11 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     }, [])
     const deleteAll = useMemoizedFn(() => {
         setLoading(true)
+        const removeParams = {
+            WebFuzzerIndex: showAll ? "" : fuzzerTabIndex
+        }
         ipcRenderer
-            .invoke("DeleteHistoryHTTPFuzzerTask", {})
+            .invoke("DeleteHistoryHTTPFuzzerTask", removeParams)
             .then(() => {
                 info("Delete History")
                 reload(1, limit)
