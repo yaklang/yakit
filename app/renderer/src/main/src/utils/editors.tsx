@@ -1046,7 +1046,9 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
 })
 
 interface DataCompareProps {
-    data: Uint8Array
+    rightCode: Uint8Array
+    /** 当存在leftCode时则使用leftCode，否则使用编辑器showValue */
+    leftCode?: Uint8Array
     leftTitle?: string
     rightTitle?: string
 }
@@ -1468,7 +1470,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     ))}
                                 </div>
                             )}
-                            {dataCompare&&dataCompare.data.length>0&&<YakitButton size={"small"} type={"primary"} onClick={() => {
+                            {dataCompare&&dataCompare.rightCode.length>0&&<YakitButton size={"small"} type={"primary"} onClick={() => {
                                 // ipcRenderer
                                 // .invoke("send-to-tab", {
                                 //     type: "add-data-compare",
@@ -1483,12 +1485,12 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                         onClose={()=>m.destroy()}
                                         rightTitle={dataCompare.rightTitle}
                                         leftTitle={dataCompare.leftTitle}
-                                        leftCode={Uint8ArrayToString(showValue)} 
-                                        rightCode={Uint8ArrayToString(dataCompare.data)} />,
+                                        leftCode={dataCompare.leftCode?Uint8ArrayToString(dataCompare.leftCode):Uint8ArrayToString(showValue)} 
+                                        rightCode={Uint8ArrayToString(dataCompare.rightCode)} />,
                                     onCancel:()=>{
                                         m.destroy()
                                     },
-                                    width:1000,
+                                    width:1200,
                                     footer: null,
                                     closable:false
                                 })
