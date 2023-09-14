@@ -80,15 +80,6 @@ import {MatcherAndExtraction} from "./MatcherAndExtractionCard/MatcherAndExtract
 import _ from "lodash"
 import {YakitRoute} from "@/routes/newRoute"
 import {defaultLabel, FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
-import {NodeInfoProps, WebFuzzerPageInfoProps, usePageNode} from "@/store/pageNodeInfo"
-import {
-    HTTPFuzzerRangeEditorMenu,
-    HTTPFuzzerClickEditorMenu,
-    LabelDataProps,
-    HTTPFuzzerRangeReadOnlyEditorMenu,
-    defaultLabel,
-    FUZZER_LABEL_LIST_NUMBER
-} from "./HTTPFuzzerEditorMenu"
 import {execCodec} from "@/utils/encodec"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
