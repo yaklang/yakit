@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {AutoCard} from "@/components/AutoCard";
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole";
 import {failed, info, success, yakitFailed, yakitNotify} from "@/utils/notification";
-import {Form, Popconfirm, Progress, Space, Tag, Tooltip} from "antd";
+import {Button, Form, Popconfirm, Progress, Space, Tag, Tooltip} from "antd";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream";
 import {randomString} from "@/utils/randomUtil";
@@ -119,12 +119,10 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                         setStarted(false)
                                     })
                                 }}>
-                        <YakitButton colors="danger">关闭靶场</YakitButton>
-                    </Popconfirm> :
-                                    <YakitButton type={"danger"}>关闭靶场</YakitButton>
+                                    <YakitButton type={"text2"}>关闭靶场</YakitButton>
                                 </Popconfirm>
 
-                                <YakitButton type={"success"} onClick={() => {
+                                <YakitButton type={"primary"} onClick={() => {
                                     const m = showYakitModal({
                                         title: "测试参数", width: "50%",
                                         content: (
@@ -206,9 +204,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
         )}
         >
 
-
-            <div style={{flex: 1, overflow: "hidden"}}>
-                <AutoCard bodyStyle={{padding: 10, overflow: "hidden"}}>
+            <div style={{width: "100%", height: "100%", overflow: "hidden auto"}}>
                     <PluginResultUI
                         // script={script}
                         loading={loading}
@@ -220,7 +216,6 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                         statusCards={infoState.statusState}
                         onXtermRef={setXtermRef}
                     />
-                </AutoCard>
             </div>
             {/*<EngineConsole/>*/}
         </AutoCard>
