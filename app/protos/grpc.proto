@@ -195,6 +195,8 @@ service Yak {
   rpc IsMultipartFormDataRequest(FixUploadPacketRequest) returns (IsMultipartFormDataRequestResult);
   rpc GenerateExtractRule(GenerateExtractRuleRequest) returns (GenerateExtractRuleResponse);
   rpc ExtractData(stream ExtractDataRequest) returns (stream ExtractDataResponse);
+  rpc ImportHTTPFuzzerTaskFromYaml(ImportHTTPFuzzerTaskFromYamlRequest) returns (ImportHTTPFuzzerTaskFromYamlResponse);
+  rpc ExportHTTPFuzzerTaskToYaml(ExportHTTPFuzzerTaskToYamlRequest) returns (ExportHTTPFuzzerTaskToYamlResponse);
 
   rpc SaveFuzzerLabel(SaveFuzzerLabelRequest) returns (Empty);
   rpc QueryFuzzerLabel(Empty) returns (QueryFuzzerLabelResponse);
@@ -1910,7 +1912,7 @@ message HistoryHTTPFuzzerTasksResponse {
 message QueryHistoryHTTPFuzzerTaskExParams {
   Paging Pagination = 1;
   string Keyword = 2;
-  string FuzzerTabIndex =3;
+  string FuzzerTabIndex = 3;
 }
 
 message ExecutePacketYakScriptParams {
@@ -3140,6 +3142,8 @@ message FuzzerRequest {
   // 继承透传给 HTTPPOOL 的参数，可以使用批量目标来发送
   bool BatchTargetFile = 43;
   bytes BatchTarget = 44;
+  bool AfterRequested = 45;
+  bool StopAtFirstMatch = 46;
 }
 
 message KVPair {
@@ -3582,6 +3586,10 @@ message Certificate {
   bytes CrtPem = 1;
   bytes KeyPem = 2;
   repeated bytes CaCertificates = 3;
+
+  // pkcs12path need a .p12 or .pfx file
+  bytes Pkcs12Bytes = 4;
+  bytes Pkcs12Password = 5;
 }
 
 message MITMContentReplacer {
@@ -3783,6 +3791,21 @@ message HTTPFlowBareRequest {
 }
 
 message HTTPFlowBareResponse {
-    int64 Id = 1;
-    bytes Data = 2;
+  int64 Id = 1;
+  bytes Data = 2;
+}
+message ImportHTTPFuzzerTaskFromYamlRequest {
+  string YamlContent = 1;
+}
+message ImportHTTPFuzzerTaskFromYamlResponse{
+  GeneralResponse Status = 1;
+  FuzzerRequests Requests = 2;
+}
+message ExportHTTPFuzzerTaskToYamlRequest{
+  FuzzerRequests Requests = 1;
+  string TemplateType = 2;
+}
+message ExportHTTPFuzzerTaskToYamlResponse{
+  GeneralResponse Status = 1;
+  string YamlContent = 2;
 }

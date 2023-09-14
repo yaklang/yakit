@@ -1,5 +1,7 @@
 export type WebFuzzerEventProps = {
     onSetFuzzerAdvancedConfigShow?: string
     onRefWebFuzzer?: string
-    onGetFuzzerAdvancedConfigShow: boolean
+    onGetFuzzerAdvancedConfigShow: boolean,
+    onImportYamlPopEditorContent: string,
+    onImportYamlEditorChange: string,
 }

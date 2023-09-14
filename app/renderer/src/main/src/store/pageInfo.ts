@@ -43,7 +43,7 @@ interface PageParamsInfoProps {
 export interface WebFuzzerPageInfoProps {
     pageId: string
     advancedConfigValue: AdvancedConfigValueProps
-    request: string
+    request: string 
 }
 
 interface PageInfoStoreProps {

@@ -367,7 +367,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 增加tab页面 start ---------- */
     /** Global Sending Function(全局发送功能|通过发送新增功能页面)*/
     const addFuzzer = useMemoizedFn((res: any) => {
-        const {isHttps, isGmTLS, request} = res || {}
+        const {isHttps, isGmTLS, request, advancedConfigValue} = res || {}
         if (request) {
             openMenuPage(
                 {route: YakitRoute.HTTPFuzzer},
@@ -377,7 +377,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         isGmTLS: isGmTLS || false,
                         request: request || "",
                         system: system,
-                        shareContent: res.shareContent
+                        shareContent: res.shareContent,
+                        advancedConfigValue: advancedConfigValue
                     }
                 }
             )
@@ -1046,7 +1047,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
                 if (newMultipleNodeList.length === 0) return
                 // console.log("multipleNodeList", multipleNodeList)
-                // console.log("pageNodeInfo", pageNodeInfo.pageList[2])
+                // console.log("pageNodeInfo", pageNodeInfo)
                 const webFuzzerPage = {
                     routeKey: key,
                     verbose: tabName,
@@ -1065,6 +1066,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 } else {
                     oldPageCache.splice(index, 1, webFuzzerPage)
                 }
+                // console.log('oldPageCache',oldPageCache);
                 setPageCache(oldPageCache)
                 setCurrentTabKey(key)
                 setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
@@ -1083,6 +1085,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 新增缓存数据
     /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose */
     const addFuzzerList = useMemoizedFn((key: string, node: MultipleNodeInfo, order: number) => {
+        const clonePageParams = structuredClone(node.pageParams) || {}
+        if ("advancedConfigValue" in clonePageParams) {
+            delete clonePageParams.advancedConfigValue
+        }
         const newPageNode: PageNodeItemProps = {
             id: `${randomString(8)}-${order}`,
             routeKey: YakitRoute.HTTPFuzzer,
@@ -1094,7 +1100,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     pageId: node.id,
                     advancedConfigValue: {
                         ...defaultAdvancedConfigValue,
-                        ...node.pageParams
+                        ...clonePageParams,
+                        ...node.pageParams?.advancedConfigValue
                     },
                     request: node.pageParams?.request || defaultPostTemplate
                 }

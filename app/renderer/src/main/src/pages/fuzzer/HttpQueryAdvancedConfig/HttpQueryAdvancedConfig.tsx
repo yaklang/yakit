@@ -87,7 +87,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         onShowResponseMatcherAndExtraction,
         inViewportCurrent
     } = props
-
+    
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
 
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
