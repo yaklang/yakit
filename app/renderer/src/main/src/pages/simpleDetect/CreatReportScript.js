@@ -368,18 +368,16 @@ aliveHostList = []
 aliveHostKey = 0
 for aliveHost = range db.QueryAliveHost(runtimeID) {
     aliveHostKey = aliveHostKey + 1
-    aliveHostList = append(aliveHostList, {
-        "序号": { "value": aliveHostKey, "sort": 1},
-        "存活资产": { "value": aliveHost.IP, "sort": 2}
-    })
+    aliveHostList = append(aliveHostList,
+        [aliveHostKey, aliveHost.IP]
+    )
 }
 if len(aliveHostList) == 0 {
     for _, host := range aliveHostCountList{
         aliveHostKey = aliveHostKey + 1
-        aliveHostList = append(aliveHostList, {
-            "序号": { "value": aliveHostKey, "sort": 1},
-            "存活资产": { "value": host, "sort": 2}
-        })
+        aliveHostList = append(aliveHostList,
+            [aliveHostKey, host]
+        )
     }
 }
 
@@ -390,7 +388,10 @@ reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [
 reportInstance.Markdown("#### 存活资产汇总")
 if len(aliveHostList) > 0 {
     reportInstance.Markdown("存活资产列表会显示所有存活资产，如有漏洞与风险会展示在风险资产列表中，未在风险资产列表中出现则默认为安全。")
-    reportInstance.Raw( json.dumps({ "type": "potential-risks-list", "data": aliveHostList }))
+    reportInstance.Table(
+        ["序号", "存活资产"],
+        aliveHostList...,
+    )
 } else {
     reportInstance.Markdown("暂无存活资产")
 }
