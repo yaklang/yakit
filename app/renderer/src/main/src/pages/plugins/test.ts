@@ -1,5 +1,6 @@
 import {API} from "@/services/swagger/resposeType"
 import {FilterPanelGroupItem} from "@/components/businessUI/FilterPanel/FilterPanelType"
+import {v4 as uuidv4} from "uuid"
 
 const datas: API.YakitPluginDetail[] = [
     {
@@ -42,7 +43,7 @@ const datas: API.YakitPluginDetail[] = [
         script_name: "泛微 OA e-cology XXE漏洞",
         stars: 0,
         status: 1,
-        tags: '["泛微 OA e-cology XXE漏洞"]',
+        tags: '["泛微 OA e-cology XXE漏洞","我不知道","你是什么鬼","啊啊啊啊啊啊啊啊","不要啊杰哥"]',
         type: "yak",
         user_id: 440,
         uuid: "7b3670a6-bf3a-42d8-85ff-0e72fdfa2680"
@@ -2161,13 +2162,18 @@ export const apiFetchList: (params: {page: number; limit?: number}) => Promise<A
     return new Promise((resolve, reject) => {
         try {
             let listPage: number = params.page
-            let listLimit: number = params.limit || 20
+            let listLimit: number = 5 || params.limit || 20
             if (!listLimit) listLimit = 20
 
             const start = (listPage - 1) * listLimit
             const end = listPage * listLimit
             const obj: API.YakitPluginListResponse = {
-                data: [...datas.slice(start, end)],
+                // data:[...datas.slice(start, end)],
+                data: [...datas.slice(0, 30)].map((item) => {
+                    const obj = {...item}
+                    obj.uuid = uuidv4()
+                    return obj
+                }),
                 pagemeta: {limit: listLimit, page: listPage, total: datas.length, total_page: 2}
             }
             setTimeout(() => {
