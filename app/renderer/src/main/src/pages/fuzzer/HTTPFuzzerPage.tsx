@@ -573,7 +573,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
         /** 有分享内容按照分享内容中的 advancedConfig 为准 */
         getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
-            // console.log(1111111111, c);
             if (c === "") {
                 setAdvancedConfig(true)
             } else {

@@ -26,6 +26,10 @@ const webFuzzerTabs = [
     }
 ]
 const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
+    const webFuzzerRef = useRef<any>(null)
+    const [inViewport] = useInViewport(webFuzzerRef)
+    const inViewportRef = useRef<boolean>(false)
+
     const {selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (s) => ({
             selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
@@ -56,22 +60,18 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         }
     })
     
-    const webFuzzerRef = useRef<any>(null)
-    const [inViewport] = useInViewport(webFuzzerRef)
-    const inViewportRef = useRef<boolean>(false)
+    // 监听tab栏打开或关闭
     useEffect(() => {
         if (inViewport !== undefined) inViewportRef.current = inViewport
     }, [inViewport])
-    const [advancedConfigShow, setAdvancedConfigShow] = useState<boolean>(true)
+    const [advancedConfigShow, setAdvancedConfigShow] = useState<boolean>(false)
     const debounceGetFuzzerAdvancedConfigShow = useDebounceFn((flag) => {
         inViewportRef.current && setAdvancedConfigShow(flag)
-    }, { wait: 500 }).run
+    }, { wait: 100 }).run
     useEffect(() => {
-        emiter.on("onGetFuzzerAdvancedConfigShow", (flag) => {
-            debounceGetFuzzerAdvancedConfigShow(flag)
-        })
+        emiter.on("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
         return () => {
-            emiter.off("onGetFuzzerAdvancedConfigShow")
+            emiter.off("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
         }
     }, [])
 
