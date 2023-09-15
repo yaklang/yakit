@@ -18,7 +18,7 @@ import {FileOutlined, FolderOpenOutlined} from "@ant-design/icons";
 import {InputItem} from "@/utils/inputUtil";
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
-import {WebShellDetail} from "@/pages/webShell/models";
+import {ShellType, WebShellDetail} from "@/pages/webShell/models";
 import {showByCustom} from "@/components/functionTemplate/showByContext";
 import mitmStyles from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking.module.scss";
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu";
@@ -32,6 +32,7 @@ import {yakitFailed} from "@/utils/notification";
 
 interface WebShellURLTreeAndTableProp {
     Id: string
+    shellType: ShellType
 }
 
 export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (props) => {
@@ -153,8 +154,8 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         }, 10)
     })
 
-    // const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
-    const [currentPath, setCurrentPath] = useState<string>("behinder://C:/Tools/Vuln/apache-tomcat-8.5.87/webapps/S2-032?mode=list&id=" + props.Id)
+    // const [currentPath, setCurrentPath] = useState<string>("behinder:///C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
+    const [currentPath, setCurrentPath] = useState<string>(props.shellType + ":///C:/Tools/Vuln/apache-tomcat-8.5.87/webapps/S2-032?mode=list&id=" + props.Id)
 
     const fileMenuData = [
         {
@@ -178,7 +179,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     useEffect(() => {
         if (shouldEdit && content) {
             const edit = showYakitModal({
-                title: "编辑 Shell",
+                title: "编辑文件",
                 width: "60%",
                 onCancelText: "返回",
                 onOkText: "保存",
@@ -243,8 +244,9 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
 
         requestYakURLList(newYakUrl, undefined, undefined).then(
             (rsp) => {
-                const newContent = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.ValueBytes || '';
-                const contentStr = Buffer.from(newContent).toString()
+                // const newContent = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.ValueBytes || '';
+                // const contentStr = Buffer.from(newContent).toString()
+                const contentStr = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.Value || '';
                 console.log(contentStr);
                 setContent(contentStr);
                 setShouldEdit(true);  // 设置 shouldEdit 为 true
