@@ -70,8 +70,6 @@ export interface PluginsListProps {
 export interface ListShowContainerProps<T> {
     /** 插件展示(列表|网格) */
     isList: boolean
-    /** 插件列表总数 */
-    total: number
     /** 插件列表数据 */
     data: T[]
     /** 网格布局-item组件 */
@@ -84,19 +82,35 @@ export interface ListShowContainerProps<T> {
     listHeight: number
     /** 列表是否在加载状态 */
     loading: boolean
+    /** 是否还有数据可以加载 */
+    hasMore: boolean
     /** 更新列表数据 */
     updateList: (reset?: boolean) => any
-    /** 生成唯一key值 */
-    onKey: (info: {index: number; data: T}) => string
 }
 
+export interface ListListProps<T> {
+    /** 插件展示(列表|网格) */
+    isList: boolean
+    /** 插件列表数据 */
+    data: T[]
+    /** 列表布局-item组件 */
+    render: (info: {index: number; data: T}) => ReactNode
+    /** 列表布局-行高 */
+    optHeight: number
+    /** 列表是否在加载状态 */
+    loading: boolean
+    /** 是否还有数据可以加载 */
+    hasMore: boolean
+    /** 更新列表数据 */
+    updateList: (reset?: boolean) => any
+}
 export interface ListLayoutOptProps {
-    /** 唯一标识符 */
-    onlyId: string
+    /** 插件详细信息 */
+    data: any
     /** 是否选中 */
     checked: boolean
     /** 勾选的回调 */
-    onCheck: (value: boolean) => any
+    onCheck: (data: any, value: boolean) => any
     /** 插件作者头像 */
     img: string
     /** 插件名 */
@@ -105,20 +119,36 @@ export interface ListLayoutOptProps {
     help: string
     /** 插件更新时间 */
     time: number
-    /** 插件相关属性 */
-    subTitle?: ReactNode
-    extraNode?: ReactNode
+    /** 插件相关拓展节点 */
+    subTitle?: (data: any) => ReactNode
+    extraNode?: (data: any) => ReactNode
     /** 点击该展示项的回调 */
-    onClick?: () => any
+    onClick?: (data: any) => any
 }
 
+export interface GridListProps<T> {
+    /** 插件展示(列表|网格) */
+    isList: boolean
+    /** 插件列表数据 */
+    data: T[]
+    /** 网格布局-item组件 */
+    render: (info: {index: number; data: T}) => ReactNode
+    /** 网格布局-行高 */
+    optHeight: number
+    /** 列表是否在加载状态 */
+    loading: boolean
+    /** 是否还有数据可以加载 */
+    hasMore: boolean
+    /** 更新列表数据 */
+    updateList: (reset?: boolean) => any
+}
 export interface GridLayoutOptProps {
-    /** 唯一标识符 */
-    onlyId: string
+    /** 插件详细信息 */
+    data: any
     /** 是否选中 */
     checked: boolean
     /** 勾选的回调 */
-    onCheck: (value: boolean) => any
+    onCheck: (data: any, value: boolean) => any
     /** 插件名 */
     title: string
     /** 插件类型 */
@@ -132,16 +162,19 @@ export interface GridLayoutOptProps {
     /** 插件作者 */
     user: string
     /** 贡献者头像 */
-    prImgs: string[]
+    prImgs?: string[]
     /** 插件更新时间 */
     time: number
-    /** 插件相关属性 */
-    subTitle?: ReactNode
-    extraFooter?: ReactNode
+    /** 插件相关拓展节点 */
+    subTitle?: (data: any) => ReactNode
+    extraFooter?: (data: any) => ReactNode
     /** 点击该展示项的回调 */
-    onClick?: () => any
+    onClick?: (data: any) => any
 }
 
+export interface TagsListShowProps {
+    tags: string[]
+}
 
 type AuthorImgType = "official" | "yakit" | "mitm" | "port" | "sparkles" | "documentSearch" | "collection"
 export interface AuthorImgProps {
@@ -154,4 +187,3 @@ export interface AuthorImgProps {
     /** 右下角icon 自己传组件 */
     icon?: ReactNode
 }
-

@@ -19,7 +19,7 @@ import {
     SolidFlagIcon
 } from "@/assets/icon/solid"
 import {FilterPanel} from "@/components/businessUI/FilterPanel/FilterPanel"
-import {AuthorImg, FuncSearch} from "./funcTemplate"
+import {AuthorIcon, AuthorImg, FuncSearch, TagsListShow} from "./funcTemplate"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
@@ -36,11 +36,9 @@ import {
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {
-    SolidPluginCodecIcon,
-    SolidPluginLuaIcon,
-    SolidPluginNucleiIcon,
+    SolidCollectionPluginIcon,
+    SolidDocumentSearchPluginIcon,
     SolidPluginProtScanIcon,
-    SolidPluginYakIcon,
     SolidPluginYakMitmIcon,
     SolidSparklesPluginIcon,
     SolidYakitPluginIcon
@@ -100,19 +98,21 @@ export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) =>
     const {loading, visible, setVisible, selecteds, onSelect, groupList, children} = props
 
     return (
-        <div className={styles["plugins-container-wrapper"]}>
-            <div className={styles["container-body"]}>{children}</div>
+        <YakitSpin spinning={loading}>
+            <div className={styles["plugins-container-wrapper"]}>
+                <div className={styles["container-body"]}>{children}</div>
 
-            <FilterPanel
-                wrapperClassName={styles["container-filter-wrapper"]}
-                loading={!!loading}
-                visible={visible}
-                setVisible={setVisible}
-                selecteds={selecteds}
-                onSelect={onSelect}
-                groupList={groupList}
-            />
-        </div>
+                <FilterPanel
+                    wrapperClassName={styles["container-filter-wrapper"]}
+                    // loading={!!loading}
+                    visible={visible}
+                    setVisible={setVisible}
+                    selecteds={selecteds}
+                    onSelect={onSelect}
+                    groupList={groupList}
+                />
+            </div>
+        </YakitSpin>
     )
 })
 /** @name 插件详情大框架组件(带左侧插件列表) */
@@ -169,17 +169,12 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                         <span className={styles["subtitle-style"]}>线上数据需要下载到本地才可执行</span>
                     </div>
                     <div className={styles["header-btn"]}>
-                        <YakitButton
-                            className={styles["btn-style"]}
-                            type='text'
-                            icon={<OutlineReplyIcon />}
-                            onClick={onBack}
-                        >
+                        <YakitButton type='text2' icon={<OutlineReplyIcon />} onClick={onBack}>
                             返回
                         </YakitButton>
                         <div className={styles["divider-style"]}></div>
                         <YakitButton
-                            type='text'
+                            type='text2'
                             icon={<OutlineArrowsexpandIcon />}
                             onClick={() => setHidden(!hidden)}
                         />
@@ -189,15 +184,6 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
             </div>
         </div>
     )
-})
-
-/** @name 代表作者的图标ICON */
-export const AuthorIcon: React.FC<{}> = memo((props) => {
-    return <div className={styles["author-icon-wrapper"]}>作者</div>
-})
-/** @name 代表申请人的图标ICON */
-export const ApplicantIcon: React.FC<{}> = memo((props) => {
-    return <div className={styles["applicant-icon-wrapper"]}>申请人</div>
 })
 
 /** @name 插件详情-头部信息(样式未调完整) */
@@ -219,50 +205,76 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
             <div className={styles["header-wrapper"]}>
                 <div className={styles["header-info"]}>
                     <div className={styles["info-title"]}>
-                        <div>{pluginName}</div>
-                        <Tooltip title={help || "No Description about it."} overlayClassName='plugins-tooltip'>
-                            <OutlineQuestionmarkcircleIcon />
-                        </Tooltip>
+                        <div
+                            className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}
+                            title={pluginName}
+                        >
+                            {pluginName}
+                        </div>
+                        <div className={styles["subtitle-wrapper"]}>
+                            <Tooltip title={help || "No Description about it."} overlayClassName='plugins-tooltip'>
+                                <OutlineQuestionmarkcircleIcon className={styles["help-icon"]} />
+                            </Tooltip>
+                            {titleNode || null}
+                        </div>
                     </div>
-                    {titleNode || null}
-                    <div className={styles["info-tags"]}>
-                        {tagList.map((item) => {
-                            return (
-                                <div key={`tag-${item}`} className={styles["tag-wrapper"]}>
-                                    {item}
-                                </div>
-                            )
-                        })}
+                    <div className={classNames(styles["info-tags"])}>
+                        <TagsListShow tags={tagList} />
                     </div>
                 </div>
                 {extraNode || null}
             </div>
 
             <div className={styles["author-wrapper"]}>
-                <div className={styles["author-info"]}>
-                    <AuthorImg src={img || ""} />
-                    {user || ""}
-                    <AuthorIcon />
-                </div>
-                <div className={styles["divider-style"]}></div>
-                <YakitPopover
-                    overlayClassName={styles["terminal-popover"]}
-                    placement='bottom'
-                    content={<>123</>}
-                    onVisibleChange={(show) => setPrShow(show)}
-                >
-                    <div className={classNames(styles["pr-author"], {[styles["pr-active-author"]]: prShow})}>
-                        {`${7}位协作者`}
-                        {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
+                <div className={styles["left-wrapper"]}>
+                    <div className={styles["left-wrapper"]}>
+                        <div className={styles["author-wrapper"]}>
+                            <AuthorImg src={img || ""} />
+                            <div
+                                className={classNames(
+                                    styles["name-wrapper"],
+                                    styles["text-style"],
+                                    "yakit-content-single-ellipsis"
+                                )}
+                                title={user || ""}
+                            >
+                                {user || ""}
+                            </div>
+                            <AuthorIcon />
+                        </div>
+
+                        <div style={{marginRight: 8}} className={styles["divider-style"]}></div>
+                        <YakitPopover
+                            overlayClassName={styles["terminal-popover"]}
+                            placement='bottom'
+                            content={<>123</>}
+                            onVisibleChange={(show) => setPrShow(show)}
+                        >
+                            <YakitButton type='text2' isActive={prShow}>
+                                {`${7}位协作者`}
+                                {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
+                            </YakitButton>
+                        </YakitPopover>
                     </div>
-                </YakitPopover>
-                <div className={styles["divider-style"]}></div>
-                <div className={styles["info-style"]}>
-                    {`插件ID : ${pluginId}`}
-                    <CopyComponents className={classNames(styles["copy-icon-style"])} copyText={pluginId} />
+
+                    <div style={{marginLeft: 8}} className={styles["divider-style"]}></div>
+                    <div className={styles["id-wrapper"]}>
+                        <div
+                            className={classNames(
+                                styles["text-wrapper"],
+                                styles["text-style"],
+                                "yakit-content-single-ellipsis"
+                            )}
+                            title={`插件ID : ${pluginId}`}
+                        >{`插件ID : ${pluginId}`}</div>
+                        <CopyComponents className={classNames(styles["copy-icon-style"])} copyText={pluginId} />
+                    </div>
                 </div>
+
                 <div className={styles["divider-style"]}></div>
-                <div className={styles["info-style"]}>{`更新时间 : ${formatDate(updated_at)}`}</div>
+                <div className={classNames(styles["constant-wrapper"], styles["text-style"])}>{`更新时间 : ${formatDate(
+                    updated_at
+                )}`}</div>
             </div>
         </div>
     )
@@ -1207,7 +1219,7 @@ export const pluginTypeToName: Record<
     yak: {
         name: "Yak 原生插件",
         description: "内置了众多网络安全常用库，可快速编写安全小工具，该原生模块只支持手动调用",
-        icon: <SolidPluginYakIcon />,
+        icon: <SolidYakitPluginIcon />,
         color: "warning",
         content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n"
     },
@@ -1228,21 +1240,21 @@ export const pluginTypeToName: Record<
     codec: {
         name: "Yak-Codec",
         description: "Yakit 中的编解码模块，可以自定义实现所需要的编解码、加解密",
-        icon: <SolidPluginCodecIcon />,
+        icon: <SolidSparklesPluginIcon />,
         color: "purple",
         content: CodecPluginTemplate
     },
     lua: {
         name: "Lua 模块",
         description: "监修中，无法使用",
-        icon: <SolidPluginLuaIcon />,
+        icon: <SolidDocumentSearchPluginIcon />,
         color: "bluePurple",
         content: ""
     },
     nuclei: {
         name: "Nuclei YamI 模块",
         description: "使用 YakVM 构建了一个沙箱，可以兼容执行 Nuclei DSL ，无感使用 Nuclei 自带的 Yaml 模板",
-        icon: <SolidPluginNucleiIcon />,
+        icon: <SolidCollectionPluginIcon />,
         color: "cyan",
         content: "# Add your nuclei formatted PoC!"
     }
