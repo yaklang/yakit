@@ -1,3 +1,4 @@
+const {ipcMain} = require("electron")
 const childProcess = require("child_process")
 
 /**
