@@ -9,7 +9,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineSearchIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {Divider} from "antd"
 import classNames from "classnames"
-import {useMemoizedFn, useInViewport, useEventListener} from "ahooks"
+import {useMemoizedFn, useInViewport, useEventListener, useSize, useThrottleFn, useScroll} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import card1 from "./card1.png"
 import card2 from "./card2.png"
@@ -18,22 +18,51 @@ import qrCode from "./qrCode.png"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 
+const {ipcRenderer} = window.require("electron")
+
 interface PluginsOnlineProps {}
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
-    const pluginsOnlineHeardRef = useRef<any>()
-    const [inViewport = true] = useInViewport(pluginsOnlineHeardRef)
-
+    const [isOnline, setIsOnline] = useState<boolean>(true)
+    const pluginsOnlineHeardRef = useRef<HTMLDivElement>(null)
+    const pluginsOnlineRef = useRef<HTMLDivElement>(null)
+    const [inViewport, ratio = 0] = useInViewport(pluginsOnlineHeardRef, {
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+        root: () => pluginsOnlineRef.current
+    })
+    useEffect(() => {
+        ipcRenderer
+            .invoke("fetch-netWork-status")
+            .then((res) => {
+                console.log('res',res)
+            })
+            .catch((error) => {
+                
+            })
+    }, [])
+    const updateOnlineStatus = useMemoizedFn((event) => {
+        console.log("event", event)
+    })
+    const isShowRoll = useMemo(() => {
+        return ratio > 0.1
+    }, [ratio])
     return (
         <div
             className={classNames(styles["plugins-online"], {
-                [styles["plugins-online-overflow-hidden"]]: !inViewport
+                [styles["plugins-online-overflow-hidden"]]: !isShowRoll
             })}
         >
-            <div style={{display: inViewport ? "" : "none"}} ref={pluginsOnlineHeardRef}>
-                <PluginsOnlineHeard />
+            <div ref={pluginsOnlineRef} className={classNames(styles["plugins-online-body"])}>
+                <div ref={pluginsOnlineHeardRef}>
+                    <PluginsOnlineHeard />
+                </div>
+                <div
+                    className={classNames(styles["plugins-online-list"], {
+                        [styles["plugins-online-list-no-roll"]]: isShowRoll
+                    })}
+                >
+                    <PluginManage />
+                </div>
             </div>
-
-            <PluginManage />
         </div>
     )
 })
