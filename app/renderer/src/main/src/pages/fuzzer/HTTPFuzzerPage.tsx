@@ -1,12 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
-import { Form, Modal, Result, Space, Popover, Tooltip, Divider } from "antd"
-import { IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info } from "../../utils/editors"
-import { showDrawer, showModal } from "../../utils/showModal"
-import { monacoEditorWrite } from "./fuzzerTemplates"
-import { QueryFuzzerLabelResponseProps, StringFuzzer } from "./StringFuzzer"
-import { FuzzerResponseToHTTPFlowDetail } from "../../components/HTTPFlowDetail"
-import { randomString } from "../../utils/randomUtil"
-import { failed, info, yakitFailed, yakitNotify } from "../../utils/notification"
+import React, {useEffect, useMemo, useRef, useState} from "react"
+import {Form, Modal, Result, Space, Popover, Tooltip, Divider} from "antd"
+import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
+import {showDrawer, showModal} from "../../utils/showModal"
+import {monacoEditorWrite} from "./fuzzerTemplates"
+import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
+import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
+import {randomString} from "../../utils/randomUtil"
+import {failed, info, yakitFailed, yakitNotify} from "../../utils/notification"
 import {
     useCreation,
     useDebounceFn,
@@ -17,17 +17,17 @@ import {
     useSize,
     useUpdateEffect
 } from "ahooks"
-import { getRemoteValue, setRemoteValue } from "../../utils/kv"
-import { HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail } from "./HTTPFuzzerHistory"
-import { PayloadManagerPage } from "../payloadManager/PayloadManager"
-import { fuzzerInfoProp } from "../MainOperator"
-import { HTTPFuzzerHotPatch } from "./HTTPFuzzerHotPatch"
-import { callCopyToClipboard } from "../../utils/basic"
-import { exportHTTPFuzzerResponse, exportPayloadResponse } from "./HTTPFuzzerPageExport"
-import { StringToUint8Array, Uint8ArrayToString } from "../../utils/str"
-import { PacketScanButton } from "@/pages/packetScanner/DefaultPacketScanGroup"
+import {getRemoteValue, setRemoteValue} from "../../utils/kv"
+import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
+import {PayloadManagerPage} from "../payloadManager/PayloadManager"
+import {fuzzerInfoProp} from "../MainOperator"
+import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
+import {callCopyToClipboard} from "../../utils/basic"
+import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
+import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
+import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import styles from "./HTTPFuzzerPage.module.scss"
-import { ShareData } from "./components/ShareData"
+import {ShareData} from "./components/ShareData"
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -41,31 +41,31 @@ import {
     ArrowsExpandIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
-import { PaginationSchema } from "../invoker/schema"
-import { showResponseViaResponseRaw } from "@/components/ShowInBrowser"
-import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
-import { YakitButton, YakitButtonProp } from "@/components/yakitUI/YakitButton/YakitButton"
-import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
-import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
-import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
-import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
-import { Size } from "re-resizable"
+import {PaginationSchema} from "../invoker/schema"
+import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {Size} from "re-resizable"
 import {
     BodyLengthInputNumber,
     HTTPFuzzerPageTable,
     HTTPFuzzerPageTableQuery
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import { useSubscribeClose } from "@/store/tabSubscribe"
-import { monaco } from "react-monaco-editor"
+import {useSubscribeClose} from "@/store/tabSubscribe"
+import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
-import { OtherMenuListProps } from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
-import { WebFuzzerResponseExtractor } from "@/utils/extractor"
-import { HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST } from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
-import { FuzzerParamItem, AdvancedConfigValueProps, KVPair } from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {WebFuzzerResponseExtractor} from "@/utils/extractor"
+import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
+import {FuzzerParamItem, AdvancedConfigValueProps, KVPair} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
     ExtractorValueProps,
     HTTPResponseExtractor,
@@ -74,21 +74,21 @@ import {
     MatcherValueProps,
     MatchingAndExtraction
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCardType"
-import { HTTPHeader } from "../mitm/MITMContentReplacerHeaderOperator"
-import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import { MatcherAndExtraction } from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {HTTPHeader} from "../mitm/MITMContentReplacerHeaderOperator"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {MatcherAndExtraction} from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
-import { YakitRoute } from "@/routes/newRoute"
-import { defaultLabel, FUZZER_LABEL_LIST_NUMBER } from "./HTTPFuzzerEditorMenu"
-import { execCodec } from "@/utils/encodec"
-import { WebFuzzerNewEditor } from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
-import { WebFuzzerType } from "./WebFuzzerPage/WebFuzzerPageType"
-import { OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon } from "@/assets/icon/outline"
+import {YakitRoute} from "@/routes/newRoute"
+import {defaultLabel, FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
+import {execCodec} from "@/utils/encodec"
+import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
+import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
+import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
-import { shallow } from "zustand/shallow"
-import { usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps } from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 
-const { ipcRenderer } = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
 interface ShareValueProps {
     advancedConfig: boolean
@@ -253,7 +253,7 @@ export const showDictsAndSelect = (res: (i: string) => any) => {
         title: "选择想要插入的字典",
         width: 1200,
         content: (
-            <div style={{ width: 1100, height: 500, overflow: "hidden" }}>
+            <div style={{width: 1100, height: 500, overflow: "hidden"}}>
                 <PayloadManagerPage
                     readOnly={true}
                     selectorHandle={(e) => {
@@ -274,10 +274,10 @@ interface FuzzResponseFilter {
     StatusCode: string[]
 }
 
-export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
+export function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
     ipcRenderer
         .invoke("ExtractUrl", f)
-        .then((data: { Url: string }) => {
+        .then((data: {Url: string}) => {
             callCopyToClipboard(data.Url)
         })
         .catch((e) => {
@@ -345,7 +345,7 @@ export const newWebFuzzerTab = (isHttps: boolean, request: string) => {
     return ipcRenderer
         .invoke("send-to-tab", {
             type: "fuzzer",
-            data: { isHttps: isHttps, request: request }
+            data: {isHttps: isHttps, request: request}
         })
         .then(() => {
             info("新开 WebFuzzer Tab")
@@ -360,7 +360,7 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
         footer: null,
         subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
         content: (
-            <div style={{ padding: 24 }}>
+            <div style={{padding: 24}}>
                 <StringFuzzer
                     advanced={true}
                     disableBasicMode={true}
@@ -469,7 +469,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     dnsServers: [],
     etcHosts: [],
     // 设置变量
-    params: [{ Key: "", Value: "", Type: "raw" }],
+    params: [{Key: "", Value: "", Type: "raw"}],
     // 匹配器
     filterMode: "onlyMatch",
     matchers: [],
@@ -480,7 +480,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
 }
 
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
-    const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo(
+    const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
             updatePagesDataCacheById: s.updatePagesDataCacheById
@@ -544,7 +544,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [activeKey, setActiveKey] = useState<string>("")
 
     const requestRef = useRef<string>(initWebFuzzerPageInfo().request)
-    const { setSubscribeClose, getSubscribeClose } = useSubscribeClose()
+    const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
     const fuzzerRef = useRef<any>()
     const [inViewport = true] = useInViewport(fuzzerRef)
 
@@ -635,21 +635,21 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     useEffect(() => {
         // 常用标签默认存储
-        ipcRenderer.invoke("QueryFuzzerLabel").then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
-            const { Data } = data
+        ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+            const {Data} = data
             if (Array.isArray(Data) && Data.length === 0) {
                 ipcRenderer.invoke("SaveFuzzerLabel", {
                     Data: defaultLabel
                 })
                 // 缓存标签数量 用于添加生成标签Description
-                setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({ number: defaultLabel.length }))
+                setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabel.length}))
             }
         })
     }, [])
 
     // 定时器
     const resetResponse = useMemoizedFn(() => {
-        setFirstResponse({ ...emptyFuzzer })
+        setFirstResponse({...emptyFuzzer})
         setSuccessFuzzer([])
         setRedirectedResponse(undefined)
         setFailedFuzzer([])
@@ -702,7 +702,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     etcHosts: etcHostsRef.current
                 })
             }
-        } catch (error) { }
+        } catch (error) {}
     })
 
     useUpdateEffect(() => {
@@ -727,10 +727,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setHistoryTask(undefined)
         setLoading(true)
         setDroppedCount(0)
-        ipcRenderer.invoke("HTTPFuzzer", { HistoryWebFuzzerId: id }, tokenRef.current).then(() => {
+        ipcRenderer.invoke("HTTPFuzzer", {HistoryWebFuzzerId: id}, tokenRef.current).then(() => {
             ipcRenderer
-                .invoke("GetHistoryHTTPFuzzerTask", { Id: id })
-                .then((data: { OriginRequest: HistoryHTTPFuzzerTask }) => {
+                .invoke("GetHistoryHTTPFuzzerTask", {Id: id})
+                .then((data: {OriginRequest: HistoryHTTPFuzzerTask}) => {
                     setHistoryTask(data.OriginRequest)
                     setCurrentSelectId(id)
                 })
@@ -742,7 +742,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (showMatcherAndExtraction && responseViewerRef.current) {
             responseViewerRef.current
                 .validate()
-                .then((data: { matcher: MatcherValueProps; extractor: ExtractorValueProps }) => {
+                .then((data: {matcher: MatcherValueProps; extractor: ExtractorValueProps}) => {
                     setAdvancedConfigValue({
                         ...advancedConfigValue,
                         filterMode: data.matcher.filterMode || "drop",
@@ -781,7 +781,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             FuzzerTabIndex: props.id
         }
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
-            const proxyToArr = advancedConfigValue.proxy.map((ele) => ({ label: ele, value: ele }))
+            const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
         }
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
@@ -796,19 +796,19 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const preProxyList = remoteData
                     ? JSON.parse(remoteData)
                     : [
-                        {
-                            label: "http://127.0.0.1:7890",
-                            value: "http://127.0.0.1:7890"
-                        },
-                        {
-                            label: "http://127.0.0.1:8080",
-                            value: "http://127.0.0.1:8080"
-                        },
-                        {
-                            label: "http://127.0.0.1:8082",
-                            value: "http://127.0.0.1:8082"
-                        }
-                    ]
+                          {
+                              label: "http://127.0.0.1:7890",
+                              value: "http://127.0.0.1:7890"
+                          },
+                          {
+                              label: "http://127.0.0.1:8080",
+                              value: "http://127.0.0.1:8080"
+                          },
+                          {
+                              label: "http://127.0.0.1:8082",
+                              value: "http://127.0.0.1:8082"
+                          }
+                      ]
 
                 const list = [...proxyList, ...preProxyList]
                 const newProxyList: SelectOptionProps[] = []
@@ -939,11 +939,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
-    const [extractedMap, { setAll, reset }] = useMap<string, string>()
+    const [extractedMap, {setAll, reset}] = useMap<string, string>()
     useEffect(() => {
         ipcRenderer.on(
             "fetch-extracted-to-table",
-            (e: any, data: { type: string; extractedMap: Map<string, string> }) => {
+            (e: any, data: {type: string; extractedMap: Map<string, string>}) => {
                 if (data.type === "fuzzer") {
                     setExtractedMap(data.extractedMap)
                 }
@@ -993,7 +993,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
             onUpdateFuzzerSequenceDueToDataChanges(props.id || "", webFuzzerPageInfo)
         },
-        { wait: 500 }
+        {wait: 500}
     ).run
     useUpdateEffect(() => {
         sendFuzzerSettingInfo()
@@ -1017,7 +1017,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }
             }
         }
-        updatePagesDataCacheById(YakitRoute.HTTPFuzzer, { ...newCurrentItem })
+        updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
     })
 
     const hotPatchTrigger = useMemoizedFn(() => {
@@ -1061,7 +1061,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
      */
     const setUpShareContent = useMemoizedFn((shareContent: ShareValueProps) => {
         try {
-            const newAdvancedConfigValue = { ...advancedConfigValue, ...shareContent.advancedConfiguration }
+            const newAdvancedConfigValue = {...advancedConfigValue, ...shareContent.advancedConfiguration}
             setAdvancedConfig(shareContent.advancedConfig)
             requestRef.current = shareContent.request
             setAdvancedConfigValue(newAdvancedConfigValue)
@@ -1078,11 +1078,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setLoading(true)
         const params = {
             FuzzerTabIndex: props.id,
-            Pagination: { Page: pageInt, Limit: 1 }
+            Pagination: {Page: pageInt, Limit: 1}
         }
         ipcRenderer
             .invoke("QueryHistoryHTTPFuzzerTaskEx", params)
-            .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTotal(data.Total)
                 if (data.Data.length > 0) {
                     loadHistory(data.Data[0].BasicInfo.Id)
@@ -1120,9 +1120,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         ipcRenderer
             .invoke("QueryHistoryHTTPFuzzerTaskEx", {
                 FuzzerTabIndex: props.id,
-                Pagination: { Page: 1, Limit: 1 }
+                Pagination: {Page: 1, Limit: 1}
             })
-            .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
                 setTotal(data.Total)
             })
     })
@@ -1241,7 +1241,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 <YakitPopover
                     trigger={"click"}
                     content={
-                        <div style={{ width: 400 }}>
+                        <div style={{width: 400}}>
                             <Form
                                 layout={"vertical"}
                                 onFinish={(v) => {
@@ -1268,7 +1268,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         .catch((e) => {
                                             failed(e.message)
                                         })
-                                        .finally(() => { })
+                                        .finally(() => {})
                                 }}
                                 size={"small"}
                             >
@@ -1290,7 +1290,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <Form.Item name='Text'>
                                     <YakitInput size='small' />
                                 </Form.Item>
-                                <Form.Item style={{ marginBottom: 8, marginTop: 8 }}>
+                                <Form.Item style={{marginBottom: 8, marginTop: 8}}>
                                     <YakitButton type={"primary"} htmlType={"submit"}>
                                         构造请求
                                     </YakitButton>
@@ -1312,7 +1312,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const secondNodeTitle = () => (
         <>
-            <span style={{ marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f" }}>Responses</span>
+            <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>
             <SecondNodeTitle
                 cachedTotal={cachedTotal}
                 onlyOneResponse={onlyOneResponse}
@@ -1347,7 +1347,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 successFuzzer={successFuzzer}
                 secondNodeSize={secondNodeSize}
                 query={query}
-                setQuery={(q) => setQuery({ ...q })}
+                setQuery={(q) => setQuery({...q})}
                 sendPayloadsType='fuzzer'
                 setShowExtra={setShowExtra}
                 showResponseInfoSecondEditor={showResponseInfoSecondEditor}
@@ -1410,7 +1410,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         <YakitCheckbox
                             checked={advancedConfigValue.isHttps}
                             onChange={(e) =>
-                                setAdvancedConfigValue({ ...advancedConfigValue, isHttps: e.target.checked })
+                                setAdvancedConfigValue({...advancedConfigValue, isHttps: e.target.checked})
                             }
                         />
                     </div>
@@ -1423,16 +1423,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     {/*        }*/}
                     {/*    />*/}
                     {/*</div>*/}
-                    <Divider type='vertical' style={{ margin: 0, top: 1 }} />
+                    <Divider type='vertical' style={{margin: 0, top: 1}} />
                     <div className={styles["display-flex"]}>
                         <ShareData module='fuzzer' getShareContent={getShareContent} />
-                        <Divider type='vertical' style={{ margin: "0 8px", top: 1 }} />
+                        <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
                         <Popover
                             trigger={"click"}
                             placement={"leftTop"}
                             destroyTooltipOnHide={true}
                             content={
-                                <div style={{ width: 400 }}>
+                                <div style={{width: 400}}>
                                     <HTTPFuzzerHistorySelector
                                         currentSelectId={currentSelectId}
                                         onSelect={(e, page, showAll) => {
@@ -1448,14 +1448,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 </div>
                             }
                         >
-                            <YakitButton type='text' icon={<ClockIcon />} style={{ padding: "4px 0px" }}>
+                            <YakitButton type='text' icon={<ClockIcon />} style={{padding: "4px 0px"}}>
                                 历史
                             </YakitButton>
                         </Popover>
                     </div>
                     {loading && (
                         <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
-                            <YakitSpin size={"small"} style={{ width: "auto" }} />
+                            <YakitSpin size={"small"} style={{width: "auto"}} />
                             sending packets
                         </div>
                     )}
@@ -1508,10 +1508,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     firstMinSize={380}
                     secondMinSize={480}
                     isShowDefaultLineStyle={false}
-                    style={{ overflow: "hidden" }}
-                    lineStyle={{ display: firstFull || secondFull ? "none" : "" }}
-                    secondNodeStyle={{ padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480 }}
-                    firstNodeStyle={{ padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : "" }}
+                    style={{overflow: "hidden"}}
+                    lineStyle={{display: firstFull || secondFull ? "none" : ""}}
+                    secondNodeStyle={{padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480}}
+                    firstNodeStyle={{padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : ""}}
                     {...ResizeBoxProps}
                     firstNode={
                         <WebFuzzerNewEditor
@@ -1528,7 +1528,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         />
                     }
                     secondNode={
-                        <div ref={secondNodeRef} style={{ height: "100%", overflow: "hidden" }}>
+                        <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
                             {onlyOneResponse ? (
                                 <ResponseViewer
                                     isHttps={advancedConfigValue.isHttps}
@@ -1571,7 +1571,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 <>
                                     <div
                                         className={classNames(styles["resize-card"], styles["resize-card-second"])}
-                                        style={{ display: firstFull ? "none" : "" }}
+                                        style={{display: firstFull ? "none" : ""}}
                                     >
                                         <div className={classNames(styles["resize-card-heard"])}>
                                             <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
@@ -1631,7 +1631,7 @@ interface FuzzerExtraShowProps {
     httpResponse: FuzzerResponse
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
-    const { droppedCount, advancedConfigValue, onlyOneResponse, httpResponse } = props
+    const {droppedCount, advancedConfigValue, onlyOneResponse, httpResponse} = props
     return (
         <div className={styles["display-flex"]}>
             {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
@@ -1735,10 +1735,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 placeholder='请输入定位响应'
                 value={valueSearch}
                 onChange={(e) => {
-                    const { value } = e.target
+                    const {value} = e.target
                     onSearchValueChange(value)
                 }}
-                style={{ maxWidth: 200 }}
+                style={{maxWidth: 200}}
                 onSearch={() => onSearch()}
                 onPressEnter={(e) => {
                     e.preventDefault()
@@ -1754,7 +1754,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         <YakitButton icon={<SearchIcon />} size={size} type='outline2' />
                     </YakitPopover>
                 )}
-                <Divider type='vertical' style={{ margin: 0, top: 1 }} />
+                <Divider type='vertical' style={{margin: 0, top: 1}} />
                 <ChromeSvgIcon
                     className={styles["extra-chrome-btn"]}
                     onClick={() => {
@@ -1763,10 +1763,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 />
                 {((rsp.Payloads && rsp.Payloads.length > 0) ||
                     rsp.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0) && (
-                        <YakitButton type='outline2' size={size} onClick={() => setShowExtra(true)}>
-                            查看提取结果
-                        </YakitButton>
-                    )}
+                    <YakitButton type='outline2' size={size} onClick={() => setShowExtra(true)}>
+                        查看提取结果
+                    </YakitButton>
+                )}
                 <YakitButton
                     type='primary'
                     onClick={() => {
@@ -1800,7 +1800,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 onChange={(e) => {
                     setKeyWord(e.target.value)
                 }}
-                style={{ minWidth: 130 }}
+                style={{minWidth: 130}}
                 onSearch={(v) => {
                     setQuery({
                         ...query,
@@ -1875,7 +1875,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 <BodyLengthInputNumber
                                     ref={bodyLengthRef}
                                     query={bodyLength}
-                                    setQuery={() => { }}
+                                    setQuery={() => {}}
                                     showFooter={false}
                                 />
                             </div>
@@ -1906,13 +1906,13 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     />
                 </YakitPopover>
 
-                <Divider type='vertical' style={{ margin: 0, top: 1 }} />
+                <Divider type='vertical' style={{margin: 0, top: 1}} />
                 <YakitButton
                     type='outline2'
                     size={size}
                     onClick={() => {
                         if (successFuzzer.length === 0) {
-                            showYakitModal({ title: "无 Web Fuzzer Response 以供提取信息", content: <></>, footer: null })
+                            showYakitModal({title: "无 Web Fuzzer Response 以供提取信息", content: <></>, footer: null})
                             return
                         }
                         setResponseExtractorVisible(true)
@@ -2061,7 +2061,7 @@ interface EditorOverlayWidgetProps {
 }
 
 const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((props) => {
-    const { rsp } = props
+    const {rsp} = props
     if (!rsp) return <></>
     return (
         <div className={styles["editor-overlay-widget"]}>
@@ -2136,9 +2136,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 setReason(r)
                 setShowExtra(
                     (fuzzerResponse.Payloads && fuzzerResponse.Payloads.length > 0) ||
-                    fuzzerResponse.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0
+                        fuzzerResponse.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0
                 )
-            } catch (e) { }
+            } catch (e) {}
         }, [fuzzerResponse])
 
         const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
@@ -2183,8 +2183,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             <>
                 <YakitResizeBox
                     isVer={true}
-                    lineStyle={{ display: !show ? "none" : "", background: "#f0f2f5" }}
-                    firstNodeStyle={{ padding: !show ? 0 : undefined, background: "#f0f2f5" }}
+                    lineStyle={{display: !show ? "none" : "", background: "#f0f2f5"}}
+                    firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
                     firstNode={
                         <NewHTTPPacketEditor
                             defaultHttps={isHttps}
@@ -2204,9 +2204,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     <Result
                                         status={
                                             reason.includes("tcp: i/o timeout") ||
-                                                reason.includes("empty response") ||
-                                                reason.includes("no such host") ||
-                                                reason.includes("cannot create proxy")
+                                            reason.includes("empty response") ||
+                                            reason.includes("no such host") ||
+                                            reason.includes("cannot create proxy")
                                                 ? "warning"
                                                 : "error"
                                         }
@@ -2228,7 +2228,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                             }
                                             return undefined
                                         })()}
-                                        style={{ height: "100%", backgroundColor: "#fff" }}
+                                        style={{height: "100%", backgroundColor: "#fff"}}
                                     >
                                         <>详细原因：{fuzzerResponse.Reason}</>
                                     </Result>
@@ -2270,7 +2270,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             )}
                         </>
                     }
-                    secondNodeStyle={{ display: show ? "" : "none", padding: 0 }}
+                    secondNodeStyle={{display: show ? "" : "none", padding: 0}}
                     lineDirection='bottom'
                     secondMinSize={showMatcherAndExtraction ? 300 : 100}
                     {...ResizeBoxProps}
@@ -2286,7 +2286,7 @@ interface ResponseViewerSecondNodeProps {
 }
 type tabType = "payload" | "extractContent"
 const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.memo((props) => {
-    const { fuzzerResponse, onClose } = props
+    const {fuzzerResponse, onClose} = props
     const [type, setType] = useState<tabType>("payload")
     const option = useMemo(() => {
         return [
@@ -2323,13 +2323,13 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
                 </div>
                 <YakitButton type='text2' icon={<OutlineXIcon />} size='small' onClick={() => onClose()} />
             </div>
-            <div className={styles["payload-extract-content-body"]} style={{ display: type === "payload" ? "" : "none" }}>
+            <div className={styles["payload-extract-content-body"]} style={{display: type === "payload" ? "" : "none"}}>
                 {fuzzerResponse.Payloads?.map((item) => <p>{item}</p>)}
                 {fuzzerResponse.Payloads?.length === 0 && "暂无"}
             </div>
             <div
                 className={styles["payload-extract-content-body"]}
-                style={{ display: type === "extractContent" ? "" : "none" }}
+                style={{display: type === "extractContent" ? "" : "none"}}
             >
                 {fuzzerResponse.ExtractedResults.map((item) => (
                     <p>
