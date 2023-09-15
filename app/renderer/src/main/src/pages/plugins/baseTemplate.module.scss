@@ -50,7 +50,7 @@
         flex: 1 0 0;
         height: 100%;
         overflow: hidden;
-        padding: 12px 12px 0px 16px;
+        padding: 12px 4px 0px 16px;
     }
     .container-filter-wrapper {
         border-left: 1px solid #eaecf3;
@@ -139,10 +139,10 @@
         display: flex;
         flex-direction: column;
         .details-header {
+            padding: 0px 0px 4px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0px 0px 4px 12px;
             border-bottom: 1px solid #eaecf3;
             .header-title {
                 display: flex;
@@ -155,21 +155,13 @@
                 .subtitle-style {
                     color: #b4bbca;
                     font-size: 10px;
-                    line-height: 16px;
+                    font-weight: 400;
                 }
             }
             .header-btn {
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                .btn-style {
-                    --button-color: #31343f;
-                }
-                svg {
-                    width: 16px;
-                    height: 16px;
-                    color: #85899e;
-                }
                 .divider-style {
                     width: 1px;
                     height: 12px;
@@ -183,33 +175,6 @@
             overflow: hidden;
         }
     }
-}
-
-.author-icon-wrapper {
-    min-width: 34px;
-    width: 34px;
-    height: 16px;
-    padding: 0px 6px;
-    display: flex;
-    align-items: center;
-    border-radius: 8px;
-    background: #f0f1f3;
-    color: #85899e;
-    font-size: 11px;
-    line-height: 16px;
-}
-.applicant-icon-wrapper {
-    min-width: 45px;
-    width: 45px;
-    height: 16px;
-    padding: 0px 6px;
-    display: flex;
-    align-items: center;
-    border-radius: 8px;
-    background: rgba(136, 99, 247, 0.1);
-    color: #85899e;
-    font-size: 11px;
-    line-height: 16px;
 }
 // --------------------
 .plugin-detail-header-wrapper {
@@ -225,10 +190,12 @@
             flex: 1;
             overflow: hidden;
             display: flex;
+            justify-content: flex-end;
             align-items: center;
             gap: 12px;
             .info-title {
                 height: 24px;
+                overflow: hidden;
                 display: flex;
                 align-items: center;
                 gap: 8px;
@@ -236,84 +203,86 @@
                 font-size: 16px;
                 font-weight: 600;
                 line-height: 24px;
-                svg {
-                    width: 16px;
-                    height: 16px;
-                    color: #b4bbca;
+                .title-style {
+                    flex: 1;
+                    overflow: hidden;
+                }
+                .subtitle-wrapper {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    .help-icon {
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                            color: #b4bbca;
+                        }
+                    }
                 }
             }
             .info-tags {
-                display: flex;
-                gap: 4px;
-                .tag-wrapper {
-                    height: 16px;
-                    padding: 2px 6px;
-                    display: flex;
-                    align-items: center;
-                    border-radius: 4px;
-                    border: 1px solid #eaecf3;
-                    background: #f8f8f8;
-                    color: #85899e;
-                    font-size: 12px;
-                    line-height: 16px;
-                }
+                flex: 1;
+                min-width: 20px;
+                overflow: hidden;
             }
         }
     }
     .author-wrapper {
+        overflow: hidden;
         display: flex;
+        justify-content: flex-end;
         align-items: center;
-        gap: 16px;
+
         .divider-style {
             width: 1px;
             height: 12px;
             background-color: #eaecf3;
+            margin-left: 16px;
+            margin-right: 16px;
         }
-        .author-info {
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        .text-style {
             color: #31343f;
             font-size: 12px;
             line-height: 16px;
         }
-        .pr-author {
-            height: 16px;
+        .left-wrapper {
+            overflow: hidden;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .author-wrapper {
+            min-width: 103px;
+            flex: 1;
+            overflow: hidden;
             display: flex;
             align-items: center;
             gap: 4px;
-            color: #31343f;
-            font-size: 12px;
-            line-height: 16px;
-            svg {
-                width: 16px;
-                height: 16px;
-                color: #85899e;
+            .name-wrapper {
+                flex: 1;
+                overflow: hidden;
             }
         }
-        .pr-author {
-            color: #f28b44;
-            svg {
-                color: #f28b44;
-            }
-        }
-        .pr-active-author {
-            color: #f28b44;
-            svg {
-                color: #f28b44;
-            }
-        }
-        .info-style {
-            height: 16px;
+        .id-wrapper {
+            min-width: 85px;
+            flex: 1;
+            overflow: hidden;
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #31343f;
-            font-size: 12px;
-            line-height: 16px;
+            .text-wrapper {
+                flex: 1;
+                overflow: hidden;
+            }
             .copy-icon-style {
                 margin-left: 0;
             }
+        }
+        .constant-wrapper {
+            flex-grow: 1;
+            flex-shrink: 0;
+            overflow: hidden;
         }
     }
 }
@@ -578,6 +547,7 @@
 }
 // --------------------
 .audit-status-tag {
+    white-space: nowrap;
     padding: 3px 6px;
     display: flex;
     align-items: center;
