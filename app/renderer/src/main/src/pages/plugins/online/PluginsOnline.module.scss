@@ -5,13 +5,51 @@
 }
 
 .plugins-online {
-    display: flex;
-    flex-direction: column;
-    position: relative;
     height: 100%;
+    position: relative;
+    overflow: hidden;
+    ::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+    .plugins-online-body {
+        height: 100%;
+        position: relative;
+        overflow: overlay;
+    }
+    .plugins-online-list {
+        height: 100%;
+        overflow: hidden;
+        position: sticky;
+        top: 0;
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #c1c1c1;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            border-color: #c1c1c1;
+        }
+    }
+    .plugins-online-list-no-roll {
+        pointer-events: none;
+        ::-webkit-scrollbar-thumb {
+            background-color: transparent;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            border-color: transparent;
+        }
+    }
 }
 .plugins-online-overflow-hidden {
-    overflow: hidden;
+    ::-webkit-scrollbar-thumb {
+        background-color: transparent;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        border-color: transparent;
+    }
 }
 
 .plugin-online-heard {
