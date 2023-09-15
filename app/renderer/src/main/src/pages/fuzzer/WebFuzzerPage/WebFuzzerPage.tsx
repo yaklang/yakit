@@ -83,7 +83,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                         key={item.key}
                         className={classNames(styles["web-fuzzer-tab-item"], {
                             [styles["web-fuzzer-tab-item-active"]]: props.type === item.key,
-                            [styles["web-fuzzer-tab-item-advanced-config-unShow"]]: item.key === 'config' && !advancedConfigShow
+                            [styles["web-fuzzer-tab-item-advanced-config-unShow"]]: props.type === 'config' && item.key === 'config' && !advancedConfigShow
                         })}
                         onClick={() => {
                             if (item.key === "sequence") {
