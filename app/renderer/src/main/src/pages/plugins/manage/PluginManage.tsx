@@ -298,6 +298,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         selected={selectNum}
                         tag={filters.tags || []}
                         onDelTag={onDelTag}
+                        visible={showFilter}
+                        setVisible={setShowFilter}
                     >
                         <ListShowContainer<API.YakitPluginDetail>
                             isList={isList}
