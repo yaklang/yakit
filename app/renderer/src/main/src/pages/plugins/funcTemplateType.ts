@@ -65,6 +65,11 @@ export interface PluginsListProps {
     /** 表头拓展元素 */
     extraHeader?: ReactNode
     children: ReactNode
+
+    /** 是否可见 */
+    visible: boolean
+    /** 设置是否可见 */
+    setVisible: (show: boolean) => any
 }
 
 export interface ListShowContainerProps<T> {

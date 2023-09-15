@@ -244,6 +244,9 @@ module.exports = {
         // reverse logger
         require("./handlers/reverse-connlogger").register(win, getClient)
 
+        // 网络相关
+        require("./handlers/networkJudgment").register(win, getClient)
+
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))
         api.forEach((item) => {
