@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo} from "react"
+import React, {useEffect, useState, useMemo, useRef} from "react"
 import {
     Button,
     Card,
@@ -465,6 +465,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(false)
+    const lastIdRef = useRef<number>()
 
     useDebounceEffect(
         () => {
@@ -472,48 +473,50 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 setIsSelect(false)
                 return
             }
+            lastIdRef.current = id
             setIsSelect(true)
             getRemoteValue("IsFoldValue").then((data) => {
                 if (!data) {
                     return
                 }
-                const is: boolean = JSON.parse(data).is
-                setFold(is)
+                const parseData = JSON.parse(data)
+                if (parseData.id == lastIdRef.current) {
+                    setFold(parseData.is)
+                }
             })
             setFlow(undefined)
             // 小于500K不走接口拿数据
             if (
-                selectedFlow?.BodySizeVerbose == '0' ||
-                selectedFlow?.BodySizeVerbose?.endsWith('B') ||
-                selectedFlow?.BodySizeVerbose?.endsWith('K') && Number(selectedFlow?.BodySizeVerbose?.slice(0, -1)) <= 500
+                selectedFlow?.BodySizeVerbose == "0" ||
+                selectedFlow?.BodySizeVerbose?.endsWith("B") ||
+                (selectedFlow?.BodySizeVerbose?.endsWith("K") &&
+                    Number(selectedFlow?.BodySizeVerbose?.slice(0, -1)) <= 500)
             ) {
+                setLoading(false)
                 setFlow(selectedFlow)
                 queryMITMRuleExtractedData(selectedFlow)
-                return
+            } else {
+                setLoading(true)
+                ipcRenderer
+                    .invoke("GetHTTPFlowById", {Id: id})
+                    .then((i: HTTPFlow) => {
+                        if (+i.Id == lastIdRef.current) {
+                            setLoading(false)
+                            setFlow(i)
+                            queryMITMRuleExtractedData(i)
+                        }
+                    })
+                    .catch((e: any) => {
+                        setTimeout(() => setLoading(false), 300)
+                        failed(`Query HTTPFlow failed: ${e}`)
+                    })
             }
-            setLoading(true)
-            ipcRenderer
-                .invoke("GetHTTPFlowById", {Id: id})
-                .then((i: HTTPFlow) => {
-                    setFlow(i)
-                    queryMITMRuleExtractedData(i)
-                })
-                .catch((e: any) => {
-                    failed(`Query HTTPFlow failed: ${e}`)
-                })
-                .finally(() => {
-                    setTimeout(() => setLoading(false), 300)
-                })
             return () => {
                 setExistedInfoType([])
             }
         },
         [id],
-        {
-            wait: 1000,
-            leading: false,
-            trailing: true
-        }
+        {wait: 500, leading: true, trailing: true}
     )
 
     const queryMITMRuleExtractedData = (i: HTTPFlow) => {
@@ -615,7 +618,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 <SideBarOpenIcon
                                                     className={styles["fold-icon"]}
                                                     onClick={() => {
-                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
+                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true, id}))
                                                         setFold(true)
                                                     }}
                                                 />
@@ -670,7 +673,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     <SideBarOpenIcon
                                                         className={styles["fold-icon"]}
                                                         onClick={() => {
-                                                            setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
+                                                            setRemoteValue(
+                                                                "IsFoldValue",
+                                                                JSON.stringify({is: true, id})
+                                                            )
                                                             setFold(true)
                                                         }}
                                                     />
@@ -697,7 +703,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                 <SideBarCloseIcon
                                     className={styles["fold-icon"]}
                                     onClick={() => {
-                                        setRemoteValue("IsFoldValue", JSON.stringify({is: false}))
+                                        setRemoteValue("IsFoldValue", JSON.stringify({is: false, id}))
                                         setFold(false)
                                     }}
                                 />
@@ -906,7 +912,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         dataCompare={{
                             rightCode: beforeResValue,
-                            leftCode: resType === "request" ? (flow?.Request || new Uint8Array()) : undefined,
+                            leftCode: resType === "request" ? flow?.Request || new Uint8Array() : undefined,
                             leftTitle: "请求",
                             rightTitle: "原始请求"
                         }}
@@ -979,7 +985,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         dataCompare={{
                             rightCode: beforeRspValue,
-                            leftCode: rspType === "response" ? (flow?.Response || new Uint8Array()) : undefined,
+                            leftCode: rspType === "response" ? flow?.Response || new Uint8Array() : undefined,
                             leftTitle: "响应",
                             rightTitle: "原始响应"
                         }}
