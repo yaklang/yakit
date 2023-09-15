@@ -9,8 +9,9 @@ import "video-react/dist/video-react.css" // import css
 import {yakitNotify} from "@/utils/notification"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import FuzzerContext from "./FuzzerContext"
 import emiter from "@/utils/eventBus/eventBus"
+import {getRemoteValue} from "@/utils/kv"
+import {WEB_FUZZ_Advanced_Config_Switch_Checked} from "../HTTPFuzzerPage"
 const {ipcRenderer} = window.require("electron")
 
 const webFuzzerTabs = [
@@ -28,7 +29,6 @@ const webFuzzerTabs = [
 const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const webFuzzerRef = useRef<any>(null)
     const [inViewport] = useInViewport(webFuzzerRef)
-    const inViewportRef = useRef<boolean>(false)
 
     const {selectGroupId, getPagesDataByGroupId} = usePageInfo(
         (s) => ({
@@ -59,15 +59,23 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
             ipcRenderer.invoke("send-ref-webFuzzer-request", {type: key})
         }
     })
-    
+
     // 监听tab栏打开或关闭
-    useEffect(() => {
-        if (inViewport !== undefined) inViewportRef.current = inViewport
-    }, [inViewport])
     const [advancedConfigShow, setAdvancedConfigShow] = useState<boolean>(false)
-    const debounceGetFuzzerAdvancedConfigShow = useDebounceFn((flag) => {
-        inViewportRef.current && setAdvancedConfigShow(flag)
-    }, { wait: 100 }).run
+    useEffect(() => {
+        getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
+            if (c === "") {
+                setAdvancedConfigShow(true)
+            } else {
+                setAdvancedConfigShow(c === "true")
+            }
+        })
+    }, [])
+
+    const debounceGetFuzzerAdvancedConfigShow = useMemoizedFn((flag) => {
+        if (inViewport) setAdvancedConfigShow(flag)
+    })
+
     useEffect(() => {
         emiter.on("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
         return () => {
@@ -83,7 +91,8 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                         key={item.key}
                         className={classNames(styles["web-fuzzer-tab-item"], {
                             [styles["web-fuzzer-tab-item-active"]]: props.type === item.key,
-                            [styles["web-fuzzer-tab-item-advanced-config-unShow"]]: props.type === 'config' && item.key === 'config' && !advancedConfigShow
+                            [styles["web-fuzzer-tab-item-advanced-config-unShow"]]:
+                                props.type === "config" && item.key === "config" && !advancedConfigShow
                         })}
                         onClick={() => {
                             if (item.key === "sequence") {
@@ -98,9 +107,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                     </div>
                 ))}
             </div>
-            <FuzzerContext.Provider value={!!inViewport}>
-                <div className={classNames(styles["web-fuzzer-tab-content"])}>{props.children}</div>
-            </FuzzerContext.Provider>
+            <div className={classNames(styles["web-fuzzer-tab-content"])}>{props.children}</div>
         </div>
     )
 })

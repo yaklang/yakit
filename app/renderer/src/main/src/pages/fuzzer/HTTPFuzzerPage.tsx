@@ -87,7 +87,6 @@ import { OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXI
 import emiter from "@/utils/eventBus/eventBus"
 import { shallow } from "zustand/shallow"
 import { usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps } from "@/store/pageInfo"
-import FuzzerContext from "./WebFuzzerPage/FuzzerContext"
 
 const { ipcRenderer } = window.require("electron")
 
@@ -1147,6 +1146,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onSetAdvancedConfig = useMemoizedFn((c: boolean) => {
         setAdvancedConfig(c)
         setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
+        emiter.emit("onGetFuzzerAdvancedConfigShow", c)
     })
 
     const httpResponse: FuzzerResponse = useMemo(() => {
@@ -1359,280 +1359,267 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         </>
     )
 
-    const debounceEmitGetFuzzerAdvancedConfigShow = useDebounceFn(() => {
-        emiter.emit("onGetFuzzerAdvancedConfigShow", advancedConfig)
-    }, { wait: 100 }).run
-
     return (
-        <FuzzerContext.Consumer>
-            {
-                (webFuzzerPageIsCreated) => {
-                    if (webFuzzerPageIsCreated) {
-                        debounceEmitGetFuzzerAdvancedConfigShow()
+        <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
+            <React.Suspense fallback={<>加载中...</>}>
+                <HttpQueryAdvancedConfig
+                    advancedConfigValue={advancedConfigValue}
+                    visible={advancedConfig}
+                    onInsertYakFuzzer={onInsertYakFuzzerFun}
+                    onValuesChange={onGetFormValue}
+                    refreshProxy={refreshProxy}
+                    defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
+                    outsideShowResponseMatcherAndExtraction={
+                        onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
                     }
-                    return <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
-                        <React.Suspense fallback={<>加载中...</>}>
-                            <HttpQueryAdvancedConfig
-                                advancedConfigValue={advancedConfigValue}
-                                visible={advancedConfig}
-                                onInsertYakFuzzer={onInsertYakFuzzerFun}
-                                onValuesChange={onGetFormValue}
-                                refreshProxy={refreshProxy}
-                                defaultHttpResponse={Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw) || ""}
-                                outsideShowResponseMatcherAndExtraction={
-                                    onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
-                                }
-                                onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
-                                inViewportCurrent={inViewport === true}
-                            />
-                        </React.Suspense>
-                        <div className={styles["http-fuzzer-page"]}>
-                            <div className={styles["fuzzer-heard"]}>
-                                {loading ? (
-                                    <YakitButton
-                                        onClick={() => {
-                                            cancelCurrentHTTPFuzzer()
+                    onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
+                    inViewportCurrent={inViewport === true}
+                />
+            </React.Suspense>
+            <div className={styles["http-fuzzer-page"]}>
+                <div className={styles["fuzzer-heard"]}>
+                    {loading ? (
+                        <YakitButton
+                            onClick={() => {
+                                cancelCurrentHTTPFuzzer()
+                            }}
+                            icon={<StopIcon />}
+                            type={"primary"}
+                            colors='danger'
+                            size='large'
+                        >
+                            强制停止
+                        </YakitButton>
+                    ) : (
+                        <YakitButton
+                            onClick={() => {
+                                setRedirectedResponse(undefined)
+                                sendFuzzerSettingInfo()
+                                onValidateHTTPFuzzer()
+                                setCurrentPage(1)
+                            }}
+                            icon={<PaperAirplaneIcon />}
+                            type={"primary"}
+                            size='large'
+                        >
+                            发送请求
+                        </YakitButton>
+                    )}
+                    <div className={styles["fuzzer-heard-force"]}>
+                        <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
+                        <YakitCheckbox
+                            checked={advancedConfigValue.isHttps}
+                            onChange={(e) =>
+                                setAdvancedConfigValue({ ...advancedConfigValue, isHttps: e.target.checked })
+                            }
+                        />
+                    </div>
+                    {/*<div className={styles["fuzzer-heard-force"]}>*/}
+                    {/*    <span className={styles["fuzzer-heard-https"]}>国密TLS</span>*/}
+                    {/*    <YakitCheckbox*/}
+                    {/*        checked={advancedConfigValue.isGmTLS}*/}
+                    {/*        onChange={(e) =>*/}
+                    {/*            setAdvancedConfigValue({...advancedConfigValue, isGmTLS: e.target.checked})*/}
+                    {/*        }*/}
+                    {/*    />*/}
+                    {/*</div>*/}
+                    <Divider type='vertical' style={{ margin: 0, top: 1 }} />
+                    <div className={styles["display-flex"]}>
+                        <ShareData module='fuzzer' getShareContent={getShareContent} />
+                        <Divider type='vertical' style={{ margin: "0 8px", top: 1 }} />
+                        <Popover
+                            trigger={"click"}
+                            placement={"leftTop"}
+                            destroyTooltipOnHide={true}
+                            content={
+                                <div style={{ width: 400 }}>
+                                    <HTTPFuzzerHistorySelector
+                                        currentSelectId={currentSelectId}
+                                        onSelect={(e, page, showAll) => {
+                                            if (!showAll) setCurrentPage(page)
+                                            loadHistory(e)
                                         }}
-                                        icon={<StopIcon />}
-                                        type={"primary"}
-                                        colors='danger'
-                                        size='large'
-                                    >
-                                        强制停止
-                                    </YakitButton>
-                                ) : (
-                                    <YakitButton
-                                        onClick={() => {
-                                            setRedirectedResponse(undefined)
-                                            sendFuzzerSettingInfo()
-                                            onValidateHTTPFuzzer()
-                                            setCurrentPage(1)
+                                        onDeleteAllCallback={() => {
+                                            setCurrentPage(0)
+                                            getTotal()
                                         }}
-                                        icon={<PaperAirplaneIcon />}
-                                        type={"primary"}
-                                        size='large'
-                                    >
-                                        发送请求
-                                    </YakitButton>
-                                )}
-                                <div className={styles["fuzzer-heard-force"]}>
-                                    <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
-                                    <YakitCheckbox
-                                        checked={advancedConfigValue.isHttps}
-                                        onChange={(e) =>
-                                            setAdvancedConfigValue({ ...advancedConfigValue, isHttps: e.target.checked })
-                                        }
+                                        fuzzerTabIndex={props.id}
                                     />
                                 </div>
-                                {/*<div className={styles["fuzzer-heard-force"]}>*/}
-                                {/*    <span className={styles["fuzzer-heard-https"]}>国密TLS</span>*/}
-                                {/*    <YakitCheckbox*/}
-                                {/*        checked={advancedConfigValue.isGmTLS}*/}
-                                {/*        onChange={(e) =>*/}
-                                {/*            setAdvancedConfigValue({...advancedConfigValue, isGmTLS: e.target.checked})*/}
-                                {/*        }*/}
-                                {/*    />*/}
-                                {/*</div>*/}
-                                <Divider type='vertical' style={{ margin: 0, top: 1 }} />
-                                <div className={styles["display-flex"]}>
-                                    <ShareData module='fuzzer' getShareContent={getShareContent} />
-                                    <Divider type='vertical' style={{ margin: "0 8px", top: 1 }} />
-                                    <Popover
-                                        trigger={"click"}
-                                        placement={"leftTop"}
-                                        destroyTooltipOnHide={true}
-                                        content={
-                                            <div style={{ width: 400 }}>
-                                                <HTTPFuzzerHistorySelector
-                                                    currentSelectId={currentSelectId}
-                                                    onSelect={(e, page, showAll) => {
-                                                        if (!showAll) setCurrentPage(page)
-                                                        loadHistory(e)
-                                                    }}
-                                                    onDeleteAllCallback={() => {
-                                                        setCurrentPage(0)
-                                                        getTotal()
-                                                    }}
-                                                    fuzzerTabIndex={props.id}
-                                                />
-                                            </div>
-                                        }
-                                    >
-                                        <YakitButton type='text' icon={<ClockIcon />} style={{ padding: "4px 0px" }}>
-                                            历史
-                                        </YakitButton>
-                                    </Popover>
-                                </div>
-                                {loading && (
-                                    <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
-                                        <YakitSpin size={"small"} style={{ width: "auto" }} />
-                                        sending packets
-                                    </div>
-                                )}
+                            }
+                        >
+                            <YakitButton type='text' icon={<ClockIcon />} style={{ padding: "4px 0px" }}>
+                                历史
+                            </YakitButton>
+                        </Popover>
+                    </div>
+                    {loading && (
+                        <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
+                            <YakitSpin size={"small"} style={{ width: "auto" }} />
+                            sending packets
+                        </div>
+                    )}
 
-                                {onlyOneResponse && httpResponse.Ok && checkRedirect && (
-                                    <YakitButton
-                                        onClick={() => {
-                                            setLoading(true)
-                                            const redirectRequestProps: RedirectRequestParams = {
-                                                Request: requestRef.current,
-                                                Response: new Buffer(httpResponse.ResponseRaw).toString("utf8"),
-                                                IsHttps: advancedConfigValue.isHttps,
-                                                IsGmTLS: advancedConfigValue.isGmTLS,
-                                                PerRequestTimeoutSeconds: advancedConfigValue.timeout,
-                                                Proxy: advancedConfigValue.proxy.join(","),
-                                                Extractors: advancedConfigValue.extractors,
-                                                Matchers: advancedConfigValue.matchers,
-                                                MatchersCondition: advancedConfigValue.matchersCondition,
-                                                HitColor:
-                                                    advancedConfigValue.filterMode === "onlyMatch"
-                                                        ? advancedConfigValue.hitColor
-                                                        : "",
-                                                Params: advancedConfigValue.params || []
-                                            }
-                                            ipcRenderer
-                                                .invoke("RedirectRequest", redirectRequestProps)
-                                                .then((rsp: FuzzerResponse) => {
-                                                    setRedirectedResponse(rsp)
-                                                })
-                                                .catch((e) => {
-                                                    failed(`"ERROR in: ${e}"`)
-                                                })
-                                                .finally(() => {
-                                                    setTimeout(() => setLoading(false), 300)
-                                                })
-                                        }}
-                                        type='outline2'
-                                    >
-                                        跟随重定向
-                                    </YakitButton>
-                                )}
-                                <FuzzerExtraShow
-                                    droppedCount={droppedCount}
-                                    advancedConfigValue={advancedConfigValue}
-                                    onlyOneResponse={onlyOneResponse}
-                                    httpResponse={httpResponse}
-                                />
-                            </div>
-                            <YakitResizeBox
-                                firstMinSize={380}
-                                secondMinSize={480}
-                                isShowDefaultLineStyle={false}
-                                style={{ overflow: "hidden" }}
-                                lineStyle={{ display: firstFull || secondFull ? "none" : "" }}
-                                secondNodeStyle={{ padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480 }}
-                                firstNodeStyle={{ padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : "" }}
-                                {...ResizeBoxProps}
-                                firstNode={
-                                    <WebFuzzerNewEditor
-                                        ref={webFuzzerNewEditorRef}
-                                        refreshTrigger={refreshTrigger}
-                                        request={requestRef.current}
-                                        setRequest={onSetRequest}
-                                        isHttps={advancedConfigValue.isHttps}
-                                        hotPatchCode={hotPatchCodeRef.current}
-                                        hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
-                                        setHotPatchCode={setHotPatchCode}
-                                        setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                                        firstNodeExtra={firstNodeExtra}
-                                    />
+                    {onlyOneResponse && httpResponse.Ok && checkRedirect && (
+                        <YakitButton
+                            onClick={() => {
+                                setLoading(true)
+                                const redirectRequestProps: RedirectRequestParams = {
+                                    Request: requestRef.current,
+                                    Response: new Buffer(httpResponse.ResponseRaw).toString("utf8"),
+                                    IsHttps: advancedConfigValue.isHttps,
+                                    IsGmTLS: advancedConfigValue.isGmTLS,
+                                    PerRequestTimeoutSeconds: advancedConfigValue.timeout,
+                                    Proxy: advancedConfigValue.proxy.join(","),
+                                    Extractors: advancedConfigValue.extractors,
+                                    Matchers: advancedConfigValue.matchers,
+                                    MatchersCondition: advancedConfigValue.matchersCondition,
+                                    HitColor:
+                                        advancedConfigValue.filterMode === "onlyMatch"
+                                            ? advancedConfigValue.hitColor
+                                            : "",
+                                    Params: advancedConfigValue.params || []
                                 }
-                                secondNode={
-                                    <div ref={secondNodeRef} style={{ height: "100%", overflow: "hidden" }}>
-                                        {onlyOneResponse ? (
-                                            <ResponseViewer
-                                                isHttps={advancedConfigValue.isHttps}
-                                                ref={responseViewerRef}
-                                                fuzzerResponse={httpResponse}
-                                                defaultResponseSearch={defaultResponseSearch}
-                                                system={props.system}
-                                                showMatcherAndExtraction={showMatcherAndExtraction}
-                                                setShowMatcherAndExtraction={setShowMatcherAndExtraction}
-                                                showExtra={showExtra}
-                                                setShowExtra={setShowExtra}
-                                                matcherValue={{
-                                                    hitColor: advancedConfigValue.hitColor || "red",
-                                                    matchersCondition: advancedConfigValue.matchersCondition || "and",
-                                                    matchersList: advancedConfigValue.matchers || [],
-                                                    filterMode: advancedConfigValue.filterMode || "drop"
-                                                }}
-                                                extractorValue={{
-                                                    extractorList: advancedConfigValue.extractors || []
-                                                }}
-                                                defActiveKey={activeKey}
-                                                defActiveType={activeType}
-                                                onSaveMatcherAndExtraction={(matcher, extractor) => {
-                                                    setAdvancedConfigValue({
-                                                        ...advancedConfigValue,
-                                                        filterMode: matcher.filterMode,
-                                                        hitColor: matcher.hitColor || "red",
-                                                        matchersCondition: matcher.matchersCondition,
-                                                        matchers: matcher.matchersList,
-                                                        extractors: extractor.extractorList
-                                                    })
-                                                }}
-                                                webFuzzerValue={StringToUint8Array(requestRef.current)}
-                                                showResponseInfoSecondEditor={showResponseInfoSecondEditor}
-                                                setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
-                                                secondNodeTitle={secondNodeTitle}
-                                                secondNodeExtra={secondNodeExtra}
-                                            />
-                                        ) : (
+                                ipcRenderer
+                                    .invoke("RedirectRequest", redirectRequestProps)
+                                    .then((rsp: FuzzerResponse) => {
+                                        setRedirectedResponse(rsp)
+                                    })
+                                    .catch((e) => {
+                                        failed(`"ERROR in: ${e}"`)
+                                    })
+                                    .finally(() => {
+                                        setTimeout(() => setLoading(false), 300)
+                                    })
+                            }}
+                            type='outline2'
+                        >
+                            跟随重定向
+                        </YakitButton>
+                    )}
+                    <FuzzerExtraShow
+                        droppedCount={droppedCount}
+                        advancedConfigValue={advancedConfigValue}
+                        onlyOneResponse={onlyOneResponse}
+                        httpResponse={httpResponse}
+                    />
+                </div>
+                <YakitResizeBox
+                    firstMinSize={380}
+                    secondMinSize={480}
+                    isShowDefaultLineStyle={false}
+                    style={{ overflow: "hidden" }}
+                    lineStyle={{ display: firstFull || secondFull ? "none" : "" }}
+                    secondNodeStyle={{ padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480 }}
+                    firstNodeStyle={{ padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : "" }}
+                    {...ResizeBoxProps}
+                    firstNode={
+                        <WebFuzzerNewEditor
+                            ref={webFuzzerNewEditorRef}
+                            refreshTrigger={refreshTrigger}
+                            request={requestRef.current}
+                            setRequest={onSetRequest}
+                            isHttps={advancedConfigValue.isHttps}
+                            hotPatchCode={hotPatchCodeRef.current}
+                            hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
+                            setHotPatchCode={setHotPatchCode}
+                            setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
+                            firstNodeExtra={firstNodeExtra}
+                        />
+                    }
+                    secondNode={
+                        <div ref={secondNodeRef} style={{ height: "100%", overflow: "hidden" }}>
+                            {onlyOneResponse ? (
+                                <ResponseViewer
+                                    isHttps={advancedConfigValue.isHttps}
+                                    ref={responseViewerRef}
+                                    fuzzerResponse={httpResponse}
+                                    defaultResponseSearch={defaultResponseSearch}
+                                    system={props.system}
+                                    showMatcherAndExtraction={showMatcherAndExtraction}
+                                    setShowMatcherAndExtraction={setShowMatcherAndExtraction}
+                                    showExtra={showExtra}
+                                    setShowExtra={setShowExtra}
+                                    matcherValue={{
+                                        hitColor: advancedConfigValue.hitColor || "red",
+                                        matchersCondition: advancedConfigValue.matchersCondition || "and",
+                                        matchersList: advancedConfigValue.matchers || [],
+                                        filterMode: advancedConfigValue.filterMode || "drop"
+                                    }}
+                                    extractorValue={{
+                                        extractorList: advancedConfigValue.extractors || []
+                                    }}
+                                    defActiveKey={activeKey}
+                                    defActiveType={activeType}
+                                    onSaveMatcherAndExtraction={(matcher, extractor) => {
+                                        setAdvancedConfigValue({
+                                            ...advancedConfigValue,
+                                            filterMode: matcher.filterMode,
+                                            hitColor: matcher.hitColor || "red",
+                                            matchersCondition: matcher.matchersCondition,
+                                            matchers: matcher.matchersList,
+                                            extractors: extractor.extractorList
+                                        })
+                                    }}
+                                    webFuzzerValue={StringToUint8Array(requestRef.current)}
+                                    showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                                    setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+                                    secondNodeTitle={secondNodeTitle}
+                                    secondNodeExtra={secondNodeExtra}
+                                />
+                            ) : (
+                                <>
+                                    <div
+                                        className={classNames(styles["resize-card"], styles["resize-card-second"])}
+                                        style={{ display: firstFull ? "none" : "" }}
+                                    >
+                                        <div className={classNames(styles["resize-card-heard"])}>
+                                            <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
+                                            <div className={styles["resize-card-heard-extra"]}></div>
+                                            {secondNodeExtra()}
+                                        </div>
+                                        {cachedTotal > 1 ? (
                                             <>
-                                                <div
-                                                    className={classNames(styles["resize-card"], styles["resize-card-second"])}
-                                                    style={{ display: firstFull ? "none" : "" }}
-                                                >
-                                                    <div className={classNames(styles["resize-card-heard"])}>
-                                                        <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
-                                                        <div className={styles["resize-card-heard-extra"]}></div>
-                                                        {secondNodeExtra()}
-                                                    </div>
-                                                    {cachedTotal > 1 ? (
-                                                        <>
-                                                            {showSuccess && (
-                                                                <HTTPFuzzerPageTable
-                                                                    // onSendToWebFuzzer={onSendToWebFuzzer}
-                                                                    success={showSuccess}
-                                                                    data={successFuzzer}
-                                                                    setExportData={setExportData}
-                                                                    query={query}
-                                                                    setQuery={setQuery}
-                                                                    extractedMap={extractedMap}
-                                                                    isEnd={loading}
-                                                                />
-                                                            )}
-                                                            {!showSuccess && (
-                                                                <HTTPFuzzerPageTable
-                                                                    success={showSuccess}
-                                                                    data={failedFuzzer}
-                                                                    query={query}
-                                                                    setQuery={setQuery}
-                                                                    isEnd={loading}
-                                                                    extractedMap={extractedMap}
-                                                                />
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        <Result
-                                                            status={"warning"}
-                                                            title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                                                            subTitle={
-                                                                "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
-                                                            }
-                                                        />
-                                                    )}
-                                                </div>
+                                                {showSuccess && (
+                                                    <HTTPFuzzerPageTable
+                                                        // onSendToWebFuzzer={onSendToWebFuzzer}
+                                                        success={showSuccess}
+                                                        data={successFuzzer}
+                                                        setExportData={setExportData}
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        extractedMap={extractedMap}
+                                                        isEnd={loading}
+                                                    />
+                                                )}
+                                                {!showSuccess && (
+                                                    <HTTPFuzzerPageTable
+                                                        success={showSuccess}
+                                                        data={failedFuzzer}
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        isEnd={loading}
+                                                        extractedMap={extractedMap}
+                                                    />
+                                                )}
                                             </>
+                                        ) : (
+                                            <Result
+                                                status={"warning"}
+                                                title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                                subTitle={
+                                                    "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                                }
+                                            />
                                         )}
                                     </div>
-                                }
-                            />
+                                </>
+                            )}
                         </div>
-                    </div>
-                }
-            }
-        </FuzzerContext.Consumer>
+                    }
+                />
+            </div>
+        </div>
     )
 }
 export default HTTPFuzzerPage
