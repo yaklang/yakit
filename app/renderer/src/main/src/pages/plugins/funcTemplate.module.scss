@@ -248,6 +248,33 @@
     box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
 }
 // --------------------
+.author-icon-wrapper {
+    min-width: 34px;
+    width: 34px;
+    height: 16px;
+    padding: 0px 6px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    background: #f0f1f3;
+    color: #85899e;
+    font-size: 11px;
+    line-height: 16px;
+}
+.applicant-icon-wrapper {
+    min-width: 45px;
+    width: 45px;
+    height: 16px;
+    padding: 0px 6px;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    background: rgba(136, 99, 247, 0.1);
+    color: #85899e;
+    font-size: 11px;
+    line-height: 16px;
+}
+// --------------------
 .plugins-list {
     width: 100%;
     height: 100%;
@@ -346,6 +373,7 @@
             justify-content: flex-end;
             align-items: center;
             gap: 12px;
+            padding-right: 8px;
             .is-list-btn {
                 width: 24px;
                 height: 24px;
@@ -415,82 +443,65 @@
     height: 100%;
     padding: 0;
     overflow: hidden;
-    .list-wrapper {
+    .tab-panel {
         width: 100%;
         height: 100%;
-        margin-top: 8px;
         padding: 0;
-        overflow: hidden auto;
-
-        .grid-row-wrapper {
-            width: 100%;
-            height: 210px;
-            display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
+        overflow: hidden;
     }
-
-    .grid-wrapper {
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        overflow: hidden auto;
-        display: flex;
-        justify-content: center;
-        :global {
-            ol,
-            ul,
-            li {
-                list-style: none;
-            }
-        }
-        .ul-wrapper {
-            flex: 1;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            position: relative;
-            z-index: 1;
-            .li-style {
-                width: 50%;
-                padding: 8px;
-                padding-bottom: 16px;
-                position: absolute;
-                left: 0;
-                top: 0;
-                z-index: 0;
-            }
-            @media screen and (min-width: 1156px) and (max-width: 1480px) {
-                .li-style {
-                    width: 33.33333333%;
-                }
-            }
-            @media screen and (min-width: 1480px) and (max-width: 1736px) {
-                .li-style {
-                    width: 25%;
-                }
-            }
-            @media screen and (min-width: 1736px) {
-                .li-style {
-                    width: 20%;
-                }
-            }
-        }
+    .tab-hidden-panel {
+        display: none;
     }
 }
 .list-hide-container {
     display: none !important;
 }
-// --------------------
+// -------------------- ListList ↓↓↓ --------------------
+.list-list-warpper {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    overflow: hidden auto;
+    overflow-anchor: none;
+    .list-opt {
+        width: 100%;
+        border-top: 1px solid #eaecf3;
+    }
+    .list-opt:hover {
+        border-radius: 8px;
+        background: #f8f8f8;
+        border-color: transparent;
+    }
+    .list-opt:hover + .list-opt {
+        border-color: transparent;
+    }
+
+    .no-more-wrapper {
+        width: 100%;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--yakit-helper-text-color);
+        font-size: 12px;
+    }
+
+    .loading-wrapper {
+        width: 100%;
+        height: 32px;
+        .loading-style {
+            align-items: center;
+        }
+    }
+}
+// -------------------- ListLayoutOpt ↓↓↓ --------------------
 .list-layout-opt-wrapper {
     width: 100%;
-    height: 73px;
+    height: 72px;
     padding: 8px;
     display: flex;
     align-items: center;
     gap: 32px;
-    border-top: 1px solid #eaecf3;
     .opt-body {
         flex: 1 0 0;
         overflow: hidden;
@@ -548,15 +559,79 @@
         }
     }
 }
-.list-layout-opt-wrapper:hover {
-    border-radius: 8px;
-    background: #f8f8f8;
-    border-color: transparent;
+// -------------------- GridList ↓↓↓ --------------------
+.grid-list-wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    overflow: hidden overlay;
+    overflow: hidden auto;
+
+    .grid-list-body {
+        display: flex;
+        justify-content: center;
+        :global {
+            ol,
+            ul,
+            li {
+                list-style: none;
+            }
+        }
+        .ul-wrapper {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            .li-style {
+                width: 50%;
+                padding: 8px;
+                position: absolute;
+                left: 0;
+                top: 0;
+                z-index: 0;
+            }
+            .li-first-style {
+                padding-left: 0;
+            }
+            @media screen and (min-width: 1156px) and (max-width: 1480px) {
+                .li-style {
+                    width: 33.33333333%;
+                }
+            }
+            @media screen and (min-width: 1480px) and (max-width: 1736px) {
+                .li-style {
+                    width: 25%;
+                }
+            }
+            @media screen and (min-width: 1736px) {
+                .li-style {
+                    width: 20%;
+                }
+            }
+        }
+    }
+
+    .no-more-wrapper {
+        width: 100%;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--yakit-helper-text-color);
+        font-size: 12px;
+    }
+
+    .loading-wrapper {
+        width: 100%;
+        height: 32px;
+        .loading-style {
+            align-items: center;
+        }
+    }
 }
-.list-layout-opt-wrapper:hover + .list-layout-opt-wrapper {
-    border-color: transparent;
-}
-// --------------------
+// -------------------- GridLayoutOpt ↓↓↓ --------------------
 .grid-layout-opt-wrapper {
     flex: 1 0 0;
     min-width: 170px;
@@ -781,7 +856,7 @@
         }
     }
 }
-// -------------------- AuthorImg start --------------------
+// -------------------- AuthorImg ↓↓↓ --------------------
 %author-img-style {
     border-radius: 50%;
     border: 1px solid #f8f8f8;
@@ -845,4 +920,25 @@
         height: 100%;
     }
 }
-// -------------------- AuthorImg end --------------------
+// -------------------- TagsListShow ↓↓↓ --------------------
+.tags-list-show-wrapper {
+    width: 100%;
+    overflow: hidden;
+    .tag-wrapper {
+        height: 16px;
+        padding: 2px 6px;
+        overflow: hidden;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 4px;
+        border: 1px solid #eaecf3;
+        background: #f8f8f8;
+        color: #85899e;
+        font-size: 12px;
+    }
+    .tag-wrapper + .tag-wrapper {
+        margin-left: 4px;
+    }
+}
+// --------------------
