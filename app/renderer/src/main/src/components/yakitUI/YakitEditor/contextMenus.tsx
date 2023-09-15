@@ -5,15 +5,9 @@ import { showModal } from "@/utils/showModal"
 import { AutoCard } from "../../AutoCard"
 import { YakitEditor } from "./YakitEditor"
 import { YakitButton } from "../YakitButton/YakitButton"
-import { monacoEditorClear, monacoEditorReplace, monacoEditorWrite } from "@/pages/fuzzer/fuzzerTemplates"
+import { monacoEditorClear, monacoEditorWrite } from "@/pages/fuzzer/fuzzerTemplates"
 import { failed } from "@/utils/notification"
 import { fetchCursorContent, fetchSelectionRange } from "./editorUtils"
-import { queryYakScriptList } from "@/pages/yakitStore/network"
-import { CodecType } from "@/pages/codec/CodecPage"
-import { useMemoizedFn } from "ahooks"
-import { YakScript } from "@/pages/invoker/schema"
-import { useEffect, useState } from "react"
-import {prettifyPacket} from "@/utils/prettifyPacket";
 
 
 const { ipcRenderer } = window.require("electron")
@@ -124,8 +118,6 @@ const decodeSubmenu: { key: string; label: string }[] = [
     { key: "unicode-decode", label: "Unicode 解码（\\uXXXX 解码）" },
     { key: "urlunescape", label: "URL 解码" }
 ]
-/** @name 美化数据包(JSON)菜单 */
-const prettySubmenu: { key: string; label: string }[] = [{ key: "pretty", label: "美化数据包(JSON)" }]
 /** @name 自定义HTTP数据包变形模块子菜单 */
 /** @name HTTP数据包变形模块子菜单 */
 const httpSubmenu: {
@@ -194,25 +186,6 @@ export const extraMenuLists: OtherMenuListProps = {
             } catch (e) {
                 failed(`editor exec decode failed ${e}`)
             }
-        }
-    },
-    pretty: {
-        menu: [...prettySubmenu] as any as EditorMenuItemType[],
-        onRun: (editor: YakitIMonacoEditor, key: string) => {
-            prettifyPacket(editor)
-            // try {
-            //     // @ts-ignore
-            //     const text = editor.getModel()?.getValueInRange(editor.getSelection()) || ""
-            //     if (!!text) {
-            //         execCodec("pretty-packet", text, false, editor)
-            //     } else {
-            //         const model = editor.getModel()
-            //         const fullText = model?.getValue()
-            //         execCodec("pretty-packet", fullText || "", false, editor, true)
-            //     }
-            // } catch (e) {
-            //     failed(`editor exec pretty failed ${e}`)
-            // }
         }
     },
     http: {

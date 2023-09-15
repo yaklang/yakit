@@ -63,6 +63,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     search={highlightSearch}
                                     id={selected?.Id || 0}
                                     defaultHttps={selected?.IsHTTPS}
+                                    Tags={selected?.Tags}
                                     sendToWebFuzzer={true}
                                     selectedFlow={selected}
                                     // defaultHeight={detailHeight}

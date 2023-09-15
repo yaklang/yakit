@@ -68,7 +68,6 @@ import {
 import {randomString} from "@/utils/randomUtil"
 import {getLocalValue, getRemoteValue} from "@/utils/kv"
 import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {ResizeCardBox} from "@/components/ResizeCardBox/ResizeCardBox"
 import {HTTP_PACKET_EDITOR_Response_Info, NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
@@ -77,12 +76,13 @@ import {MatcherValueProps, ExtractorValueProps} from "../MatcherAndExtractionCar
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {InheritLineIcon, InheritArrowIcon} from "./icon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {PencilAltIcon} from "@/assets/newIcon"
+import {ArrowsExpandIcon, ArrowsRetractIcon, PencilAltIcon} from "@/assets/newIcon"
 import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {shallow} from "zustand/shallow"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageNodeItemProps, WebFuzzerPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 // import { ResponseCard } from "./ResponseCard"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -1286,60 +1286,91 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
         },
         {wait: 200, leading: true}
     ).run
+
+    const [firstFull, setFirstFull] = useState<boolean>(false)
+    const [secondFull, setSecondFull] = useState<boolean>(false)
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%"
+        }
+        if (secondFull) {
+            p.firstRatio = "0%"
+        }
+        if (firstFull) {
+            p.secondRatio = "0%"
+            p.firstRatio = "100%"
+        }
+        return p
+    }, [firstFull, secondFull])
+
+    const firstNodeExtra = () => (
+        <>
+            <div className={styles["resize-card-icon"]} onClick={() => setFirstFull(!firstFull)}>
+                {firstFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+            </div>
+        </>
+    )
+
+    const secondNodeTitle = () => (
+        <>
+            <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>
+            <SecondNodeTitle
+                cachedTotal={cachedTotal}
+                onlyOneResponse={onlyOneResponse}
+                rsp={httpResponse}
+                successFuzzerLength={(successFuzzer || []).length}
+                failedFuzzerLength={(failedFuzzer || []).length}
+                showSuccess={showSuccess}
+                setShowSuccess={(v) => {
+                    setShowSuccess(v)
+                    setQuery({})
+                }}
+            />
+        </>
+    )
+
+    const secondNodeExtra = () => (
+        <>
+            <SecondNodeExtra
+                onlyOneResponse={onlyOneResponse}
+                cachedTotal={cachedTotal}
+                rsp={httpResponse}
+                valueSearch={affixSearch}
+                onSearchValueChange={(value) => {
+                    setAffixSearch(value)
+                    if (value === "" && defaultResponseSearch !== "") {
+                        setDefaultResponseSearch("")
+                    }
+                }}
+                onSearch={() => {
+                    setDefaultResponseSearch(affixSearch)
+                }}
+                successFuzzer={successFuzzer}
+                secondNodeSize={secondNodeSize}
+                query={query}
+                setQuery={(q) => setQuery({...q})}
+                sendPayloadsType='fuzzerSequence'
+                setShowExtra={setShowExtra}
+                showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+            />
+            <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
+                {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+            </div>
+        </>
+    )
     return (
         <>
-            <ResizeCardBox
+            <YakitResizeBox
                 firstMinSize={380}
                 secondMinSize={480}
                 isShowDefaultLineStyle={false}
                 style={{overflow: "hidden"}}
-                firstNodeProps={{
-                    title: "Request"
-                }}
-                secondNodeProps={{
-                    title: (
-                        <>
-                            <span style={{marginRight: 8}}>Responses</span>
-                            <SecondNodeTitle
-                                cachedTotal={cachedTotal}
-                                onlyOneResponse={onlyOneResponse}
-                                rsp={httpResponse}
-                                successFuzzerLength={(successFuzzer || []).length}
-                                failedFuzzerLength={(failedFuzzer || []).length}
-                                showSuccess={showSuccess}
-                                setShowSuccess={(v) => {
-                                    setShowSuccess(v)
-                                    setQuery({})
-                                }}
-                            />
-                        </>
-                    ),
-                    extra: (
-                        <SecondNodeExtra
-                            onlyOneResponse={onlyOneResponse}
-                            cachedTotal={cachedTotal}
-                            rsp={httpResponse}
-                            valueSearch={affixSearch}
-                            onSearchValueChange={(value) => {
-                                setAffixSearch(value)
-                                if (value === "" && defaultResponseSearch !== "") {
-                                    setDefaultResponseSearch("")
-                                }
-                            }}
-                            onSearch={() => {
-                                setDefaultResponseSearch(affixSearch)
-                            }}
-                            successFuzzer={successFuzzer}
-                            secondNodeSize={secondNodeSize}
-                            query={query}
-                            setQuery={(q) => setQuery({...q})}
-                            sendPayloadsType='fuzzerSequence'
-                            setShowExtra={setShowExtra}
-                            showResponseInfoSecondEditor={showResponseInfoSecondEditor}
-                            setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
-                        />
-                    )
-                }}
+                lineStyle={{display: firstFull || secondFull ? "none" : ""}}
+                secondNodeStyle={{padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480}}
+                firstNodeStyle={{padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : ""}}
+                {...ResizeBoxProps}
                 firstNode={
                     <WebFuzzerNewEditor
                         refreshTrigger={refreshTrigger}
@@ -1350,6 +1381,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
                         setHotPatchCode={setHotPatchCode}
                         setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
+                        firstNodeExtra={firstNodeExtra}
                     />
                 }
                 secondNode={
@@ -1377,39 +1409,51 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                                 setShowExtra={setShowExtra}
                                 showResponseInfoSecondEditor={showResponseInfoSecondEditor}
                                 setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+                                secondNodeTitle={secondNodeTitle}
+                                secondNodeExtra={secondNodeExtra}
                             />
                         ) : (
                             <>
-                                {cachedTotal > 1 ? (
-                                    <>
-                                        {showSuccess && (
-                                            <HTTPFuzzerPageTable
-                                                ref={successTableRef}
-                                                isRefresh={isRefresh}
-                                                success={showSuccess}
-                                                data={successFuzzer}
-                                                query={query}
-                                                setQuery={setQuery}
-                                                extractedMap={extractedMap}
-                                                isEnd={loading}
-                                                isShowDebug={false}
-                                            />
-                                        )}
-                                        {!showSuccess && (
-                                            <HTTPFuzzerPageTable
-                                                isRefresh={isRefresh}
-                                                success={showSuccess}
-                                                data={failedFuzzer}
-                                                query={query}
-                                                setQuery={setQuery}
-                                                isEnd={loading}
-                                                extractedMap={extractedMap}
-                                            />
-                                        )}
-                                    </>
-                                ) : (
-                                    <Result status={"warning"} title={"请执行序列后进行查看"} />
-                                )}
+                                <div
+                                    className={classNames(styles["resize-card"], styles["resize-card-second"])}
+                                    style={{display: firstFull ? "none" : ""}}
+                                >
+                                    <div className={classNames(styles["resize-card-heard"])}>
+                                        <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
+                                        <div className={styles["resize-card-heard-extra"]}></div>
+                                        {secondNodeExtra()}
+                                    </div>
+                                    {cachedTotal > 1 ? (
+                                        <>
+                                            {showSuccess && (
+                                                <HTTPFuzzerPageTable
+                                                    ref={successTableRef}
+                                                    isRefresh={isRefresh}
+                                                    success={showSuccess}
+                                                    data={successFuzzer}
+                                                    query={query}
+                                                    setQuery={setQuery}
+                                                    extractedMap={extractedMap}
+                                                    isEnd={loading}
+                                                    isShowDebug={false}
+                                                />
+                                            )}
+                                            {!showSuccess && (
+                                                <HTTPFuzzerPageTable
+                                                    isRefresh={isRefresh}
+                                                    success={showSuccess}
+                                                    data={failedFuzzer}
+                                                    query={query}
+                                                    setQuery={setQuery}
+                                                    isEnd={loading}
+                                                    extractedMap={extractedMap}
+                                                />
+                                            )}
+                                        </>
+                                    ) : (
+                                        <Result status={"warning"} title={"请执行序列后进行查看"} />
+                                    )}
+                                </div>
                             </>
                         )}
                     </div>

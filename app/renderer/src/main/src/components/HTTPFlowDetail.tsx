@@ -18,7 +18,7 @@ import {
 } from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
-import {HTTPPacketEditor, IMonacoEditor, NewHTTPPacketEditor} from "../utils/editors"
+import {NewHTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
@@ -31,7 +31,7 @@ import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
@@ -39,8 +39,9 @@ import {OtherMenuListProps} from "./yakitUI/YakitEditor/YakitEditorType"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import { YakitResizeBox } from "./yakitUI/YakitResizeBox/YakitResizeBox"
-import { YakitButton } from "./yakitUI/YakitButton/YakitButton"
+import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
+import {YakitCheckableTag} from "./yakitUI/YakitTag/YakitCheckableTag"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -52,6 +53,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     noHeader?: boolean
     onClose?: () => any
     defaultHeight?: number
+    Tags?: string
 
     //查看前/后一个请求内容
     isFront?: boolean
@@ -180,7 +182,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     callCopyToClipboard(flow?.Url || "")
                 },
                 order: 14
-            },
+            }
         }
     }, [flow?.Url])
 
@@ -314,9 +316,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             defaultHttps={flow?.IsHTTPS}
                                             // actions={[...actionFuzzer]}
                                             extraEditorProps={{
-                                                isShowSelectRangeMenu:true
+                                                isShowSelectRangeMenu: true
                                             }}
-                                            contextMenu={{ ...copyUrlMenuItem }}
+                                            contextMenu={{...copyUrlMenuItem}}
                                         />
                                     </div>
                                 </Card>
@@ -334,9 +336,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             // actions={[...actionFuzzer]}
                                             webFuzzerValue={new Buffer(flow.Request)}
                                             extraEditorProps={{
-                                                isShowSelectRangeMenu:true
+                                                isShowSelectRangeMenu: true
                                             }}
-                                            contextMenu={{ ...copyUrlMenuItem }}
+                                            contextMenu={{...copyUrlMenuItem}}
                                         />
                                     </div>
                                 </Card>
@@ -577,7 +579,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                         {existedInfoType.map((i) => {
                                             return (
                                                 <YakitButton
-                                                    size="small"
+                                                    size='small'
                                                     type={infoType === i ? "primary" : "outline2"}
                                                     onClick={() => {
                                                         setInfoType(i)
@@ -706,13 +708,13 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     loading: boolean
 }
 
-interface TypeOptionsProps {
-    value: string
-    label: string
+interface HTTPFlowBareProps {
+    Id: number
+    Data: Uint8Array
 }
 
 export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAndResponseProps> = React.memo((props) => {
-    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, loading} = props
+    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, loading, id, Tags} = props
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
         if (!flow?.RawRequestBodyBase64) return {}
@@ -762,9 +764,79 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     callCopyToClipboard(flow?.Url || "")
                 },
                 order: 14
-            },
+            }
         }
     }, [flow?.Url])
+
+    // 是否显示原始数据
+    const [isShowBeforeData, setShowBeforeData] = useState<boolean>(false)
+    // 请求/原始请求
+    const [resType, setResType] = useState<"current" | "request">("current")
+    // 响应/原始响应
+    const [rspType, setRspType] = useState<"current" | "response">("current")
+    // 编辑器展示originValue
+    const [originResValue, setOriginResValue] = useState<Uint8Array>(new Uint8Array())
+    const [originRspValue, setOriginRspValue] = useState<Uint8Array>(new Uint8Array())
+    // 原始数据
+    const [beforeResValue, setBeforeResValue] = useState<Uint8Array>(new Uint8Array())
+    const [beforeRspValue, setBeforeRspValue] = useState<Uint8Array>(new Uint8Array())
+    useEffect(() => {
+        // 复原数据
+        setResType("current")
+        setRspType("current")
+        setOriginResValue(flow?.Request || new Uint8Array())
+        setOriginRspValue(flow?.Response || new Uint8Array())
+        setBeforeResValue(new Uint8Array())
+        setBeforeRspValue(new Uint8Array())
+        const existedTags = Tags ? Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+        if (existedTags.includes("[手动修改]")) {
+            setShowBeforeData(true)
+        } else {
+            setShowBeforeData(false)
+        }
+    }, [id])
+
+    useUpdateEffect(() => {
+        if (isShowBeforeData) {
+            // 获取原始数据内容后 有内容则展示 无内容不展示
+            handleGetHTTPFlowBare("request")
+            handleGetHTTPFlowBare("response")
+        }
+    }, [isShowBeforeData, id])
+
+    useEffect(() => {
+        if (resType === "request") {
+            setOriginResValue(beforeResValue)
+        } else {
+            setOriginResValue(flow?.Request || new Uint8Array())
+        }
+    }, [resType, flow?.Request])
+    useEffect(() => {
+        if (rspType === "response") {
+            setOriginRspValue(beforeRspValue)
+        } else {
+            setOriginRspValue(flow?.Response || new Uint8Array())
+        }
+    }, [rspType, flow?.Response])
+    const handleGetHTTPFlowBare = useMemoizedFn((data: "request" | "response") => {
+        ipcRenderer
+            .invoke("GetHTTPFlowBare", {
+                Id: parseInt(id + ""),
+                BareType: data
+            })
+            .then((res: HTTPFlowBareProps) => {
+                if (res.Data && res.Data.length > 0) {
+                    if (data === "request") {
+                        setBeforeResValue(res.Data)
+                    }
+                    if (data === "response") {
+                        setBeforeRspValue(res.Data)
+                    }
+                }
+            })
+            .catch((err) => {})
+            .finally(() => {})
+    })
 
     return (
         <YakitResizeBox
@@ -777,7 +849,34 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
-                        originValue={flow?.Request || new Uint8Array()}
+                        title={
+                            isShowBeforeData &&
+                            beforeResValue.length > 0 && (
+                                <div className={classNames(styles["type-options-checkable-tag"])}>
+                                    <YakitCheckableTag
+                                        checked={resType === "current"}
+                                        onChange={(checked) => {
+                                            if (checked) {
+                                                setResType("current")
+                                            }
+                                        }}
+                                    >
+                                        请求
+                                    </YakitCheckableTag>
+                                    <YakitCheckableTag
+                                        checked={resType === "request"}
+                                        onChange={(checked) => {
+                                            if (checked) {
+                                                setResType("request")
+                                            }
+                                        }}
+                                    >
+                                        原始请求
+                                    </YakitCheckableTag>
+                                </div>
+                            )
+                        }
+                        originValue={originResValue}
                         readOnly={true}
                         noLineNumber={true}
                         sendToWebFuzzer={sendToWebFuzzer}
@@ -787,14 +886,20 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         hideSearch={true}
                         noHex={true}
                         noMinimap={true}
-                        contextMenu={{ ...copyRequestBase64BodyMenuItem, ...copyUrlMenuItem }}
+                        contextMenu={{...copyRequestBase64BodyMenuItem, ...copyUrlMenuItem}}
                         // 这个为了解决不可见字符的问题
                         defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
                         extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
                         defaultSearchKeyword={search}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_REQUEST'
                         extraEditorProps={{
-                            isShowSelectRangeMenu:true
+                            isShowSelectRangeMenu: true
+                        }}
+                        dataCompare={{
+                            rightCode: beforeResValue,
+                            leftCode: resType === "request" ? (flow?.Request || new Uint8Array()) : undefined,
+                            leftTitle: "请求",
+                            rightTitle: "原始请求"
                         }}
                     />
                 )
@@ -809,7 +914,34 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
-                        contextMenu={{ ...copyResponseBase64BodyMenuItem, ...copyUrlMenuItem }}
+                        title={
+                            isShowBeforeData &&
+                            beforeRspValue.length > 0 && (
+                                <div className={classNames(styles["type-options-checkable-tag"])}>
+                                    <YakitCheckableTag
+                                        checked={rspType === "current"}
+                                        onChange={(checked) => {
+                                            if (checked) {
+                                                setRspType("current")
+                                            }
+                                        }}
+                                    >
+                                        响应
+                                    </YakitCheckableTag>
+                                    <YakitCheckableTag
+                                        checked={rspType === "response"}
+                                        onChange={(checked) => {
+                                            if (checked) {
+                                                setRspType("response")
+                                            }
+                                        }}
+                                    >
+                                        原始响应
+                                    </YakitCheckableTag>
+                                </div>
+                            )
+                        }
+                        contextMenu={{...copyResponseBase64BodyMenuItem, ...copyUrlMenuItem}}
                         extra={[
                             <Button
                                 className={styles["extra-chrome-btn"]}
@@ -823,9 +955,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         ]}
                         isResponse={true}
                         noHex={true}
-                        noMinimap={(flow?.Response || new Uint8Array()).length < 1024 * 2}
+                        noMinimap={originRspValue.length < 1024 * 2}
                         loading={loading}
-                        originValue={flow?.Response || new Uint8Array()}
+                        originValue={originRspValue}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
                         hideSearch={true}
@@ -834,12 +966,15 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         webFuzzerValue={flow?.Request || new Uint8Array()}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE'
                         extraEditorProps={{
-                            isShowSelectRangeMenu:true
+                            isShowSelectRangeMenu: true
+                        }}
+                        dataCompare={{
+                            rightCode: beforeRspValue,
+                            leftCode: rspType === "response" ? (flow?.Response || new Uint8Array()) : undefined,
+                            leftTitle: "响应",
+                            rightTitle: "原始响应"
                         }}
                     />
-                    // {
-                    //     type==="render"&&prettifyPacketCode(new Buffer((flow?.Response || new Uint8Array())).toString("utf8"))
-                    // }
                 )
             }}
             secondMinSize={300}

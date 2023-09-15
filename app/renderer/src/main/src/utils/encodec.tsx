@@ -6,8 +6,6 @@ import {monacoEditorClear, monacoEditorReplace, monacoEditorWrite} from "../page
 import {failed} from "./notification";
 import {AutoCard} from "../components/AutoCard";
 import {Buffer} from "buffer";
-import {StringToUint8Array} from "@/utils/str";
-import {prettifyPacket} from "@/utils/prettifyPacket";
 
 export type CodecType = |
     "fuzz" | "md5" | "sha1" | "sha256" | "sha512"
@@ -109,20 +107,6 @@ export const MonacoEditorCodecActions: MonacoEditorActions[] = [
 ].map(i => {
     return {id: i.id, label: i.label, contextMenuGroupId: "codec", run: editorCodecHandlerFactory(i.id as CodecType)}
 });
-
-export const MonacoEditorFullCodecActions: MonacoEditorActions[] = [
-    {id: "pretty-packet", label: "美化数据包(JSON)"},
-].map(i => {
-    return {
-        id: i.id,
-        label: i.label,
-        contextMenuGroupId: "pretty",
-        run: (e => {
-            prettifyPacket(e)
-            // old editorFullCodecHandlerFactory(i.id as CodecType)(e)
-        })
-    }
-})
 
 export const MonacoEditorMutateHTTPRequestActions: {
     id: CodecType | string, label: string,

@@ -10,11 +10,12 @@ import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {info, yakitFailed} from "@/utils/notification"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Divider, Form, Upload} from "antd"
+import {Divider, Form, Modal, Upload} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {ExportIcon, PlusCircleIcon, SaveIcon, TrashIcon} from "@/assets/newIcon"
+import {ExportIcon, PlusCircleIcon, RemoveIcon, SaveIcon, TrashIcon} from "@/assets/newIcon"
 import {MITMFilters, MITMFilterSchema} from "./MITMFilters"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -81,10 +82,26 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const onClearFilters = () => {
         filtersRef.current.clearFormValue()
     }
+
+    // 判断对象内的属性是否为空
+    const areObjectPropertiesEmpty = useMemoizedFn((obj) => {
+        try {
+            for (const key in obj) {
+                if (obj[key] !== null && obj[key] !== undefined && Array.isArray(obj[key]) && obj[key].length > 0) {
+                    return false
+                }
+            }
+            return true
+        } catch (error) {
+            return true
+        }
+    })
     return (
         <YakitModal
             visible={visible}
-            onCancel={() => setVisible(false)}
+            onCancel={() => {
+                setVisible(false)
+            }}
             closable={false}
             title='过滤器配置'
             width={720}
@@ -102,7 +119,38 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 )
             }
             className={styles["mitm-filters-modal"]}
-            onOk={() => onSetFilter()}
+            onOk={() => {
+                const filter = filtersRef.current.getFormValue()
+                if (areObjectPropertiesEmpty(filter)) {
+                    Modal.confirm({
+                        title: "温馨提示",
+                        icon: <ExclamationCircleOutlined />,
+                        content: "过滤器为空时将重置为默认配置，确认重置吗？",
+                        okText: "确认",
+                        cancelText: "取消",
+                        closable: true,
+                        closeIcon: (
+                            <div
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    Modal.destroyAll()
+                                }}
+                                className='modal-remove-icon'
+                            >
+                                <RemoveIcon />
+                            </div>
+                        ),
+                        onOk: () => {
+                            onSetFilter()
+                        },
+                        onCancel: () => {},
+                        cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                        okButtonProps: {size: "small", className: "modal-ok-button"}
+                    })
+                } else {
+                    onSetFilter()
+                }
+            }}
         >
             <MITMFilters filter={_mitmFilter} onFinished={() => onSetFilter()} ref={filtersRef} />
         </YakitModal>

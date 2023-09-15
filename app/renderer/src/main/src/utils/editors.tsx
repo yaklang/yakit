@@ -15,7 +15,6 @@ import {
     execAutoDecode,
     MonacoEditorActions,
     MonacoEditorCodecActions,
-    MonacoEditorFullCodecActions,
     MonacoEditorMutateHTTPRequestActions
 } from "./encodec"
 import {HTTPPacketFuzzable} from "../components/HTTPHistory"
@@ -45,6 +44,8 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import styles from "./editors.module.scss"
 import classNames from "classnames"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { DataCompareModal } from "@/pages/compare/DataCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1020,7 +1021,6 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     ...MonacoEditorCodecActions
                                 ],
                                 ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions),
-                                ...(props.noPacketModifier ? [] : MonacoEditorFullCodecActions)
                             ].filter((i) => !!i)}
                             editorDidMount={(editor) => {
                                 setMonacoEditor(editor)
@@ -1044,6 +1044,14 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
         </div>
     )
 })
+
+interface DataCompareProps {
+    rightCode: Uint8Array
+    /** 当存在leftCode时则使用leftCode，否则使用编辑器showValue */
+    leftCode?: Uint8Array
+    leftTitle?: string
+    rightTitle?: string
+}
 
 export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     /** yakit-editor组件基础属性 */
@@ -1104,6 +1112,10 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     webFuzzerCallBack?: () => void
     /**@name 是否显示美化/渲染TYPE(默认显示) */
     isShowBeautifyRender?: boolean
+    /**@name 是否显示显示Extra默认项 */
+    showDefaultExtra?: boolean
+    /**@name 数据对比(默认无对比) */
+    dataCompare?: DataCompareProps
 }
 
 interface TypeOptionsProps {
@@ -1113,7 +1125,7 @@ interface TypeOptionsProps {
 
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
     const isResponse = props.isResponse
-    const {originValue, isShowBeautifyRender = true} = props
+    const {originValue, isShowBeautifyRender = true,showDefaultExtra=true,dataCompare} = props
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
             return "utf8"
@@ -1458,18 +1470,33 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     ))}
                                 </div>
                             )}
-                            {/* <YakitButton size={"small"} type={"primary"} onClick={() => {
-                                ipcRenderer
-                                .invoke("send-to-tab", {
-                                    type: "add-data-compare",
-                                    data: {
-                                        leftData:"3",
-                                        rightData:"2"
-                                    }
+                            {dataCompare&&dataCompare.rightCode.length>0&&<YakitButton size={"small"} type={"primary"} onClick={() => {
+                                // ipcRenderer
+                                // .invoke("send-to-tab", {
+                                //     type: "add-data-compare",
+                                //     data: {
+                                //         leftData:Uint8ArrayToString(showValue),
+                                //         rightData:Uint8ArrayToString(dataCompare)
+                                //     }
+                                // })
+                                const m = showYakitModal({
+                                    title: null,
+                                    content: <DataCompareModal
+                                        onClose={()=>m.destroy()}
+                                        rightTitle={dataCompare.rightTitle}
+                                        leftTitle={dataCompare.leftTitle}
+                                        leftCode={dataCompare.leftCode?Uint8ArrayToString(dataCompare.leftCode):Uint8ArrayToString(showValue)} 
+                                        rightCode={Uint8ArrayToString(dataCompare.rightCode)} />,
+                                    onCancel:()=>{
+                                        m.destroy()
+                                    },
+                                    width:1200,
+                                    footer: null,
+                                    closable:false
                                 })
                             }}>
                                 对比
-                            </YakitButton> */}
+                            </YakitButton>}
                             {props.sendToWebFuzzer && props.readOnly && (
                                 <YakitButton
                                     size={"small"}
@@ -1491,6 +1518,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     FUZZ
                                 </YakitButton>
                             )}
+                            {showDefaultExtra&&<>
                             <Tooltip title={"不自动换行"}>
                                 <YakitButton
                                     size={"small"}
@@ -1584,6 +1612,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
                                 </Popover>
                             )}
+                            </>}
                             {props.extraEnd}
                         </div>
                     )

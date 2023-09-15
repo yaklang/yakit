@@ -253,4 +253,19 @@ module.exports = (win, getClient) => {
     ipcMain.handle("HTTPFlowsExtract", async (e, params) => {
         return await asyncHTTPFlowsExtract(params)
     })
+
+    const asyncGetHTTPFlowBare = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetHTTPFlowBare(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetHTTPFlowBare", async (e, params) => {
+        return await asyncGetHTTPFlowBare(params)
+    })
 }
