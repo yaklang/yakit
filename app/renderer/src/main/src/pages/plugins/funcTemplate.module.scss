@@ -290,6 +290,15 @@
             display: flex;
             align-items: center;
             gap: 16px;
+            .header-filter {
+                display: flex;
+                align-items: center;
+                &-text {
+                    color: #31343f;
+                    font-size: 12px;
+                    line-height: 16px;
+                }
+            }
             .body-check {
                 display: flex;
                 align-items: center;

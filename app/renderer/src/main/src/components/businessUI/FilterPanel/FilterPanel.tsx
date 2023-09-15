@@ -36,7 +36,6 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
         }
         onSelect({...selected})
     })
-
     return (
         <div className={classNames(styles["filter-panel-wrapper"], wrapperClassName || "")}>
             <div className={styles["filter-panel-container"]}>
