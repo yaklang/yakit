@@ -138,6 +138,26 @@
         height: 100%;
         padding: 0 12px;
         overflow: hidden overlay;
+        .plugin-info-extra-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .btn-style {
+                display: inline-flex;
+            }
+            .btn-icon {
+                display: none;
+            }
+            @media screen and (max-width: 1100px) {
+                .btn-style {
+                    display: none;
+                }
+                .btn-icon {
+                    display: inline-flex;
+                }
+            }
+        }
         .plugin-info-body {
             margin-top: 12px;
             width: 100%;

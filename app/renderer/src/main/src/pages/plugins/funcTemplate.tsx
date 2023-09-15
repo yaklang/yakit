@@ -5,12 +5,23 @@ import {
     FuncFilterPopverProps,
     FuncSearchProps,
     GridLayoutOptProps,
+    GridListProps,
     ListLayoutOptProps,
+    ListListProps,
     ListShowContainerProps,
     PluginsListProps,
+    TagsListShowProps,
     TypeSelectProps
 } from "./funcTemplateType"
-import {useGetState, useInViewport, useMemoizedFn, useScroll, useSize, useVirtualList} from "ahooks"
+import {
+    useGetState,
+    useInViewport,
+    useMemoizedFn,
+    useSize,
+    useThrottleFn,
+    useVirtualList,
+    useWhyDidYouUpdate
+} from "ahooks"
 import {
     OutlineCalendarIcon,
     OutlineDotshorizontalIcon,
@@ -20,21 +31,6 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {SolidCheckIcon} from "@/assets/icon/solid"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {Dropdown} from "antd"
-import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {formatDate} from "@/utils/timeUtil"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import ReactResizeDetector from "react-resize-detector"
-import {AuthorIcon, pluginTypeToName} from "./baseTemplate"
-import {PluginsGridCheckIcon} from "./icon"
-
-import styles from "./funcTemplate.module.scss"
-import classNames from "classnames"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {
     SolidOfficialpluginIcon,
     SolidYakitPluginIcon,
@@ -44,7 +40,21 @@ import {
     SolidDocumentSearchPluginIcon,
     SolidCollectionPluginIcon
 } from "@/assets/icon/colors"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {Dropdown} from "antd"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {formatDate} from "@/utils/timeUtil"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {pluginTypeToName} from "./baseTemplate"
+import {PluginsGridCheckIcon} from "./icon"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
+
+import styles from "./funcTemplate.module.scss"
+import classNames from "classnames"
 
 /** @name 标题栏的搜索选项组件 */
 export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
@@ -268,6 +278,15 @@ export const FuncFilterPopver: React.FC<FuncFilterPopverProps> = memo((props) =>
     )
 })
 
+/** @name 代表作者的图标ICON */
+export const AuthorIcon: React.FC<{}> = memo((props) => {
+    return <div className={styles["author-icon-wrapper"]}>作者</div>
+})
+/** @name 代表申请人的图标ICON */
+export const ApplicantIcon: React.FC<{}> = memo((props) => {
+    return <div className={styles["applicant-icon-wrapper"]}>申请人</div>
+})
+
 /** @name 插件主要部分组件 */
 export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
     const {checked, onCheck, isList, setIsList, total, selected, tag, onDelTag, extraHeader, children} = props
@@ -366,37 +385,181 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
 
 /** @name 插件列表组件 */
 export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = memo((props) => {
-    const {isList, total, data, gridNode, gridHeight, listNode, listHeight, loading, updateList, onKey} = props
+    const {isList, data, gridNode, gridHeight, listNode, listHeight, loading, hasMore, updateList} = props
+
+    // useWhyDidYouUpdate("ListShowContainer", {...props})
+
+    return (
+        <div className={styles["list-show-container"]}>
+            <div
+                tabIndex={isList ? 0 : -1}
+                className={classNames(styles["tab-panel"], {[styles["tab-hidden-panel"]]: !isList})}
+            >
+                <ListList
+                    isList={isList}
+                    data={data}
+                    render={listNode}
+                    optHeight={listHeight}
+                    loading={loading}
+                    hasMore={hasMore}
+                    updateList={updateList}
+                />
+            </div>
+            <div
+                tabIndex={isList ? -1 : 0}
+                className={classNames(styles["tab-panel"], {[styles["tab-hidden-panel"]]: isList})}
+            >
+                <GridList
+                    isList={isList}
+                    data={data}
+                    render={gridNode}
+                    optHeight={gridHeight}
+                    loading={loading}
+                    hasMore={hasMore}
+                    updateList={updateList}
+                />
+            </div>
+        </div>
+    )
+})
+
+/** @name 插件列表布局列表 */
+export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
+    const {isList, data, render, optHeight, loading, hasMore, updateList} = props
+
+    // useWhyDidYouUpdate("ListList", {...props})
 
     // 列表布局相关变量
     const listContainerRef = useRef<HTMLDivElement>(null)
+    // 获取组件高度相关数据
+    const fetchListHeight = useMemoizedFn(() => {
+        const {scrollTop, clientHeight, scrollHeight} = listContainerRef.current || {
+            scrollTop: 0,
+            clientHeight: 0,
+            scrollHeight: 0
+        }
+        return {scrollTop, clientHeight, scrollHeight}
+    })
     const listwrapperRef = useRef<HTMLDivElement>(null)
     const [list] = useVirtualList(data, {
         containerTarget: listContainerRef,
         wrapperTarget: listwrapperRef,
-        itemHeight: listHeight,
-        overscan: 6
+        itemHeight: optHeight || 73,
+        overscan: 50
     })
-    // 网格布局相关变量
-    // const [gridCol, setGridCol] = useState<number>(3)
-    // const showList = useMemo(() => {
-    //     // @ts-ignore
-    //     const arr: T[][] = []
-    //     const length = Math.ceil(data.length / gridCol)
-    //     for (let i = 0; i < length; i++) {
-    //         arr.push(data.slice(i * gridCol, i * gridCol + gridCol))
-    //     }
-    //     return arr
-    // }, [data, gridCol])
-    // const gridContainerRef = useRef<HTMLDivElement>(null)
-    // const gridwrapperRef = useRef<HTMLDivElement>(null)
-    // const [grid] = useVirtualList(showList, {
-    //     containerTarget: gridContainerRef,
-    //     wrapperTarget: gridwrapperRef,
-    //     itemHeight: gridHeight + 16,
-    //     overscan: 6
-    // })
-    // ----
+
+    const onScrollCapture = useThrottleFn(
+        () => {
+            // 不执行非列表布局逻辑
+            if (!isList) return
+
+            if (loading) return
+            if (!hasMore) return
+
+            if (listContainerRef && listContainerRef.current) {
+                const {scrollTop, clientHeight, scrollHeight} = fetchListHeight()
+                const scrollBottom = scrollHeight - scrollTop - clientHeight
+                if (scrollBottom <= optHeight * 3) {
+                    updateList()
+                }
+            }
+        },
+        {wait: 200, leading: false}
+    )
+
+    useEffect(() => {
+        // 不执行非列表布局逻辑
+        if (!isList) return
+
+        if (loading) return
+        if (!hasMore) return
+
+        if (listContainerRef && listContainerRef.current && listwrapperRef && listwrapperRef.current) {
+            const {clientHeight} = fetchListHeight()
+            const bodyHeight = listwrapperRef.current?.clientHeight
+            if (bodyHeight + optHeight * 2 <= clientHeight) {
+                updateList()
+            }
+        }
+    }, [loading, listContainerRef.current?.clientHeight, listwrapperRef.current?.clientHeight])
+
+    return (
+        <div ref={listContainerRef} className={styles["list-list-warpper"]} onScroll={() => onScrollCapture.run()}>
+            <div ref={listwrapperRef}>
+                {list.map((ele) => {
+                    return (
+                        <div key={(ele.data || {})["uuid"]} className={styles["list-opt"]}>
+                            {render(ele)}
+                        </div>
+                    )
+                })}
+                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
+                {data.length > 0 && loading && (
+                    <div className={styles["loading-wrapper"]}>
+                        <YakitSpin wrapperClassName={styles["loading-style"]} />
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+})
+/** @name 插件列表形式单个项组件 */
+export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
+    const {data, checked, onCheck, img, title, help, time, subTitle, extraNode, onClick} = props
+
+    // useWhyDidYouUpdate("ListLayoutOpt", {...props})
+
+    // 副标题组件
+    const subtitle = useMemoizedFn(() => {
+        if (subTitle) return subTitle(data)
+        return null
+    })
+    // 拓展组件
+    const extra = useMemoizedFn(() => {
+        if (extraNode) return extraNode(data)
+        return null
+    })
+    // 组件点击回调
+    const onclick = useMemoizedFn(() => {
+        if (onClick) return onClick(data)
+        return null
+    })
+
+    return (
+        <div className={styles["list-layout-opt-wrapper"]} onClick={onclick}>
+            <div className={styles["opt-body"]}>
+                <div className={styles["content-style"]}>
+                    <YakitCheckbox
+                        checked={checked}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => onCheck(data, e.target.checked)}
+                    />
+                    <AuthorImg src={img || ""} />
+                    <div className={styles["title-wrapper"]}>
+                        <div className={styles["title-body"]}>
+                            <div className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}>
+                                {title}
+                            </div>
+                            {subtitle()}
+                        </div>
+                        <div className={classNames(styles["help-style"], "yakit-content-single-ellipsis")}>
+                            {help || "No Description about it."}
+                        </div>
+                    </div>
+                </div>
+                <div className={styles["time-style"]}>{formatDate(time)}</div>
+            </div>
+            {extra()}
+        </div>
+    )
+})
+
+/** @name 插件网格布局列表 */
+export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
+    const {isList, data, render, optHeight, loading, hasMore, updateList} = props
+
+    // useWhyDidYouUpdate("ListList", {...props})
+
     const bodyRef = useSize(document.querySelector("body"))
     const gridContainerRef = useRef<HTMLDivElement>(null)
     const gridCol = useMemo(() => {
@@ -406,146 +569,120 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
         if (width >= 1736) return 5
         return 2
     }, [bodyRef])
+    // 列表最小高度
+    const wrapperHeight = useMemo(() => {
+        const count = data.length || 0
+        const rows = Math.ceil(count / gridCol)
+        return rows * optHeight + rows * 16
+    }, [data, gridCol])
 
-    const listPosition = useScroll(listContainerRef, ({top}) => {
-        if (listContainerRef.current) {
-            const clientHeight = listContainerRef.current?.clientHeight
-            const scrollHeight = listContainerRef.current?.scrollHeight
+    useEffect(() => {
+        // 不执行非网格布局逻辑
+        if (isList) return
 
-            if (loading) return false
-            if (top + clientHeight > scrollHeight - 10) {
-                if (data.length === total) return false
+        if (loading) return
+        if (!hasMore) return
+        if (wrapperHeight === 0) return
+
+        if (gridContainerRef && gridContainerRef.current) {
+            const clientHeight = gridContainerRef.current?.clientHeight || 0
+            if (wrapperHeight <= clientHeight + optHeight) {
                 updateList()
             }
         }
+    }, [wrapperHeight, loading, gridContainerRef.current?.clientHeight])
 
-        return false
-    })
-    const gridPosition = useScroll(gridContainerRef, ({top}) => {
-        if (gridContainerRef.current) {
-            const clientHeight = gridContainerRef.current?.clientHeight
-            const scrollHeight = gridContainerRef.current?.scrollHeight
+    const onScrollCapture = useThrottleFn(
+        () => {
+            // 不执行非网格布局逻辑
+            if (isList) return
 
-            if (loading) return false
-            if (top + clientHeight > scrollHeight - 10) {
-                if (data.length === total) return false
-                updateList()
+            if (loading) return
+            if (!hasMore) return
+
+            // 网格布局
+            if (gridContainerRef && gridContainerRef.current) {
+                const {scrollTop, clientHeight, scrollHeight} = gridContainerRef.current || {
+                    scrollTop: 0,
+                    clientHeight: 0,
+                    scrollHeight: 0
+                }
+                const scrollBottom = scrollHeight - scrollTop - clientHeight
+                if (scrollBottom <= optHeight * 2) {
+                    updateList()
+                }
             }
-        }
-
-        return false
-    })
-
-    return (
-        <div className={styles["list-show-container"]}>
-            <YakitSpin spinning={loading}>
-                {/* 列表布局 */}
-                <div
-                    ref={listContainerRef}
-                    className={classNames(styles["list-wrapper"], {[styles["list-hide-container"]]: !isList})}
-                >
-                    <div ref={listwrapperRef}>
-                        {list.map((ele) => {
-                            return listNode(ele)
-                        })}
-                    </div>
-                </div>
-                {/* 网格布局 */}
-                <div
-                    ref={gridContainerRef}
-                    className={classNames(styles["grid-wrapper"], {[styles["list-hide-container"]]: isList})}
-                >
-                    <ul className={styles["ul-wrapper"]}>
-                        {data.map((item, index) => {
-                            const rowNum = Math.floor(index / gridCol)
-                            const colNum = index % gridCol
-                            return (
-                                <li
-                                    key={onKey({index: index, data: item})}
-                                    style={{
-                                        zIndex: index + 1,
-                                        transform: `translate(${colNum * 100}%, ${rowNum * 100}%)`
-                                    }}
-                                    className={styles["li-style"]}
-                                >
-                                    {gridNode({index: index, data: item})}
-                                </li>
-                            )
-                        })}
-                    </ul>
-                </div>
-                {/* <div
-                    ref={gridContainerRef}
-                    className={classNames(styles["list-wrapper"], {[styles["list-hide-container"]]: isList})}
-                >
-                    <ReactResizeDetector
-                        onResize={(w, h) => {
-                            if (!w || !h) {
-                                return
-                            }
-                            let cols = Math.floor(w / 288)
-                            if (cols >= 5) setGridCol(cols)
-                            else setGridCol(cols)
-                        }}
-                        handleWidth={true}
-                        handleHeight={false}
-                        refreshMode={"debounce"}
-                        refreshRate={50}
-                    />
-                    <div ref={gridwrapperRef}>
-                        {grid.map((ele) => {
-                            return (
-                                <div className={styles["grid-row-wrapper"]}>
-                                    {ele.data.map((item, i) => {
-                                        return gridNode({row: ele.index, col: i, data: item})
-                                    })}
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div> */}
-            </YakitSpin>
-        </div>
+        },
+        {wait: 200, leading: false}
     )
-})
-
-/** @name 插件列表形式单个项组件 */
-export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
-    const {onlyId, checked, onCheck, img, title, help, time, subTitle, extraNode, onClick} = props
 
     return (
-        <div key={onlyId} className={styles["list-layout-opt-wrapper"]} onClick={onClick}>
-            <div className={styles["opt-body"]}>
-                <div className={styles["content-style"]}>
-                    <YakitCheckbox
-                        checked={checked}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => onCheck(e.target.checked)}
-                    />
-                    <AuthorImg src={img || ""} />
-                    <div className={styles["title-wrapper"]}>
-                        <div className={styles["title-body"]}>
-                            <div className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}>
-                                {title}
-                            </div>
-                            {subTitle || null}
-                        </div>
-                        <div className={classNames(styles["help-style"], "yakit-content-single-ellipsis")}>
-                            {help || "No Description about it."}
-                        </div>
-                    </div>
-                </div>
-                <div className={styles["time-style"]}>{formatDate(time)}</div>
+        <div ref={gridContainerRef} className={styles["grid-list-wrapper"]} onScroll={() => onScrollCapture.run()}>
+            <div style={{minHeight: wrapperHeight}} className={styles["grid-list-body"]}>
+                <ul className={styles["ul-wrapper"]}>
+                    {data.map((item, index) => {
+                        const rowNum = Math.floor(index / gridCol)
+                        const colNum = index % gridCol
+                        return (
+                            <li
+                                key={item["uuid"]}
+                                style={{
+                                    zIndex: index + 1,
+                                    transform: `translate(${colNum * 100}%, ${rowNum * 100}%)`
+                                }}
+                                className={classNames(styles["li-style"], {[styles["li-first-style"]]: colNum === 0})}
+                            >
+                                {render({index: index, data: item})}
+                            </li>
+                        )
+                    })}
+                </ul>
             </div>
-            {extraNode || null}
+            {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
+            {data.length > 0 && loading && (
+                <div className={styles["loading-wrapper"]}>
+                    <YakitSpin wrapperClassName={styles["loading-style"]} />
+                </div>
+            )}
         </div>
     )
 })
-
 /** @name 插件网格形式单个项组件 */
 export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
-    const {onlyId, checked, onCheck, title, type, tags, help, img, user, prImgs, time, subTitle, extraFooter, onClick} =
-        props
+    const {
+        data,
+        checked,
+        onCheck,
+        title,
+        type,
+        tags,
+        help,
+        img,
+        user,
+        prImgs = [],
+        time,
+        subTitle,
+        extraFooter,
+        onClick
+    } = props
+
+    // useWhyDidYouUpdate("GridLayoutOpt", {...props})
+
+    // 副标题组件
+    const subtitle = useMemoizedFn(() => {
+        if (subTitle) return subTitle(data)
+        return null
+    })
+    // 拓展组件
+    const extra = useMemoizedFn(() => {
+        if (extraFooter) return extraFooter(data)
+        return null
+    })
+    // 组件点击回调
+    const onclick = useMemoizedFn(() => {
+        if (onClick) return onClick(data)
+        return null
+    })
 
     /** 展示的标签列表 */
     const tagList = useMemo(() => {
@@ -570,12 +707,12 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
     }, [prImgs])
 
     return (
-        <div key={onlyId} className={styles["grid-layout-opt-wrapper"]} onClick={onClick}>
+        <div className={styles["grid-layout-opt-wrapper"]} onClick={onclick}>
             <div
                 className={classNames(styles["opt-check-wrapper"], {[styles["opt-check-active"]]: checked})}
                 onClick={(e) => {
                     e.stopPropagation()
-                    onCheck(!checked)
+                    onCheck(data, !checked)
                 }}
             >
                 <PluginsGridCheckIcon />
@@ -587,7 +724,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                         <div className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}>
                             {title}
                         </div>
-                        {subTitle || null}
+                        {subtitle()}
                     </div>
 
                     <div className={styles["content-wrapper"]}>
@@ -649,7 +786,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                         <OutlineCalendarIcon />
                         {formatDate(time)}
                     </div>
-                    <div className={styles["extra-footer"]}>{extraFooter || null}</div>
+                    <div className={styles["extra-footer"]}>{extra()}</div>
                 </div>
             </div>
         </div>
@@ -709,6 +846,54 @@ export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
         <div className={imgBodyClass}>
             <img className={imgClass} src={srcUrl} alt='' onError={onErrorImg} />
             {iconNode && <div className={styles["author-img-mask"]}>{iconNode}</div>}
+        </div>
+    )
+})
+
+/** @name 插件标签横向一行展示 */
+export const TagsListShow: React.FC<TagsListShowProps> = memo((props) => {
+    const {tags} = props
+
+    // 获取wrapper和第一个标签的宽度
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const wrapperSize = useSize(wrapperRef)
+    const firstRef = useRef<HTMLDivElement>(null)
+    const initFirstWidthRef = useRef<number>(0)
+    const fetchFirstWidth = useMemoizedFn(() => {
+        if (initFirstWidthRef.current) return initFirstWidthRef.current
+        if (!firstRef || !firstRef.current) return 0
+        initFirstWidthRef.current = firstRef.current.getBoundingClientRect().width
+        return initFirstWidthRef.current
+    })
+
+    // 判断是否需要将第一个标签隐藏并换成...展示
+    const isShow = useMemo(() => {
+        if (!wrapperSize?.width) return true
+        const firstWidth = fetchFirstWidth()
+        if (!firstWidth) return true
+
+        const {width} = wrapperSize
+        if (width > firstWidth + 16) return true
+        else return false
+    }, [wrapperSize])
+
+    if (tags.length === 0) return null
+
+    return (
+        <div ref={wrapperRef} className={classNames(styles["tags-list-show-wrapper"], "yakit-content-single-ellipsis")}>
+            {isShow
+                ? tags.map((item, index) => {
+                      return (
+                          <div
+                              ref={index === 0 ? firstRef : undefined}
+                              key={`tag-${item}`}
+                              className={styles["tag-wrapper"]}
+                          >
+                              {item}
+                          </div>
+                      )
+                  })
+                : "..."}
         </div>
     )
 })

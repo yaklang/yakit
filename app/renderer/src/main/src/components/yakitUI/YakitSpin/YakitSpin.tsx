@@ -19,7 +19,7 @@ export const YakitSpin: React.FC<YakitSpinProps> = (props) => {
     return (
         <Spin
             {...props}
-            className={styles["yakit-spin"]}
+            className={classNames(styles["yakit-spin"], props.wrapperClassName)}
             wrapperClassName={classNames(styles["yakit-spin"], props.wrapperClassName)}
         ></Spin>
     )
