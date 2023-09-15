@@ -31,7 +31,7 @@ import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useUpdateEffect, useDebounceEffect} from "ahooks"
 import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
@@ -465,47 +465,56 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(false)
-    useEffect(() => {
-        if (!id) {
-            setIsSelect(false)
-            return
-        }
-        setIsSelect(true)
-        getRemoteValue("IsFoldValue").then((data) => {
-            if (!data) {
+
+    useDebounceEffect(
+        () => {
+            if (!id) {
+                setIsSelect(false)
                 return
             }
-            const is: boolean = JSON.parse(data).is
-            setFold(is)
-        })
-        setFlow(undefined)
-        // 小于500K不走接口拿数据
-        if (
-            selectedFlow?.BodySizeVerbose == '0' ||
-            selectedFlow?.BodySizeVerbose?.endsWith('B') ||
-            selectedFlow?.BodySizeVerbose?.endsWith('K') && Number(selectedFlow?.BodySizeVerbose?.slice(0, -1)) <= 500
-        ) {
-            setFlow(selectedFlow)
-            queryMITMRuleExtractedData(selectedFlow)
-            return
+            setIsSelect(true)
+            getRemoteValue("IsFoldValue").then((data) => {
+                if (!data) {
+                    return
+                }
+                const is: boolean = JSON.parse(data).is
+                setFold(is)
+            })
+            setFlow(undefined)
+            // 小于500K不走接口拿数据
+            if (
+                selectedFlow?.BodySizeVerbose == '0' ||
+                selectedFlow?.BodySizeVerbose?.endsWith('B') ||
+                selectedFlow?.BodySizeVerbose?.endsWith('K') && Number(selectedFlow?.BodySizeVerbose?.slice(0, -1)) <= 500
+            ) {
+                setFlow(selectedFlow)
+                queryMITMRuleExtractedData(selectedFlow)
+                return
+            }
+            setLoading(true)
+            ipcRenderer
+                .invoke("GetHTTPFlowById", {Id: id})
+                .then((i: HTTPFlow) => {
+                    setFlow(i)
+                    queryMITMRuleExtractedData(i)
+                })
+                .catch((e: any) => {
+                    failed(`Query HTTPFlow failed: ${e}`)
+                })
+                .finally(() => {
+                    setTimeout(() => setLoading(false), 300)
+                })
+            return () => {
+                setExistedInfoType([])
+            }
+        },
+        [id],
+        {
+            wait: 1000,
+            leading: false,
+            trailing: true
         }
-        setLoading(true)
-        ipcRenderer
-            .invoke("GetHTTPFlowById", {Id: id})
-            .then((i: HTTPFlow) => {
-                setFlow(i)
-                queryMITMRuleExtractedData(i)
-            })
-            .catch((e: any) => {
-                failed(`Query HTTPFlow failed: ${e}`)
-            })
-            .finally(() => {
-                setTimeout(() => setLoading(false), 300)
-            })
-        return () => {
-            setExistedInfoType([])
-        }
-    }, [id])
+    )
 
     const queryMITMRuleExtractedData = (i: HTTPFlow) => {
         const existedExtraInfos: HTTPFlowInfoType[] = []
