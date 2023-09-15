@@ -102,7 +102,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const updateToken = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer
-            .invoke("RequireDNSLogDomain", {Addr: "", DNSMode: selectedMode || "", UseLocal: isLocal})
+            .invoke("RequireDNSLogDomain", {Addr: "", DNSMode: selectedMode || "", UseLocal: selectedMode==="内置"?false:isLocal})
             .then((rsp: {Domain: string; Token: string}) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
@@ -342,15 +342,15 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                         ))}
                                     </YakitSelect>
                                 </Form.Item>
-                                <Form.Item
+                                {selectedMode!=="内置"&&<Form.Item
                                     style={{
                                         marginBottom: 0,
-                                        marginRight: 10 // 添加右侧间隔
+                                        marginRight: 10 // 添加右侧间隔isLocal
                                     }}
                                     label={"使用本地"}
                                 >
                                     <YakitSwitch checked={isLocal} onChange={setIsLocal} />
-                                </Form.Item>
+                                </Form.Item>}
                                 <Divider
                                     style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
                                     type={"vertical"}
