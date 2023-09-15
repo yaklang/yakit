@@ -1146,6 +1146,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onSetAdvancedConfig = useMemoizedFn((c: boolean) => {
         setAdvancedConfig(c)
         setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
+        emiter.emit("onGetFuzzerAdvancedConfigShow", c)
     })
 
     const httpResponse: FuzzerResponse = useMemo(() => {
