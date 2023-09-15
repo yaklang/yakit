@@ -33,15 +33,10 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
         ipcRenderer
             .invoke("fetch-netWork-status")
             .then((res) => {
-                console.log('res',res)
+                console.log("res", res)
             })
-            .catch((error) => {
-                
-            })
+            .catch((error) => {})
     }, [])
-    const updateOnlineStatus = useMemoizedFn((event) => {
-        console.log("event", event)
-    })
     const isShowRoll = useMemo(() => {
         return ratio > 0.1
     }, [ratio])
