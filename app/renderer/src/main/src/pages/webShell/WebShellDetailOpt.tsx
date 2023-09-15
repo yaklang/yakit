@@ -1,5 +1,5 @@
 import React from 'react';
-import {WebShellDetail} from "@/pages/webShell/models";
+import {ShellType, WebShellDetail} from "@/pages/webShell/models";
 import { Tabs } from 'antd';
 import {WebShellURLTreeAndTable} from "@/pages/webShell/WebShellTreeAndTable";
 
@@ -17,9 +17,10 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
             <Tabs className='scan-port-tabs no-theme-tabs' tabBarStyle={{marginBottom: 5}}>
                 <Tabs.TabPane tab={"基本信息"} key={"basicInfo"}>
                     {props.webshellInfo.Url}
+                    {props.webshellInfo.ShellType}
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"文件管理"} key={"fileOpt"}>
-                    <WebShellURLTreeAndTable Id={props.webshellInfo.Id}/>
+                    <WebShellURLTreeAndTable Id={props.webshellInfo.Id} shellType={props.webshellInfo.ShellType as ShellType}/>
                 </Tabs.TabPane>
             </Tabs>
         </div>
