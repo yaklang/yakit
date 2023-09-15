@@ -14,7 +14,7 @@ import classNames from "classnames"
 const {YakitPanel} = YakitCollapse
 
 export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
-    const {wrapperClassName, loading, visible, setVisible, selecteds, onSelect, groupList, noDataHint} = props
+    const {wrapperClassName, loading = false, visible, setVisible, selecteds, onSelect, groupList, noDataHint} = props
 
     const [activeKey, setActiveKey] = useState<string[]>([])
     useEffect(() => {
