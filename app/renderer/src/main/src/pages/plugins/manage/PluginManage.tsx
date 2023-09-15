@@ -1,15 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {
-    ApplicantIcon,
-    PluginDetailHeader,
-    PluginDetails,
-    PluginEditorDiff,
-    PluginModifyInfo,
-    PluginModifySetting,
-    PluginsContainer,
-    PluginsLayout,
-    statusTag
-} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout, statusTag} from "../baseTemplate"
 import {
     AuthorImg,
     FuncBtn,
@@ -22,20 +12,11 @@ import {
     TypeSelect
 } from "../funcTemplate"
 import {TypeSelectOpt} from "../funcTemplateType"
-import {
-    SolidBadgecheckIcon,
-    SolidBanIcon,
-    SolidChevrondownIcon,
-    SolidFlagIcon,
-    SolidFloatwinIcon
-} from "@/assets/icon/solid"
+import {SolidBadgecheckIcon, SolidBanIcon, SolidFlagIcon} from "@/assets/icon/solid"
 import {
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
-    OutlineLightbulbIcon,
     OutlinePencilaltIcon,
-    OutlineQuestionmarkcircleIcon,
-    OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {SolidOfficialpluginIcon} from "@/assets/icon/colors"
@@ -45,22 +26,17 @@ import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
 import {apiFetchList, ssfilters} from "../test"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {Form, Tabs, Tooltip} from "antd"
+import {Form} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakEditor} from "@/utils/editors"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {PluginManageDetail} from "./PluginManageDetail"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
-
-const {TabPane} = Tabs
 
 const defaultFilter: PluginFilterParams = {
     type: ["yak", "mitm", "codec", "packet-hack", "port-scan"],
@@ -90,12 +66,60 @@ const StatusType: TypeSelectOpt[] = [
 interface PluginManageProps {}
 
 export const PluginManage: React.FC<PluginManageProps> = (props) => {
+    // 获取插件列表数据-相关逻辑
+    /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
+    /** 是否为首页加载 */
+    const isLoadingRef = useRef<boolean>(true)
+
     const [showFilter, setShowFilter] = useState<boolean>(true)
     const [filters, setFilters, getFilters] = useGetState<PluginFilterParams>(cloneDeep(defaultFilter))
     const [searchs, setSearchs, getSearchs] = useGetState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [pageMeta, setPageMeta, getPageMeta] = useGetState<PluginListPageMeta>(cloneDeep(defaultPagemeta))
     const [response, setResponse, getResponse] = useGetState<API.YakitPluginListResponse>(cloneDeep(defaultResponse))
+    const [hasMore, setHasMore] = useState<boolean>(true)
+
+    const fetchList = useMemoizedFn((reset?: boolean) => {
+        if (loading) return
+
+        setLoading(true)
+
+        const params: PluginListPageMeta = !!reset
+            ? {...defaultPagemeta}
+            : {
+                  page: response.pagemeta.page + 1,
+                  limit: response.pagemeta.limit || 20
+              }
+
+        apiFetchList(params)
+            .then((res: API.YakitPluginListResponse) => {
+                if (!res.data) res.data = []
+
+                const data = false && res.pagemeta.page === 1 ? res.data : getResponse().data.concat(res.data)
+                // const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
+                // setHasMore(!isMore)
+                console.log(data)
+
+                setResponse({
+                    ...res,
+                    data: [...data]
+                })
+                isLoadingRef.current = false
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 300)
+            })
+    })
+
+    // 页面初始化的首次列表请求
+    useEffect(() => {
+        fetchList(true)
+    }, [])
+    // 滚动更多加载
+    const onUpdateList = useMemoizedFn((reset?: boolean) => {
+        fetchList()
+    })
 
     const [allCheck, setAllcheck] = useState<boolean>(false)
     const [selectList, setSelectList, getSelectList] = useGetState<string[]>([])
@@ -114,8 +138,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 单项插件删除
     const [activeDelPlugin, setActiveDelPlugin] = useState<API.YakitPluginDetail | undefined>()
 
-    const modifyForm = useRef<any>(null)
-
     // 全选
     const onCheck = useMemoizedFn((value: boolean) => {
         if (value) setSelectList([])
@@ -127,36 +149,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const onDownload = useMemoizedFn((value?: API.YakitPluginDetail) => {})
     // 删除
     const onDelPlugin = useMemoizedFn(() => {})
-
-    const fetchList = useMemoizedFn(() => {
-        setLoading(true)
-        apiFetchList({...getPageMeta()})
-            .then((res: API.YakitPluginListResponse) => {
-                if (!res.data) res.data = []
-                const data = res.pagemeta.page === 1 ? res.data : getResponse().data.concat(res.data)
-                setResponse({
-                    ...res,
-                    data: [...data]
-                })
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 300)
-            })
-    })
-
-    useEffect(() => {
-        fetchList()
-    }, [])
-
-    const onUpdateList = useMemoizedFn((reset?: boolean) => {
-        if (reset) setPageMeta(cloneDeep(defaultPagemeta))
-        else setPageMeta({...getPageMeta(), page: getPageMeta().page + 1})
-        setTimeout(() => {
-            fetchList()
-        }, 50)
-    })
 
     const onDelTag = useMemoizedFn((value?: string) => {
         if (!value) setFilters({...getFilters(), tags: []})
@@ -179,13 +171,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         } catch (error) {}
         return arr
     }, [plugin])
-    // 查看单项插件详情
-    const onCurrentPlugin = useMemoizedFn((data: API.YakitPluginDetail) => {
-        setPlugin({...data})
-    })
 
-    // 单项勾选回调事件
-    const onItemCheck = useMemoizedFn((data: API.YakitPluginDetail, check: boolean) => {
+    // 单项组件-相关操作和展示组件逻辑
+    /** 单项勾选|取消勾选 */
+    const optCheck = useMemoizedFn((data: API.YakitPluginDetail, value: boolean) => {
         // 全选情况时的取消勾选
         if (allCheck) {
             setSelectList(response.data.map((item) => item.uuid).filter((item) => item !== data.uuid))
@@ -193,277 +182,68 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             return
         }
         // 单项勾选回调
-        if (check) setSelectList([...getSelectList(), data.uuid])
+        if (value) setSelectList([...getSelectList(), data.uuid])
         else setSelectList(getSelectList().filter((item) => item !== data.uuid))
     })
-    /** 网格布局-item组件 */
-    const gridItemRender = (info: {index: number; data: API.YakitPluginDetail}) => {
-        const {index, data} = info
-        const check = allCheck || selectList.includes(data.uuid)
+    /** 单项副标题组件 */
+    const optSubTitle = useMemoizedFn((data: API.YakitPluginDetail) => {
         return (
-            <GridLayoutOpt
-                key={`${data.script_name}|${+data.id || 0}|${data.uuid || "0"}`}
-                onlyId={`${data.script_name}|${+data.id || 0}|${data.uuid || "0"}`}
-                checked={check}
-                onCheck={(value) => onItemCheck(data, value)}
-                title={data.script_name}
-                type={data.type}
-                tags={data.tags}
-                help={data.help || ""}
-                img={data.head_img || ""}
-                user={data.authors || ""}
-                prImgs={[
-                    data.head_img,
-                    data.head_img,
-                    data.head_img,
-                    data.head_img,
-                    data.head_img,
-                    data.head_img,
-                    data.head_img,
-                    data.head_img,
-                    data.head_img
-                ]}
-                time={data.updated_at}
-                subTitle={
-                    <>
-                        {data.official && (
-                            <div className='official-plugin-icon'>
-                                <SolidOfficialpluginIcon />
-                            </div>
-                        )}
-                        {statusTag[`${index % 3}`]}
-                    </>
-                }
-                extraFooter={
-                    <FuncFilterPopver
-                        icon={<OutlineDotshorizontalIcon />}
-                        name={""}
-                        menu={{
-                            data: [
-                                {key: "del", label: "删除"},
-                                {key: "download", label: "下载"}
-                            ],
-                            className: styles["func-filter-dropdown-menu"],
-                            onClick: ({key}) => {
-                                switch (key) {
-                                    case "del":
-                                        setActiveDelPlugin(data)
-                                        setShowReason({visible: true, type: "del"})
-                                        break
-                                    case "download":
-                                        onDownload(data)
-                                        break
-
-                                    default:
-                                        break
-                                }
-                            }
-                        }}
-                    />
-                }
-                onClick={() => onCurrentPlugin(data)}
+            <>
+                {/* {data.official && (
+                    <div className='official-plugin-icon'>
+                        <SolidOfficialpluginIcon />
+                    </div>
+                )} */}
+                {statusTag[`${1 % 3}`]}
+            </>
+        )
+    })
+    /** 单项额外操作组件 */
+    const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
+        return (
+            <FuncFilterPopver
+                icon={<OutlineDotshorizontalIcon />}
+                name={""}
+                menu={{
+                    data: [
+                        {key: "del", label: "删除"},
+                        {key: "download", label: "下载"}
+                    ],
+                    className: styles["func-filter-dropdown-menu"],
+                    onClick: ({key}) => {
+                        switch (key) {
+                            case "del":
+                                setActiveDelPlugin(data)
+                                setShowReason({visible: true, type: "del"})
+                                break
+                            case "download":
+                                onDownload(data)
+                                break
+                            default:
+                                break
+                        }
+                    }
+                }}
+                placement='bottomRight'
             />
         )
-    }
-    /** 列表布局-item组件 */
-    const listItemRender = (info: {index: number; data: API.YakitPluginDetail}) => {
-        const {index, data} = info
-        const check = allCheck || selectList.includes(data.uuid)
-        return (
-            <ListLayoutOpt
-                key={`${data.script_name}|${+data.id || 0}|${data.uuid || "0"}`}
-                onlyId={`${data.script_name}|${+data.id || 0}|${data.uuid || "0"}`}
-                checked={check}
-                onCheck={(value) => onItemCheck(data, value)}
-                img={data.head_img}
-                title={data.script_name}
-                help={data.help || ""}
-                time={data.updated_at}
-                subTitle={
-                    <>
-                        {data.official && (
-                            <div className='official-plugin-icon'>
-                                <SolidOfficialpluginIcon />
-                            </div>
-                        )}
-                        {statusTag[`${index % 3}`]}
-                    </>
-                }
-                extraNode={
-                    <FuncFilterPopver
-                        icon={<OutlineDotshorizontalIcon />}
-                        name={""}
-                        menu={{
-                            data: [
-                                {key: "del", label: "删除"},
-                                {key: "download", label: "下载"}
-                            ],
-                            className: styles["func-filter-dropdown-menu"],
-                            onClick: ({key}) => {
-                                switch (key) {
-                                    case "del":
-                                        setActiveDelPlugin(data)
-                                        setShowReason({visible: true, type: "del"})
-                                        break
-                                    case "download":
-                                        onDownload(data)
-                                        break
-
-                                    default:
-                                        break
-                                }
-                            }
-                        }}
-                        placement='bottomRight'
-                    />
-                }
-                onClick={() => onCurrentPlugin(data)}
-            />
-        )
-    }
-    /** 生成唯一key值 */
-    const onKey = useMemoizedFn((info: {index: number; data: API.YakitPluginDetail}) => {
-        const {data} = info
-        return `${data.script_name}|${+data.id || 0}|${data.uuid || "0"}`
+    })
+    /** 单项点击回调 */
+    const optClick = useMemoizedFn((data: API.YakitPluginDetail) => {
+        setPlugin({...data})
     })
 
     return (
         <>
             {!!plugin && (
-                <PluginDetails<API.YakitPluginDetail>
-                    title='插件管理'
-                    checked={allCheck}
+                <PluginManageDetail
+                    info={plugin}
+                    allCheck={allCheck}
                     onCheck={onCheck}
-                    total={response.pagemeta.total}
+                    data={response}
                     selected={selectNum}
-                    listProps={{
-                        rowKey: "uuid",
-                        data: response.data,
-                        loadMoreData: () => {},
-                        classNameRow: styles["details-opt-wrapper"],
-                        renderRow: (info, i) => {
-                            return (
-                                <div
-                                    className={classNames(styles["details-wrapper-item-opt"], {
-                                        [styles["details-wrapper-item-opt-active"]]: plugin.uuid === info.uuid
-                                    })}
-                                >
-                                    <div className={styles["opt-wrapper"]}>
-                                        <div className={styles["opt-info"]}>
-                                            <YakitCheckbox />
-                                            <AuthorImg src={info.head_img || ""} />
-                                            <div
-                                                className={classNames(
-                                                    styles["text-style"],
-                                                    "yakit-content-single-ellipsis"
-                                                )}
-                                                title={info.script_name}
-                                            >
-                                                {info.script_name}
-                                            </div>
-                                        </div>
-                                        <div className={styles["opt-show"]}>
-                                            {statusTag[`${i % 3}`]}
-                                            {info.official && (
-                                                <div className='official-plugin-icon'>
-                                                    <SolidOfficialpluginIcon />
-                                                </div>
-                                            )}
-                                            <Tooltip
-                                                title={info.help || "No Description about it."}
-                                                placement='topRight'
-                                                overlayClassName='plugins-tooltip'
-                                            >
-                                                <OutlineQuestionmarkcircleIcon className={styles["icon-style"]} />
-                                            </Tooltip>
-                                            <YakitPopover
-                                                placement='topRight'
-                                                overlayClassName={styles["terminal-popover"]}
-                                                content={
-                                                    <YakEditor type={"yak"} value={info.content} readOnly={true} />
-                                                }
-                                            >
-                                                <OutlineTerminalIcon className={styles["icon-style"]} />
-                                            </YakitPopover>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        },
-                        page: pageMeta.page,
-                        hasMore: response.pagemeta.total !== response.data.length,
-                        loading: loading,
-                        defItemHeight: 46
-                    }}
-                    onBack={() => {
-                        setPlugin(undefined)
-                    }}
-                >
-                    <div className={styles["details-content-wrapper"]}>
-                        <Tabs tabPosition='right' className='plugins-tabs'>
-                            <TabPane tab='源 码' key='code'>
-                                <div className={styles["plugin-info-wrapper"]}>
-                                    <PluginDetailHeader
-                                        pluginName={plugin.script_name}
-                                        help={plugin.help}
-                                        titleNode={statusTag["1"]}
-                                        tags={plugin.tags}
-                                        extraNode={
-                                            <>
-                                                <YakitButton
-                                                    onClick={() => {
-                                                        modifyForm.current?.onSubmit()
-                                                    }}
-                                                >
-                                                    submit
-                                                </YakitButton>
-                                            </>
-                                        }
-                                        img={plugin.head_img}
-                                        user={plugin.authors}
-                                        pluginId={plugin.uuid}
-                                        updated_at={plugin.updated_at}
-                                    />
-
-                                    <div className={styles["plugin-info-body"]}>
-                                        <div className={styles["plugin-modify-info"]}>
-                                            <div className={styles["modify-advice"]}>
-                                                <div className={styles["advice-icon"]}>
-                                                    <OutlineLightbulbIcon />
-                                                </div>
-                                                <div className={styles["advice-body"]}>
-                                                    <div className={styles["advice-content"]}>
-                                                        <div className={styles["content-title"]}>修改内容描述</div>
-                                                        <div className={styles["content-style"]}>
-                                                            这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，
-                                                        </div>
-                                                    </div>
-                                                    <div className={styles["advice-user"]}>
-                                                        <AuthorImg src={plugin.head_img} />
-                                                        {plugin.authors}
-                                                        <ApplicantIcon />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <PluginModifyInfo ref={modifyForm} kind='bug' />
-                                        </div>
-
-                                        <div className={styles["plugin-setting-info"]}>
-                                            <div className={styles["setting-header"]}>插件配置</div>
-                                            <div className={styles["setting-body"]}>
-                                                {/* <PluginModifySetting /> */}
-                                                <PluginEditorDiff />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </TabPane>
-                            <TabPane tab='日 志' key='log'>
-                                <div></div>
-                            </TabPane>
-                        </Tabs>
-                    </div>
-                </PluginDetails>
+                    onBack={() => {}}
+                />
             )}
 
             <PluginsLayout
@@ -502,7 +282,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 }
             >
                 <PluginsContainer
-                    loading={loading}
+                    loading={loading && isLoadingRef.current}
                     visible={showFilter}
                     setVisible={setShowFilter}
                     selecteds={filters as Record<string, string[]>}
@@ -521,15 +301,52 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     >
                         <ListShowContainer<API.YakitPluginDetail>
                             isList={isList}
-                            total={response.pagemeta.total}
                             data={response.data}
-                            gridNode={gridItemRender}
+                            gridNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                                const {data} = info
+                                const check = allCheck || selectList.includes(data.uuid)
+                                return (
+                                    <GridLayoutOpt
+                                        data={data}
+                                        checked={check}
+                                        onCheck={optCheck}
+                                        title={data.script_name}
+                                        type={data.type}
+                                        tags={data.tags}
+                                        help={data.help || ""}
+                                        img={data.head_img || ""}
+                                        user={data.authors || ""}
+                                        prImgs={data.prs}
+                                        time={data.updated_at}
+                                        subTitle={optSubTitle}
+                                        extraFooter={optExtraNode}
+                                        onClick={optClick}
+                                    />
+                                )
+                            }}
                             gridHeight={210}
-                            listNode={listItemRender}
+                            listNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                                const {data} = info
+                                const check = allCheck || selectList.includes(data.uuid)
+                                return (
+                                    <ListLayoutOpt
+                                        data={data}
+                                        checked={check}
+                                        onCheck={optCheck}
+                                        img={data.head_img}
+                                        title={data.script_name}
+                                        help={data.help || ""}
+                                        time={data.updated_at}
+                                        subTitle={optSubTitle}
+                                        extraNode={optExtraNode}
+                                        onClick={optClick}
+                                    />
+                                )
+                            }}
                             listHeight={73}
                             loading={loading}
+                            hasMore={hasMore}
                             updateList={onUpdateList}
-                            onKey={onKey}
                         />
                     </PluginsList>
                 </PluginsContainer>
@@ -669,7 +486,7 @@ interface ReasonModalProps {
     onOK: (reason: string) => any
 }
 /** @name 原因说明 */
-const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
+export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
     const {visible, setVisible, type = "nopass", onOK} = props
 
     const title = useMemo(() => {
