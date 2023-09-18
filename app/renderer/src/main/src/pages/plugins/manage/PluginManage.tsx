@@ -97,7 +97,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 const data = false && res.pagemeta.page === 1 ? res.data : getResponse().data.concat(res.data)
                 // const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
                 // setHasMore(!isMore)
-                console.log(data)
+                // console.log(data)
 
                 setResponse({
                     ...res,
@@ -318,7 +318,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         help={data.help || ""}
                                         img={data.head_img || ""}
                                         user={data.authors || ""}
-                                        prImgs={data.prs}
+                                        // prImgs={data.prs}
                                         time={data.updated_at}
                                         subTitle={optSubTitle}
                                         extraFooter={optExtraNode}
