@@ -874,6 +874,23 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
         return null
     }
 
+    /** 区分继续任务与新任务 获取扫描主机数 Ping存活主机数 */
+    const getCardByJudgeOld = (v:"扫描主机数"|"Ping存活主机数") => {
+        if(oldRunParams && oldRunParams.LastRecord.ExtraInfo){
+            let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo).statusCards
+            const oldItem:StatusCardInfoProps[] = oldCards.filter((item) =>["存活主机数/扫描主机数"].includes(item.tag))
+            if(oldItem.length>0){
+                let strArr:string[] = oldItem[0].info[0].Data.split("/")
+                if(v==="Ping存活主机数") return strArr[0]
+                else return strArr[strArr.length - 1]
+            }
+            return getCardForId(v)
+        }
+        else{
+            return getCardForId(v)
+        }
+    }
+
     /** 下载报告 */
     const downloadReport = () => {
         // 脚本数据
@@ -883,8 +900,8 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
             {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
             {Key: "report_name", Value: reportName},
             {Key: "plugins", Value: runPluginCount},
-            {Key: "host_total", Value: getCardForId("扫描主机数")},
-            {Key: "ping_alive_host_total", Value: getCardForId("Ping存活主机数")},
+            {Key: "host_total", Value: getCardByJudgeOld("扫描主机数")},
+            {Key: "ping_alive_host_total", Value: getCardByJudgeOld("Ping存活主机数")},
             {Key: "port_total", Value: getCardForId("扫描端口数")}
         ]
         // 老报告生成
@@ -911,8 +928,8 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
                 {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
                 {Key: "report_name", Value: reportName},
                 {Key: "plugins", Value: runPluginCount},
-                {Key: "host_total", Value: getCardForId("扫描主机数")},
-                {Key: "ping_alive_host_total", Value: getCardForId("Ping存活主机数")},
+                {Key: "host_total", Value: getCardByJudgeOld("扫描主机数")},
+                {Key: "ping_alive_host_total", Value: getCardByJudgeOld("Ping存活主机数")},
                 {Key: "port_total", Value: getCardForId("扫描端口数")}
             ]
         }
@@ -1258,7 +1275,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
 
     const statusErrorCards = infoState.statusState.filter((item) => ["加载插件失败", "SYN扫描失败"].includes(item.tag))
     const statusSucceeCards = infoState.statusState.filter((item) =>
-        ["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数"].includes(item.tag)
+        ["加载插件", "漏洞/风险/指纹", "开放端口数/已扫主机数", "存活主机数/扫描主机数"].includes(item.tag)
     )
     const statusCards = useMemo(() => {
         if (statusErrorCards.length > 0) {
@@ -1272,6 +1289,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         if (showOldCard && oldRunParams && oldRunParams.LastRecord.ExtraInfo) {
             let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo).statusCards
             return Array.isArray(oldCards) ? oldCards : []
+        }
+        // 继续任务运行时 保持之前的 存活主机数/扫描主机数 数据
+        else if(oldRunParams && oldRunParams.LastRecord.ExtraInfo){
+            let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo).statusCards
+            const oldItem:StatusCardInfoProps[] = oldCards.filter((item) =>["存活主机数/扫描主机数"].includes(item.tag))
+            const nowStatusCards:StatusCardInfoProps [] = statusCards.filter((item) => item.tag !== "存活主机数/扫描主机数")
+            return [...oldItem,...nowStatusCards]
         }
         return statusCards
     }, [statusCards, showOldCard, oldRunParams])
