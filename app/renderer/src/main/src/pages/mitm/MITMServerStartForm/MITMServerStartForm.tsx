@@ -118,7 +118,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-                const findOpenRepRule = newRules.find(item => (!item.NoReplace || item.Drop || item.ExtraRepeat))
+                const findOpenRepRule = newRules.find(item => (!item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)))
                 setOpenRepRuleFlag(findOpenRepRule !== undefined)
                 setRules(newRules)
             })

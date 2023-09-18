@@ -1,5 +1,5 @@
-import React, {ReactNode, useContext, useEffect, useMemo, useRef, useState} from "react"
-import {Form, Modal, notification, Result, Space, Popover, Tooltip, Divider} from "antd"
+import React, {useEffect, useMemo, useRef, useState} from "react"
+import {Form, Modal, Result, Space, Popover, Tooltip, Divider} from "antd"
 import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
@@ -15,24 +15,19 @@ import {
     useMap,
     useMemoizedFn,
     useSize,
-    useThrottleFn,
-    useUpdateEffect,
-    useWhyDidYouUpdate
+    useUpdateEffect
 } from "ahooks"
-import {getRemoteValue, getLocalValue, setLocalValue, setRemoteValue} from "../../utils/kv"
+import {getRemoteValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
-import {HackerPlugin} from "../hacker/HackerPlugin"
 import {fuzzerInfoProp} from "../MainOperator"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
 import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
-import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "./InsertFileFuzzTag"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import styles from "./HTTPFuzzerPage.module.scss"
 import {ShareData} from "./components/ShareData"
-// import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -42,15 +37,12 @@ import {
     PaperAirplaneIcon,
     SearchIcon,
     StopIcon,
-    TrashIcon,
-    ResizerIcon
+    ArrowsRetractIcon,
+    ArrowsExpandIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
-import {editor} from "monaco-editor"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
-import {ResizeCardBox} from "@/components/ResizeCardBox/ResizeCardBox"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -65,7 +57,6 @@ import {
     HTTPFuzzerPageTable,
     HTTPFuzzerPageTableQuery
 } from "./components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import {useWatch} from "antd/lib/form/Form"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
@@ -85,22 +76,10 @@ import {
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {HTTPHeader} from "../mitm/MITMContentReplacerHeaderOperator"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {
-    ExtractionResultsContent,
-    MatcherAndExtraction,
-    defaultExtractorItem,
-    defaultMatcherItem
-} from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {MatcherAndExtraction} from "./MatcherAndExtractionCard/MatcherAndExtractionCard"
 import _ from "lodash"
 import {YakitRoute} from "@/routes/newRoute"
-import {
-    HTTPFuzzerRangeEditorMenu,
-    HTTPFuzzerClickEditorMenu,
-    LabelDataProps,
-    HTTPFuzzerRangeReadOnlyEditorMenu,
-    defaultLabel,
-    FUZZER_LABEL_LIST_NUMBER
-} from "./HTTPFuzzerEditorMenu"
+import {defaultLabel, FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {execCodec} from "@/utils/encodec"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
@@ -1167,6 +1146,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const onSetAdvancedConfig = useMemoizedFn((c: boolean) => {
         setAdvancedConfig(c)
         setRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked, `${c}`)
+        emiter.emit("onGetFuzzerAdvancedConfigShow", c)
     })
 
     const httpResponse: FuzzerResponse = useMemo(() => {
@@ -1206,6 +1186,178 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
         return false
     }, [httpResponse])
+
+    const [firstFull, setFirstFull] = useState<boolean>(false)
+    const [secondFull, setSecondFull] = useState<boolean>(false)
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%"
+        }
+        if (secondFull) {
+            p.firstRatio = "0%"
+        }
+        if (firstFull) {
+            p.secondRatio = "0%"
+            p.firstRatio = "100%"
+        }
+        return p
+    }, [firstFull, secondFull])
+
+    const firstNodeExtra = () => (
+        <>
+            <div className={styles["fuzzer-firstNode-extra"]}>
+                <div className={styles["fuzzer-flipping-pages"]}>
+                    <ChevronLeftIcon
+                        className={classNames(styles["chevron-icon"], {
+                            [styles["chevron-icon-disable"]]: currentPage === 0 || currentPage === 1
+                        })}
+                        onClick={() => onPrePage()}
+                    />
+                    <ChevronRightIcon
+                        className={classNames(styles["chevron-icon"], {
+                            [styles["chevron-icon-disable"]]: currentPage >= Number(total) || !Number(total)
+                        })}
+                        onClick={() => onNextPage()}
+                    />
+                </div>
+                <PacketScanButton
+                    packetGetter={() => {
+                        return {
+                            httpRequest: StringToUint8Array(requestRef.current),
+                            https: advancedConfigValue.isHttps
+                        }
+                    }}
+                />
+                <YakitButton
+                    size='small'
+                    type='primary'
+                    onClick={() => {
+                        hotPatchTrigger()
+                    }}
+                >
+                    热加载
+                </YakitButton>
+                <YakitPopover
+                    trigger={"click"}
+                    content={
+                        <div style={{width: 400}}>
+                            <Form
+                                layout={"vertical"}
+                                onFinish={(v) => {
+                                    setAdvancedConfigValue({
+                                        ...advancedConfigValue,
+                                        isHttps: false
+                                    })
+                                    ipcRenderer
+                                        .invoke("Codec", {
+                                            ...v
+                                        })
+                                        .then((e) => {
+                                            if (e?.Result) {
+                                                requestRef.current = e.Result
+                                                if (v.Text.includes("https://")) {
+                                                    setAdvancedConfigValue({
+                                                        ...advancedConfigValue,
+                                                        isHttps: true
+                                                    })
+                                                }
+                                                refreshRequest()
+                                            }
+                                        })
+                                        .catch((e) => {
+                                            failed(e.message)
+                                        })
+                                        .finally(() => {})
+                                }}
+                                size={"small"}
+                            >
+                                <Form.Item name='Type' initialValue='packet-from-url'>
+                                    <YakitRadioButtons
+                                        buttonStyle='solid'
+                                        options={[
+                                            {
+                                                value: "packet-from-url",
+                                                label: "URL"
+                                            },
+                                            {
+                                                value: "packet-from-curl",
+                                                label: "cURL"
+                                            }
+                                        ]}
+                                    />
+                                </Form.Item>
+                                <Form.Item name='Text'>
+                                    <YakitInput size='small' />
+                                </Form.Item>
+                                <Form.Item style={{marginBottom: 8, marginTop: 8}}>
+                                    <YakitButton type={"primary"} htmlType={"submit"}>
+                                        构造请求
+                                    </YakitButton>
+                                </Form.Item>
+                            </Form>
+                        </div>
+                    }
+                >
+                    <YakitButton size={"small"} type={"primary"}>
+                        构造请求
+                    </YakitButton>
+                </YakitPopover>
+            </div>
+            <div className={styles["resize-card-icon"]} onClick={() => setFirstFull(!firstFull)}>
+                {firstFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+            </div>
+        </>
+    )
+
+    const secondNodeTitle = () => (
+        <>
+            <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>
+            <SecondNodeTitle
+                cachedTotal={cachedTotal}
+                onlyOneResponse={onlyOneResponse}
+                rsp={httpResponse}
+                successFuzzerLength={(successFuzzer || []).length}
+                failedFuzzerLength={(failedFuzzer || []).length}
+                showSuccess={showSuccess}
+                setShowSuccess={(v) => {
+                    setShowSuccess(v)
+                    setQuery(undefined)
+                }}
+            />
+        </>
+    )
+
+    const secondNodeExtra = () => (
+        <>
+            <SecondNodeExtra
+                onlyOneResponse={onlyOneResponse}
+                cachedTotal={cachedTotal}
+                rsp={httpResponse}
+                valueSearch={affixSearch}
+                onSearchValueChange={(value) => {
+                    setAffixSearch(value)
+                    if (value === "" && defaultResponseSearch !== "") {
+                        setDefaultResponseSearch("")
+                    }
+                }}
+                onSearch={() => {
+                    setDefaultResponseSearch(affixSearch)
+                }}
+                successFuzzer={successFuzzer}
+                secondNodeSize={secondNodeSize}
+                query={query}
+                setQuery={(q) => setQuery({...q})}
+                sendPayloadsType='fuzzer'
+                setShowExtra={setShowExtra}
+                showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+            />
+            <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
+                {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+            </div>
+        </>
+    )
 
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -1352,160 +1504,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         httpResponse={httpResponse}
                     />
                 </div>
-                <ResizeCardBox
+                <YakitResizeBox
                     firstMinSize={380}
                     secondMinSize={480}
                     isShowDefaultLineStyle={false}
                     style={{overflow: "hidden"}}
-                    firstNodeProps={{
-                        title: "Request",
-                        extra: (
-                            <div className={styles["fuzzer-firstNode-extra"]}>
-                                <div className={styles["fuzzer-flipping-pages"]}>
-                                    <ChevronLeftIcon
-                                        className={classNames(styles["chevron-icon"], {
-                                            [styles["chevron-icon-disable"]]: currentPage === 0 || currentPage === 1
-                                        })}
-                                        onClick={() => onPrePage()}
-                                    />
-                                    <ChevronRightIcon
-                                        className={classNames(styles["chevron-icon"], {
-                                            [styles["chevron-icon-disable"]]:
-                                                currentPage >= Number(total) || !Number(total)
-                                        })}
-                                        onClick={() => onNextPage()}
-                                    />
-                                </div>
-                                <PacketScanButton
-                                    packetGetter={() => {
-                                        return {
-                                            httpRequest: StringToUint8Array(requestRef.current),
-                                            https: advancedConfigValue.isHttps
-                                        }
-                                    }}
-                                />
-                                <YakitButton
-                                    size='small'
-                                    type='primary'
-                                    onClick={() => {
-                                        hotPatchTrigger()
-                                    }}
-                                >
-                                    热加载
-                                </YakitButton>
-                                <YakitPopover
-                                    trigger={"click"}
-                                    content={
-                                        <div style={{width: 400}}>
-                                            <Form
-                                                layout={"vertical"}
-                                                onFinish={(v) => {
-                                                    setAdvancedConfigValue({
-                                                        ...advancedConfigValue,
-                                                        isHttps: false
-                                                    })
-                                                    ipcRenderer
-                                                        .invoke("Codec", {
-                                                            ...v
-                                                        })
-                                                        .then((e) => {
-                                                            if (e?.Result) {
-                                                                requestRef.current = e.Result
-                                                                if (v.Text.includes("https://")) {
-                                                                    setAdvancedConfigValue({
-                                                                        ...advancedConfigValue,
-                                                                        isHttps: true
-                                                                    })
-                                                                }
-                                                                refreshRequest()
-                                                            }
-                                                        })
-                                                        .catch((e) => {
-                                                            failed(e.message)
-                                                        })
-                                                        .finally(() => {})
-                                                }}
-                                                size={"small"}
-                                            >
-                                                <Form.Item name='Type' initialValue='packet-from-url'>
-                                                    <YakitRadioButtons
-                                                        buttonStyle='solid'
-                                                        options={[
-                                                            {
-                                                                value: "packet-from-url",
-                                                                label: "URL"
-                                                            },
-                                                            {
-                                                                value: "packet-from-curl",
-                                                                label: "cURL"
-                                                            }
-                                                        ]}
-                                                    />
-                                                </Form.Item>
-                                                <Form.Item name='Text'>
-                                                    <YakitInput size='small' />
-                                                </Form.Item>
-                                                <Form.Item style={{marginBottom: 8, marginTop: 8}}>
-                                                    <YakitButton type={"primary"} htmlType={"submit"}>
-                                                        构造请求
-                                                    </YakitButton>
-                                                </Form.Item>
-                                            </Form>
-                                        </div>
-                                    }
-                                >
-                                    <YakitButton size={"small"} type={"primary"}>
-                                        构造请求
-                                    </YakitButton>
-                                </YakitPopover>
-                            </div>
-                        )
-                    }}
-                    secondNodeProps={{
-                        title: (
-                            <>
-                                <span style={{marginRight: 8}}>Responses</span>
-
-                                <SecondNodeTitle
-                                    cachedTotal={cachedTotal}
-                                    onlyOneResponse={onlyOneResponse}
-                                    rsp={httpResponse}
-                                    successFuzzerLength={(successFuzzer || []).length}
-                                    failedFuzzerLength={(failedFuzzer || []).length}
-                                    showSuccess={showSuccess}
-                                    setShowSuccess={(v) => {
-                                        setShowSuccess(v)
-                                        setQuery(undefined)
-                                    }}
-                                />
-                            </>
-                        ),
-                        extra: (
-                            <SecondNodeExtra
-                                onlyOneResponse={onlyOneResponse}
-                                cachedTotal={cachedTotal}
-                                rsp={httpResponse}
-                                valueSearch={affixSearch}
-                                onSearchValueChange={(value) => {
-                                    setAffixSearch(value)
-                                    if (value === "" && defaultResponseSearch !== "") {
-                                        setDefaultResponseSearch("")
-                                    }
-                                }}
-                                onSearch={() => {
-                                    setDefaultResponseSearch(affixSearch)
-                                }}
-                                successFuzzer={successFuzzer}
-                                secondNodeSize={secondNodeSize}
-                                query={query}
-                                setQuery={(q) => setQuery({...q})}
-                                sendPayloadsType='fuzzer'
-                                setShowExtra={setShowExtra}
-                                showResponseInfoSecondEditor={showResponseInfoSecondEditor}
-                                setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
-                            />
-                        )
-                    }}
+                    lineStyle={{display: firstFull || secondFull ? "none" : ""}}
+                    secondNodeStyle={{padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480}}
+                    firstNodeStyle={{padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : ""}}
+                    {...ResizeBoxProps}
                     firstNode={
                         <WebFuzzerNewEditor
                             ref={webFuzzerNewEditorRef}
@@ -1517,6 +1524,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                             setHotPatchCode={setHotPatchCode}
                             setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
+                            firstNodeExtra={firstNodeExtra}
                         />
                     }
                     secondNode={
@@ -1556,43 +1564,55 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     webFuzzerValue={StringToUint8Array(requestRef.current)}
                                     showResponseInfoSecondEditor={showResponseInfoSecondEditor}
                                     setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+                                    secondNodeTitle={secondNodeTitle}
+                                    secondNodeExtra={secondNodeExtra}
                                 />
                             ) : (
                                 <>
-                                    {cachedTotal > 1 ? (
-                                        <>
-                                            {showSuccess && (
-                                                <HTTPFuzzerPageTable
-                                                    // onSendToWebFuzzer={onSendToWebFuzzer}
-                                                    success={showSuccess}
-                                                    data={successFuzzer}
-                                                    setExportData={setExportData}
-                                                    query={query}
-                                                    setQuery={setQuery}
-                                                    extractedMap={extractedMap}
-                                                    isEnd={loading}
-                                                />
-                                            )}
-                                            {!showSuccess && (
-                                                <HTTPFuzzerPageTable
-                                                    success={showSuccess}
-                                                    data={failedFuzzer}
-                                                    query={query}
-                                                    setQuery={setQuery}
-                                                    isEnd={loading}
-                                                    extractedMap={extractedMap}
-                                                />
-                                            )}
-                                        </>
-                                    ) : (
-                                        <Result
-                                            status={"warning"}
-                                            title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
-                                            subTitle={
-                                                "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
-                                            }
-                                        />
-                                    )}
+                                    <div
+                                        className={classNames(styles["resize-card"], styles["resize-card-second"])}
+                                        style={{display: firstFull ? "none" : ""}}
+                                    >
+                                        <div className={classNames(styles["resize-card-heard"])}>
+                                            <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
+                                            <div className={styles["resize-card-heard-extra"]}></div>
+                                            {secondNodeExtra()}
+                                        </div>
+                                        {cachedTotal > 1 ? (
+                                            <>
+                                                {showSuccess && (
+                                                    <HTTPFuzzerPageTable
+                                                        // onSendToWebFuzzer={onSendToWebFuzzer}
+                                                        success={showSuccess}
+                                                        data={successFuzzer}
+                                                        setExportData={setExportData}
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        extractedMap={extractedMap}
+                                                        isEnd={loading}
+                                                    />
+                                                )}
+                                                {!showSuccess && (
+                                                    <HTTPFuzzerPageTable
+                                                        success={showSuccess}
+                                                        data={failedFuzzer}
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        isEnd={loading}
+                                                        extractedMap={extractedMap}
+                                                    />
+                                                )}
+                                            </>
+                                        ) : (
+                                            <Result
+                                                status={"warning"}
+                                                title={"请在左边编辑并发送一个 HTTP 请求/模糊测试"}
+                                                subTitle={
+                                                    "本栏结果针对模糊测试的多个 HTTP 请求结果展示做了优化，可以自动识别单个/多个请求的展示"
+                                                }
+                                            />
+                                        )}
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -2074,6 +2094,8 @@ interface ResponseViewerProps {
 
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
+    secondNodeTitle?: () => JSX.Element
+    secondNodeExtra?: () => JSX.Element
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
@@ -2092,7 +2114,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             onSaveMatcherAndExtraction,
             showResponseInfoSecondEditor,
             setShowResponseInfoSecondEditor,
-            isHttps
+            isHttps,
+            secondNodeTitle,
+            secondNodeExtra
         } = props
         const [reason, setReason] = useState<string>("未知原因")
 
@@ -2167,11 +2191,13 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
                             originValue={fuzzerResponse.ResponseRaw}
-                            bordered={false}
                             hideSearch={true}
                             isResponse={true}
                             noHex={true}
-                            noHeader={true}
+                            // noHeader={true}
+                            showDefaultExtra={false}
+                            title={secondNodeTitle && secondNodeTitle()}
+                            extraEnd={secondNodeExtra && secondNodeExtra()}
                             editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF_RESPONSE'
                             emptyOr={
                                 !fuzzerResponse?.Ok && (
