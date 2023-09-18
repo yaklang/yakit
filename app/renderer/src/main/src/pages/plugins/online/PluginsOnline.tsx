@@ -1,15 +1,12 @@
 import React, {useState, useRef, useMemo, useEffect} from "react"
 import {PluginManage} from "../manage/PluginManage"
 import styles from "./PluginsOnline.module.scss"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {funcSearchType} from "../funcTemplate"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineSearchIcon, OutlineXIcon} from "@/assets/icon/outline"
-import {Divider} from "antd"
+import {OutlineRefreshIcon, OutlineSearchIcon, OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
-import {useMemoizedFn, useInViewport, useEventListener, useSize, useThrottleFn, useScroll} from "ahooks"
+import {useMemoizedFn, useInViewport, useEventListener, useSize, useThrottleFn, useScroll, useNetwork} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import card1 from "./card1.png"
 import card2 from "./card2.png"
@@ -17,48 +14,40 @@ import card3 from "./card3.png"
 import qrCode from "./qrCode.png"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
-
-const {ipcRenderer} = window.require("electron")
+import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 
 interface PluginsOnlineProps {}
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
-    const [isOnline, setIsOnline] = useState<boolean>(true)
     const pluginsOnlineHeardRef = useRef<HTMLDivElement>(null)
     const pluginsOnlineRef = useRef<HTMLDivElement>(null)
-    const [inViewport, ratio = 0] = useInViewport(pluginsOnlineHeardRef, {
-        threshold: [0, 0.25, 0.5, 0.75, 1],
+    const [inViewport, ratio = 1] = useInViewport(pluginsOnlineHeardRef, {
+        threshold: [0, 0.25, 0.5, 0.75, 0.99],
         root: () => pluginsOnlineRef.current
     })
-    useEffect(() => {
-        ipcRenderer
-            .invoke("fetch-netWork-status")
-            .then((res) => {
-                console.log("res", res)
-            })
-            .catch((error) => {})
-    }, [])
     const isShowRoll = useMemo(() => {
         return ratio > 0.1
     }, [ratio])
     return (
-        <div
-            className={classNames(styles["plugins-online"], {
-                [styles["plugins-online-overflow-hidden"]]: !isShowRoll
-            })}
-        >
-            <div ref={pluginsOnlineRef} className={classNames(styles["plugins-online-body"])}>
-                <div ref={pluginsOnlineHeardRef}>
-                    <PluginsOnlineHeard />
-                </div>
-                <div
-                    className={classNames(styles["plugins-online-list"], {
-                        [styles["plugins-online-list-no-roll"]]: isShowRoll
-                    })}
-                >
-                    <PluginManage />
+        <OnlineJudgment>
+            <div
+                className={classNames(styles["plugins-online"], {
+                    [styles["plugins-online-overflow-hidden"]]: !isShowRoll
+                })}
+            >
+                <div ref={pluginsOnlineRef} className={classNames(styles["plugins-online-body"])}>
+                    <div ref={pluginsOnlineHeardRef}>
+                        <PluginsOnlineHeard />
+                    </div>
+                    <div
+                        className={classNames(styles["plugins-online-list"], {
+                            [styles["plugins-online-list-no-roll"]]: isShowRoll
+                        })}
+                    >
+                        <PluginManage />
+                    </div>
                 </div>
             </div>
-        </div>
+        </OnlineJudgment>
     )
 })
 
