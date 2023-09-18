@@ -100,7 +100,9 @@ export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) =>
         <YakitSpin spinning={loading}>
             <div className={styles["plugins-container-wrapper"]}>
                 <FilterPanel
-                    wrapperClassName={styles["container-filter-wrapper"]}
+                    wrapperClassName={classNames(styles["container-filter-wrapper"], {
+                        [styles["container-filter-wrapper-hidden"]]: !visible
+                    })}
                     // loading={!!loading}
                     visible={visible}
                     setVisible={setVisible}
