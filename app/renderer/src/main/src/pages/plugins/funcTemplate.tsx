@@ -55,6 +55,7 @@ import YakitLogo from "@/assets/yakitLogo.png"
 
 import styles from "./funcTemplate.module.scss"
 import classNames from "classnames"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 /** @name 标题栏的搜索选项组件 */
 export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
@@ -289,7 +290,20 @@ export const ApplicantIcon: React.FC<{}> = memo((props) => {
 
 /** @name 插件主要部分组件 */
 export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
-    const {checked, onCheck, isList, setIsList, total, selected, tag, onDelTag, extraHeader, children} = props
+    const {
+        checked,
+        onCheck,
+        isList,
+        setIsList,
+        total,
+        selected,
+        tag,
+        onDelTag,
+        extraHeader,
+        children,
+        visible,
+        setVisible
+    } = props
 
     /** 全选框是否为半选状态 */
     const checkIndeterminate = useMemo(() => {
@@ -307,6 +321,12 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
         <div className={styles["plugins-list"]}>
             <div className={styles["list-header"]}>
                 <div className={styles["header-body"]}>
+                    {!visible && (
+                        <div className={styles["header-body-filter"]}>
+                            <span className={styles["header-body-filter-title"]}>高级筛选</span>
+                            <YakitSwitch checked={visible} onChange={setVisible} />
+                        </div>
+                    )}
                     <div className={styles["body-check"]}>
                         <YakitCheckbox
                             indeterminate={checkIndeterminate}
