@@ -281,7 +281,7 @@ for target,risks = range targetToRisks {
     riskLevel = "安全"
     isRiskKye = []
     for _, riskIns := range risks {
-        if  riskIns.RiskType == "dnslog" || riskIns.RiskTypeVerbose == "DNSLOG" {
+        if str.Contains(riskIns.Severity, "info") {
             isRiskKye = append(isRiskKye, riskIns)
         }
         if str.Contains(riskIns.Severity, "critical") {
@@ -316,7 +316,7 @@ for target,risks = range targetToRisks {
                 lowRisks = append(lowRisks, riskIns)
             }
         }
-       if  str.Contains(riskIns.Severity, "info") && riskIns.RiskType != "dnslog"  {
+       if  str.Contains(riskIns.Severity, "info") {
            secureCount++
             if parseBool(riskIns.IsPotential) {
                 secureCountScaleRisks = append(secureCountScaleRisks, riskIns)
@@ -476,7 +476,7 @@ if len(noPotentialRisks) == 0 {
         if titleVerbose == "" {
             titleVerbose = info.Title
         }
-        if info.RiskTypeVerbose != "DNSLOG" {
+        if !str.Contains(info.Severity, "info") {
             _line = append(_line, {
                 "序号": { "value": index + 1, "sort": 1},
                 "网站地址": { "value": sprintf(\`%v:%v\`, info.IP, info.Port), "sort": 2},
