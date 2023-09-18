@@ -35,17 +35,22 @@ import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import IModelDecoration = editor.IModelDecoration
-import {OtherMenuListProps, YakitEditorProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {
+    OperationRecordRes,
+    OtherMenuListProps,
+    YakitEditorProps
+} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "./prettifyPacket"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import styles from "./editors.module.scss"
 import classNames from "classnames"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
-import { showYakitModal } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import { DataCompareModal } from "@/pages/compare/DataCompare"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {DataCompareModal} from "@/pages/compare/DataCompare"
+import emiter from "./eventBus/eventBus"
+import {v4 as uuidv4} from "uuid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1020,7 +1025,7 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     },
                                     ...MonacoEditorCodecActions
                                 ],
-                                ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions),
+                                ...(props.noPacketModifier ? [] : MonacoEditorMutateHTTPRequestActions)
                             ].filter((i) => !!i)}
                             editorDidMount={(editor) => {
                                 setMonacoEditor(editor)
@@ -1123,9 +1128,19 @@ interface TypeOptionsProps {
     label: string
 }
 
+interface RefreshEditorOperationRecordProps extends OperationRecordRes {
+    editorId: string
+}
+
 export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
     const isResponse = props.isResponse
-    const {originValue, isShowBeautifyRender = true,showDefaultExtra=true,dataCompare} = props
+    const {
+        originValue,
+        isShowBeautifyRender = true,
+        showDefaultExtra = true,
+        dataCompare,
+        editorOperationRecord
+    } = props
     const getEncoding = (): "utf8" | "latin1" | "ascii" => {
         if (isResponse || props.readOnly || props.utf8) {
             return "utf8"
@@ -1138,7 +1153,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array(originValue))
     const [searchValue, setSearchValue] = useState("")
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
-    const [fontSize, setFontSize] = useState<undefined | number>()
+    const [fontSize, setFontSize] = useState<undefined | number>(12)
     const [showLineBreaks, setShowLineBreaks] = useState<boolean>(true)
     const [highlightDecorations, setHighlightDecorations] = useState<any[]>([])
     const [noWordwrap, setNoWordwrap] = useState(false)
@@ -1153,6 +1168,43 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     // 操作系统类型
     const [system, setSystem] = useState<string>()
 
+    // 编辑器Id 用于区分每个编辑器
+    const [editorId, setEditorId] = useState<string>(uuidv4())
+
+    // 读取上次选择的字体大小/换行符
+    const onRefreshEditorOperationRecord = useMemoizedFn((v) => {
+        const obj: RefreshEditorOperationRecordProps = JSON.parse(v)
+        if (obj.editorId === editorId) {
+            if (obj?.fontSize) {
+                setFontSize(obj.fontSize)
+            } else {
+                setShowLineBreaks(obj.showBreak || false)
+            }
+        }
+    })
+
+    useEffect(() => {
+        if (editorOperationRecord) {
+            getRemoteValue(editorOperationRecord).then((data) => {
+                if (!data) return
+                let obj: OperationRecordRes = JSON.parse(data)
+                if (obj?.fontSize) {
+                    setFontSize(obj?.fontSize)
+                }
+                if (typeof obj?.showBreak === "boolean") {
+                    setShowLineBreaks(obj?.showBreak)
+                }
+            })
+        }
+    }, [])
+
+    useEffect(() => {
+        emiter.on("refreshEditorOperationRecord", onRefreshEditorOperationRecord)
+        return () => {
+            emiter.off("refreshEditorOperationRecord", onRefreshEditorOperationRecord)
+        }
+    }, [])
+
     useUpdateEffect(() => {
         setNoWordwrap(props.noWordWrapState || false)
     }, [props.noWordWrapState])
@@ -1166,24 +1218,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
-
-        // 无落如何都会设置，最小为 12
-        getRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE)
-            .then((data: string) => {
-                try {
-                    const size = parseInt(data)
-                    if (size > 0) {
-                        setFontSize(size)
-                    } else {
-                        setFontSize(12)
-                    }
-                } catch (e) {
-                    setFontSize(12)
-                }
-            })
-            .catch(() => {
-                setFontSize(12)
-            })
         getRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks)
             .then((data) => {
                 setShowLineBreaks(data === "true")
@@ -1302,14 +1336,14 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     useEffect(() => {
         setType(undefined)
         if (originValue) {
-            const encoder = new TextEncoder();
-            const bytes = encoder.encode(Uint8ArrayToString(originValue));
-            const mb = bytes.length / 1024 /1024
+            const encoder = new TextEncoder()
+            const bytes = encoder.encode(Uint8ArrayToString(originValue))
+            const mb = bytes.length / 1024 / 1024
             // 0.5mb 及以下内容才可美化
             if (isResponse) {
                 formatPacketRender(originValue, (packet) => {
                     if (packet) {
-                        if(mb > 0.5){
+                        if (mb > 0.5) {
                             setTypeOptions([
                                 {
                                     value: "render",
@@ -1329,7 +1363,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             }
                         ])
                     } else {
-                        if(mb > 0.5) return
+                        if (mb > 0.5) return
                         setTypeOptions([
                             {
                                 value: "beautify",
@@ -1339,7 +1373,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     }
                 })
             } else {
-                if(mb > 0.5) return
+                if (mb > 0.5) return
                 setTypeOptions([
                     {
                         value: "beautify",
@@ -1470,33 +1504,46 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     ))}
                                 </div>
                             )}
-                            {dataCompare&&dataCompare.rightCode.length>0&&<YakitButton size={"small"} type={"primary"} onClick={() => {
-                                // ipcRenderer
-                                // .invoke("send-to-tab", {
-                                //     type: "add-data-compare",
-                                //     data: {
-                                //         leftData:Uint8ArrayToString(showValue),
-                                //         rightData:Uint8ArrayToString(dataCompare)
-                                //     }
-                                // })
-                                const m = showYakitModal({
-                                    title: null,
-                                    content: <DataCompareModal
-                                        onClose={()=>m.destroy()}
-                                        rightTitle={dataCompare.rightTitle}
-                                        leftTitle={dataCompare.leftTitle}
-                                        leftCode={dataCompare.leftCode?Uint8ArrayToString(dataCompare.leftCode):Uint8ArrayToString(showValue)} 
-                                        rightCode={Uint8ArrayToString(dataCompare.rightCode)} />,
-                                    onCancel:()=>{
-                                        m.destroy()
-                                    },
-                                    width:1200,
-                                    footer: null,
-                                    closable:false
-                                })
-                            }}>
-                                对比
-                            </YakitButton>}
+                            {dataCompare && dataCompare.rightCode.length > 0 && (
+                                <YakitButton
+                                    size={"small"}
+                                    type={"primary"}
+                                    onClick={() => {
+                                        // ipcRenderer
+                                        // .invoke("send-to-tab", {
+                                        //     type: "add-data-compare",
+                                        //     data: {
+                                        //         leftData:Uint8ArrayToString(showValue),
+                                        //         rightData:Uint8ArrayToString(dataCompare)
+                                        //     }
+                                        // })
+                                        const m = showYakitModal({
+                                            title: null,
+                                            content: (
+                                                <DataCompareModal
+                                                    onClose={() => m.destroy()}
+                                                    rightTitle={dataCompare.rightTitle}
+                                                    leftTitle={dataCompare.leftTitle}
+                                                    leftCode={
+                                                        dataCompare.leftCode
+                                                            ? Uint8ArrayToString(dataCompare.leftCode)
+                                                            : Uint8ArrayToString(showValue)
+                                                    }
+                                                    rightCode={Uint8ArrayToString(dataCompare.rightCode)}
+                                                />
+                                            ),
+                                            onCancel: () => {
+                                                m.destroy()
+                                            },
+                                            width: 1200,
+                                            footer: null,
+                                            closable: false
+                                        })
+                                    }}
+                                >
+                                    对比
+                                </YakitButton>
+                            )}
                             {props.sendToWebFuzzer && props.readOnly && (
                                 <YakitButton
                                     size={"small"}
@@ -1518,101 +1565,104 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     FUZZ
                                 </YakitButton>
                             )}
-                            {showDefaultExtra&&<>
-                            <Tooltip title={"不自动换行"}>
-                                <YakitButton
-                                    size={"small"}
-                                    type={noWordwrap ? "text" : "primary"}
-                                    icon={<EnterOutlined />}
-                                    onClick={() => {
-                                        setNoWordwrap(!noWordwrap)
-                                    }}
-                                />
-                            </Tooltip>
-                            {!props.simpleMode && (
-                                <Popover
-                                    title={"配置编辑器"}
-                                    content={
-                                        <>
-                                            <Form
-                                                onSubmitCapture={(e) => {
-                                                    e.preventDefault()
-                                                }}
-                                                size={"small"}
-                                                layout={"horizontal"}
-                                                wrapperCol={{span: 14}}
-                                                labelCol={{span: 10}}
-                                            >
-                                                {(fontSize || 0) > 0 && (
-                                                    <SelectOne
-                                                        formItemStyle={{marginBottom: 4}}
-                                                        label={"字号"}
-                                                        data={[
-                                                            {text: "小", value: 12},
-                                                            {text: "中", value: 16},
-                                                            {text: "大", value: 20}
-                                                        ]}
-                                                        oldTheme={false}
-                                                        value={fontSize}
-                                                        setValue={(size) => {
-                                                            setRemoteValue(HTTP_PACKET_EDITOR_FONT_SIZE, `${size}`)
-                                                            setFontSize(size)
+                            {showDefaultExtra && (
+                                <>
+                                    <Tooltip title={"不自动换行"}>
+                                        <YakitButton
+                                            size={"small"}
+                                            type={noWordwrap ? "text" : "primary"}
+                                            icon={<EnterOutlined />}
+                                            onClick={() => {
+                                                setNoWordwrap(!noWordwrap)
+                                            }}
+                                        />
+                                    </Tooltip>
+                                    {!props.simpleMode && (
+                                        <Popover
+                                            title={"配置编辑器"}
+                                            content={
+                                                <>
+                                                    <Form
+                                                        onSubmitCapture={(e) => {
+                                                            e.preventDefault()
                                                         }}
-                                                    />
-                                                )}
-                                                <Form.Item label={"全屏"} style={{marginBottom: 4}}>
-                                                    <YakitButton
                                                         size={"small"}
-                                                        type={"text"}
-                                                        icon={<FullscreenOutlined />}
-                                                        onClick={() => {
-                                                            showDrawer({
-                                                                title: "全屏",
-                                                                width: "100%",
-                                                                content: (
-                                                                    <div style={{height: "100%", width: "100%"}}>
-                                                                        <HTTPPacketEditor
-                                                                            {...props}
-                                                                            disableFullscreen={true}
-                                                                            defaultHeight={670}
-                                                                        />
-                                                                    </div>
-                                                                )
-                                                            })
-                                                            setPopoverVisible(false)
-                                                        }}
-                                                    />
-                                                </Form.Item>
-                                                {(props.language === "http" || !isResponse) && (
-                                                    <Form.Item
-                                                        label='是否显示换行符'
-                                                        style={{marginBottom: 4, lineHeight: "16px"}}
+                                                        layout={"horizontal"}
+                                                        wrapperCol={{span: 14}}
+                                                        labelCol={{span: 10}}
                                                     >
-                                                        <YakitSwitch
-                                                            checked={showLineBreaks}
-                                                            onChange={(checked) => {
-                                                                setRemoteValue(
-                                                                    HTTP_PACKET_EDITOR_Line_Breaks,
-                                                                    `${checked}`
-                                                                )
-                                                                setShowLineBreaks(checked)
-                                                            }}
-                                                        />
-                                                    </Form.Item>
-                                                )}
-                                            </Form>
-                                        </>
-                                    }
-                                    onVisibleChange={(v) => {
-                                        setPopoverVisible(v)
-                                    }}
-                                    overlayInnerStyle={{width: 300}}
-                                    visible={popoverVisible}
-                                >
-                                    <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
-                                </Popover>
+                                                        {(fontSize || 0) > 0 && (
+                                                            <SelectOne
+                                                                formItemStyle={{marginBottom: 4}}
+                                                                label={"字号"}
+                                                                data={[
+                                                                    {text: "小", value: 12},
+                                                                    {text: "中", value: 16},
+                                                                    {text: "大", value: 20}
+                                                                ]}
+                                                                oldTheme={false}
+                                                                value={fontSize}
+                                                                setValue={(size) => {
+                                                                    setFontSize(size)
+                                                                }}
+                                                            />
+                                                        )}
+                                                        <Form.Item label={"全屏"} style={{marginBottom: 4}}>
+                                                            <YakitButton
+                                                                size={"small"}
+                                                                type={"text"}
+                                                                icon={<FullscreenOutlined />}
+                                                                onClick={() => {
+                                                                    showDrawer({
+                                                                        title: "全屏",
+                                                                        width: "100%",
+                                                                        content: (
+                                                                            <div
+                                                                                style={{height: "100%", width: "100%"}}
+                                                                            >
+                                                                                <HTTPPacketEditor
+                                                                                    {...props}
+                                                                                    disableFullscreen={true}
+                                                                                    defaultHeight={670}
+                                                                                />
+                                                                            </div>
+                                                                        )
+                                                                    })
+                                                                    setPopoverVisible(false)
+                                                                }}
+                                                            />
+                                                        </Form.Item>
+                                                        {(props.language === "http" || !isResponse) && (
+                                                            <Form.Item
+                                                                label='是否显示换行符'
+                                                                style={{marginBottom: 4, lineHeight: "16px"}}
+                                                            >
+                                                                <YakitSwitch
+                                                                    checked={showLineBreaks}
+                                                                    onChange={(checked) => {
+                                                                        setRemoteValue(
+                                                                            HTTP_PACKET_EDITOR_Line_Breaks,
+                                                                            `${checked}`
+                                                                        )
+                                                                        setShowLineBreaks(checked)
+                                                                    }}
+                                                                />
+                                                            </Form.Item>
+                                                        )}
+                                                    </Form>
+                                                </>
+                                            }
+                                            onVisibleChange={(v) => {
+                                                setPopoverVisible(v)
+                                            }}
+                                            overlayInnerStyle={{width: 300}}
+                                            visible={popoverVisible}
+                                        >
+                                            <YakitButton icon={<SettingOutlined />} type={"text"} size={"small"} />
+                                        </Popover>
+                                    )}
+                                </>
                             )}
-                            </>}
                             {props.extraEnd}
                         </div>
                     )
@@ -1637,19 +1687,20 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             readOnly={props.readOnly}
                             setValue={setStrValue}
                             noWordWrap={noWordwrap}
-                            fontSize={12}
-                            showLineBreaks={false}
+                            fontSize={fontSize}
+                            showLineBreaks={showLineBreaks}
                             contextMenu={props.contextMenu || {}}
                             noPacketModifier={props.noPacketModifier}
                             editorDidMount={(editor) => {
                                 setMonacoEditor(editor)
                             }}
-                            editorOperationRecord={props.editorOperationRecord}
+                            editorOperationRecord={editorOperationRecord}
                             defaultHttps={props.defaultHttps}
                             webFuzzerValue={
                                 props.webFuzzerValue && new Buffer(props.webFuzzerValue).toString(getEncoding())
                             }
                             webFuzzerCallBack={props.webFuzzerCallBack}
+                            editorId={editorId}
                             {...props.extraEditorProps}
                         />
                     )}
