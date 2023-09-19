@@ -29,6 +29,8 @@ export interface PluginsContainerProps {
     onSelect: (value: Record<string, string[] | string>) => any
     /** 数据展示列表 */
     groupList: FilterPanelGroupItem[]
+    /** ClassName */
+    filterClassName?:string
 }
 
 export interface PluginDetailsProps<T> {
