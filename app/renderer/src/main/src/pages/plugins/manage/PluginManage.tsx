@@ -302,6 +302,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         setVisible={setShowFilter}
                     >
                         <ListShowContainer<API.YakitPluginDetail>
+                            id='online'
                             isList={isList}
                             data={response.data}
                             gridNode={(info: {index: number; data: API.YakitPluginDetail}) => {
