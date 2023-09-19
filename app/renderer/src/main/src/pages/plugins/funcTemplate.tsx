@@ -44,7 +44,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {Dropdown} from "antd"
+import {Dropdown, Tooltip} from "antd"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {formatDate} from "@/utils/timeUtil"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -53,6 +53,7 @@ import {PluginsGridCheckIcon} from "./icon"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
 
+import "./plugins.scss"
 import styles from "./funcTemplate.module.scss"
 import classNames from "classnames"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
@@ -128,10 +129,7 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
                                     })}
                                 </div>
                                 <div className={styles["list-btn-wrapper"]}>
-                                    <div
-                                        className={classNames(styles["btn-style"], styles["reset-btn"])}
-                                        onClick={() => setActive([])}
-                                    >
+                                    <div className={styles["btn-style"]} onClick={() => setActive([])}>
                                         重置
                                     </div>
                                 </div>
@@ -148,21 +146,33 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
     )
 })
 
-/**
- * @name 带屏幕宽度自适应的按钮组件
- * @description 注意！组件样式设置了媒体查询，查询宽度暂只适应插件列表相关页面
- */
+/** @name 带屏幕宽度自适应的按钮组件 */
 export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
-    const {icon, name, className, ...rest} = props
+    const {name, maxWidth, className, ...rest} = props
 
-    return (
-        <YakitButton
-            type='outline2'
-            size='large'
-            className={classNames(styles["func-btn-wrapper"], className || "")}
-            {...rest}
-        >
-            {icon}
+    const [isIcon, setIsIcon, getIsIcon] = useGetState<boolean>(false)
+    const mediaHandle = useMemoizedFn((e) => {
+        let value = !!e.matches
+        if (getIsIcon() === value) return
+        setIsIcon(value)
+    })
+    useEffect(() => {
+        if (!maxWidth) return
+        const mediaQuery = window.matchMedia(`(max-width: ${maxWidth}px)`)
+        setIsIcon(!!mediaQuery.matches)
+
+        mediaQuery.addEventListener("change", mediaHandle)
+        return () => {
+            mediaQuery.removeEventListener("change", mediaHandle)
+        }
+    }, [])
+
+    return isIcon ? (
+        <Tooltip title={name} overlayClassName='plugins-tooltip'>
+            <YakitButton {...rest}></YakitButton>
+        </Tooltip>
+    ) : (
+        <YakitButton {...rest}>
             <span className={styles["title-style"]}>{name}</span>
         </YakitButton>
     )
@@ -172,30 +182,41 @@ export const funcSearchType: {value: string; label: string}[] = [
     {value: "user", label: "按作者"},
     {value: "keyword", label: "关键字"}
 ]
-/**
- * @name 带屏幕宽度自适应的搜索内容组件
- * @description 注意！组件样式设置了媒体查询，查询宽度暂只适应插件商店功能相关页面
- * 包括: 插件管理、插件商店、我的插件、本地插件
- */
+/** @name 带屏幕宽度自适应的搜索内容组件 */
 export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
-    const {defaultValue = "", onSearch: onsearch} = props
+    const {maxWidth, defaultValue = "", onSearch: onsearch} = props
+
+    const [isIcon, setIsIcon, getIsIcon] = useGetState<boolean>(false)
+    const mediaHandle = useMemoizedFn((e) => {
+        let value = !!e.matches
+        if (getIsIcon() === value) return
+        if (showPopver && !value) setShowPopver(false)
+        setIsIcon(value)
+    })
+    useEffect(() => {
+        if (!maxWidth) return
+        const mediaQuery = window.matchMedia(`(max-width: ${maxWidth}px)`)
+        setIsIcon(!!mediaQuery.matches)
+
+        mediaQuery.addEventListener("change", mediaHandle)
+        return () => {
+            mediaQuery.removeEventListener("change", mediaHandle)
+        }
+    }, [])
 
     const [type, setType] = useState<string>("keyword")
     const [search, setSearch, getSearch] = useGetState<string>(defaultValue)
-
     const [showPopver, setShowPopver] = useState<boolean>(false)
 
     const onTypeChange = useMemoizedFn((value: string) => {
         setType(value)
-        setSearch("")
-        onsearch(null, "")
     })
     const onSearch = useMemoizedFn(() => {
         onsearch(type, getSearch())
     })
 
     return (
-        <div className={styles["func-search-wrapper"]}>
+        <div className={isIcon ? styles["func-search-icon-wrapper"] : styles["func-search-wrapper"]}>
             <YakitCombinationSearch
                 wrapperClassName={styles["search-body"]}
                 valueBeforeOption={type}
@@ -222,16 +243,17 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
                     />
                 }
                 trigger='click'
+                visible={showPopver}
                 onVisibleChange={setShowPopver}
-                placement='bottomLeft'
+                placement='bottomRight'
             >
                 <YakitButton
-                    className={classNames(styles["search-icon"], {"button-text-primary": showPopver})}
+                    className={styles["search-icon"]}
                     size='large'
                     type='outline2'
-                >
-                    <OutlineSearchIcon />
-                </YakitButton>
+                    icon={<OutlineSearchIcon />}
+                    isActive={showPopver}
+                ></YakitButton>
             </YakitPopover>
         </div>
     )
