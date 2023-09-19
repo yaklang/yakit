@@ -14,7 +14,17 @@ import classNames from "classnames"
 const {YakitPanel} = YakitCollapse
 
 export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
-    const {wrapperClassName, loading = false, visible, setVisible, selecteds, onSelect, groupList, noDataHint} = props
+    const {
+        wrapperClassName,
+        loading = false,
+        visible,
+        setVisible,
+        selecteds,
+        onSelect,
+        groupList,
+        noDataHint,
+        listClassName
+    } = props
 
     const [activeKey, setActiveKey] = useState<string[]>([])
     useEffect(() => {
@@ -45,7 +55,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                 </div>
                 <div className={styles["panel-content"]}>
                     <YakitSpin spinning={loading}>
-                        <div className={styles["content-body"]}>
+                        <div className={classNames(styles["content-body"], listClassName)}>
                             <YakitCollapse
                                 activeKey={activeKey}
                                 onChange={(key) => setActiveKey(key as string[])}
