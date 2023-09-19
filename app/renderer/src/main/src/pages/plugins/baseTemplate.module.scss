@@ -1,3 +1,4 @@
+// -------------------- PluginsLayout ↓↓↓ --------------------
 .plugins-layout {
     width: 100%;
     height: 100%;
@@ -39,7 +40,7 @@
     width: 100%;
     overflow: hidden;
 }
-// --------------------
+// -------------------- PluginsContainer ↓↓↓ --------------------
 .plugins-container-wrapper {
     width: 100%;
     height: 100%;
@@ -66,7 +67,7 @@
         opacity: 0;
     }
 }
-// --------------------
+// -------------------- PluginDetails ↓↓↓ --------------------
 .plugin-details-wrapper {
     width: 100%;
     height: 100%;
@@ -186,7 +187,7 @@
         }
     }
 }
-// --------------------
+// -------------------- PluginDetailHeader ↓↓↓ --------------------
 .plugin-detail-header-wrapper {
     width: 100%;
     display: flex;
@@ -296,7 +297,7 @@
         }
     }
 }
-// --------------------
+// -------------------- PluginModifyInfo ↓↓↓ --------------------
 .plugin-modify-info-wrapper {
     .modify-input {
         :global {
@@ -391,7 +392,7 @@
         }
     }
 }
-// --------------------
+// -------------------- PluginModifySetting ↓↓↓ --------------------
 .plugin-modify-setting-wrapper {
     width: 100%;
     display: flex;
@@ -439,13 +440,14 @@
         }
     }
 }
+// -------------------- PluginAddParamModal ↓↓↓ --------------------
 .plugin-add-param-form {
     width: 100%;
     max-height: 80vh;
     padding: 24px;
     overflow: hidden auto;
 }
-// --------------------
+// -------------------- PluginParamList ↓↓↓ --------------------
 .plugin-param-list-wrapper {
     width: 100%;
     display: flex;
@@ -518,7 +520,7 @@
 .plugin-param-list-hidden {
     display: none;
 }
-// --------------------
+// -------------------- PluginEditorDiff ↓↓↓ --------------------
 .plugin-edtior-diff-wrapper {
     width: 100%;
     display: flex;
@@ -555,7 +557,7 @@
         }
     }
 }
-// --------------------
+// -------------------- 插件审核状态展示tag ↓↓↓ --------------------
 .audit-status-tag {
     white-space: nowrap;
     padding: 3px 6px;
@@ -574,21 +576,12 @@
 .audit-status-tag-failed {
     background: #f0f1f3;
     color: #ccd2de;
-    svg {
-        color: #b4bbca;
-    }
 }
 .audit-status-tag-pending {
     background: rgba(255, 182, 96, 0.2);
     color: #ffb660;
-    svg {
-        color: #ffb660;
-    }
 }
 .audit-status-tag-passed {
     background: rgba(86, 201, 145, 0.2);
     color: #56c991;
-    svg {
-        color: #56c991;
-    }
 }
