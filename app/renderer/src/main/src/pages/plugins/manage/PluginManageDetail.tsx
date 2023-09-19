@@ -15,7 +15,6 @@ import {
     OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {SolidOfficialpluginIcon} from "@/assets/icon/colors"
 import {PluginListPageMeta} from "../pluginsType"
 import {useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
@@ -126,11 +125,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                                 </div>
                                 <div className={styles["opt-show"]}>
                                     {statusTag[`${i % 3}`]}
-                                    {info.official && (
-                                        <div className='official-plugin-icon'>
-                                            <SolidOfficialpluginIcon />
-                                        </div>
-                                    )}
                                     <Tooltip
                                         title={info.help || "No Description about it."}
                                         placement='topRight'
