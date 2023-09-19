@@ -95,7 +95,12 @@ export interface ListShowContainerProps<T> {
     hasMore: boolean
     /** 更新列表数据 */
     updateList: (reset?: boolean) => any
+    /**列表/宫格id */
     id?: string
+    /**列表className */
+    listClassName?: string
+    /**宫格className */
+    gridClassName?: string
 }
 
 export interface ListListProps<T> {
@@ -113,7 +118,10 @@ export interface ListListProps<T> {
     hasMore: boolean
     /** 更新列表数据 */
     updateList: (reset?: boolean) => any
+    /**列表id */
     id?: string
+    /**列表className */
+    listClassName?: string
 }
 export interface ListLayoutOptProps {
     /** 插件详细信息 */
@@ -152,7 +160,10 @@ export interface GridListProps<T> {
     hasMore: boolean
     /** 更新列表数据 */
     updateList: (reset?: boolean) => any
+    /**宫格id */
     id?: string
+    /**宫格className */
+    gridClassName?: string
 }
 export interface GridLayoutOptProps {
     /** 插件详细信息 */
