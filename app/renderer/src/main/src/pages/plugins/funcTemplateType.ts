@@ -21,17 +21,19 @@ export interface TypeSelectProps {
 }
 
 export interface FuncBtnProps extends YakitButtonProp {
-    /** 按钮icon */
-    icon: ReactNode
     /** 按钮展示名称 */
     name: string
+    /** 切换纯图标按钮的宽度界限 */
+    maxWidth?: number
 }
 
 export interface FuncSearchProps {
+    /** 切换纯图标按钮的宽度界限 */
+    maxWidth?: number
     /** 默认值 */
     defaultValue?: string
     /** 搜索回调 */
-    onSearch: (type: string | null, value: string) => any
+    onSearch: (type: string, value: string) => any
 }
 
 export interface FuncFilterPopverProps {

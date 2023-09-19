@@ -66,6 +66,7 @@ import {CodecPluginTemplate} from "../invoker/data/CodecPluginTemplate"
 import {CodeGV} from "@/yakitGV"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
+import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
 
@@ -87,7 +88,7 @@ export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
                     {titleNode}
                     {!!subTitle ? <div className={styles["subtitle-wrapper"]}>{subTitle}</div> : null}
                 </div>
-                {!!extraHeader ? extraHeader : <div style={{width: 300}}></div>}
+                {!!extraHeader ? extraHeader : <div></div>}
             </div>
             <div className={styles["plugins-layout-container"]}>{children}</div>
         </div>
@@ -103,7 +104,6 @@ export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) =>
                     wrapperClassName={classNames(styles["container-filter-wrapper"], {
                         [styles["container-filter-wrapper-hidden"]]: !visible
                     })}
-                    // loading={!!loading}
                     visible={visible}
                     setVisible={setVisible}
                     selecteds={selecteds}
@@ -115,6 +115,7 @@ export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) =>
         </YakitSpin>
     )
 })
+
 /** @name 插件详情大框架组件(带左侧插件列表) */
 export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((props) => {
     const {title, filterNode, filterExtra, checked, onCheck, total, selected, listProps, onBack, children} = props
@@ -185,7 +186,6 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         </div>
     )
 })
-
 /** @name 插件详情-头部信息(样式未调完整) */
 export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props) => {
     const {pluginName, help, titleNode, tags, extraNode, img, user, pluginId, updated_at} = props
@@ -1201,11 +1201,33 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
 /** ---------- 以下为对应关系字段和插件页面共用图标 ---------- */
 
 /** 审核状态对应展示名称 */
-export const aduitStatusToName: Record<string, string> = {
-    "0": "待审核",
-    "1": "已通过",
-    "2": "未通过"
+export const aduitStatusToName: Record<string, {name: string; icon: ReactNode}> = {
+    "0": {name: "待审核", icon: <SolidFlagIcon className='aduit-status-flag-color' />},
+    "1": {name: "已通过", icon: <SolidBadgecheckIcon className='aduit-status-badge-check-color' />},
+    "2": {name: "未通过", icon: <SolidBanIcon className='aduit-status-ban-color' />}
 }
+/** 审核状态标签 */
+export const statusTag: {[key: string]: ReactNode} = {
+    "0": (
+        <div className={classNames(styles["audit-status-tag"], styles["audit-status-tag-pending"])}>
+            {aduitStatusToName["0"].icon}
+            {aduitStatusToName["0"].name}
+        </div>
+    ),
+    "1": (
+        <div className={classNames(styles["audit-status-tag"], styles["audit-status-tag-passed"])}>
+            {aduitStatusToName["1"].icon}
+            {aduitStatusToName["1"].name}
+        </div>
+    ),
+    "2": (
+        <div className={classNames(styles["audit-status-tag"], styles["audit-status-tag-failed"])}>
+            {aduitStatusToName["2"].icon}
+            {aduitStatusToName["2"].name}
+        </div>
+    )
+}
+
 /** 个人插件状态对应展示名称 */
 export const pluginStatusToName: Record<string, string> = {
     "1": "公开",
@@ -1266,26 +1288,4 @@ export const filterToName: Record<string, string> = {
     plugin_type: "插件类型",
     status: "审核状态",
     group: "插件分组"
-}
-
-/** 审核状态标签 */
-export const statusTag: {[key: string]: ReactNode} = {
-    "0": (
-        <div className={classNames(styles["audit-status-tag"], styles["audit-status-tag-failed"])}>
-            <SolidBanIcon />
-            {aduitStatusToName["0"]}
-        </div>
-    ),
-    "1": (
-        <div className={classNames(styles["audit-status-tag"], styles["audit-status-tag-pending"])}>
-            <SolidFlagIcon />
-            {aduitStatusToName["1"]}
-        </div>
-    ),
-    "2": (
-        <div className={classNames(styles["audit-status-tag"], styles["audit-status-tag-passed"])}>
-            <SolidBadgecheckIcon />
-            {aduitStatusToName["2"]}
-        </div>
-    )
 }
