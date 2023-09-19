@@ -1,21 +1,21 @@
+// -------------------- TypeSelect ↓↓↓ --------------------
 .type-select-wrapper {
     width: 100%;
     min-width: 344px;
-    overflow-x: auto;
+    overflow: hidden;
     display: flex;
     align-items: center;
     gap: 12px;
     position: relative;
     .type-select-opt {
-        display: flex;
         padding: 6px 8px;
+        display: flex;
         align-items: center;
         gap: 4px;
         border-radius: 14px;
         border: 1px solid transparent;
         background: #f8f8f8;
         cursor: pointer;
-
         position: relative;
         svg {
             width: 16px;
@@ -81,9 +81,6 @@
             }
         }
     }
-}
-.type-select-wrapper::-webkit-scrollbar {
-    display: none;
 }
 .ellipsis-type-select-popover {
     padding-top: 4px;
@@ -153,36 +150,15 @@
             border: 1px solid #eaecf3;
             background: #f8f8f8;
             cursor: pointer;
-
+            border-radius: 0px 0px 4px 4px;
+            color: #f6544a;
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
         }
-        .reset-btn {
-            border-radius: 0px 0px 4px 4px;
-            color: #f6544a;
-        }
     }
 }
-// --------------------
-.func-btn-wrapper {
-    svg {
-        width: 16px;
-        height: 16px;
-    }
-}
-@media screen and (max-width: 850px) {
-    .func-btn-wrapper {
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-        .title-style {
-            display: none;
-        }
-    }
-}
-// --------------------
+// -------------------- FuncSearch ↓↓↓ --------------------
 .func-search-wrapper {
     .search-body {
         display: block;
@@ -191,14 +167,12 @@
         display: none;
     }
 }
-@media screen and (max-width: 1008px) {
-    .func-search-wrapper {
-        .search-body {
-            display: none;
-        }
-        .search-icon {
-            display: block;
-        }
+.func-search-icon-wrapper {
+    .search-body {
+        display: none;
+    }
+    .search-icon {
+        display: block;
     }
 }
 .func-search-popver {
@@ -208,10 +182,10 @@
             border-radius: 4px;
         }
         .ant-popover-inner-content {
-            padding: 4px;
+            padding: 12px;
         }
         .ant-popover-arrow {
-            left: 6px;
+            right: 6px;
         }
     }
 }
@@ -247,7 +221,7 @@
     border: 1px solid var(--yakit-border-color);
     box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
 }
-// --------------------
+// -------------------- AuthorIcon & ApplicantIcon ↓↓↓ --------------------
 .author-icon-wrapper {
     min-width: 34px;
     width: 34px;
