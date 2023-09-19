@@ -4,9 +4,12 @@ import {
     PluginDetailHeaderProps,
     PluginDetailsProps,
     PluginEditorDiffProps,
+    PluginFilterParams,
+    PluginListPageMeta,
     PluginModifyInfoProps,
     PluginModifySettingProps,
     PluginParamListProps,
+    PluginSearchParams,
     PluginsContainerProps,
     PluginsLayoutProps
 } from "./baseTemplateType"
@@ -69,6 +72,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
+import { API } from "@/services/swagger/resposeType"
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
@@ -1288,4 +1292,23 @@ export const filterToName: Record<string, string> = {
     plugin_type: "插件类型",
     status: "审核状态",
     group: "插件分组"
+}
+
+export const defaultFilter: PluginFilterParams = {
+    type: ["yak", "mitm", "codec", "packet-hack", "port-scan"],
+    status: ["0"]
+}
+export const defaultSearch: PluginSearchParams = {
+    keyword: "",
+    userName: ""
+}
+export const defaultPagemeta: PluginListPageMeta = {page: 1, limit: 20}
+export const defaultResponse: API.YakitPluginListResponse = {
+    data: [],
+    pagemeta: {
+        limit: 20,
+        page: 1,
+        total: 0,
+        total_page: 1
+    }
 }
