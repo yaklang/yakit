@@ -3,7 +3,7 @@ import {PluginsContainer, PluginsLayout,aduitStatusToName, defaultFilter, defaul
 import {
     AuthorImg,
     FuncBtn,
-    FuncFilterPopver,
+    FuncFilterPopover,
     FuncSearch,
     GridLayoutOpt,
     ListLayoutOpt,
@@ -186,7 +186,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     /** 单项额外操作组件 */
     const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
         return (
-            <FuncFilterPopver
+            <FuncFilterPopover
                 icon={<OutlineDotshorizontalIcon />}
                 menu={{
                     data: [
