@@ -17,6 +17,8 @@ export interface FilterPanelGroupItem {
 export interface FilterPanelProps {
     /** 外框架修饰类 */
     wrapperClassName?: string
+    /** 列表架修饰类 */
+    listClassName?: string
     /** 加载状态 */
     loading?: boolean
     /** 是否可见 */
