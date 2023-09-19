@@ -582,12 +582,13 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 secondNode={
                     flow ? (
                         <HTTPFlowDetailRequestAndResponse
-                            id={0}
+                            id={flow.Id}
                             noHeader={true}
                             loading={detailLoading}
                             sendToWebFuzzer={true}
                             defaultHttps={selected?.IsHTTPS}
                             flow={flow}
+                            Tags={flow.Tags}
                         />
                     ) : null
                 }
