@@ -122,3 +122,30 @@ export interface PluginParamListProps {
 }
 
 export interface PluginEditorDiffProps {}
+
+/** ---------- 插件列表相关 start ---------- */
+/** 插件通用过滤条件 */
+export interface PluginFilterParams {
+    /** 插件类型 */
+    type?: string[]
+    /** 审核状态 */
+    status?: string[]
+    /** 标签 */
+    tags?: string[]
+    /** 插件组 */
+    groups?: string[]
+    /** 插件状态(公开/私密) */
+    state?: string[]
+}
+/** 插件搜索条件 */
+export interface PluginSearchParams {
+    /** 关键词 */
+    keyword: string
+    /** 用户名 */
+    userName: string
+}
+/** 插件列表页码条件 */
+export interface PluginListPageMeta {
+    page: number
+    limit: number
+}
