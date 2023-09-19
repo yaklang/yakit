@@ -481,7 +481,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                 str = "包含合规检测、小字典弱口令检测与部分漏洞检测"
                 break
             case "专项扫描":
-                str = "包含合规检测、大字典弱口令检测与针对不同场景的专项漏洞检测扫描"
+                str = "针对不同场景的专项漏洞检测扫描"
                 break
         }
         return str
