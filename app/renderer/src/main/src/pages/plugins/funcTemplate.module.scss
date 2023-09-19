@@ -189,7 +189,7 @@
         }
     }
 }
-// -------------------- FuncFilterPopver ↓↓↓ --------------------
+// -------------------- FuncFilterPopover ↓↓↓ --------------------
 .func-filter-popover {
     border-radius: 4px;
     --yakit-primary-5: var(--yakit-background-color);
@@ -197,6 +197,8 @@
 
     border: 1px solid var(--yakit-border-color);
     box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
+
+    padding: 0 4px;
 }
 // -------------------- AuthorIcon & ApplicantIcon ↓↓↓ --------------------
 .author-icon-wrapper {
@@ -241,6 +243,7 @@
             display: flex;
             align-items: center;
             gap: 16px;
+            padding-bottom: 12px;
             .header-body-filter {
                 display: flex;
                 padding: 12px 16px 12px 12px;
@@ -321,6 +324,7 @@
                     color: #31343f;
                     font-size: 12px;
                     line-height: 16px;
+                    height: 24px;
                     .total-style {
                         color: #f28b44;
                     }
@@ -345,7 +349,7 @@
             justify-content: flex-end;
             align-items: center;
             gap: 12px;
-            padding-right: 8px;
+            // padding-right: 8px;
             .is-list-btn {
                 width: 24px;
                 height: 24px;
@@ -566,6 +570,9 @@
             }
             .li-first-style {
                 padding-left: 0;
+            }
+            .li-last-style {
+                padding-right: 0;
             }
             @media screen and (min-width: 1156px) and (max-width: 1480px) {
                 .li-style {
