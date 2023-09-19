@@ -63,6 +63,7 @@ import {
 import {TypeSelectOpt} from "../funcTemplateType"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {PluginManageDetail} from "../manage/PluginManageDetail"
+import ReactResizeDetector from "react-resize-detector"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import "../plugins.scss"
 import styles from "./PluginsOnline.module.scss"
@@ -83,32 +84,33 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
 
     const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
 
-    useEffect(() => {
-        const io = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((change) => {
-                    // console.log("change", change)
-                    if (change.intersectionRatio <= 0) {
-                        setIsShowRoll(false)
-                        // pluginsOnlineListRef.current?.focus()
-                    } else {
-                        setIsShowRoll(true)
-                    }
-                })
-            },
-            {
-                root: pluginsOnlineRef.current
-            }
-        )
-        setTimeout(() => {
-            if (pluginsOnlineHeardRef.current) {
-                io.observe(pluginsOnlineHeardRef.current)
-            }
-        }, 1000)
-        return () => {
-            io.disconnect()
-        }
-    }, [pluginsOnlineHeardRef])
+    // useEffect(() => {
+    //     const io = new IntersectionObserver(
+    //         (entries) => {
+    //             entries.forEach((change) => {
+    //                 console.log("change", change)
+    //                 if (change.intersectionRatio <= 0.1) {
+    //                     setIsShowRoll(false)
+    //                     // pluginsOnlineListRef.current?.focus()
+    //                 } else {
+    //                     setIsShowRoll(true)
+    //                 }
+    //             })
+    //         },
+    //         {
+    //             threshold: [0, 0.1, 1],
+    //             root: pluginsOnlineRef.current
+    //         }
+    //     )
+    //     setTimeout(() => {
+    //         if (pluginsOnlineHeardRef.current) {
+    //             io.observe(pluginsOnlineHeardRef.current)
+    //         }
+    //     }, 1000)
+    //     return () => {
+    //         io.disconnect()
+    //     }
+    // }, [])
     useEffect(() => {
         window.addEventListener("scroll", handleScroll, true)
         return () => {
@@ -118,12 +120,22 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
     const handleScroll = useDebounceFn(
         useMemoizedFn((e) => {
             e.stopPropagation()
-            if (e.target.id === "online-list" || e.target.id === "online-grid") {
-                const {scrollTop} = e.target
-                // console.log("scrollTop", scrollTop)
+            const {scrollTop, id} = e.target
+            if (id === "online-list" || id === "online-grid") {
                 if (scrollTop === 0) {
                     setIsShowRoll(true)
-                    pluginsOnlineRef.current?.focus()
+                    if (pluginsOnlineRef.current) {
+                        pluginsOnlineRef.current.scrollTop -= 54
+                    }
+                }
+            }
+            if (id === "pluginsOnline") {
+                const {scrollHeight, clientHeight} = e.target
+                const maxScrollTop = Math.max(0, scrollHeight - clientHeight)
+                if (scrollTop === maxScrollTop) {
+                    setIsShowRoll(false)
+                } else {
+                    setIsShowRoll(true)
                 }
             }
         }),
@@ -131,22 +143,13 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
     ).run
     return (
         <OnlineJudgment>
-            <div
-                className={classNames(styles["plugins-online"], {
-                    [styles["plugins-online-overflow-hidden"]]: !isShowRoll
-                })}
-            >
-                <div ref={pluginsOnlineRef} className={classNames(styles["plugins-online-body"])}>
+            <div className={styles["plugins-online"]}>
+                <div id='pluginsOnline' ref={pluginsOnlineRef} className={styles["plugins-online-body"]}>
                     <div ref={pluginsOnlineHeardRef}>
                         <PluginsOnlineHeard />
                     </div>
-                    <div
-                        className={classNames(styles["plugins-online-list"], {
-                            [styles["plugins-online-list-no-roll"]]: isShowRoll
-                        })}
-                        ref={pluginsOnlineListRef}
-                    >
-                        <PluginsOnlineList />
+                    <div className={styles["plugins-online-list"]} ref={pluginsOnlineListRef}>
+                        <PluginsOnlineList isShowRoll={isShowRoll} />
                     </div>
                 </div>
             </div>
@@ -155,6 +158,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
 })
 
 const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) => {
+    const {isShowRoll} = props
     // 获取插件列表数据-相关逻辑
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
@@ -307,22 +311,31 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                 />
             )}
             <PluginsLayout
-                title='插件管理'
+                title={isShowRoll ? <></> : "插件商店"}
                 hidden={!!plugin}
                 subTitle={<TypeSelect active={filters.status || []} list={TypeType} setActive={onSetActive} />}
                 extraHeader={
                     <div className={styles["online-extra-header-wrapper"]}>
-                        <FuncSearch onSearch={onKeywordAndUser} />
-                        <div className='divider-style'></div>
+                        {!isShowRoll && (
+                            <>
+                                <FuncSearch onSearch={onKeywordAndUser} />
+                                <div className='divider-style'></div>
+                            </>
+                        )}
+
                         <div className={styles["btn-group-wrapper"]}>
                             <FuncBtn
-                                icon={<OutlineClouddownloadIcon className='btn-icon-color' />}
+                                maxWidth={1050}
+                                icon={<OutlineClouddownloadIcon />}
+                                type='outline2'
+                                size='large'
                                 name={selectNum > 0 ? "下载" : "一键下载"}
                                 onClick={() => onDownload()}
                             />
                             <FuncBtn
-                                type='primary'
+                                maxWidth={1050}
                                 icon={<SolidPluscircleIcon />}
+                                size='large'
                                 name='新建插件'
                                 onClick={onNewAddPlugin}
                             />
@@ -337,6 +350,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                     selecteds={filters as Record<string, string[]>}
                     onSelect={setFilters}
                     groupList={ssfilters}
+                    filterClassName={classNames({
+                        [styles["list-overflow-hidden"]]: isShowRoll
+                    })}
                 >
                     <PluginsList
                         checked={allCheck}
@@ -354,6 +370,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                             id='online'
                             isList={isList}
                             data={response.data}
+                            listClassName={classNames({
+                                [styles["list-overflow-hidden"]]: isShowRoll
+                            })}
+                            gridClassName={classNames({
+                                [styles["list-overflow-hidden"]]: isShowRoll
+                            })}
                             gridNode={(info: {index: number; data: API.YakitPluginDetail}) => {
                                 const {data} = info
                                 const check = allCheck || selectList.includes(data.uuid)
