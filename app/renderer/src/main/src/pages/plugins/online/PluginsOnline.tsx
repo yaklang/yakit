@@ -2,7 +2,7 @@ import React, {useState, useRef, useMemo, useEffect} from "react"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {
     FuncBtn,
-    FuncFilterPopver,
+    FuncFilterPopover,
     FuncSearch,
     GridLayoutOpt,
     ListLayoutOpt,
@@ -13,11 +13,13 @@ import {
 } from "../funcTemplate"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
+    OutlineCalendarIcon,
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
     OutlinePencilaltIcon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
+    OutlineSwitchverticalIcon,
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -168,7 +170,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
     const [isList, setIsList] = useState<boolean>(true)
 
     const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
-    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
+    const [filters, setFilters] = useState<PluginFilterParams>(
+        cloneDeep({...defaultFilter, tags: ["Weblogic", "威胁情报"]})
+    )
+    const [timeType, setTimeType] = useState<string>("所有时间")
+    const [heatType, setHeatType] = useState<string>("当前最热")
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [response, setResponse] = useState<API.YakitPluginListResponse>(cloneDeep(defaultResponse))
     const [hasMore, setHasMore] = useState<boolean>(true)
@@ -261,7 +267,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
     /** 单项额外操作组件 */
     const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
         return (
-            <FuncFilterPopver
+            <FuncFilterPopover
                 icon={<OutlineDotshorizontalIcon />}
                 name={""}
                 menu={{
@@ -272,9 +278,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                     className: styles["func-filter-dropdown-menu"],
                     onClick: ({key}) => {
                         switch (key) {
-                            // case "download":
-                            //     onDownload(data)
-                            //     break
                             default:
                                 break
                         }
@@ -365,6 +368,73 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                         onDelTag={onDelTag}
                         visible={showFilter}
                         setVisible={setShowFilter}
+                        extraHeader={
+                            <div className={styles["plugin-list-extra-heard"]}>
+                                <FuncFilterPopover
+                                    maxWidth={1200}
+                                    icon={<OutlineCalendarIcon />}
+                                    name={timeType}
+                                    menu={{
+                                        data: [
+                                            {key: "toDay", label: "今日"},
+                                            {key: "thisWeek", label: "本周"},
+                                            {key: "thisMonth", label: "本月"},
+                                            {key: "allTimes", label: "所有时间"}
+                                        ],
+                                        className: styles["func-filter-dropdown-menu"],
+                                        onClick: ({key}) => {
+                                            switch (key) {
+                                                case "toDay":
+                                                    setTimeType("今日")
+                                                    break
+                                                case "thisWeek":
+                                                    setTimeType("本周")
+                                                    break
+                                                case "thisMonth":
+                                                    setTimeType("本月")
+                                                    break
+                                                case "allTimes":
+                                                    setTimeType("所有时间")
+                                                    break
+                                                default:
+                                                    return
+                                            }
+                                        }
+                                    }}
+                                    placement='bottomRight'
+                                />
+                                <FuncFilterPopover
+                                    maxWidth={1200}
+                                    icon={<OutlineSwitchverticalIcon />}
+                                    name='当前最热'
+                                    menu={{
+                                        data: [
+                                            {key: "currentHottest", label: "当前最热"},
+                                            {key: "mostLikes", label: "点赞最多"},
+                                            {key: "downloadMost", label: "下载最多"}
+                                        ],
+                                        className: styles["func-filter-dropdown-menu"],
+                                        onClick: ({key}) => {
+                                            switch (key) {
+                                                case "currentHottest":
+                                                    setHeatType("当前最热")
+                                                    break
+                                                case "mostLikes":
+                                                    setHeatType("点赞最多")
+                                                    break
+                                                case "downloadMost":
+                                                    setHeatType("下载最多")
+                                                    break
+                                                default:
+                                                    return
+                                            }
+                                        }
+                                    }}
+                                    placement='bottomRight'
+                                />
+                                <div className='divider-style' style={{marginLeft: 4}} />
+                            </div>
+                        }
                     >
                         <ListShowContainer<API.YakitPluginDetail>
                             id='online'
