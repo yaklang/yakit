@@ -72,7 +72,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
-import { API } from "@/services/swagger/resposeType"
+import {API} from "@/services/swagger/resposeType"
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
@@ -100,13 +100,13 @@ export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
 })
 /** @name 插件列表组件(带侧边搜索栏)  */
 export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) => {
-    const {loading, visible, setVisible, selecteds, onSelect, groupList, children,filterClassName} = props
+    const {loading, visible, setVisible, selecteds, onSelect, groupList, children, filterClassName} = props
     return (
         <YakitSpin spinning={loading}>
             <div className={styles["plugins-container-wrapper"]}>
                 <FilterPanel
                     wrapperClassName={classNames(styles["container-filter-wrapper"], {
-                        [styles["container-filter-wrapper-hidden"]]: !visible,
+                        [styles["container-filter-wrapper-hidden"]]: !visible
                     })}
                     listClassName={filterClassName}
                     visible={visible}
