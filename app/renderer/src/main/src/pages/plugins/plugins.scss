@@ -8,18 +8,7 @@
 .aduit-status-ban-color {
     color: #b4bbca;
 }
-// -------------------- xxx ↓↓↓ --------------------
-.official-plugin-icon {
-    width: 16px;
-    height: 16px;
-    display: flex;
-    align-items: center;
-    svg {
-        width: 16px;
-        height: 16px;
-    }
-}
-// tabs组件样式
+// -------------------- tabs组件样式 ↓↓↓ --------------------
 .plugins-tabs {
     width: 100%;
     height: 100%;
@@ -79,7 +68,7 @@
         }
     }
 }
-// tooltip组件样式
+// -------------------- tooltip组件样式 ↓↓↓ --------------------
 .plugins-tooltip {
     .ant-tooltip-inner {
         display: flex;
@@ -136,7 +125,7 @@
         top: 1px;
     }
 }
-// form组件样式
+// -------------------- form组件样式 ↓↓↓ --------------------
 .plugins-form {
     width: 100%;
 
@@ -158,7 +147,7 @@
         }
     }
 }
-// radio组件样式
+// -------------------- radio组件样式 ↓↓↓ --------------------
 .plugins-radio-wrapper {
     .ant-radio:hover .ant-radio-inner {
         border-color: #f28b44;
@@ -187,7 +176,7 @@
         background-color: #ccd2de;
     }
 }
-// anchor组件样式
+// -------------------- anchor组件样式 ↓↓↓ --------------------
 .plugins-anchor {
     &.ant-anchor-wrapper {
         margin-left: 0;
