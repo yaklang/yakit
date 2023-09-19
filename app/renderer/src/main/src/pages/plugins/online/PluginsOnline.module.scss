@@ -257,3 +257,18 @@
         }
     }
 }
+
+.online-extra-header-wrapper {
+    @extend %display-row-center;
+    gap: 16px;
+    .divider-style {
+        width: 1px;
+        height: 16px;
+        background-color: #eaecf3;
+    }
+    .btn-group-wrapper {
+        @extend %display-row-center;
+        gap: 8px;
+    }
+    
+}
