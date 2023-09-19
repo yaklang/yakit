@@ -37,10 +37,12 @@ export interface FuncSearchProps {
 }
 
 export interface FuncFilterPopverProps {
+    /** 切换纯图标按钮的宽度界限 */
+    maxWidth?: number
     /** 展示icon */
     icon: ReactNode
     /** 展示名称 */
-    name: string
+    name?: string
     /** 下拉菜单组件属性 */
     menu: YakitMenuProp
     /** 弹框放置位置 */
