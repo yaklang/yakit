@@ -1336,6 +1336,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     useEffect(() => {
         setType(undefined)
         if (originValue) {
+            // 默认展示 originValue
+            setRenderHTML(undefined)
+            setShowValue(originValue)
+
             const encoder = new TextEncoder()
             const bytes = encoder.encode(Uint8ArrayToString(originValue))
             const mb = bytes.length / 1024 / 1024
@@ -1401,7 +1405,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         setTypeLoading(false)
     }
 
-    useEffect(() => {
+    useUpdateEffect(() => {
         if (originValue && type === undefined) {
             setRenderHTML(undefined)
             setShowValue(originValue)
@@ -1414,7 +1418,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 renderCode()
             }, 200)
         }
-    }, [originValue, type])
+    }, [type])
 
     return (
         <div className={styles["new-http-packet-editor"]}>
