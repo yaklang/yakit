@@ -562,7 +562,7 @@ $keyColor: map-keys($colors);
     flex-direction: column;
     flex: 1;
     // overflow: hidden;
-    overflow-y: auto;
+    overflow-y: overlay;
     overflow-x: hidden;
 }
 

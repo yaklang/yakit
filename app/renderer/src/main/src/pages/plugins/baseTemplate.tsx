@@ -96,14 +96,13 @@ export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
 /** @name 插件列表组件(带侧边搜索栏)  */
 export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) => {
     const {loading, visible, setVisible, selecteds, onSelect, groupList, children} = props
-
     return (
         <YakitSpin spinning={loading}>
             <div className={styles["plugins-container-wrapper"]}>
-                <div className={styles["container-body"]}>{children}</div>
-
                 <FilterPanel
-                    wrapperClassName={styles["container-filter-wrapper"]}
+                    wrapperClassName={classNames(styles["container-filter-wrapper"], {
+                        [styles["container-filter-wrapper-hidden"]]: !visible
+                    })}
                     // loading={!!loading}
                     visible={visible}
                     setVisible={setVisible}
@@ -111,6 +110,7 @@ export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) =>
                     onSelect={onSelect}
                     groupList={groupList}
                 />
+                <div className={styles["container-body"]}>{children}</div>
             </div>
         </YakitSpin>
     )

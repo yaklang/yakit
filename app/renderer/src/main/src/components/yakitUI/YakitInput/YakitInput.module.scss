@@ -10,6 +10,7 @@
     :global {
         .ant-input-borderless {
             border: none;
+            box-shadow: none !important;
         }
         .ant-input-group {
             display: flex;

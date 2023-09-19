@@ -290,6 +290,27 @@
             display: flex;
             align-items: center;
             gap: 16px;
+            .header-body-filter {
+                display: flex;
+                padding: 12px 16px 12px 12px;
+                justify-content: space-between;
+                align-items: center;
+                // border-bottom: 1px solid #eaecf3;
+                .header-body-filter-title {
+                    color: #31343f;
+                    font-size: 12px;
+                    line-height: 16px;
+                }
+            }
+            .header-filter {
+                display: flex;
+                align-items: center;
+                &-text {
+                    color: #31343f;
+                    font-size: 12px;
+                    line-height: 16px;
+                }
+            }
             .body-check {
                 display: flex;
                 align-items: center;
