@@ -58,7 +58,8 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                                         extra={
                                             <YakitButton
                                                 type='text'
-                                                className={classNames("button-text-danger", styles["clear-btn"])}
+                                                colors='danger'
+                                                className={styles["clear-btn"]}
                                                 onClick={(e) => {
                                                     e.stopPropagation()
                                                     onClear(item.groupKey)

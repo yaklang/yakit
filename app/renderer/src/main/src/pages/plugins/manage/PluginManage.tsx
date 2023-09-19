@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {PluginsContainer, PluginsLayout, statusTag} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout, aduitStatusToName, statusTag} from "../baseTemplate"
 import {
     AuthorImg,
     FuncBtn,
@@ -12,7 +12,6 @@ import {
     TypeSelect
 } from "../funcTemplate"
 import {TypeSelectOpt} from "../funcTemplateType"
-import {SolidBadgecheckIcon, SolidBanIcon, SolidFlagIcon} from "@/assets/icon/solid"
 import {
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
@@ -58,9 +57,9 @@ const defaultResponse: API.YakitPluginListResponse = {
 }
 
 const StatusType: TypeSelectOpt[] = [
-    {key: "0", name: "待审核", icon: <SolidFlagIcon className='flag-icon-color' />},
-    {key: "1", name: "已通过", icon: <SolidBadgecheckIcon className='badge-check-icon-color' />},
-    {key: "2", name: "未通过", icon: <SolidBanIcon className='ban-icon-color' />}
+    {key: "0", ...aduitStatusToName["0"]},
+    {key: "1", ...aduitStatusToName["1"]},
+    {key: "2", ...aduitStatusToName["2"]}
 ]
 
 interface PluginManageProps {}
@@ -74,7 +73,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
     const [filters, setFilters, getFilters] = useGetState<PluginFilterParams>(cloneDeep(defaultFilter))
-    const [searchs, setSearchs, getSearchs] = useGetState<PluginSearchParams>(cloneDeep(defaultSearch))
+    const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [response, setResponse, getResponse] = useGetState<API.YakitPluginListResponse>(cloneDeep(defaultResponse))
     const [hasMore, setHasMore] = useState<boolean>(true)
 
@@ -121,6 +120,24 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         fetchList()
     })
 
+    // 关键词|作者搜索
+    const onKeywordAndUser = useDebounceFn(
+        (type: string, value: string) => {
+            console.log("onKeywordAndUser", type, value)
+
+            if (type === "keyword") setSearchs({userName: "", keyword: value})
+            if (type === "user") setSearchs({keyword: "", userName: value})
+        },
+        {wait: 300}
+    )
+    // 过滤条件搜索
+    const onFilter = useDebounceFn(
+        (value: Record<string, string[] | string>) => {
+            setFilters({...value})
+        },
+        {wait: 300}
+    )
+
     const [allCheck, setAllcheck] = useState<boolean>(false)
     const [selectList, setSelectList, getSelectList] = useGetState<string[]>([])
     // 选中插件的数量
@@ -128,6 +145,11 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         if (allCheck) return response.pagemeta.total
         else return selectList.length
     }, [allCheck, selectList])
+    // 全选
+    const onCheck = useMemoizedFn((value: boolean) => {
+        if (value) setSelectList([])
+        setAllcheck(value)
+    })
 
     /** 插件展示(列表|网格) */
     const [isList, setIsList] = useState<boolean>(true)
@@ -138,13 +160,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 单项插件删除
     const [activeDelPlugin, setActiveDelPlugin] = useState<API.YakitPluginDetail | undefined>()
 
-    // 全选
-    const onCheck = useMemoizedFn((value: boolean) => {
-        if (value) setSelectList([])
-        setAllcheck(value)
-    })
     // 修改作者
-    const onModifyAuthor = useMemoizedFn(() => {})
+    const onModifyAuthor = useMemoizedFn(() => {
+        setShowModifyAuthor(true)
+    })
     // 下载
     const onDownload = useMemoizedFn((value?: API.YakitPluginDetail) => {})
     // 删除
@@ -153,14 +172,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const onDelTag = useMemoizedFn((value?: string) => {
         if (!value) setFilters({...getFilters(), tags: []})
         else setFilters({...getFilters(), tags: (getFilters().tags || []).filter((item) => item !== value)})
-    })
-    // 关键词/作者搜索
-    const onKeywordAndUser = useMemoizedFn((type: string | null, value: string) => {
-        if (!type) setSearchs(cloneDeep(defaultSearch))
-        else {
-            if (type === "keyword") setSearchs({...getSearchs(), keyword: value})
-            if (type === "user") setSearchs({...getSearchs(), userName: value})
-        }
     })
 
     const [plugin, setPlugin] = useState<API.YakitPluginDetail | undefined>()
@@ -242,7 +253,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     onCheck={onCheck}
                     data={response}
                     selected={selectNum}
-                    onBack={() => {}}
+                    onBack={() => {
+                        setPlugin(undefined)
+                    }}
                 />
             )}
 
@@ -258,22 +271,31 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 }
                 extraHeader={
                     <div className={styles["extra-header-wrapper"]}>
-                        <FuncSearch onSearch={onKeywordAndUser} />
+                        <FuncSearch maxWidth={1000} onSearch={onKeywordAndUser.run} />
                         <div className={styles["divider-style"]}></div>
                         <div className={styles["btn-group-wrapper"]}>
                             <FuncBtn
-                                icon={<OutlinePencilaltIcon className='btn-icon-color' />}
+                                maxWidth={1050}
+                                icon={<OutlinePencilaltIcon />}
                                 disabled={selectNum === 0}
+                                type='outline2'
+                                size='large'
                                 name={"修改作者"}
-                                onClick={() => setShowModifyAuthor(true)}
+                                onClick={onModifyAuthor}
                             />
                             <FuncBtn
-                                icon={<OutlineClouddownloadIcon className='btn-icon-color' />}
+                                maxWidth={1050}
+                                icon={<OutlineClouddownloadIcon />}
+                                type='outline2'
+                                size='large'
                                 name={selectNum > 0 ? "下载" : "一键下载"}
                                 onClick={() => onDownload()}
                             />
                             <FuncBtn
-                                icon={<OutlineTrashIcon className='btn-icon-color' />}
+                                maxWidth={1050}
+                                icon={<OutlineTrashIcon />}
+                                type='outline2'
+                                size='large'
                                 name={selectNum > 0 ? "删除" : "清空"}
                                 onClick={() => setShowReason({visible: true, type: "del"})}
                             />
@@ -286,7 +308,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     visible={showFilter}
                     setVisible={setShowFilter}
                     selecteds={filters as Record<string, string[]>}
-                    onSelect={setFilters}
+                    onSelect={onFilter.run}
                     groupList={ssfilters}
                 >
                     <PluginsList
