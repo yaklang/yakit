@@ -2,7 +2,7 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {
     AuthorImgProps,
     FuncBtnProps,
-    FuncFilterPopverProps,
+    FuncFilterPopoverProps,
     FuncSearchProps,
     GridLayoutOptProps,
     GridListProps,
@@ -260,7 +260,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
 })
 
 /** @name 带下拉菜单的按钮组件 */
-export const FuncFilterPopver: React.FC<FuncFilterPopverProps> = memo((props) => {
+export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) => {
     const {
         maxWidth,
         icon,
@@ -316,7 +316,12 @@ export const FuncFilterPopver: React.FC<FuncFilterPopverProps> = memo((props) =>
             onVisibleChange={setShow}
         >
             {nameAndIcon ? (
-                <YakitButton type='text2' isActive={show} onClick={(e) => e.stopPropagation()}>
+                <YakitButton
+                    type='text2'
+                    isActive={show}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{padding: "3px 4px"}}
+                >
                     {name}
                     {icon}
                 </YakitButton>
@@ -710,7 +715,6 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
         },
         {wait: 200, leading: false}
     )
-
     return (
         <div
             ref={gridContainerRef}
@@ -730,7 +734,10 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
                                     zIndex: index + 1,
                                     transform: `translate(${colNum * 100}%, ${rowNum * 100}%)`
                                 }}
-                                className={classNames(styles["li-style"], {[styles["li-first-style"]]: colNum === 0})}
+                                className={classNames(styles["li-style"], {
+                                    [styles["li-first-style"]]: colNum === 0,
+                                    [styles["li-last-style"]]: colNum === gridCol - 1
+                                })}
                             >
                                 {render({index: index, data: item})}
                             </li>

@@ -36,7 +36,7 @@ export interface FuncSearchProps {
     onSearch: (type: string, value: string) => any
 }
 
-export interface FuncFilterPopverProps {
+export interface FuncFilterPopoverProps {
     /** 切换纯图标按钮的宽度界限 */
     maxWidth?: number
     /** 展示icon */
