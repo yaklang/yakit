@@ -189,30 +189,7 @@
         }
     }
 }
-// --------------------
-.func-filter-wrapper {
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    border-radius: 4px;
-    cursor: pointer;
-
-    color: #31343f;
-    font-size: 12px;
-    line-height: 16px;
-    svg {
-        width: 16px;
-        height: 16px;
-        color: #85899e;
-    }
-}
-.func-filter-wrapper:hover {
-    background-color: #f0f1f3;
-}
-.func-filter-active {
-    background-color: #f0f1f3;
-}
+// -------------------- FuncFilterPopver ↓↓↓ --------------------
 .func-filter-popover {
     border-radius: 4px;
     --yakit-primary-5: var(--yakit-background-color);

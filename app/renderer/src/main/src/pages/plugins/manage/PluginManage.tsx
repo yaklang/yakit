@@ -18,7 +18,6 @@ import {
     OutlinePencilaltIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {SolidOfficialpluginIcon} from "@/assets/icon/colors"
 import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "../pluginsType"
 import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
@@ -145,9 +144,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         if (allCheck) return response.pagemeta.total
         else return selectList.length
     }, [allCheck, selectList])
-    // 全选
+    // 全选|取消全选
     const onCheck = useMemoizedFn((value: boolean) => {
-        if (value) setSelectList([])
+        setSelectList([])
         setAllcheck(value)
     })
 
@@ -198,23 +197,13 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     })
     /** 单项副标题组件 */
     const optSubTitle = useMemoizedFn((data: API.YakitPluginDetail) => {
-        return (
-            <>
-                {/* {data.official && (
-                    <div className='official-plugin-icon'>
-                        <SolidOfficialpluginIcon />
-                    </div>
-                )} */}
-                {statusTag[`${1 % 3}`]}
-            </>
-        )
+        return statusTag[`${1 % 3}`]
     })
     /** 单项额外操作组件 */
     const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
         return (
             <FuncFilterPopver
                 icon={<OutlineDotshorizontalIcon />}
-                name={""}
                 menu={{
                     data: [
                         {key: "del", label: "删除"},
@@ -226,12 +215,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                             case "del":
                                 setActiveDelPlugin(data)
                                 setShowReason({visible: true, type: "del"})
-                                break
+                                return
                             case "download":
                                 onDownload(data)
-                                break
+                                return
                             default:
-                                break
+                                return
                         }
                     }
                 }}
