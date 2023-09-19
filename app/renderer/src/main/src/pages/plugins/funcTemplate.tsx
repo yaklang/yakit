@@ -458,7 +458,20 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
 
 /** @name 插件列表组件 */
 export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = memo((props) => {
-    const {isList, data, gridNode, gridHeight, listNode, listHeight, loading, hasMore, updateList, id} = props
+    const {
+        isList,
+        data,
+        gridNode,
+        gridHeight,
+        listNode,
+        listHeight,
+        loading,
+        hasMore,
+        updateList,
+        id,
+        listClassName,
+        gridClassName
+    } = props
 
     // useWhyDidYouUpdate("ListShowContainer", {...props})
 
@@ -477,6 +490,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
                     loading={loading}
                     hasMore={hasMore}
                     updateList={updateList}
+                    listClassName={listClassName}
                 />
             </div>
             <div
@@ -492,6 +506,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
                     loading={loading}
                     hasMore={hasMore}
                     updateList={updateList}
+                    gridClassName={gridClassName}
                 />
             </div>
         </div>
@@ -500,7 +515,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
 
 /** @name 插件列表布局列表 */
 export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
-    const {isList, data, render, optHeight, loading, hasMore, updateList, id} = props
+    const {isList, data, render, optHeight, loading, hasMore, updateList, id, listClassName} = props
 
     // useWhyDidYouUpdate("ListList", {...props})
 
@@ -562,7 +577,7 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
         <div
             ref={listContainerRef}
             id={id}
-            className={styles["list-list-warpper"]}
+            className={classNames(styles["list-list-warpper"], listClassName)}
             onScroll={() => onScrollCapture.run()}
         >
             <div ref={listwrapperRef}>
@@ -636,7 +651,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
 
 /** @name 插件网格布局列表 */
 export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
-    const {isList, data, render, optHeight, loading, hasMore, updateList, id} = props
+    const {isList, data, render, optHeight, loading, hasMore, updateList, id, gridClassName} = props
 
     // useWhyDidYouUpdate("ListList", {...props})
 
@@ -699,7 +714,7 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
     return (
         <div
             ref={gridContainerRef}
-            className={styles["grid-list-wrapper"]}
+            className={classNames(styles["grid-list-wrapper"], gridClassName)}
             id={id}
             onScroll={() => onScrollCapture.run()}
         >
