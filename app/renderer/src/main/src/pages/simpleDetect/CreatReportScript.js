@@ -557,8 +557,14 @@ for i, riskIns := range potentialRisks {
     }
 }
 if len(potentialRisks) != 0 {
+    reportInstance.Markdown(sprintf("### 3.3.3 合规检查风险统计")) 
+    if(complianceRiskCriticalCount > 0 || complianceRiskHighCount > 0 || complianceRiskHighCount > 0 || complianceRiskWarningCount > 0) {
+        reportInstance.Raw({"type": "bar-graph", "title": "合规漏洞严重程度统计", "data": [{"name": "严重", "value": complianceRiskCriticalCount}, {"name": "高危", "value": complianceRiskHighCount}, {"name": "中危", "value": complianceRiskWarningCount}, {"name": "低危", "value": complianceRiskLowCount}], "color": ["#f70208", "#f9c003", "#2ab150", "#5c9cd5"]})
+    }
+    reportInstance.Markdown(\`合规检查是根据多年的经验， 通过扫描检查出危险系统及组件的版本。合规检查风险不是会造成实际损失的漏洞，可跟技术人员评估后，决定是否升级系统版本。\`)
+    reportInstance.Table(["CVE编号", "漏洞标题", "地址", "CWE类型", "漏洞级别"], showPotentialLine...)
     
-    reportInstance.Markdown(sprintf("### 3.3.3 合规检查风险统计"))
+    reportInstance.Markdown(sprintf("### 3.3.4 合规检查风险分析"))
     for _, gp := range cpp.ToGraphs(){
         aa = json.dumps(gp)
         reportInstance.Raw(aa)
@@ -570,19 +576,13 @@ if len(potentialRisks) != 0 {
 | <font color="#43ab42">通过网络攻击</font>  | 这种漏洞类型指的是攻击者可以通过互联网或者内部网络等方式，利用<font color="#43ab42">已知或未知的漏洞</font>来实现对目标系统或应用程序的攻击。这种攻击通常涉及到系统或应用程序中的某个软件组件或者功能模块，攻击者可以通过针对这些组件或模块的漏洞发起攻击，例如代码注入、文件包含、SQL 注入等方式。这种漏洞需要及时更新系统或应用程序中的软件版本，并加强安全测试和审计等手段，确保系统或应用程序的安全性和可靠性。|\`))
         }
     }
-    reportInstance.Markdown(sprintf("### 3.3.4 合规检查风险列表"))
-    
-    if(complianceRiskCriticalCount > 0 || complianceRiskHighCount > 0 || complianceRiskHighCount > 0 || complianceRiskWarningCount > 0) {
-        reportInstance.Raw({"type": "bar-graph", "title": "合规漏洞严重程度统计", "data": [{"name": "严重", "value": complianceRiskCriticalCount}, {"name": "高危", "value": complianceRiskHighCount}, {"name": "中危", "value": complianceRiskWarningCount}, {"name": "低危", "value": complianceRiskLowCount}], "color": ["#f70208", "#f9c003", "#2ab150", "#5c9cd5"]})
-    }
-    reportInstance.Markdown(\`合规检查是根据多年的经验， 通过扫描检查出危险系统及组件的版本。合规检查风险不是会造成实际损失的漏洞，可跟技术人员评估后，决定是否升级系统版本。\`)
-    reportInstance.Table(["CVE编号", "漏洞标题", "地址", "CWE类型", "漏洞级别"], showPotentialLine...)
 } else {
-    reportInstance.Markdown(sprintf("### 3.3.3 合规风险资产图"))
-    reportInstance.Markdown("无风险资产图")
+    reportInstance.Markdown(sprintf("### 3.3.3 合规检查风险统计"))
+    reportInstance.Markdown("无合规检查风险统计")
+    
+    reportInstance.Markdown(sprintf("### 3.3.4 合规检查风险分析"))
+    reportInstance.Markdown("无合规检查风险分析")
 
-    reportInstance.Markdown(sprintf("### 3.3.4 合规检查风险列表"))
-    reportInstance.Markdown("无合规检查风险")
 }
 
 
