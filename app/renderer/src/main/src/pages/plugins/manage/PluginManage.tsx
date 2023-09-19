@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {PluginsContainer, PluginsLayout, aduitStatusToName, statusTag} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout,aduitStatusToName, defaultFilter, defaultPagemeta, defaultResponse, defaultSearch, statusTag} from "../baseTemplate"
 import {
     AuthorImg,
     FuncBtn,
@@ -18,7 +18,7 @@ import {
     OutlinePencilaltIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "../pluginsType"
+import {SolidOfficialpluginIcon} from "@/assets/icon/colors"
 import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
@@ -33,27 +33,11 @@ import {PluginManageDetail} from "./PluginManageDetail"
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
+import { PluginFilterParams, PluginSearchParams, PluginListPageMeta } from "../baseTemplateType"
 
 const {ipcRenderer} = window.require("electron")
 
-const defaultFilter: PluginFilterParams = {
-    type: ["yak", "mitm", "codec", "packet-hack", "port-scan"],
-    status: ["0"]
-}
-const defaultSearch: PluginSearchParams = {
-    keyword: "",
-    userName: ""
-}
-const defaultPagemeta: PluginListPageMeta = {page: 1, limit: 20}
-const defaultResponse: API.YakitPluginListResponse = {
-    data: [],
-    pagemeta: {
-        limit: 20,
-        page: 1,
-        total: 0,
-        total_page: 1
-    }
-}
+
 
 const StatusType: TypeSelectOpt[] = [
     {key: "0", ...aduitStatusToName["0"]},
