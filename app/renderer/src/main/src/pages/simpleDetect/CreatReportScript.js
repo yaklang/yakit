@@ -281,7 +281,7 @@ for target,risks = range targetToRisks {
     riskLevel = "安全"
     isRiskKye = []
     for _, riskIns := range risks {
-        if  riskIns.RiskType == "dnslog" || riskIns.RiskTypeVerbose == "DNSLOG" {
+        if str.Contains(riskIns.Severity, "info") {
             isRiskKye = append(isRiskKye, riskIns)
         }
         if str.Contains(riskIns.Severity, "critical") {
@@ -316,7 +316,7 @@ for target,risks = range targetToRisks {
                 lowRisks = append(lowRisks, riskIns)
             }
         }
-       if  str.Contains(riskIns.Severity, "info") && riskIns.RiskType != "dnslog"  {
+       if  str.Contains(riskIns.Severity, "info") {
            secureCount++
             if parseBool(riskIns.IsPotential) {
                 secureCountScaleRisks = append(secureCountScaleRisks, riskIns)
@@ -368,28 +368,30 @@ aliveHostList = []
 aliveHostKey = 0
 for aliveHost = range db.QueryAliveHost(runtimeID) {
     aliveHostKey = aliveHostKey + 1
-    aliveHostList = append(aliveHostList, {
-        "序号": { "value": aliveHostKey, "sort": 1},
-        "存活资产": { "value": aliveHost.IP, "sort": 2}
-    })
+    aliveHostList = append(aliveHostList,
+        [aliveHostKey, aliveHost.IP]
+    )
 }
 if len(aliveHostList) == 0 {
     for _, host := range aliveHostCountList{
         aliveHostKey = aliveHostKey + 1
-        aliveHostList = append(aliveHostList, {
-            "序号": { "value": aliveHostKey, "sort": 1},
-            "存活资产": { "value": host, "sort": 2}
-        })
+        aliveHostList = append(aliveHostList,
+            [aliveHostKey, host]
+        )
     }
 }
 
+reportInstance.Markdown("<br/>")
 reportInstance.Raw({"type": "pie-graph", "title":"存活资产统计", "data": [{"name": "存活资产", "value": len(aliveHostList), "color": "#43ab42"}, {"name": "未知", "value": hostTotal-len(aliveHostList), "color": "#bfbfbf"}, {"name": "总资产", "value": hostTotal, "direction": "center", "color": "#ffffff"} ]})
 reportInstance.Raw({"type": "pie-graph", "title":"风险资产统计", "data": [{"name": "超危", "value": criticalCountScale, "color":"#f2637b"}, {"name": "高危", "value": highCountScale, "color":"#fbd438"}, {"name": "中危", "value": warningCountScale, "color": "#4ecb73"}, {"name": "低危", "value": lowCountScale, "color": "#59d4d4"}, {"name": "安全", "value": aliveHostCount-len(ipRisksStr), "color": "#43ab42"}, {"name": "存活资产统计", "value": aliveHostCount, "direction": "center", "color": "#ffffff"} ]})
 
 reportInstance.Markdown("#### 存活资产汇总")
 if len(aliveHostList) > 0 {
     reportInstance.Markdown("存活资产列表会显示所有存活资产，如有漏洞与风险会展示在风险资产列表中，未在风险资产列表中出现则默认为安全。")
-    reportInstance.Raw( json.dumps({ "type": "potential-risks-list", "data": aliveHostList }))
+    reportInstance.Table(
+        ["序号", "存活资产"],
+        aliveHostList...,
+    )
 } else {
     reportInstance.Markdown("暂无存活资产")
 }
@@ -474,7 +476,7 @@ if len(noPotentialRisks) == 0 {
         if titleVerbose == "" {
             titleVerbose = info.Title
         }
-        if info.RiskTypeVerbose != "DNSLOG" {
+        if !str.Contains(info.Severity, "info") {
             _line = append(_line, {
                 "序号": { "value": index + 1, "sort": 1},
                 "网站地址": { "value": sprintf(\`%v:%v\`, info.IP, info.Port), "sort": 2},
@@ -555,8 +557,14 @@ for i, riskIns := range potentialRisks {
     }
 }
 if len(potentialRisks) != 0 {
+    reportInstance.Markdown(sprintf("### 3.3.3 合规检查风险统计")) 
+    if(complianceRiskCriticalCount > 0 || complianceRiskHighCount > 0 || complianceRiskHighCount > 0 || complianceRiskWarningCount > 0) {
+        reportInstance.Raw({"type": "bar-graph", "title": "合规漏洞严重程度统计", "data": [{"name": "严重", "value": complianceRiskCriticalCount}, {"name": "高危", "value": complianceRiskHighCount}, {"name": "中危", "value": complianceRiskWarningCount}, {"name": "低危", "value": complianceRiskLowCount}], "color": ["#f70208", "#f9c003", "#2ab150", "#5c9cd5"]})
+    }
+    reportInstance.Markdown(\`合规检查是根据多年的经验， 通过扫描检查出危险系统及组件的版本。合规检查风险不是会造成实际损失的漏洞，可跟技术人员评估后，决定是否升级系统版本。\`)
+    reportInstance.Table(["CVE编号", "漏洞标题", "地址", "CWE类型", "漏洞级别"], showPotentialLine...)
     
-    reportInstance.Markdown(sprintf("### 3.3.3 合规检查风险统计"))
+    reportInstance.Markdown(sprintf("### 3.3.4 合规检查风险分析"))
     for _, gp := range cpp.ToGraphs(){
         aa = json.dumps(gp)
         reportInstance.Raw(aa)
@@ -568,19 +576,13 @@ if len(potentialRisks) != 0 {
 | <font color="#43ab42">通过网络攻击</font>  | 这种漏洞类型指的是攻击者可以通过互联网或者内部网络等方式，利用<font color="#43ab42">已知或未知的漏洞</font>来实现对目标系统或应用程序的攻击。这种攻击通常涉及到系统或应用程序中的某个软件组件或者功能模块，攻击者可以通过针对这些组件或模块的漏洞发起攻击，例如代码注入、文件包含、SQL 注入等方式。这种漏洞需要及时更新系统或应用程序中的软件版本，并加强安全测试和审计等手段，确保系统或应用程序的安全性和可靠性。|\`))
         }
     }
-    reportInstance.Markdown(sprintf("### 3.3.4 合规检查风险列表"))
-    
-    if(complianceRiskCriticalCount > 0 || complianceRiskHighCount > 0 || complianceRiskHighCount > 0 || complianceRiskWarningCount > 0) {
-        reportInstance.Raw({"type": "bar-graph", "title": "合规漏洞严重程度统计", "data": [{"name": "严重", "value": complianceRiskCriticalCount}, {"name": "高危", "value": complianceRiskHighCount}, {"name": "中危", "value": complianceRiskWarningCount}, {"name": "低危", "value": complianceRiskLowCount}], "color": ["#f70208", "#f9c003", "#2ab150", "#5c9cd5"]})
-    }
-    reportInstance.Markdown(\`合规检查是根据多年的经验， 通过扫描检查出危险系统及组件的版本。合规检查风险不是会造成实际损失的漏洞，可跟技术人员评估后，决定是否升级系统版本。\`)
-    reportInstance.Table(["CVE编号", "漏洞标题", "地址", "CWE类型", "漏洞级别"], showPotentialLine...)
 } else {
-    reportInstance.Markdown(sprintf("### 3.3.3 合规风险资产图"))
-    reportInstance.Markdown("无风险资产图")
+    reportInstance.Markdown(sprintf("### 3.3.3 合规检查风险统计"))
+    reportInstance.Markdown("无合规检查风险统计")
+    
+    reportInstance.Markdown(sprintf("### 3.3.4 合规检查风险分析"))
+    reportInstance.Markdown("无合规检查风险分析")
 
-    reportInstance.Markdown(sprintf("### 3.3.4 合规检查风险列表"))
-    reportInstance.Markdown("无合规检查风险")
 }
 
 

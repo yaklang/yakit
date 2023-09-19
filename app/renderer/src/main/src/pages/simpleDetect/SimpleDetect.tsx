@@ -58,7 +58,7 @@ import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
-const plainOptions = ["弱口令", "网络设备扫描", "合规检测"]
+const plainOptions = ["操作系统类漏洞","WEB中间件漏洞","WEB应用漏洞","网络安全设备漏洞","OA产品漏洞","CMS产品漏洞","弱口令", "CVE合规漏洞"]
 const layout = {
     labelCol: {span: 6},
     wrapperCol: {span: 16}
@@ -189,7 +189,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         passwordValue: ""
     })
     const [_, setScanType, getScanType] = useGetState<string>("基础扫描")
-    const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>(["弱口令", "合规检测"])
+    const [checkedList, setCheckedList, getCheckedList] = useGetState<CheckboxValueType[]>(["弱口令", "CVE合规漏洞"])
     const [__, setScanDeep, getScanDeep] = useGetState<number>(3)
     const isInputValue = useRef<boolean>(false)
     // 是否已经修改速度
@@ -197,7 +197,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
 
     useEffect(() => {
         let obj: any = {}
-        if (getScanType() === "自定义" && !getCheckedList().includes("弱口令")) {
+        if (getScanType() === "专项扫描" && !getCheckedList().includes("弱口令")) {
             obj.EnableBrute = false
         } else {
             obj.EnableBrute = true
@@ -284,7 +284,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     const saveTask = (v?: string) => {
         const cacheData = v ? JSON.parse(v) : false
         let newParams: PortScanParams = {...getPortParams()}
-        const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
+        const OnlineGroup: string = getScanType() !== "专项扫描" ? getScanType() : [...checkedList].join(",")
         let StartBruteParams: StartBruteParams = {...getBruteParams()}
         // 继续任务暂存报告参数 用于恢复任务下载 --如果直接关闭Dom则无法存储报告
         const ReportParams = getReportParams()
@@ -328,7 +328,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             }
         } else {
             let newParams: PortScanParams = {...getPortParams()}
-            const OnlineGroup: string = getScanType() !== "自定义" ? getScanType() : [...checkedList].join(",")
+            const OnlineGroup: string = getScanType() !== "专项扫描" ? getScanType() : [...checkedList].join(",")
             obj = {
                 LastRecord: {
                     LastRecordPtr: filePtrValue,
@@ -426,7 +426,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             warn("请输入任务名称")
             return
         }
-        if (getScanType() === "自定义" && getCheckedList().length === 0) {
+        if (getScanType() === "专项扫描" && getCheckedList().length === 0) {
             warn("请选择自定义内容")
             return
         }
@@ -436,7 +436,7 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
 
         const OnlineGroup: string =
-            getScanType() !== "自定义" ? getScanType() : [...checkedList].filter((name) => name !== "弱口令").join(",")
+            getScanType() !== "专项扫描" ? getScanType() : [...checkedList].filter((name) => name !== "弱口令").join(",")
         // 继续任务 参数拦截
         if (Uid) {
             recoverRun()
@@ -480,11 +480,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             case "基础扫描":
                 str = "包含合规检测、小字典弱口令检测与部分漏洞检测"
                 break
-            case "深度扫描":
-                str = "包含合规检测、大字典弱口令检测与所有漏洞检测"
-                break
-            case "自定义":
-                str = "自定义选择需要扫描的内容"
+            case "专项扫描":
+                str = "针对不同场景的专项漏洞检测扫描"
                 break
         }
         return str
@@ -665,19 +662,22 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
                             disabled={shield}
                         >
                             <Radio.Button value='基础扫描'>基础扫描</Radio.Button>
-                            <Radio.Button value='深度扫描'>深度扫描</Radio.Button>
-                            <Radio.Button value='自定义'>自定义</Radio.Button>
+                            <Radio.Button value='专项扫描'>专项扫描</Radio.Button>
                         </Radio.Group>
-                        {getScanType() === "自定义" && (
+                        
+                    </Form.Item>
+                    
+                    {getScanType() === "专项扫描" && (
+                        <Form.Item label=" " colon={false} style={{marginTop:"-16px"}}>
                             <CheckboxGroup
                                 disabled={shield}
-                                style={{paddingLeft: 18}}
                                 options={plainOptions}
                                 value={checkedList}
                                 onChange={(list) => setCheckedList(list)}
                             />
+                         </Form.Item>       
                         )}
-                    </Form.Item>
+                    
                     <div style={{display: "none"}}>
                         <Form.Item name='TaskName' label='任务名称'>
                             <Input
@@ -874,6 +874,23 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
         return null
     }
 
+    /** 区分继续任务与新任务 获取扫描主机数 Ping存活主机数 */
+    const getCardByJudgeOld = (v:"扫描主机数"|"Ping存活主机数") => {
+        if(oldRunParams && oldRunParams.LastRecord.ExtraInfo){
+            let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo).statusCards
+            const oldItem:StatusCardInfoProps[] = oldCards.filter((item) =>["存活主机数/扫描主机数"].includes(item.tag))
+            if(oldItem.length>0){
+                let strArr:string[] = oldItem[0].info[0].Data.split("/")
+                if(v==="Ping存活主机数") return strArr[0]
+                else return strArr[strArr.length - 1]
+            }
+            return getCardForId(v)
+        }
+        else{
+            return getCardForId(v)
+        }
+    }
+
     /** 下载报告 */
     const downloadReport = () => {
         // 脚本数据
@@ -883,8 +900,8 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
             {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
             {Key: "report_name", Value: reportName},
             {Key: "plugins", Value: runPluginCount},
-            {Key: "host_total", Value: getCardForId("扫描主机数")},
-            {Key: "ping_alive_host_total", Value: getCardForId("Ping存活主机数")},
+            {Key: "host_total", Value: getCardByJudgeOld("扫描主机数")},
+            {Key: "ping_alive_host_total", Value: getCardByJudgeOld("Ping存活主机数")},
             {Key: "port_total", Value: getCardForId("扫描端口数")}
         ]
         // 老报告生成
@@ -911,8 +928,8 @@ export const SimpleDetectTable: React.FC<SimpleDetectTableProps> = React.forward
                 {Key: "runtime_id", Value: getCardForId("RuntimeIDFromRisks")},
                 {Key: "report_name", Value: reportName},
                 {Key: "plugins", Value: runPluginCount},
-                {Key: "host_total", Value: getCardForId("扫描主机数")},
-                {Key: "ping_alive_host_total", Value: getCardForId("Ping存活主机数")},
+                {Key: "host_total", Value: getCardByJudgeOld("扫描主机数")},
+                {Key: "ping_alive_host_total", Value: getCardByJudgeOld("Ping存活主机数")},
                 {Key: "port_total", Value: getCardForId("扫描端口数")}
             ]
         }
@@ -1258,7 +1275,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
 
     const statusErrorCards = infoState.statusState.filter((item) => ["加载插件失败", "SYN扫描失败"].includes(item.tag))
     const statusSucceeCards = infoState.statusState.filter((item) =>
-        ["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数"].includes(item.tag)
+        ["加载插件", "漏洞/风险/指纹", "开放端口数/已扫主机数", "存活主机数/扫描主机数"].includes(item.tag)
     )
     const statusCards = useMemo(() => {
         if (statusErrorCards.length > 0) {
@@ -1272,6 +1289,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = (props) => {
         if (showOldCard && oldRunParams && oldRunParams.LastRecord.ExtraInfo) {
             let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo).statusCards
             return Array.isArray(oldCards) ? oldCards : []
+        }
+        // 继续任务运行时 保持之前的 存活主机数/扫描主机数 数据
+        else if(oldRunParams && oldRunParams.LastRecord.ExtraInfo){
+            let oldCards = JSON.parse(oldRunParams.LastRecord.ExtraInfo).statusCards
+            const oldItem:StatusCardInfoProps[] = oldCards.filter((item) =>["存活主机数/扫描主机数"].includes(item.tag))
+            const nowStatusCards:StatusCardInfoProps [] = statusCards.filter((item) => item.tag !== "存活主机数/扫描主机数")
+            return [...oldItem,...nowStatusCards]
         }
         return statusCards
     }, [statusCards, showOldCard, oldRunParams])
