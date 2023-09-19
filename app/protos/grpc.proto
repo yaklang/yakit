@@ -3519,8 +3519,8 @@ message MITMRequest {
   repeated string includeUri = 44;
   bool updateFilter = 12;
 
-  // 劫持当前请求的响应信息
-  bool hijackResponse = 13;
+  // 劫持当前请求的响应信息，0是默认值，1是劫持响应，2是不劫持响应
+  uint32 hijackResponse = 13;
 
   // 手动丢包
   bool drop = 14;

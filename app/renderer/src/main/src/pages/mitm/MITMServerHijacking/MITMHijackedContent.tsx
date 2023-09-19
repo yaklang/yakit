@@ -257,6 +257,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 info("劫持所有响应内容")
                 break
             case "never":
+                cancelHijackedResponseByRequest(currentPacketId)
                 info("仅劫持请求")
                 break
             default:
@@ -430,5 +431,8 @@ const forwardResponse = (id: number) => {
 }
 
 export const allowHijackedResponseByRequest = (id: number) => {
-    return ipcRenderer.invoke("mitm-hijacked-current-response", id)
+    return ipcRenderer.invoke("mitm-hijacked-current-response", id, true)
+}
+export const cancelHijackedResponseByRequest = (id: number) => {
+    return ipcRenderer.invoke("mitm-hijacked-current-response", id, false)
 }
