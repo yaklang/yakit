@@ -52,11 +52,11 @@ import {pluginTypeToName} from "./baseTemplate"
 import {PluginsGridCheckIcon} from "./icon"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 import "./plugins.scss"
 import styles from "./funcTemplate.module.scss"
 import classNames from "classnames"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 /** @name 标题栏的搜索选项组件 */
 export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
@@ -262,11 +262,36 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
 /** @name 带下拉菜单的按钮组件 */
 export const FuncFilterPopver: React.FC<FuncFilterPopverProps> = memo((props) => {
     const {
+        maxWidth,
         icon,
         name,
         menu: {onClick, ...menurest},
         placement = "bottom"
     } = props
+
+    const [isIcon, setIsIcon, getIsIcon] = useGetState<boolean>(false)
+    const mediaHandle = useMemoizedFn((e) => {
+        let value = !!e.matches
+        if (getIsIcon() === value) return
+        setIsIcon(value)
+    })
+    useEffect(() => {
+        if (!maxWidth) return
+        const mediaQuery = window.matchMedia(`(max-width: ${maxWidth}px)`)
+        setIsIcon(!!mediaQuery.matches)
+
+        mediaQuery.addEventListener("change", mediaHandle)
+        return () => {
+            mediaQuery.removeEventListener("change", mediaHandle)
+        }
+    }, [])
+
+    /** 判断组件是纯图标还是带内容 */
+    const nameAndIcon = useMemo(() => {
+        if (!name) return false
+        if (isIcon) return false
+        return true
+    }, [name, isIcon])
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -288,15 +313,21 @@ export const FuncFilterPopver: React.FC<FuncFilterPopverProps> = memo((props) =>
             overlayClassName={styles["func-filter-popover"]}
             overlay={overlay}
             placement={placement}
-            onVisibleChange={(open) => setShow(open)}
+            onVisibleChange={setShow}
         >
-            <div
-                className={classNames(styles["func-filter-wrapper"], {[styles["func-filter-active"]]: show})}
-                onClick={(e) => e.stopPropagation()}
-            >
-                {name}
-                {icon}
-            </div>
+            {nameAndIcon ? (
+                <YakitButton type='text2' isActive={show} onClick={(e) => e.stopPropagation()}>
+                    {name}
+                    {icon}
+                </YakitButton>
+            ) : (
+                <YakitButton
+                    type='text2'
+                    isActive={show}
+                    icon={icon}
+                    onClick={(e) => e.stopPropagation()}
+                ></YakitButton>
+            )}
         </Dropdown>
     )
 })
