@@ -6,7 +6,17 @@ import {funcSearchType} from "../funcTemplate"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {OutlineRefreshIcon, OutlineSearchIcon, OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
-import {useMemoizedFn, useInViewport, useEventListener, useSize, useThrottleFn, useScroll, useNetwork} from "ahooks"
+import {
+    useMemoizedFn,
+    useInViewport,
+    useEventListener,
+    useSize,
+    useThrottleFn,
+    useScroll,
+    useNetwork,
+    useDebounceFn,
+    useUpdateEffect
+} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import card1 from "./card1.png"
 import card2 from "./card2.png"
@@ -18,15 +28,58 @@ import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 
 interface PluginsOnlineProps {}
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
-    const pluginsOnlineHeardRef = useRef<HTMLDivElement>(null)
     const pluginsOnlineRef = useRef<HTMLDivElement>(null)
-    const [inViewport, ratio = 1] = useInViewport(pluginsOnlineHeardRef, {
-        threshold: [0, 0.25, 0.5, 0.75, 0.99],
-        root: () => pluginsOnlineRef.current
-    })
-    const isShowRoll = useMemo(() => {
-        return ratio > 0.1
-    }, [ratio])
+    const pluginsOnlineHeardRef = useRef<HTMLDivElement>(null)
+    const pluginsOnlineListRef = useRef<HTMLDivElement>(null)
+
+    const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
+
+    useEffect(() => {
+        const io = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((change) => {
+                    // console.log("change", change)
+                    if (change.intersectionRatio <= 0) {
+                        setIsShowRoll(false)
+                        // pluginsOnlineListRef.current?.focus()
+                    } else {
+                        setIsShowRoll(true)
+                    }
+                })
+            },
+            {
+                root: pluginsOnlineRef.current
+            }
+        )
+        setTimeout(() => {
+            if (pluginsOnlineHeardRef.current) {
+                io.observe(pluginsOnlineHeardRef.current)
+            }
+        }, 1000)
+        return () => {
+            io.disconnect()
+        }
+    }, [pluginsOnlineHeardRef])
+    useEffect(() => {
+        window.addEventListener("scroll", handleScroll, true)
+        return () => {
+            window.removeEventListener("scroll", handleScroll, true)
+        }
+    }, [])
+    const handleScroll = useDebounceFn(
+        useMemoizedFn((e) => {
+            e.stopPropagation()
+            if (e.target.id === "online-list" || e.target.id === "online-grid") {
+                const {scrollTop} = e.target
+                // console.log("scrollTop", scrollTop)
+                if (scrollTop === 0) {
+                    setIsShowRoll(true)
+                    pluginsOnlineRef.current?.focus()
+                }
+            }
+        }),
+        {wait: 200, leading: true}
+    ).run
     return (
         <OnlineJudgment>
             <div
@@ -42,6 +95,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
                         className={classNames(styles["plugins-online-list"], {
                             [styles["plugins-online-list-no-roll"]]: isShowRoll
                         })}
+                        ref={pluginsOnlineListRef}
                     >
                         <PluginManage />
                     </div>
