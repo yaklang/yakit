@@ -405,7 +405,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
 
 /** @name 插件列表组件 */
 export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = memo((props) => {
-    const {isList, data, gridNode, gridHeight, listNode, listHeight, loading, hasMore, updateList} = props
+    const {isList, data, gridNode, gridHeight, listNode, listHeight, loading, hasMore, updateList, id} = props
 
     // useWhyDidYouUpdate("ListShowContainer", {...props})
 
@@ -416,6 +416,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
                 className={classNames(styles["tab-panel"], {[styles["tab-hidden-panel"]]: !isList})}
             >
                 <ListList
+                    id={`${id}-list`}
                     isList={isList}
                     data={data}
                     render={listNode}
@@ -430,6 +431,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
                 className={classNames(styles["tab-panel"], {[styles["tab-hidden-panel"]]: isList})}
             >
                 <GridList
+                    id={`${id}-grid`}
                     isList={isList}
                     data={data}
                     render={gridNode}
@@ -445,7 +447,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
 
 /** @name 插件列表布局列表 */
 export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
-    const {isList, data, render, optHeight, loading, hasMore, updateList} = props
+    const {isList, data, render, optHeight, loading, hasMore, updateList, id} = props
 
     // useWhyDidYouUpdate("ListList", {...props})
 
@@ -504,7 +506,12 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
     }, [loading, listContainerRef.current?.clientHeight, listwrapperRef.current?.clientHeight])
 
     return (
-        <div ref={listContainerRef} className={styles["list-list-warpper"]} onScroll={() => onScrollCapture.run()}>
+        <div
+            ref={listContainerRef}
+            id={id}
+            className={styles["list-list-warpper"]}
+            onScroll={() => onScrollCapture.run()}
+        >
             <div ref={listwrapperRef}>
                 {list.map((ele) => {
                     return (
@@ -576,7 +583,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
 
 /** @name 插件网格布局列表 */
 export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
-    const {isList, data, render, optHeight, loading, hasMore, updateList} = props
+    const {isList, data, render, optHeight, loading, hasMore, updateList, id} = props
 
     // useWhyDidYouUpdate("ListList", {...props})
 
@@ -637,7 +644,12 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
     )
 
     return (
-        <div ref={gridContainerRef} className={styles["grid-list-wrapper"]} onScroll={() => onScrollCapture.run()}>
+        <div
+            ref={gridContainerRef}
+            className={styles["grid-list-wrapper"]}
+            id={id}
+            onScroll={() => onScrollCapture.run()}
+        >
             <div style={{minHeight: wrapperHeight}} className={styles["grid-list-body"]}>
                 <ul className={styles["ul-wrapper"]}>
                     {data.map((item, index) => {

@@ -91,6 +91,7 @@ export interface ListShowContainerProps<T> {
     hasMore: boolean
     /** 更新列表数据 */
     updateList: (reset?: boolean) => any
+    id?: string
 }
 
 export interface ListListProps<T> {
@@ -108,6 +109,7 @@ export interface ListListProps<T> {
     hasMore: boolean
     /** 更新列表数据 */
     updateList: (reset?: boolean) => any
+    id?: string
 }
 export interface ListLayoutOptProps {
     /** 插件详细信息 */
@@ -146,6 +148,7 @@ export interface GridListProps<T> {
     hasMore: boolean
     /** 更新列表数据 */
     updateList: (reset?: boolean) => any
+    id?: string
 }
 export interface GridLayoutOptProps {
     /** 插件详细信息 */
