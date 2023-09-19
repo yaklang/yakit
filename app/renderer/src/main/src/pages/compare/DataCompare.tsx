@@ -54,11 +54,14 @@ interface DataCompareModalProps {
     leftCode: string
     rightTitle?: string
     rightCode: string
+    loadCallBack?:()=>void
 }
 
 export const DataCompareModal : React.FC<DataCompareModalProps> = (props) => {
-    const {onClose,leftCode,rightCode,leftTitle,rightTitle} = props
-
+    const {onClose,leftCode,rightCode,leftTitle,rightTitle,loadCallBack} = props
+    useEffect(()=>{
+        loadCallBack&&loadCallBack()
+    })
     return (
         <div className={styles['data-compare-modal']}>
             <div className={styles['header']}>

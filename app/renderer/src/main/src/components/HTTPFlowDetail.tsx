@@ -781,6 +781,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     }, [flow?.Url])
 
+    // 请求loading
+    const [resLoading,setResLoading] = useState<boolean>(false)
+    // 响应loading
+    const [rspLoading,setRspLoading] = useState<boolean>(false)
+
     // 是否显示原始数据
     const [isShowBeforeData, setShowBeforeData] = useState<boolean>(false)
     // 请求/原始请求
@@ -818,18 +823,34 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     }, [isShowBeforeData, id])
 
     useEffect(() => {
+        setResLoading(true)
         if (resType === "request") {
-            setOriginResValue(beforeResValue)
+            setTimeout(()=>{
+               setOriginResValue(beforeResValue)
+               setResLoading(false)
+            },300)
+            
         } else {
-            setOriginResValue(flow?.Request || new Uint8Array())
+            setTimeout(()=>{
+                setOriginResValue(flow?.Request || new Uint8Array())
+                setResLoading(false)
+            },300)
         }
     }, [resType, flow?.Request])
     useEffect(() => {
+        setRspLoading(true)
         if (rspType === "response") {
-            setOriginRspValue(beforeRspValue)
+            setTimeout(()=>{
+                setOriginRspValue(beforeRspValue)
+                setRspLoading(false)
+            },300)
         } else {
-            setOriginRspValue(flow?.Response || new Uint8Array())
+            setTimeout(()=>{
+                setOriginRspValue(flow?.Response || new Uint8Array())
+                setRspLoading(false)
+            },300)
         }
+        
     }, [rspType, flow?.Response])
     const handleGetHTTPFlowBare = useMemoizedFn((data: "request" | "response") => {
         ipcRenderer
@@ -894,7 +915,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noLineNumber={true}
                         sendToWebFuzzer={sendToWebFuzzer}
                         defaultHeight={defaultHeight}
-                        loading={loading}
+                        loading={resLoading||loading}
                         defaultHttps={defaultHttps}
                         hideSearch={true}
                         noHex={true}
@@ -969,7 +990,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isResponse={true}
                         noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}
-                        loading={loading}
+                        loading={rspLoading||loading}
                         originValue={originRspValue}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}

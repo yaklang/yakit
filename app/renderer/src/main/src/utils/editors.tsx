@@ -1165,6 +1165,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
     const [typeLoading, setTypeLoading] = useState<boolean>(false)
 
+    // 对比loading
+    const [compareLoading,setCompareLoading] = useState<boolean>(false)
+
     // 操作系统类型
     const [system, setSystem] = useState<string>()
 
@@ -1247,6 +1250,35 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         },
         [hexValue]
     )
+
+    const openCompareModal = useMemoizedFn((dataCompare) => {
+        setCompareLoading(true)
+        setTimeout(() => {
+        const m = showYakitModal({
+            title: null,
+            content: (
+                <DataCompareModal
+                    onClose={() => m.destroy()}
+                    rightTitle={dataCompare.rightTitle}
+                    leftTitle={dataCompare.leftTitle}
+                    leftCode={
+                        dataCompare.leftCode
+                            ? Uint8ArrayToString(dataCompare.leftCode)
+                            : Uint8ArrayToString(showValue)
+                    }
+                    rightCode={Uint8ArrayToString(dataCompare.rightCode)}
+                    loadCallBack={()=>setCompareLoading(false)} 
+                />
+            ),
+            onCancel: () => {
+                m.destroy()
+            },
+            width: 1200,
+            footer: null,
+            closable: false
+        })
+        }, 500);
+    })
 
     useEffect(() => {
         if (!props.defaultHeight) {
@@ -1512,6 +1544,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 <YakitButton
                                     size={"small"}
                                     type={"primary"}
+                                    loading={compareLoading}
                                     onClick={() => {
                                         // ipcRenderer
                                         // .invoke("send-to-tab", {
@@ -1521,28 +1554,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                         //         rightData:Uint8ArrayToString(dataCompare)
                                         //     }
                                         // })
-                                        const m = showYakitModal({
-                                            title: null,
-                                            content: (
-                                                <DataCompareModal
-                                                    onClose={() => m.destroy()}
-                                                    rightTitle={dataCompare.rightTitle}
-                                                    leftTitle={dataCompare.leftTitle}
-                                                    leftCode={
-                                                        dataCompare.leftCode
-                                                            ? Uint8ArrayToString(dataCompare.leftCode)
-                                                            : Uint8ArrayToString(showValue)
-                                                    }
-                                                    rightCode={Uint8ArrayToString(dataCompare.rightCode)}
-                                                />
-                                            ),
-                                            onCancel: () => {
-                                                m.destroy()
-                                            },
-                                            width: 1200,
-                                            footer: null,
-                                            closable: false
-                                        })
+                                        openCompareModal(dataCompare)
                                     }}
                                 >
                                     对比
