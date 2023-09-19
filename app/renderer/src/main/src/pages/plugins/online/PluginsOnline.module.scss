@@ -38,15 +38,25 @@
             .divider-style {
                 width: 1px;
                 height: 16px;
-                background-color: #eaecf3;
+                background-color: var(--yakit-border-color);
             }
             .btn-group-wrapper {
                 @extend %display-row-center;
                 gap: 8px;
             }
         }
+        .plugins-layout-title {
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+        }
         .list-overflow-hidden {
             overflow: hidden;
+        }
+        .plugin-list-extra-heard {
+            @extend %display-row-center;
+            gap: 8px;
         }
     }
 }
