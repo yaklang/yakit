@@ -86,11 +86,17 @@ module.exports = (win, getClient) => {
     // 发送劫持请当前请求的消息，可以劫持当前响应的请求
     ipcMain.handle("mitm-hijacked-current-response", (e, id, should) => {
         if (stream) {
-
-            stream.write({
-                id: id,
-                hijackResponse: should ? 1 : 2,
-            })
+            if (should) {
+                stream.write({
+                    id: id,
+                    hijackResponse: true,
+                })
+            } else {
+                stream.write({
+                    id: id,
+                    cancelhijackResponse: true,
+                })
+            }
         }
     })
 
