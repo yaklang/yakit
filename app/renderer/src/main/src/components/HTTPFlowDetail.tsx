@@ -499,7 +499,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     .invoke("GetHTTPFlowById", {Id: id})
                     .then((i: HTTPFlow) => {
                         if (+i.Id == lastIdRef.current) {
-                            setLoading(false)
+                            setTimeout(() => setLoading(false), 10)
                             setFlow(i)
                             queryMITMRuleExtractedData(i)
                         }
