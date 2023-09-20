@@ -9,6 +9,7 @@ import {
     ListLayoutOptProps,
     ListListProps,
     ListShowContainerProps,
+    OnlineExtraOperateProps,
     PluginsListProps,
     TagsListShowProps,
     TypeSelectProps
@@ -24,8 +25,12 @@ import {
 } from "ahooks"
 import {
     OutlineCalendarIcon,
+    OutlineChatIcon,
+    OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
     OutlineSearchIcon,
+    OutlineThumbdownIcon,
+    OutlineThumbupIcon,
     OutlineViewgridIcon,
     OutlineViewlistIcon,
     OutlineXIcon
@@ -38,7 +43,8 @@ import {
     SolidPluginProtScanIcon,
     SolidSparklesPluginIcon,
     SolidDocumentSearchPluginIcon,
-    SolidCollectionPluginIcon
+    SolidCollectionPluginIcon,
+    SolidCloudpluginIcon
 } from "@/assets/icon/colors"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -57,6 +63,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import "./plugins.scss"
 import styles from "./funcTemplate.module.scss"
 import classNames from "classnames"
+import {SolidThumbUpIcon} from "@/assets/newIcon"
 
 /** @name 标题栏的搜索选项组件 */
 export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
@@ -606,7 +613,6 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
 /** @name 插件列表形式单个项组件 */
 export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
     const {data, checked, onCheck, img, title, help, time, subTitle, extraNode, onClick} = props
-
     // useWhyDidYouUpdate("ListLayoutOpt", {...props})
 
     // 副标题组件
@@ -625,6 +631,13 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
         return null
     })
 
+    const authorImgNode = useMemo(() => {
+        if (data.isCorePlugin) {
+            return <AuthorImg icon={pluginTypeToName[data.type].icon} />
+        }
+        return <AuthorImg src={img || ""} builtInIcon={data.official ? "official" : undefined} />
+    }, [data.isCorePlugin])
+
     return (
         <div className={styles["list-layout-opt-wrapper"]} onClick={onclick}>
             <div className={styles["opt-body"]}>
@@ -634,7 +647,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => onCheck(data, e.target.checked)}
                     />
-                    <AuthorImg src={img || ""} />
+                    {authorImgNode}
                     <div className={styles["title-wrapper"]}>
                         <div className={styles["title-body"]}>
                             <div className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}>
@@ -812,7 +825,12 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
             return {arr: prImgs.slice(0, 5), length: prImgs.length - 5}
         }
     }, [prImgs])
-
+    const authorImgNode = useMemo(() => {
+        if (data.isCorePlugin) {
+            return <AuthorImg icon={pluginTypeToName[data.type].icon} />
+        }
+        return <AuthorImg src={img || ""} builtInIcon={data.official ? "official" : undefined} />
+    }, [data.isCorePlugin])
     return (
         <div className={styles["grid-layout-opt-wrapper"]} onClick={onclick}>
             <div
@@ -869,7 +887,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                         {!noUser && (
                             <div className={styles["user-wrapper"]}>
                                 <div className={styles["user-body"]}>
-                                    <AuthorImg src={img || ""} />
+                                    {authorImgNode}
                                     <div className={classNames(styles["user-style"], "yakit-content-single-ellipsis")}>
                                         {user || ""}
                                     </div>
@@ -1001,6 +1019,46 @@ export const TagsListShow: React.FC<TagsListShowProps> = memo((props) => {
                       )
                   })
                 : "..."}
+        </div>
+    )
+})
+
+/** @name 线上插件额外操作 */
+export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props) => {
+    const {likeProps, commentProps, downloadProps} = props
+    const onLikeClick = useMemoizedFn((e) => {
+        e.stopPropagation()
+        likeProps.onLikeClick(!likeProps.active)
+    })
+    const onCommentClick = useMemoizedFn((e) => {
+        e.stopPropagation()
+        commentProps.onCommentClick()
+    })
+    const onDownloadClick = useMemoizedFn((e) => {
+        e.stopPropagation()
+        downloadProps.onDownloadClick()
+    })
+    return (
+        <div className={styles["online-extra-operate-wrapper"]}>
+            <div
+                className={classNames(styles["like-operate"], {
+                    [styles["like-operate-active"]]: likeProps.active
+                })}
+                onClick={onLikeClick}
+            >
+                {likeProps.active ? <SolidThumbUpIcon /> : <OutlineThumbupIcon />}
+                <span>{likeProps.likeNumber}</span>
+            </div>
+            <div className='divider-style' />
+            <div className={styles["comment-operate"]} onClick={onCommentClick}>
+                <OutlineChatIcon />
+                <span>{commentProps.commentNumber}</span>
+            </div>
+            <div className='divider-style' />
+            <div className={styles["download-operate"]} onClick={onDownloadClick}>
+                <OutlineClouddownloadIcon />
+                <span>{downloadProps.downloadNumber}</span>
+            </div>
         </div>
     )
 })
