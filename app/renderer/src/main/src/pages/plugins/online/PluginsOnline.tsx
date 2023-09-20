@@ -7,6 +7,7 @@ import {
     GridLayoutOpt,
     ListLayoutOpt,
     ListShowContainer,
+    OnlineExtraOperate,
     PluginsList,
     TypeSelect,
     funcSearchType
@@ -69,6 +70,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import "../plugins.scss"
 import styles from "./PluginsOnline.module.scss"
+import {yakitNotify} from "@/utils/notification"
 
 const TypeType: TypeSelectOpt[] = [
     {key: "yak", ...pluginTypeToName["yak"]},
@@ -260,30 +262,33 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
         if (value) setSelectList([...getSelectList(), data.uuid])
         else setSelectList(getSelectList().filter((item) => item !== data.uuid))
     })
-    /** 单项副标题组件 */
-    const optSubTitle = useMemoizedFn((data: API.YakitPluginDetail) => {
-        return <>{statusTag[`${1 % 3}`]}</>
+
+    const onLikeClick = useMemoizedFn(() => {
+        yakitNotify("success", "点赞~~~")
+    })
+    const onCommentClick = useMemoizedFn(() => {
+        yakitNotify("success", "评论~~~")
+    })
+    const onDownloadClick = useMemoizedFn(() => {
+        yakitNotify("success", "下载~~~")
     })
     /** 单项额外操作组件 */
     const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
         return (
-            <FuncFilterPopover
-                icon={<OutlineDotshorizontalIcon />}
-                name={""}
-                menu={{
-                    data: [
-                        {key: "del", label: "删除"},
-                        {key: "download", label: "下载"}
-                    ],
-                    className: styles["func-filter-dropdown-menu"],
-                    onClick: ({key}) => {
-                        switch (key) {
-                            default:
-                                break
-                        }
-                    }
+            <OnlineExtraOperate
+                likeProps={{
+                    active: data.is_stars,
+                    likeNumber: data.stars,
+                    onLikeClick: onLikeClick
                 }}
-                placement='bottomRight'
+                commentProps={{
+                    commentNumber: data.comment_num,
+                    onCommentClick: onCommentClick
+                }}
+                downloadProps={{
+                    downloadNumber: `${data.downloaded_total}`,
+                    onDownloadClick: onDownloadClick
+                }}
             />
         )
     })
@@ -462,7 +467,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                                         user={data.authors || ""}
                                         // prImgs={data.prs}
                                         time={data.updated_at}
-                                        subTitle={optSubTitle}
                                         extraFooter={optExtraNode}
                                         onClick={optClick}
                                     />
@@ -481,7 +485,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                                         title={data.script_name}
                                         help={data.help || ""}
                                         time={data.updated_at}
-                                        subTitle={optSubTitle}
                                         extraNode={optExtraNode}
                                         onClick={optClick}
                                     />
