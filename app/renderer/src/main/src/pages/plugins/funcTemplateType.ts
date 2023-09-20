@@ -210,3 +210,24 @@ export interface AuthorImgProps {
     /** 右下角icon 自己传组件 */
     icon?: ReactNode
 }
+/**
+ * @description 插件商店列表的额外操作
+ * @property likeProps 点赞的props,包括激活状态和数量
+ * @property commentProps 评论的props,包括激活状态和数量
+ * @property downloadProps 下载的props,包括激活状态和数量
+ */
+export interface OnlineExtraOperateProps{
+    likeProps:{
+        active:boolean
+        likeNumber:number,
+        onLikeClick:(active:boolean)=>void
+    }
+    commentProps:{
+        commentNumber:number
+        onCommentClick:()=>void
+    }
+    downloadProps:{
+        downloadNumber:string
+        onDownloadClick:()=>void
+    }
+}

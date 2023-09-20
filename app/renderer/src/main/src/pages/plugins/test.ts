@@ -19,7 +19,7 @@ const datas: API.YakitPluginDetail[] = [
         help: "泛微 OA e-cology XXE漏洞，注意此插件需要结合dnslog判断漏洞",
         is_private: false,
         is_stars: false,
-        official: false,
+        official: true,
         params: [
             {
                 default_value: "注意此插件需要结合dnslog判断漏洞 例如：https://www.baidu.com/",
