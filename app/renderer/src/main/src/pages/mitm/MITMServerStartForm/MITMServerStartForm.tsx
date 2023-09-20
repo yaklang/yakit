@@ -315,8 +315,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                             劫持启动
                         </YakitButton>
                         <ChromeLauncherButton
-                            host={form.getFieldValue("host")}
-                            port={form.getFieldValue("port")}
+                            host={useWatch("host", form)}
+                            port={useWatch("port", form)}
                             onFished={(host, port) => {
                                 const values = {
                                     ...form.getFieldsValue(),
