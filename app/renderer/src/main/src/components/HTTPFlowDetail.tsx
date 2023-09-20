@@ -485,16 +485,14 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 }
             })
             setFlow(undefined)
-            // 小于500K不走接口拿数据
+            // 请求或响应只要有一个为0就走接口拿取数据
             if (
-                selectedFlow?.BodySizeVerbose == "0" ||
-                selectedFlow?.BodySizeVerbose?.endsWith("B") ||
-                (selectedFlow?.BodySizeVerbose?.endsWith("K") &&
-                    Number(selectedFlow?.BodySizeVerbose?.slice(0, -1)) <= 500)
+                Uint8ArrayToString(selectedFlow?.Request as Uint8Array) &&
+                Uint8ArrayToString(selectedFlow?.Response as Uint8Array)
             ) {
                 setLoading(false)
                 setFlow(selectedFlow)
-                queryMITMRuleExtractedData(selectedFlow)
+                queryMITMRuleExtractedData(selectedFlow as HTTPFlow)
             } else {
                 setLoading(true)
                 ipcRenderer
@@ -516,7 +514,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             }
         },
         [id],
-        {wait: 500, leading: true, trailing: true}
+        {wait: 200, leading: true, trailing: false}
     )
 
     const queryMITMRuleExtractedData = (i: HTTPFlow) => {

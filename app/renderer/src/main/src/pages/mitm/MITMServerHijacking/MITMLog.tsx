@@ -44,6 +44,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {ResizeBox} from "@/components/ResizeBox"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -297,12 +298,8 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
 
     const getHTTPFlowById = useDebounceFn(
         (id: number, rowDate: HTTPFlow) => {
-            // 小于500K不走接口拿数据
-            if (
-                rowDate?.BodySizeVerbose == "0" ||
-                rowDate?.BodySizeVerbose?.endsWith("B") ||
-                (rowDate?.BodySizeVerbose?.endsWith("K") && Number(rowDate?.BodySizeVerbose?.slice(0, -1)) <= 500)
-            ) {
+            // 请求或响应只要有一个为0就走接口拿取数据
+            if (Uint8ArrayToString(rowDate.Request) && Uint8ArrayToString(rowDate.Response)) {
                 setDetailLoading(false)
                 setFlow(rowDate)
                 setFirstFull(false)
@@ -323,7 +320,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                     })
             }
         },
-        {wait: 500, leading: true, trailing: true}
+        {wait: 200, leading: true, trailing: false}
     ).run
 
     const menuData = [
