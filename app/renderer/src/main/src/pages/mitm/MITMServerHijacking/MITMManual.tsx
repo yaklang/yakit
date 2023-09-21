@@ -58,6 +58,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                 <div className={styles["manual-select"]}>
                     <span className={styles["manual-select-label"]}>劫持响应:</span>
                     <YakitSegmented
+                        size='small'
                         value={hijackResponseType}
                         onChange={(v) => {
                             setHijackResponseType(v as "onlyOne" | "all" | "never")
