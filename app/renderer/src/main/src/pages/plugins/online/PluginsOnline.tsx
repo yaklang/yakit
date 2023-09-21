@@ -16,27 +16,11 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
     OutlineCalendarIcon,
     OutlineClouddownloadIcon,
-    OutlineDotshorizontalIcon,
-    OutlinePencilaltIcon,
-    OutlineRefreshIcon,
     OutlineSearchIcon,
     OutlineSwitchverticalIcon,
-    OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import classNames from "classnames"
-import {
-    useMemoizedFn,
-    useInViewport,
-    useEventListener,
-    useSize,
-    useThrottleFn,
-    useScroll,
-    useNetwork,
-    useDebounceFn,
-    useUpdateEffect,
-    useGetState
-} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useGetState} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import card1 from "./card1.png"
 import card2 from "./card2.png"
@@ -60,26 +44,17 @@ import {
     defaultFilter,
     defaultResponse,
     defaultSearch,
-    pluginTypeToName,
-    statusTag
+    pluginTypeList
 } from "../baseTemplate"
-import {TypeSelectOpt} from "../funcTemplateType"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {PluginManageDetail} from "../manage/PluginManageDetail"
-import ReactResizeDetector from "react-resize-detector"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
-import "../plugins.scss"
-import styles from "./PluginsOnline.module.scss"
 import {yakitNotify} from "@/utils/notification"
 
-const TypeType: TypeSelectOpt[] = [
-    {key: "yak", ...pluginTypeToName["yak"]},
-    {key: "mitm", ...pluginTypeToName["mitm"]},
-    {key: "port-scan", ...pluginTypeToName["port-scan"]},
-    {key: "codec", ...pluginTypeToName["codec"]},
-    {key: "lua", ...pluginTypeToName["lua"]},
-    {key: "nuclei", ...pluginTypeToName["nuclei"]}
-]
+import classNames from "classnames"
+import "../plugins.scss"
+import styles from "./PluginsOnline.module.scss"
+
 
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
     const pluginsOnlineRef = useRef<HTMLDivElement>(null)
@@ -236,8 +211,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
     const onUpdateList = useMemoizedFn((reset?: boolean) => {
         fetchList()
     })
-    const onSetActive = useMemoizedFn((status: string[]) => {
-        setFilters({...filters, status: status})
+    const onSetActive = useMemoizedFn((type: string[]) => {
+        setFilters({...filters, type: type})
     })
     /**下载 */
     const onDownload = useMemoizedFn((value?: API.YakitPluginDetail) => {})
@@ -321,9 +296,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
             <PluginsLayout
                 title={isShowRoll ? <></> : "插件商店"}
                 hidden={!!plugin}
-                subTitle={<TypeSelect active={filters.status || []} list={TypeType} setActive={onSetActive} />}
+                subTitle={<TypeSelect active={filters.type || []} list={pluginTypeList} setActive={onSetActive} />}
                 extraHeader={
-                    <div className={styles["online-extra-header-wrapper"]}>
+                    <div className="extra-header-wrapper">
                         {!isShowRoll && (
                             <>
                                 <FuncSearch onSearch={onKeywordAndUser} />
@@ -331,7 +306,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                             </>
                         )}
 
-                        <div className={styles["btn-group-wrapper"]}>
+                        <div className="btn-group-wrapper">
                             <FuncBtn
                                 maxWidth={1050}
                                 icon={<OutlineClouddownloadIcon />}
@@ -380,13 +355,13 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                                     icon={<OutlineCalendarIcon />}
                                     name={timeType}
                                     menu={{
+                                        type: 'grey',
                                         data: [
                                             {key: "toDay", label: "今日"},
                                             {key: "thisWeek", label: "本周"},
                                             {key: "thisMonth", label: "本月"},
                                             {key: "allTimes", label: "所有时间"}
                                         ],
-                                        className: styles["func-filter-dropdown-menu"],
                                         onClick: ({key}) => {
                                             switch (key) {
                                                 case "toDay":
