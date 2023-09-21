@@ -195,8 +195,28 @@
     }
 }
 
+// -------------------- 列表上方的header右侧样式 --------------------
 .divider-style{
     width: 1px;
     height: 16px;
     background-color: #eaecf3;
 }
+
+.extra-header-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .divider-style {
+        width: 1px;
+        height: 16px;
+        background-color: #eaecf3;
+    }
+
+    .btn-group-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+}
+// --------------------
