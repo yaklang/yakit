@@ -47,6 +47,10 @@ export interface FuncFilterPopoverProps {
     menu: YakitMenuProp
     /** 弹框放置位置 */
     placement?: DropDownProps["placement"]
+    /**菜单是否禁用 */
+    disabled?: boolean
+    /**button属性 */
+    button?: YakitButtonProp
 }
 
 export interface PluginsListProps {
@@ -216,18 +220,18 @@ export interface AuthorImgProps {
  * @property commentProps 评论的props,包括激活状态和数量
  * @property downloadProps 下载的props,包括激活状态和数量
  */
-export interface OnlineExtraOperateProps{
-    likeProps:{
-        active:boolean
-        likeNumber:number,
-        onLikeClick:(active:boolean)=>void
+export interface OnlineExtraOperateProps {
+    likeProps: {
+        active: boolean
+        likeNumber: number
+        onLikeClick: (active: boolean) => void
     }
-    commentProps:{
-        commentNumber:number
-        onCommentClick:()=>void
+    commentProps: {
+        commentNumber: number
+        onCommentClick: () => void
     }
-    downloadProps:{
-        downloadNumber:string
-        onDownloadClick:()=>void
+    downloadProps: {
+        downloadNumber: string
+        onDownloadClick: () => void
     }
 }
