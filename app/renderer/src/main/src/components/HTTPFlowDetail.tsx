@@ -462,8 +462,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const {id, selectedFlow, refresh} = props
     const [flow, setFlow] = useState<HTTPFlow>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
+    const [flowResponse,setFlowResponse] = useState<Uint8Array>()
+    const [flowRequestLoad,setFlowRequestLoad] = useState<boolean>(false)
+    const [flowResponseLoad,setFlowResponseLoad] = useState<boolean>(false)
     const [isSelect, setIsSelect] = useState<boolean>(false)
-    const [loading, setLoading] = useState(false)
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
@@ -494,33 +496,52 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 setFold(parseData.is)
             }
         })
-        setFlow(undefined)
-        // 无论是否小于500K Request显示都不走接口获取
-        setFlowRequest(selectedFlow?.Request)
-        // 请求或响应只要有一个为0就走接口拿取数据
-        if (
-            Uint8ArrayToString(selectedFlow?.Request as Uint8Array) &&
-            Uint8ArrayToString(selectedFlow?.Response as Uint8Array) &&
-            !isSkip
-        ) {
-            setLoading(false)
-            setFlow(selectedFlow)
-            queryMITMRuleExtractedData(selectedFlow as HTTPFlow)
-        } else {
-            setLoading(true)
+        setFlowRequestLoad(false)
+        setFlowResponseLoad(false)
+        setFlow(selectedFlow)
+        setFlowRequest(undefined)
+        setFlowResponse(undefined)
+
+        // 是否获取Request
+        let isGetRequest:boolean = true
+        let isGetResponse:boolean = true
+
+        // 请求不为空直接使用
+        if(Uint8ArrayToString(selectedFlow?.Request as Uint8Array)&&!isSkip){
+          isGetRequest = false
+          setFlowRequest(selectedFlow?.Request)
+        }
+        if(Uint8ArrayToString(selectedFlow?.Response as Uint8Array)&&!isSkip){
+          isGetResponse = false
+          setFlowResponse(selectedFlow?.Response)
+        }
+        // 请求或响应只要有一个为0或者为isSkip就走接口拿取数据
+        if(isGetRequest || isGetResponse || isSkip){
+          isGetRequest&&setFlowRequestLoad(true)
+          isGetResponse&&setFlowResponseLoad(true)
             ipcRenderer
                 .invoke("GetHTTPFlowById", {Id: id})
                 .then((i: HTTPFlow) => {
                     if (+i.Id == lastIdRef.current) {
-                        setTimeout(() => setLoading(false), 10)
+                        if(isGetRequest){
+                          setFlowRequest(i?.Request)
+                        }
+                        if(isGetResponse){
+                          setFlowResponse(i?.Response)
+                        }
                         setFlow(i)
                         queryMITMRuleExtractedData(i)
                     }
                 })
                 .catch((e: any) => {
-                    setTimeout(() => setLoading(false), 300)
                     failed(`Query HTTPFlow failed: ${e}`)
                 })
+                .finally(() => {
+                  setTimeout(() => {
+                    setFlowRequestLoad(false)
+                    setFlowResponseLoad(false)
+                  }, 300)
+              })
         }
     })
 
@@ -585,9 +606,11 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 <Col span={mainCol} style={{height: "100%"}}>
                     {flow && (
                         <HTTPFlowDetailRequestAndResponse
-                            loading={loading}
                             flow={flow}
                             flowRequest={flowRequest}
+                            flowResponse={flowResponse}
+                            flowRequestLoad={flowRequestLoad}
+                            flowResponseLoad={flowResponseLoad}
                             {...props}
                         />
                     )}
@@ -739,8 +762,11 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
 interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flow?: HTTPFlow
-    loading: boolean
+    loading?: boolean
     flowRequest?: Uint8Array
+    flowResponse?: Uint8Array
+    flowRequestLoad?: boolean
+    flowResponseLoad?: boolean
 }
 
 interface HTTPFlowBareProps {
@@ -749,7 +775,7 @@ interface HTTPFlowBareProps {
 }
 
 export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAndResponseProps> = React.memo((props) => {
-    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, loading, id, Tags, flowRequest} = props
+    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, id, Tags,loading=false, flowRequest,flowResponse,flowRequestLoad,flowResponseLoad} = props
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
         if (!flow?.RawRequestBodyBase64) return {}
@@ -815,11 +841,20 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 原始数据
     const [beforeResValue, setBeforeResValue] = useState<Uint8Array>(new Uint8Array())
     const [beforeRspValue, setBeforeRspValue] = useState<Uint8Array>(new Uint8Array())
+
+    useUpdateEffect(()=>{
+      setOriginResValue(flowRequest || new Uint8Array())
+    },[flowRequestLoad])
+
+    useUpdateEffect(()=>{
+      setOriginRspValue(flowResponse || new Uint8Array())
+    },[flowResponseLoad])
+    
     useEffect(() => {
         // 复原数据
         setResType("current")
         setRspType("current")
-        setOriginResValue(flowRequest || flow?.Request || new Uint8Array())
+        setOriginResValue(flow?.Request || new Uint8Array())
         setOriginRspValue(flow?.Response || new Uint8Array())
         const existedTags = Tags ? Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
         if (existedTags.includes("[手动修改]")) {
@@ -837,7 +872,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         if (resType === "request") {
             setOriginResValue(beforeResValue)
         } else {
-            setOriginResValue(flowRequest || flow?.Request || new Uint8Array())
+            setOriginResValue(flow?.Request || new Uint8Array())
         }
     }, [resType, flow?.Request])
     useEffect(() => {
@@ -910,7 +945,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noLineNumber={true}
                         sendToWebFuzzer={sendToWebFuzzer}
                         defaultHeight={defaultHeight}
-                        loading={!flowRequest && loading}
+                        loading={flowRequestLoad||loading}
                         defaultHttps={defaultHttps}
                         hideSearch={true}
                         noHex={true}
@@ -991,7 +1026,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isResponse={true}
                         noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}
-                        loading={loading}
+                        loading={flowResponseLoad||loading}
                         originValue={originRspValue}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
