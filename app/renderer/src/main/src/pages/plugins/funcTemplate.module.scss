@@ -192,8 +192,6 @@
 // -------------------- FuncFilterPopover ↓↓↓ --------------------
 .func-filter-popover {
     border-radius: 4px;
-    --yakit-primary-5: var(--yakit-background-color);
-    --yakit-neutral10-color: var(--yakit-header-color);
 
     border: 1px solid var(--yakit-border-color);
     box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
@@ -474,7 +472,7 @@
 .list-layout-opt-wrapper {
     width: 100%;
     height: 72px;
-    padding: 8px;
+    padding: 8px 8px 8px 6px;
     display: flex;
     align-items: center;
     gap: 32px;
@@ -490,6 +488,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            padding-left: 2px;
             .img-style {
                 width: 28px;
                 height: 28px;
@@ -947,6 +946,9 @@
         width: 16px;
         height: 16px;
         color: var(--yakit-body-text-color);
+    }
+    path {
+        stroke-width: 1.5;
     }
 
     .like-operate {
