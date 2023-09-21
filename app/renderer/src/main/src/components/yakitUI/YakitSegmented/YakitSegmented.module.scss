@@ -1,4 +1,4 @@
-.yakit-segmented-wrapper {
+.yakit-segmented-small-wrapper {
     .yakit-segmented {
         border-radius: 4px;
         background: var(--yakit-background-color);
@@ -12,6 +12,14 @@
             .ant-segmented-item:focus {
                 color: var(--yakit-header-color);
             }
+        }
+    }
+}
+
+.yakit-segmented-middle-wrapper{
+    :global{
+        .ant-segmented.ant-segmented-sm .ant-segmented-item-label{
+            line-height: 24px;
         }
     }
 }
