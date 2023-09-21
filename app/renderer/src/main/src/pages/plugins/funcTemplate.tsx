@@ -490,6 +490,16 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
 
     // useWhyDidYouUpdate("ListShowContainer", {...props})
 
+    const listId = useMemo(() => {
+        if (id) {
+            return `${id}-list`
+        }
+    }, [id])
+    const gridId = useMemo(() => {
+        if (id) {
+            return `${id}-grid`
+        }
+    }, [id])
     return (
         <div className={styles["list-show-container"]}>
             <div
@@ -497,7 +507,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
                 className={classNames(styles["tab-panel"], {[styles["tab-hidden-panel"]]: !isList})}
             >
                 <ListList
-                    id={`${id}-list`}
+                    id={listId}
                     isList={isList}
                     data={data}
                     render={listNode}
@@ -513,7 +523,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
                 className={classNames(styles["tab-panel"], {[styles["tab-hidden-panel"]]: isList})}
             >
                 <GridList
-                    id={`${id}-grid`}
+                    id={gridId}
                     isList={isList}
                     data={data}
                     render={gridNode}
