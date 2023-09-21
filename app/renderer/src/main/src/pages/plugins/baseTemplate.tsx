@@ -68,11 +68,12 @@ import {PortScanPluginTemplate} from "../invoker/data/PortScanPluginTemplate"
 import {CodecPluginTemplate} from "../invoker/data/CodecPluginTemplate"
 import {CodeGV} from "@/yakitGV"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {API} from "@/services/swagger/resposeType"
+import { TypeSelectOpt } from "./funcTemplateType"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
-import {API} from "@/services/swagger/resposeType"
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
@@ -1313,3 +1314,12 @@ export const defaultResponse: API.YakitPluginListResponse = {
         total_page: 1
     }
 }
+
+export const pluginTypeList: TypeSelectOpt[] = [
+    {key: "yak", ...pluginTypeToName["yak"]},
+    {key: "mitm", ...pluginTypeToName["mitm"]},
+    {key: "port-scan", ...pluginTypeToName["port-scan"]},
+    {key: "codec", ...pluginTypeToName["codec"]},
+    {key: "lua", ...pluginTypeToName["lua"]},
+    {key: "nuclei", ...pluginTypeToName["nuclei"]}
+]
