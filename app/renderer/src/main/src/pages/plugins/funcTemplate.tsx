@@ -1,4 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import {pluginTypeToName} from "./baseTemplate"
 import {
     AuthorImgProps,
     FuncBtnProps,
@@ -54,16 +55,15 @@ import {Dropdown, Tooltip} from "antd"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {formatDate} from "@/utils/timeUtil"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {pluginTypeToName} from "./baseTemplate"
 import {PluginsGridCheckIcon} from "./icon"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {SolidThumbUpIcon} from "@/assets/newIcon"
 
+import classNames from "classnames"
 import "./plugins.scss"
 import styles from "./funcTemplate.module.scss"
-import classNames from "classnames"
-import {SolidThumbUpIcon} from "@/assets/newIcon"
 
 /** @name 标题栏的搜索选项组件 */
 export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
@@ -272,7 +272,9 @@ export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) 
         maxWidth,
         icon,
         name,
-        menu: {onClick, ...menurest},
+        menu: {onClick, type = "grey", ...menurest},
+        button,
+        disabled,
         placement = "bottom"
     } = props
 
@@ -306,6 +308,7 @@ export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) 
         return (
             <YakitMenu
                 {...menurest}
+                type={type}
                 onClick={(e) => {
                     e.domEvent.stopPropagation()
                     if (onClick) onClick(e)
@@ -313,31 +316,31 @@ export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) 
                 }}
             />
         )
-    }, [onClick, menurest])
-
+    }, [onClick, type, menurest])
     return (
         <Dropdown
             overlayClassName={styles["func-filter-popover"]}
             overlay={overlay}
             placement={placement}
             onVisibleChange={setShow}
+            disabled={disabled}
         >
             {nameAndIcon ? (
                 <YakitButton
-                    type='text2'
+                    style={{padding: "3px 4px"}}
                     isActive={show}
                     onClick={(e) => e.stopPropagation()}
-                    style={{padding: "3px 4px"}}
+                    {...(button || {})}
                 >
                     {name}
                     {icon}
                 </YakitButton>
             ) : (
                 <YakitButton
-                    type='text2'
                     isActive={show}
                     icon={icon}
                     onClick={(e) => e.stopPropagation()}
+                    {...(button || {})}
                 ></YakitButton>
             )}
         </Dropdown>

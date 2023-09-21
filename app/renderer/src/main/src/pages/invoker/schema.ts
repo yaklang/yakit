@@ -121,6 +121,7 @@ export interface YakScript {
     BaseOnlineId?: number
     OnlineOfficial?: boolean
     OnlineGroup?: string
+    IsCorePlugin?: boolean
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
