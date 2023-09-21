@@ -1,5 +1,14 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {PluginsContainer, PluginsLayout,aduitStatusToName, defaultFilter, defaultPagemeta, defaultResponse, defaultSearch, statusTag} from "../baseTemplate"
+import {
+    PluginsContainer,
+    PluginsLayout,
+    aduitStatusToName,
+    defaultFilter,
+    defaultPagemeta,
+    defaultResponse,
+    defaultSearch,
+    statusTag
+} from "../baseTemplate"
 import {
     AuthorImg,
     FuncBtn,
@@ -33,11 +42,9 @@ import {PluginManageDetail} from "./PluginManageDetail"
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
-import { PluginFilterParams, PluginSearchParams, PluginListPageMeta } from "../baseTemplateType"
+import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 
 const {ipcRenderer} = window.require("electron")
-
-
 
 const StatusType: TypeSelectOpt[] = [
     {key: "0", ...aduitStatusToName["0"]},
@@ -243,10 +250,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     />
                 }
                 extraHeader={
-                    <div className={styles["extra-header-wrapper"]}>
+                    <div className='extra-header-wrapper'>
                         <FuncSearch maxWidth={1000} onSearch={onKeywordAndUser.run} />
-                        <div className={styles["divider-style"]}></div>
-                        <div className={styles["btn-group-wrapper"]}>
+                        <div className='divider-style'></div>
+                        <div className='btn-group-wrapper'>
                             <FuncBtn
                                 maxWidth={1050}
                                 icon={<OutlinePencilaltIcon />}

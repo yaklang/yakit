@@ -1,0 +1,16 @@
+.local-extra-operate-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--yakit-body-text-color);
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+    path {
+        stroke-width: 1.5;
+    }
+    .cloud-upload-icon {
+        margin-left: 4px;
+    }
+}
