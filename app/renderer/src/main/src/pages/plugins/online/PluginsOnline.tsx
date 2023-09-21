@@ -386,7 +386,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                                 <FuncFilterPopover
                                     maxWidth={1200}
                                     icon={<OutlineSwitchverticalIcon />}
-                                    name='当前最热'
+                                    name={heatType}
                                     menu={{
                                         data: [
                                             {key: "currentHottest", label: "当前最热"},
