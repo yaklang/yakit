@@ -3495,6 +3495,7 @@ message SetMITMFilterResponse {
 
 // 中间人劫持的问题
 message MITMRequest {
+  // id 54
   bytes request = 1;
   bytes response = 111;
 
@@ -3519,8 +3520,8 @@ message MITMRequest {
   repeated string includeUri = 44;
   bool updateFilter = 12;
 
-  // 劫持当前请求的响应信息
   bool hijackResponse = 13;
+  bool cancelhijackResponse = 54;
 
   // 手动丢包
   bool drop = 14;

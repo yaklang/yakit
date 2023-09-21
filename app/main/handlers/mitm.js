@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron");
+const { ipcMain } = require("electron");
 const DNS = require("dns");
 
 
@@ -39,7 +39,7 @@ module.exports = (win, getClient) => {
     //
     ipcMain.handle("mitm-auto-forward", (e, value) => {
         if (stream) {
-            stream.write({setAutoForward: true, autoForwardValue: value})
+            stream.write({ setAutoForward: true, autoForwardValue: value })
         }
     })
 
@@ -84,14 +84,22 @@ module.exports = (win, getClient) => {
     })
 
     // 发送劫持请当前请求的消息，可以劫持当前响应的请求
-    ipcMain.handle("mitm-hijacked-current-response", (e, id) => {
+    ipcMain.handle("mitm-hijacked-current-response", (e, id, should) => {
         if (stream) {
-            stream.write({
-                id: id,
-                hijackResponse: true
-            })
+            if (should) {
+                stream.write({
+                    id: id,
+                    hijackResponse: true,
+                })
+            } else {
+                stream.write({
+                    id: id,
+                    cancelhijackResponse: true,
+                })
+            }
         }
     })
+
 
     ipcMain.handle("mitm-enable-plugin-mode", (e, initPluginNames) => {
         if (stream) {
@@ -179,7 +187,7 @@ module.exports = (win, getClient) => {
     // 设置正则替换
     ipcMain.handle("mitm-content-replacers", (e, filter) => {
         if (stream) {
-            stream.write({...filter, setContentReplacers: true})
+            stream.write({ ...filter, setContentReplacers: true })
         }
     })
 
@@ -255,11 +263,11 @@ module.exports = (win, getClient) => {
             // 把劫持到的信息发送回前端
             if (win) {
                 if (data.justFilter) {
-                    win.webContents.send("client-mitm-filter", {...data})
+                    win.webContents.send("client-mitm-filter", { ...data })
                     return
                 }
                 if (data.id == "0" && data.responseId == "0") return
-                win.webContents.send("client-mitm-hijacked", {...data})
+                win.webContents.send("client-mitm-hijacked", { ...data })
             }
         })
         stream.on("error", (err) => {
@@ -412,7 +420,7 @@ module.exports = (win, getClient) => {
 
     ipcMain.handle("mitm-set-filter", async (e, params) => {
         if (stream) {
-                stream.write({...params, updateFilter: true})
+            stream.write({ ...params, updateFilter: true })
         }
         return await asyncSetMITMFilter(params)
     })
