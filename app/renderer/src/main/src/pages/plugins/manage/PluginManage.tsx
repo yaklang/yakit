@@ -38,11 +38,12 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {PluginManageDetail} from "./PluginManageDetail"
+import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
-import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
+
 
 const {ipcRenderer} = window.require("electron")
 
