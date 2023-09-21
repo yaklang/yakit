@@ -129,6 +129,10 @@
             span.anticon {
                 color: var(--menu-color);
             }
+            // span+span 暂时性满足外面字体颜色不是黑色时,hover状态下文字颜色同步
+            span+span {
+                color: var(--menu-color);
+            }
         }
 
         .ant-dropdown-menu-item-disabled {
