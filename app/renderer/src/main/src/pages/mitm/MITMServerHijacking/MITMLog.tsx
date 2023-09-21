@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import emiter from "@/utils/eventBus/eventBus";
+import emiter from "@/utils/eventBus/eventBus"
 import styles from "./MITMServerHijacking.module.scss"
 import {
     availableColors,
@@ -44,6 +44,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {ResizeBox} from "@/components/ResizeBox"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -65,6 +66,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     const [statusCode, setStatusCode, getStatusCode] = useGetState<FiltersItemProps[]>([])
 
     const [selected, setSelected] = useState<HTTPFlow>()
+    const lasetIdRef = useRef<number>()
 
     const [compareLeft, setCompareLeft] = useState<CompateData>({content: "", language: "http"})
     const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
@@ -196,9 +198,9 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             .then((res: QueryGeneralResponse<HTTPFlow>) => {
                 // if (res?.Data.length === 0) return
                 let newData: HTTPFlow[] = getClassNameData(res?.Data || []).concat(getData() || [])
-                newData = filterData(newData, 'Id')
-                            .filter((_, index) => index < 30)
-                            .sort((a, b) => +b.Id - +a.Id)
+                newData = filterData(newData, "Id")
+                    .filter((_, index) => index < 30)
+                    .sort((a, b) => +b.Id - +a.Id)
                 setData(newData)
             })
             .finally(() => {
@@ -242,9 +244,9 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             setLoading(true)
             setData([])
         }
-        emiter.on('cleanMitmLogEvent', cleanLogTableData)
+        emiter.on("cleanMitmLogEvent", cleanLogTableData)
         return () => {
-            emiter.off('cleanMitmLogEvent', cleanLogTableData)
+            emiter.off("cleanMitmLogEvent", cleanLogTableData)
         }
     }, [])
 
@@ -284,8 +286,9 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     const onRowClick = useMemoizedFn((rowDate: HTTPFlow) => {
         if (!rowDate.Hash) return
         if (rowDate.Hash !== selected?.Hash) {
+            lasetIdRef.current = rowDate.Id
             setSelected(rowDate)
-            getHTTPFlowById(rowDate.Id)
+            getHTTPFlowById(rowDate.Id, rowDate)
         } else {
             setSelected(undefined)
             setFlow(undefined)
@@ -294,22 +297,30 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     })
 
     const getHTTPFlowById = useDebounceFn(
-        (id: number) => {
-            setDetailLoading(true)
-            ipcRenderer
-                .invoke("GetHTTPFlowById", {Id: id})
-                .then((i: HTTPFlow) => {
-                    setFlow(i)
-                    setFirstFull(false)
-                })
-                .catch((e: any) => {
-                    yakitNotify("error", `Query HTTPFlow failed: ${e}`)
-                })
-                .finally(() => {
-                    setTimeout(() => setDetailLoading(false), 300)
-                })
+        (id: number, rowDate: HTTPFlow) => {
+            // 请求或响应只要有一个为0就走接口拿取数据
+            if (Uint8ArrayToString(rowDate.Request) && Uint8ArrayToString(rowDate.Response)) {
+                setDetailLoading(false)
+                setFlow(rowDate)
+                setFirstFull(false)
+            } else {
+                setDetailLoading(true)
+                ipcRenderer
+                    .invoke("GetHTTPFlowById", {Id: id})
+                    .then((i: HTTPFlow) => {
+                        if (i.Id == lasetIdRef.current) {
+                            setDetailLoading(false)
+                            setFlow(i)
+                            setFirstFull(false)
+                        }
+                    })
+                    .catch((e: any) => {
+                        setTimeout(() => setDetailLoading(false), 300)
+                        yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+                    })
+            }
         },
-        {wait: 200}
+        {wait: 200, leading: true, trailing: false}
     ).run
 
     const menuData = [
@@ -485,7 +496,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 break
         }
     })
-    const onRowContextMenu = (rowData: HTTPFlow,_, event: React.MouseEvent) => {
+    const onRowContextMenu = (rowData: HTTPFlow, _, event: React.MouseEvent) => {
         if (rowData) {
             setSelected(rowData)
         }
@@ -593,14 +604,14 @@ interface MITMLogHeardExtraProps {
 export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((props) => {
     const {shieldData, cancleFilter} = props
 
-    const cleanMitmLogTableData = useMemoizedFn((params: { DeleteAll: boolean, Filter?: {} }) => {
+    const cleanMitmLogTableData = useMemoizedFn((params: {DeleteAll: boolean; Filter?: {}}) => {
         ipcRenderer
             .invoke("DeleteHTTPFlows", params)
             .then(() => {
                 emiter.emit("cleanMitmLogEvent")
             })
             .catch((e: any) => {
-                yakitNotify('error', `历史记录删除失败: ${e}`)
+                yakitNotify("error", `历史记录删除失败: ${e}`)
             })
     })
 
@@ -621,10 +632,10 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                     onClick: ({key}) => {
                         switch (key) {
                             case "resetId":
-                                cleanMitmLogTableData({ DeleteAll: true })
+                                cleanMitmLogTableData({DeleteAll: true})
                                 break
                             case "noResetId":
-                                cleanMitmLogTableData({ Filter: {}, DeleteAll: false })
+                                cleanMitmLogTableData({Filter: {}, DeleteAll: false})
                                 break
                             default:
                                 break
@@ -636,10 +647,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                     placement: "bottom"
                 }}
             >
-                <YakitButton
-                    type='outline1'
-                    colors="danger"
-                >
+                <YakitButton type='outline1' colors='danger'>
                     清空
                 </YakitButton>
             </YakitDropdownMenu>

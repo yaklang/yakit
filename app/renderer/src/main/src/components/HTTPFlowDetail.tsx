@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo} from "react"
+import React, {useEffect, useState, useMemo, useRef} from "react"
 import {
     Button,
     Card,
@@ -31,7 +31,7 @@ import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
 import {callCopyToClipboard} from "@/utils/basic"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useUpdateEffect, useDebounceEffect} from "ahooks"
 import {HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
@@ -465,47 +465,57 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(false)
-    useEffect(() => {
-        if (!id) {
-            setIsSelect(false)
-            return
-        }
-        setIsSelect(true)
-        getRemoteValue("IsFoldValue").then((data) => {
-            if (!data) {
+    const lastIdRef = useRef<number>()
+
+    useDebounceEffect(
+        () => {
+            if (!id) {
+                setIsSelect(false)
                 return
             }
-            const is: boolean = JSON.parse(data).is
-            setFold(is)
-        })
-        setFlow(undefined)
-        // 小于500K不走接口拿数据
-        if (
-            selectedFlow?.BodySizeVerbose == '0' ||
-            selectedFlow?.BodySizeVerbose?.endsWith('B') ||
-            selectedFlow?.BodySizeVerbose?.endsWith('K') && Number(selectedFlow?.BodySizeVerbose?.slice(0, -1)) <= 500
-        ) {
-            setFlow(selectedFlow)
-            queryMITMRuleExtractedData(selectedFlow)
-            return
-        }
-        setLoading(true)
-        ipcRenderer
-            .invoke("GetHTTPFlowById", {Id: id})
-            .then((i: HTTPFlow) => {
-                setFlow(i)
-                queryMITMRuleExtractedData(i)
+            lastIdRef.current = id
+            setIsSelect(true)
+            getRemoteValue("IsFoldValue").then((data) => {
+                if (!data) {
+                    return
+                }
+                const parseData = JSON.parse(data)
+                if (parseData.id == lastIdRef.current) {
+                    setFold(parseData.is)
+                }
             })
-            .catch((e: any) => {
-                failed(`Query HTTPFlow failed: ${e}`)
-            })
-            .finally(() => {
-                setTimeout(() => setLoading(false), 300)
-            })
-        return () => {
-            setExistedInfoType([])
-        }
-    }, [id])
+            setFlow(undefined)
+            // 请求或响应只要有一个为0就走接口拿取数据
+            if (
+                Uint8ArrayToString(selectedFlow?.Request as Uint8Array) &&
+                Uint8ArrayToString(selectedFlow?.Response as Uint8Array)
+            ) {
+                setLoading(false)
+                setFlow(selectedFlow)
+                queryMITMRuleExtractedData(selectedFlow as HTTPFlow)
+            } else {
+                setLoading(true)
+                ipcRenderer
+                    .invoke("GetHTTPFlowById", {Id: id})
+                    .then((i: HTTPFlow) => {
+                        if (+i.Id == lastIdRef.current) {
+                            setTimeout(() => setLoading(false), 10)
+                            setFlow(i)
+                            queryMITMRuleExtractedData(i)
+                        }
+                    })
+                    .catch((e: any) => {
+                        setTimeout(() => setLoading(false), 300)
+                        failed(`Query HTTPFlow failed: ${e}`)
+                    })
+            }
+            return () => {
+                setExistedInfoType([])
+            }
+        },
+        [id],
+        {wait: 200, leading: true, trailing: false}
+    )
 
     const queryMITMRuleExtractedData = (i: HTTPFlow) => {
         const existedExtraInfos: HTTPFlowInfoType[] = []
@@ -606,7 +616,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 <SideBarOpenIcon
                                                     className={styles["fold-icon"]}
                                                     onClick={() => {
-                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
+                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true, id}))
                                                         setFold(true)
                                                     }}
                                                 />
@@ -661,7 +671,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     <SideBarOpenIcon
                                                         className={styles["fold-icon"]}
                                                         onClick={() => {
-                                                            setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
+                                                            setRemoteValue(
+                                                                "IsFoldValue",
+                                                                JSON.stringify({is: true, id})
+                                                            )
                                                             setFold(true)
                                                         }}
                                                     />
@@ -688,7 +701,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                 <SideBarCloseIcon
                                     className={styles["fold-icon"]}
                                     onClick={() => {
-                                        setRemoteValue("IsFoldValue", JSON.stringify({is: false}))
+                                        setRemoteValue("IsFoldValue", JSON.stringify({is: false, id}))
                                         setFold(false)
                                     }}
                                 />
@@ -897,7 +910,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         dataCompare={{
                             rightCode: beforeResValue,
-                            leftCode: resType === "request" ? (flow?.Request || new Uint8Array()) : undefined,
+                            leftCode: resType === "request" ? flow?.Request || new Uint8Array() : undefined,
                             leftTitle: "请求",
                             rightTitle: "原始请求"
                         }}
@@ -970,7 +983,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         dataCompare={{
                             rightCode: beforeRspValue,
-                            leftCode: rspType === "response" ? (flow?.Response || new Uint8Array()) : undefined,
+                            leftCode: rspType === "response" ? flow?.Response || new Uint8Array() : undefined,
                             leftTitle: "响应",
                             rightTitle: "原始响应"
                         }}
