@@ -4,13 +4,7 @@ import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
-import {
-    defaultFilter,
-    defaultSearch,
-    PluginsLayout,
-    PluginsContainer,
-    pluginTypeList
-} from "../baseTemplate"
+import {defaultFilter, defaultSearch, PluginsLayout, PluginsContainer, pluginTypeList} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {
     TypeSelect,
@@ -22,7 +16,7 @@ import {
     GridLayoutOpt,
     ListLayoutOpt
 } from "../funcTemplate"
-import { apiFetchLocalList, ssfilters} from "../test"
+import {apiFetchLocalList, ssfilters} from "../test"
 import {SolidChevronDownIcon} from "@/assets/newIcon"
 import {PluginManageDetail} from "../manage/PluginManageDetail"
 import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
