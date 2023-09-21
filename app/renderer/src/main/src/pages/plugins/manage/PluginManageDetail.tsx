@@ -15,7 +15,6 @@ import {
     OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {PluginListPageMeta} from "../pluginsType"
 import {useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
