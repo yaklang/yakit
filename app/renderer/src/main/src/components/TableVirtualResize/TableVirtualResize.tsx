@@ -271,7 +271,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
         if (!inViewport) scrollTo(index)
         },
-        {wait: 100}
+        {wait: 100, leading: true}
     ).run
     // 使用下箭头
     useHotkeys(
@@ -336,7 +336,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
             if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
         },
-        {wait: 100}
+        {wait: 100, leading: true}
     ).run
     useEffect(() => {
         if (isRightClickBatchOperate) document.addEventListener("mousedown", handleShiftMousedown)

@@ -23,7 +23,7 @@ import {writeXTerm, xtermFit} from "@/utils/xtermUtils"
 import {Uint8ArrayToString} from "@/utils/str"
 import {XTerm} from "xterm-for-react"
 import ReactResizeDetector from "react-resize-detector"
-import {useStore} from "../baseConsole/StoreConsole"
+import {useStore} from "../../store/baseConsole"
 import {YakitSystem} from "@/yakitGVDefine"
 
 const {ipcRenderer} = window.require("electron")

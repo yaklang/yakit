@@ -1367,11 +1367,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     useEffect(() => {
         setType(undefined)
-        if (originValue) {
+        setRenderHTML(undefined)
+        setShowValue(originValue)
+        if (originValue.length>0) {
             // 默认展示 originValue
-            setRenderHTML(undefined)
-            setShowValue(originValue)
-
             const encoder = new TextEncoder()
             const bytes = encoder.encode(Uint8ArrayToString(originValue))
             const mb = bytes.length / 1024 / 1024
@@ -1418,14 +1417,24 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 ])
             }
         }
+        else{
+            setTypeOptions([])
+        }
     }, [originValue])
 
     const beautifyCode = async () => {
         setTypeLoading(true)
         setRenderHTML(undefined)
-        let beautifyValue = await prettifyPacketCode(new Buffer(originValue).toString("utf8"))
-        setShowValue(beautifyValue as Uint8Array)
-        setTypeLoading(false)
+        if(originValue.length>0){
+            let beautifyValue = await prettifyPacketCode(new Buffer(originValue).toString("utf8"))
+            setShowValue(beautifyValue as Uint8Array)
+            setTypeLoading(false)
+        }
+        else{
+            setShowValue(new Uint8Array())
+            setTypeLoading(false)
+        }
+        
     }
 
     const renderCode = async () => {

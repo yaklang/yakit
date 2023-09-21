@@ -15,6 +15,7 @@ import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
 import {useHotkeys} from "react-hotkeys-hook"
+import {useStore} from "@/store/mitmState"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -74,6 +75,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     const hijackedContentRef = useRef<any>()
     const [inViewport] = useInViewport(hijackedContentRef)
+
+    const {setIsRefreshHistory} = useStore()
 
     const isManual = useCreation(() => {
         return autoForward === "manual"
@@ -200,7 +203,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         if (!currentPacketId) {
             return
         }
-
+        setIsRefreshHistory(true)
         // setLoading(true);
         setStatus("hijacking")
         if (hijackResponseType !== "all") {

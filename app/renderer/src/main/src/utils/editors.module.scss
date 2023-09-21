@@ -65,8 +65,9 @@
     :global {
         .ant-card-head {
             background-color: #ffffff;
-            height: 33px;
-            min-height: 33px;
+            height: 32px;
+            min-height: 32px;
+            box-sizing: content-box;
             border-bottom: 1px solid var(--yakit-border-color);
             .ant-card-head-wrapper {
                 height: 100%;
