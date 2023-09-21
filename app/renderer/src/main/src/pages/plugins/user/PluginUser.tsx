@@ -66,8 +66,6 @@ import {PluginUserDetail} from "./PluginUserDetail"
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginUser.module.scss"
-
-
 export const mePluginTypeList = [
     {
         label: "我的云端插件",
