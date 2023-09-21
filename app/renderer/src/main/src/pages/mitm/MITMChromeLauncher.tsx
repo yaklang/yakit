@@ -20,7 +20,7 @@ interface ChromeLauncherButtonProp {
     host?: string
     port?: number
     onFished?: (host: string, port: number) => void
-    isStartMITM?: boolean,
+    isStartMITM?: boolean
     repRuleFlag?: boolean
 }
 
@@ -43,6 +43,16 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
     const [userDataDirArr, setUserDataDirArr] = useState<string[]>([])
 
     useEffect(() => {
+        // 获取连接引擎的地址参数
+        ipcRenderer
+            .invoke("fetch-yaklang-engine-addr")
+            .then((data) => {
+                if (data.addr === `${params.host}:${params.port}`) return
+                const hosts: string[] = (data.addr as string).split(":")
+                if (hosts.length !== 2) return
+                setParams({...params, host: hosts[0]})
+            })
+            .catch(() => {})
         ipcRenderer.invoke("getDefaultUserDataDir").then((e: string) => {
             getRemoteValue("USER_DATA_DIR_ARR").then((data) => {
                 if (!data) {
@@ -102,7 +112,9 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                     />
                     <YakitInput
                         prefix={":"}
-                        onChange={(e) => setParams({...params, port: parseInt(e.target.value)})}
+                        onChange={(e) => {
+                            setParams({...params, port: parseInt(e.target.value) || 0})
+                        }}
                         value={`${params.port}`}
                         wrapperStyle={{width: 80}}
                     />
@@ -252,8 +264,8 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                 onOk: () => {
                     setChromeVisible(true)
                 },
-                cancelButtonProps: { size: "small", className: "modal-cancel-button" },
-                okButtonProps: { size: "small", className: "modal-ok-button" }
+                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                okButtonProps: {size: "small", className: "modal-ok-button"}
             })
             return
         }
@@ -285,11 +297,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                     )}
                 </>
             )) || (
-                <YakitButton
-                    type='outline2'
-                    size='large'
-                    onClick={clickChromeLauncher}
-                >
+                <YakitButton type='outline2' size='large' onClick={clickChromeLauncher}>
                     <ChromeFrameSvgIcon style={{height: 16, color: "var(--yakit-body-text-color)"}} />
                     <span style={{marginLeft: 4}}>免配置启动</span>
                 </YakitButton>
