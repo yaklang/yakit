@@ -1298,7 +1298,8 @@ export const filterToName: Record<string, string> = {
 
 export const defaultFilter: PluginFilterParams = {
     type: ["yak", "mitm", "codec", "packet-hack", "port-scan"],
-    status: ["0"]
+    status: ["0"],
+    state:['1']
 }
 export const defaultSearch: PluginSearchParams = {
     keyword: "",
