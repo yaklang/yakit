@@ -189,6 +189,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
                 m.destroy()
             },
             onOk: (e) => {
+                console.log(123, yamlContRef.current);
                 if (yamlContRef.current) {
                     execImportYaml()
                     m.destroy()
