@@ -515,6 +515,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
           isGetResponse = false
           setFlowResponse(selectedFlow?.Response)
         }
+        if(!isGetRequest && !isGetResponse && !isSkip){
+            queryMITMRuleExtractedData(selectedFlow as HTTPFlow)
+        }
         // 请求或响应只要有一个为0或者为isSkip就走接口拿取数据
         if(isGetRequest || isGetResponse || isSkip){
           isGetRequest&&setFlowRequestLoad(true)
