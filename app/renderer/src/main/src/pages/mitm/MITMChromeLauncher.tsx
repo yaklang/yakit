@@ -12,6 +12,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import { MITMConsts } from "./MITMConsts"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -74,9 +75,14 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         <Form
             labelCol={{span: 4}}
             wrapperCol={{span: 18}}
-            onSubmitCapture={(e) => {
+            onSubmitCapture={async(e) => {
                 e.preventDefault()
-                let newParams: {host: string; port: number; chromePath?: string; userDataDir?: string} = {...params}
+                // 代理认证用户名
+                let username = await getRemoteValue(MITMConsts.MITMDefaultProxyUsername)||""
+                // 代理认证用户密码
+                let password = await getRemoteValue(MITMConsts.MITMDefaultProxyPassword)||""
+                let newParams: {host: string; port: number; chromePath?: string; userDataDir?: string; username?: string, password?: string} = {...params,username,password}
+                
                 if (isSaveUserData) {
                     let newUserDataDirArr = filterItem([userDataDir, ...userDataDirArr]).slice(0, 5)
                     setRemoteValue(
