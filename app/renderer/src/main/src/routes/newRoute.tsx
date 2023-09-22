@@ -350,9 +350,9 @@ export interface ComponentParams {
     /**@param groupId HTTPFuzzer必须要有的，其他页面可以不用 */
     groupId?: string
     /**@name webFuzzer变量参数 */
-    params?:FuzzerParamItem[]
+    params?: FuzzerParamItem[]
     /**@name webFuzzer提取器参数 */
-    extractors?:HTTPResponseExtractor[]
+    extractors?: HTTPResponseExtractor[]
 
     // Route.Mod_ScanPort 参数
     scanportParams?: string
@@ -444,7 +444,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Codec:
             return <CodecPage />
         case YakitRoute.DataCompare:
-            return <DataCompare leftData={params?.leftData} rightData={params?.rightData}/>
+            return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
         case YakitRoute.Mod_ScanPort:
             return <PortScanPage sendTarget={params?.scanportParams} />
         case YakitRoute.PoC:
