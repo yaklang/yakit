@@ -142,7 +142,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     })
 
     /** 插件展示(列表|网格) */
-    const [isList, setIsList] = useState<boolean>(true)
+    const [isList, setIsList] = useState<boolean>(false)
     /** 批量修改插件作者 */
     const [showModifyAuthor, setShowModifyAuthor] = useState<boolean>(false)
     // 原因窗口
@@ -165,13 +165,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     })
 
     const [plugin, setPlugin] = useState<API.YakitPluginDetail | undefined>()
-    const pluginInfoTags = useMemo(() => {
-        let arr: string[] = []
-        try {
-            arr = JSON.parse(plugin?.tags || "") || []
-        } catch (error) {}
-        return arr
-    }, [plugin])
 
     // 单项组件-相关操作和展示组件逻辑
     /** 单项勾选|取消勾选 */
@@ -231,11 +224,13 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     info={plugin}
                     allCheck={allCheck}
                     onCheck={onCheck}
+                    selectList={selectList}
+                    optCheck={optCheck}
                     data={response}
-                    selected={selectNum}
                     onBack={() => {
                         setPlugin(undefined)
                     }}
+                    loadMoreData={onUpdateList}
                 />
             )}
 
