@@ -138,7 +138,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setProxyUsernameDef(e)
                 form.setFieldsValue({proxyUsername: e})
             })
-            // 代理认证用户名
+            // 代理认证用户密码
             getRemoteValue(MITMConsts.MITMDefaultProxyPassword).then((e) => {
                 setProxyPasswordDef(e)
                 form.setFieldsValue({proxyPassword: e})
