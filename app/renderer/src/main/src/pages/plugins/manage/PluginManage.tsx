@@ -44,7 +44,6 @@ import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
 
-
 const {ipcRenderer} = window.require("electron")
 
 const StatusType: TypeSelectOpt[] = [
