@@ -54,7 +54,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         if (noPacketModifier) {
             return []
         } else {
-            return ["http",  "customhttp"]
+            return ["http", "customhttp"]
         }
     }, [noPacketModifier])
 
@@ -183,7 +183,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             return
                         }
                         newWebFuzzerTab(defaultHttps || false, text).finally(() => {
-                            webFuzzerCallBack&&webFuzzerCallBack()
+                            webFuzzerCallBack && webFuzzerCallBack()
                         })
                     } catch (e) {
                         failed("editor exec new-open-fuzzer failed")
@@ -194,11 +194,12 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     }, [defaultHttps, system, originValue, contextMenu, readOnly])
 
     return (
-         <YakitEditor
+        <YakitEditor
             menuType={["code", "decode", ...rightMenuType]}
             readOnly={readOnly}
             contextMenu={{...rightContextMenu}}
             {...restProps}
             {...extraEditorProps}
-        />)
+        />
+    )
 })

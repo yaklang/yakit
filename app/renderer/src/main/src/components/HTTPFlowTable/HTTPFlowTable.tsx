@@ -9,7 +9,7 @@ import {yakitInfo, yakitNotify} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
-import {useClickAway, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useVirtualList} from "ahooks"
+import {useClickAway, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {callCopyToClipboard} from "../../utils/basic"
 import {
@@ -406,6 +406,7 @@ export interface HTTPFlowTableProp {
     title?: string
     onlyShowFirstNode?: boolean
     setOnlyShowFirstNode?:(i:boolean)=>void
+    refresh?: boolean
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -718,7 +719,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 }
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
-    const { onlyShowFirstNode,setOnlyShowFirstNode,inViewport = true } = props
+    const { onlyShowFirstNode,setOnlyShowFirstNode,inViewport = true,refresh } = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -797,6 +798,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const size = useSize(ref)
+
+    useUpdateEffect(()=>{
+        update(1)
+    },[refresh])
 
     // 初次进入页面 获取默认高级筛选项
     useEffect(()=>{
@@ -1143,14 +1148,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .finally(() => setTimeout(() => setLoading(false), 200))
     })
 
-    // 给设置做防抖
-    useDebounceEffect(
-        () => {
-            props.onSelected && props.onSelected(selected)
-        },
-        [selected],
-        {wait: 400, trailing: true, leading: true}
-    )
+    useEffect(()=>{
+        props.onSelected && props.onSelected(selected)
+    },[selected])
+
     // 设置是否自动刷新
     useEffect(() => {
         if (inViewport) {
@@ -1216,7 +1217,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         (rowDate: HTTPFlow) => {
             onRowClick(rowDate)
         },
-        {wait: 200}
+        {wait: 200,leading:true}
     ).run
 
     const onCheckThan0 = useDebounceFn(

@@ -70,6 +70,9 @@ export interface YakitEditorProps {
     selectNode?: (close: () => void, editorInfo?: EditorDetailInfoProps) => ReactElement
     /** @name 配置项-选中弹窗显示内容(默认为编/解码-编辑器可读情况下为解码) */
     rangeNode?: (close: () => void, editorInfo?: EditorDetailInfoProps) => ReactElement
+
+    /** @name 配置项-(存在此项则将字体/换行交由emiter更新) */
+    editorId?: string
 }
 
 /**

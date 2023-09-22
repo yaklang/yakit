@@ -61,6 +61,8 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     fetchRequest?: (kind: number) => any
     search?: string
     selectedFlow?: HTTPFlow
+
+    refresh?: boolean
 }
 
 const {Text} = Typography
@@ -457,65 +459,91 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow} = props
+    const {id, selectedFlow, refresh} = props
     const [flow, setFlow] = useState<HTTPFlow>()
+    const [flowRequest, setFlowRequest] = useState<Uint8Array>()
+    const [flowResponse,setFlowResponse] = useState<Uint8Array>()
+    const [flowRequestLoad,setFlowRequestLoad] = useState<boolean>(false)
+    const [flowResponseLoad,setFlowResponseLoad] = useState<boolean>(false)
     const [isSelect, setIsSelect] = useState<boolean>(false)
-    const [loading, setLoading] = useState(false)
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(false)
     const lastIdRef = useRef<number>()
 
-    useDebounceEffect(
-        () => {
-            if (!id) {
-                setIsSelect(false)
+    useEffect(() => {
+        update()
+    }, [id])
+
+    useUpdateEffect(() => {
+        update(true)
+    }, [refresh])
+
+    const update = useMemoizedFn((isSkip: boolean = false) => {
+        if (!id) {
+            setIsSelect(false)
+            return
+        }
+        lastIdRef.current = id
+        setIsSelect(true)
+        getRemoteValue("IsFoldValue").then((data) => {
+            if (!data) {
                 return
             }
-            lastIdRef.current = id
-            setIsSelect(true)
-            getRemoteValue("IsFoldValue").then((data) => {
-                if (!data) {
-                    return
-                }
-                const parseData = JSON.parse(data)
-                if (parseData.id == lastIdRef.current) {
-                    setFold(parseData.is)
-                }
-            })
-            setFlow(undefined)
-            // 请求或响应只要有一个为0就走接口拿取数据
-            if (
-                Uint8ArrayToString(selectedFlow?.Request as Uint8Array) &&
-                Uint8ArrayToString(selectedFlow?.Response as Uint8Array)
-            ) {
-                setLoading(false)
-                setFlow(selectedFlow)
-                queryMITMRuleExtractedData(selectedFlow as HTTPFlow)
-            } else {
-                setLoading(true)
-                ipcRenderer
-                    .invoke("GetHTTPFlowById", {Id: id})
-                    .then((i: HTTPFlow) => {
-                        if (+i.Id == lastIdRef.current) {
-                            setTimeout(() => setLoading(false), 10)
-                            setFlow(i)
-                            queryMITMRuleExtractedData(i)
+            const parseData = JSON.parse(data)
+            if (parseData.id == lastIdRef.current) {
+                setFold(parseData.is)
+            }
+        })
+        setFlowRequestLoad(false)
+        setFlowResponseLoad(false)
+        setFlow(selectedFlow)
+        setFlowRequest(undefined)
+        setFlowResponse(undefined)
+
+        // 是否获取Request
+        let isGetRequest:boolean = true
+        let isGetResponse:boolean = true
+
+        // 请求不为空直接使用
+        if(Uint8ArrayToString(selectedFlow?.Request as Uint8Array)&&!isSkip){
+          isGetRequest = false
+          setFlowRequest(selectedFlow?.Request)
+        }
+        if(Uint8ArrayToString(selectedFlow?.Response as Uint8Array)&&!isSkip){
+          isGetResponse = false
+          setFlowResponse(selectedFlow?.Response)
+        }
+        // 请求或响应只要有一个为0或者为isSkip就走接口拿取数据
+        if(isGetRequest || isGetResponse || isSkip){
+          isGetRequest&&setFlowRequestLoad(true)
+          isGetResponse&&setFlowResponseLoad(true)
+            ipcRenderer
+                .invoke("GetHTTPFlowById", {Id: id})
+                .then((i: HTTPFlow) => {
+                    if (+i.Id == lastIdRef.current) {
+                        if(isGetRequest){
+                          setFlowRequest(i?.Request)
                         }
-                    })
-                    .catch((e: any) => {
-                        setTimeout(() => setLoading(false), 300)
-                        failed(`Query HTTPFlow failed: ${e}`)
-                    })
-            }
-            return () => {
-                setExistedInfoType([])
-            }
-        },
-        [id],
-        {wait: 200, leading: true, trailing: false}
-    )
+                        if(isGetResponse){
+                          setFlowResponse(i?.Response)
+                        }
+                        setFlow(i)
+                        queryMITMRuleExtractedData(i)
+                    }
+                })
+                .catch((e: any) => {
+                    failed(`Query HTTPFlow failed: ${e}`)
+                })
+                .finally(() => {
+                  setTimeout(() => {
+                    setFlowRequestLoad(false)
+                    setFlowResponseLoad(false)
+                  }, 300)
+              })
+        }
+    })
 
     const queryMITMRuleExtractedData = (i: HTTPFlow) => {
         const existedExtraInfos: HTTPFlowInfoType[] = []
@@ -564,27 +592,98 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setTimeout(() => setInfoTypeLoading(false), 300)
     }, [infoType])
 
-    const spinning = !flow || loading
-
     const mainCol: number = useMemo(() => {
-        let col: number = existedInfoType.length > 0 ? 19 : 24
+        let col: number = 19
         if (isFold) {
             col = 24
         }
         return col
-    }, [existedInfoType.length, isFold])
+    }, [isFold])
 
     return isSelect ? (
-        <AutoSpin spinning={spinning} tip={"选择想要查看的请求 / 等待加载"}>
-            <div className={styles["http-history-box"]}>
-                <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
-                    <Col span={mainCol} style={{height: "100%"}}>
-                        <HTTPFlowDetailRequestAndResponse loading={loading} flow={flow} {...props} />
+        <div className={styles["http-history-box"]}>
+            <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
+                <Col span={mainCol} style={{height: "100%"}}>
+                    {flow && (
+                        <HTTPFlowDetailRequestAndResponse
+                            flow={flow}
+                            flowRequest={flowRequest}
+                            flowResponse={flowResponse}
+                            flowRequestLoad={flowRequestLoad}
+                            flowResponseLoad={flowResponseLoad}
+                            {...props}
+                        />
+                    )}
+                </Col>
+                {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
+                    <Col span={5}>
+                        <NewHTTPPacketEditor
+                            title={
+                                <Button.Group size={"small"}>
+                                    {existedInfoType.map((i) => {
+                                        return (
+                                            <YakitButton
+                                                size='small'
+                                                type={infoType === i ? "primary" : "outline2"}
+                                                onClick={() => {
+                                                    setInfoType(i)
+                                                }}
+                                                key={i}
+                                            >
+                                                {infoTypeVerbose(i)}
+                                            </YakitButton>
+                                        )
+                                    })}
+                                </Button.Group>
+                            }
+                            readOnly={true}
+                            noLineNumber={true}
+                            noMinimap={true}
+                            noHex={true}
+                            hideSearch={true}
+                            refreshTrigger={infoType}
+                            loading={infoTypeLoading}
+                            extraEnd={
+                                <div className={classNames(styles["http-history-fold-box"])}>
+                                    <div className={styles["http-history-icon-box"]}>
+                                        <Tooltip placement='top' title='向右收起'>
+                                            <SideBarOpenIcon
+                                                className={styles["fold-icon"]}
+                                                onClick={() => {
+                                                    setRemoteValue("IsFoldValue", JSON.stringify({is: true, id}))
+                                                    setFold(true)
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    </div>
+                                </div>
+                            }
+                            originValue={(() => {
+                                switch (infoType) {
+                                    case "domains":
+                                        return StringToUint8Array(
+                                            "# 根域 (Root-Domains)\r\n" +
+                                                (flow?.RootDomains || []).join("\r\n") +
+                                                "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                (flow?.Domains || []).join("\r\n")
+                                        )
+                                    case "json":
+                                        return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
+                                    default:
+                                        return new Uint8Array()
+                                }
+                            })()}
+                            editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
+                            isShowBeautifyRender={false}
+                        />
                     </Col>
-                    {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
-                        <Col span={5}>
-                            <NewHTTPPacketEditor
-                                title={
+                )}
+                {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && !isFold && (
+                    <Col span={5}>
+                        <HTTPFlowExtractedDataTable
+                            httpFlowHash={flow?.Hash || ""}
+                            title={
+                                <div className={styles["table-header"]}>
                                     <Button.Group size={"small"}>
                                         {existedInfoType.map((i) => {
                                             return (
@@ -601,15 +700,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             )
                                         })}
                                     </Button.Group>
-                                }
-                                readOnly={true}
-                                noLineNumber={true}
-                                noMinimap={true}
-                                noHex={true}
-                                hideSearch={true}
-                                refreshTrigger={infoType}
-                                loading={infoTypeLoading}
-                                extraEnd={
                                     <div className={classNames(styles["http-history-fold-box"])}>
                                         <div className={styles["http-history-icon-box"]}>
                                             <Tooltip placement='top' title='向右收起'>
@@ -623,102 +713,60 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             </Tooltip>
                                         </div>
                                     </div>
-                                }
-                                originValue={(() => {
-                                    switch (infoType) {
-                                        case "domains":
-                                            return StringToUint8Array(
-                                                "# 根域 (Root-Domains)\r\n" +
-                                                    (flow?.RootDomains || []).join("\r\n") +
-                                                    "\r\n\r\n# 域名 (Domain) \r\n" +
-                                                    (flow?.Domains || []).join("\r\n")
-                                            )
-                                        case "json":
-                                            return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
-                                        default:
-                                            return new Uint8Array()
-                                    }
-                                })()}
-                                editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
-                                isShowBeautifyRender={false}
-                            />
-                        </Col>
-                    )}
-                    {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && !isFold && (
-                        <Col span={5}>
-                            <HTTPFlowExtractedDataTable
-                                httpFlowHash={flow?.Hash || ""}
-                                title={
-                                    <div className={styles["table-header"]}>
-                                        <Button.Group size={"small"}>
-                                            {existedInfoType.map((i) => {
-                                                return (
-                                                    <Button
-                                                        type={infoType === i ? "primary" : "default"}
-                                                        onClick={() => {
-                                                            setInfoType(i)
-                                                        }}
-                                                        key={i}
-                                                    >
-                                                        {infoTypeVerbose(i)}
-                                                    </Button>
-                                                )
-                                            })}
-                                        </Button.Group>
-                                        <div className={classNames(styles["http-history-fold-box"])}>
-                                            <div className={styles["http-history-icon-box"]}>
-                                                <Tooltip placement='top' title='向右收起'>
-                                                    <SideBarOpenIcon
-                                                        className={styles["fold-icon"]}
-                                                        onClick={() => {
-                                                            setRemoteValue(
-                                                                "IsFoldValue",
-                                                                JSON.stringify({is: true, id})
-                                                            )
-                                                            setFold(true)
-                                                        }}
-                                                    />
-                                                </Tooltip>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            />
-                        </Col>
-                    )}
-                </Row>
-                {isFold && (
-                    <div
-                        className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}
-                    >
-                        <div
-                            className={classNames(
-                                styles["http-history-icon-box"],
-                                styles["http-history-icon-paading-box"]
-                            )}
-                        >
-                            <Tooltip placement='top' title='向左展开'>
-                                <SideBarCloseIcon
-                                    className={styles["fold-icon"]}
-                                    onClick={() => {
-                                        setRemoteValue("IsFoldValue", JSON.stringify({is: false, id}))
-                                        setFold(false)
-                                    }}
-                                />
-                            </Tooltip>
-                        </div>
-                    </div>
+                                </div>
+                            }
+                        />
+                    </Col>
                 )}
-            </div>
-        </AutoSpin>
-    ) : (
-        <YakitEmpty style={{paddingTop: 48}} title='未选中 HTTP History 数据' />
-    )
+                {existedInfoType.length === 0 && !isFold && (
+                    <Col span={5}>
+                        <div className={styles["empty-box"]}>
+                            <div className={classNames(styles["empty-box-fold-box"])}>
+                                <div className={styles["empty-box-icon-box"]}>
+                                    <Tooltip placement='top' title='向右收起'>
+                                        <SideBarOpenIcon
+                                            className={styles["fold-icon"]}
+                                            onClick={() => {
+                                                setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
+                                                setFold(true)
+                                            }}
+                                        />
+                                    </Tooltip>
+                                </div>
+                            </div>
+                            <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
+                        </div>
+                    </Col>
+                )}
+            </Row>
+            {isFold && (
+                <div className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}>
+                    <div
+                        className={classNames(styles["http-history-icon-box"], styles["http-history-icon-paading-box"])}
+                    >
+                        <Tooltip placement='top' title='向左展开'>
+                            <SideBarCloseIcon
+                                className={styles["fold-icon"]}
+                                onClick={() => {
+                                    setRemoteValue("IsFoldValue", JSON.stringify({is: false, id}))
+                                    setFold(false)
+                                }}
+                            />
+                        </Tooltip>
+                    </div>
+                </div>
+            )}
+        </div>
+    ) : null
 }
 
 interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flow?: HTTPFlow
-    loading: boolean
+    loading?: boolean
+    flowRequest?: Uint8Array
+    flowResponse?: Uint8Array
+    flowRequestLoad?: boolean
+    flowResponseLoad?: boolean
 }
 
 interface HTTPFlowBareProps {
@@ -727,7 +775,7 @@ interface HTTPFlowBareProps {
 }
 
 export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAndResponseProps> = React.memo((props) => {
-    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, loading, id, Tags} = props
+    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, id, Tags,loading=false, flowRequest,flowResponse,flowRequestLoad,flowResponseLoad} = props
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
         if (!flow?.RawRequestBodyBase64) return {}
@@ -793,29 +841,32 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 原始数据
     const [beforeResValue, setBeforeResValue] = useState<Uint8Array>(new Uint8Array())
     const [beforeRspValue, setBeforeRspValue] = useState<Uint8Array>(new Uint8Array())
+
+    useUpdateEffect(()=>{
+      setOriginResValue(flowRequest || new Uint8Array())
+    },[flowRequestLoad])
+
+    useUpdateEffect(()=>{
+      setOriginRspValue(flowResponse || new Uint8Array())
+    },[flowResponseLoad])
+    
     useEffect(() => {
         // 复原数据
         setResType("current")
         setRspType("current")
         setOriginResValue(flow?.Request || new Uint8Array())
         setOriginRspValue(flow?.Response || new Uint8Array())
-        setBeforeResValue(new Uint8Array())
-        setBeforeRspValue(new Uint8Array())
         const existedTags = Tags ? Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
         if (existedTags.includes("[手动修改]")) {
             setShowBeforeData(true)
-        } else {
-            setShowBeforeData(false)
-        }
-    }, [id])
-
-    useUpdateEffect(() => {
-        if (isShowBeforeData) {
-            // 获取原始数据内容后 有内容则展示 无内容不展示
             handleGetHTTPFlowBare("request")
             handleGetHTTPFlowBare("response")
+        } else {
+            setShowBeforeData(false)
+            setBeforeResValue(new Uint8Array())
+            setBeforeRspValue(new Uint8Array())
         }
-    }, [isShowBeforeData, id])
+    }, [id])
 
     useEffect(() => {
         if (resType === "request") {
@@ -894,12 +945,15 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noLineNumber={true}
                         sendToWebFuzzer={sendToWebFuzzer}
                         defaultHeight={defaultHeight}
-                        loading={loading}
+                        loading={flowRequestLoad||loading}
                         defaultHttps={defaultHttps}
                         hideSearch={true}
                         noHex={true}
                         noMinimap={true}
-                        contextMenu={{...copyRequestBase64BodyMenuItem, ...copyUrlMenuItem}}
+                        contextMenu={{
+                            ...copyRequestBase64BodyMenuItem,
+                            ...copyUrlMenuItem
+                        }}
                         // 这个为了解决不可见字符的问题
                         defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
                         extra={flow.InvalidForUTF8Request ? <Tag color={"red"}>含二进制流</Tag> : undefined}
@@ -954,7 +1008,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 </div>
                             )
                         }
-                        contextMenu={{...copyResponseBase64BodyMenuItem, ...copyUrlMenuItem}}
+                        contextMenu={{
+                            ...copyResponseBase64BodyMenuItem,
+                            ...copyUrlMenuItem
+                        }}
                         extra={[
                             <Button
                                 className={styles["extra-chrome-btn"]}
@@ -969,7 +1026,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isResponse={true}
                         noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}
-                        loading={loading}
+                        loading={flowResponseLoad||loading}
                         originValue={originRspValue}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}

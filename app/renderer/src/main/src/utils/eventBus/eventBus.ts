@@ -2,6 +2,7 @@ import mitt from "mitt"
 import {MitmEventProps} from "./events/mitm"
 import {WebFuzzerEventProps} from "./events/webFuzzer"
 import {SimpleDetectEventProps} from "./events/simpleDetect";
+import {EditorEventProps} from "./events/editor";
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -27,7 +28,7 @@ type Joins<T extends object[]> = T extends [infer H extends object, ...infer U e
  *
  * - 建议不要在map方法内的组件设置事件监听，如果需要设置，请自行解决如何区别不同页面同事件监听的问题
  */
-type Events = [MitmEventProps, WebFuzzerEventProps,SimpleDetectEventProps]
+type Events = [MitmEventProps, WebFuzzerEventProps,SimpleDetectEventProps,EditorEventProps]
 
 type CheckVal = Exchange<ArrContrast<Events>>
 // !!! 该变量声明不能改动
