@@ -57,6 +57,11 @@
                 color: #ffffff;
             }
         }
+        .ant-tabs-tab.ant-tabs-tab-disabled {
+            .ant-tabs-tab-btn {
+                color: #ccd2de;
+            }
+        }
     }
     .ant-tabs-content-holder {
         flex: 1;
@@ -196,7 +201,7 @@
 }
 
 // -------------------- 列表上方的header右侧样式 --------------------
-.divider-style{
+.divider-style {
     width: 1px;
     height: 16px;
     background-color: #eaecf3;
