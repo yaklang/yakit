@@ -57,6 +57,65 @@ const manifestStr = `
 }
 `
 
+// 生成临时文件夹
+const tempFile = "selenium-chrome-auth-proxy"
+// 生成临时文件名
+const exceptFileName = "background.js"
+const manifestFileName = "manifest.json"
+// 创建临时文件的完整路径
+const exceptFilePath = path.join(homeDir, tempFile, exceptFileName)
+const manifestFilePath = path.join(homeDir, tempFile, manifestFileName)
+// 获取文件夹路径
+const commonFilePath = path.dirname(exceptFilePath)
+// 是否创建用户名/密码文件
+let isCreateFile = false
+
+function deleteFolderRecursive(folderPath) {
+    if (fs.existsSync(folderPath)) {
+        fs.readdirSync(folderPath).forEach((file) => {
+            const filePath = path.join(folderPath, file)
+            const stat = fs.statSync(filePath)
+
+            if (stat.isFile()) {
+                fs.unlinkSync(filePath)
+            } else if (stat.isDirectory()) {
+                deleteFolderRecursive(filePath)
+            }
+        })
+        fs.rmdirSync(folderPath)
+    }
+}
+
+// 删除临时文件夹及文件夹中所有文件
+const deleteCreateFile = () => {
+    if (isCreateFile) {
+        // 判断文件夹是否存在
+        if (fs.existsSync(commonFilePath)) {
+            // 读取文件夹中的文件和子文件夹
+            fs.readdirSync(commonFilePath).forEach((file) => {
+                const filePath = path.join(commonFilePath, file)
+
+                // 检查文件类型
+                const stat = fs.statSync(filePath)
+
+                if (stat.isFile()) {
+                    // 如果是文件，则删除文件
+                    fs.unlinkSync(filePath)
+                } else if (stat.isDirectory()) {
+                    // 如果是文件夹，则递归删除文件夹及其内容
+                    deleteFolderRecursive(filePath)
+                }
+            })
+
+            // 删除空文件夹
+            fs.rmdirSync(commonFilePath)
+        } else {
+            console.log(`not found ${commonFilePath} .`)
+        }
+        isCreateFile = false
+    }
+}
+
 module.exports = (win, getClient) => {
     // 启动的数量
     let startNum = 0
@@ -144,39 +203,27 @@ module.exports = (win, getClient) => {
                     (item) => !(item.startsWith("--proxy-server=http://") || item === "--disable-extensions")
                 )
 
-                // 生成临时文件夹
-                const tempFile = "selenium-chrome-auth-proxy"
-                // 生成临时文件名
-                const exceptFileName = "background.js"
-                const manifestFileName = "manifest.json"
-
-                // 创建临时文件的完整路径
-                const exceptFilePath = path.join(__dirname, tempFile, exceptFileName)
-                const manifestFilePath = path.join(__dirname, tempFile, manifestFileName)
-                // 获取文件夹路径
-                const commonFilePath = path.dirname(exceptFilePath)
-
                 // 要写入的内容
                 const exceptContent = disableExtensionsExceptStr(host, port, username, password)
                 const manifestContent = manifestStr
 
                 // 创建文件夹 { recursive: true } 选项确保如果文件夹的上级目录也不存在时，一同创建。
                 if (!fs.existsSync(commonFilePath)) {
-                    fs.mkdirSync(commonFilePath, { recursive: true });
+                    fs.mkdirSync(commonFilePath, {recursive: true})
                 }
 
                 // 使用 fs.writeFileSync创建文件 写入内容到临时文件
                 fs.writeFileSync(exceptFilePath, exceptContent)
                 fs.writeFileSync(manifestFilePath, manifestContent)
 
-                launchOpt["chromeFlags"].unshift(`--disable-extensions-except=${commonFilePath}`,
-                `--load-extension=${commonFilePath}`,)
-                console.log("commonFilePath",commonFilePath);
-                console.log("exceptFilePath:",exceptFilePath);
-                console.log("manifestFilePath",manifestFilePath);
-                console.log("launchOpt", launchOpt["chromeFlags"])
+                isCreateFile = true
+
+                launchOpt["chromeFlags"].unshift(
+                    `--disable-extensions-except=${commonFilePath}`,
+                    `--load-extension=${commonFilePath}`
+                )
             } catch (error) {
-                console.log(`操作失败：${error}`);
+                console.log(`操作失败：${error}`)
             }
         }
         return launch(launchOpt).then((chrome) => {
@@ -185,6 +232,7 @@ module.exports = (win, getClient) => {
                 startNum -= 1
                 if (startNum <= 0) {
                     started = false
+                    deleteCreateFile()
                 }
             })
             startNum += 1
@@ -239,6 +287,7 @@ module.exports = (win, getClient) => {
     })
 
     ipcMain.handle("StopAllChrome", async (e) => {
+        deleteCreateFile()
         startNum = 0
         started = false
         return killAll()
