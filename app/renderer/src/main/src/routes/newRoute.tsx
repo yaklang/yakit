@@ -117,10 +117,8 @@ import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
-import {FuzzerParamItem} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
-import {PluginUser} from "@/pages/plugins/user/PluginUser"
-import { PluginsOnline } from "@/pages/plugins/online/PluginsOnline"
+import { FuzzerParamItem } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import { HTTPResponseExtractor } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -351,9 +349,9 @@ export interface ComponentParams {
     /**@param groupId HTTPFuzzer必须要有的，其他页面可以不用 */
     groupId?: string
     /**@name webFuzzer变量参数 */
-    params?: FuzzerParamItem[]
+    params?:FuzzerParamItem[]
     /**@name webFuzzer提取器参数 */
-    extractors?: HTTPResponseExtractor[]
+    extractors?:HTTPResponseExtractor[]
 
     // Route.Mod_ScanPort 参数
     scanportParams?: string
@@ -418,8 +416,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            // return <NewHome />
-            return <PluginUser />
+            return <NewHome />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -446,7 +443,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Codec:
             return <CodecPage />
         case YakitRoute.DataCompare:
-            return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
+            return <DataCompare leftData={params?.leftData} rightData={params?.rightData}/>
         case YakitRoute.Mod_ScanPort:
             return <PortScanPage sendTarget={params?.scanportParams} />
         case YakitRoute.PoC:
