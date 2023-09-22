@@ -83,6 +83,7 @@ import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageNodeItemProps, WebFuzzerPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {ShareImportExportData} from "../components/ShareImportExportData"
 // import { ResponseCard } from "./ResponseCard"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -609,18 +610,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
      * @description HotPatchCode和HotPatchCodeWithParamGetter一直使用缓存在数据库中的值
      * proxy,dnsServers,etcHosts使用各个页面上显示的值
      */
-    const onStartExecution = useMemoizedFn(() => {
-        const i = sequenceList.findIndex((ele) => !ele.pageId)
-        if (i !== -1) {
-            setErrorIndex(i)
-            yakitNotify("error", "请配置序列后再执行")
-            return
-        }
-        setLoading(true)
-        onClearRef()
-        resetResponse()
-        resetDroppedCount()
-        setCurrentSelectResponse(undefined)
+    const getHttpParams = useMemoizedFn(() => {
         const httpParams: FuzzerRequestProps[] = []
         const pageChildrenList = getCurrentGroupSequence()
         sequenceList.forEach((item) => {
@@ -642,9 +632,24 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 httpParams.push(httpParamsItem)
             }
         })
+        return httpParams
+    })
+
+    const onStartExecution = useMemoizedFn(() => {
+        const i = sequenceList.findIndex((ele) => !ele.pageId)
+        if (i !== -1) {
+            setErrorIndex(i)
+            yakitNotify("error", "请配置序列后再执行")
+            return
+        }
+        setLoading(true)
+        onClearRef()
+        resetResponse()
+        resetDroppedCount()
+        setCurrentSelectResponse(undefined)
         const newSequenceList = sequenceList.map((item) => ({...item, disabled: true}))
         setSequenceList([...newSequenceList])
-        ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: httpParams}, fuzzTokenRef.current)
+        ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: getHttpParams()}, fuzzTokenRef.current)
     })
     const onForcedStop = useMemoizedFn(() => {
         setLoading(false)
@@ -838,6 +843,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 onShowAll={() => {
                                     setShowAllResponse(true)
                                 }}
+                                getHttpParams={getHttpParams}
                             />
                             <SequenceResponse
                                 requestInfo={currentSelectRequest}
@@ -1135,7 +1141,8 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         disabled,
         onShowAll,
         currentSequenceItemName,
-        currentSequenceItemPageName
+        currentSequenceItemPageName,
+        getHttpParams
     } = props
     const {
         onlyOneResponse: httpResponse,
@@ -1174,9 +1181,12 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                     httpResponse={httpResponse}
                 />
             </div>
-            <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()}>
-                展示全部响应
-            </YakitButton>
+            <div>
+                {/* <ShareImportExportData module='fuzzer' supportShare={false} supportImport={false} getFuzzerRequestParams={getHttpParams} /> */}
+                <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()}>
+                    展示全部响应
+                </YakitButton>
+            </div>
         </div>
     )
 })

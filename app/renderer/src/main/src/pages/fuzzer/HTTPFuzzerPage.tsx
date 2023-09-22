@@ -27,7 +27,8 @@ import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageE
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import styles from "./HTTPFuzzerPage.module.scss"
-import {ShareData} from "./components/ShareData"
+import {ShareImportExportData} from "./components/ShareImportExportData"
+// import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -761,6 +762,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             submitToHTTPFuzzer()
         }
     })
+
+    const getFuzzerRequestParams = useMemoizedFn(() => {
+        return {
+            ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
+            RequestRaw: Buffer.from(requestRef.current, "utf8"), // StringToUint8Array(request, "utf8"),
+            HotPatchCode: hotPatchCodeRef.current,
+            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
+            FuzzerTabIndex: props.id
+        }
+    })
+
     const submitToHTTPFuzzer = useMemoizedFn(() => {
         resetResponse()
         // 清楚历史任务的标记
@@ -773,13 +785,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setDroppedCount(0)
 
         // FuzzerRequestProps
-        const httpParams: FuzzerRequestProps = {
-            ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
-            RequestRaw: Buffer.from(requestRef.current, "utf8"), // StringToUint8Array(request, "utf8"),
-            HotPatchCode: hotPatchCodeRef.current,
-            HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
-            FuzzerTabIndex: props.id
-        }
+        const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
             const proxyToArr = advancedConfigValue.proxy.map((ele) => ({label: ele, value: ele}))
             getProxyList(proxyToArr)
@@ -1378,131 +1384,135 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             </React.Suspense>
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
-                    {loading ? (
-                        <YakitButton
-                            onClick={() => {
-                                cancelCurrentHTTPFuzzer()
-                            }}
-                            icon={<StopIcon />}
-                            type={"primary"}
-                            colors='danger'
-                            size='large'
-                        >
-                            强制停止
-                        </YakitButton>
-                    ) : (
-                        <YakitButton
-                            onClick={() => {
-                                setRedirectedResponse(undefined)
-                                sendFuzzerSettingInfo()
-                                onValidateHTTPFuzzer()
-                                setCurrentPage(1)
-                            }}
-                            icon={<PaperAirplaneIcon />}
-                            type={"primary"}
-                            size='large'
-                        >
-                            发送请求
-                        </YakitButton>
-                    )}
-                    <div className={styles["fuzzer-heard-force"]}>
-                        <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
-                        <YakitCheckbox
-                            checked={advancedConfigValue.isHttps}
-                            onChange={(e) =>
-                                setAdvancedConfigValue({...advancedConfigValue, isHttps: e.target.checked})
-                            }
+                    <div className={styles["fuzzer-heard-left"]}>
+                        {loading ? (
+                            <YakitButton
+                                onClick={() => {
+                                    cancelCurrentHTTPFuzzer()
+                                }}
+                                icon={<StopIcon />}
+                                type={"primary"}
+                                colors='danger'
+                                size='large'
+                            >
+                                强制停止
+                            </YakitButton>
+                        ) : (
+                            <YakitButton
+                                onClick={() => {
+                                    setRedirectedResponse(undefined)
+                                    sendFuzzerSettingInfo()
+                                    onValidateHTTPFuzzer()
+                                    setCurrentPage(1)
+                                }}
+                                icon={<PaperAirplaneIcon />}
+                                type={"primary"}
+                                size='large'
+                            >
+                                发送请求
+                            </YakitButton>
+                        )}
+                        <div className={styles["fuzzer-heard-force"]}>
+                            <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
+                            <YakitCheckbox
+                                checked={advancedConfigValue.isHttps}
+                                onChange={(e) =>
+                                    setAdvancedConfigValue({...advancedConfigValue, isHttps: e.target.checked})
+                                }
+                            />
+                        </div>
+                        {/*<div className={styles["fuzzer-heard-force"]}>*/}
+                        {/*    <span className={styles["fuzzer-heard-https"]}>国密TLS</span>*/}
+                        {/*    <YakitCheckbox*/}
+                        {/*        checked={advancedConfigValue.isGmTLS}*/}
+                        {/*        onChange={(e) =>*/}
+                        {/*            setAdvancedConfigValue({...advancedConfigValue, isGmTLS: e.target.checked})*/}
+                        {/*        }*/}
+                        {/*    />*/}
+                        {/*</div>*/}
+                        <Divider type='vertical' style={{margin: 0, top: 1}} />
+                        <div className={styles["display-flex"]}>
+                            <Popover
+                                trigger={"click"}
+                                placement={"leftTop"}
+                                destroyTooltipOnHide={true}
+                                content={
+                                    <div style={{width: 400}}>
+                                        <HTTPFuzzerHistorySelector
+                                            currentSelectId={currentSelectId}
+                                            onSelect={(e, page, showAll) => {
+                                                if (!showAll) setCurrentPage(page)
+                                                loadHistory(e)
+                                            }}
+                                            onDeleteAllCallback={() => {
+                                                setCurrentPage(0)
+                                                getTotal()
+                                            }}
+                                            fuzzerTabIndex={props.id}
+                                        />
+                                    </div>
+                                }
+                            >
+                                <YakitButton type='text' icon={<ClockIcon />} style={{padding: "4px 0px"}}>
+                                    历史
+                                </YakitButton>
+                            </Popover>
+                        </div>
+                        {loading && (
+                            <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
+                                <YakitSpin size={"small"} style={{width: "auto"}} />
+                                sending packets
+                            </div>
+                        )}
+
+                        {onlyOneResponse && httpResponse.Ok && checkRedirect && (
+                            <YakitButton
+                                onClick={() => {
+                                    setLoading(true)
+                                    const redirectRequestProps: RedirectRequestParams = {
+                                        Request: requestRef.current,
+                                        Response: new Buffer(httpResponse.ResponseRaw).toString("utf8"),
+                                        IsHttps: advancedConfigValue.isHttps,
+                                        IsGmTLS: advancedConfigValue.isGmTLS,
+                                        PerRequestTimeoutSeconds: advancedConfigValue.timeout,
+                                        Proxy: advancedConfigValue.proxy.join(","),
+                                        Extractors: advancedConfigValue.extractors,
+                                        Matchers: advancedConfigValue.matchers,
+                                        MatchersCondition: advancedConfigValue.matchersCondition,
+                                        HitColor:
+                                            advancedConfigValue.filterMode === "onlyMatch"
+                                                ? advancedConfigValue.hitColor
+                                                : "",
+                                        Params: advancedConfigValue.params || []
+                                    }
+                                    ipcRenderer
+                                        .invoke("RedirectRequest", redirectRequestProps)
+                                        .then((rsp: FuzzerResponse) => {
+                                            setRedirectedResponse(rsp)
+                                        })
+                                        .catch((e) => {
+                                            failed(`"ERROR in: ${e}"`)
+                                        })
+                                        .finally(() => {
+                                            setTimeout(() => setLoading(false), 300)
+                                        })
+                                }}
+                                type='outline2'
+                            >
+                                跟随重定向
+                            </YakitButton>
+                        )}
+                        <FuzzerExtraShow
+                            droppedCount={droppedCount}
+                            advancedConfigValue={advancedConfigValue}
+                            onlyOneResponse={onlyOneResponse}
+                            httpResponse={httpResponse}
                         />
                     </div>
-                    {/*<div className={styles["fuzzer-heard-force"]}>*/}
-                    {/*    <span className={styles["fuzzer-heard-https"]}>国密TLS</span>*/}
-                    {/*    <YakitCheckbox*/}
-                    {/*        checked={advancedConfigValue.isGmTLS}*/}
-                    {/*        onChange={(e) =>*/}
-                    {/*            setAdvancedConfigValue({...advancedConfigValue, isGmTLS: e.target.checked})*/}
-                    {/*        }*/}
-                    {/*    />*/}
-                    {/*</div>*/}
-                    <Divider type='vertical' style={{margin: 0, top: 1}} />
-                    <div className={styles["display-flex"]}>
-                        <ShareData module='fuzzer' getShareContent={getShareContent} />
-                        <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
-                        <Popover
-                            trigger={"click"}
-                            placement={"leftTop"}
-                            destroyTooltipOnHide={true}
-                            content={
-                                <div style={{width: 400}}>
-                                    <HTTPFuzzerHistorySelector
-                                        currentSelectId={currentSelectId}
-                                        onSelect={(e, page, showAll) => {
-                                            if (!showAll) setCurrentPage(page)
-                                            loadHistory(e)
-                                        }}
-                                        onDeleteAllCallback={() => {
-                                            setCurrentPage(0)
-                                            getTotal()
-                                        }}
-                                        fuzzerTabIndex={props.id}
-                                    />
-                                </div>
-                            }
-                        >
-                            <YakitButton type='text' icon={<ClockIcon />} style={{padding: "4px 0px"}}>
-                                历史
-                            </YakitButton>
-                        </Popover>
+                    <div className={styles['fuzzer-heard-right']}>
+                        <ShareImportExportData module='fuzzer' getShareContent={getShareContent} getFuzzerRequestParams={getFuzzerRequestParams} />
+                        {/* <Divider type='vertical' style={{ margin: "0 8px" }} /> */}
                     </div>
-                    {loading && (
-                        <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
-                            <YakitSpin size={"small"} style={{width: "auto"}} />
-                            sending packets
-                        </div>
-                    )}
-
-                    {onlyOneResponse && httpResponse.Ok && checkRedirect && (
-                        <YakitButton
-                            onClick={() => {
-                                setLoading(true)
-                                const redirectRequestProps: RedirectRequestParams = {
-                                    Request: requestRef.current,
-                                    Response: new Buffer(httpResponse.ResponseRaw).toString("utf8"),
-                                    IsHttps: advancedConfigValue.isHttps,
-                                    IsGmTLS: advancedConfigValue.isGmTLS,
-                                    PerRequestTimeoutSeconds: advancedConfigValue.timeout,
-                                    Proxy: advancedConfigValue.proxy.join(","),
-                                    Extractors: advancedConfigValue.extractors,
-                                    Matchers: advancedConfigValue.matchers,
-                                    MatchersCondition: advancedConfigValue.matchersCondition,
-                                    HitColor:
-                                        advancedConfigValue.filterMode === "onlyMatch"
-                                            ? advancedConfigValue.hitColor
-                                            : "",
-                                    Params: advancedConfigValue.params || []
-                                }
-                                ipcRenderer
-                                    .invoke("RedirectRequest", redirectRequestProps)
-                                    .then((rsp: FuzzerResponse) => {
-                                        setRedirectedResponse(rsp)
-                                    })
-                                    .catch((e) => {
-                                        failed(`"ERROR in: ${e}"`)
-                                    })
-                                    .finally(() => {
-                                        setTimeout(() => setLoading(false), 300)
-                                    })
-                            }}
-                            type='outline2'
-                        >
-                            跟随重定向
-                        </YakitButton>
-                    )}
-                    <FuzzerExtraShow
-                        droppedCount={droppedCount}
-                        advancedConfigValue={advancedConfigValue}
-                        onlyOneResponse={onlyOneResponse}
-                        httpResponse={httpResponse}
-                    />
                 </div>
                 <YakitResizeBox
                     firstMinSize={380}

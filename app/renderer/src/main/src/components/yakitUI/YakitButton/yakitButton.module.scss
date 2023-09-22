@@ -169,6 +169,10 @@
         color: var(--ui-icon-color);
     }
 
+    path {
+        stroke-width: 1.5;
+    }
+
     &.yakit-hover-button {
         background: var(--ui-background-color);
         color: fetch-color($type, "color-4");

@@ -23,7 +23,21 @@
     }
 }
 
-.display-flex{
+.display-flex {
     display: flex;
     align-items: center;
+}
+
+.importYamlPopTitle {
+    .importText {
+        color: #B4BBCA;
+        font-size: 14px;
+        font-weight: normal;
+        margin-left: 16px;
+    }
+}
+
+.multimodeImportYaml {
+    height: 500px;
+    margin-bottom: 15px;
 }

@@ -117,6 +117,7 @@ export interface SequenceResponseHeardProps {
     advancedConfigValue?: AdvancedConfigValueProps
     responseInfo?: ResponseProps
     onShowAll: () => void
+    getHttpParams: () => FuzzerRequestProps[]
 }
 
 export interface ResponseCardProps {

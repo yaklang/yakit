@@ -33,7 +33,7 @@ interface pwdRequestProps {
 
 export function onImportShare() {
     const m = showYakitModal({
-        title: "导入分享数据",
+        title: "导入数据包 ID",
         content: <ShareImport onClose={() => m.destroy()} />,
         footer: null
     })

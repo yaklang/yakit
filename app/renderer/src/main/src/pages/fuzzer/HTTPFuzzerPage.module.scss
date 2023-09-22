@@ -28,31 +28,35 @@
     }
     .fuzzer-heard {
         display: flex;
-        align-items: center;
-        // height: 36px;
-        padding-bottom: 12px;
-        gap: 8px 16px;
-        flex-wrap: wrap;
-        .fuzzer-heard-force {
+        justify-content: space-between;
+        &-left {
             display: flex;
             align-items: center;
-            .fuzzer-heard-https {
-                margin-right: 6px;
+            // height: 36px;
+            padding-bottom: 12px;
+            gap: 8px 16px;
+            flex-wrap: wrap;
+            .fuzzer-heard-force {
+                display: flex;
+                align-items: center;
+                .fuzzer-heard-https {
+                    margin-right: 6px;
+                }
             }
-        }
-        .spinning-text {
-            color: var(--yakit-primary-5);
-            gap: 8px;
-        }
-        .proxy-text {
-            max-width: 400px;
-            display: inline-block;
-            line-height: 16px;
-        }
-        .actualHost-text {
-            max-width: 200px;
-            display: inline-block;
-            line-height: 16px;
+            .spinning-text {
+                color: var(--yakit-primary-5);
+                gap: 8px;
+            }
+            .proxy-text {
+                max-width: 400px;
+                display: inline-block;
+                line-height: 16px;
+            }
+            .actualHost-text {
+                max-width: 200px;
+                display: inline-block;
+                line-height: 16px;
+            }
         }
     }
     .fuzzer-firstNode-extra {
