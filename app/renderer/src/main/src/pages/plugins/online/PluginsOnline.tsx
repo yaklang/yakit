@@ -283,7 +283,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
     })
     return (
         <>
-            {!!plugin && (
+            {/* {!!plugin && (
                 <PluginManageDetail
                     info={plugin}
                     allCheck={allCheck}
@@ -292,7 +292,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                     selected={selectNum}
                     onBack={() => {}}
                 />
-            )}
+            )} */}
             <PluginsLayout
                 title={isShowRoll ? <></> : "插件商店"}
                 hidden={!!plugin}
