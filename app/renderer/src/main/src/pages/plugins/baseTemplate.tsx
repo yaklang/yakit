@@ -26,6 +26,7 @@ import {AuthorIcon, AuthorImg, FuncSearch, TagsListShow} from "./funcTemplate"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
+    OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineBugIcon,
     OutlineIdentificationIcon,
@@ -69,7 +70,7 @@ import {CodecPluginTemplate} from "../invoker/data/CodecPluginTemplate"
 import {CodeGV} from "@/yakitGV"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {API} from "@/services/swagger/resposeType"
-import { TypeSelectOpt } from "./funcTemplateType"
+import {TypeSelectOpt} from "./funcTemplateType"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
@@ -126,6 +127,17 @@ export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) =>
 export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((props) => {
     const {title, filterNode, filterExtra, checked, onCheck, total, selected, listProps, onBack, children} = props
 
+    // 隐藏插件列表
+    const [hidden, setHidden] = useState<boolean>(false)
+
+    // 关键词|用户搜索
+    const onSearch = useDebounceFn(
+        (type: string, value: string) => {
+            console.log("onKeywordAndUser", type, value)
+        },
+        {wait: 300}
+    )
+
     /** 全选框是否为半选状态 */
     const checkIndeterminate = useMemo(() => {
         if (checked) return false
@@ -133,15 +145,13 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         return false
     }, [checked, selected])
 
-    const [hidden, setHidden] = useState<boolean>(false)
-
     return (
         <div className={styles["plugin-details-wrapper"]}>
             <div className={classNames(styles["filter-wrapper"], {[styles["filter-hidden-wrapper"]]: hidden})}>
                 <div className={styles["filter-header"]}>
                     <div className={styles["header-search"]}>
                         <div className={styles["title-style"]}>{title}</div>
-                        <FuncSearch onSearch={() => {}} />
+                        <FuncSearch onSearch={onSearch.run} />
                     </div>
                     {filterNode || null}
                     <div className={styles["filter-body"]}>
@@ -182,7 +192,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                         <div className={styles["divider-style"]}></div>
                         <YakitButton
                             type='text2'
-                            icon={<OutlineArrowsexpandIcon />}
+                            icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
                             onClick={() => setHidden(!hidden)}
                         />
                     </div>
@@ -200,7 +210,9 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
         let arr: string[] = []
         try {
             arr = JSON.parse(tags || "[]")
-        } catch (error) {}
+        } catch (error) {
+            arr = []
+        }
         return arr
     }, [tags])
 

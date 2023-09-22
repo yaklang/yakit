@@ -9,13 +9,15 @@ import {
 } from "../baseTemplate"
 import {SolidBadgecheckIcon, SolidBanIcon} from "@/assets/icon/solid"
 import {
+    OutlineClouddownloadIcon,
     OutlineCursorclickIcon,
+    OutlineFilterIcon,
     OutlineLightbulbIcon,
     OutlineQuestionmarkcircleIcon,
     OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
 import {Tabs, Tooltip} from "antd"
@@ -25,11 +27,14 @@ import {YakEditor} from "@/utils/editors"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginInfoRefProps, PluginSettingRefProps} from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
-import {ApplicantIcon, AuthorImg} from "../funcTemplate"
+import {ApplicantIcon, AuthorImg, FuncBtn} from "../funcTemplate"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
+import {IconOutlinePencilAltIcon} from "@/assets/newIcon"
+import {PluginBaseParamProps, PluginSettingParamProps} from "../pluginsType"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -39,13 +44,21 @@ interface PluginManageDetailProps {
     info: API.YakitPluginDetail
     allCheck: boolean
     onCheck: (value: boolean) => any
+    selectList: string[]
+    optCheck: (data: API.YakitPluginDetail, value: boolean) => any
     data: API.YakitPluginListResponse
-    selected: number
     onBack: () => any
+    loadMoreData: () => any
 }
 
 export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => {
-    const {info, allCheck, onCheck, data, selected, onBack} = props
+    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData} = props
+
+    // 选中插件的数量
+    const selectNum = useMemo(() => {
+        if (allCheck) return data.pagemeta.total
+        else return selectList.length
+    }, [allCheck, selectList])
 
     const [loading, setLoading] = useState<boolean>(false)
     const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
@@ -55,15 +68,11 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
         else setPlugin(undefined)
     }, [info])
 
-    const pluginInfoTags = useMemo(() => {
-        let arr: string[] = []
-        try {
-            arr = JSON.parse(plugin?.tags || "") || []
-        } catch (error) {}
-        return arr
-    }, [plugin])
-
+    // 插件基础信息-相关逻辑
     const infoRef = useRef<PluginInfoRefProps>(null)
+    const [infoParams, setInfoParams, getInfoParams] = useGetState<PluginBaseParamProps>({
+        name: ""
+    })
     // 获取基础信息组件内容
     const fetchInfoData = useMemoizedFn(() => {
         if (infoRef.current) {
@@ -71,7 +80,16 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
         }
         return undefined
     })
+    // DNSLog和HTTP数据包变形开关实质改变插件的tag
+    const onTagsCallback = useMemoizedFn(() => {
+        setInfoParams({...(fetchInfoData() || getInfoParams())})
+    })
+    // 插件配置信息-相关逻辑
     const settingRef = useRef<PluginSettingRefProps>(null)
+    const [settingParams, setSettingParams, getSettingParams] = useGetState<PluginSettingParamProps>({
+        params: [],
+        content: ""
+    })
     // 获取配置信息组件内容
     const fetchSettingData = useMemoizedFn(() => {
         if (settingRef.current) {
@@ -89,22 +107,53 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
     const onNoPass = useMemoizedFn(() => {})
     const onPass = useMemoizedFn(() => {})
     const onRun = useMemoizedFn(() => {})
+    // 返回
+    const onPluginBack = useMemoizedFn(() => {
+        onBack()
+        setPlugin(undefined)
+    })
 
     if (!plugin) return null
 
     return (
         <PluginDetails<API.YakitPluginDetail>
             title='插件管理'
+            filterExtra={
+                <div className={styles["details-filter-extra-wrapper"]}>
+                    <YakitButton
+                        type='text2'
+                        icon={<OutlineFilterIcon />}
+                        onClick={() => setShowReason({visible: true, type: "del"})}
+                    />
+                    <div style={{height: 12}} className='divider-style'></div>
+                    <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineClouddownloadIcon />}
+                            onClick={() => setShowReason({visible: true, type: "del"})}
+                        />
+                    </Tooltip>
+                    <div style={{height: 12}} className='divider-style'></div>
+                    <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineTrashIcon />}
+                            onClick={() => setShowReason({visible: true, type: "del"})}
+                        />
+                    </Tooltip>
+                </div>
+            }
             checked={allCheck}
             onCheck={onCheck}
             total={data.pagemeta.total}
-            selected={selected}
+            selected={selectNum}
             listProps={{
                 rowKey: "uuid",
                 data: data.data,
-                loadMoreData: () => {},
+                loadMoreData: loadMoreData,
                 classNameRow: styles["details-opt-wrapper"],
                 renderRow: (info, i) => {
+                    const check = allCheck || selectList.includes(info.uuid)
                     return (
                         <div
                             className={classNames(styles["details-wrapper-item-opt"], {
@@ -113,7 +162,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                         >
                             <div className={styles["opt-wrapper"]}>
                                 <div className={styles["opt-info"]}>
-                                    <YakitCheckbox />
+                                    <YakitCheckbox checked={check} onChange={(e) => optCheck(info, e.target.checked)} />
                                     <AuthorImg src={info.head_img || ""} />
                                     <div
                                         className={classNames(styles["text-style"], "yakit-content-single-ellipsis")}
@@ -148,10 +197,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                 loading: loading,
                 defItemHeight: 46
             }}
-            onBack={() => {
-                onBack()
-                setPlugin(undefined)
-            }}
+            onBack={onPluginBack}
         >
             <div className={styles["details-content-wrapper"]}>
                 <Tabs tabPosition='right' className='plugins-tabs'>
@@ -164,6 +210,16 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                                 tags={plugin.tags}
                                 extraNode={
                                     <div className={styles["plugin-info-extra-header"]}>
+                                        {true && (
+                                            <>
+                                                <YakitButton
+                                                    type='text2'
+                                                    icon={<IconOutlinePencilAltIcon />}
+                                                    onClick={() => setShowReason({visible: true, type: "del"})}
+                                                />
+                                                <div style={{height: 12}} className='divider-style'></div>
+                                            </>
+                                        )}
                                         <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
                                             <YakitButton
                                                 type='text2'
@@ -172,49 +228,31 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                                             />
                                         </Tooltip>
 
-                                        <YakitButton
-                                            className={styles["btn-style"]}
-                                            type='outline1'
-                                            colors='danger'
-                                            onClick={() => setShowReason({visible: true, type: "nopass"})}
-                                        >
-                                            <SolidBanIcon />
-                                            不通过
-                                        </YakitButton>
-                                        <Tooltip title='不通过' overlayClassName='plugins-tooltip'>
-                                            <YakitButton
-                                                className={styles["btn-icon"]}
-                                                type='outline1'
-                                                colors='danger'
-                                                icon={<SolidBanIcon />}
-                                                onClick={() => setShowReason({visible: true, type: "nopass"})}
-                                            />
-                                        </Tooltip>
-
-                                        <YakitButton className={styles["btn-style"]} colors='success' onClick={onPass}>
-                                            <SolidBadgecheckIcon />
-                                            通过
-                                        </YakitButton>
-                                        <Tooltip title='通过' overlayClassName='plugins-tooltip'>
-                                            <YakitButton
-                                                className={styles["btn-icon"]}
-                                                colors='success'
-                                                icon={<SolidBadgecheckIcon />}
-                                                onClick={onPass}
-                                            />
-                                        </Tooltip>
-
-                                        <YakitButton className={styles["btn-style"]} onClick={onRun}>
-                                            <OutlineCursorclickIcon />
-                                            去使用
-                                        </YakitButton>
-                                        <Tooltip title='去使用' overlayClassName='plugins-tooltip'>
-                                            <YakitButton
-                                                className={styles["btn-icon"]}
-                                                icon={<OutlineCursorclickIcon />}
-                                                onClick={onRun}
-                                            />
-                                        </Tooltip>
+                                        {false && (
+                                            <>
+                                                <FuncBtn
+                                                    maxWidth={1100}
+                                                    type='outline1'
+                                                    colors='danger'
+                                                    icon={<SolidBanIcon />}
+                                                    name={"不通过"}
+                                                    onClick={() => setShowReason({visible: true, type: "nopass"})}
+                                                />
+                                                <FuncBtn
+                                                    maxWidth={1100}
+                                                    colors='success'
+                                                    icon={<SolidBadgecheckIcon />}
+                                                    name={"通过"}
+                                                    onClick={onPass}
+                                                />
+                                            </>
+                                        )}
+                                        <FuncBtn
+                                            maxWidth={1100}
+                                            icon={<OutlineCursorclickIcon />}
+                                            name={"去使用"}
+                                            onClick={onRun}
+                                        />
                                     </div>
                                 }
                                 img={plugin.head_img}
@@ -223,40 +261,56 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                                 updated_at={plugin.updated_at}
                             />
 
-                            <div className={styles["plugin-info-body"]}>
-                                <div className={styles["plugin-modify-info"]}>
-                                    <div className={styles["modify-advice"]}>
-                                        <div className={styles["advice-icon"]}>
-                                            <OutlineLightbulbIcon />
-                                        </div>
-                                        <div className={styles["advice-body"]}>
-                                            <div className={styles["advice-content"]}>
-                                                <div className={styles["content-title"]}>修改内容描述</div>
-                                                <div className={styles["content-style"]}>
-                                                    这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，
+                            {false ? (
+                                <div className={styles["plugin-info-body"]}>
+                                    <div className={styles["plugin-modify-info"]}>
+                                        <div className={styles["modify-advice"]}>
+                                            <div className={styles["advice-icon"]}>
+                                                <OutlineLightbulbIcon />
+                                            </div>
+                                            <div className={styles["advice-body"]}>
+                                                <div className={styles["advice-content"]}>
+                                                    <div className={styles["content-title"]}>修改内容描述</div>
+                                                    <div className={styles["content-style"]}>
+                                                        这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，
+                                                    </div>
+                                                </div>
+                                                <div className={styles["advice-user"]}>
+                                                    <AuthorImg src={plugin?.head_img || ""} />
+                                                    {plugin?.authors || ""}
+                                                    <ApplicantIcon />
                                                 </div>
                                             </div>
-                                            <div className={styles["advice-user"]}>
-                                                <AuthorImg src={plugin.head_img} />
-                                                {plugin.authors}
-                                                <ApplicantIcon />
-                                            </div>
+                                        </div>
+                                        <PluginModifyInfo
+                                            ref={infoRef}
+                                            kind='bug'
+                                            data={infoParams}
+                                            tagsCallback={onTagsCallback}
+                                        />
+                                    </div>
+                                    <div className={styles["plugin-setting-info"]}>
+                                        <div className={styles["setting-header"]}>插件配置</div>
+                                        <div className={styles["setting-body"]}>
+                                            <PluginModifySetting
+                                                ref={settingRef}
+                                                type='yak'
+                                                tags={infoParams.tags || []}
+                                                setTags={(value) => setInfoParams({...getInfoParams(), tags: value})}
+                                                data={settingParams}
+                                            />
+                                            <PluginEditorDiff />
                                         </div>
                                     </div>
-                                    <PluginModifyInfo ref={infoRef} kind='bug' />
                                 </div>
-
-                                <div className={styles["plugin-setting-info"]}>
-                                    <div className={styles["setting-header"]}>插件配置</div>
-                                    <div className={styles["setting-body"]}>
-                                        <PluginModifySetting type='yak' tags={[]} setTags={() => {}} />
-                                        <PluginEditorDiff />
-                                    </div>
+                            ) : (
+                                <div className={styles["details-editor-wrapper"]}>
+                                    <YakitEditor type={"yak"} value={"1231242112515"} />
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </TabPane>
-                    <TabPane tab='日 志' key='log'>
+                    <TabPane tab='日 志(监修中)' key='log' disabled={true}>
                         <div></div>
                     </TabPane>
                 </Tabs>
