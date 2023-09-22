@@ -16,6 +16,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
     OutlineCalendarIcon,
     OutlineClouddownloadIcon,
+    OutlineDatabasebackupIcon,
     OutlineDotshorizontalIcon,
     OutlineLockclosedIcon,
     OutlineLockopenIcon,
@@ -44,18 +45,25 @@ import {
     defaultResponse,
     defaultSearch,
     pluginStatusToName,
-    pluginTypeList
+    pluginTypeList,
+    statusTag
 } from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {PluginManageDetail} from "../manage/PluginManageDetail"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
-import {PluginUserListProps, PluginUserProps} from "./PluginUserType"
+import {
+    OnlineRecycleExtraOperateProps,
+    PluginRecycleListProps,
+    PluginUserListProps,
+    PluginUserProps
+} from "./PluginUserType"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginUser.module.scss"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 const userPluginTypeList = [
     {
@@ -134,40 +142,75 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         <FuncSearch onSearch={onKeywordAndUser} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
-                            <FuncBtn
-                                maxWidth={1050}
-                                icon={<OutlineClouddownloadIcon />}
-                                type='outline2'
-                                size='large'
-                                name={isSelectNum ? "下载" : "一键下载"}
-                                onClick={() => onDownload()}
-                            />
-                            <FuncBtn
-                                maxWidth={1050}
-                                icon={<OutlineClouddownloadIcon />}
-                                type='outline2'
-                                size='large'
-                                name='清空'
-                                onClick={() => onRemove()}
-                            />
-                            <FuncBtn
-                                maxWidth={1050}
-                                icon={<SolidPluscircleIcon />}
-                                size='large'
-                                name='新建插件'
-                                onClick={onNewAddPlugin}
-                            />
+                            {userPluginType === "myOnlinePlugin" ? (
+                                <>
+                                    <FuncBtn
+                                        maxWidth={1050}
+                                        icon={<OutlineClouddownloadIcon />}
+                                        type='outline2'
+                                        size='large'
+                                        name={isSelectNum ? "下载" : "一键下载"}
+                                        onClick={() => onDownload()}
+                                    />
+                                    <FuncBtn
+                                        maxWidth={1050}
+                                        icon={<OutlineClouddownloadIcon />}
+                                        type='outline2'
+                                        size='large'
+                                        name='清空'
+                                        onClick={() => onRemove()}
+                                    />
+                                    <FuncBtn
+                                        maxWidth={1050}
+                                        icon={<SolidPluscircleIcon />}
+                                        size='large'
+                                        name='新建插件'
+                                        onClick={onNewAddPlugin}
+                                    />
+                                </>
+                            ) : (
+                                <>
+                                    <FuncBtn
+                                        maxWidth={1050}
+                                        icon={<OutlineClouddownloadIcon />}
+                                        type='outline2'
+                                        size='large'
+                                        name='清空'
+                                        onClick={() => {}}
+                                    />
+                                    <FuncBtn
+                                        maxWidth={1050}
+                                        icon={<OutlineDatabasebackupIcon />}
+                                        size='large'
+                                        name='还原'
+                                        onClick={() => {}}
+                                    />
+                                </>
+                            )}
                         </div>
                     </div>
                 }
             >
-                <div className={classNames(styles["plugin-user-list"])}>
+                <div
+                    className={classNames(styles["plugin-user-list"], {
+                        [styles["plugin-user-list-hidden"]]: userPluginType === "recycle"
+                    })}
+                    tabIndex={userPluginType === "recycle" ? -1 : 0}
+                >
                     <PluginUserList
                         pluginState={pluginState}
                         searchUser={searchUser}
                         setIsShowDetails={setIsShowDetails}
                         setIsSelectNum={setIsSelectNum}
                     />
+                </div>
+                <div
+                    className={classNames(styles["plugin-recycle-list"], {
+                        [styles["plugin-user-list-hidden"]]: userPluginType === "myOnlinePlugin"
+                    })}
+                    tabIndex={userPluginType === "myOnlinePlugin" ? -1 : 0}
+                >
+                    <PluginRecycleList />
                 </div>
             </PluginsLayout>
         </>
@@ -198,7 +241,6 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
         if (allCheck) return response.pagemeta.total
         else return selectList.length
     }, [allCheck, selectList])
-
     // 页面初始化的首次列表请求
     useEffect(() => {
         fetchList(true)
@@ -238,7 +280,6 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
                 }, 300)
             })
     })
-
     const onDelTag = useMemoizedFn((value?: string) => {
         if (!value) setFilters({...filters, tags: []})
         else setFilters({...filters, tags: (filters.tags || []).filter((item) => item !== value)})
@@ -437,5 +478,186 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
                 </PluginsList>
             </PluginsContainer>
         </>
+    )
+})
+
+const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) => {
+    /** 是否为加载更多 */
+    const [loading, setLoading] = useState<boolean>(false)
+    /** 是否为首页加载 */
+    const isLoadingRef = useRef<boolean>(true)
+    const [response, setResponse] = useState<API.YakitPluginListResponse>(cloneDeep(defaultResponse))
+    const [selectList, setSelectList] = useState<string[]>([])
+    const [isList, setIsList] = useState<boolean>(true)
+    const [hasMore, setHasMore] = useState<boolean>(true)
+
+    const [allCheck, setAllCheck] = useState<boolean>(false)
+
+    // 页面初始化的首次列表请求
+    useEffect(() => {
+        fetchList(true)
+    }, [])
+
+    const fetchList = useMemoizedFn((reset?: boolean) => {
+        if (loading) return
+
+        setLoading(true)
+
+        const params: PluginListPageMeta = !!reset
+            ? {page: 1, limit: 20}
+            : {
+                  page: response.pagemeta.page + 1,
+                  limit: response.pagemeta.limit || 20
+              }
+
+        apiFetchList(params)
+            .then((res: API.YakitPluginListResponse) => {
+                if (!res.data) res.data = []
+
+                const data = false && res.pagemeta.page === 1 ? res.data : response.data.concat(res.data)
+                // const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
+                // setHasMore(!isMore)
+                // console.log(data)
+
+                setResponse({
+                    ...res,
+                    data: [...data]
+                })
+                isLoadingRef.current = false
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                    isLoadingRef.current = false
+                }, 300)
+            })
+    })
+    /** 单项勾选|取消勾选 */
+    const optCheck = useMemoizedFn((data: API.YakitPluginDetail, value: boolean) => {
+        // 全选情况时的取消勾选
+        if (allCheck) {
+            setSelectList(response.data.map((item) => item.uuid).filter((item) => item !== data.uuid))
+            setAllCheck(false)
+            return
+        }
+        // 单项勾选回调
+        if (value) {
+            setSelectList([...selectList, data.uuid])
+        } else {
+            const newSelectList = selectList.filter((item) => item !== data.uuid)
+            setSelectList(newSelectList)
+        }
+    })
+    // 滚动更多加载
+    const onUpdateList = useMemoizedFn((reset?: boolean) => {
+        fetchList()
+    })
+    /**全选 */
+    const onCheck = useMemoizedFn((value: boolean) => {
+        if (value) setSelectList([])
+        setAllCheck(value)
+    })
+    /** 单项点击回调 */
+    const optClick = useMemoizedFn((data: API.YakitPluginDetail) => {})
+    // 选中插件的数量
+    const selectNum = useMemo(() => {
+        if (allCheck) return response.pagemeta.total
+        else return selectList.length
+    }, [allCheck, selectList])
+    const onDelTag = useMemoizedFn(() => {})
+    const onSetVisible = useMemoizedFn(() => {})
+    /** 单项额外操作组件 */
+    const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
+        return <OnlineRecycleExtraOperate uuid={data.uuid} onRemove={onRemove} onReduction={onReduction} />
+    })
+    /** 单项副标题组件 */
+    const optSubTitle = useMemoizedFn((data: API.YakitPluginDetail) => {
+        return statusTag[`${data.status}`]
+    })
+    const onRemove = useMemoizedFn((uuid: string) => {})
+    const onReduction = useMemoizedFn((uuid: string) => {})
+    return (
+        <>
+            <PluginsList
+                checked={allCheck}
+                onCheck={onCheck}
+                isList={isList}
+                setIsList={setIsList}
+                total={response.pagemeta.total}
+                selected={selectNum}
+                tag={[]}
+                onDelTag={onDelTag}
+                visible={true}
+                setVisible={onSetVisible}
+            >
+                <ListShowContainer<API.YakitPluginDetail>
+                    isList={isList}
+                    data={response.data}
+                    gridNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                        const {data} = info
+                        const check = allCheck || selectList.includes(data.uuid)
+                        return (
+                            <GridLayoutOpt
+                                data={data}
+                                checked={check}
+                                onCheck={optCheck}
+                                title={data.script_name}
+                                type={data.type}
+                                tags={data.tags}
+                                help={data.help || ""}
+                                img={data.head_img || ""}
+                                user={data.authors || ""}
+                                // prImgs={data.prs}
+                                time={data.updated_at}
+                                subTitle={optSubTitle}
+                                extraFooter={optExtraNode}
+                                onClick={optClick}
+                            />
+                        )
+                    }}
+                    gridHeight={210}
+                    listNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                        const {data} = info
+                        const check = allCheck || selectList.includes(data.uuid)
+                        return (
+                            <ListLayoutOpt
+                                data={data}
+                                checked={check}
+                                onCheck={optCheck}
+                                img={data.head_img}
+                                title={data.script_name}
+                                help={data.help || ""}
+                                time={data.updated_at}
+                                subTitle={optSubTitle}
+                                extraNode={optExtraNode}
+                                onClick={optClick}
+                            />
+                        )
+                    }}
+                    listHeight={73}
+                    loading={loading}
+                    hasMore={hasMore}
+                    updateList={onUpdateList}
+                />
+            </PluginsList>
+        </>
+    )
+})
+
+const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps> = React.memo((props) => {
+    const {uuid, onRemove, onReduction} = props
+    const onRemoveClick = useMemoizedFn(() => {
+        onRemove(uuid)
+    })
+    const onReductionClick = useMemoizedFn(() => {
+        onReduction(uuid)
+    })
+    return (
+        <div className={styles["plugin-recycle-extra-node"]}>
+            <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onRemoveClick} />
+            <YakitButton icon={<OutlineDatabasebackupIcon />} onClick={onReductionClick}>
+                还原
+            </YakitButton>
+        </div>
     )
 })
