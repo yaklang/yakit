@@ -155,6 +155,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [sequenceList, setSequenceList] = useState<SequenceProps[]>(
         queryFuzzerSequenceCacheDataByGroupId(propsGroupId)
     )
+    
     const [errorIndex, setErrorIndex] = useState<number>(-1)
 
     const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
@@ -1210,8 +1211,8 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                 />
             </div>
             <div>
-                {/* <ShareImportExportData module='fuzzer' supportShare={false} supportImport={false} getFuzzerRequestParams={getHttpParams} /> */}
-                <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()}>
+                <ShareImportExportData module='fuzzer' supportShare={false} supportImport={true} getFuzzerRequestParams={getHttpParams} />
+                <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()} style={{ marginLeft: 8 }}>
                     展示全部响应
                 </YakitButton>
             </div>
