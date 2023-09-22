@@ -21,6 +21,17 @@ export interface GlobalNetworkConfig {
     DNSFallbackTCP: boolean
     DNSFallbackDoH: boolean
     CustomDoHServers: string[]
+
+    ClientCertificates: ClientCertificate[]
+}
+
+interface ClientCertificate {
+    CrtPem: Uint8Array
+    KeyPem: Uint8Array
+    CaCertificates: Uint8Array[]
+
+    Pkcs12Bytes: Uint8Array
+    Pkcs12Password: string
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -61,7 +72,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         })
                     }}
                 >
-                    <Divider orientation={"left"} style={{marginTop:"0px"}}>DNS 配置</Divider>
+                    <Divider orientation={"left"} style={{marginTop: "0px"}}>DNS 配置</Divider>
                     <SwitchItem
                         label={"禁用系统 DNS"}
                         setValue={(DisableSystemDNS) => setParams({...params, DisableSystemDNS})}
@@ -98,6 +109,14 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             mode={"tags"}
                         />
                     )}
+                    <Divider orientation={"left"} style={{marginTop: "0px"}}>TLS 客户端证书（双向认证）</Divider>
+                    <Form.Item label={"添加证书"}>
+                        {/*
+                            PEM: 3 - CERT / KEY / CA-CERT
+                            PKCS12(P12/PFX)(.p12 .pfx): File + Password
+                        */}
+                        <YakitButton type={"outline2"}>添加 TLS 客户端证书</YakitButton>
+                    </Form.Item>
                     <Form.Item colon={false} label={" "}>
                         <Space>
                             <YakitButton type='primary' htmlType='submit'>
