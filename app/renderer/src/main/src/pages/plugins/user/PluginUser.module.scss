@@ -1,9 +1,23 @@
-.plugin-user-list {
+%plugin-list {
     display: flex;
     flex-direction: column;
     flex: 1;
     overflow: hidden;
     height: 100%;
+}
+.plugin-user-list {
+    @extend %plugin-list;
+    transform: translate(0, 0);
+}
+.plugin-recycle-list {
+    @extend %plugin-list;
+    padding: 12px 16px;
+    transform: translate(0, -100%);
+}
+.plugin-user-list-hidden {
+    transform: translate(-100%, -100%);
+    opacity: 0;
+    z-index: -99999;
 }
 .plugin-user-extra-node {
     display: flex;
@@ -23,6 +37,15 @@
         width: 16px;
         height: 16px;
     }
+    path {
+        stroke-width: 1.5;
+    }
+}
+
+.plugin-recycle-extra-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     path {
         stroke-width: 1.5;
     }
