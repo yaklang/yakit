@@ -141,7 +141,6 @@ export interface HTTPFuzzerPageProp {
     system?: string
     shareContent?: string
     id: string
-    advancedConfigValue: AdvancedConfigValueProps
 }
 
 export interface FuzzerResponse {

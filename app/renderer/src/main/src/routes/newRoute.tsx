@@ -435,7 +435,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                             system={params?.system}
                             id={params?.id || ""}
                             shareContent={params?.shareContent}
-                            advancedConfigValue={params?.advancedConfigValue}
                         />
                     </WebFuzzerPage>
                 </Suspense>
