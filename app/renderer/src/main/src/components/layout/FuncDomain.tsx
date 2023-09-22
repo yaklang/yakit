@@ -1013,7 +1013,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                     type: "white",
                     footer: null,
                     maskClosable: false,
-                    width:580,
+                    width:700,
                     // onCancel: () => y.destroy(),
                     content: <ConfigNetworkPage onClose={() => m.destroy()} />
                 })
