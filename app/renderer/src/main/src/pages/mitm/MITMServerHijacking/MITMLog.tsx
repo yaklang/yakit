@@ -80,6 +80,11 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     const logRef = useRef(null)
     const [inViewport] = useInViewport(logRef)
 
+    const [flowRequest, setFlowRequest] = useState<Uint8Array>()
+    const [flowResponse,setFlowResponse] = useState<Uint8Array>()
+    const [flowRequestLoad,setFlowRequestLoad] = useState<boolean>(false)
+    const [flowResponseLoad,setFlowResponseLoad] = useState<boolean>(false)
+
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
             {
@@ -298,25 +303,53 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
 
     const getHTTPFlowById = useDebounceFn(
         (id: number, rowDate: HTTPFlow) => {
-            // 请求或响应只要有一个为0就走接口拿取数据
-            if (Uint8ArrayToString(rowDate.Request) && Uint8ArrayToString(rowDate.Response)) {
-                setDetailLoading(false)
-                setFlow(rowDate)
+            setFlowRequestLoad(false)
+            setFlowResponseLoad(false)
+            setFlow(rowDate)
+            setFlowRequest(undefined)
+            setFlowResponse(undefined)
+
+            // 是否获取Request
+            let isGetRequest:boolean = true
+            let isGetResponse:boolean = true
+
+            // 请求不为空直接使用
+            if(Uint8ArrayToString(rowDate.Request)){
+                isGetRequest = false
+                setFlowRequest(rowDate.Request)
                 setFirstFull(false)
-            } else {
-                setDetailLoading(true)
+            }
+            if(Uint8ArrayToString(rowDate.Response)){
+                isGetResponse = false
+                setFlowResponse(rowDate.Response)
+                setFirstFull(false)
+            }
+            // 请求或响应只要有一个为0就走接口拿取数据
+            if(isGetRequest || isGetResponse){
+                isGetRequest&&setFlowRequestLoad(true)
+                isGetResponse&&setFlowResponseLoad(true)
                 ipcRenderer
                     .invoke("GetHTTPFlowById", {Id: id})
                     .then((i: HTTPFlow) => {
                         if (i.Id == lasetIdRef.current) {
-                            setDetailLoading(false)
+                            if(isGetRequest){
+                                setFlowRequest(i?.Request)
+                            }
+                            if(isGetResponse){
+                                setFlowResponse(i?.Response)
+                            }
                             setFlow(i)
                             setFirstFull(false)
                         }
                     })
                     .catch((e: any) => {
-                        setTimeout(() => setDetailLoading(false), 300)
                         yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                        setFlowRequestLoad(false)
+                        setFlowResponseLoad(false)
+                        }, 300)
                     })
             }
         },
@@ -584,7 +617,10 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                         <HTTPFlowDetailRequestAndResponse
                             id={flow.Id}
                             noHeader={true}
-                            loading={detailLoading}
+                            flowRequest={flowRequest}
+                            flowResponse={flowResponse}
+                            flowRequestLoad={flowRequestLoad}
+                            flowResponseLoad={flowResponseLoad}
                             sendToWebFuzzer={true}
                             defaultHttps={selected?.IsHTTPS}
                             flow={flow}

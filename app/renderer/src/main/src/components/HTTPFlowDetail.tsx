@@ -762,7 +762,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
 interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flow?: HTTPFlow
-    loading?: boolean
     flowRequest?: Uint8Array
     flowResponse?: Uint8Array
     flowRequestLoad?: boolean
@@ -775,7 +774,7 @@ interface HTTPFlowBareProps {
 }
 
 export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAndResponseProps> = React.memo((props) => {
-    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, id, Tags,loading=false, flowRequest,flowResponse,flowRequestLoad,flowResponseLoad} = props
+    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, id, Tags, flowRequest,flowResponse,flowRequestLoad,flowResponseLoad} = props
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
         if (!flow?.RawRequestBodyBase64) return {}
@@ -945,7 +944,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noLineNumber={true}
                         sendToWebFuzzer={sendToWebFuzzer}
                         defaultHeight={defaultHeight}
-                        loading={flowRequestLoad||loading}
+                        loading={flowRequestLoad}
                         defaultHttps={defaultHttps}
                         hideSearch={true}
                         noHex={true}
@@ -1026,7 +1025,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isResponse={true}
                         noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}
-                        loading={flowResponseLoad||loading}
+                        loading={flowResponseLoad}
                         originValue={originRspValue}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
