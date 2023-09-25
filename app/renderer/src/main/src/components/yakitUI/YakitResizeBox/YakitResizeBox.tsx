@@ -367,6 +367,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         bodyResize()
     }, [bodyWidth, bodyHeight])
 
+    
+
     return (
         <div ref={bodyRef} style={{...style, flexFlow: `${isVer ? "column" : "row"}`}} className={styles["resize-box"]}>
             <ReactResizeDetector

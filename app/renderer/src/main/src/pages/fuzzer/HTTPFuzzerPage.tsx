@@ -88,13 +88,16 @@ import {
     OutlineBeakerIcon,
     OutlineExportIcon,
     OutlinePayloadIcon,
-    OutlineXIcon
+    OutlineXIcon,
+    OutlineCodeIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 import {CopyableField} from "@/utils/inputUtil"
 import { YakitCopyText } from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import {useFuzzerSequence} from "@/store/fuzzerSequence"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1425,6 +1428,52 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setCurrentPage(Number(data.Total) + 1)
             })
     })
+    const handleGenerateYaml = useMemoizedFn((e: {clientX: number; clientY: number}) => {
+        showByRightContext(
+            {
+                width: 150,
+                data: [
+                    {key: "pathTemplate", label: "生成为 Path 模板"},
+                    {key: "rawTemplate", label: "生成为 Raw 模板"}
+                ],
+                onClick: ({key}) => {
+                    switch (key) {
+                        case "pathTemplate":
+                            handleSkipPluginDebuggerPage("path")
+                            break
+                        case "rawTemplate":
+                            handleSkipPluginDebuggerPage("raw")
+                            break
+                        default:
+                            break
+                    }
+                }
+            },
+            e.clientX,
+            e.clientY
+        )
+    })
+    // 跳转插件调试页面
+    const handleSkipPluginDebuggerPage = async (tempType: "path" | "raw") => {
+        const requests = getFuzzerRequestParams()
+        const params = {
+            Requests: {Requests: Array.isArray(requests) ? requests : [getFuzzerRequestParams()]},
+            TemplateType: tempType
+        }
+        try {
+            const {Status, YamlContent} = await ipcRenderer.invoke("ExportHTTPFuzzerTaskToYaml", params)
+            if (Status.Ok) {
+                ipcRenderer.invoke("send-to-tab", {
+                    type: "**debug-plugin",
+                    data: {generateYamlTemplate: true, YamlContent}
+                })
+            } else {
+                throw new Error(Status.Reason)
+            }
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
 
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -1576,7 +1625,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             getShareContent={getShareContent}
                             getFuzzerRequestParams={getFuzzerRequestParams}
                         />
-                        {/* <Divider type='vertical' style={{ margin: "0 8px" }} /> */}
+                        <Divider type='vertical' style={{margin: 8}} />
+                        <YakitButton
+                            type='primary'
+                            icon={<OutlineCodeIcon />}
+                            onClick={handleGenerateYaml}
+                            onContextMenuCapture={handleGenerateYaml}
+                        >
+                            生成 Yaml 模板
+                        </YakitButton>
                     </div>
                 </div>
                 <YakitResizeBox

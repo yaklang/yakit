@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState, useMemo} from "react"
 import {YakScript} from "../../invoker/schema"
-import {Card, Col, Popover, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip, Pagination, Tag} from "antd"
+import {Card, Col, Popover, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag} from "antd"
 import {HTTPFlowTable, LogLevelToCode, TableFilterDropdownForm} from "../../../components/HTTPFlowTable/HTTPFlowTable"
 import {YakitLogFormatter} from "../../invoker/YakitLogFormatter"
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer"
@@ -40,6 +40,7 @@ import {EngineConsole} from "@/components/baseConsole/BaseConsole";
 import {isEnpriTrace} from "@/utils/envfile"
 import {HTTPHistory} from "@/components/HTTPHistory";
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow";
+import YakitTabs from "@/components/yakitUI/YakitTabs/YakitTabs"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -285,10 +286,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             {progressBars.length > 0 && (
                 <div style={{marginTop: 4, marginBottom: 8}}>{progressBars.map((i) => i.node)}</div>
             )}
-            <Tabs
+            <YakitTabs
+                type="card"
                 style={{flex: 1, overflow: "hidden", minHeight: "55%"}}
                 className={"main-content-tabs no-theme-tabs"}
-                size={"small"}
                 activeKey={active}
                 onChange={(activeKey) => {
                     setActive(activeKey)
@@ -299,17 +300,17 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             >
                 {(finalFeatures || []).map((i, index) => {
                     return (
-                        <Tabs.TabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
+                        <YakitTabs.YakitTabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
                             <YakitFeatureRender
                                 params={i.params}
                                 feature={i.feature}
                                 execResultsLog={feature || []}
                                 excelName={YakitFeatureTabName(i.feature, i.params)}
                             />
-                        </Tabs.TabPane>
+                        </YakitTabs.YakitTabPane>
                     )
                 })}
-                <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
+                <YakitTabs.YakitTabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
                     {
                         <>
                             {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
@@ -348,9 +349,9 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                             </AutoCard>
                         </>
                     }
-                </Tabs.TabPane>
+                </YakitTabs.YakitTabPane>
                 {!!props?.risks && props.risks.length > 0 && (
-                    <Tabs.TabPane tab={<div>
+                    <YakitTabs.YakitTabPane tab={<div>
                         {`漏洞与风险`}
                         <Tag style={{marginLeft: 4}} color={"red"}>{props.risks.length}</Tag>
                     </div>} key={"risk"}>
@@ -367,15 +368,15 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                             </div>} */}
                             </Space>
                         </AutoCard>
-                    </Tabs.TabPane>
+                    </YakitTabs.YakitTabPane>
                 )}
-                <Tabs.TabPane tab={"Console"} key={"console"}>
+                <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>
                     <div style={{width: "100%", height: "100%"}}>
                         <EngineConsole isMini={true}/>
                     </div>
-                </Tabs.TabPane>
-                {!!props.runtimeId && <Tabs.TabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
-                    <div style={{width: "100%", height: "100%"}}>
+                </YakitTabs.YakitTabPane>
+                {!!props.runtimeId && <YakitTabs.YakitTabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
+                    <div style={{width: "100%", height: "100%", paddingTop: 12}}>
                         <HTTPFlowTable
                             noHeader={true} inViewport={true}
                             noDeleteAll={true}
@@ -385,27 +386,27 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                             }}
                         />
                     </div>
-                </Tabs.TabPane>}
-                {/*{props.fromPlugin && <Tabs.TabPane tab={"插件所有流量"} key={"current-plugin-flow"}>*/}
+                </YakitTabs.YakitTabPane>}
+                {/*{props.fromPlugin && <YakitTabs.YakitTabPane tab={"插件所有流量"} key={"current-plugin-flow"}>*/}
                 {/*    <div style={{width: "100%", height: "100%"}}>*/}
                 {/*        <HTTPFlowTable*/}
                 {/*            noHeader={true}*/}
                 {/*            params={{FromPlugin: props.fromPlugin}}*/}
                 {/*        />*/}
                 {/*    </div>*/}
-                {/*</Tabs.TabPane>}*/}
+                {/*</YakitTabs.YakitTabPane>}*/}
                 {/*{!props.debugMode && props.onXtermRef ? (*/}
-                {/*    <Tabs.TabPane tab={"Console"} key={"console"}>*/}
+                {/*    <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>*/}
                 {/*        <div style={{width: "100%", height: "100%"}}>*/}
                 {/*            <CVXterm ref={xtermRef} options={{convertEol: true}}/>*/}
                 {/*        </div>*/}
-                {/*    </Tabs.TabPane>*/}
-                {/*) : <Tabs.TabPane tab={"Console"} key={"console"}>*/}
+                {/*    </YakitTabs.YakitTabPane>*/}
+                {/*) : <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>*/}
                 {/*    <div style={{width: "100%", height: "100%"}}>*/}
                 {/*        <EngineConsole isMini={true}/>*/}
                 {/*    </div>*/}
-                {/*</Tabs.TabPane>}*/}
-            </Tabs>
+                {/*</YakitTabs.YakitTabPane>}*/}
+            </YakitTabs>
             {/* </div> */}
         </div>
     )

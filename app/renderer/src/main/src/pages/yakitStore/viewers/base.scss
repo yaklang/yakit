@@ -115,3 +115,12 @@
     flex-direction: column;
     overflow: hidden;
 }
+
+.baseTopTabs {
+    :global {
+        .ant-tabs-nav {
+            position: relative;
+            top: 0;
+        }
+    }
+}

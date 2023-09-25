@@ -359,6 +359,7 @@ export const YakitStorePage: React.FC<YakitStorePageProp> = (props) => {
     const [numberOnline, setNumberOnline] = useState<number>()
     const [numberUser, setNumberUser] = useState<number>()
     const onSetPluginAndGetLocal = useMemoizedFn((p?: API.YakitPluginDetail) => {
+        console.log(123, p);
         if (!p) {
             setScript(undefined)
             setPlugin(undefined)

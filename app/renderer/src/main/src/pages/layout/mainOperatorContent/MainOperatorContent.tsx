@@ -341,7 +341,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "add-data-compare") addDataCompare(data)
             if (type === "**screen-recorder") openMenuPage({route: YakitRoute.ScreenRecorderPage})
             if (type === "**chaos-maker") openMenuPage({route: YakitRoute.DB_ChaosMaker})
-            if (type === "**debug-plugin") openMenuPage({route: YakitRoute.Beta_DebugPlugin})
+            if (type === "**debug-plugin") addPluginDebugger(data)
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
             if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
             if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
@@ -535,7 +535,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
     /** ---------- 新建插件 ---------- */
     const addYakScript = useMemoizedFn((res: any) => {
-        openMenuPage({route: YakitRoute.AddYakitScript})
+        const { moduleType = "yak", content = "" } = res || {}
+        openMenuPage(
+            {route: YakitRoute.AddYakitScript},
+            {
+                pageParams: {
+                    moduleType,
+                    content
+                }
+            }
+        )
     })
     /** ---------- 插件修改历史详情 ---------- */
     const addYakPluginJournalDetails = useMemoizedFn((res: any) => {
@@ -568,6 +577,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             )
         }
+    })
+    /** 插件调试 */
+    const addPluginDebugger = useMemoizedFn((res: any) => {
+        const { generateYamlTemplate = false, YamlContent = "" } = res || {}
+        openMenuPage(
+            {route: YakitRoute.Beta_DebugPlugin},
+            {
+                pageParams: {
+                    generateYamlTemplate,
+                    YamlContent
+                }
+            }
+        )
     })
     /**
      * @name 远程通信打开一个页面(新逻辑)
@@ -832,9 +854,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             })
         )
-        if (data.route === YakitRoute.AddYakitScript) {
-            setCurrentTabKey(YakitRoute.Plugin_Local)
-        }
         if (data.route === YakitRoute.HTTPFuzzer) {
             removeSubscribeClose(YakitRoute.HTTPFuzzer)
             // 关闭fuzzer一级页面时,清除缓存

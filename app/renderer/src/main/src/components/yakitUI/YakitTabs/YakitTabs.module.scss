@@ -1,0 +1,100 @@
+.yakitTabs {
+    height: 100%;
+    :global {
+        .ant-tabs {
+            height: 100%;
+            .ant-tabs-tab {
+                font-size: 12px;
+                .ant-tabs-tab-btn {
+                    color: #ccd2de;
+                }
+            }
+            .ant-tabs-tab-active {
+                .ant-tabs-tab-btn {
+                    color: var(--yakit-primary-5);
+                }
+            }
+            .ant-tabs-content {
+                height: 100%;
+            }
+        }
+        .yakit-tabs-card {
+            .ant-tabs-tab {
+                background-color: #eaecf3;
+                .ant-tabs-tab-btn {
+                    color: #31343F !important;
+                }
+            }
+            .ant-tabs-tab-active {
+                background-color: var(--yakit-primary-5);
+                .ant-tabs-tab-btn {
+                    color: #ffffff !important;
+                }
+            }
+        }
+        .yakit-tabs-card-top {
+            & > .ant-tabs-nav {
+                .ant-tabs-tab {
+                    padding: 4px 8px;
+                    border-top-left-radius: 4px !important;
+                    border-top-right-radius: 4px !important;
+                }
+            }
+        }
+        .yakit-tabs-card-bottom {
+            & > .ant-tabs-nav {
+                .ant-tabs-tab {
+                    padding: 4px 8px;
+                    border-bottom-right-radius: 4px !important;
+                    border-bottom-left-radius: 4px !important;
+                }
+            }
+        }
+        .yakit-tabs-card-right {
+            & > .ant-tabs-nav {
+                min-width: 26px !important;
+                max-width: 26px !important;
+                .ant-tabs-tab {
+                    width: 26px;
+                    padding: 8px 2px;
+                    border-top-right-radius: 4px !important;
+                    border-bottom-right-radius: 4px !important;
+                    .ant-tabs-tab-btn {
+                        text-orientation: upright;
+                        writing-mode: vertical-rl;
+                    }
+                }
+            }
+            & > .ant-tabs-content-holder {
+                .ant-tabs-content-right {
+                    & > .ant-tabs-tabpane {
+                        padding-right: 8px !important;
+                    }
+                }
+            }
+        }
+        .yakit-tabs-card-left {
+            & > .ant-tabs-nav {
+                min-width: 26px !important;
+                max-width: 26px !important;
+                .ant-tabs-tab {
+                    width: 26px;
+                    padding: 8px 2px;
+                    border-top-left-radius: 4px !important;
+                    border-bottom-left-radius: 4px !important;
+                    .ant-tabs-tab-btn {
+                        text-orientation: upright;
+                        writing-mode: vertical-rl;
+                    }
+                }
+            }
+            & > .ant-tabs-content-holder {
+                .ant-tabs-content-left {
+                    & > .ant-tabs-tabpane {
+                        padding-left: 8px !important;
+                    }
+                }
+            }
+        }
+    }
+}
