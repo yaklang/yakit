@@ -1,4 +1,4 @@
-import React, {useState, useRef, useMemo, useEffect} from "react"
+import React, {useState, useRef, useMemo, useEffect, forwardRef, useImperativeHandle} from "react"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {
     FuncBtn,
@@ -8,7 +8,7 @@ import {
     ListLayoutOpt,
     ListShowContainer,
     OnlineExtraOperate,
-    PluginsList, 
+    PluginsList,
     TypeSelect,
     funcSearchType
 } from "../funcTemplate"
@@ -30,6 +30,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {
+    PluginsListRefProps,
     PluginsOnlineHeardProps,
     PluginsOnlineListProps,
     PluginsOnlineProps,
@@ -47,7 +48,7 @@ import {
     pluginTypeList
 } from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
-import {PluginManageDetail} from "../manage/PluginManageDetail"
+import {PluginsOnlineDetail} from "./PluginsOnlineDetail"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
 
@@ -55,41 +56,15 @@ import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginsOnline.module.scss"
 
-
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
+    const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
+
+    const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
+
     const pluginsOnlineRef = useRef<HTMLDivElement>(null)
     const pluginsOnlineHeardRef = useRef<HTMLDivElement>(null)
     const pluginsOnlineListRef = useRef<HTMLDivElement>(null)
 
-    const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
-
-    // useEffect(() => {
-    //     const io = new IntersectionObserver(
-    //         (entries) => {
-    //             entries.forEach((change) => {
-    //                 console.log("change", change)
-    //                 if (change.intersectionRatio <= 0.1) {
-    //                     setIsShowRoll(false)
-    //                     // pluginsOnlineListRef.current?.focus()
-    //                 } else {
-    //                     setIsShowRoll(true)
-    //                 }
-    //             })
-    //         },
-    //         {
-    //             threshold: [0, 0.1, 1],
-    //             root: pluginsOnlineRef.current
-    //         }
-    //     )
-    //     setTimeout(() => {
-    //         if (pluginsOnlineHeardRef.current) {
-    //             io.observe(pluginsOnlineHeardRef.current)
-    //         }
-    //     }, 1000)
-    //     return () => {
-    //         io.disconnect()
-    //     }
-    // }, [])
     useEffect(() => {
         window.addEventListener("scroll", handleScroll, true)
         return () => {
@@ -120,15 +95,21 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
         }),
         {wait: 200, leading: true}
     ).run
+
     return (
         <OnlineJudgment>
             <div className={styles["plugins-online"]}>
-                <div id='pluginsOnline' ref={pluginsOnlineRef} className={styles["plugins-online-body"]}>
-                    <div ref={pluginsOnlineHeardRef}>
+                <div id='pluginsOnline' ref={pluginsOnlineRef} className={classNames(styles["plugins-online-body"])}>
+                    <div
+                        ref={pluginsOnlineHeardRef}
+                        className={classNames({
+                            [styles["plugin-online-heard-hidden"]]: plugin
+                        })}
+                    >
                         <PluginsOnlineHeard />
                     </div>
                     <div className={styles["plugins-online-list"]} ref={pluginsOnlineListRef}>
-                        <PluginsOnlineList isShowRoll={isShowRoll} />
+                        <PluginsOnlineList plugin={plugin} setPlugin={setPlugin} isShowRoll={isShowRoll} />
                     </div>
                 </div>
             </div>
@@ -136,17 +117,17 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
     )
 })
 
-const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) => {
-    const {isShowRoll} = props
-    // 获取插件列表数据-相关逻辑
-    /** 是否为加载更多 */
-    const [loading, setLoading] = useState<boolean>(false)
+const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, ref) => {
+    const {isShowRoll, plugin, setPlugin} = props
+
     /** 是否为首页加载 */
     const isLoadingRef = useRef<boolean>(true)
     /** 插件展示(列表|网格) */
     const [isList, setIsList] = useState<boolean>(true)
-
-    const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
+    const [selectList, setSelectList] = useState<string[]>([])
+    const [allCheck, setAllCheck] = useState<boolean>(false)
+    /** 是否为加载更多 */
+    const [loading, setLoading] = useState<boolean>(false)
     const [filters, setFilters] = useState<PluginFilterParams>(
         cloneDeep({...defaultFilter, tags: ["Weblogic", "威胁情报"]})
     )
@@ -161,8 +142,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
 
-    const [allCheck, setAllCheck] = useState<boolean>(false)
-    const [selectList, setSelectList, getSelectList] = useGetState<string[]>([])
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return response.pagemeta.total
@@ -216,28 +195,32 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
     })
     /**下载 */
     const onDownload = useMemoizedFn((value?: API.YakitPluginDetail) => {})
-    /**全选 */
-    const onCheck = useMemoizedFn((value: boolean) => {
-        if (value) setSelectList([])
-        setAllCheck(value)
-    })
+
     const onDelTag = useMemoizedFn((value?: string) => {
         if (!value) setFilters({...filters, tags: []})
         else setFilters({...filters, tags: (filters.tags || []).filter((item) => item !== value)})
     })
     /** 单项勾选|取消勾选 */
     const optCheck = useMemoizedFn((data: API.YakitPluginDetail, value: boolean) => {
-        // 全选情况时的取消勾选
-        if (allCheck) {
-            setSelectList(response.data.map((item) => item.uuid).filter((item) => item !== data.uuid))
-            setAllCheck(false)
-            return
+        try {
+            // 全选情况时的取消勾选
+            if (allCheck) {
+                setSelectList(response.data.map((item) => item.uuid).filter((item) => item !== data.uuid))
+                setAllCheck(false)
+                return
+            }
+            // 单项勾选回调
+            if (value) setSelectList([...selectList, data.uuid])
+            else setSelectList(selectList.filter((item) => item !== data.uuid))
+        } catch (error) {
+            yakitNotify("error", "勾选失败:" + error)
         }
-        // 单项勾选回调
-        if (value) setSelectList([...getSelectList(), data.uuid])
-        else setSelectList(getSelectList().filter((item) => item !== data.uuid))
     })
-
+    /**全选 */
+    const onCheck = useMemoizedFn((value: boolean) => {
+        if (value) setSelectList([])
+        setAllCheck(value)
+    })
     const onLikeClick = useMemoizedFn(() => {
         yakitNotify("success", "点赞~~~")
     })
@@ -281,24 +264,32 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
             if (type === "user") setSearch({...search, userName: value})
         }
     })
+    const onBack = useMemoizedFn(() => {
+        setPlugin(undefined)
+    })
     return (
         <>
-            {/* {!!plugin && (
-                <PluginManageDetail
-                    info={plugin}
-                    allCheck={allCheck}
-                    onCheck={onCheck}
-                    data={response}
-                    selected={selectNum}
-                    onBack={() => {}}
-                />
-            )} */}
+            {!!plugin && (
+                <div className={styles["plugins-online-detail"]}>
+                    <PluginsOnlineDetail
+                        info={plugin}
+                        selectList={selectList}
+                        allCheck={allCheck}
+                        onCheck={onCheck}
+                        optCheck={optCheck}
+                        loading={loading}
+                        data={response}
+                        onBack={onBack}
+                        loadMoreData={onUpdateList}
+                    />
+                </div>
+            )}
             <PluginsLayout
                 title={isShowRoll ? <></> : "插件商店"}
                 hidden={!!plugin}
                 subTitle={<TypeSelect active={filters.type || []} list={pluginTypeList} setActive={onSetActive} />}
                 extraHeader={
-                    <div className="extra-header-wrapper">
+                    <div className='extra-header-wrapper'>
                         {!isShowRoll && (
                             <>
                                 <FuncSearch onSearch={onKeywordAndUser} />
@@ -306,7 +297,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                             </>
                         )}
 
-                        <div className="btn-group-wrapper">
+                        <div className='btn-group-wrapper'>
                             <FuncBtn
                                 maxWidth={1050}
                                 icon={<OutlineClouddownloadIcon />}
@@ -355,7 +346,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                                     icon={<OutlineCalendarIcon />}
                                     name={timeType}
                                     menu={{
-                                        type: 'grey',
+                                        type: "grey",
                                         data: [
                                             {key: "toDay", label: "今日"},
                                             {key: "thisWeek", label: "本周"},
@@ -381,6 +372,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                                             }
                                         }
                                     }}
+                                    button={{type: "text2"}}
                                     placement='bottomRight'
                                 />
                                 <FuncFilterPopover
@@ -410,6 +402,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props) =
                                             }
                                         }
                                     }}
+                                    button={{type: "text2"}}
                                     placement='bottomRight'
                                 />
                                 <div className='divider-style' style={{marginLeft: 4}} />
