@@ -404,8 +404,10 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
                     allCheck={allCheck}
                     onCheck={onCheck}
                     data={response}
-                    selected={selectNum}
                     onBack={() => {}}
+                    selectList={[]}
+                    optCheck={() => {}}
+                    loadMoreData={() => {}}
                 />
             )}
             <PluginsContainer
