@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     PluginDetailHeader,
     PluginDetails,
+    PluginDetailsListItem,
     PluginEditorDiff,
     PluginModifyInfo,
     PluginModifySetting,
@@ -151,45 +152,25 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                 rowKey: "uuid",
                 data: data.data,
                 loadMoreData: loadMoreData,
-                classNameRow: styles["details-opt-wrapper"],
+                classNameRow: "plugin-details-opt-wrapper",
                 renderRow: (info, i) => {
                     const check = allCheck || selectList.includes(info.uuid)
                     return (
-                        <div
-                            className={classNames(styles["details-wrapper-item-opt"], {
-                                [styles["details-wrapper-item-opt-active"]]: plugin.uuid === info.uuid
-                            })}
-                        >
-                            <div className={styles["opt-wrapper"]}>
-                                <div className={styles["opt-info"]}>
-                                    <YakitCheckbox checked={check} onChange={(e) => optCheck(info, e.target.checked)} />
-                                    <AuthorImg src={info.head_img || ""} />
-                                    <div
-                                        className={classNames(styles["text-style"], "yakit-content-single-ellipsis")}
-                                        title={info.script_name}
-                                    >
-                                        {info.script_name}
-                                    </div>
-                                </div>
-                                <div className={styles["opt-show"]}>
-                                    {statusTag[`${i % 3}`]}
-                                    <Tooltip
-                                        title={info.help || "No Description about it."}
-                                        placement='topRight'
-                                        overlayClassName='plugins-tooltip'
-                                    >
-                                        <OutlineQuestionmarkcircleIcon className={styles["icon-style"]} />
-                                    </Tooltip>
-                                    <YakitPopover
-                                        placement='topRight'
-                                        overlayClassName={styles["terminal-popover"]}
-                                        content={<YakEditor type={"yak"} value={info.content} readOnly={true} />}
-                                    >
-                                        <OutlineTerminalIcon className={styles["icon-style"]} />
-                                    </YakitPopover>
-                                </div>
-                            </div>
-                        </div>
+                        <PluginDetailsListItem
+                            plugin={info}
+                            selectUUId={plugin.uuid}
+                            check={check}
+                            headImg={info.head_img}
+                            pluginUUId={info.uuid}
+                            pluginName={info.script_name}
+                            help={info.help}
+                            content={info.content}
+                            optCheck={optCheck}
+                            extra={statusTag[`${i % 3}`]}
+                            official={info.official}
+                            isCorePlugin={info.is_core_plugin}
+                            pluginType={info.type}
+                        />
                     )
                 },
                 page: data.pagemeta.page,
