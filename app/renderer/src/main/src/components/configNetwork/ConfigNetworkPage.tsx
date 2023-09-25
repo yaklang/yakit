@@ -11,9 +11,7 @@ import {setTimeout} from "timers"
 import {useMemoizedFn} from "ahooks"
 import {setLogger} from "@grpc/grpc-js"
 
-export interface ConfigNetworkPageProp {
-    onClose: () => void
-}
+export interface ConfigNetworkPageProp {}
 
 export interface GlobalNetworkConfig {
     DisableSystemDNS: boolean
