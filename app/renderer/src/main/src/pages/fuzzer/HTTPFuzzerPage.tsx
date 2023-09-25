@@ -84,7 +84,7 @@ import {defaultLabel, FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {execCodec} from "@/utils/encodec"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
-import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlineExportIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
@@ -1829,8 +1829,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         )
         return (
             <div className={styles["fuzzer-secondNode-extra"]}>
-                {+(secondNodeSize?.width || 0) >= 610 && searchNode}
-                {+(secondNodeSize?.width || 0) < 610 && (
+                {+(secondNodeSize?.width || 0) >= 680 && searchNode}
+                {+(secondNodeSize?.width || 0) < 680 && (
                     <YakitPopover
                         content={searchNode}
                         onVisibleChange={(b) => {
@@ -1917,51 +1917,112 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 </YakitPopover>
 
                 <Divider type='vertical' style={{margin: 0, top: 1}} />
-                <YakitButton
-                    type='outline2'
-                    size={size}
-                    onClick={() => {
-                        if (successFuzzer.length === 0) {
-                            showYakitModal({title: "无 Web Fuzzer Response 以供提取信息", content: <></>, footer: null})
-                            return
-                        }
-                        setResponseExtractorVisible(true)
-                    }}
-                >
-                    提取响应数据
-                </YakitButton>
-                <YakitPopover
-                    title={"导出数据"}
-                    trigger={["click"]}
-                    content={
-                        <>
-                            <Space>
-                                <YakitButton
-                                    size={size}
-                                    type={"primary"}
-                                    onClick={() => {
-                                        exportHTTPFuzzerResponse(successFuzzer)
-                                    }}
-                                >
-                                    导出所有请求
-                                </YakitButton>
-                                <YakitButton
-                                    size={size}
-                                    type={"primary"}
-                                    onClick={() => {
-                                        exportPayloadResponse(successFuzzer)
-                                    }}
-                                >
-                                    仅导出 Payload
-                                </YakitButton>
-                            </Space>
-                        </>
-                    }
-                >
-                    <YakitButton type='outline2' size={size}>
-                        导出数据
+                {+(secondNodeSize?.width || 0) >= 610 ? (
+                    <YakitButton
+                        type='outline2'
+                        size={size}
+                        onClick={() => {
+                            if (successFuzzer.length === 0) {
+                                showYakitModal({
+                                    title: "无 Web Fuzzer Response 以供提取信息",
+                                    content: <></>,
+                                    footer: null
+                                })
+                                return
+                            }
+                            setResponseExtractorVisible(true)
+                        }}
+                    >
+                        提取响应数据
                     </YakitButton>
-                </YakitPopover>
+                ) : (
+                    <Tooltip title="提取响应数据">
+                        <YakitButton
+                            type='outline2'
+                            size={size}
+                            icon={<OutlineBeakerIcon />}
+                            onClick={() => {
+                                if (successFuzzer.length === 0) {
+                                    showYakitModal({
+                                        title: "无 Web Fuzzer Response 以供提取信息",
+                                        content: <></>,
+                                        footer: null
+                                    })
+                                    return
+                                }
+                                setResponseExtractorVisible(true)
+                            }}
+                        />
+                    </Tooltip>
+                )}
+                {+(secondNodeSize?.width || 0) >= 610 ? (
+                    <YakitPopover
+                        title={"导出数据"}
+                        trigger={["click"]}
+                        content={
+                            <>
+                                <Space>
+                                    <YakitButton
+                                        size={size}
+                                        type={"primary"}
+                                        onClick={() => {
+                                            exportHTTPFuzzerResponse(successFuzzer)
+                                        }}
+                                    >
+                                        导出所有请求
+                                    </YakitButton>
+                                    <YakitButton
+                                        size={size}
+                                        type={"primary"}
+                                        onClick={() => {
+                                            exportPayloadResponse(successFuzzer)
+                                        }}
+                                    >
+                                        仅导出 Payload
+                                    </YakitButton>
+                                </Space>
+                            </>
+                        }
+                    >
+                        <YakitButton type='outline2' size={size}>
+                            导出数据
+                        </YakitButton>
+                    </YakitPopover>
+                ) : (
+                    <YakitPopover
+                        title={"导出数据"}
+                        trigger={["click"]}
+                        content={
+                            <>
+                                <Space>
+                                    <YakitButton
+                                        size={size}
+                                        type={"primary"}
+                                        onClick={() => {
+                                            exportHTTPFuzzerResponse(successFuzzer)
+                                        }}
+                                    >
+                                        导出所有请求
+                                    </YakitButton>
+                                    <YakitButton
+                                        size={size}
+                                        type={"primary"}
+                                        onClick={() => {
+                                            exportPayloadResponse(successFuzzer)
+                                        }}
+                                    >
+                                        仅导出 Payload
+                                    </YakitButton>
+                                </Space>
+                            </>
+                        }
+                    >
+                        <Tooltip title='导出数据'>
+                            <YakitButton type='outline2' icon={<OutlineExportIcon />} size={size} />
+                        </Tooltip>
+                    </YakitPopover>
+                )}
+                
                 <YakitModal
                     title='提取响应数据包中内容'
                     onCancel={() => setResponseExtractorVisible(false)}
