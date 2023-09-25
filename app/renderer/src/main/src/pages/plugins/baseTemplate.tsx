@@ -2,6 +2,7 @@ import React, {ReactNode, memo, useEffect, useImperativeHandle, useMemo, useRef,
 import {
     PluginAddParamModalProps,
     PluginDetailHeaderProps,
+    PluginDetailsListItemProps,
     PluginDetailsProps,
     PluginEditorDiffProps,
     PluginFilterParams,
@@ -37,6 +38,7 @@ import {
     OutlineReplyIcon,
     OutlineSparklesIcon,
     OutlineTagIcon,
+    OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {
@@ -75,6 +77,7 @@ import {TypeSelectOpt} from "./funcTemplateType"
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
+import {YakEditor} from "@/utils/editors"
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
@@ -237,7 +240,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                         </div>
                     </div>
                     <div className={classNames(styles["info-tags"])}>
-                        <TagsListShow tags={tagList} />
+                        <TagsListShow tags={tagList || []} />
                     </div>
                 </div>
                 {extraNode || null}
@@ -1216,6 +1219,75 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
     )
 })
 
+/**@name 插件详情中列表的item */
+export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) => any = React.memo((props) => {
+    const {
+        plugin,
+        check,
+        headImg,
+        isCorePlugin,
+        official,
+        pluginType,
+        selectUUId,
+        pluginName,
+        help,
+        pluginUUId,
+        content,
+        optCheck,
+        extra
+    } = props
+    const onCheck = useMemoizedFn((e) => {
+        optCheck(plugin, e.target.checked)
+    })
+    const authorImgNode = useMemo(() => {
+        if (isCorePlugin) {
+            return <AuthorImg icon={pluginTypeToName[pluginType].icon} />
+        }
+        return <AuthorImg src={headImg} builtInIcon={official ? "official" : undefined} />
+    }, [isCorePlugin])
+    return (
+        <div
+            className={classNames("plugin-details-item-wrapper", {
+                "plugin-details-item-wrapper-active": selectUUId === pluginUUId
+            })}
+        >
+            <div
+                className={classNames("plugin-details-item", {
+                    "plugin-details-item-active": selectUUId === pluginUUId
+                })}
+            >
+                <div className={"plugin-details-item-info"}>
+                    <YakitCheckbox checked={check} onChange={onCheck} />
+                    {authorImgNode}
+                    <div
+                        className={classNames("plugin-details-item-info-text-style", "yakit-content-single-ellipsis")}
+                        title={pluginName}
+                    >
+                        {pluginName}
+                    </div>
+                </div>
+                <div className={"plugin-details-item-show"}>
+                    {extra}
+                    <Tooltip
+                        title={help || "No Description about it."}
+                        placement='topRight'
+                        overlayClassName='plugins-tooltip'
+                    >
+                        <OutlineQuestionmarkcircleIcon className={"plugin-details-item-show-icon-style"} />
+                    </Tooltip>
+                    <YakitPopover
+                        placement='topRight'
+                        overlayClassName={styles["terminal-popover"]}
+                        content={<YakEditor type={"yak"} value={content} readOnly={true} />}
+                    >
+                        <OutlineTerminalIcon className={"plugin-details-item-show-icon-style"} />
+                    </YakitPopover>
+                </div>
+            </div>
+        </div>
+    )
+})
+
 /** ---------- 以下为对应关系字段和插件页面共用图标 ---------- */
 
 /** 审核状态对应展示名称 */
@@ -1311,7 +1383,7 @@ export const filterToName: Record<string, string> = {
 export const defaultFilter: PluginFilterParams = {
     type: ["yak", "mitm", "codec", "packet-hack", "port-scan"],
     status: ["0"],
-    state:['1']
+    state: ["1"]
 }
 export const defaultSearch: PluginSearchParams = {
     keyword: "",
