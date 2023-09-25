@@ -8,14 +8,21 @@
     height: 100%;
     position: relative;
     overflow: hidden;
+    display: flex;
     ::-webkit-scrollbar {
         width: 0;
         height: 0;
     }
     .plugins-online-body {
+        flex: 1;
         height: 100%;
         position: relative;
         overflow: overlay;
+    }
+    .plugin-online-heard-hidden {
+        transform: translate(-100%, -100%);
+        opacity: 0;
+        z-index: -99999;
     }
     .plugins-online-list {
         height: 100%;
@@ -133,6 +140,19 @@
                 transition: all 0.5s;
             }
         }
+    }
+}
+
+.plugins-online-detail {
+    display: flex;
+    width: 100%;
+    height: calc(100% - 185px);
+    overflow: hidden;
+    position: fixed;
+    top: 185px;
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
     }
 }
 

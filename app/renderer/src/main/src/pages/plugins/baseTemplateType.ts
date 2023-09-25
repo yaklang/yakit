@@ -30,7 +30,7 @@ export interface PluginsContainerProps {
     /** 数据展示列表 */
     groupList: FilterPanelGroupItem[]
     /** ClassName */
-    filterClassName?:string
+    filterClassName?: string
 }
 
 export interface PluginDetailsProps<T> {
@@ -150,4 +150,23 @@ export interface PluginSearchParams {
 export interface PluginListPageMeta {
     page: number
     limit: number
+}
+/** ---------- 插件列表相关 end ---------- */
+
+/**插件详情中列表的item */
+export interface PluginDetailsListItemProps<T> {
+    plugin: T
+    selectUUId: string
+    check: boolean
+    headImg: string
+    pluginUUId: string
+    pluginName: string
+    help?: string
+    content: string
+    official: boolean
+    pluginType:string
+    /** @name 是否内置 */
+    isCorePlugin:boolean
+    optCheck: (data: T, value: boolean) => any
+    extra?:ReactNode
 }
