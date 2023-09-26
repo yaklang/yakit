@@ -87,7 +87,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                 renderRow: (info, i) => {
                     const check = allCheck || selectList.includes(info.uuid)
                     return (
-                        <PluginDetailsListItem
+                        <PluginDetailsListItem<API.YakitPluginDetail>
                             plugin={info}
                             selectUUId={plugin.uuid}
                             check={check}
