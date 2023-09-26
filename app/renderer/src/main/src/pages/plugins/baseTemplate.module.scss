@@ -87,12 +87,13 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            // gap: 16px;
             padding: 0 8px;
             .header-search {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                margin-bottom: 16px;
                 .title-style {
                     color: #31343f;
                     font-size: 12px;
