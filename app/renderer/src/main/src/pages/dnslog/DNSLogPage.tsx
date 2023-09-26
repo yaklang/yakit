@@ -20,7 +20,8 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {ReloadOutlined} from "@ant-design/icons"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
-export interface DNSLogPageProp {}
+export interface DNSLogPageProp {
+}
 
 const {ipcRenderer} = window.require("electron")
 
@@ -70,7 +71,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         // 获取菜单发送的配置参数
         ipcRenderer.on(
             "dnslog-menu-to-page-callback",
-            (e, data: {token: string; domain: string; onlyARecord: boolean}) => {
+            (e, data: { token: string; domain: string; onlyARecord: boolean }) => {
                 setOnlyARecord(data.onlyARecord)
                 if (getToken() !== data.token || getDomain() !== data.domain) {
                     setToken(data.token || "")
@@ -94,7 +95,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     }, [])
 
     // 同步给菜单里dnslog新的参数
-    const sendMenuDnslog = useMemoizedFn((data: {token: string; domain: string; onlyARecord: boolean}) => {
+    const sendMenuDnslog = useMemoizedFn((data: { token: string; domain: string; onlyARecord: boolean }) => {
         ipcRenderer.invoke("dnslog-page-change-menu", data)
     })
     const [selectedMode, setSelectedMode] = useState<string>() // 在组件状态中保存选中的值
@@ -102,8 +103,12 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const updateToken = useMemoizedFn(() => {
         setLoading(true)
         ipcRenderer
-            .invoke("RequireDNSLogDomain", {Addr: "", DNSMode: selectedMode || "", UseLocal: selectedMode==="内置"?false:isLocal})
-            .then((rsp: {Domain: string; Token: string}) => {
+            .invoke("RequireDNSLogDomain", {
+                Addr: "",
+                DNSMode: selectedMode || "",
+                UseLocal: selectedMode === "内置" ? false : isLocal
+            })
+            .then((rsp: { Domain: string; Token: string }) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
                 sendMenuDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord})
@@ -129,9 +134,15 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     })
 
     const queryDNSLogByToken = () => {
+        console.log("token", token)
         ipcRenderer
-            .invoke("QueryDNSLogByToken", {Token: token, DNSMode: selectedMode || "", UseLocal: isLocal})
-            .then((rsp: {Events: DNSLogEvent[]}) => {
+            .invoke("QueryDNSLogByToken", {
+                Token: token,
+                DNSMode: selectedMode || "",
+                UseLocal: selectedMode === "内置" ? false : isLocal
+            })
+            .then((rsp: { Events: DNSLogEvent[] }) => {
+                console.log(rsp)
                 setRecords(
                     rsp.Events.filter((i) => {
                         if (getOnlyARecord()) {
@@ -230,7 +241,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         setLoading(true)
         ipcRenderer
             .invoke("RequireDNSLogDomainByScript", {ScriptName: params || ""})
-            .then((rsp: {Domain: string; Token: string}) => {
+            .then((rsp: { Domain: string; Token: string }) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
                 sendMenuDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord: onlyARecord})
@@ -252,7 +263,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const queryDNSLogTokenByScript = () => {
         ipcRenderer
             .invoke("QueryDNSLogTokenByScript", {Token: token, ScriptName: params || ""})
-            .then((rsp: {Events: DNSLogEvent[]}) => {
+            .then((rsp: { Events: DNSLogEvent[] }) => {
                 setRecords(
                     rsp.Events.filter((i) => {
                         if (getOnlyARecord()) {
@@ -342,14 +353,14 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                         ))}
                                     </YakitSelect>
                                 </Form.Item>
-                                {selectedMode!=="内置"&&<Form.Item
+                                {selectedMode !== "内置" && <Form.Item
                                     style={{
                                         marginBottom: 0,
                                         marginRight: 10 // 添加右侧间隔isLocal
                                     }}
                                     label={"使用本地"}
                                 >
-                                    <YakitSwitch checked={isLocal} onChange={setIsLocal} />
+                                    <YakitSwitch checked={isLocal} onChange={setIsLocal}/>
                                 </Form.Item>}
                                 <Divider
                                     style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
@@ -407,11 +418,11 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     </div>
                     {token !== "" && (
                         <Alert
-                            style={{marginTop:12}}
+                            style={{marginTop: 12}}
                             type={"success"}
                             message={
                                 <div>
-                                    当前激活域名为 <CopyableField noCopy={false} text={tokenDomain} />
+                                    当前激活域名为 <CopyableField noCopy={false} text={tokenDomain}/>
                                 </div>
                             }
                         />
@@ -447,7 +458,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                 }}
                                 label={"自动刷新记录"}
                             >
-                                <YakitSwitch checked={autoQuery} onChange={setAutoQuery} />
+                                <YakitSwitch checked={autoQuery} onChange={setAutoQuery}/>
                             </Form.Item>
                         </div>
 
@@ -457,7 +468,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             onClick={() => {
                                 dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
                             }}
-                            icon={<ReloadOutlined style={{position: "relative", top: 2}} />}
+                            icon={<ReloadOutlined style={{position: "relative", top: 2}}/>}
                         />
                     </div>
                 </Form>
@@ -473,7 +484,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             return (
                                 <div style={{width: "100%", height: 300}}>
                                     <AutoCard style={{padding: 0}} bodyStyle={{padding: 0}}>
-                                        <YakEditor readOnly={true} valueBytes={i.Raw} bytes={true} />
+                                        <YakEditor readOnly={true} valueBytes={i.Raw} bytes={true}/>
                                     </AutoCard>
                                 </div>
                             )
