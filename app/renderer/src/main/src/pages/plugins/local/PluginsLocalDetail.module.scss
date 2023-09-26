@@ -1,0 +1,48 @@
+.details-content-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding-top: 12px;
+    .plugin-info-wrapper {
+        width: 100%;
+        height: 100%;
+        padding: 0 12px 12px;
+        overflow: hidden overlay;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        .plugin-info-extra-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            path {
+                stroke-width: 1.5;
+            }
+        }
+    }
+}
+
+// 详情-审核完的编辑器样式
+.details-editor-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.remove-menu-item {
+    color: var(--yakit-danger-5);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.plugin-local-extra-node-icon {
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+    path {
+        stroke-width: 1.5;
+    }
+}
