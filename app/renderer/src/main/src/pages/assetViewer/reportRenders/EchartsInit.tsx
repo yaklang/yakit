@@ -116,7 +116,7 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref}>
+        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="vertical-bar">
             <div className={classNames(styles["echart-item"], styles["echart-item-vertical-bar"])} ref={chartRef}></div>
         </div>
     )
@@ -267,7 +267,7 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref}>
+        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="stacked-vertical-bar">
             <div
                 className={classNames(styles["echart-item"], styles["echart-item-stacked-vertical-bar"])}
                 ref={chartRef}
@@ -420,7 +420,8 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={classNames(styles["echarts-box"],styles["echarts-box-hollow-pie"])} ref={ref}>
+        <div className={classNames(styles["echarts-box"],styles["echarts-box-hollow-pie"])} ref={ref} 
+        data-type="echarts-box" echart-type="hollow-pie">
             <div className={classNames(styles["echart-item"], styles["echart-item-hollow-pie"])} ref={chartRef}></div>
         </div>
     )
@@ -595,7 +596,7 @@ export const MultiPie: React.FC<MultiPieProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref}>
+        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="multi-pie">
             <div className={classNames(styles["echart-item"], styles["echart-item-multi-pie"])} ref={chartRef}></div>
         </div>
     )
@@ -761,7 +762,7 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
     return (
         <>
             {Array.isArray(data) && (
-                <div className={styles["echarts-box"]} ref={ref}>
+                <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="nightingle-rose">
                     <div
                         className={classNames(styles["echart-item"], styles["echart-item-nightingle-rose"])}
                         ref={chartRef}
