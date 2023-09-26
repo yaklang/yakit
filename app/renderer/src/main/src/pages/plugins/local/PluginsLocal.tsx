@@ -18,12 +18,12 @@ import {
 } from "../funcTemplate"
 import {apiFetchLocalList, ssfilters} from "../test"
 import {SolidChevronDownIcon} from "@/assets/newIcon"
-import {PluginManageDetail} from "../manage/PluginManageDetail"
 import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
-import {OutlineCloudIcon, OutlineClouduploadIcon, OutlineExportIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {OutlineClouduploadIcon, OutlineExportIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useStore} from "@/store"
+import {PluginsLocalDetail} from "./PluginsLocalDetail"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
@@ -159,8 +159,24 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {})
+    const onBack = useMemoizedFn(() => {
+        setPlugin(undefined)
+    })
     return (
         <>
+            {!!plugin && (
+                <PluginsLocalDetail
+                    info={plugin}
+                    allCheck={allCheck}
+                    loading={loading}
+                    onCheck={onCheck}
+                    selectList={selectList}
+                    optCheck={optCheck}
+                    data={response}
+                    onBack={onBack}
+                    loadMoreData={onUpdateList}
+                />
+            )}
             <PluginsLayout
                 title='本地插件'
                 hidden={!!plugin}
@@ -289,7 +305,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     )
 })
 
-const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((props) => {
+export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((props) => {
     const {isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
     const onRemove = useMemoizedFn((e) => {
         e.stopPropagation()
