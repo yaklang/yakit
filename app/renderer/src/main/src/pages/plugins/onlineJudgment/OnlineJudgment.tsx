@@ -15,7 +15,6 @@ const {ipcRenderer} = window.require("electron")
 export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
     forwardRef((props, ref) => {
         const networkState = useNetwork()
-        const [isOnline, setIsOnline] = useState<boolean>(false)
         const [initLoading, setInitLoading] = useState<boolean>(true)
         const [loading, setLoading] = useState<boolean>(true)
         const [onlineResponseStatus, setOnlineResponseStatus] = useState<OnlineResponseStatusProps>({
@@ -38,7 +37,11 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                 getNetWork()
             } else {
                 setInitLoading(false)
-                setIsOnline(false)
+                setLoading(false)
+                setOnlineResponseStatus({
+                    code: -1,
+                    message: ""
+                })
             }
         }, [networkState.online])
 
@@ -48,10 +51,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                 .invoke("fetch-netWork-status-by-request-interface")
                 .then((res) => {
                     if (res.code === -1) {
-                        setIsOnline(false)
                         yakitNotify("error", res.message)
-                    } else {
-                        setIsOnline(true)
                     }
                     setOnlineResponseStatus({
                         code: res.code,
@@ -82,7 +82,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                     return (
                         <YakitEmpty
                             image={<img src={Online} alt='' />}
-                            imageStyle={{width: 300, height: 210}}
+                            imageStyle={{width: 300, height: 210, marginBottom: 16}}
                             title='请检查私有域配置与网络连接'
                             description='连网后才可访问 Yakit 插件商店'
                         />
@@ -93,7 +93,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
             <YakitSpin wrapperClassName={styles["online-spin"]} />
         ) : (
             <>
-                {isOnline ? (
+                {onlineResponseStatus.code !== -1 ? (
                     props.children
                 ) : (
                     <YakitSpin spinning={loading}>
