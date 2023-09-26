@@ -1,0 +1,27 @@
+.certificate-box {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .certificate-item {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        .certificate-path {
+            font-size: 12px;
+        }
+        .input-box {
+            flex: 1;
+        }
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--yakit-helper-text-color);
+            cursor: pointer;
+            &:hover {
+                color: var(--yakit-primary-4);
+            }
+        }
+    }
+}
