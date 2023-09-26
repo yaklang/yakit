@@ -84,10 +84,17 @@ import {defaultLabel, FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {execCodec} from "@/utils/encodec"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
-import {OutlineAnnotationIcon, OutlineBeakerIcon, OutlineExportIcon, OutlinePayloadIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {
+    OutlineAnnotationIcon,
+    OutlineBeakerIcon,
+    OutlineExportIcon,
+    OutlinePayloadIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
+import {useFuzzerSequence} from "@/store/fuzzerSequence"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -481,6 +488,13 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
 }
 
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
+    const {hotPatchCode, setHotPatchCodeVal} = useFuzzerSequence(
+        (s) => ({
+            hotPatchCode: s.hotPatchCode,
+            setHotPatchCodeVal: s.setHotPatchCodeVal
+        }),
+        shallow
+    )
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
@@ -549,7 +563,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const fuzzerRef = useRef<any>()
     const [inViewport = true] = useInViewport(fuzzerRef)
 
-    const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
     useEffect(() => {
@@ -767,7 +780,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         return {
             ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
             RequestRaw: Buffer.from(requestRef.current, "utf8"), // StringToUint8Array(request, "utf8"),
-            HotPatchCode: hotPatchCodeRef.current,
+            HotPatchCode: hotPatchCode,
             HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
             FuzzerTabIndex: props.id
         }
@@ -1034,7 +1047,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             content: (
                 <div className={styles["http-fuzzer-hotPatch"]}>
                     <HTTPFuzzerHotPatch
-                        initialHotPatchCode={hotPatchCodeRef.current}
+                        initialHotPatchCode={hotPatchCode}
                         initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                         onInsert={(tag) => {
                             if (webFuzzerNewEditorRef.current.reqEditor)
@@ -1170,7 +1183,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setActiveKey(activeKey)
     })
     const setHotPatchCode = useMemoizedFn((v: string) => {
-        hotPatchCodeRef.current = v
+        setHotPatchCodeVal(v)
     })
     const setHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
         hotPatchCodeWithParamGetterRef.current = v
@@ -1509,8 +1522,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             httpResponse={httpResponse}
                         />
                     </div>
-                    <div className={styles['fuzzer-heard-right']}>
-                        <ShareImportExportData module='fuzzer' getShareContent={getShareContent} getFuzzerRequestParams={getFuzzerRequestParams} />
+                    <div className={styles["fuzzer-heard-right"]}>
+                        <ShareImportExportData
+                            module='fuzzer'
+                            getShareContent={getShareContent}
+                            getFuzzerRequestParams={getFuzzerRequestParams}
+                        />
                         {/* <Divider type='vertical' style={{ margin: "0 8px" }} /> */}
                     </div>
                 </div>
@@ -1530,7 +1547,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             request={requestRef.current}
                             setRequest={onSetRequest}
                             isHttps={advancedConfigValue.isHttps}
-                            hotPatchCode={hotPatchCodeRef.current}
+                            hotPatchCode={hotPatchCode}
                             hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                             setHotPatchCode={setHotPatchCode}
                             setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
@@ -1936,7 +1953,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         提取响应数据
                     </YakitButton>
                 ) : (
-                    <Tooltip title="提取响应数据">
+                    <Tooltip title='提取响应数据'>
                         <YakitButton
                             type='outline2'
                             size={size}
@@ -2022,7 +2039,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         </Tooltip>
                     </YakitPopover>
                 )}
-                
+
                 <YakitModal
                     title='提取响应数据包中内容'
                     onCancel={() => setResponseExtractorVisible(false)}
