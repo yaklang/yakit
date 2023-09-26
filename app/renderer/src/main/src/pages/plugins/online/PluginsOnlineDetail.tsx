@@ -10,7 +10,7 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
 
 import "../plugins.scss"
-import styles from "./PluginUserDetail.module.scss"
+import styles from "./PluginsOnlineDetail.module.scss"
 import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
