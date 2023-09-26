@@ -10,7 +10,7 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
 
 import "../plugins.scss"
-import styles from "./PluginsOnlineDetail.module.scss"
+import styles from "./PluginUserDetail.module.scss"
 import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
@@ -21,12 +21,12 @@ interface PluginsOnlineDetailProps {
     info: API.YakitPluginDetail
     allCheck: boolean
     loading: boolean
-    onCheck: (value: boolean) => any
+    onCheck: (value: boolean) => void
     selectList: string[]
     optCheck: (data: API.YakitPluginDetail, value: boolean) => void
     data: API.YakitPluginListResponse
-    onBack: () => any
-    loadMoreData: () => any
+    onBack: () => void
+    loadMoreData: () => void
 }
 
 export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) => {
@@ -65,7 +65,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         <PluginDetails<API.YakitPluginDetail>
             title='插件管理'
             filterExtra={
-                <div className={styles["details-filter-extra-wrapper"]}>
+                <div className={"details-filter-extra-wrapper"}>
                     <YakitButton type='text2' icon={<OutlineFilterIcon />} />
                     <div style={{height: 12}} className='divider-style'></div>
                     <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
@@ -98,7 +98,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                             content={info.content}
                             optCheck={optCheck}
                             official={info.official}
-                            isCorePlugin={info.is_core_plugin}
+                            // isCorePlugin={info.is_core_plugin}
+                            isCorePlugin={false}
                             pluginType={info.type}
                         />
                     )
