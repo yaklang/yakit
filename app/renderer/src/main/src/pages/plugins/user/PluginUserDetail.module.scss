@@ -9,6 +9,7 @@
         padding: 0 12px 12px;
         overflow: hidden overlay;
         display: flex;
+        flex: 1;
         flex-direction: column;
         .plugin-info-extra-header {
             display: flex;
