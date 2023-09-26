@@ -740,7 +740,6 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                                     arrowPointAtCenter={true}
                                     content={
                                         <YakitMenu
-                                            type='secondary'
                                             data={batchMenuData}
                                             selectedKeys={[]}
                                             width={92}

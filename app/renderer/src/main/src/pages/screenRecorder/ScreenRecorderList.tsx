@@ -493,7 +493,6 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                                     arrowPointAtCenter={true}
                                     content={
                                         <YakitMenu
-                                            type='secondary'
                                             data={batchMenuDataEnterprise}
                                             selectedKeys={[]}
                                             width={92}
