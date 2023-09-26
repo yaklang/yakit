@@ -92,7 +92,6 @@ export declare namespace API {
      */
     base_script_name?: string;
     group?: string;
-    is_core_plugin: boolean;
   }
   export interface UserOrdinaryResponse {
     data: UserList[];
