@@ -29,13 +29,13 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginInfoRefProps, PluginSettingRefProps} from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
 import {ApplicantIcon, AuthorImg, FuncBtn} from "../funcTemplate"
+import {IconOutlinePencilAltIcon} from "@/assets/newIcon"
+import {PluginBaseParamProps, PluginSettingParamProps} from "../pluginsType"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
-import {IconOutlinePencilAltIcon} from "@/assets/newIcon"
-import {PluginBaseParamProps, PluginSettingParamProps} from "../pluginsType"
-import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -120,7 +120,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
         <PluginDetails<API.YakitPluginDetail>
             title='插件管理'
             filterExtra={
-                <div className={styles["details-filter-extra-wrapper"]}>
+                <div className={"details-filter-extra-wrapper"}>
                     <YakitButton
                         type='text2'
                         icon={<OutlineFilterIcon />}
@@ -168,7 +168,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                             optCheck={optCheck}
                             extra={statusTag[`${i % 3}`]}
                             official={info.official}
-                            isCorePlugin={info.is_core_plugin}
+                            // isCorePlugin={info.is_core_plugin}
+                            isCorePlugin={false}
                             pluginType={info.type}
                         />
                     )

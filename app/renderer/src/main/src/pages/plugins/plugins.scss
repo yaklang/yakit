@@ -305,4 +305,35 @@
         border-color: transparent;
     }
 }
+// 详情-插件列表单项-源码弹窗
+.terminal-popover {
+    width: 429px;
+    padding-bottom: 4px;
+    padding-top: 4px;
+
+    .ant-popover-inner-content {
+        height: 40vh;
+        padding: 4px;
+    }
+
+    .ant-popover-inner {
+        border-radius: 4px;
+    }
+
+    .ant-popover-arrow {
+        left: 0;
+    }
+}
+// --------------------
+
+// -------------------- 详情-插件列表-过滤条件
+.details-filter-extra-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    path {
+        stroke-width: 1.5;
+    }
+}
+
 // --------------------
