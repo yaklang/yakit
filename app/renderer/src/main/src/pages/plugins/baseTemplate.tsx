@@ -73,11 +73,11 @@ import {CodeGV} from "@/yakitGV"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {API} from "@/services/swagger/resposeType"
 import {TypeSelectOpt} from "./funcTemplateType"
+import {YakEditor} from "@/utils/editors"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
-import {YakEditor} from "@/utils/editors"
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
@@ -1277,7 +1277,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
                     </Tooltip>
                     <YakitPopover
                         placement='topRight'
-                        overlayClassName={styles["terminal-popover"]}
+                        overlayClassName={"terminal-popover"}
                         content={<YakEditor type={"yak"} value={content} readOnly={true} />}
                     >
                         <OutlineTerminalIcon className={"plugin-details-item-show-icon-style"} />
