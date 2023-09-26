@@ -11,7 +11,9 @@ import html2pdf from "html2pdf.js"
 import styles from "./ReportViewer.module.scss"
 import {isEnterpriseEdition} from "@/utils/envfile"
 import {openABSFileLocated} from "../../utils/openWebsite"
-import {useThrottleFn, useGetState} from "ahooks"
+import {useThrottleFn, useGetState, useUpdateEffect} from "ahooks"
+import htmlDocx from "html-docx-js/dist/html-docx"
+import {saveAs} from "file-saver"
 export interface ReportViewerProp {
     id?: number
 }
@@ -20,7 +22,8 @@ const {ipcRenderer} = window.require("electron")
 
 export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     const [loading, setLoading] = useState(false)
-    const [SpinLoading, setSpinLoading] = useState(false)
+    const [SpinLoading, setSpinLoading] = useState<boolean>(false)
+    const [wordSpinLoading, setWordSpinLoading] = useState<boolean>(false)
     const [report, setReport] = useState<Report>({
         From: "",
         Hash: "",
@@ -66,6 +69,19 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             failed(`Parse Report[${props.id}]'s items failed`)
         }
     }, [report])
+
+    useUpdateEffect(()=>{
+        if(wordSpinLoading){
+            const contentHTML = divRef.current
+
+            saveAs(
+                //保存文件到本地
+                htmlDocx.asBlob(contentHTML.outerHTML), //将html转为docx
+                `${report.Title}.doc`
+            )
+            setWordSpinLoading(false)
+        }
+    },[renderReportItems])
 
     const loadReport = useThrottleFn(
         () => {
@@ -151,6 +167,19 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             })
     }
 
+    // 下载Word
+    const downloadWord = () => {
+        if (!divRef || !divRef.current) return
+        setWordSpinLoading(true)
+        
+        let newData:ReportItem[] = []
+        // word报告下载移除掉附录
+        reportItems.some((item)=>{
+            newData.push(item)
+            return /附录：/.test(item.content)
+        })
+        setRenderReportItems(newData.slice(0, -1))
+    }
     return (
         <div className={styles["report-viewer"]}>
             <Spin spinning={SpinLoading}>
@@ -185,7 +214,8 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                             <a
                                 href={"#"}
                                 onClick={() => {
-                                    isEnterpriseEdition() ? downloadHtml() : downloadPdf()
+                                    downloadWord()
+                                    // isEnterpriseEdition() ? downloadWord() : downloadPdf()
                                 }}
                             >
                                 下载
