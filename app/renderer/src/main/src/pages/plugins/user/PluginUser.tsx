@@ -130,7 +130,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     })
 
     return (
-        <>
+        <OnlineJudgment>
             {!!plugin && (
                 <PluginUserDetail
                     info={plugin}
@@ -235,7 +235,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     <PluginRecycleList />
                 </div>
             </PluginsLayout>
-        </>
+        </OnlineJudgment>
     )
 })
 
