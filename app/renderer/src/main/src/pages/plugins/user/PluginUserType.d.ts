@@ -5,8 +5,9 @@ export interface PluginUserProps {}
 export interface PluginUserListProps {
     pluginState: string[]
     searchUser: PluginSearchParams
-    setIsShowDetails: (b: boolean) => void
+    plugin?: API.YakitPluginDetail
     setIsSelectNum: (b: boolean) => void
+    setPlugin: (p?: API.YakitPluginDetail) => void
 }
 
 export interface PluginRecycleListProps {}
@@ -18,4 +19,8 @@ export interface OnlineRecycleExtraOperateProps {
     uuid: string
     onRemove: (uuid: string) => void
     onReduction: (uuid: string) => void
+}
+
+export interface OnlineUserExtraOperateProps {
+    plugin: API.YakitPluginDetail
 }
