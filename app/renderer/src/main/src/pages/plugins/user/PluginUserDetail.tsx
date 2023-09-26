@@ -176,7 +176,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                     renderRow: (info, i) => {
                         const check = allCheck || selectList.includes(info.uuid)
                         return (
-                            <PluginDetailsListItem
+                            <PluginDetailsListItem<API.YakitPluginDetail>
                                 plugin={info}
                                 selectUUId={plugin.uuid}
                                 check={check}
