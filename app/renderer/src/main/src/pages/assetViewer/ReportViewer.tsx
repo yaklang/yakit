@@ -14,7 +14,6 @@ import {openABSFileLocated} from "../../utils/openWebsite"
 import {useThrottleFn, useGetState, useUpdateEffect} from "ahooks"
 import htmlDocx from "html-docx-js/dist/html-docx"
 import {saveAs} from "file-saver"
-import html2canvas from "html2canvas"
 export interface ReportViewerProp {
     id?: number
 }
@@ -72,52 +71,18 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         }
     }, [report])
 
-    const exportToWord = async () => {
-        const contentHTML = divRef.current
+    useUpdateEffect(()=>{
+        if(wordSpinLoading){
+            const contentHTML = divRef.current
 
-        if (isEchartsToImg.current) {
-            isEchartsToImg.current = false
-            // 使用html2canvas将ECharts图表转换为图像
-            const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
-            const promises = Array.from(echartsElements).map(async (element) => {
-                // @ts-ignore
-                const echartType: string = element.getAttribute("echart-type")
-                let options = {}
-                // 适配各种图表
-                if (echartType === "vertical-bar") {
-                    options = {scale: 0.8}
-                } else if (echartType === "hollow-pie") {
-                    options = {scale: 1, windowWidth: 1000}
-                }
-
-                const canvas = await html2canvas(element as HTMLElement, options)
-                return canvas.toDataURL("image/jpeg")
-            })
-
-            const echartsImages = await Promise.all(promises)
-
-            // 将图像插入到contentHTML中
-            echartsImages.forEach((imageDataUrl, index) => {
-                const img = document.createElement("img")
-                img.src = imageDataUrl
-                img.style.display = "none"
-                echartsElements[index].appendChild(img)
-            })
+            saveAs(
+                //保存文件到本地
+                htmlDocx.asBlob(contentHTML.outerHTML), //将html转为docx
+                `${report.Title}.doc`
+            )
+            setWordSpinLoading(false)
         }
-
-        saveAs(
-            //保存文件到本地
-            htmlDocx.asBlob(contentHTML.outerHTML), //将html转为docx
-            `${report.Title}.doc`
-        )
-        setWordSpinLoading(false)
-    }
-
-    useUpdateEffect(() => {
-        if (wordSpinLoading) {
-            exportToWord()
-        }
-    }, [renderReportItems])
+    },[renderReportItems])
 
     const loadReport = useThrottleFn(
         () => {
@@ -206,17 +171,15 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     // 下载Word
     const downloadWord = () => {
         if (!divRef || !divRef.current) return
-
         setWordSpinLoading(true)
-        let newData: ReportItem[] = []
+        
+        let newData:ReportItem[] = []
         // word报告下载移除掉附录
-        reportItems.some((item) => {
+        reportItems.some((item)=>{
             newData.push(item)
             return /附录：/.test(item.content)
         })
-        setTimeout(() => {
-            setRenderReportItems(newData.slice(0, -1))
-        }, 500)
+        setRenderReportItems(newData.slice(0, -1))
     }
     return (
         <div className={styles["report-viewer"]}>

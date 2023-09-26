@@ -35,7 +35,6 @@
         "file-saver": "^2.0.5",
         "hint.css": "^2.7.0",
         "html-docx-js": "^0.3.1",
-        "html2canvas": "^1.4.1",
         "html2pdf.js": "^0.10.1",
         "immutability-helper": "^3.1.1",
         "isomorphic-dompurify": "^1.8.0",
