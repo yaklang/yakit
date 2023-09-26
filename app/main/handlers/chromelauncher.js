@@ -58,7 +58,7 @@ const manifestStr = `
 `
 
 // 生成临时文件夹
-const tempFile = "selenium-chrome-auth-proxy"
+const tempFile = "yakit-proxy"
 // 生成临时文件名
 const exceptFileName = "background.js"
 const manifestFileName = "manifest.json"
