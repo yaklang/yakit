@@ -54,18 +54,21 @@ import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
 import {
     OnlineRecycleExtraOperateProps,
+    OnlineUserExtraOperateProps,
     PluginRecycleListProps,
     PluginUserListProps,
     PluginUserProps
 } from "./PluginUserType"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {PluginUserDetail} from "./PluginUserDetail"
 
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginUser.module.scss"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
-const userPluginTypeList = [
+
+export const mePluginTypeList = [
     {
         label: "我的云端插件",
         value: "myOnlinePlugin"
@@ -90,19 +93,20 @@ const onlinePluginTypeList = [
     }
 ]
 
-export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
-    const [isShowDetails, setIsShowDetails] = useState<boolean>(false)
+export type MePluginType = "myOnlinePlugin" | "recycle"
 
+export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
+    const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
     const [searchUser, setSearchUser] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [pluginState, setPluginState] = useState<string[]>(["1"])
     const [isSelectNum, setIsSelectNum] = useState<boolean>(false)
 
-    const [userPluginType, setUserPluginType] = useState<"myOnlinePlugin" | "recycle">("myOnlinePlugin")
+    const [userPluginType, setUserPluginType] = useState<MePluginType>("myOnlinePlugin")
 
     const onRemove = useMemoizedFn(() => {})
     const onSwitchUserPluginType = useDebounceFn(
         useMemoizedFn((v) => {
-            setUserPluginType(v as "myOnlinePlugin" | "recycle")
+            setUserPluginType(v as MePluginType)
         }),
         {wait: 200, leading: true}
     ).run
@@ -121,17 +125,34 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     const onSetActive = useMemoizedFn((state: string[]) => {
         setPluginState(state)
     })
+    const onBack = useMemoizedFn(() => {
+        setPlugin(undefined)
+    })
+
     return (
         <>
+            {!!plugin && (
+                <PluginUserDetail
+                    info={plugin}
+                    selectList={[]}
+                    allCheck={false}
+                    onCheck={() => {}}
+                    optCheck={() => {}}
+                    loading={false}
+                    data={cloneDeep(defaultResponse)}
+                    onBack={onBack}
+                    loadMoreData={() => {}}
+                />
+            )}
             <PluginsLayout
                 title={
                     <YakitSegmented
                         value={userPluginType}
                         onChange={onSwitchUserPluginType}
-                        options={userPluginTypeList}
+                        options={mePluginTypeList}
                     />
                 }
-                hidden={isShowDetails}
+                hidden={!!plugin}
                 subTitle={
                     userPluginType === "myOnlinePlugin" && (
                         <TypeSelect active={pluginState} list={onlinePluginTypeList} setActive={onSetActive} />
@@ -200,8 +221,9 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     <PluginUserList
                         pluginState={pluginState}
                         searchUser={searchUser}
-                        setIsShowDetails={setIsShowDetails}
                         setIsSelectNum={setIsSelectNum}
+                        plugin={plugin}
+                        setPlugin={setPlugin}
                     />
                 </div>
                 <div
@@ -218,8 +240,8 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
 })
 
 const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
-    const {pluginState, searchUser, setIsShowDetails, setIsSelectNum} = props
-    const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
+    const {pluginState, searchUser, setIsSelectNum, plugin, setPlugin} = props
+    // const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
     /** 是否为首页加载 */
@@ -326,59 +348,17 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
                     }}
                 />
                 <div className='divider-style' />
-                <FuncFilterPopover
-                    icon={<OutlineDotshorizontalIcon />}
-                    menu={{
-                        type: "primary",
-                        data: [
-                            {
-                                key: "share",
-                                label: "分享",
-                                itemIcon: <OutlineShareIcon className={styles["plugin-user-extra-node-icon"]} />
-                            },
-                            {
-                                key: "download",
-                                label: "下载",
-                                itemIcon: <OutlineClouddownloadIcon className={styles["plugin-user-extra-node-icon"]} />
-                            },
-                            {
-                                key: "editState",
-                                label: data.is_private ? "改为公开" : "改为私密",
-                                itemIcon: data.is_private ? (
-                                    <OutlineLockopenIcon className={styles["plugin-user-extra-node-icon"]} />
-                                ) : (
-                                    <OutlineLockclosedIcon className={styles["plugin-user-extra-node-icon"]} />
-                                )
-                            },
-                            {type: "divider"},
-                            {
-                                key: "remove",
-                                label: (
-                                    <span className={styles["remove-menu-item"]}>
-                                        <OutlineTrashIcon className={styles["plugin-user-extra-node-icon"]} />
-                                        <span>删除</span>
-                                    </span>
-                                )
-                            }
-                        ],
-                        className: styles["func-filter-dropdown-menu"],
-                        onClick: ({key}) => {
-                            switch (key) {
-                                default:
-                                    break
-                            }
-                        }
-                    }}
-                    button={{type: "text2"}}
-                    placement='bottomRight'
-                />
+                <OnlineUserExtraOperate plugin={data} />
             </div>
         )
+    })
+    /** 单项副标题组件 */
+    const optSubTitle = useMemoizedFn((data: API.YakitPluginDetail) => {
+        return statusTag[`${1 % 3}`]
     })
     /** 单项点击回调 */
     const optClick = useMemoizedFn((data: API.YakitPluginDetail) => {
         setPlugin(data)
-        setIsShowDetails(true)
     })
     const onLikeClick = useMemoizedFn(() => {
         yakitNotify("success", "点赞~~~")
@@ -396,20 +376,24 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
         setAllCheck(value)
         setIsSelectNum(value)
     })
+    const onBack = useMemoizedFn(() => {
+        setPlugin(undefined)
+    })
     return (
         <>
-            {!!plugin && (
-                <PluginManageDetail
+            {/* {!!plugin && (
+                <PluginUserDetail
                     info={plugin}
+                    selectList={selectList}
                     allCheck={allCheck}
                     onCheck={onCheck}
+                    optCheck={optCheck}
+                    loading={loading}
                     data={response}
-                    onBack={() => {}}
-                    selectList={[]}
-                    optCheck={() => {}}
-                    loadMoreData={() => {}}
+                    onBack={onBack}
+                    loadMoreData={onUpdateList}
                 />
-            )}
+            )} */}
             <PluginsContainer
                 loading={loading && isLoadingRef.current}
                 visible={showFilter}
@@ -449,6 +433,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
                                     user={data.authors || ""}
                                     // prImgs={data.prs}
                                     time={data.updated_at}
+                                    subTitle={optSubTitle}
                                     extraFooter={optExtraNode}
                                     onClick={optClick}
                                 />
@@ -467,6 +452,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
                                     title={data.script_name}
                                     help={data.help || ""}
                                     time={data.updated_at}
+                                    subTitle={optSubTitle}
                                     extraNode={optExtraNode}
                                     onClick={optClick}
                                 />
@@ -661,5 +647,57 @@ const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps> = Reac
                 还原
             </YakitButton>
         </div>
+    )
+})
+
+export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = React.memo((props) => {
+    const {plugin} = props
+    return (
+        <FuncFilterPopover
+            icon={<OutlineDotshorizontalIcon />}
+            menu={{
+                type: "primary",
+                data: [
+                    {
+                        key: "share",
+                        label: "分享",
+                        itemIcon: <OutlineShareIcon className={styles["plugin-user-extra-node-icon"]} />
+                    },
+                    {
+                        key: "download",
+                        label: "下载",
+                        itemIcon: <OutlineClouddownloadIcon className={styles["plugin-user-extra-node-icon"]} />
+                    },
+                    {
+                        key: "editState",
+                        label: plugin.is_private ? "改为公开" : "改为私密",
+                        itemIcon: plugin.is_private ? (
+                            <OutlineLockopenIcon className={styles["plugin-user-extra-node-icon"]} />
+                        ) : (
+                            <OutlineLockclosedIcon className={styles["plugin-user-extra-node-icon"]} />
+                        )
+                    },
+                    {type: "divider"},
+                    {
+                        key: "remove",
+                        label: (
+                            <span className={styles["remove-menu-item"]}>
+                                <OutlineTrashIcon className={styles["plugin-user-extra-node-icon"]} />
+                                <span>删除</span>
+                            </span>
+                        )
+                    }
+                ],
+                className: styles["func-filter-dropdown-menu"],
+                onClick: ({key}) => {
+                    switch (key) {
+                        default:
+                            break
+                    }
+                }
+            }}
+            button={{type: "text2"}}
+            placement='bottomRight'
+        />
     )
 })
