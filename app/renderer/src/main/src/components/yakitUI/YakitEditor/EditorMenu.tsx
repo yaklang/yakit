@@ -28,8 +28,7 @@ export type EditorMenuItemType = EditorMenuItemProps | EditorMenuItemDividerProp
 
 export interface EditorMenuProp extends MenuProps {
     data?: EditorMenuItemType[]
-    /** 有默认菜单样式(深底白字)和'secondary-浅底深字'样式 */
-    type?: "secondary" | "primary"
+    type?: "primary" | "grey"
     /** 是否鼠标悬浮展示文字内容弹窗 */
     isHint?: boolean
     popupClassName?: string
@@ -48,6 +47,10 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
         ...restMenu
     } = props
 
+    const menuTypeClass = useMemo(() => {
+        if (type === "grey") return styles["yakit-menu-grey"]
+        return styles["yakit-menu-primary"]
+    }, [type])
     const menuSizeClass = useMemo(() => {
         if (size === "rightMenu") return styles["yakit-menu-right-menu-size"]
         return styles["yakit-menu-default-size"]
@@ -84,11 +87,8 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
                     disabled: info.disabled,
                     children: [],
                     popupClassName: classNames(
-                        {
-                            [styles["yakit-menu-primary"]]: type === "primary",
-                            [styles["yakit-menu-secondary"]]: type === "secondary"
-                        },
                         styles["yakit-menu-submenu"],
+                        menuTypeClass,
                         menuSizeClass,
                         popupClassName
                     )
@@ -130,16 +130,13 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
         <div
             className={classNames(
                 styles["yakit-menu-div-wrapper"],
-                {
-                    [styles["yakit-menu-primary"]]: type === "primary",
-                    [styles["yakit-menu-secondary"]]: type === "secondary"
-                },
+                menuTypeClass,
                 menuSizeClass
             )}
         >
             <Menu
                 {...restMenu}
-                className={classNames(styles["yakit-menu-wrapper"], {[className || ""]: !!className})}
+                className={classNames(styles["yakit-menu-wrapper"], className || "")}
                 items={data && data.length > 0 ? items : restMenu.items}
             ></Menu>
         </div>

@@ -1044,7 +1044,6 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
 
     const menu = (
         <YakitMenu
-            type='secondary'
             isHint={true}
             data={newMenuData}
             width={136}

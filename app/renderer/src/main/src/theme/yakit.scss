@@ -10,14 +10,6 @@ html {
     --yakit-color-yellow: #ffd583;
     --yakit-color-grey: #b4bbca;
 
-    // 主题色
-    --yakit-primary-1: rgba(242, 139, 68, 0.06);
-    --yakit-primary-2: #fbe7d9;
-    --yakit-primary-3: #fbc6a1;
-    --yakit-primary-4: #f69c5d;
-    --yakit-primary-5: #f28b44;
-    --yakit-primary-6: #e27122;
-
     // 成功状态色
     --yakit-success-1: rgba(86, 201, 145, 0.08);
     --yakit-success-2: #d9f2e6;
@@ -55,10 +47,20 @@ html[data-theme="default"] {
     --ui-text-inverse-color: #fff;
     --ui-icon-color: #85899e;
     --ui-background-color: #fff;
+    --ui-hover-background-color: #f0f1f3;
+
+    // 主题色
+    --yakit-primary-1: rgba(242, 139, 68, 0.06);
+    --yakit-primary-2: #fbe7d9;
+    --yakit-primary-3: #fbc6a1;
+    --yakit-primary-4: #f69c5d;
+    --yakit-primary-5: #f28b44;
+    --yakit-primary-6: #e27122;
 }
 html[data-theme="dark"] {
     --ui-text-color: #fff;
     --ui-text-inverse-color: #31343f;
     --ui-icon-color: #85899e;
     --ui-background-color: #000;
+    --ui-hover-background-color: #f0f1f3;
 }

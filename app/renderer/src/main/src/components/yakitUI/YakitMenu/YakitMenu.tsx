@@ -2,19 +2,25 @@ import React, {ReactNode, useMemo} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Menu, MenuProps, Tooltip} from "antd"
 import {ItemType} from "antd/lib/menu/hooks/useItems"
-import {ChevronRightIcon} from "@/assets/newIcon"
 import {MenuDividerType} from "rc-menu/lib/interface"
+import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 
 import classNames from "classnames"
 import styles from "./yakitMenu.module.scss"
 
 export interface YakitMenuItemProps {
+    /** 菜单项展示内容 */
     label: string | ReactNode
+    /** 菜单项值 */
     key: string
+    /** 是否禁用 */
     disabled?: boolean
     children?: YakitMenuItemProps[]
     itemIcon?: ReactNode
+    /** tooltip提示，不填默认用label */
     title?: string
+    /** 单项菜单类型(只在叶子节点时有效) */
+    type?: "success" | "danger"
 }
 export interface YakitMenuItemDividerProps {
     type: "divider"
@@ -24,8 +30,7 @@ export type YakitMenuItemType = YakitMenuItemProps | YakitMenuItemDividerProps
 export interface YakitMenuProp extends MenuProps {
     data?: YakitMenuItemType[]
     width?: number
-    /** 有默认菜单样式(深底白字)和'secondary-浅底深字'样式 */
-    type?: "secondary" | "primary" | "grey"
+    type?: "primary" | "grey"
     /** 是否鼠标悬浮展示文字内容弹窗 */
     isHint?: boolean
     popupClassName?: string
@@ -45,13 +50,26 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         ...restMenu
     } = props
 
+    const menuTypeClass = useMemo(() => {
+        if (type === "grey") return styles["yakit-menu-grey"]
+        return styles["yakit-menu-primary"]
+    }, [type])
     const menuSizeClass = useMemo(() => {
         if (size === "rightMenu") return styles["yakit-menu-right-menu-size"]
         return styles["yakit-menu-default-size"]
     }, [size])
 
+    const itemMenuTypeClass = useMemoizedFn((type?: YakitMenuItemProps["type"]) => {
+        if (type === "success") return "yakit-menu-item-success"
+        if (type === "danger") return "yakit-menu-item-danger"
+        return ""
+    })
+
     const generateMenuInfo = useMemoizedFn((data: YakitMenuItemType) => {
-        if (typeof (data as any as YakitMenuItemDividerProps)["type"] !== "undefined") {
+        if (
+            typeof (data as any as YakitMenuItemDividerProps)["type"] !== "undefined" &&
+            (data as any as YakitMenuItemDividerProps).type === "divider"
+        ) {
             const itemInfo: MenuDividerType = {
                 type: "divider"
             }
@@ -88,19 +106,15 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                                     </div>
                                 )}
                             </div>
-                            <ChevronRightIcon className='icon-style' />
+                            <OutlineChevronrightIcon />
                         </div>
                     ),
                     key: info.key,
                     disabled: info.disabled,
                     children: [],
                     popupClassName: classNames(
-                        {
-                            [styles["yakit-menu-primary"]]: type === "primary",
-                            [styles["yakit-menu-secondary"]]: type === "secondary",
-                            [styles["yakit-menu-grey"]]: type === "grey"
-                        },
                         styles["yakit-menu-submenu"],
+                        menuTypeClass,
                         menuSizeClass,
                         popupClassName
                     )
@@ -114,7 +128,10 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
             } else {
                 const itemInfo: ItemType = {
                     label: (
-                        <div style={{minWidth: width}} className={classNames(styles["yakit-menu-item"])}>
+                        <div
+                            style={{minWidth: width}}
+                            className={classNames(styles["yakit-menu-item"], itemMenuTypeClass(info.type) || "")}
+                        >
                             <div className={styles["yakit-menu-item-content"]}>
                                 {info.itemIcon}
                                 {isHint && !!hintTitle ? (
@@ -153,20 +170,10 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     if (data.length > 0) for (let item of data) items.push(generateMenuInfo(item))
 
     return (
-        <div
-            className={classNames(
-                styles["yakit-menu-div-wrapper"],
-                {
-                    [styles["yakit-menu-primary"]]: type === "primary",
-                    [styles["yakit-menu-secondary"]]: type === "secondary",
-                    [styles["yakit-menu-grey"]]: type === "grey"
-                },
-                menuSizeClass
-            )}
-        >
+        <div className={classNames(styles["yakit-menu-div-wrapper"], menuTypeClass, menuSizeClass)}>
             <Menu
                 {...restMenu}
-                className={classNames(styles["yakit-menu-wrapper"], {[className || ""]: !!className})}
+                className={classNames(styles["yakit-menu-wrapper"], className || "")}
                 items={data && data.length > 0 ? items : restMenu.items}
             ></Menu>
         </div>
