@@ -32,8 +32,8 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     const [records, setRecords] = useState<DNSLogEvent[]>([])
     const [total, setTotal] = useState<number>(0)
     const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(true)
-    const [dnsMode,setDNSMode] = useState<string>("")
-    const [useLocal,setUseLocal] = useState<boolean>(true)
+    const [dnsMode,setDNSMode,getDNSMode] = useGetState<string>("")
+    const [useLocal,setUseLocal,getUseLocal] = useGetState<boolean>(true)
     // 生成传递给页面的配置信息
     const generateData = useMemoizedFn(() => {
         return {
@@ -65,7 +65,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                         setToken(token || "")
                         setDomain(domain || "")
                         DNSMode&&setDNSMode(DNSMode)
-                        UseLocal&&setUseLocal(UseLocal)
+                        UseLocal!==undefined&&setUseLocal(UseLocal)
                         setLastRecords([])
                         setRecords([])
                         setTotal(0)
@@ -164,7 +164,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
 
         const id = setInterval(() => {
 
-            ipcRenderer.invoke("QueryDNSLogByToken", {Token: token,DNSMode:dnsMode,UseLocal:useLocal}).then((rsp: {Events: DNSLogEvent[]}) => {
+            ipcRenderer.invoke("QueryDNSLogByToken", {Token: token,DNSMode:getDNSMode(),UseLocal:getUseLocal()}).then((rsp: {Events: DNSLogEvent[]}) => {
                 setTotal(rsp.Events.length)
                 const lists = rsp.Events.filter((i) => {
                     if (getOnlyARecord()) {
