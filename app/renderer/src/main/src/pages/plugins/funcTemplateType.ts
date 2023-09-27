@@ -2,6 +2,7 @@ import {ReactNode} from "react"
 import {YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitMenuProp} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {DropDownProps} from "antd"
+import {PluginSearchParams} from "./baseTemplateType"
 
 export interface TypeSelectOpt {
     /** 唯一标识符 */
@@ -30,10 +31,12 @@ export interface FuncBtnProps extends YakitButtonProp {
 export interface FuncSearchProps {
     /** 切换纯图标按钮的宽度界限 */
     maxWidth?: number
-    /** 默认值 */
-    defaultValue?: string
+    /** 值 */
+    value?: PluginSearchParams
+    /** */
+    onChange: (v: PluginSearchParams) => void
     /** 搜索回调 */
-    onSearch: (type: string, value: string) => any
+    onSearch: (value: PluginSearchParams) => any
 }
 
 export interface FuncFilterPopoverProps {
@@ -223,11 +226,11 @@ export interface AuthorImgProps {
 export interface OnlineExtraOperateProps {
     likeProps: {
         active: boolean
-        likeNumber: number
-        onLikeClick: (active: boolean) => void
+        likeNumber: string
+        onLikeClick: () => void
     }
     commentProps: {
-        commentNumber: number
+        commentNumber: string
         onCommentClick: () => void
     }
     downloadProps: {
