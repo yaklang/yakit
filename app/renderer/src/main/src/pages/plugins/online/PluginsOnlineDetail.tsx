@@ -8,6 +8,10 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {FuncBtn, OnlineExtraOperate} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
+import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "./PluginsOnlineType"
+import {PluginSearchParams} from "../baseTemplateType"
+import cloneDeep from "bizcharts/lib/utils/cloneDeep"
+import {OnlinePluginAppAction} from "../pluginReducer"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -18,27 +22,41 @@ const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
 
 interface PluginsOnlineDetailProps {
-    info: API.YakitPluginDetail
+    info: YakitPluginOnlineDetail
     allCheck: boolean
     loading: boolean
     onCheck: (value: boolean) => void
     selectList: string[]
-    optCheck: (data: API.YakitPluginDetail, value: boolean) => void
-    data: API.YakitPluginListResponse
-    onBack: () => void
+    optCheck: (data: YakitPluginOnlineDetail, value: boolean) => void
+    data: YakitPluginListOnlineResponse
+    onBack: (q: PluginSearchParams) => void
     loadMoreData: () => void
+    defaultSearchValue: PluginSearchParams
+    dispatch: React.Dispatch<OnlinePluginAppAction>
 }
 
 export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) => {
-    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData, loading} = props
-
+    const {
+        info,
+        allCheck,
+        onCheck,
+        selectList,
+        optCheck,
+        data,
+        onBack,
+        loadMoreData,
+        loading,
+        defaultSearchValue,
+        dispatch
+    } = props
+    const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return data.pagemeta.total
         else return selectList.length
     }, [allCheck, selectList])
 
-    const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
+    const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
 
     useEffect(() => {
         if (info) setPlugin({...info})
@@ -48,21 +66,39 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     const onRun = useMemoizedFn(() => {})
     // 返回
     const onPluginBack = useMemoizedFn(() => {
-        onBack()
-        setPlugin(undefined)
+        onBack(search)
     })
     const onLikeClick = useMemoizedFn(() => {
-        yakitNotify("success", "点赞~~~")
+        if (plugin) {
+            dispatch({
+                type: "unLikeAndLike",
+                payload: {
+                    item: {
+                        ...plugin
+                    }
+                }
+            })
+        }
     })
     const onCommentClick = useMemoizedFn(() => {
         yakitNotify("success", "评论~~~")
     })
     const onDownloadClick = useMemoizedFn(() => {
+        if (plugin) {
+            dispatch({
+                type: "download",
+                payload: {
+                    item: {
+                        ...plugin
+                    }
+                }
+            })
+        }
         yakitNotify("success", "下载~~~")
     })
     if (!plugin) return null
     return (
-        <PluginDetails<API.YakitPluginDetail>
+        <PluginDetails<YakitPluginOnlineDetail>
             title='插件管理'
             filterExtra={
                 <div className={"details-filter-extra-wrapper"}>
@@ -87,7 +123,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                 renderRow: (info, i) => {
                     const check = allCheck || selectList.includes(info.uuid)
                     return (
-                        <PluginDetailsListItem<API.YakitPluginDetail>
+                        <PluginDetailsListItem<YakitPluginOnlineDetail>
                             plugin={info}
                             selectUUId={plugin.uuid}
                             check={check}
@@ -110,6 +146,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                 defItemHeight: 46
             }}
             onBack={onPluginBack}
+            search={search}
+            setSearch={setSearch}
         >
             <div className={styles["details-content-wrapper"]}>
                 <Tabs tabPosition='right' className='plugins-tabs'>
@@ -124,15 +162,15 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                                         <OnlineExtraOperate
                                             likeProps={{
                                                 active: plugin.is_stars,
-                                                likeNumber: plugin.stars,
+                                                likeNumber: plugin.starsCountString || "",
                                                 onLikeClick: onLikeClick
                                             }}
                                             commentProps={{
-                                                commentNumber: plugin.comment_num,
+                                                commentNumber: plugin.commentCountString || "",
                                                 onCommentClick: onCommentClick
                                             }}
                                             downloadProps={{
-                                                downloadNumber: `${plugin.downloaded_total}`,
+                                                downloadNumber: plugin.downloadedTotalString || "",
                                                 onDownloadClick: onDownloadClick
                                             }}
                                         />
