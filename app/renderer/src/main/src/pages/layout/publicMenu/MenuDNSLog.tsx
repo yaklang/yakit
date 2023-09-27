@@ -137,8 +137,11 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                     updateToken(obj)
                 }
                 // 自定义
-                if(obj.type==="custom"){
+                else if(obj.type==="custom"&&obj.ScriptName.length>0){
                     updateTokenByScript(obj)
+                }
+                else{
+                    updateToken()
                 }
             }
         })

@@ -165,21 +165,6 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             })
     }
 
-    useEffect(() => {
-        if (!token || !autoQuery) {
-            return
-        }
-        setRecords([])
-
-        const id = setInterval(() => {
-            queryDNSLogByToken(false)
-        }, 5000)
-
-        return () => {
-            clearInterval(id)
-        }
-    }, [token, autoQuery])
-
     const tokenDomain = `${domain}`
 
     const [platforms, setPlatforms] = useState<string[]>([])
@@ -260,10 +245,12 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 setDomain("")
             })
             .finally(() => {
-                // 用于 MenuDNSLog 生成域名时读取此处数据
-                setRemoteValue(DNS_LOG_PAGE_UPDATE_TOKEN, JSON.stringify({type: "custom", ScriptName: params || ""}))
-                // 用于缓存历史勾选项
-                setRemoteValue(DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE, JSON.stringify({ScriptName: params || ""}))
+                if(params&&params?.length>0){
+                    // 用于 MenuDNSLog 生成域名时读取此处数据
+                    setRemoteValue(DNS_LOG_PAGE_UPDATE_TOKEN, JSON.stringify({type: "custom", ScriptName: params}))
+                    // 用于缓存历史勾选项
+                    setRemoteValue(DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE, JSON.stringify({ScriptName: params}))
+                }
                 setTimeout(() => {
                     setLoading(false)
                     setBtnLoading(false)
@@ -300,7 +287,12 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         setRecords([])
 
         const id = setInterval(() => {
-            queryDNSLogTokenByScript(false)
+            if(dnsLogType === "builtIn"){
+                queryDNSLogByToken(false)
+            }
+            else{
+                queryDNSLogTokenByScript(false)
+            }
         }, 5000)
 
         return () => {
