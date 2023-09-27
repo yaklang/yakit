@@ -268,7 +268,7 @@ highCountScale = 0
 warningCountScale = 0
 lowCountScale = 0
 secureCountScale = 0
-
+infoPotentialRisk = []
 for target,risks = range targetToRisks {
     if target == "" {
         continue
@@ -279,10 +279,9 @@ for target,risks = range targetToRisks {
     lowCount = 0
     secureCount = 0
     riskLevel = "安全"
-    isRiskKye = []
     for _, riskIns := range risks {
         if str.Contains(riskIns.Severity, "info") {
-            isRiskKye = append(isRiskKye, riskIns)
+            infoPotentialRisk = append(infoPotentialRisk, riskIns)
         }
         if str.Contains(riskIns.Severity, "critical") {
             criticalCount++
@@ -348,7 +347,7 @@ for target,risks = range targetToRisks {
     }
     
     allCount = criticalCount +highCount + warningCount + lowCount
-    if len(isRiskKye) == 0 {
+    if len(infoPotentialRisk) == 0 {
         ipRisksStr = append(ipRisksStr, {
         "资产": {"value": target, "jump_link": target, "sort": 1},
         "风险等级": {"value": riskLevel,"color": colorTag, "sort": 2},
@@ -648,6 +647,35 @@ if len(weakPassWordRisks) != 0 {
 } else {
     reportInstance.Markdown(sprintf("### 3.3.5 弱口令风险列表"))
     reportInstance.Markdown("对资产进行弱口令检测，检测到 0 个弱口令，暂无弱口令风险")
+}
+
+if len(infoPotentialRisk) > 0 {
+    reportInstance.Markdown(sprintf("### 3.3.6 信息/指纹列表"))
+    reportInstance.Markdown(sprintf(\`本次扫描检测到信息/指纹共<span font-weight:bold">%v个</span> 条，请认真查看是否有风险信息需要排查。\`, len(infoPotentialRisk) ))
+    for _, infoRisk := range infoPotentialRisk {
+        addr := sprintf(\`%v:%v\`, infoRisk.Host, infoRisk.Port)
+        reportInstance.Raw({"type": "info-risk-list", "data": {
+            "标题": {
+                "sort": 1,
+                "value": titleVerbose
+            },
+            "风险地址": {
+                 "sort": 2,
+                 "value": addr
+             },
+            "漏洞级别": {
+                 "sort": 3,
+                 "value": infoRisk.Severity
+            },
+            "标漏洞类型": {
+                  "sort": 4,
+                  "value": infoRisk.RiskTypeVerbose
+            }, 
+        }
+    }
+} else {
+    reportInstance.Markdown(sprintf("### 3.3.6 信息/指纹列表"))
+    reportInstance.Markdown("暂无信息/指纹")
 }
 
 
