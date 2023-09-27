@@ -343,7 +343,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
                                 <div className={styles["content-style"]}>剪切</div>
-                                <div className={classNames(styles["keybind-style"], "icon-style")}>{keysContent}</div>
+                                <div className={classNames(styles["keybind-style"], "keys-style")}>{keysContent}</div>
                             </div>
                         ) : (
                             info.label
@@ -357,7 +357,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
                                 <div className={styles["content-style"]}>复制</div>
-                                <div className={classNames(styles["keybind-style"], "icon-style")}>{keysContent}</div>
+                                <div className={classNames(styles["keybind-style"], "keys-style")}>{keysContent}</div>
                             </div>
                         ) : (
                             info.label
@@ -371,7 +371,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
                                 <div className={styles["content-style"]}>粘贴</div>
-                                <div className={classNames(styles["keybind-style"], "icon-style")}>{keysContent}</div>
+                                <div className={classNames(styles["keybind-style"], "keys-style")}>{keysContent}</div>
                             </div>
                         ) : (
                             info.label
@@ -390,7 +390,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         info.label = keysContent ? (
                             <div className={styles["editor-context-menu-keybind-wrapper"]}>
                                 <div className={styles["content-style"]}>{info.label}</div>
-                                <div className={classNames(styles["keybind-style"], "icon-style")}>{keysContent}</div>
+                                <div className={classNames(styles["keybind-style"], "keys-style")}>{keysContent}</div>
                             </div>
                         ) : (
                             info.label

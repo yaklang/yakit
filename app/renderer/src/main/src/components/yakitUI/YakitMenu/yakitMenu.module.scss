@@ -104,12 +104,18 @@
                 }
             }
         }
+        .keys-style {
+            color: var(--menu-icon-color);
+        }
     }
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child,
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-selected.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child {
         color: var(--menu-active-color);
         background-color: var(--menu-active-background);
         span.anticon {
+            color: var(--menu-active-icon-color);
+        }
+        .keys-style {
             color: var(--menu-active-icon-color);
         }
     }
@@ -119,11 +125,17 @@
         span.anticon {
             color: var(--menu-select-icon-color);
         }
+        .keys-style {
+            color: var(--menu-select-icon-color);
+        }
     }
     .ant-#{$kind}menu-item.ant-#{$kind}menu-item-disabled.ant-#{$kind}menu-item-only-child {
-        color: #ccd2de;
+        color: var(--yakit-disable-text-color);
         span.anticon {
-            color: #ccd2de;
+            color: var(--yakit-disable-text-color);
+        }
+        .keys-style {
+            color: var(--yakit-disable-text-color);
         }
     }
 
@@ -139,6 +151,9 @@
                     stroke-width: 1.5;
                 }
             }
+        }
+        .keys-style {
+            color: var(--menu-icon-color);
         }
         .ant-#{$kind}menu-submenu-title {
             color: var(--menu-color);
@@ -159,6 +174,9 @@
         span.anticon {
             color: var(--menu-active-icon-color);
         }
+        .keys-style {
+            color: var(--menu-active-icon-color);
+        }
         .ant-#{$kind}menu-submenu-title {
             color: var(--menu-active-color);
         }
@@ -167,16 +185,22 @@
         span.anticon {
             color: var(--menu-select-icon-color);
         }
+        .keys-style {
+            color: var(--menu-select-icon-color);
+        }
         .ant-#{$kind}menu-submenu-title {
             color: var(--menu-select-color);
         }
     }
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-disabled {
         span.anticon {
-            color: #ccd2de;
+            color: var(--yakit-disable-text-color);
+        }
+        .keys-style {
+            color: var(--yakit-disable-text-color);
         }
         .ant-#{$kind}menu-submenu-title {
-            color: #ccd2de;
+            color: var(--yakit-disable-text-color);
         }
     }
 
