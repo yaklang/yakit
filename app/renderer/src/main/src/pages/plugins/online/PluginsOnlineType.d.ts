@@ -1,11 +1,16 @@
 import {API} from "@/services/swagger/resposeType"
 import {Ref} from "react"
+import {PluginSearchParams} from "../baseTemplateType"
 
 export interface PluginsOnlineProps {}
 
 export interface PluginsOnlineListProps {
-    plugin: API.YakitPluginDetail | undefined
-    setPlugin: (data: API.YakitPluginDetail | undefined) => void
+    /**刷新数据 */
+    refresh:boolean
+    plugin: YakitPluginOnlineDetail | undefined
+    searchValue: PluginSearchParams
+    setSearchValue: (s: PluginSearchParams) => void
+    setPlugin: (data: YakitPluginOnlineDetail | undefined) => voidc
     /**是否显示滚动条，显示滚动条的时候需要补全搜索框 */
     isShowRoll: boolean
 }
@@ -14,5 +19,26 @@ export interface PluginsListRefProps {
     onBack: () => void
     loadMoreData: () => void
 }
-export interface PluginsOnlineHeardProps {}
-export interface YakitCombinationSearchCircleProps {}
+export interface PluginsOnlineHeardProps {
+    value: PluginSearchParams
+    onChange: (v: PluginSearchParams) => void
+    onSearch: () => void
+}
+export interface YakitCombinationSearchCircleProps {
+    value: PluginSearchParams
+    onChange: (v: PluginSearchParams) => void
+    onSearch: () => void
+}
+
+export interface YakitPluginOnlineDetail extends API.YakitPluginDetail {
+    /**1.2k */
+    starsCountString?: string
+    /**1.2k */
+    commentCountString?: string
+    /**1.2K */
+    downloadedTotalString?: string
+}
+
+export interface YakitPluginListOnlineResponse extends Omit<API.YakitPluginListResponse, "data"> {
+    data: YakitPluginOnlineDetail[]
+}

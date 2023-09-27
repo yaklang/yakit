@@ -52,6 +52,10 @@ export interface PluginDetailsProps<T> {
     /** 返回事件 */
     onBack: () => any
     children: ReactNode
+    /**搜索框的条件 */
+    search: PluginSearchParams
+    /** */
+    setSearch: (s: PluginSearchParams) => void
 }
 
 export interface PluginDetailHeaderProps {
@@ -145,6 +149,8 @@ export interface PluginSearchParams {
     keyword: string
     /** 用户名 */
     userName: string
+    /** 搜索类型 */
+    type: "keyword" | "userName"
 }
 /** 插件列表页码条件 */
 export interface PluginListPageMeta {
@@ -164,9 +170,9 @@ export interface PluginDetailsListItemProps<T> {
     help?: string
     content: string
     official: boolean
-    pluginType:string
+    pluginType: string
     /** @name 是否内置 */
-    isCorePlugin:boolean
+    isCorePlugin: boolean
     optCheck: (data: T, value: boolean) => any
-    extra?:ReactNode
+    extra?: ReactNode
 }

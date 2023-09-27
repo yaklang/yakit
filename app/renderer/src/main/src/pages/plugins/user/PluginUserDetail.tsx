@@ -19,6 +19,9 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {MePluginType, OnlineUserExtraOperate, mePluginTypeList} from "./PluginUser"
+import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
+import {PluginSearchParams} from "../baseTemplateType"
+import cloneDeep from "bizcharts/lib/utils/cloneDeep"
 
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
@@ -29,27 +32,28 @@ const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
 
 interface PluginUserDetailProps {
-    info: API.YakitPluginDetail
+    info: YakitPluginOnlineDetail
     allCheck: boolean
     loading: boolean
     onCheck: (value: boolean) => void
     selectList: string[]
-    optCheck: (data: API.YakitPluginDetail, value: boolean) => void
+    optCheck: (data: YakitPluginOnlineDetail, value: boolean) => void
     data: API.YakitPluginListResponse
     onBack: () => void
     loadMoreData: () => void
+    defaultSearchValue: PluginSearchParams
 }
 
 export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
-    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData, loading} = props
-
+    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData, loading,defaultSearchValue} = props
+    const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return data.pagemeta.total
         else return selectList.length
     }, [allCheck, selectList])
 
-    const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
+    const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
 
     useEffect(() => {
         if (info) setPlugin({...info})
@@ -75,7 +79,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     if (!plugin) return null
     return (
         <>
-            <PluginDetails<API.YakitPluginDetail>
+            <PluginDetails<YakitPluginOnlineDetail>
                 title='我的云端插件'
                 filterExtra={
                     <div className={"details-filter-extra-wrapper"}>
@@ -176,7 +180,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                     renderRow: (info, i) => {
                         const check = allCheck || selectList.includes(info.uuid)
                         return (
-                            <PluginDetailsListItem<API.YakitPluginDetail>
+                            <PluginDetailsListItem<YakitPluginOnlineDetail>
                                 plugin={info}
                                 selectUUId={plugin.uuid}
                                 check={check}
@@ -200,6 +204,8 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                     defItemHeight: 46
                 }}
                 onBack={onPluginBack}
+                search={search}
+                setSearch={setSearch}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs tabPosition='right' className='plugins-tabs'>
