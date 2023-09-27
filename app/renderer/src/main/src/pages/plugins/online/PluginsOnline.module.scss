@@ -130,6 +130,7 @@
         display: inline-grid;
         grid-template-columns: repeat(3, 1fr);
         grid-column-gap: 16px;
+        user-select: none;
         &-img {
             cursor: pointer;
             width: 100%;
