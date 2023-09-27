@@ -32,17 +32,20 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     const [records, setRecords] = useState<DNSLogEvent[]>([])
     const [total, setTotal] = useState<number>(0)
     const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(true)
-
+    const [dnsMode,setDNSMode] = useState<string>("")
+    const [useLocal,setUseLocal] = useState<boolean>(true)
     // 生成传递给页面的配置信息
     const generateData = useMemoizedFn(() => {
         return {
             token,
             domain,
-            onlyARecord
+            onlyARecord,
+            dnsMode,
+            useLocal,
         }
     })
     // 同步给页面里dnslog新的参数
-    const sendPageDnslog = useMemoizedFn((data: {token: string; domain: string; onlyARecord: boolean}) => {
+    const sendPageDnslog = useMemoizedFn((data: {token: string; domain: string; onlyARecord: boolean,dnsMode:string,useLocal:boolean}) => {
         ipcRenderer.invoke("dnslog-menu-to-page", data)
     })
 
@@ -54,14 +57,19 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
         // 接收dnslog页面改变参数后的新参数
         ipcRenderer.on(
             "dnslog-page-change-menu-callback",
-            (e, data: {token: string; domain: string; onlyARecord: boolean}) => {
-                setOnlyARecord(data.onlyARecord)
-                if (getToken() !== data.token || getDomain() !== data.domain) {
-                    setToken(data.token || "")
-                    setDomain(data.domain || "")
-                    setLastRecords([])
-                    setRecords([])
-                    setTotal(0)
+            (e, data: {dnsLogType:"builtIn"|"custom",token: string; domain: string; onlyARecord: boolean,DNSMode?:string,UseLocal?:boolean}) => {
+                const {dnsLogType,onlyARecord,token,domain,DNSMode,UseLocal} = data
+                if(dnsLogType==="builtIn"){
+                    setOnlyARecord(onlyARecord)
+                    if (getToken() !== token || getDomain() !== domain) {
+                        setToken(token || "")
+                        setDomain(domain || "")
+                        DNSMode&&setDNSMode(DNSMode)
+                        UseLocal&&setUseLocal(UseLocal)
+                        setLastRecords([])
+                        setRecords([])
+                        setTotal(0)
+                    }
                 }
             }
         )
@@ -81,8 +89,10 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             paramsObj.Addr = params.Addr
             paramsObj.DNSMode = params.DNSMode
             paramsObj.UseLocal = params.UseLocal
+            setDNSMode(params.DNSMode)
+            setUseLocal(params.UseLocal)
         }
-
+        
         setTokenLoading(true)
         ipcRenderer
             .invoke("RequireDNSLogDomain", paramsObj)
@@ -90,7 +100,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
                 setLastRecords([])
-                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord})
+                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord,dnsMode,useLocal,})
             })
             .catch((e) => {
                 yakitNotify("error", `error: ${e}`)
@@ -112,7 +122,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
                 setLastRecords([])
-                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord})
+                sendPageDnslog({token: rsp.Token, domain: rsp.Domain, onlyARecord,dnsMode,useLocal,})
             })
             .catch((e) => {
                 yakitNotify("error", `error: ${e}`)
@@ -137,8 +147,11 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                     updateToken(obj)
                 }
                 // 自定义
-                if(obj.type==="custom"){
+                else if(obj.type==="custom"&&obj.ScriptName.length>0){
                     updateTokenByScript(obj)
+                }
+                else{
+                    updateToken()
                 }
             }
         })
@@ -150,9 +163,9 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
         }
 
         const id = setInterval(() => {
-            ipcRenderer.invoke("QueryDNSLogByToken", {Token: token}).then((rsp: {Events: DNSLogEvent[]}) => {
-                setTotal(rsp.Events.length)
 
+            ipcRenderer.invoke("QueryDNSLogByToken", {Token: token,DNSMode:dnsMode,UseLocal:useLocal}).then((rsp: {Events: DNSLogEvent[]}) => {
+                setTotal(rsp.Events.length)
                 const lists = rsp.Events.filter((i) => {
                     if (getOnlyARecord()) {
                         return i.DNSType === "A"
@@ -214,7 +227,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
                             checked={onlyARecord}
                             onChange={(val: boolean) => {
                                 setOnlyARecord(val)
-                                sendPageDnslog({token, domain, onlyARecord: val})
+                                sendPageDnslog({token, domain, onlyARecord: val,dnsMode,useLocal,})
                             }}
                         />
                     </div>
