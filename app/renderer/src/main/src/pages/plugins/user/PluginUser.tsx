@@ -167,7 +167,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                                     />
                                     <FuncBtn
                                         maxWidth={1050}
-                                        icon={<OutlineClouddownloadIcon />}
+                                        icon={<OutlineTrashIcon />}
                                         type='outline2'
                                         size='large'
                                         name='清空'
