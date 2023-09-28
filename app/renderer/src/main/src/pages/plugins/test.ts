@@ -19,7 +19,7 @@ const datas: YakitPluginOnlineDetail[] = [
         head_img:
             "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJicUwxTHkcj4qQAacH5rCOpWjQDrAnJn1bbeErrPtJS8eYbM5X7CtccCtiaKvdhicnkFhazBwVVuxFQ/132",
         help: "泛微 OA e-cology XXE漏洞，注意此插件需要结合dnslog判断漏洞",
-        is_private: false,
+        is_private: true,
         is_stars: false,
         official: true,
         params: [
@@ -108,7 +108,7 @@ const datas: YakitPluginOnlineDetail[] = [
         head_img:
             "https://thirdwx.qlogo.cn/mmopen/vi_32/ag7nfjFEdqcF2OsROrmibCjC3PkdSlErXia1iaSicd5MkkBIpOlXIfQoDgNDuzF0bG3bSNVW7Era7KdELyeRZsJwiag/132",
         help: "通过 dnslog 检测可能存在命令执行的参数",
-        is_private: false,
+        is_private: true,
         is_stars: false,
         official: true,
         params: [
