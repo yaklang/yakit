@@ -1,6 +1,7 @@
-import {API} from "@/services/swagger/resposeType"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "./online/PluginsOnlineType"
+import {QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 
+// ----------------------- 线上
 // 初始 state
 export const initialOnlineState: YakitPluginListOnlineResponse = {
     data: [],
@@ -38,14 +39,17 @@ const thousandthConversion = (n: number): string => {
     return shortString
 }
 
-export const pluginOnlineReducer = (state: YakitPluginListOnlineResponse, action: OnlinePluginAppAction) => {
+export const pluginOnlineReducer = (
+    state: YakitPluginListOnlineResponse,
+    action: OnlinePluginAppAction
+): YakitPluginListOnlineResponse => {
     const {response, list = [], item} = action.payload
     switch (action.type) {
         case "add":
             if (response?.pagemeta.page === 1) {
                 return {
                     data:
-                        response?.data.map((ele) => ({
+                        (response?.data || []).map((ele) => ({
                             ...ele,
                             starsCountString: thousandthConversion(ele.stars),
                             commentCountString: thousandthConversion(ele.comment_num),
@@ -62,7 +66,7 @@ export const pluginOnlineReducer = (state: YakitPluginListOnlineResponse, action
                 return {
                     data: [
                         ...state.data,
-                        ...list?.map((ele) => ({
+                        ...(response?.data || []).map((ele) => ({
                             ...ele,
                             starsCountString: thousandthConversion(ele.stars),
                             commentCountString: thousandthConversion(ele.comment_num),
@@ -90,9 +94,7 @@ export const pluginOnlineReducer = (state: YakitPluginListOnlineResponse, action
                     data: [...state.data]
                 }
             } else {
-                return {
-                    ...state
-                }
+                return state
             }
 
         case "remove":
@@ -102,9 +104,7 @@ export const pluginOnlineReducer = (state: YakitPluginListOnlineResponse, action
                     data: state.data.filter((ele) => ele.id !== item.id)
                 }
             } else {
-                return {
-                    ...state
-                }
+                return state
             }
         case "unLikeAndLike":
             const indexLike = state.data.findIndex((ele) => ele.uuid === item?.uuid)
@@ -127,9 +127,7 @@ export const pluginOnlineReducer = (state: YakitPluginListOnlineResponse, action
                     data: [...state.data]
                 }
             } else {
-                return {
-                    ...state
-                }
+                return state
             }
         case "download":
             const indexDownload = state.data.findIndex((ele) => ele.uuid === item?.uuid)
@@ -145,10 +143,96 @@ export const pluginOnlineReducer = (state: YakitPluginListOnlineResponse, action
                     data: [...state.data]
                 }
             }
-            return {
-                ...state
+            return state
+        default:
+            return state
+    }
+}
+
+// -----------------------
+
+// ----------------------- 本地
+export const initialLocalState: QueryYakScriptsResponse = {
+    Data: [],
+    Pagination: {
+        Limit: 10,
+        Page: 0,
+        OrderBy: "",
+        Order: ""
+    },
+    Total: 0
+}
+
+type LocalPluginType = "add" | "update" | "remove"
+
+// 定义 action 的类型
+export interface LocalPluginAppAction {
+    type: LocalPluginType
+    payload: {
+        response?: QueryYakScriptsResponse
+        list?: YakScript[]
+        item?: YakScript
+    }
+}
+
+export const pluginLocalReducer = (
+    state: QueryYakScriptsResponse,
+    action: LocalPluginAppAction
+): QueryYakScriptsResponse => {
+    const {response, list = [], item} = action.payload
+    switch (action.type) {
+        case "add":
+            if (response?.Pagination.Page === 1) {
+                return {
+                    Data: response?.Data || [],
+                    Pagination: response?.Pagination || {
+                        Limit: 20,
+                        Page: 1,
+                        OrderBy: "",
+                        Order: ""
+                    },
+                    Total: response?.Total
+                }
+            } else {
+                return {
+                    Data: [...state.Data, ...(response?.Data || [])],
+                    Pagination: response?.Pagination || {
+                        Limit: 20,
+                        Page: 1,
+                        OrderBy: "",
+                        Order: ""
+                    },
+                    Total: response?.Total || 0
+                }
+            }
+        case "update":
+            if (item) {
+                const index = state.Data.findIndex((ele) => ele.ScriptName === item.ScriptName)
+                if (index !== -1) {
+                    state.Data[index] = {
+                        ...item
+                    }
+                }
+                return {
+                    ...state,
+                    Data: [...state.Data]
+                }
+            } else {
+                return state
+            }
+
+        case "remove":
+            if (item) {
+                return {
+                    ...state,
+                    Data: state.Data.filter((ele) => ele.ScriptName !== item.ScriptName)
+                }
+            } else {
+                return state
             }
         default:
             return state
     }
 }
+
+// -----------------------

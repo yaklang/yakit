@@ -349,7 +349,7 @@ export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) 
         >
             {nameAndIcon ? (
                 <YakitButton
-                    style={{padding: "3px 4px"}}
+                    // style={{padding: "3px 4px"}}
                     isActive={show}
                     onClick={(e) => e.stopPropagation()}
                     {...(button || {})}
