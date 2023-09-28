@@ -45,7 +45,8 @@ interface PluginUserDetailProps {
 }
 
 export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
-    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData, loading,defaultSearchValue} = props
+    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData, loading, defaultSearchValue} =
+        props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -74,6 +75,22 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     })
     const onDownloadClick = useMemoizedFn(() => {
         yakitNotify("success", "下载~~~")
+    })
+
+    const onUserDetailSelect = useMemoizedFn((key) => {
+        switch (key) {
+            case "share":
+                yakitNotify("success", "分享~~~")
+                break
+            case "download":
+                break
+            case "editState":
+                break
+            case "remove":
+                break
+            default:
+                break
+        }
     })
 
     if (!plugin) return null
@@ -217,7 +234,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                                     tags={plugin.tags}
                                     extraNode={
                                         <div className={styles["plugin-info-extra-header"]}>
-                                            <OnlineUserExtraOperate plugin={plugin} />
+                                            <OnlineUserExtraOperate plugin={plugin} onSelect={onUserDetailSelect} />
                                             <FuncBtn
                                                 maxWidth={1100}
                                                 icon={<OutlineCursorclickIcon />}
