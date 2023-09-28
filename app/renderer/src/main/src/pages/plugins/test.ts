@@ -3167,13 +3167,13 @@ const localDatas:YakScript[]=[
         "IsCorePlugin": false
     }
 ]
-export const apiFetchLocalList: (params: {page: number; limit?: number}) => Promise<QueryYakScriptsResponse> = (
+export const apiFetchLocalList: (params: {Page: number; Limit?: number}) => Promise<QueryYakScriptsResponse> = (
     params
 ) => {
     return new Promise((resolve, reject) => {
         try {
-            let listPage: number = params.page
-            let listLimit: number = 5 || params.limit || 20
+            let listPage: number = params.Page
+            let listLimit: number = 5 || params.Limit || 20
             if (!listLimit) listLimit = 20
             const obj: QueryYakScriptsResponse = {
                 // data:[...datas.slice(start, end)],

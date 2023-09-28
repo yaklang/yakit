@@ -103,7 +103,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
         useMemoizedFn(() => {
             setRefresh(!refresh)
         }),
-        {wait: 200,leading:true}
+        {wait: 200, leading: true}
     ).run
     return (
         <OnlineJudgment>
@@ -416,7 +416,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             }
                                         }
                                     }}
-                                    button={{type: "text2"}}
+                                    button={{type: "text2", style: {padding: "3px 4px"}}}
                                     placement='bottomRight'
                                 />
                                 <FuncFilterPopover
@@ -446,7 +446,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             }
                                         }
                                     }}
-                                    button={{type: "text2"}}
+                                    button={{type: "text2", style: {padding: "3px 4px"}}}
                                     placement='bottomRight'
                                 />
                                 <div className='divider-style' style={{marginLeft: 4}} />
