@@ -94,6 +94,18 @@ export const pluginOnlineReducer = (state: YakitPluginListOnlineResponse, action
                     ...state
                 }
             }
+
+        case "remove":
+            if (item) {
+                return {
+                    ...state,
+                    data: state.data.filter((ele) => ele.id !== item.id)
+                }
+            } else {
+                return {
+                    ...state
+                }
+            }
         case "unLikeAndLike":
             const indexLike = state.data.findIndex((ele) => ele.uuid === item?.uuid)
             if (item && indexLike !== -1) {
