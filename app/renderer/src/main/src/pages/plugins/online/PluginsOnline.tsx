@@ -52,11 +52,12 @@ import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../bas
 import {PluginsOnlineDetail} from "./PluginsOnlineDetail"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
+import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
+import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginsOnline.module.scss"
-import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
     const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
@@ -158,6 +159,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
 
     const [hasMore, setHasMore] = useState<boolean>(true)
+    const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
 
     // 单项插件删除
     const [activeDelPlugin, setActiveDelPlugin] = useState<YakitPluginOnlineDetail>()
@@ -224,7 +226,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setFilters({...filters, type: type})
     })
     /**下载 */
-    const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {})
+    const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {
+        setVisibleOnline(true)
+    })
 
     const onDelTag = useMemoizedFn((value?: string) => {
         if (!value) setFilters({...filters, tags: []})
@@ -510,6 +514,14 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                     </PluginsList>
                 </PluginsContainer>
             </PluginsLayout>
+            {visibleOnline && (
+                <YakitGetOnlinePlugin
+                    visible={visibleOnline}
+                    setVisible={(v) => {
+                        setVisibleOnline(v)
+                    }}
+                />
+            )}
         </>
     )
 })

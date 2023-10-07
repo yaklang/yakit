@@ -115,8 +115,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         (type: string, value: string) => {
             console.log("onKeywordAndUser", type, value)
 
-            if (type === "keyword") setSearchs({userName: "", keyword: value})
-            if (type === "user") setSearchs({keyword: "", userName: value})
+            if (type === "keyword") setSearchs({...searchs, userName: "", keyword: value})
+            if (type === "user") setSearchs({...searchs, keyword: "", userName: value})
         },
         {wait: 300}
     )
@@ -246,7 +246,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 }
                 extraHeader={
                     <div className='extra-header-wrapper'>
-                        <FuncSearch maxWidth={1000} onSearch={onKeywordAndUser.run} />
+                        <FuncSearch maxWidth={1000} onSearch={onKeywordAndUser.run} onChange={()=>{}}/>
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
                             <FuncBtn
@@ -299,7 +299,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         setVisible={setShowFilter}
                     >
                         <ListShowContainer<API.YakitPluginDetail>
-                            id='online'
+                            id='pluginManage'
                             isList={isList}
                             data={response.data}
                             gridNode={(info: {index: number; data: API.YakitPluginDetail}) => {
