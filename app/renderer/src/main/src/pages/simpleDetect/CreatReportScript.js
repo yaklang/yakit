@@ -215,10 +215,10 @@ if criticalLens > 0{
      riskGrade = "中危"
      riskGradeColor = "#FFA500"
 }
-riskGradeStyleColor = "<span style='color:'" + riskGradeColor + ";>" + riskGrade + "个</span>"
+riskGradeStyleColor = sprintf(\`<span style='color:%s;font-weight:bold'>%s</span>\`, riskGradeColor, riskGrade)
 reportInstance.Markdown(sprintf(\`
 本次测试的总体安全现状如下：
-- 风险等级：### %v
+- 风险等级：%s
 - 扫描端口数：%v个
 - 开放端口数：%v个
 - 存活主机数：%v个
