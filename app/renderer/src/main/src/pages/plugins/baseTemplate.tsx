@@ -148,7 +148,6 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
     // 关键词|用户搜索
     const onSearch = useDebounceFn(
         (type: string, value: string) => {
-            console.log("onKeywordAndUser", type, value)
         },
         {wait: 300}
     )

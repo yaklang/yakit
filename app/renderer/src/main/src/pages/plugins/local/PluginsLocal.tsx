@@ -159,6 +159,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**删除 */
     const onRemovePlugin = useMemoizedFn((data: YakScript) => {
+        const index = selectList.findIndex((ele) => ele === data.UUID)
+        if (index !== -1) {
+            optCheck(data, false)
+        }
         dispatch({
             type: "remove",
             payload: {
@@ -193,6 +197,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     data={response}
                     onBack={onBack}
                     loadMoreData={onUpdateList}
+                    defaultSearchValue={search}
                 />
             )}
             <PluginsLayout
@@ -208,7 +213,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                 maxWidth={1200}
                                 icon={<SolidChevronDownIcon />}
                                 name='批量操作'
-                                disabled={selectList.length === 0}
+                                disabled={selectNum === 0}
                                 button={{
                                     type: "outline2",
                                     size: "large"
