@@ -128,10 +128,13 @@ for port :=range portChan{
         port.ServiceType,
         port.HtmlTitle,
     ])*/
-    portsLine = append(
-        portsLine,
-        [port.Host, port.Port, port.Proto, port.ServiceType, port.HtmlTitle],
-    )
+    portsLine = append(portsLine, {
+        "地址": {"value": port.Host, "sort": 1},
+        "端口": {"value": port.Port, "sort": 2},
+        "协议": {"value": port.Proto,  "sort": 3 },
+        "指纹": {"value": port.ServiceType, "sort": 4 },
+        "网站标题": {"value": port.HtmlTitle, "sort": 5 }
+    })
 }
 
 
@@ -397,7 +400,7 @@ if len(aliveHostList) > 0 {
 
 reportInstance.Markdown("#### 风险资产汇总")
 if len(ipRisksStr) > 0 {
-    ipRisksList := json.dumps({ "type": "risk-list", "data": ipRisksStr })
+    ipRisksList := json.dumps({ "type": "risk-list", "dump": "risk-list", "data": ipRisksStr })
     reportInstance.Raw(ipRisksList)
 } else {
     reportInstance.Markdown("暂无资产汇总")
@@ -405,10 +408,11 @@ if len(ipRisksStr) > 0 {
 
 // 端口扫描统计展示
 reportInstance.Markdown("## 3.2 端口扫描统计")
-reportInstance.SearchTable(
-    ["地址", "端口", "协议", "指纹", "网站标题"],
-    portsLine...,
-)
+if len(portsLine) > 0 {
+    reportInstance.Raw(json.dumps({ "type": "search-json-table", "dump": "search-json-table", "data": portsLine }))
+} else {
+    reportInstance.Markdown("暂无端口扫描")
+}
 
 // 风险统计展示
 reportInstance.Markdown("## 3.3 风险统计")
@@ -484,7 +488,7 @@ if len(noPotentialRisks) == 0 {
             })
         }
     }
-    potentialRisksList := json.dumps({ "type": "potential-risks-list", "data": _line })
+    potentialRisksList := json.dumps({ "type": "potential-risks-list", "dump": "potential-risks-list", "data": _line })
     reportInstance.Raw(potentialRisksList)
 }
 
