@@ -6,6 +6,7 @@ import {
     PluginEditorDiff,
     PluginModifyInfo,
     PluginModifySetting,
+    defaultSearch,
     statusTag
 } from "../baseTemplate"
 import {SolidBadgecheckIcon, SolidBanIcon} from "@/assets/icon/solid"
@@ -180,6 +181,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                 defItemHeight: 46
             }}
             onBack={onPluginBack}
+            search={cloneDeep(defaultSearch)}
+            setSearch={() => {}}
         >
             <div className={styles["details-content-wrapper"]}>
                 <Tabs tabPosition='right' className='plugins-tabs'>
