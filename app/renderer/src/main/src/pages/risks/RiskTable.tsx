@@ -788,20 +788,123 @@ interface RiskDetailsProp {
     shrink?: boolean
     quotedRequest?: string
     quotedResponse?: string
-    onClose?:()=>void
+    onClose?: () => void
 }
 
 export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDetailsProp) => {
-    const {info, isShowTime = true, quotedRequest, quotedResponse,onClose} = props
+    const {info, isShowTime = true, quotedRequest, quotedResponse, onClose} = props
     const title = TitleColor.filter((item) => item.key.includes(info.Severity || ""))[0]
     const [shrink, setShrink] = useState(!!props.shrink)
-    const [isHttps,setIsHttps] = useState<boolean>(false)
-    useEffect(()=>{
-        if(info.Url&&info.Url?.length>0&&info.Url.includes("https")){
+    const [isHttps, setIsHttps] = useState<boolean>(false)
+    useEffect(() => {
+        if (info.Url && info.Url?.length > 0 && info.Url.includes("https")) {
             setIsHttps(true)
         }
-    },[])
-    
+    }, [])
+    let details: any;
+    let requestKeys: string[] = [];
+    let responseKeys: string[] = [];
+
+    if (info.Details) {
+        details = typeof info.Details === 'string' ? JSON.parse(info.Details) : info.Details;
+        if (details) {
+            requestKeys = Object.keys(details).filter(key => key.startsWith('request_')).sort();
+            responseKeys = Object.keys(details).filter(key => key.startsWith('response_')).sort();
+        }
+    }
+
+    const items: React.ReactNode[] = [];
+    if (requestKeys.length > 0 || responseKeys.length > 0) {
+        for (let i = 0; i < Math.max(requestKeys.length, responseKeys.length); i++) {
+            if (requestKeys[i]) {
+                items.push(
+                    <Descriptions.Item label={'Request_' + (i + 1)} span={3} key={requestKeys[i]}>
+                        <div style={{height: 300}}>
+                            {quotedRequest ? (
+                                <div>{quotedRequest}</div>
+                            ) : (
+                                <NewHTTPPacketEditor
+                                    defaultHttps={isHttps}
+                                    originValue={new TextEncoder().encode(details[requestKeys[i]])}
+                                    readOnly={true}
+                                    noHeader={true}
+                                    webFuzzerCallBack={() => {
+                                        onClose && onClose()
+                                    }}
+                                />
+                            )}
+                        </div>
+                    </Descriptions.Item>
+                );
+            }
+            if (responseKeys[i]) {
+                items.push(
+                    <Descriptions.Item label={'Response_' + (i + 1)} span={3} key={responseKeys[i]}>
+                        <div style={{height: 300}}>
+                            {quotedResponse ? (
+                                <div>{quotedResponse}</div>
+                            ) : (
+                                <NewHTTPPacketEditor
+                                    defaultHttps={isHttps}
+                                    originValue={new TextEncoder().encode(details[responseKeys[i]])}
+                                    readOnly={true}
+                                    noHeader={true}
+                                    webFuzzerCallBack={() => {
+                                        onClose && onClose()
+                                    }}
+                                />
+                            )}
+                        </div>
+                    </Descriptions.Item>
+                );
+            }
+        }
+    } else {
+        if ((info?.Request || []).length > 0) {
+            items.push(
+                <Descriptions.Item label='Request' span={3}>
+                    <div style={{height: 300}}>
+                        {quotedRequest ? (
+                            <div>{quotedRequest}</div>
+                        ) : (
+                            <NewHTTPPacketEditor
+                                defaultHttps={isHttps}
+                                originValue={info?.Request || new Uint8Array()}
+                                readOnly={true}
+                                noHeader={true}
+                                webFuzzerCallBack={() => {
+                                    onClose && onClose()
+                                }}
+                            />
+                        )}
+                    </div>
+                </Descriptions.Item>
+            );
+        }
+        if ((info?.Response || []).length > 0) {
+            items.push(
+                <Descriptions.Item label='Response' span={3}>
+                    <div style={{height: 300}}>
+                        {quotedResponse ? (
+                            <div>{quotedResponse}</div>
+                        ) : (
+                            <NewHTTPPacketEditor
+                                defaultHttps={isHttps}
+                                webFuzzerValue={info?.Request || new Uint8Array()}
+                                originValue={info?.Response || new Uint8Array()}
+                                readOnly={true}
+                                noHeader={true}
+                                webFuzzerCallBack={() => {
+                                    onClose && onClose()
+                                }}
+                            />
+                        )}
+                    </div>
+                </Descriptions.Item>
+            );
+        }
+    }
+
     return (
         <Descriptions
             className="risk-details-descriptions-box"
@@ -906,45 +1009,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
                     <Descriptions.Item label='Payload' span={3}>
                         <div>{info.Payload || "-"}</div>
                     </Descriptions.Item>
-                    {(info?.Request || []).length > 0 && (
-                        <Descriptions.Item label='Request' span={3}>
-                            <div style={{height: 300}}>
-                                {quotedRequest ? (
-                                    <div>{quotedRequest}</div>
-                                ) : (
-                                    <NewHTTPPacketEditor
-                                        defaultHttps={isHttps}
-                                        originValue={info?.Request || new Uint8Array()}
-                                        readOnly={true}
-                                        noHeader={true}
-                                        webFuzzerCallBack={()=>{
-                                            onClose&&onClose()
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        </Descriptions.Item>
-                    )}
-                    {(info?.Response || []).length > 0 && (
-                        <Descriptions.Item label='Response' span={3}>
-                            <div style={{height: 300}}>
-                                {quotedResponse ? (
-                                    <div>{quotedResponse}</div>
-                                ) : (
-                                    <NewHTTPPacketEditor
-                                        defaultHttps={isHttps}
-                                        webFuzzerValue={info?.Request || new Uint8Array()}
-                                        originValue={info?.Response || new Uint8Array()}
-                                        readOnly={true}
-                                        noHeader={true}
-                                        webFuzzerCallBack={()=>{
-                                            onClose&&onClose()
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        </Descriptions.Item>
-                    )}
+                    {items}
                     <Descriptions.Item label='详情' span={3}>
                         <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Details}` || "-"}</div>
                     </Descriptions.Item>
