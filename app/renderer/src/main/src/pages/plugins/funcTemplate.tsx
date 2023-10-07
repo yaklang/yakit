@@ -16,6 +16,7 @@ import {
     TypeSelectProps
 } from "./funcTemplateType"
 import {
+    useControllableValue,
     useGetState,
     useInViewport,
     useMemoizedFn,
@@ -60,6 +61,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {SolidThumbUpIcon} from "@/assets/newIcon"
+import {PluginSearchParams} from "./baseTemplateType"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -191,7 +193,7 @@ export const funcSearchType: {value: string; label: string}[] = [
 ]
 /** @name 带屏幕宽度自适应的搜索内容组件 */
 export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
-    const {maxWidth, defaultValue = "", onSearch: onsearch} = props
+    const {maxWidth, onSearch: onsearch} = props
 
     const [isIcon, setIsIcon, getIsIcon] = useGetState<boolean>(false)
     const mediaHandle = useMemoizedFn((e) => {
@@ -210,28 +212,48 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
             mediaQuery.removeEventListener("change", mediaHandle)
         }
     }, [])
-
-    const [type, setType] = useState<string>("keyword")
-    const [search, setSearch, getSearch] = useGetState<string>(defaultValue)
+    const [search, setSearch] = useControllableValue<PluginSearchParams>(props)
     const [showPopver, setShowPopver] = useState<boolean>(false)
 
     const onTypeChange = useMemoizedFn((value: string) => {
-        setType(value)
+        setSearch({
+            ...search,
+            type: value as "keyword" | "userName"
+        })
+    })
+    const onValueChange = useMemoizedFn((e) => {
+        if (search.type === "keyword") {
+            setSearch({
+                ...search,
+                keyword: e.target.value
+            })
+        } else {
+            setSearch({
+                ...search,
+                userName: e.target.value
+            })
+        }
     })
     const onSearch = useMemoizedFn(() => {
-        onsearch(type, getSearch())
+        onsearch(search)
     })
-
+    const searchValue = useMemo(() => {
+        if (search.type === "keyword") {
+            return search.keyword
+        } else {
+            return search.userName
+        }
+    }, [search])
     return (
         <div className={isIcon ? styles["func-search-icon-wrapper"] : styles["func-search-wrapper"]}>
             <YakitCombinationSearch
                 wrapperClassName={styles["search-body"]}
-                valueBeforeOption={type}
+                valueBeforeOption={search.type}
                 addonBeforeOption={funcSearchType}
                 onSelectBeforeOption={onTypeChange}
                 inputSearchModuleTypeProps={{
-                    value: search,
-                    onChange: (e) => setSearch(e.target.value),
+                    value: searchValue,
+                    onChange: onValueChange,
                     onSearch: onSearch
                 }}
             />
@@ -239,12 +261,12 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
                 overlayClassName={styles["func-search-popver"]}
                 content={
                     <YakitCombinationSearch
-                        valueBeforeOption={type}
+                        valueBeforeOption={search.type}
                         addonBeforeOption={funcSearchType}
                         onSelectBeforeOption={onTypeChange}
                         inputSearchModuleTypeProps={{
-                            value: search,
-                            onChange: (e) => setSearch(e.target.value),
+                            value: searchValue,
+                            onChange: onValueChange,
                             onSearch: onSearch
                         }}
                     />
@@ -327,7 +349,7 @@ export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) 
         >
             {nameAndIcon ? (
                 <YakitButton
-                    style={{padding: "3px 4px"}}
+                    // style={{padding: "3px 4px"}}
                     isActive={show}
                     onClick={(e) => e.stopPropagation()}
                     {...(button || {})}
@@ -626,7 +648,6 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
 /** @name 插件列表形式单个项组件 */
 export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
     const {data, checked, onCheck, img, title, help, time, subTitle, extraNode, onClick} = props
-    // useWhyDidYouUpdate("ListLayoutOpt", {...props})
 
     // 副标题组件
     const subtitle = useMemoizedFn(() => {
@@ -1041,7 +1062,7 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
     const {likeProps, commentProps, downloadProps} = props
     const onLikeClick = useMemoizedFn((e) => {
         e.stopPropagation()
-        likeProps.onLikeClick(!likeProps.active)
+        likeProps.onLikeClick()
     })
     const onCommentClick = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -1062,11 +1083,12 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
                 {likeProps.active ? <SolidThumbUpIcon /> : <OutlineThumbupIcon />}
                 <span>{likeProps.likeNumber}</span>
             </div>
-            <div className='divider-style' />
+            {/* 功能开发中,暂时注释 */}
+            {/* <div className='divider-style' />
             <div className={styles["comment-operate"]} onClick={onCommentClick}>
                 <OutlineChatIcon />
                 <span>{commentProps.commentNumber}</span>
-            </div>
+            </div> */}
             <div className='divider-style' />
             <div className={styles["download-operate"]} onClick={onDownloadClick}>
                 <OutlineClouddownloadIcon />

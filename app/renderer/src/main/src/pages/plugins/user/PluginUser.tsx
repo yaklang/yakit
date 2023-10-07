@@ -1,5 +1,4 @@
-import React, {useState, useRef, useMemo, useEffect} from "react"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
 import {
     FuncBtn,
     FuncFilterPopover,
@@ -9,34 +8,22 @@ import {
     ListShowContainer,
     OnlineExtraOperate,
     PluginsList,
-    TypeSelect,
-    funcSearchType
+    TypeSelect
 } from "../funcTemplate"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
-    OutlineCalendarIcon,
     OutlineClouddownloadIcon,
     OutlineDatabasebackupIcon,
     OutlineDotshorizontalIcon,
     OutlineLockclosedIcon,
     OutlineLockopenIcon,
-    OutlineSearchIcon,
     OutlineShareIcon,
-    OutlineSwitchverticalIcon,
-    OutlineTrashIcon,
-    OutlineXIcon
+    OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useMemoizedFn, useDebounceFn, useGetState} from "ahooks"
-import {openExternalWebsite} from "@/utils/openWebsite"
-import card1 from "./card1.png"
-import card2 from "./card2.png"
-import card3 from "./card3.png"
-import qrCode from "./qrCode.png"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {SolidCloudpluginIcon, SolidPrivatepluginIcon, SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
+import {useMemoizedFn, useDebounceFn, useLockFn, useControllableValue} from "ahooks"
+import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import cloneDeep from "lodash/cloneDeep"
-import {API} from "@/services/swagger/resposeType"
 import {apiFetchList, ssfilters} from "../test"
 import {
     PluginsContainer,
@@ -45,11 +32,9 @@ import {
     defaultResponse,
     defaultSearch,
     pluginStatusToName,
-    pluginTypeList,
     statusTag
 } from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
-import {PluginManageDetail} from "../manage/PluginManageDetail"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
 import {
@@ -62,11 +47,14 @@ import {
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginUserDetail} from "./PluginUserDetail"
+import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
+import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
+import {PrivatePluginIcon} from "@/assets/newIcon"
+import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginUser.module.scss"
-
 
 export const mePluginTypeList = [
     {
@@ -96,11 +84,18 @@ const onlinePluginTypeList = [
 export type MePluginType = "myOnlinePlugin" | "recycle"
 
 export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
-    const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
+    const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
     const [searchUser, setSearchUser] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [pluginState, setPluginState] = useState<string[]>(["1"])
-    const [isSelectNum, setIsSelectNum] = useState<boolean>(false)
 
+    const [isSelectUserNum, setIsSelectUserNum] = useState<boolean>(false) // 我的插件是否有勾选
+    const [isSelectRecycleNum, setIsSelectRecycleNum] = useState<boolean>(false) // 回收站是否有勾选
+
+    const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
+    const [refreshUser, setRefreshUser] = useState<boolean>(false)
+    const [refreshRecycle, setRefreshRecycle] = useState<boolean>(false)
+
+    const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
     const [userPluginType, setUserPluginType] = useState<MePluginType>("myOnlinePlugin")
 
     const onRemove = useMemoizedFn(() => {})
@@ -112,23 +107,26 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     ).run
     /**新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {})
-    // 关键词/作者搜索
-    const onKeywordAndUser = useMemoizedFn((type: string | null, value: string) => {
-        if (!type) setSearchUser(cloneDeep(defaultSearch))
-        else {
-            if (type === "keyword") setSearchUser({...searchUser, keyword: value})
-            if (type === "user") setSearchUser({...searchUser, userName: value})
-        }
-    })
     /**下载 */
-    const onDownload = useMemoizedFn((value?: API.YakitPluginDetail) => {})
+    const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {
+        setVisibleOnline(true)
+    })
     const onSetActive = useMemoizedFn((state: string[]) => {
         setPluginState(state)
     })
     const onBack = useMemoizedFn(() => {
         setPlugin(undefined)
     })
-
+    const onSearch = useDebounceFn(
+        useMemoizedFn(() => {
+            if (userPluginType === "myOnlinePlugin") {
+                setRefreshUser(!refreshUser)
+            } else {
+                setRefreshRecycle(!refreshRecycle)
+            }
+        }),
+        {wait: 200, leading: true}
+    ).run
     return (
         <OnlineJudgment>
             {!!plugin && (
@@ -142,6 +140,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     data={cloneDeep(defaultResponse)}
                     onBack={onBack}
                     loadMoreData={() => {}}
+                    defaultSearchValue={search}
                 />
             )}
             <PluginsLayout
@@ -160,7 +159,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                 }
                 extraHeader={
                     <div className='extra-header-wrapper'>
-                        <FuncSearch onSearch={onKeywordAndUser} />
+                        <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
                             {userPluginType === "myOnlinePlugin" ? (
@@ -170,15 +169,15 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                                         icon={<OutlineClouddownloadIcon />}
                                         type='outline2'
                                         size='large'
-                                        name={isSelectNum ? "下载" : "一键下载"}
+                                        name={isSelectUserNum ? "下载" : "一键下载"}
                                         onClick={() => onDownload()}
                                     />
                                     <FuncBtn
                                         maxWidth={1050}
-                                        icon={<OutlineClouddownloadIcon />}
+                                        icon={<OutlineTrashIcon />}
                                         type='outline2'
                                         size='large'
-                                        name='清空'
+                                        name={isSelectUserNum ? "删除" : "清空"}
                                         onClick={() => onRemove()}
                                     />
                                     <FuncBtn
@@ -196,7 +195,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                                         icon={<OutlineClouddownloadIcon />}
                                         type='outline2'
                                         size='large'
-                                        name='清空'
+                                        name={isSelectRecycleNum ? "删除" : "清空"}
                                         onClick={() => {}}
                                     />
                                     <FuncBtn
@@ -219,11 +218,11 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     tabIndex={userPluginType === "recycle" ? -1 : 0}
                 >
                     <PluginUserList
-                        pluginState={pluginState}
-                        searchUser={searchUser}
-                        setIsSelectNum={setIsSelectNum}
-                        plugin={plugin}
+                        refresh={refreshUser}
+                        setIsSelectUserNum={setIsSelectUserNum}
                         setPlugin={setPlugin}
+                        searchValue={search}
+                        setSearchValue={setSearch}
                     />
                 </div>
                 <div
@@ -232,25 +231,41 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     })}
                     tabIndex={userPluginType === "myOnlinePlugin" ? -1 : 0}
                 >
-                    <PluginRecycleList />
+                    <PluginRecycleList
+                        refresh={refreshRecycle}
+                        searchValue={search}
+                        setSearchValue={setSearch}
+                        setIsSelectRecycleNum={setIsSelectRecycleNum}
+                    />
                 </div>
             </PluginsLayout>
+            {visibleOnline && (
+                <YakitGetOnlinePlugin
+                    visible={visibleOnline}
+                    setVisible={(v) => {
+                        setVisibleOnline(v)
+                    }}
+                />
+            )}
         </OnlineJudgment>
     )
 })
 
 const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
-    const {pluginState, searchUser, setIsSelectNum, plugin, setPlugin} = props
-    // const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
+    const {refresh, setIsSelectUserNum, setPlugin} = props
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
     /** 是否为首页加载 */
     const isLoadingRef = useRef<boolean>(true)
     const [allCheck, setAllCheck] = useState<boolean>(false)
-    const [filters, setFilters] = useState<PluginFilterParams>(
-        cloneDeep({...defaultFilter, tags: ["Weblogic", "威胁情报"]})
-    )
-    const [response, setResponse] = useState<API.YakitPluginListResponse>(cloneDeep(defaultResponse))
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep({...defaultFilter}))
+    const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
+        defaultValuePropName: "searchValue",
+        valuePropName: "searchValue",
+        trigger: "setSearchValue"
+    })
+
+    const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
     const [selectList, setSelectList] = useState<string[]>([])
     const [isList, setIsList] = useState<boolean>(true)
 
@@ -266,48 +281,55 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
     // 页面初始化的首次列表请求
     useEffect(() => {
         fetchList(true)
-    }, [])
+    }, [refresh])
 
-    const fetchList = useMemoizedFn((reset?: boolean) => {
-        if (loading) return
+    const fetchList = useLockFn(
+        useMemoizedFn(async (reset?: boolean) => {
+            if (loading) return
 
-        setLoading(true)
+            setLoading(true)
 
-        const params: PluginListPageMeta = !!reset
-            ? {page: 1, limit: 20}
-            : {
-                  page: response.pagemeta.page + 1,
-                  limit: response.pagemeta.limit || 20
-              }
+            const params: PluginListPageMeta = !!reset
+                ? {page: 1, limit: 20}
+                : {
+                      page: response.pagemeta.page + 1,
+                      limit: response.pagemeta.limit || 20
+                  }
 
-        apiFetchList(params)
-            .then((res: API.YakitPluginListResponse) => {
+            const query = {
+                ...params,
+                ...search,
+                ...filters
+            }
+            if (!showFilter) {
+                query["status"] = []
+                query["plugin_type"] = []
+                query["tags"] = []
+            }
+            try {
+                const res = await apiFetchList(query)
                 if (!res.data) res.data = []
-
-                const data = false && res.pagemeta.page === 1 ? res.data : response.data.concat(res.data)
-                // const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
-                // setHasMore(!isMore)
-                // console.log(data)
-
-                setResponse({
-                    ...res,
-                    data: [...data]
+                dispatch({
+                    type: "add",
+                    payload: {
+                        response: {...res}
+                    }
                 })
-                isLoadingRef.current = false
-            })
-            .finally(() => {
                 setTimeout(() => {
                     setLoading(false)
-                    isLoadingRef.current = false
                 }, 300)
-            })
-    })
+            } catch (error) {
+                yakitNotify("error", "请求数据失败:" + error)
+            }
+        })
+    )
+
     const onDelTag = useMemoizedFn((value?: string) => {
         if (!value) setFilters({...filters, tags: []})
         else setFilters({...filters, tags: (filters.tags || []).filter((item) => item !== value)})
     })
     /** 单项勾选|取消勾选 */
-    const optCheck = useMemoizedFn((data: API.YakitPluginDetail, value: boolean) => {
+    const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
         // 全选情况时的取消勾选
         if (allCheck) {
             setSelectList(response.data.map((item) => item.uuid).filter((item) => item !== data.uuid))
@@ -316,12 +338,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
         }
         // 单项勾选回调
         if (value) {
-            setIsSelectNum(true)
+            setIsSelectUserNum(true)
             setSelectList([...selectList, data.uuid])
         } else {
             const newSelectList = selectList.filter((item) => item !== data.uuid)
             setSelectList(newSelectList)
-            if (newSelectList.length === 0) setIsSelectNum(false)
+            if (newSelectList.length === 0) setIsSelectUserNum(false)
         }
     })
     // 滚动更多加载
@@ -329,52 +351,83 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
         fetchList()
     })
     /** 单项额外操作组件 */
-    const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
+    const optExtraNode = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         return (
             <div className={styles["plugin-user-extra-node"]}>
-                <OnlineExtraOperate
-                    likeProps={{
-                        active: data.is_stars,
-                        likeNumber: data.stars,
-                        onLikeClick: onLikeClick
-                    }}
-                    commentProps={{
-                        commentNumber: data.comment_num,
-                        onCommentClick: onCommentClick
-                    }}
-                    downloadProps={{
-                        downloadNumber: `${data.downloaded_total}`,
-                        onDownloadClick: onDownloadClick
-                    }}
-                />
-                <div className='divider-style' />
-                <OnlineUserExtraOperate plugin={data} />
+                <OnlineUserExtraOperate plugin={data} onSelect={(key) => onUserSelect(key, data)} />
             </div>
         )
     })
     /** 单项副标题组件 */
-    const optSubTitle = useMemoizedFn((data: API.YakitPluginDetail) => {
-        return statusTag[`${1 % 3}`]
+    const optSubTitle = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        return <>{data.is_private ? <PrivatePluginIcon /> : statusTag[`${data.status}`]}</>
     })
     /** 单项点击回调 */
-    const optClick = useMemoizedFn((data: API.YakitPluginDetail) => {
+    const optClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         setPlugin(data)
     })
-    const onLikeClick = useMemoizedFn(() => {
-        yakitNotify("success", "点赞~~~")
+    const onUserSelect = useMemoizedFn((key: string, data: YakitPluginOnlineDetail) => {
+        switch (key) {
+            case "share":
+                yakitNotify("success", "分享~~~")
+                break
+            case "download":
+                onDownloadClick(data)
+                break
+            case "editState":
+                onUpdatePrivate(data)
+                break
+            case "remove":
+                onRemovePlugin(data)
+                break
+            default:
+                break
+        }
     })
-    const onCommentClick = useMemoizedFn(() => {
-        yakitNotify("success", "评论~~~")
-    })
-    const onDownloadClick = useMemoizedFn(() => {
+    /**下载 */
+    const onDownloadClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        dispatch({
+            type: "download",
+            payload: {
+                item: {
+                    ...data
+                }
+            }
+        })
         yakitNotify("success", "下载~~~")
+    })
+    /**更改私有状态 */
+    const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        dispatch({
+            type: "update",
+            payload: {
+                item: {
+                    ...data,
+                    is_private: !data.is_private,
+                    status: data.is_private ? 0 : data.status
+                }
+            }
+        })
+    })
+    /** 删除插件 */
+    const onRemovePlugin = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        const index = selectList.findIndex((ele) => ele === data.uuid)
+        if (index !== -1) {
+            optCheck(data, false)
+        }
+        dispatch({
+            type: "remove",
+            payload: {
+                item: data
+            }
+        })
     })
 
     /**全选 */
     const onCheck = useMemoizedFn((value: boolean) => {
         if (value) setSelectList([])
         setAllCheck(value)
-        setIsSelectNum(value)
+        setIsSelectUserNum(value)
     })
     const onBack = useMemoizedFn(() => {
         setPlugin(undefined)
@@ -414,10 +467,10 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
                     visible={showFilter}
                     setVisible={setShowFilter}
                 >
-                    <ListShowContainer<API.YakitPluginDetail>
+                    <ListShowContainer<YakitPluginOnlineDetail>
                         isList={isList}
                         data={response.data}
-                        gridNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                        gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
                             const {data} = info
                             const check = allCheck || selectList.includes(data.uuid)
                             return (
@@ -440,7 +493,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
                             )
                         }}
                         gridHeight={210}
-                        listNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                        listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
                             const {data} = info
                             const check = allCheck || selectList.includes(data.uuid)
                             return (
@@ -470,58 +523,61 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo((props) => {
 })
 
 const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) => {
+    const {refresh, setIsSelectRecycleNum} = props
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
-    /** 是否为首页加载 */
-    const isLoadingRef = useRef<boolean>(true)
-    const [response, setResponse] = useState<API.YakitPluginListResponse>(cloneDeep(defaultResponse))
+    const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
     const [selectList, setSelectList] = useState<string[]>([])
     const [isList, setIsList] = useState<boolean>(true)
     const [hasMore, setHasMore] = useState<boolean>(true)
-
+    const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
+        defaultValuePropName: "searchValue",
+        valuePropName: "searchValue",
+        trigger: "setSearchValue"
+    })
     const [allCheck, setAllCheck] = useState<boolean>(false)
 
     // 页面初始化的首次列表请求
     useEffect(() => {
         fetchList(true)
-    }, [])
+    }, [refresh])
 
-    const fetchList = useMemoizedFn((reset?: boolean) => {
-        if (loading) return
+    const fetchList = useLockFn(
+        useMemoizedFn(async (reset?: boolean) => {
+            if (loading) return
 
-        setLoading(true)
+            setLoading(true)
 
-        const params: PluginListPageMeta = !!reset
-            ? {page: 1, limit: 20}
-            : {
-                  page: response.pagemeta.page + 1,
-                  limit: response.pagemeta.limit || 20
-              }
+            const params: PluginListPageMeta = !!reset
+                ? {page: 1, limit: 20}
+                : {
+                      page: response.pagemeta.page + 1,
+                      limit: response.pagemeta.limit || 20
+                  }
 
-        apiFetchList(params)
-            .then((res: API.YakitPluginListResponse) => {
+            const query = {
+                ...params,
+                ...search
+            }
+            try {
+                const res = await apiFetchList(query)
                 if (!res.data) res.data = []
-
-                const data = false && res.pagemeta.page === 1 ? res.data : response.data.concat(res.data)
-                // const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
-                // setHasMore(!isMore)
-                // console.log(data)
-
-                setResponse({
-                    ...res,
-                    data: [...data]
+                dispatch({
+                    type: "add",
+                    payload: {
+                        response: {...res}
+                    }
                 })
-                isLoadingRef.current = false
-            })
-            .finally(() => {
                 setTimeout(() => {
                     setLoading(false)
-                    isLoadingRef.current = false
                 }, 300)
-            })
-    })
+            } catch (error) {
+                yakitNotify("error", "请求数据失败:" + error)
+            }
+        })
+    )
     /** 单项勾选|取消勾选 */
-    const optCheck = useMemoizedFn((data: API.YakitPluginDetail, value: boolean) => {
+    const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
         // 全选情况时的取消勾选
         if (allCheck) {
             setSelectList(response.data.map((item) => item.uuid).filter((item) => item !== data.uuid))
@@ -530,10 +586,12 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
         }
         // 单项勾选回调
         if (value) {
+            setIsSelectRecycleNum(true)
             setSelectList([...selectList, data.uuid])
         } else {
             const newSelectList = selectList.filter((item) => item !== data.uuid)
             setSelectList(newSelectList)
+            if (newSelectList.length === 0) setIsSelectRecycleNum(false)
         }
     })
     // 滚动更多加载
@@ -544,9 +602,10 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
     const onCheck = useMemoizedFn((value: boolean) => {
         if (value) setSelectList([])
         setAllCheck(value)
+        setIsSelectRecycleNum(value)
     })
     /** 单项点击回调 */
-    const optClick = useMemoizedFn((data: API.YakitPluginDetail) => {})
+    const optClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {})
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return response.pagemeta.total
@@ -555,15 +614,30 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
     const onDelTag = useMemoizedFn(() => {})
     const onSetVisible = useMemoizedFn(() => {})
     /** 单项额外操作组件 */
-    const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
-        return <OnlineRecycleExtraOperate uuid={data.uuid} onRemove={onRemove} onReduction={onReduction} />
+    const optExtraNode = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        return <OnlineRecycleExtraOperate onRemove={() => onRemove(data)} onReduction={() => onReduction(data)} />
     })
-    /** 单项副标题组件 */
-    const optSubTitle = useMemoizedFn((data: API.YakitPluginDetail) => {
-        return statusTag[`${data.status}`]
+    const onRemove = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        const index = selectList.findIndex((ele) => ele === data.uuid)
+        if (index !== -1) {
+            optCheck(data, false)
+        }
+        dispatch({
+            type: "remove",
+            payload: {
+                item: data
+            }
+        })
     })
-    const onRemove = useMemoizedFn((uuid: string) => {})
-    const onReduction = useMemoizedFn((uuid: string) => {})
+    const onReduction = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        dispatch({
+            type: "remove",
+            payload: {
+                item: data
+            }
+        })
+        // 调用还原的接口
+    })
     return (
         <>
             <PluginsList
@@ -578,10 +652,10 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
                 visible={true}
                 setVisible={onSetVisible}
             >
-                <ListShowContainer<API.YakitPluginDetail>
+                <ListShowContainer<YakitPluginOnlineDetail>
                     isList={isList}
                     data={response.data}
-                    gridNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                    gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
                         const {data} = info
                         const check = allCheck || selectList.includes(data.uuid)
                         return (
@@ -597,14 +671,13 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
                                 user={data.authors || ""}
                                 // prImgs={data.prs}
                                 time={data.updated_at}
-                                subTitle={optSubTitle}
                                 extraFooter={optExtraNode}
                                 onClick={optClick}
                             />
                         )
                     }}
                     gridHeight={210}
-                    listNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                    listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
                         const {data} = info
                         const check = allCheck || selectList.includes(data.uuid)
                         return (
@@ -616,7 +689,6 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
                                 title={data.script_name}
                                 help={data.help || ""}
                                 time={data.updated_at}
-                                subTitle={optSubTitle}
                                 extraNode={optExtraNode}
                                 onClick={optClick}
                             />
@@ -633,17 +705,11 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
 })
 
 const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps> = React.memo((props) => {
-    const {uuid, onRemove, onReduction} = props
-    const onRemoveClick = useMemoizedFn(() => {
-        onRemove(uuid)
-    })
-    const onReductionClick = useMemoizedFn(() => {
-        onReduction(uuid)
-    })
+    const {onRemove, onReduction} = props
     return (
         <div className={styles["plugin-recycle-extra-node"]}>
-            <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onRemoveClick} />
-            <YakitButton icon={<OutlineDatabasebackupIcon />} onClick={onReductionClick}>
+            <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onRemove} />
+            <YakitButton icon={<OutlineDatabasebackupIcon />} onClick={onReduction}>
                 还原
             </YakitButton>
         </div>
@@ -651,7 +717,10 @@ const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps> = Reac
 })
 
 export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = React.memo((props) => {
-    const {plugin} = props
+    const {plugin, onSelect} = props
+    const onClick = useMemoizedFn(({key}) => {
+        onSelect(key)
+    })
     return (
         <FuncFilterPopover
             icon={<OutlineDotshorizontalIcon />}
@@ -689,12 +758,7 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
                     }
                 ],
                 className: styles["func-filter-dropdown-menu"],
-                onClick: ({key}) => {
-                    switch (key) {
-                        default:
-                            break
-                    }
-                }
+                onClick: onClick
             }}
             button={{type: "text2"}}
             placement='bottomRight'

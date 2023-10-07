@@ -1,26 +1,34 @@
 import {API} from "@/services/swagger/resposeType"
+import {MenuProps} from "antd"
 
 export interface PluginUserProps {}
 
 export interface PluginUserListProps {
-    pluginState: string[]
-    searchUser: PluginSearchParams
-    plugin?: API.YakitPluginDetail
-    setIsSelectNum: (b: boolean) => void
-    setPlugin: (p?: API.YakitPluginDetail) => void
+    /**刷新数据 */
+    refresh: boolean
+    searchValue: PluginSearchParams
+    setSearchValue: (s: PluginSearchParams) => void
+    setIsSelectUserNum: (b: boolean) => void
+    setPlugin: (p?: YakitPluginOnlineDetail) => void
 }
 
-export interface PluginRecycleListProps {}
+export interface PluginRecycleListProps {
+    /**刷新数据 */
+    refresh: boolean
+    searchValue: PluginSearchParams
+    setIsSelectRecycleNum: (b: boolean) => void
+    setSearchValue: (s: PluginSearchParams) => void
+}
 /**
  * @property onRemove 删除
  * @property onReduction 还原
  */
 export interface OnlineRecycleExtraOperateProps {
-    uuid: string
-    onRemove: (uuid: string) => void
-    onReduction: (uuid: string) => void
+    onRemove: () => void
+    onReduction: () => void
 }
 
 export interface OnlineUserExtraOperateProps {
-    plugin: API.YakitPluginDetail
+    plugin: YakitPluginOnlineDetail
+    onSelect: (m: string) => void
 }

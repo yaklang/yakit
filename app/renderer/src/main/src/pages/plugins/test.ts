@@ -2,8 +2,9 @@ import {API} from "@/services/swagger/resposeType"
 import {FilterPanelGroupItem} from "@/components/businessUI/FilterPanel/FilterPanelType"
 import {v4 as uuidv4} from "uuid"
 import { QueryYakScriptsResponse, YakScript } from "../invoker/schema"
+import { YakitPluginListOnlineResponse, YakitPluginOnlineDetail } from "./online/PluginsOnlineType"
 
-const datas: API.YakitPluginDetail[] = [
+const datas: YakitPluginOnlineDetail[] = [
     {
         created_at: 1690078336,
         id: 19246,
@@ -18,7 +19,7 @@ const datas: API.YakitPluginDetail[] = [
         head_img:
             "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJicUwxTHkcj4qQAacH5rCOpWjQDrAnJn1bbeErrPtJS8eYbM5X7CtccCtiaKvdhicnkFhazBwVVuxFQ/132",
         help: "泛微 OA e-cology XXE漏洞，注意此插件需要结合dnslog判断漏洞",
-        is_private: false,
+        is_private: true,
         is_stars: false,
         official: true,
         params: [
@@ -42,7 +43,7 @@ const datas: API.YakitPluginDetail[] = [
         plugin_selector_types: "mitm,port-scan",
         published_at: 0,
         script_name: "泛微 OA e-cology XXE漏洞",
-        stars: 0,
+        stars: 99,
         status: 1,
         tags: '["泛微 OA e-cology XXE漏洞","我不知道","你是什么鬼","啊啊啊啊啊啊啊啊","不要啊杰哥"]',
         type: "yak",
@@ -86,7 +87,7 @@ const datas: API.YakitPluginDetail[] = [
         plugin_selector_types: "mitm,port-scan",
         published_at: 0,
         script_name: "Atlassian Jira Seraph-身份验证绕过-CVE-2022-0540",
-        stars: 0,
+        stars: 10000001,
         status: 1,
         tags: '["Atlassian ","身份验证绕过"]',
         type: "port-scan",
@@ -107,7 +108,7 @@ const datas: API.YakitPluginDetail[] = [
         head_img:
             "https://thirdwx.qlogo.cn/mmopen/vi_32/ag7nfjFEdqcF2OsROrmibCjC3PkdSlErXia1iaSicd5MkkBIpOlXIfQoDgNDuzF0bG3bSNVW7Era7KdELyeRZsJwiag/132",
         help: "通过 dnslog 检测可能存在命令执行的参数",
-        is_private: false,
+        is_private: true,
         is_stars: false,
         official: true,
         params: [
@@ -123,7 +124,7 @@ const datas: API.YakitPluginDetail[] = [
         plugin_selector_types: "mitm,port-scan",
         published_at: 0,
         script_name: "命令执行检测",
-        stars: 0,
+        stars: 1299,
         status: 1,
         tags: "null",
         type: "mitm",
@@ -145,7 +146,7 @@ const datas: API.YakitPluginDetail[] = [
             "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIDhIpvB4hJnhrJMpVmTXHy4t274hBIxpibxWrkrbZiadwOIPmydxbNBpUN9mJ8uuYWDZCTnKJKL1PA/132",
         help: "SonicWall SMA1000 LFI任意文件读取-CVE-2023-0126",
         is_private: false,
-        is_stars: false,
+        is_stars: true,
         official: false,
         params: [
             {
@@ -167,7 +168,7 @@ const datas: API.YakitPluginDetail[] = [
         plugin_selector_types: "mitm,port-scan",
         published_at: 0,
         script_name: "SonicWall SMA1000 LFI任意文件读取-CVE-2023-0126",
-        stars: 0,
+        stars: 13000,
         status: 1,
         tags: '["SonicWall ","readfile"]',
         type: "port-scan",
@@ -2157,7 +2158,7 @@ const datas: API.YakitPluginDetail[] = [
     }
 ]
 
-export const apiFetchList: (params: {page: number; limit?: number}) => Promise<API.YakitPluginListResponse> = (
+export const apiFetchList: (params: {page: number; limit?: number}) => Promise<YakitPluginListOnlineResponse> = (
     params
 ) => {
     return new Promise((resolve, reject) => {
@@ -2168,14 +2169,14 @@ export const apiFetchList: (params: {page: number; limit?: number}) => Promise<A
 
             const start = (listPage - 1) * listLimit
             const end = listPage * listLimit
-            const obj: API.YakitPluginListResponse = {
+            const obj: YakitPluginListOnlineResponse = {
                 // data:[...datas.slice(start, end)],
                 data: [...datas.slice(0, 30)].map((item) => {
                     const obj = {...item}
                     obj.uuid = uuidv4()
                     return obj
                 }),
-                pagemeta: {limit: listLimit, page: listPage, total: datas.length, total_page: 2}
+                pagemeta: {limit: listLimit, page:listPage, total: datas.length, total_page: 2}
             }
             setTimeout(() => {
                 resolve(obj)
@@ -3166,13 +3167,13 @@ const localDatas:YakScript[]=[
         "IsCorePlugin": false
     }
 ]
-export const apiFetchLocalList: (params: {page: number; limit?: number}) => Promise<QueryYakScriptsResponse> = (
+export const apiFetchLocalList: (params: {Page: number; Limit?: number}) => Promise<QueryYakScriptsResponse> = (
     params
 ) => {
     return new Promise((resolve, reject) => {
         try {
-            let listPage: number = params.page
-            let listLimit: number = 5 || params.limit || 20
+            let listPage: number = params.Page
+            let listLimit: number = 5 || params.Limit || 20
             if (!listLimit) listLimit = 20
             const obj: QueryYakScriptsResponse = {
                 // data:[...datas.slice(start, end)],

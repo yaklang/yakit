@@ -1,8 +1,7 @@
-import React, {useState, useRef, useMemo, useEffect} from "react"
+import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
 import {LocalExtraOperateProps, PluginsLocalProps} from "./PluginsLocalType"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
-import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useLockFn, useMemoizedFn} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {defaultFilter, defaultSearch, PluginsLayout, PluginsContainer, pluginTypeList} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
@@ -18,12 +17,14 @@ import {
 } from "../funcTemplate"
 import {apiFetchLocalList, ssfilters} from "../test"
 import {SolidChevronDownIcon} from "@/assets/newIcon"
-import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
+import {PaginationSchema, YakScript} from "@/pages/invoker/schema"
 import {OutlineClouduploadIcon, OutlineExportIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useStore} from "@/store"
 import {PluginsLocalDetail} from "./PluginsLocalDetail"
+import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
+import {yakitNotify} from "@/utils/notification"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
@@ -32,26 +33,15 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
-    /** 是否为首页加载 */
-    const isLoadingRef = useRef<boolean>(true)
     /** 插件展示(列表|网格) */
     const [isList, setIsList] = useState<boolean>(true)
 
     const [plugin, setPlugin] = useState<YakScript>()
     const [filters, setFilters] = useState<PluginFilterParams>(
-        cloneDeep({...defaultFilter, tags: ["Weblogic", "威胁情报"]})
+        cloneDeep({...defaultFilter, tags: ["漏洞检测", "信息泄露"]})
     )
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [response, setResponse] = useState<QueryYakScriptsResponse>({
-        Data: [],
-        Pagination: {
-            Limit: 10,
-            Page: 1,
-            OrderBy: "",
-            Order: ""
-        },
-        Total: 0
-    })
+    const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
     const [hasMore, setHasMore] = useState<boolean>(true)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
@@ -70,38 +60,48 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         fetchList(true)
     }, [])
 
-    const fetchList = useMemoizedFn((reset?: boolean) => {
-        if (loading) return
+    const fetchList = useLockFn(
+        useMemoizedFn(async (reset?: boolean) => {
+            if (loading) return
 
-        setLoading(true)
+            setLoading(true)
 
-        const params: PluginListPageMeta = !!reset
-            ? {page: 1, limit: 20}
-            : {
-                  page: response.Pagination.Page + 1,
-                  limit: response.Pagination.Limit || 20
-              }
+            const params: PaginationSchema = !!reset
+                ? {Page: 1, Limit: 20, Order: "", OrderBy: ""}
+                : {
+                      Page: response.Pagination.Page + 1,
+                      Limit: response.Pagination.Limit || 20,
+                      Order: "",
+                      OrderBy: ""
+                  }
 
-        apiFetchLocalList(params)
-            .then((res: QueryYakScriptsResponse) => {
+            const query = {
+                ...params,
+                ...search,
+                ...filters
+            }
+            if (!showFilter) {
+                query["plugin_type"] = []
+                query["tags"] = []
+            }
+            // console.log("query", reset, {...query})
+            try {
+                const res = await apiFetchLocalList(query)
                 if (!res.Data) res.Data = []
-
-                const data = false && res.Pagination.Page === 1 ? res.Data : response.Data.concat(res.Data)
-                // const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
-                // setHasMore(!isMore)
-
-                setResponse({
-                    ...res,
-                    Data: [...data]
+                dispatch({
+                    type: "add",
+                    payload: {
+                        response: res
+                    }
                 })
-                isLoadingRef.current = false
-            })
-            .finally(() => {
                 setTimeout(() => {
                     setLoading(false)
                 }, 300)
-            })
-    })
+            } catch (error) {
+                yakitNotify("error", "请求数据失败:" + error)
+            }
+        })
+    )
 
     // 滚动更多加载
     const onUpdateList = useMemoizedFn((reset?: boolean) => {
@@ -138,29 +138,51 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         return (
             <LocalExtraOperate
                 isOwn={userInfo.user_id === data.UserId}
-                onRemovePlugin={() => {}}
-                onExportPlugin={() => {}}
-                onEditPlugin={() => {}}
-                onUploadPlugin={() => {}}
+                onRemovePlugin={() => onRemovePlugin(data)}
+                onExportPlugin={() => onExportPlugin(data)}
+                onEditPlugin={() => onEditPlugin(data)}
+                onUploadPlugin={() => onUploadPlugin(data)}
             />
         )
+    })
+    /** 上传 */
+    const onUploadPlugin = useMemoizedFn((data: YakScript) => {
+        yakitNotify("success", "上传~~~")
+    })
+    /**编辑 */
+    const onEditPlugin = useMemoizedFn((data: YakScript) => {
+        yakitNotify("success", "编辑~~~")
+    })
+    /**导出 */
+    const onExportPlugin = useMemoizedFn((data: YakScript) => {
+        yakitNotify("success", "导出~~~")
+    })
+    /**删除 */
+    const onRemovePlugin = useMemoizedFn((data: YakScript) => {
+        const index = selectList.findIndex((ele) => ele === data.UUID)
+        if (index !== -1) {
+            optCheck(data, false)
+        }
+        dispatch({
+            type: "remove",
+            payload: {
+                item: {
+                    ...data
+                }
+            }
+        })
     })
     /** 单项点击回调 */
     const optClick = useMemoizedFn((data: YakScript) => {
         setPlugin({...data})
     })
-    // 关键词/作者搜索
-    const onKeywordAndUser = useMemoizedFn((type: string | null, value: string) => {
-        if (!type) setSearch(cloneDeep(defaultSearch))
-        else {
-            if (type === "keyword") setSearch({...search, keyword: value})
-            if (type === "user") setSearch({...search, userName: value})
-        }
-    })
     /**新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {})
     const onBack = useMemoizedFn(() => {
         setPlugin(undefined)
+    })
+    const onSearch = useMemoizedFn(() => {
+        fetchList(true)
     })
     return (
         <>
@@ -175,6 +197,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     data={response}
                     onBack={onBack}
                     loadMoreData={onUpdateList}
+                    defaultSearchValue={search}
                 />
             )}
             <PluginsLayout
@@ -183,16 +206,17 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 subTitle={<TypeSelect active={filters.type || []} list={pluginTypeList} setActive={onSetActive} />}
                 extraHeader={
                     <div className='extra-header-wrapper'>
-                        <FuncSearch onSearch={onKeywordAndUser} />
+                        <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
                             <FuncFilterPopover
                                 maxWidth={1200}
                                 icon={<SolidChevronDownIcon />}
                                 name='批量操作'
-                                disabled={selectList.length === 0}
+                                disabled={selectNum === 0}
                                 button={{
-                                    type: "outline2"
+                                    type: "outline2",
+                                    size: "large"
                                 }}
                                 menu={{
                                     type: "primary",
@@ -231,7 +255,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 }
             >
                 <PluginsContainer
-                    loading={loading && isLoadingRef.current}
+                    loading={loading && response.Pagination.Page === 1}
                     visible={showFilter}
                     setVisible={setShowFilter}
                     selecteds={filters as Record<string, string[]>}

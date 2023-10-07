@@ -128,15 +128,26 @@ export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) =>
 
 /** @name 插件详情大框架组件(带左侧插件列表) */
 export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((props) => {
-    const {title, filterNode, filterExtra, checked, onCheck, total, selected, listProps, onBack, children} = props
-
+    const {
+        title,
+        filterNode,
+        filterExtra,
+        checked,
+        onCheck,
+        total,
+        selected,
+        listProps,
+        onBack,
+        children,
+        search,
+        setSearch
+    } = props
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
 
     // 关键词|用户搜索
     const onSearch = useDebounceFn(
         (type: string, value: string) => {
-            console.log("onKeywordAndUser", type, value)
         },
         {wait: 300}
     )
@@ -154,7 +165,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                 <div className={styles["filter-header"]}>
                     <div className={styles["header-search"]}>
                         <div className={styles["title-style"]}>{title}</div>
-                        <FuncSearch onSearch={onSearch.run} />
+                        <FuncSearch value={search} onChange={setSearch} onSearch={onSearch.run} />
                     </div>
                     {filterNode || null}
                     <div className={styles["filter-body"]}>
@@ -1387,7 +1398,8 @@ export const defaultFilter: PluginFilterParams = {
 }
 export const defaultSearch: PluginSearchParams = {
     keyword: "",
-    userName: ""
+    userName: "",
+    type: "keyword"
 }
 export const defaultPagemeta: PluginListPageMeta = {page: 1, limit: 20}
 export const defaultResponse: API.YakitPluginListResponse = {
