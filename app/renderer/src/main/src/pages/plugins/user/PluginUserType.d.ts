@@ -8,7 +8,7 @@ export interface PluginUserListProps {
     refresh: boolean
     searchValue: PluginSearchParams
     setSearchValue: (s: PluginSearchParams) => void
-    setIsSelectNum: (b: boolean) => void
+    setIsSelectUserNum: (b: boolean) => void
     setPlugin: (p?: YakitPluginOnlineDetail) => void
 }
 
@@ -16,6 +16,7 @@ export interface PluginRecycleListProps {
     /**刷新数据 */
     refresh: boolean
     searchValue: PluginSearchParams
+    setIsSelectRecycleNum: (b: boolean) => void
     setSearchValue: (s: PluginSearchParams) => void
 }
 /**
