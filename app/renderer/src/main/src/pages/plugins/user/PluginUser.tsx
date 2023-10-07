@@ -749,12 +749,9 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
                     {type: "divider"},
                     {
                         key: "remove",
-                        label: (
-                            <span className={styles["remove-menu-item"]}>
-                                <OutlineTrashIcon className={styles["plugin-user-extra-node-icon"]} />
-                                <span>删除</span>
-                            </span>
-                        )
+                        itemIcon: <OutlineTrashIcon className={styles["plugin-user-extra-node-icon"]} />,
+                        label:'删除',
+                        type:'danger',
                     }
                 ],
                 className: styles["func-filter-dropdown-menu"],
