@@ -17,8 +17,10 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {useStore} from "@/store"
-import {FuncFilterPopover} from "../funcTemplate"
+import {FuncBtn, FuncFilterPopover} from "../funcTemplate"
 import {PluginGroup, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {cloneDeep} from "bizcharts/lib/utils"
+import {PluginSearchParams} from "../baseTemplateType"
 
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
@@ -38,12 +40,15 @@ interface PluginsLocalDetailProps {
     data: QueryYakScriptsResponse
     onBack: () => void
     loadMoreData: () => void
+    defaultSearchValue: PluginSearchParams
 }
 
 export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => {
-    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData, loading} = props
+    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData, loading, defaultSearchValue} =
+        props
 
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
+    const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -139,6 +144,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                     defItemHeight: 46
                 }}
                 onBack={onPluginBack}
+                search={search}
+                setSearch={setSearch}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs tabPosition='right' className='plugins-tabs'>
