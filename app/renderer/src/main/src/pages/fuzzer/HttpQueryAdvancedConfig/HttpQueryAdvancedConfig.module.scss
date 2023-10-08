@@ -7,7 +7,7 @@
     max-width: 300px;
     width: 300px;
     border-right: 1px solid var(--yakit-border-color);
-    animation: show 0.2s cubic-bezier(.12,.4,.29,1.46);
+    animation: show 0.2s cubic-bezier(0.12, 0.4, 0.29, 1.46);
     background-color: var(--yakit-card-background-color);
 
     :global {
@@ -49,7 +49,7 @@
         .ant-select.ant-select-in-form-item {
             height: auto;
         }
-        .ant-form-item-with-help .ant-form-item-explain{
+        .ant-form-item-with-help .ant-form-item-explain {
             font-size: 12px;
         }
     }
@@ -119,6 +119,13 @@
         border-bottom: 1px solid var(--yakit-border-color);
     }
 
+    .etcHostsText {
+        max-width: 123px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
     .variable-list {
         color: var(--yakit-helper-text-color);
 
@@ -172,15 +179,15 @@
                 line-height: 16px;
             }
             :global {
-                .ant-collapse-header{
-                    .ant-collapse-header-text{
+                .ant-collapse-header {
+                    .ant-collapse-header-text {
                         overflow: hidden;
                         white-space: nowrap;
                         text-overflow: ellipsis;
                     }
                 }
 
-                .ant-radio-button-wrapper{
+                .ant-radio-button-wrapper {
                     padding: 0px 8px;
                 }
             }
