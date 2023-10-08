@@ -3173,7 +3173,7 @@ export const apiFetchLocalList: (params: {Page: number; Limit?: number}) => Prom
     return new Promise((resolve, reject) => {
         try {
             let listPage: number = params.Page
-            let listLimit: number = 5 || params.Limit || 20
+            let listLimit: number = params.Limit || 20
             if (!listLimit) listLimit = 20
             const obj: QueryYakScriptsResponse = {
                 // data:[...datas.slice(start, end)],

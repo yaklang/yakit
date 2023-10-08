@@ -25,34 +25,35 @@ import {PluginSearchParams} from "../baseTemplateType"
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
 import classNames from "classnames"
+import {PluginsLocalDetailProps} from "./PluginsLocalType"
+import {yakitNotify} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
 const {TabPane} = Tabs
 
-interface PluginsLocalDetailProps {
-    info: YakScript
-    allCheck: boolean
-    loading: boolean
-    onCheck: (value: boolean) => void
-    selectList: string[]
-    optCheck: (data: YakScript, value: boolean) => void
-    data: QueryYakScriptsResponse
-    onBack: () => void
-    loadMoreData: () => void
-    defaultSearchValue: PluginSearchParams
-}
-
 export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => {
-    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData, loading, defaultSearchValue} =
-        props
+    const {
+        info,
+        defaultAllCheck,
+        // onCheck,
+        defaultSelectList,
+        // optCheck,
+        response,
+        onBack,
+        loadMoreData,
+        loading,
+        defaultSearchValue,
+        dispatch
+    } = props
 
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
-
+    const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
+    const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
     // 选中插件的数量
     const selectNum = useMemo(() => {
-        if (allCheck) return data.Total
+        if (allCheck) return response.Total
         else return selectList.length
     }, [allCheck, selectList])
 
@@ -66,11 +67,42 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     const onRun = useMemoizedFn(() => {})
     // 返回
     const onPluginBack = useMemoizedFn(() => {
-        onBack()
+        onBack({
+            search,
+            selectList,
+            allCheck
+        })
         setPlugin(undefined)
     })
     const onRemove = useMemoizedFn((e) => {
         e.stopPropagation()
+        if (!plugin) return
+        const removePlugin = {...plugin}
+        if (response.Data.length === 1) {
+            // 如果删除是最后一个，就回到列表中得空页面
+            onPluginBack()
+        } else {
+            const index = response.Data.findIndex((ele) => ele.ScriptName === removePlugin.ScriptName)
+
+            if (index === -1) return
+            if (index === Number(response.Total) - 1) {
+                // 选中得item为最后一个，删除后选中倒数第二个
+                setPlugin({
+                    ...response.Data[index - 1]
+                })
+            } else {
+                //选择下一个
+                setPlugin({
+                    ...response.Data[index + 1]
+                })
+            }
+        }
+        dispatch({
+            type: "remove",
+            payload: {
+                item: removePlugin
+            }
+        })
     })
     const onExport = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -80,6 +112,30 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const onUpload = useMemoizedFn((e) => {
         e.stopPropagation()
+    })
+    const onPluginClick = useMemoizedFn((data: YakScript) => {
+        setPlugin({...data})
+    })
+    /** 单项勾选|取消勾选 */
+    const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
+        try {
+            // 全选情况时的取消勾选
+            if (allCheck) {
+                setSelectList(response.Data.map((item) => item.ScriptName).filter((item) => item !== data.ScriptName))
+                setAllCheck(false)
+                return
+            }
+            // 单项勾选回调
+            if (value) setSelectList([...selectList, data.ScriptName])
+            else setSelectList(selectList.filter((item) => item !== data.ScriptName))
+        } catch (error) {
+            yakitNotify("error", "勾选失败:" + error)
+        }
+    })
+    /**全选 */
+    const onCheck = useMemoizedFn((value: boolean) => {
+        if (value) setSelectList([])
+        setAllCheck(value)
     })
     if (!plugin) return null
     return (
@@ -111,15 +167,15 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 }
                 checked={allCheck}
                 onCheck={onCheck}
-                total={data.Total}
+                total={response.Total}
                 selected={selectNum}
                 listProps={{
                     rowKey: "uuid",
-                    data: data.Data,
+                    data: response.Data,
                     loadMoreData: loadMoreData,
                     classNameRow: "plugin-details-opt-wrapper",
                     renderRow: (info, i) => {
-                        const check = allCheck || selectList.includes(info.UUID)
+                        const check = allCheck || selectList.includes(info.ScriptName)
                         return (
                             <PluginDetailsListItem<YakScript>
                                 plugin={info}
@@ -135,12 +191,12 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                 // isCorePlugin={info.is_core_plugin}
                                 isCorePlugin={false}
                                 pluginType={info.Type}
-                                onPluginClick={()=>{}}
+                                onPluginClick={onPluginClick}
                             />
                         )
                     },
-                    page: data.Pagination.Page,
-                    hasMore: data.Total !== data.Data.length,
+                    page: response.Pagination.Page,
+                    hasMore: response.Total !== response.Data.length,
                     loading: loading,
                     defItemHeight: 46
                 }}
@@ -149,7 +205,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 setSearch={setSearch}
             >
                 <div className={styles["details-content-wrapper"]}>
-                    <Tabs tabPosition='right' className='plugins-tabs'>
+                    <Tabs defaultActiveKey='code' tabPosition='right' className='plugins-tabs'>
                         <TabPane tab='执行' key='execute'>
                             <div className={styles["plugin-info-wrapper"]}>执行</div>
                         </TabPane>
@@ -203,16 +259,13 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                                         {type: "divider"},
                                                         {
                                                             key: "remove",
-                                                            label: (
-                                                                <span className={styles["remove-menu-item"]}>
-                                                                    <OutlineLogoutIcon
-                                                                        className={
-                                                                            styles["plugin-local-extra-node-icon"]
-                                                                        }
-                                                                    />
-                                                                    <span>移出菜单栏</span>
-                                                                </span>
-                                                            )
+                                                            itemIcon: (
+                                                                <OutlineLogoutIcon
+                                                                    className={styles["plugin-local-extra-node-icon"]}
+                                                                />
+                                                            ),
+                                                            label: "移出菜单栏",
+                                                            type: "danger"
                                                         }
                                                     ],
                                                     className: styles["func-filter-dropdown-menu"],
