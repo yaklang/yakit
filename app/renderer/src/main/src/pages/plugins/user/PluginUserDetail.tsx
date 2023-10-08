@@ -140,9 +140,6 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     })
     /** 单项副标题组件 */
     const optExtra = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-        if (data.is_private) {
-            console.log("data", data)
-        }
         return data.is_private ? <PrivatePluginIcon /> : statusTag[`${data.status}`]
     })
     /** 单项勾选|取消勾选 */
