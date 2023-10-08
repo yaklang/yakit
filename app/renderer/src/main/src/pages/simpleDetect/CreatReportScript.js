@@ -656,6 +656,10 @@ if len(infoPotentialRisk) > 0 {
     reportInstance.Markdown(sprintf(\`本次扫描检测到信息/指纹共<span style="font-weight:bold">%v</span>条，请认真查看是否有风险信息需要排查。\`, len(infoPotentialRisk) ))
     infoPotentialRiskList = []
     for _, infoRisk := range infoPotentialRisk {
+        titleVerbose = infoRisk.TitleVerbose    
+        if titleVerbose == "" {
+            titleVerbose = infoRisk.Title
+        }
         addr := sprintf(\`%v:%v\`, infoRisk.Host, infoRisk.Port)
         infoPotentialRiskList = append(infoPotentialRiskList, {
             "标题": {
