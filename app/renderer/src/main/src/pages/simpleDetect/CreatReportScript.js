@@ -653,11 +653,7 @@ if len(weakPassWordRisks) != 0 {
 
 if len(infoPotentialRisk) > 0 {
     reportInstance.Markdown(sprintf("### 3.3.6 信息/指纹列表"))
-    reportInstance.Markdown(sprintf(\`
-    本次扫描检测到信息/指纹共
-    <span font-weight:bold">%v个</span>
-    条，请认真查看是否有风险信息需要排查。
-    \`, len(infoPotentialRisk) ))
+    reportInstance.Markdown(sprintf(\`本次扫描检测到信息/指纹共<span style="font-weight:bold">%v</span>条，请认真查看是否有风险信息需要排查。\`, len(infoPotentialRisk) ))
     infoPotentialRiskList = []
     for _, infoRisk := range infoPotentialRisk {
         addr := sprintf(\`%v:%v\`, infoRisk.Host, infoRisk.Port)

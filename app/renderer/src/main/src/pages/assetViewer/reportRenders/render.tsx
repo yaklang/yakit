@@ -21,8 +21,6 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
             return <ReportMarkdownBlock item={props.item} />
         case "json-table":
             return <JSONTableRender item={props.item} />
-        case "search-json-table":
-            return <ReportMergeTable data={content} />
         case "pie-graph":
             try {
                 return (
@@ -102,6 +100,8 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                                 return <RiskTable data={content} />
                             case "potential-risks-list":
                                 return <RiskTable data={content} />
+                            case "search-json-table":
+                                return <ReportMergeTable data={content} />
                             default:
                                 return (
                                     <AutoCard

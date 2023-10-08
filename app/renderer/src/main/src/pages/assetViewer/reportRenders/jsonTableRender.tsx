@@ -47,12 +47,31 @@ export const JSONTableRender: React.FC<JSONTableRenderProp> = (props) => {
 };
 
 export interface ReportTableProp {
-    data: string;
+    data: any;
 }
 
 export const ReportMergeTable: React.FC<ReportTableProp> = (props) => {
-    const { data: datas } = props;
-    const { data, header } = JSON.parse(datas);
+    const { data: content } = props;
+    
+    let header:string[] = [];
+    let data:any[] = [];
+    if (Array.isArray(content.data)) {
+      content.data.map((item, index) => {
+        let newArr = Object.entries(item);
+        newArr.sort(function (a:any, b:any) {
+          return a[1].sort - b[1].sort;
+        });
+        let itemData:any[] = [];
+        newArr.map((itemIn:any) => {
+          if (index === 0) {
+            header.push(itemIn[0]);
+          }
+          itemData.push(itemIn[1]?.value||"");
+        });
+        data.push(itemData);
+      });
+    }
+
     let newData:string[][] = []
     const result = data.reduce((acc, item) => {
       const key = item[0];
