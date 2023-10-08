@@ -5,6 +5,7 @@ import {info} from "@/utils/notification";
 import {SelectOne} from "@/utils/inputUtil";
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import {YakURLTree} from "@/pages/yakURLTree/YakURLTree";
+import {TrafficDemo} from "@/components/playground/TrafficDemo";
 
 export interface DebugMonacoEditorPageProp {
 
@@ -23,7 +24,7 @@ a=1&b=2 Content-Length: a
 {{null(1)}}
 `)
     const [languageType, setLangType] = useState(MONACO_SPEC_WEBFUZZER_REQUEST);
-    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree">("fs-tree");
+    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree" | string>("traffic-session");
 
     useEffect(() => {
         if (!languageType) {
@@ -36,6 +37,7 @@ a=1&b=2 Content-Length: a
     return <div style={{height: "100%"}}>
         <AutoCard
             title={<SelectOne label={"调试组件"} data={[
+                {value: "traffic-session", text: "流量会话"},
                 {value: "http-monaco-editor", text: "HTTP 数据包编辑器"},
                 {value: "fs-tree", text: "文件系统树"},
             ]} formItemStyle={{margin: 0}} value={mode} setValue={setMode}/>}
@@ -44,6 +46,8 @@ a=1&b=2 Content-Length: a
             {
                 (() => {
                     switch (mode) {
+                        case "traffic-session":
+                            return <TrafficDemo/>
                         case "http-monaco-editor":
                             return <YakitEditor value={value} type={"http"}/>
                         case "fs-tree":
