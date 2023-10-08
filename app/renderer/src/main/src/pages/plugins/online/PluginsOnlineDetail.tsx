@@ -8,7 +8,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {FuncBtn, OnlineExtraOperate} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
-import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "./PluginsOnlineType"
+import {PluginsOnlineDetailProps, YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "./PluginsOnlineType"
 import {PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
 import {OnlinePluginAppAction, thousandthConversion} from "../pluginReducer"
@@ -21,28 +21,14 @@ const {ipcRenderer} = window.require("electron")
 
 const {TabPane} = Tabs
 
-interface PluginsOnlineDetailProps {
-    info: YakitPluginOnlineDetail
-    allCheck: boolean
-    loading: boolean
-    onCheck: (value: boolean) => void
-    selectList: string[]
-    optCheck: (data: YakitPluginOnlineDetail, value: boolean) => void
-    data: YakitPluginListOnlineResponse
-    onBack: (q: PluginSearchParams) => void
-    loadMoreData: () => void
-    defaultSearchValue: PluginSearchParams
-    dispatch: React.Dispatch<OnlinePluginAppAction>
-}
-
 export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) => {
     const {
         info,
-        allCheck,
-        onCheck,
-        selectList,
-        optCheck,
-        data,
+        defaultAllCheck,
+        // onCheck,
+        defaultSelectList,
+        // optCheck,
+        response,
         onBack,
         loadMoreData,
         loading,
@@ -50,9 +36,12 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         dispatch
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
+    const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
+    const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
+
     // 选中插件的数量
     const selectNum = useMemo(() => {
-        if (allCheck) return data.pagemeta.total
+        if (allCheck) return response.pagemeta.total
         else return selectList.length
     }, [allCheck, selectList])
 
@@ -66,7 +55,12 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     const onRun = useMemoizedFn(() => {})
     // 返回
     const onPluginBack = useMemoizedFn(() => {
-        onBack(search)
+        onBack({
+            search,
+            allCheck,
+            selectList
+        })
+        setPlugin(undefined)
     })
     const onLikeClick = useMemoizedFn(() => {
         if (plugin) {
@@ -111,6 +105,30 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         }
         yakitNotify("success", "下载~~~")
     })
+    /** 单项勾选|取消勾选 */
+    const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
+        try {
+            // 全选情况时的取消勾选
+            if (allCheck) {
+                setSelectList(response.data.map((item) => item.uuid).filter((item) => item !== data.uuid))
+                setAllCheck(false)
+                return
+            }
+            // 单项勾选回调
+            if (value) setSelectList([...selectList, data.uuid])
+            else setSelectList(selectList.filter((item) => item !== data.uuid))
+        } catch (error) {
+            yakitNotify("error", "勾选失败:" + error)
+        }
+    })
+    /**全选 */
+    const onCheck = useMemoizedFn((value: boolean) => {
+        if (value) setSelectList([])
+        setAllCheck(value)
+    })
+    const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        setPlugin({...data})
+    })
     if (!plugin) return null
     return (
         <PluginDetails<YakitPluginOnlineDetail>
@@ -128,11 +146,11 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             }
             checked={allCheck}
             onCheck={onCheck}
-            total={data.pagemeta.total}
+            total={response.pagemeta.total}
             selected={selectNum}
             listProps={{
                 rowKey: "uuid",
-                data: data.data,
+                data: response.data,
                 loadMoreData: loadMoreData,
                 classNameRow: "plugin-details-opt-wrapper",
                 renderRow: (info, i) => {
@@ -152,12 +170,12 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                             // isCorePlugin={info.is_core_plugin}
                             isCorePlugin={false}
                             pluginType={info.type}
-                            onPluginClick={()=>{}}
+                            onPluginClick={onPluginClick}
                         />
                     )
                 },
-                page: data.pagemeta.page,
-                hasMore: data.pagemeta.total !== data.data.length,
+                page: response.pagemeta.page,
+                hasMore: response.pagemeta.total !== response.data.length,
                 loading: loading,
                 defItemHeight: 46
             }}

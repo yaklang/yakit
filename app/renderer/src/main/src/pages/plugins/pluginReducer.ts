@@ -112,7 +112,7 @@ export const pluginOnlineReducer = (
                 let newLikeItem = state.data[indexLike]
                 if (newLikeItem.is_stars) {
                     newLikeItem.is_stars = false
-                    newLikeItem.stars = newLikeItem.stars - 1
+                    newLikeItem.stars = newLikeItem.stars - 1 > 0 ? newLikeItem.stars - 1 : 0
                     newLikeItem.starsCountString = thousandthConversion(newLikeItem.stars)
                 } else {
                     newLikeItem.is_stars = true

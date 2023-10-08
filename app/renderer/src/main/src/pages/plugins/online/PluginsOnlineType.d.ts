@@ -6,7 +6,7 @@ export interface PluginsOnlineProps {}
 
 export interface PluginsOnlineListProps {
     /**刷新数据 */
-    refresh:boolean
+    refresh: boolean
     plugin: YakitPluginOnlineDetail | undefined
     searchValue: PluginSearchParams
     setSearchValue: (s: PluginSearchParams) => void
@@ -41,4 +41,22 @@ export interface YakitPluginOnlineDetail extends API.YakitPluginDetail {
 
 export interface YakitPluginListOnlineResponse extends Omit<API.YakitPluginListResponse, "data"> {
     data: YakitPluginOnlineDetail[]
+}
+
+export interface PluginsOnlineDetailProps {
+    info: YakitPluginOnlineDetail
+    defaultAllCheck: boolean
+    loading: boolean
+    defaultSelectList: string[]
+    response: YakitPluginListOnlineResponse
+    onBack: (q: PluginOnlineDetailBackProps) => void
+    loadMoreData: () => void
+    defaultSearchValue: PluginSearchParams
+    dispatch: React.Dispatch<OnlinePluginAppAction>
+}
+
+export interface PluginOnlineDetailBackProps {
+    search: PluginSearchParams
+    selectList: string[]
+    allCheck: boolean
 }
