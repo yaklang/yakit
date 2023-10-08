@@ -15,6 +15,8 @@ import {useThrottleFn, useGetState, useUpdateEffect} from "ahooks"
 import htmlDocx from "html-docx-js/dist/html-docx"
 import {saveAs} from "file-saver"
 import html2canvas from "html2canvas"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 export interface ReportViewerProp {
     id?: number
 }
@@ -85,7 +87,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                 let options = {}
                 // 适配各种图表
                 if (echartType === "vertical-bar") {
-                    options = {scale: 0.8}
+                    options = {scale: 0.8, windowWidth: 1200}
                 } else if (echartType === "hollow-pie") {
                     options = {scale: 1, windowWidth: 1000}
                 }
@@ -115,7 +117,10 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
     useUpdateEffect(() => {
         if (wordSpinLoading) {
-            exportToWord()
+            // 此处定时器为了确保echarts数据已渲染
+            setTimeout(()=>{
+               exportToWord() 
+            },500)
         }
     }, [renderReportItems])
 
@@ -218,6 +223,37 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             setRenderReportItems(newData.slice(0, -1))
         }, 500)
     }
+
+    const downloadHtmlOrWord = () => {
+        const m = showYakitModal({
+            title: "选择下载类型",
+            width: 450,
+            centered: true,
+            footer:null,
+            content: (
+                <div style={{padding:20,display:"flex",gap:8,justifyContent:"space-around"}}>
+                    <YakitButton
+                        type={"primary"}
+                        onClick={() => {
+                            m.destroy()
+                            downloadHtml()
+                        }}
+                    >
+                        HTML
+                    </YakitButton>
+                    <YakitButton
+                        type={"primary"}
+                        onClick={() => {
+                            m.destroy()
+                            downloadWord()
+                        }}
+                    >
+                        Word
+                    </YakitButton>
+                </div>
+            )
+        })
+    }
     return (
         <div className={styles["report-viewer"]}>
             <Spin spinning={SpinLoading || wordSpinLoading}>
@@ -252,8 +288,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                             <a
                                 href={"#"}
                                 onClick={() => {
-                                    downloadWord()
-                                    // isEnterpriseEdition() ? downloadWord() : downloadPdf()
+                                    isEnterpriseEdition() ? downloadHtmlOrWord() : downloadPdf()
                                 }}
                             >
                                 下载

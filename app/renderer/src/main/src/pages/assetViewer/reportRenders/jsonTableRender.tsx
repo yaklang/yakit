@@ -63,23 +63,25 @@ export const FoldTable: React.FC<RiskTableProp> = (props) => {
     const [dataSource, setDataSource] = useState<any[]>([])
     const [extendItem, setExtendItem] = useState<boolean>(false)
     useEffect(() => {
-        let header: string[] = []
-        data.map((item, index) => {
-            let newArr: any = Object.entries(item)
-            newArr.sort(function (a: any, b: any) {
-                return a[1].sort - b[1].sort
+        if (Array.isArray(data)) {
+            let header: string[] = []
+            data.map((item, index) => {
+                let newArr: any = Object.entries(item)
+                newArr.sort(function (a: any, b: any) {
+                    return a[1].sort - b[1].sort
+                })
+                let itemData: any = {}
+                newArr.map((itemIn: any[], indexIn: number) => {
+                    if (index === 0) {
+                        header.push(itemIn[0])
+                    }
+                    itemData[`name-${indexIn}`] = itemIn[1]
+                })
+                tableData.current = [...tableData.current, itemData]
             })
-            let itemData: any = {}
-            newArr.map((itemIn: any[], indexIn: number) => {
-                if (index === 0) {
-                    header.push(itemIn[0])
-                }
-                itemData[`name-${indexIn}`] = itemIn[1]
-            })
-            tableData.current = [...tableData.current, itemData]
-        })
-        setHeader(header)
-        // setDataSource(tableData.current)
+            setHeader(header)
+            // setDataSource(tableData.current)
+        }
     }, [])
 
     useUpdateEffect(() => {
@@ -115,9 +117,9 @@ export const FoldTable: React.FC<RiskTableProp> = (props) => {
     }, [header, extendItem])
 
     const headerRow = {
-      onClick: () => {
-        setExtendItem(!extendItem)
-      },
+        onClick: () => {
+            setExtendItem(!extendItem)
+        }
     }
     return (
         <div
