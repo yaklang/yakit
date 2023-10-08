@@ -536,6 +536,111 @@ service Yak {
 
   // Wireshark
   rpc PcapX(stream PcapXRequest) returns (stream PcapXResponse);
+  rpc QueryTrafficSession(QueryTrafficSessionRequest) returns (QueryTrafficSessionResponse);
+  rpc QueryTrafficPacket(QueryTrafficPacketRequest) returns (QueryTrafficPacketResponse);
+  rpc QueryTrafficTCPReassembled(QueryTrafficTCPReassembledRequest) returns (QueryTrafficTCPReassembledResponse);
+}
+
+message QueryTrafficPacketRequest {
+  Paging Pagination = 1;
+
+  bool FromNow = 2;
+  string SessionId = 3;
+  string LinkLayerTypes = 4;
+  string NetworkLayerTypes = 5;
+  string TransportLayerTypes = 6;
+  string ApplicationLayerTypes = 7;
+  string SrcIP = 8;
+  string DstIP = 9;
+  string SrcPort = 10;
+  string DstPort = 11;
+}
+
+message QueryTrafficTCPReassembledRequest {
+  Paging Pagination = 1;
+
+  bool FromNow = 2;
+  string SessionId = 3;
+}
+
+message TrafficSession {
+  int64 Id = 1;
+
+  string SessionType = 2;
+  string Uuid = 3;
+  string DeviceName = 4;
+  string DeviceType = 5;
+
+  bool IsLinkLayerEthernet = 6;
+  string LinkLayerSrc = 7;
+  string LinkLayerDst = 8;
+
+  bool IsIpv4 = 9;
+  bool IsIpv6 = 10;
+  string NetworkSrcIP = 11;
+  string NetworkDstIP = 12;
+
+  bool IsTcpIpStack = 13;
+  int64 TransportLayerSrcPort = 14;
+  int64 TransportLayerDstPort = 15;
+
+  bool IsTCPReassembled = 16;
+  bool IsHalfOpen = 17;
+  bool IsClosed = 18;
+  bool IsForceClosed = 19;
+
+  bool HaveClientHello = 20;
+  string SNI = 21;
+}
+
+message QueryTrafficSessionResponse {
+  repeated TrafficSession Data = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message TrafficPacket {
+  string LinkLayerType = 1;
+  string NetworkLayerType = 2;
+  string TransportLayerType = 3;
+  string ApplicationLayerType = 4;
+  bytes Payload = 5;
+  bytes Raw = 6;
+
+  string EthernetEndpointHardwareAddrSrc = 7;
+  string EthernetEndpointHardwareAddrDst = 8;
+  bool IsIpv4 = 9;
+  bool IsIpv6 = 10;
+  string NetworkEndpointIPSrc = 11;
+  string NetworkEndpointIPDst = 12;
+  int64 TransportEndpointPortSrc = 13;
+  int64 TransportEndpointPortDst = 14;
+
+  string SessionId = 15;
+  string Id = 16;
+}
+
+message QueryTrafficPacketResponse {
+  repeated TrafficPacket Data = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message TrafficTCPReassembled {
+
+}
+
+message QueryTrafficTCPReassembledResponse {
+  repeated TrafficTCPReassembled Data = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message QueryTrafficSessionRequest {
+  Paging Pagination = 1;
+
+  // active traffic
+  bool FromNow = 2;
 }
 
 message PcapXRequest {
