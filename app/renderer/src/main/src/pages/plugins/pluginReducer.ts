@@ -26,7 +26,7 @@ export interface OnlinePluginAppAction {
 }
 
 /**大于1000，变为k，例如:1290转为1.2k */
-const thousandthConversion = (n: number): string => {
+export const thousandthConversion = (n: number): string => {
     const number = n
     let shortString = ""
     if (number > 10000000) {
@@ -101,7 +101,7 @@ export const pluginOnlineReducer = (
             if (item) {
                 return {
                     ...state,
-                    data: state.data.filter((ele) => ele.id !== item.id)
+                    data: state.data.filter((ele) => ele.uuid !== item.uuid)
                 }
             } else {
                 return state

@@ -11,7 +11,7 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "./PluginsOnlineType"
 import {PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
-import {OnlinePluginAppAction} from "../pluginReducer"
+import {OnlinePluginAppAction, thousandthConversion} from "../pluginReducer"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -78,6 +78,17 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                     }
                 }
             })
+            const newLikeItem = {...plugin}
+            if (newLikeItem.is_stars) {
+                newLikeItem.is_stars = false
+                newLikeItem.stars = newLikeItem.stars - 1
+                newLikeItem.starsCountString = thousandthConversion(newLikeItem.stars)
+            } else {
+                newLikeItem.is_stars = true
+                newLikeItem.stars = newLikeItem.stars + 1
+                newLikeItem.starsCountString = thousandthConversion(newLikeItem.stars)
+            }
+            setPlugin({...newLikeItem})
         }
     })
     const onCommentClick = useMemoizedFn(() => {
@@ -93,6 +104,10 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                     }
                 }
             })
+            const newDownloadItem = {...plugin}
+            newDownloadItem.downloaded_total = newDownloadItem.downloaded_total + 1
+            newDownloadItem.downloadedTotalString = thousandthConversion(newDownloadItem.downloaded_total)
+            setPlugin({...newDownloadItem})
         }
         yakitNotify("success", "下载~~~")
     })
@@ -137,6 +152,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                             // isCorePlugin={info.is_core_plugin}
                             isCorePlugin={false}
                             pluginType={info.type}
+                            onPluginClick={()=>{}}
                         />
                     )
                 },
