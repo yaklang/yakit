@@ -1,5 +1,5 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
-import {LocalExtraOperateProps, PluginsLocalProps} from "./PluginsLocalType"
+import {LocalExtraOperateProps, PluginLocalBackProps, PluginsLocalProps} from "./PluginsLocalType"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {useLockFn, useMemoizedFn} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
@@ -84,7 +84,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 query["plugin_type"] = []
                 query["tags"] = []
             }
-            // console.log("query", reset, {...query})
+            // console.log("query", !!reset, {...query})
             try {
                 const res = await apiFetchLocalList(query)
                 if (!res.Data) res.Data = []
@@ -125,13 +125,13 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
         // 全选情况时的取消勾选
         if (allCheck) {
-            setSelectList(response.Data.map((item) => item.UUID).filter((item) => item !== data.UUID))
+            setSelectList(response.Data.map((item) => item.ScriptName).filter((item) => item !== data.ScriptName))
             setAllCheck(false)
             return
         }
         // 单项勾选回调
-        if (value) setSelectList([...selectList, data.UUID])
-        else setSelectList(selectList.filter((item) => item !== data.UUID))
+        if (value) setSelectList([...selectList, data.ScriptName])
+        else setSelectList(selectList.filter((item) => item !== data.ScriptName))
     })
     /** 单项额外操作组件 */
     const optExtraNode = useMemoizedFn((data: YakScript) => {
@@ -159,7 +159,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**删除 */
     const onRemovePlugin = useMemoizedFn((data: YakScript) => {
-        const index = selectList.findIndex((ele) => ele === data.UUID)
+        const index = selectList.findIndex((ele) => ele === data.ScriptName)
         if (index !== -1) {
             optCheck(data, false)
         }
@@ -178,8 +178,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {})
-    const onBack = useMemoizedFn(() => {
+    const onBack = useMemoizedFn((backValues: PluginLocalBackProps) => {
         setPlugin(undefined)
+        setSearch(backValues.search)
+        setAllCheck(backValues.allCheck)
+        setSelectList(backValues.selectList)
     })
     const onSearch = useMemoizedFn(() => {
         fetchList(true)
@@ -189,15 +192,16 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             {!!plugin && (
                 <PluginsLocalDetail
                     info={plugin}
-                    allCheck={allCheck}
+                    defaultAllCheck={allCheck}
                     loading={loading}
-                    onCheck={onCheck}
-                    selectList={selectList}
-                    optCheck={optCheck}
-                    data={response}
+                    // onCheck={onCheck}
+                    defaultSelectList={selectList}
+                    // optCheck={optCheck}
+                    response={response}
                     onBack={onBack}
                     loadMoreData={onUpdateList}
                     defaultSearchValue={search}
+                    dispatch={dispatch}
                 />
             )}
             <PluginsLayout
@@ -280,7 +284,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                             data={response.Data || []}
                             gridNode={(info: {index: number; data: YakScript}) => {
                                 const {data} = info
-                                const check = allCheck || selectList.includes(data.UUID)
+                                const check = allCheck || selectList.includes(data.ScriptName)
                                 return (
                                     <GridLayoutOpt
                                         data={data}
@@ -302,7 +306,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                             gridHeight={210}
                             listNode={(info: {index: number; data: YakScript}) => {
                                 const {data} = info
-                                const check = allCheck || selectList.includes(data.UUID)
+                                const check = allCheck || selectList.includes(data.ScriptName)
                                 return (
                                     <ListLayoutOpt
                                         data={data}
