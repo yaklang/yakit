@@ -114,7 +114,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
         onBack()
         setPlugin(undefined)
     })
-
+    const optExtra = useMemoizedFn((data: API.YakitPluginDetail) => {
+        return statusTag[`${data.status}`]
+    })
     if (!plugin) return null
 
     return (
@@ -167,11 +169,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                             help={info.help}
                             content={info.content}
                             optCheck={optCheck}
-                            extra={statusTag[`${i % 3}`]}
+                            extra={optExtra}
                             official={info.official}
                             // isCorePlugin={info.is_core_plugin}
                             isCorePlugin={false}
                             pluginType={info.type}
+                            onPluginClick={() => {}}
                         />
                     )
                 },
