@@ -105,14 +105,13 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                                 <>
                                     <YakitEmpty
                                         image={<img src={NoPermissions} alt='' />}
-                                        imageStyle={{width: 272, height: 265, marginBottom: 16}}
+                                        imageStyle={{width: 320, height: 250, marginBottom: 16}}
                                         title='暂无访问权限'
                                         description='登录后即可访问该页面'
                                     />
                                     <YakitButton
                                         className={styles["refresh-button"]}
                                         type='outline1'
-                                        icon={<OutlineRefreshIcon />}
                                         onClick={onLogin}
                                     >
                                         立即登录
@@ -121,23 +120,18 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                             ) : (
                                 <YakitEmpty
                                     image={<img src={NoPermissions} alt='' />}
-                                    imageStyle={{width: 272, height: 265, marginBottom: 16}}
+                                    imageStyle={{width: 320, height: 250, marginBottom: 16}}
                                     title='暂无访问权限'
                                     description='请联系管理员分配权限'
                                 />
                             )} */}
                             <YakitEmpty
                                 image={<img src={NoPermissions} alt='' />}
-                                imageStyle={{width: 272, height: 265, marginBottom: 16}}
+                                imageStyle={{width: 320, height: 250, marginBottom: 16}}
                                 title='暂无访问权限'
                                 description='登录后即可访问该页面'
                             />
-                            <YakitButton
-                                className={styles["refresh-button"]}
-                                type='outline1'
-                                icon={<OutlineRefreshIcon />}
-                                onClick={onLogin}
-                            >
+                            <YakitButton className={styles["refresh-button"]} type='outline1' onClick={onLogin}>
                                 立即登录
                             </YakitButton>
                         </>
