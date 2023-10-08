@@ -221,6 +221,9 @@ module.exports = {
         // misc
         require("./handlers/misc")(win, getClient)
 
+        // traffic
+        require("./handlers/traffic")(win, getClient)
+
         // project
         require("./handlers/project")(win, getClient)
 
