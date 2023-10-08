@@ -174,5 +174,6 @@ export interface PluginDetailsListItemProps<T> {
     /** @name 是否内置 */
     isCorePlugin: boolean
     optCheck: (data: T, value: boolean) => any
-    extra?: ReactNode
+    extra?: (data: T) => ReactNode
+    onPluginClick: (plugin: T) => void
 }

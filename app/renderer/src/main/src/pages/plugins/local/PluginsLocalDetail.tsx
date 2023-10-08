@@ -135,6 +135,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                 // isCorePlugin={info.is_core_plugin}
                                 isCorePlugin={false}
                                 pluginType={info.Type}
+                                onPluginClick={()=>{}}
                             />
                         )
                     },
