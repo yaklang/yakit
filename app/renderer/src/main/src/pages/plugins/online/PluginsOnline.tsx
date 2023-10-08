@@ -30,6 +30,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {
+    PluginOnlineDetailBackProps,
     PluginsListRefProps,
     PluginsOnlineHeardProps,
     PluginsOnlineListProps,
@@ -306,9 +307,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     /**新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {})
 
-    const onBack = useMemoizedFn((searchValue) => {
+    const onBack = useMemoizedFn((backValues: PluginOnlineDetailBackProps) => {
         setPlugin(undefined)
-        setSearch(searchValue)
+        setSearch(backValues.search)
+        setAllCheck(backValues.allCheck)
+        setSelectList(backValues.selectList)
     })
     const onSearch = useMemoizedFn(() => {
         fetchList(true)
@@ -319,12 +322,10 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 <div className={styles["plugins-online-detail"]}>
                     <PluginsOnlineDetail
                         info={plugin}
-                        selectList={selectList}
-                        allCheck={allCheck}
-                        onCheck={onCheck}
-                        optCheck={optCheck}
+                        defaultSelectList={selectList}
+                        defaultAllCheck={allCheck}
                         loading={loading}
-                        data={response}
+                        response={response}
                         onBack={onBack}
                         loadMoreData={onUpdateList}
                         defaultSearchValue={search}
