@@ -74,6 +74,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {API} from "@/services/swagger/resposeType"
 import {TypeSelectOpt} from "./funcTemplateType"
 import {YakEditor} from "@/utils/editors"
+import {CheckboxChangeEvent} from "antd/lib/checkbox"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
@@ -146,11 +147,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
     const [hidden, setHidden] = useState<boolean>(false)
 
     // 关键词|用户搜索
-    const onSearch = useDebounceFn(
-        (type: string, value: string) => {
-        },
-        {wait: 300}
-    )
+    const onSearch = useDebounceFn((type: string, value: string) => {}, {wait: 300})
 
     /** 全选框是否为半选状态 */
     const checkIndeterminate = useMemo(() => {
@@ -158,7 +155,6 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         if (!checked && selected > 0) return true
         return false
     }, [checked, selected])
-
     return (
         <div className={styles["plugin-details-wrapper"]}>
             <div className={classNames(styles["filter-wrapper"], {[styles["filter-hidden-wrapper"]]: hidden})}>
@@ -1245,9 +1241,10 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
         pluginUUId,
         content,
         optCheck,
-        extra
+        extra,
+        onPluginClick
     } = props
-    const onCheck = useMemoizedFn((e) => {
+    const onCheck = useMemoizedFn((e: CheckboxChangeEvent) => {
         optCheck(plugin, e.target.checked)
     })
     const authorImgNode = useMemo(() => {
@@ -1256,11 +1253,20 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
         }
         return <AuthorImg src={headImg} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin])
+    const onClick = useMemoizedFn((e) => {
+        onPluginClick(plugin)
+    })
+    // 副标题组件
+    const extraNode = useMemoizedFn(() => {
+        if (extra) return extra(plugin)
+        return null
+    })
     return (
         <div
             className={classNames("plugin-details-item-wrapper", {
                 "plugin-details-item-wrapper-active": selectUUId === pluginUUId
             })}
+            onClick={onClick}
         >
             <div
                 className={classNames("plugin-details-item", {
@@ -1268,7 +1274,13 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
                 })}
             >
                 <div className={"plugin-details-item-info"}>
-                    <YakitCheckbox checked={check} onChange={onCheck} />
+                    <YakitCheckbox
+                        checked={check}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                        onChange={onCheck}
+                    />
                     {authorImgNode}
                     <div
                         className={classNames("plugin-details-item-info-text-style", "yakit-content-single-ellipsis")}
@@ -1278,7 +1290,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
                     </div>
                 </div>
                 <div className={"plugin-details-item-show"}>
-                    {extra}
+                    {extraNode()}
                     <Tooltip
                         title={help || "No Description about it."}
                         placement='topRight'
