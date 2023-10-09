@@ -11,12 +11,13 @@ import html2pdf from "html2pdf.js"
 import styles from "./ReportViewer.module.scss"
 import {isEnterpriseEdition} from "@/utils/envfile"
 import {openABSFileLocated} from "../../utils/openWebsite"
-import {useThrottleFn, useGetState, useUpdateEffect} from "ahooks"
+import classNames from "classnames"
 import htmlDocx from "html-docx-js/dist/html-docx"
 import {saveAs} from "file-saver"
 import html2canvas from "html2canvas"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 export interface ReportViewerProp {
     id?: number
 }
@@ -36,8 +37,8 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         PublishedAt: 0,
         Title: "-"
     })
-    const [reportItems, setReportItems, getReportItems] = useGetState<ReportItem[]>([])
-    const [renderReportItems, setRenderReportItems, getRenderReportItems] = useGetState<ReportItem[]>([])
+    const [show, setShow] = useState<boolean>(false)
+    const [reportItems, setReportItems] = useState<ReportItem[]>([])
     const divRef = useRef<any>(null)
     const isEchartsToImg = useRef<boolean>(true)
 
@@ -67,13 +68,13 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             const items = report.JsonRaw && report.JsonRaw !== "-" && (JSON.parse(report.JsonRaw) as ReportItem[])
             if (!!items && items.length > 0) {
                 setReportItems(items)
-                setRenderReportItems(items.slice(0, 15))
             }
         } catch (e) {
             failed(`Parse Report[${props.id}]'s items failed`)
         }
     }, [report])
 
+    // 下载报告
     const exportToWord = async () => {
         const contentHTML = divRef.current
 
@@ -90,6 +91,12 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     options = {scale: 0.8, windowWidth: 1200}
                 } else if (echartType === "hollow-pie") {
                     options = {scale: 1, windowWidth: 1000}
+                } else if (echartType === "stacked-vertical-bar") {
+                    options = {scale: 0.8, windowWidth: 1200}
+                } else if (echartType === "multi-pie") {
+                    options = {scale: 0.8, windowWidth: 1200}
+                } else if (echartType === "nightingle-rose") {
+                    options = {scale: 0.8, windowWidth: 1200}
                 }
 
                 const canvas = await html2canvas(element as HTMLElement, options)
@@ -106,34 +113,16 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                 echartsElements[index].appendChild(img)
             })
         }
-
+        // word报告不要附录 table添加边框
+        const wordStr:string = contentHTML.outerHTML.substring(0, contentHTML.outerHTML.indexOf("附录：")).replace(/<table(.*?)>/g, '<table$1 border="1">')
+        
         saveAs(
             //保存文件到本地
-            htmlDocx.asBlob(contentHTML.outerHTML), //将html转为docx
+            htmlDocx.asBlob(wordStr), //将html转为docx
             `${report.Title}.doc`
         )
         setWordSpinLoading(false)
     }
-
-    useUpdateEffect(() => {
-        if (wordSpinLoading) {
-            // 此处定时器为了确保echarts数据已渲染
-            setTimeout(()=>{
-               exportToWord() 
-            },500)
-        }
-    }, [renderReportItems])
-
-    const loadReport = useThrottleFn(
-        () => {
-            let listLength = getReportItems().length
-            let renderLength = getRenderReportItems().length
-            if (listLength > renderLength) {
-                setRenderReportItems(getReportItems().slice(0, renderLength + 15))
-            }
-        },
-        {wait: 500}
-    )
 
     if (report.Id <= 0) {
         return (
@@ -164,7 +153,6 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         setSpinLoading(true)
         setTimeout(() => {
             if (!divRef || !divRef.current) return
-            setRenderReportItems(reportItems)
             const div = divRef.current
             html2pdf()
                 .from(div)
@@ -213,47 +201,54 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         if (!divRef || !divRef.current) return
 
         setWordSpinLoading(true)
-        let newData: ReportItem[] = []
-        // word报告下载移除掉附录
-        reportItems.some((item) => {
-            newData.push(item)
-            return /附录：/.test(item.content)
-        })
+
+        // 此处定时器为了确保已处理其余任务
         setTimeout(() => {
-            setRenderReportItems(newData.slice(0, -1))
-        }, 500)
+            exportToWord()
+        }, 200)
     }
 
-    const downloadHtmlOrWord = () => {
-        const m = showYakitModal({
-            title: "选择下载类型",
-            width: 450,
-            centered: true,
-            footer:null,
-            content: (
-                <div style={{padding:20,display:"flex",gap:8,justifyContent:"space-around"}}>
-                    <YakitButton
-                        type={"primary"}
-                        onClick={() => {
-                            m.destroy()
-                            downloadHtml()
-                        }}
-                    >
-                        HTML
-                    </YakitButton>
-                    <YakitButton
-                        type={"primary"}
-                        onClick={() => {
-                            m.destroy()
-                            downloadWord()
-                        }}
-                    >
-                        Word
-                    </YakitButton>
-                </div>
-            )
-        })
-    }
+    const dowloadMenu = (
+        <YakitMenu
+            selectedKeys={[]}
+            data={
+                isEnterpriseEdition()
+                    ? [
+                          {
+                              key: "html",
+                              label: "HTML"
+                          },
+                          {
+                              key: "word",
+                              label: "Word"
+                          }
+                      ]
+                    : [
+                          {
+                              key: "pdf",
+                              label: "Pdf"
+                          }
+                      ]
+            }
+            onClick={({key}) => {
+                setShow(false)
+                switch (key) {
+                    case "html":
+                        downloadHtml()
+                        return
+                    case "word":
+                        downloadWord()
+                        return
+                    case "pdf":
+                        downloadPdf()
+                        return
+                    default:
+                        return
+                }
+            }}
+        ></YakitMenu>
+    )
+
     return (
         <div className={styles["report-viewer"]}>
             <Spin spinning={SpinLoading || wordSpinLoading}>
@@ -269,8 +264,8 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     bodyStyle={{paddingLeft: 20, overflow: "hidden"}}
                     extra={
                         <Space>
-                            <a
-                                href={"#"}
+                            <YakitButton
+                                size="small"
                                 onClick={() => {
                                     showModal({
                                         title: "RAW DATA",
@@ -284,32 +279,22 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                 }}
                             >
                                 RAW
-                            </a>
-                            <a
-                                href={"#"}
-                                onClick={() => {
-                                    isEnterpriseEdition() ? downloadHtmlOrWord() : downloadPdf()
-                                }}
+                            </YakitButton>
+                            <YakitPopover
+                                overlayClassName={classNames(styles["ui-op-setting-dropdown"])}
+                                placement={"bottom"}
+                                content={dowloadMenu}
+                                visible={show}
+                                onVisibleChange={(visible) => setShow(visible)}
                             >
-                                下载
-                            </a>
+                                <YakitButton size="small">下载</YakitButton>
+                            </YakitPopover>
                         </Space>
                     }
                 >
-                    <div
-                        ref={divRef}
-                        style={{overflow: "auto", height: "100%"}}
-                        onScroll={() => {
-                            const {scrollTop, clientHeight, scrollHeight} = divRef.current
-                            const isAtBottom = scrollTop + clientHeight > scrollHeight - 20
-                            // 监听是否滚动到接近底部
-                            if (isAtBottom) {
-                                loadReport.run()
-                            }
-                        }}
-                    >
+                    <div ref={divRef} style={{overflow: "auto", height: "100%"}}>
                         <Space direction={"vertical"} style={{width: "100%"}}>
-                            {renderReportItems.map((i, index) => {
+                            {reportItems.map((i, index) => {
                                 return <ReportItemRender item={i} key={index} />
                             })}
                         </Space>
