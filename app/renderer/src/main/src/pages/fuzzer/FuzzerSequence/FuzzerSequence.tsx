@@ -1424,7 +1424,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         }
                     }
                 }
-                console.log('newCurrentItem',newCurrentItem)
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
             }
         }

@@ -633,7 +633,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (!currentItem) return
         let newAdvancedConfigValue = currentItem.pageParamsInfo.webFuzzerPageInfo?.advancedConfigValue
         if (!newAdvancedConfigValue) return
-        console.log("newAdvancedConfigValue", newAdvancedConfigValue)
         setAdvancedConfigValue({...newAdvancedConfigValue})
     })
 
