@@ -14,7 +14,7 @@ import {YakitAutoComplete} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {InformationCircleIcon} from "@/assets/newIcon"
 import {RemoteGV} from "@/yakitGV"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRoute"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -73,7 +73,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             }
         })
             .then((res: API.UserData) => {
-                console.log("返回结果：", res)
                 ipcRenderer.invoke("company-sign-in", {...res}).then((data) => {
                     const user = {
                         isLogin: true,
@@ -93,14 +92,14 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     }
                     setStoreUserInfo(user)
                     if (data?.next) {
-                        aboutLoginUpload(res.token) 
+                        aboutLoginUpload(res.token)
                         success("企业登录成功")
                         onCloseTab()
                         onClose && onClose()
                         onSuccee && onSuccee()
                     }
                     // 首次登录强制修改密码
-                    if (!res.loginTime){
+                    if (!res.loginTime) {
                         ipcRenderer.invoke("reset-password", {...res})
                     }
                 })
@@ -119,6 +118,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             })
             .then(() => {})
     })
+
     const onFinish = useMemoizedFn((v: OnlineProfileProps) => {
         setLoading(true)
         const values = {
@@ -132,7 +132,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             })
             .then((data) => {
                 ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
-                setRemoteValue(RemoteGV.HttpSetting, JSON.stringify(values))
+
                 addHttpHistoryList(values.BaseUrl)
                 if (values.Proxy) {
                     addProxyList(values.Proxy)
@@ -144,6 +144,16 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     syncLoginOut()
                     onCloseTab()
                     onClose && onClose()
+                }
+                if (v?.pwd) {
+                    // 加密
+                    ipcRenderer
+                        .invoke("Codec", {Type: "base64", Text: v.pwd, Params: [], ScriptName: ""})
+                        .then((res) => {
+                            setRemoteValue(RemoteGV.HttpSetting, JSON.stringify({...values, pwd: res.Result}))
+                        })
+                } else {
+                    setRemoteValue(RemoteGV.HttpSetting, JSON.stringify(values))
                 }
             })
             .catch((e: any) => {
@@ -173,11 +183,24 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             if (!setting) return
             const value = JSON.parse(setting)
             defaultHttpUrl.current = value.BaseUrl
+            if (value?.pwd && value.pwd.length > 0) {
+                // 解密
+                ipcRenderer
+                    .invoke("Codec", {Type: "base64-decode", Text: value.pwd, Params: [], ScriptName: ""})
+                    .then((res) => {
+                        form.setFieldsValue({
+                            ...value,
+                            pwd: res.Result
+                        })
+                        setFormValue({...value, pwd: res.Result})
+                    })
+            } else {
+                form.setFieldsValue({
+                    ...value
+                })
+                setFormValue({...value})
+            }
             getHistoryList()
-            form.setFieldsValue({
-                ...value
-            })
-            setFormValue({...value})
         })
     })
     const getHistoryList = useMemoizedFn(() => {
@@ -313,7 +336,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             size='large'
                             type='primary'
                             htmlType='submit'
-                            style={{width: 165, marginLeft:skipShow?0:43}}
+                            style={{width: 165, marginLeft: skipShow ? 0 : 43}}
                             loading={loading}
                         >
                             登录
