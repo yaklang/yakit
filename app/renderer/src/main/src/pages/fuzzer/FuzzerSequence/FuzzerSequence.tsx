@@ -43,10 +43,7 @@ import {Divider, Form, Result, Tooltip} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
-import {
-    LabelNodeItem,
-    MatcherAndExtractionDrawer,
-} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
+import {LabelNodeItem, MatcherAndExtractionDrawer} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {yakitNotify} from "@/utils/notification"
 import {YakitRoute} from "@/routes/newRoute"
@@ -1232,6 +1229,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
     const [type, setType] = useState<MatchingAndExtraction>("matchers")
     const [matcherAndExtractionHttpResponse, setMatcherAndExtractionHttpResponse] = useState<string>("")
+    const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
 
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
@@ -1426,6 +1424,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         }
                     }
                 }
+                console.log('newCurrentItem',newCurrentItem)
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
             }
         }
@@ -1461,20 +1460,13 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                                 fuzzerResponse={httpResponse}
                                 defaultResponseSearch={defaultResponseSearch}
                                 webFuzzerValue={httpResponse.ResponseRaw}
-                                showMatcherAndExtraction={false}
-                                setShowMatcherAndExtraction={() => {}}
-                                matcherValue={{
-                                    filterMode: "matchers",
-                                    hitColor: "",
-                                    matchersCondition: "and",
-                                    matchersList: []
-                                }}
-                                extractorValue={{
-                                    extractorList: []
-                                }}
+                                showMatcherAndExtraction={showMatcherAndExtraction}
+                                setShowMatcherAndExtraction={setShowMatcherAndExtraction}
+                                matcherValue={matcherValue}
+                                extractorValue={extractorValue}
                                 defActiveKey={""}
-                                defActiveType={"matchers"}
-                                onSaveMatcherAndExtraction={() => {}}
+                                defActiveType={type}
+                                onSaveMatcherAndExtraction={onSaveMatcherAndExtractionDrawer}
                                 showExtra={showExtra}
                                 setShowExtra={setShowExtra}
                                 showResponseInfoSecondEditor={showResponseInfoSecondEditor}

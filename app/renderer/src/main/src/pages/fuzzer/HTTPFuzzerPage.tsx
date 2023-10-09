@@ -8,6 +8,7 @@ import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed, yakitNotify} from "../../utils/notification"
 import {
+    useControllableValue,
     useCreation,
     useDebounceFn,
     useGetState,
@@ -599,17 +600,22 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
     useEffect(() => {
         if (inViewport) {
-            onUpdateRequest()
-            onUpdateAdvancedConfigValue()
-            emiter.on("onRefWebFuzzer", onUpdateRequest)
+            onRefWebFuzzerValue()
+            emiter.on("onRefWebFuzzer", onRefWebFuzzerValue)
         }
         return () => {
-            emiter.off("onRefWebFuzzer", onUpdateRequest)
+            emiter.off("onRefWebFuzzer", onRefWebFuzzerValue)
         }
     }, [inViewport])
     const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
         if (inViewport) onSetAdvancedConfig(!advancedConfig)
     })
+    const onRefWebFuzzerValue = useMemoizedFn(() => {
+        if (!inViewport) return
+        onUpdateRequest()
+        onUpdateAdvancedConfigValue()
+    })
+    /**更新请求包 */
     const onUpdateRequest = useMemoizedFn(() => {
         if (!inViewport) return
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
@@ -627,6 +633,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (!currentItem) return
         let newAdvancedConfigValue = currentItem.pageParamsInfo.webFuzzerPageInfo?.advancedConfigValue
         if (!newAdvancedConfigValue) return
+        console.log("newAdvancedConfigValue", newAdvancedConfigValue)
         setAdvancedConfigValue({...newAdvancedConfigValue})
     })
 
@@ -2201,8 +2208,6 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         const {
             fuzzerResponse,
             defaultResponseSearch,
-            showMatcherAndExtraction,
-            setShowMatcherAndExtraction,
             showExtra,
             setShowExtra,
             extractorValue,
@@ -2216,6 +2221,12 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             secondNodeTitle,
             secondNodeExtra
         } = props
+
+        const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {
+            defaultValuePropName: "showMatcherAndExtraction",
+            valuePropName: "showMatcherAndExtraction",
+            trigger: "setShowMatcherAndExtraction"
+        })
         const [reason, setReason] = useState<string>("未知原因")
 
         const [activeKey, setActiveKey] = useState<string>("")
@@ -2252,6 +2263,33 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
                         setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
                     }
+                },
+                showMatcherAndExtraction: {
+                    menu: [
+                        {type: "divider"},
+                        {
+                            key: "show-matchers",
+                            label: "匹配器"
+                        },
+                        {
+                            key: "show-extractors",
+                            label: "提取器"
+                        }
+                    ],
+                    onRun: (editor, key) => {
+                        switch (key) {
+                            case "show-matchers":
+                                setShowMatcherAndExtraction(true)
+                                setActiveType("matchers")
+                                break
+                            case "show-extractors":
+                                setShowMatcherAndExtraction(true)
+                                setActiveType("extractors")
+                                break
+                            default:
+                                break
+                        }
+                    }
                 }
             }
         }, [showResponseInfoSecondEditor])
@@ -2277,6 +2315,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             }
             return overlayWidget
         }, [fuzzerResponse])
+        const onClose = useMemoizedFn(() => {
+            setShowMatcherAndExtraction(false)
+        })
         return (
             <>
                 <YakitResizeBox
@@ -2347,7 +2388,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             {showMatcherAndExtraction ? (
                                 <MatcherAndExtraction
                                     ref={ref}
-                                    onClose={() => setShowMatcherAndExtraction(false)}
+                                    onClose={onClose}
                                     onSave={onSaveMatcherAndExtraction}
                                     httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
                                     matcherValue={matcherValue}
