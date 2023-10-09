@@ -1,7 +1,7 @@
-import { WebFuzzerPageInfoProps } from "../../../store/pageNodeInfo";
-import { FuzzerResponse, FuzzerRequestProps } from "../HTTPFuzzerPage";
-import { AdvancedConfigValueProps } from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType";
-import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
+import {WebFuzzerPageInfoProps} from "../../../store/pageInfo"
+import {FuzzerResponse, FuzzerRequestProps} from "../HTTPFuzzerPage"
+import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
 /**
  * @description 序列props
  * @property {string} pageId页面节点id
@@ -47,7 +47,7 @@ export interface ExtraSettingProps {
  * @property {number} errorIndex 当前错误状态的index
  * @property {boolean} isDragging 是否在拖拽中
  * @property {boolean} isShowLine 是否显示线
- * @property {boolean} disabled 
+ * @property {boolean} disabled
  * @property {SequenceProps} pageNodeList 原始的页面节点list，用来做下拉选中选择
  * @function onUpdateItemPage 更新序列item
  * @function onUpdateItem 更新序列item
@@ -106,7 +106,7 @@ export interface SequenceResponseProps {
     loading: boolean
     requestInfo?: WebFuzzerPageInfoProps
     responseInfo?: ResponseProps
-    extractedMap:Map<string, string>
+    extractedMap: Map<string, string>
 }
 
 export interface SequenceResponseHeardProps {
@@ -121,11 +121,7 @@ export interface SequenceResponseHeardProps {
 }
 
 export interface ResponseCardProps {
-    // allSuccessResponse:ResponseProps[]
-    // allFailedResponse:ResponseProps[]
-    showAllResponse:boolean
+    showAllResponse: boolean
     responseMap: Map<string, ResponseProps>
-    // extractedMap: Map<string, string>
     setShowAllResponse: () => void
-    // sendToFuzzer: (isHttps: boolean, request: string) => void
 }

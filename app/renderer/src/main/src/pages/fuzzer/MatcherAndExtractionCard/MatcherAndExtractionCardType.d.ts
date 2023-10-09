@@ -123,3 +123,14 @@ export interface MatcherAndExtractionValueListProps {
 export interface ExtractionResultsContentProps{
     list:{Key: string; Value: string}[]
 }
+
+export interface MatcherAndExtractionDrawerProps{
+    visibleDrawer:boolean
+    defActiveType:MatchingAndExtraction
+    httpResponse: string
+    defActiveKey: string
+    matcherValue: MatcherValueProps
+    extractorValue: ExtractorValueProps
+    onClose:()=>void
+    onSave: (m: MatcherValueProps, e: ExtractorValueProps) => void
+}

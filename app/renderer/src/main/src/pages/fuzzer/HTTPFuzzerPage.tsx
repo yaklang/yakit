@@ -600,6 +600,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useEffect(() => {
         if (inViewport) {
             onUpdateRequest()
+            onUpdateAdvancedConfigValue()
             emiter.on("onRefWebFuzzer", onUpdateRequest)
         }
         return () => {
@@ -618,6 +619,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (requestRef.current === newRequest) return
         requestRef.current = newRequest || defaultPostTemplate
         refreshRequest()
+    })
+    /**从数据中心获取页面最新得高级配置数据,目前只有提取器和匹配器相关数据 */
+    const onUpdateAdvancedConfigValue = useMemoizedFn(() => {
+        if (!inViewport) return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        if (!currentItem) return
+        let newAdvancedConfigValue = currentItem.pageParamsInfo.webFuzzerPageInfo?.advancedConfigValue
+        if (!newAdvancedConfigValue) return
+        setAdvancedConfigValue({...newAdvancedConfigValue})
     })
 
     useEffect(() => {

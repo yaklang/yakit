@@ -45,8 +45,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
 import {
     LabelNodeItem,
-    defaultExtractorItem,
-    defaultMatcherItem
+    MatcherAndExtractionDrawer,
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {yakitNotify} from "@/utils/notification"
@@ -72,7 +71,11 @@ import {HTTP_PACKET_EDITOR_Response_Info, NewHTTPPacketEditor} from "@/utils/edi
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {MatcherValueProps, ExtractorValueProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {
+    MatcherValueProps,
+    ExtractorValueProps,
+    MatchingAndExtraction
+} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {InheritLineIcon, InheritArrowIcon} from "./icon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -1225,6 +1228,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
     const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
     const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
+    // 匹配器和提取器相关
+    const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
+    const [type, setType] = useState<MatchingAndExtraction>("matchers")
+    const [matcherAndExtractionHttpResponse, setMatcherAndExtractionHttpResponse] = useState<string>("")
+
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
 
@@ -1370,6 +1378,58 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
             </div>
         </>
     )
+    /**调试匹配器和提取器 */
+    const onDebug = useMemoizedFn((response: string) => {
+        setMatcherAndExtractionHttpResponse(response)
+        setVisibleDrawer(true)
+    })
+    const matcherValue: MatcherValueProps = useMemo(() => {
+        return {
+            filterMode: advancedConfigValue.filterMode,
+            matchersList: advancedConfigValue.matchers || [],
+            matchersCondition: advancedConfigValue.matchersCondition,
+            hitColor: advancedConfigValue.hitColor || "red"
+        }
+    }, [advancedConfigValue])
+    const extractorValue: ExtractorValueProps = useMemo(() => {
+        return {
+            extractorList: advancedConfigValue.extractors || []
+        }
+    }, [advancedConfigValue])
+    /**关闭匹配器或提取器 */
+    const onCloseMatcherAndExtractionDrawer = useMemoizedFn(() => {
+        setVisibleDrawer(false)
+    })
+    /**保存匹配器/提取器数据 */
+    const onSaveMatcherAndExtractionDrawer = useMemoizedFn(
+        (matcher: MatcherValueProps, extractor: ExtractorValueProps) => {
+            if (!pageId) return
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
+            if (!currentItem) return
+            if (
+                currentItem.pageParamsInfo.webFuzzerPageInfo &&
+                currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue
+            ) {
+                const newCurrentItem: PageNodeItemProps = {
+                    ...currentItem,
+                    pageParamsInfo: {
+                        webFuzzerPageInfo: {
+                            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                            advancedConfigValue: {
+                                ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
+                                filterMode: matcher.filterMode,
+                                matchers: matcher.matchersList || [],
+                                matchersCondition: matcher.matchersCondition,
+                                hitColor: matcher.hitColor || "red",
+                                extractors: extractor.extractorList || []
+                            }
+                        }
+                    }
+                }
+                updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+            }
+        }
+    )
     return (
         <>
             <YakitResizeBox
@@ -1445,7 +1505,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                                                     setQuery={setQuery}
                                                     extractedMap={extractedMap}
                                                     isEnd={loading}
-                                                    isShowDebug={false}
+                                                    onDebug={onDebug}
                                                 />
                                             )}
                                             {!showSuccess && (
@@ -1468,6 +1528,17 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => 
                         )}
                     </div>
                 }
+            />
+            <MatcherAndExtractionDrawer
+                visibleDrawer={visibleDrawer}
+                defActiveType={type}
+                httpResponse={matcherAndExtractionHttpResponse}
+                // defActiveKey={defActiveKey}
+                defActiveKey=''
+                matcherValue={matcherValue}
+                extractorValue={extractorValue}
+                onClose={onCloseMatcherAndExtractionDrawer}
+                onSave={onSaveMatcherAndExtractionDrawer}
             />
         </>
     )
