@@ -34,6 +34,15 @@
 // 不通过|删除原因弹窗
 .reason-modal-body {
     padding: 16px 24px 24px 24px;
+    .hint-wrapper {
+        color:  #b4bbca;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px; 
+        .total-num{
+            color: #f28b44;
+        }
+    }
 }
 
 .details-content-wrapper {
