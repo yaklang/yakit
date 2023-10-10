@@ -3,6 +3,7 @@ import {Form, Button} from "antd"
 import {InputInteger, InputItem, SwitchItem, InputStringOrJsonItem} from "../../utils/inputUtil"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "../../utils/kv"
+import {NetInterface} from "@/models/Traffic";
 const {ipcRenderer} = window.require("electron")
 export const BRIDGE_ADDR = "yak-bridge-addr"
 export const BRIDGE_SECRET = "yak-bridge-secret"
@@ -19,11 +20,6 @@ export interface StartFacadeServerParams {
 }
 export interface FacadeOptionsProp {
     onStartFacades: (StartFacadeServerParams) => any
-}
-interface NetInterface {
-    Name: string
-    Addr: string
-    IP: string
 }
 export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
     const [onLoad, setOnLoad] = useState(false)

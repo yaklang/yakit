@@ -473,7 +473,7 @@ export const InputInteger: React.FC<InputNumberProps> = (p) => {
 export interface MultiSelectForStringProps extends InputBase {
     value?: string
     mode?: "multiple" | "tags"
-    help?: string
+    help?: any
 
     defaultSep?: string
 

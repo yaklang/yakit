@@ -1,4 +1,5 @@
 import React from "react";
+import {KVPair} from "@/models/kv";
 
 export interface TrafficSession {
     Id: number;
@@ -41,4 +42,21 @@ export interface TrafficPacket {
     TransportEndpointPortDst: number;
     SessionId: string;
     Id: number;
+}
+
+export interface NetInterface {
+    Name: string
+    Addr: string
+    IP: string
+    IsIpv4?: boolean
+    IsIpv6?: boolean
+}
+
+export interface PcapMetadata {
+    AvailablePcapDevices: NetInterface[]
+    AvailableSessionTypes: KVPair[]
+    AvailableLinkLayerTypes: KVPair[]
+    AvailableNetworkLayerTypes: KVPair[]
+    AvailableTransportLayerTypes: KVPair[]
+    DefaultPublicNetInterface: NetInterface
 }
