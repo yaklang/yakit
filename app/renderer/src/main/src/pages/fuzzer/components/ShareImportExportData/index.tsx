@@ -6,7 +6,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import styles from "./index.module.scss"
 import {useStore} from "@/store"
-import {success, yakitNotify, yakitFailed} from "@/utils/notification"
+import {success, yakitNotify, yakitFailed, yakitInfo, warn} from "@/utils/notification"
 import CopyToClipboard from "react-copy-to-clipboard"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -123,8 +123,14 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
             TemplateType: tempType
         }
         try {
-            const {Status, YamlContent} = await ipcRenderer.invoke("ExportHTTPFuzzerTaskToYaml", params)
+            const {Status, YamlContent}: {Status: {Ok: boolean; Reason: string}; YamlContent: string} =
+                await ipcRenderer.invoke("ExportHTTPFuzzerTaskToYaml", params)
             if (Status.Ok) {
+                if (!!Status.Reason) {
+                    Status.Reason.split("\n").forEach((msg) => {
+                        warn(msg)
+                    })
+                }
                 await saveABSFileAnotherOpen({
                     name: tempType + "-temp.yaml",
                     data: YamlContent,
@@ -189,7 +195,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
                 m.destroy()
             },
             onOk: (e) => {
-                console.log(123, yamlContRef.current);
+                console.log(123, yamlContRef.current)
                 if (yamlContRef.current) {
                     execImportYaml()
                     m.destroy()
@@ -229,10 +235,18 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
 
     const execImportYaml = async () => {
         try {
-            const {Status, Requests} = await ipcRenderer.invoke("ImportHTTPFuzzerTaskFromYaml", {
-                YamlContent: yamlContRef.current
-            })
+            const {Status, Requests}: {Status: {Ok: boolean; Reason: string}; Requests: any} = await ipcRenderer.invoke(
+                "ImportHTTPFuzzerTaskFromYaml",
+                {
+                    YamlContent: yamlContRef.current
+                }
+            )
             if (Status.Ok) {
+                if (!!Status.Reason) {
+                    Status.Reason.split("\n").forEach((msg) => {
+                        warn(msg)
+                    })
+                }
                 if (Requests.Requests.length === 1) {
                     const params = Requests.Requests[0]
                     await ipcRenderer.invoke("send-to-tab", {
