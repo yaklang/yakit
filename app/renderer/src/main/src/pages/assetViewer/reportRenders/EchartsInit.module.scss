@@ -63,31 +63,3 @@
         }
     }
 }
-
-.echarts-card-head {
-    font-size: 18px;
-    padding: 10px 0;
-    font-weight: bold;
-    color: rgb(70, 70, 70);
-}
-
-.echarts-card {
-    display: flex;
-    justify-content: space-between;
-    /* gap: 24px; */
-    margin-bottom: 12px;
-    .echarts-card-item {
-        height: 66px;
-        width: 46%;
-        padding: 10px;
-        border: 1px solid #cbcbcb;
-        box-sizing: content-box;
-        .echarts-card-title {
-            color: #666;
-        }
-        .echarts-card-content {
-            margin-top: 10px;
-            font-size: 24px;
-        }
-    }
-}
