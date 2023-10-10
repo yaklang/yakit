@@ -20,8 +20,8 @@ export interface OnlinePluginAppAction {
     type: OnlinePluginType
     payload: {
         response?: YakitPluginListOnlineResponse
-        list?: YakitPluginOnlineDetail[]
         item?: YakitPluginOnlineDetail
+        itemList?: YakitPluginOnlineDetail[]
     }
 }
 
@@ -43,7 +43,7 @@ export const pluginOnlineReducer = (
     state: YakitPluginListOnlineResponse,
     action: OnlinePluginAppAction
 ): YakitPluginListOnlineResponse => {
-    const {response, list = [], item} = action.payload
+    const {response, item, itemList} = action.payload
     switch (action.type) {
         case "add":
             if (response?.pagemeta.page === 1) {
@@ -98,10 +98,11 @@ export const pluginOnlineReducer = (
             }
 
         case "remove":
-            if (item) {
+            if (itemList) {
+                const filters = (itemList || []).map((item) => item.uuid)
                 return {
                     ...state,
-                    data: state.data.filter((ele) => ele.uuid !== item.uuid)
+                    data: state.data.filter((ele) => !filters.includes(ele.uuid))
                 }
             } else {
                 return state
@@ -170,8 +171,8 @@ export interface LocalPluginAppAction {
     type: LocalPluginType
     payload: {
         response?: QueryYakScriptsResponse
-        list?: YakScript[]
         item?: YakScript
+        itemList?: YakScript[]
     }
 }
 
@@ -179,7 +180,7 @@ export const pluginLocalReducer = (
     state: QueryYakScriptsResponse,
     action: LocalPluginAppAction
 ): QueryYakScriptsResponse => {
-    const {response, list = [], item} = action.payload
+    const {response, item, itemList} = action.payload
     switch (action.type) {
         case "add":
             if (response?.Pagination.Page === 1) {
@@ -223,9 +224,10 @@ export const pluginLocalReducer = (
 
         case "remove":
             if (item) {
+                const filters = (itemList || []).map((item) => item.ScriptName)
                 return {
                     ...state,
-                    Data: state.Data.filter((ele) => ele.ScriptName !== item.ScriptName)
+                    Data: state.Data.filter((ele) => !filters.includes(ele.ScriptName))
                 }
             } else {
                 return state

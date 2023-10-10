@@ -15,17 +15,12 @@ import {
     OutlineCursorclickIcon,
     OutlineFilterIcon,
     OutlineLightbulbIcon,
-    OutlineQuestionmarkcircleIcon,
-    OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
 import {Tabs, Tooltip} from "antd"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakEditor} from "@/utils/editors"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginInfoRefProps, PluginSettingRefProps} from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
@@ -44,6 +39,8 @@ const {TabPane} = Tabs
 
 interface PluginManageDetailProps {
     info: API.YakitPluginDetail
+    currentIndex: number
+    setCurrentIndex: (index: number) => any
     allCheck: boolean
     onCheck: (value: boolean) => any
     selectList: string[]
@@ -54,7 +51,8 @@ interface PluginManageDetailProps {
 }
 
 export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => {
-    const {info, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData} = props
+    const {info, currentIndex, setCurrentIndex, allCheck, onCheck, selectList, optCheck, data, onBack, loadMoreData} =
+        props
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -153,6 +151,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
             selected={selectNum}
             listProps={{
                 rowKey: "uuid",
+                numberRoll: currentIndex,
                 data: data.data,
                 loadMoreData: loadMoreData,
                 classNameRow: "plugin-details-opt-wrapper",

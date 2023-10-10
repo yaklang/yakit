@@ -450,7 +450,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             dispatch({
                 type: "remove",
                 payload: {
-                    item: data
+                    itemList: [data]
                 }
             })
         })
@@ -656,7 +656,7 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
         dispatch({
             type: "remove",
             payload: {
-                item: data
+                itemList: [data]
             }
         })
     })
@@ -664,7 +664,7 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
         dispatch({
             type: "remove",
             payload: {
-                item: data
+                itemList: [data]
             }
         })
         // 调用还原的接口
