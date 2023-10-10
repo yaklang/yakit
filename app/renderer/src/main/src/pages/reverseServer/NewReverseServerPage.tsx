@@ -17,6 +17,7 @@ import {
 import {getRemoteValue} from "@/utils/kv"
 
 import "./reverseServerPage.scss"
+import {NetInterface} from "@/models/Traffic";
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -109,11 +110,6 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
 export interface SettingReverseServerProp {
     defaultSetting: SettingReverseParamsInfo
     setServer: (params: {setting: SettingReverseParamsInfo; remoteIp: string}) => any
-}
-export interface NetInterface {
-    Name: string
-    Addr: string
-    IP: string
 }
 
 export const BRIDGE_ADDR = "yak-bridge-addr"

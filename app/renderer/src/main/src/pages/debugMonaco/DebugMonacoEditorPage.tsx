@@ -6,6 +6,7 @@ import {SelectOne} from "@/utils/inputUtil";
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import {YakURLTree} from "@/pages/yakURLTree/YakURLTree";
 import {TrafficDemo} from "@/components/playground/TrafficDemo";
+import {PcapXDemo} from "@/components/playground/PcapXDemo";
 
 export interface DebugMonacoEditorPageProp {
 
@@ -37,6 +38,7 @@ a=1&b=2 Content-Length: a
     return <div style={{height: "100%"}}>
         <AutoCard
             title={<SelectOne label={"调试组件"} data={[
+                {value: "pcapx", text: "抓包工具"},
                 {value: "traffic-session", text: "流量会话"},
                 {value: "http-monaco-editor", text: "HTTP 数据包编辑器"},
                 {value: "fs-tree", text: "文件系统树"},
@@ -46,6 +48,8 @@ a=1&b=2 Content-Length: a
             {
                 (() => {
                     switch (mode) {
+                        case "pcapx":
+                            return <PcapXDemo/>
                         case "traffic-session":
                             return <TrafficDemo/>
                         case "http-monaco-editor":

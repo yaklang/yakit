@@ -11,13 +11,16 @@ import {ReverseNotification, ReverseNotificationTable} from "./ReverseNotificati
 import {ThunderboltOutlined, PoweroffOutlined} from "@ant-design/icons"
 import {FacadeOptions} from "./FacadesOptions"
 import {Color} from "bizcharts/lib/plots/core/dependents"
+
 const {ipcRenderer} = window.require("electron")
 export const BRIDGE_ADDR = "yak-bridge-addr"
 export const BRIDGE_SECRET = "yak-bridge-secret"
+
 interface GetTunnelServerExternalIPParams {
     Addr: string
     Secret: string
 }
+
 interface YsoClassGeneraterOptions {
     Key: string
     KeyVerbose: string
@@ -25,27 +28,26 @@ interface YsoClassGeneraterOptions {
     Value: string
     Type: string
 }
+
 interface YsoGeneraterRequest {
     Gadget: string
     Class: string
     Options: YsoClassGeneraterOptions[]
 }
+
 export interface StartFacadeServerParams {
     IsRemote: boolean
     BridgeParam: GetTunnelServerExternalIPParams
     ReversePort: number
     ReverseHost: string
 }
+
 export interface FacadeOptionsProp {
     facadeServerParams?: StartFacadeServerParams
-    classGeneraterParams?: {[key: string]: any}
+    classGeneraterParams?: { [key: string]: any }
     classType?: string
 }
-interface NetInterface {
-    Name: string
-    Addr: string
-    IP: string
-}
+
 interface YsoOption {
     value: string
     label: string
@@ -53,21 +55,24 @@ interface YsoOption {
     isLeaf?: boolean
     loading?: boolean
 }
+
 interface YsoRawOption {
     Name: string
     NameVerbose: string
     Help: string
 }
+
 enum ParamType {
     String = "String",
     Base64Bytes = "Base64Bytes",
     StringBool = "StringBool",
     StringPort = "StringPort"
 }
+
 export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
     const [optionsIsLoading, setOptionsIsLoading] = useState(false)
     const [showClassParamOptions, setShowClassParamOptions] = useState(false)
-    const [classParamOptions, setClassParamOptions] = useState<{[key: string]: any}>([])
+    const [classParamOptions, setClassParamOptions] = useState<{ [key: string]: any }>([])
     const [generaterRequest, setGeneraterRequest] = useState<YsoGeneraterRequest>({Gadget: "", Class: "", Options: []})
     const [facadesLoading, setFacadesLoading] = useState(false)
     const [yakCode, SetYakCode] = useState<string>("")
@@ -79,13 +84,13 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
     const [reverseAddr, setReverseAddr, getReverseAddr] = useGetState("")
     const [isClearLog, setIsClearLog, getIsClearLog] = useGetState(false)
     const [supportedFacades, setSupportedFacades] = useState(false)
-    const [classParamOptionsForClass, setClassParamOptionsForClass] = useState<{[key: string]: any}>([])
+    const [classParamOptionsForClass, setClassParamOptionsForClass] = useState<{ [key: string]: any }>([])
     const [options, setOptions] = useState<YsoOption[]>([])
     const [generaterOptions, setGeneraterOptions] = useState<YsoClassGeneraterOptions[]>([])
     const loadAllClassForSelect = useMemoizedFn(() => {
         ipcRenderer
             .invoke("GetAllYsoClassOptions", {Gadget: "None"})
-            .then((d: {Options: YsoRawOption[]}) => {
+            .then((d: { Options: YsoRawOption[] }) => {
                 setOptionsIsLoading(true)
                 let classOptions: YsoOption[] = []
                 for (let option of d.Options) {
@@ -120,7 +125,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
         }
         ipcRenderer
             .invoke("GetAllYsoClassGeneraterOptions", {Class: value[1], Gadget: value[0]})
-            .then((d: {Options: YsoClassGeneraterOptions[]}) => {
+            .then((d: { Options: YsoClassGeneraterOptions[] }) => {
                 let paramsObj = {}
                 for (let o of d.Options) {
                     if (o.Value === undefined) {
@@ -196,7 +201,8 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                 if (messages.length > 100) {
                     messages.pop()
                 }
-            } catch (e) {}
+            } catch (e) {
+            }
         })
         ipcRenderer.on(`${token}-error`, (_, data) => {
             if (data) {
@@ -264,7 +270,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                         Addr: params.BridgeParam.Addr,
                         Secret: params.BridgeParam.Secret
                     })
-                    .then((data: {IP: string}) => {
+                    .then((data: { IP: string }) => {
                         setReverseAddr(`${data.IP}:${params.ReversePort}`)
                         startFacadeParams.ReverseHost = data.IP
                         ipcRenderer
@@ -289,7 +295,8 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                         setFacadesIsConnect(false)
                         reject(e)
                     })
-                    .finally(() => {})
+                    .finally(() => {
+                    })
             } else {
                 setReverseAddr(`${params.ReverseHost}:${params.ReversePort}`)
                 ipcRenderer
@@ -312,7 +319,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
             }
         })
     })
-    const applyClassOptions = useMemoizedFn((vals: {[key: string]: any}) => {
+    const applyClassOptions = useMemoizedFn((vals: { [key: string]: any }) => {
         let genOptions: YsoClassGeneraterOptions[] = []
         for (let key in vals) {
             let value = vals[key]
@@ -407,13 +414,13 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                                         console.log(item)
                                         switch (item.Type) {
                                             case ParamType.String:
-                                                pushElement(item.KeyVerbose, item.Key, <Input placeholder='' />)
+                                                pushElement(item.KeyVerbose, item.Key, <Input placeholder=''/>)
                                                 break
                                             case ParamType.StringBool:
                                                 pushElement(
                                                     item.KeyVerbose,
                                                     item.Key,
-                                                    <Switch defaultChecked={item.Value === "true" ? true : false} />,
+                                                    <Switch defaultChecked={item.Value === "true" ? true : false}/>,
                                                     false
                                                 )
                                                 break
@@ -421,7 +428,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                                                 pushElement(
                                                     item.KeyVerbose,
                                                     item.Key,
-                                                    <InputNumber min={1} max={65535} />
+                                                    <InputNumber min={1} max={65535}/>
                                                 )
                                                 break
                                         }
@@ -433,7 +440,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                                                 onClick={() => {
                                                     formInstance
                                                         .validateFields()
-                                                        .then((vals: {[key: string]: any}) => {
+                                                        .then((vals: { [key: string]: any }) => {
                                                             applyClassOptions(vals)
                                                         })
                                                         .catch(() => {
@@ -447,7 +454,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                                                 type='primary'
                                                 ghost
                                                 style={{margin: "1rem"}}
-                                                icon={<ThunderboltOutlined />}
+                                                icon={<ThunderboltOutlined/>}
                                             >
                                                 Yak Runner
                                             </Button>
@@ -485,7 +492,7 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                         </Form>
                     </Col>
                     <Col span={1}>
-                        <Divider type='vertical' style={{height: "100%"}} />
+                        <Divider type='vertical' style={{height: "100%"}}/>
                     </Col>
                     <Col span={17}>
                         <ReverseNotificationTable

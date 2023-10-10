@@ -29,7 +29,6 @@ import {
     BRIDGE_ADDR,
     BRIDGE_SECRET,
     FacadesRequest,
-    NetInterface,
     SettingReverseParamsInfo
 } from "../reverseServer/NewReverseServerPage"
 import {randomString} from "@/utils/randomUtil"
@@ -47,6 +46,7 @@ import {saveABSFileToOpen} from "@/utils/openWebsite"
 import ReactResizeDetector from "react-resize-detector"
 
 import "./javaPayloadPage.scss"
+import {NetInterface} from "@/models/Traffic";
 
 const {ipcRenderer} = window.require("electron")
 

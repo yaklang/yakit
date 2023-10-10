@@ -24,6 +24,7 @@ import {randomString} from "./randomUtil";
 import {PluginResultUI} from "../pages/yakitStore/viewers/base";
 import {AutoCard} from "../components/AutoCard";
 import { getReleaseEditionName, isCommunityEdition } from "./envfile";
+import {NetInterface} from "@/models/Traffic";
 
 export interface YakVersionProp {
 
@@ -202,12 +203,6 @@ export const AutoUpdateYakModuleViewer: React.FC<AutoUpdateYakModuleViewerProp> 
 };
 
 const {Text} = Typography;
-
-interface NetInterface {
-    Name: string
-    Addr: string
-    IP: string
-}
 
 export const ConfigGlobalReverse = React.memo(() => {
     const [addr, setAddr, getAddr] = useGetState("");
