@@ -166,9 +166,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         dispatch({
             type: "remove",
             payload: {
-                item: {
+                itemList: [{
                     ...data
-                }
+                }]
             }
         })
     })

@@ -100,7 +100,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         dispatch({
             type: "remove",
             payload: {
-                item: removePlugin
+                itemList: [removePlugin]
             }
         })
     })
