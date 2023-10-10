@@ -1,11 +1,10 @@
-import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useReducer, useRef, useState} from "react"
 import {
     PluginsContainer,
     PluginsLayout,
     aduitStatusToName,
     defaultFilter,
     defaultPagemeta,
-    defaultResponse,
     defaultSearch,
     statusTag
 } from "../baseTemplate"
@@ -25,9 +24,9 @@ import {
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
     OutlinePencilaltIcon,
+    OutlinePluscircleIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {SolidOfficialpluginIcon} from "@/assets/icon/colors"
 import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
@@ -39,6 +38,10 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {PluginManageDetail} from "./PluginManageDetail"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
+import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
+import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {yakitNotify} from "@/utils/notification"
+import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
@@ -58,14 +61,18 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 获取插件列表数据-相关逻辑
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
-    /** 是否为首页加载 */
+    /** 是否为首屏加载 */
     const isLoadingRef = useRef<boolean>(true)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
     const [filters, setFilters, getFilters] = useGetState<PluginFilterParams>(cloneDeep(defaultFilter))
     const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [response, setResponse, getResponse] = useGetState<API.YakitPluginListResponse>(cloneDeep(defaultResponse))
+    const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
     const [hasMore, setHasMore] = useState<boolean>(true)
+
+    useEffect(() => {
+        console.log(response.data.length)
+    }, [response])
 
     const fetchList = useMemoizedFn((reset?: boolean) => {
         if (loading) return
@@ -83,15 +90,15 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             .then((res: API.YakitPluginListResponse) => {
                 if (!res.data) res.data = []
 
-                const data = false && res.pagemeta.page === 1 ? res.data : getResponse().data.concat(res.data)
+                dispatch({
+                    type: "add",
+                    payload: {
+                        response: {...res}
+                    }
+                })
                 // const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
                 // setHasMore(!isMore)
-                // console.log(data)
 
-                setResponse({
-                    ...res,
-                    data: [...data]
-                })
                 isLoadingRef.current = false
             })
             .finally(() => {
@@ -111,12 +118,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     })
 
     // 关键词|作者搜索
+    // 触发列表的搜索(未完成)
     const onKeywordAndUser = useDebounceFn(
-        (type: string, value: string) => {
-            console.log("onKeywordAndUser", type, value)
-
-            if (type === "keyword") setSearchs({...searchs, userName: "", keyword: value})
-            if (type === "user") setSearchs({...searchs, keyword: "", userName: value})
+        (value: PluginSearchParams) => {
+            console.log("onKeywordAndUser", value)
         },
         {wait: 300}
     )
@@ -128,6 +133,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         {wait: 300}
     )
 
+    // ----- 选中插件 -----
     const [allCheck, setAllcheck] = useState<boolean>(false)
     const [selectList, setSelectList, getSelectList] = useGetState<string[]>([])
     // 选中插件的数量
@@ -141,27 +147,99 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         setAllcheck(value)
     })
 
-    /** 插件展示(列表|网格) */
-    const [isList, setIsList] = useState<boolean>(false)
+    const [showGroup, setShowGroup] = useState<boolean>(false)
+    // 添加至分组
+    const onAddGroup = useMemoizedFn(() => {})
+
     /** 批量修改插件作者 */
     const [showModifyAuthor, setShowModifyAuthor] = useState<boolean>(false)
-    // 原因窗口
-    const [showReason, setShowReason] = useState<{visible: boolean; type: string}>({visible: false, type: "nopass"})
-    // 单项插件删除
-    const [activeDelPlugin, setActiveDelPlugin] = useState<API.YakitPluginDetail | undefined>()
-
-    // 修改作者
-    const onModifyAuthor = useMemoizedFn(() => {
+    const onShowModifyAuthor = useMemoizedFn(() => {
         setShowModifyAuthor(true)
     })
-    // 下载
-    const onDownload = useMemoizedFn((value?: API.YakitPluginDetail) => {})
-    // 删除
-    const onDelPlugin = useMemoizedFn(() => {})
+    const onModifyAuthor = useMemoizedFn(() => {
+        setShowModifyAuthor(false)
+        setAllcheck(false)
+        setSelectList([])
+        fetchList(true)
+    })
 
+    /** 批量下载插件 */
+    const [showBatchDownload, setShowBatchDownload] = useState<boolean>(false)
+    const onBatchDownload = useMemoizedFn(() => {
+        if (allCheck || selectNum === 0) {
+            // 全部下载
+            setShowBatchDownload(true)
+        } else {
+            // 批量下载
+            console.log("selectlist", selectList)
+        }
+    })
+    /** 单个插件下载 */
+    const onDownload = useMemoizedFn((value?: API.YakitPluginDetail) => {})
+
+    /** 批量删除插件 */
+    // 原因窗口(删除|不通过)
+    const [showReason, setShowReason] = useState<{visible: boolean; type: "nopass" | "del"}>({
+        visible: false,
+        type: "nopass"
+    })
+    // 单项插件删除
+    const [activeDelPlugin, setActiveDelPlugin] = useState<API.YakitPluginDetail | undefined>()
+    const onShowDelPlugin = useMemoizedFn(() => {
+        setShowReason({visible: true, type: "del"})
+    })
+    const onCancelReason = useMemoizedFn(() => {
+        setActiveDelPlugin(undefined)
+        setShowReason({visible: false, type: "nopass"})
+    })
+    const onReasonCallback = useMemoizedFn((reason: string) => {
+        console.log("reason", reason)
+        if (showReason.type === "del") {
+            let arr: YakitPluginOnlineDetail[] = []
+            if (!!activeDelPlugin) {
+                arr = [activeDelPlugin]
+            } else {
+                if (allCheck || selectNum === 0) arr = [...response.data]
+                else
+                    arr = [
+                        ...(selectList.map((item) => {
+                            return {uuid: item}
+                        }) as any)
+                    ]
+                setHasMore(false)
+            }
+
+            isLoadingRef.current = true
+            setLoading(true)
+            dispatch({
+                type: "remove",
+                payload: {
+                    itemList: [...arr]
+                }
+            })
+            onCancelReason()
+            setTimeout(() => {
+                isLoadingRef.current = false
+                setLoading(false)
+            }, 2000)
+        }
+        if (showReason.type === "nopass") {
+        }
+    })
+
+    /** 插件展示(列表|网格) */
+    const [isList, setIsList] = useState<boolean>(false)
+
+    // 删除选中的筛选tags
     const onDelTag = useMemoizedFn((value?: string) => {
         if (!value) setFilters({...getFilters(), tags: []})
         else setFilters({...getFilters(), tags: (getFilters().tags || []).filter((item) => item !== value)})
+    })
+
+    // 当前展示的插件序列
+    const showPluginIndex = useRef<number>(0)
+    const setShowPluginIndex = useMemoizedFn((index: number) => {
+        showPluginIndex.current = index
     })
 
     const [plugin, setPlugin] = useState<API.YakitPluginDetail | undefined>()
@@ -181,7 +259,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     })
     /** 单项副标题组件 */
     const optSubTitle = useMemoizedFn((data: API.YakitPluginDetail) => {
-        return statusTag[`${1 % 3}`]
+        return statusTag[`${data.status}`]
     })
     /** 单项额外操作组件 */
     const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
@@ -208,6 +286,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         }
                     }
                 }}
+                button={{
+                    type: "text2"
+                }}
                 placement='bottomRight'
             />
         )
@@ -222,6 +303,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             {!!plugin && (
                 <PluginManageDetail
                     info={plugin}
+                    currentIndex={showPluginIndex.current}
+                    setCurrentIndex={setShowPluginIndex}
                     allCheck={allCheck}
                     onCheck={onCheck}
                     selectList={selectList}
@@ -246,33 +329,47 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 }
                 extraHeader={
                     <div className='extra-header-wrapper'>
-                        <FuncSearch maxWidth={1000} onSearch={onKeywordAndUser.run} onChange={()=>{}}/>
+                        <FuncSearch
+                            maxWidth={1000}
+                            value={searchs}
+                            onSearch={onKeywordAndUser.run}
+                            onChange={setSearchs}
+                        />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
                             <FuncBtn
-                                maxWidth={1050}
+                                maxWidth={1150}
+                                icon={<OutlinePluscircleIcon />}
+                                disabled={selectNum === 0}
+                                type='outline2'
+                                size='large'
+                                name={"添加至分组"}
+                                onClick={onAddGroup}
+                            />
+                            <FuncBtn
+                                maxWidth={1150}
                                 icon={<OutlinePencilaltIcon />}
                                 disabled={selectNum === 0}
                                 type='outline2'
                                 size='large'
                                 name={"修改作者"}
-                                onClick={onModifyAuthor}
+                                onClick={onShowModifyAuthor}
                             />
                             <FuncBtn
-                                maxWidth={1050}
+                                maxWidth={1150}
                                 icon={<OutlineClouddownloadIcon />}
                                 type='outline2'
                                 size='large'
                                 name={selectNum > 0 ? "下载" : "一键下载"}
-                                onClick={() => onDownload()}
+                                onClick={onBatchDownload}
                             />
                             <FuncBtn
-                                maxWidth={1050}
+                                maxWidth={1150}
                                 icon={<OutlineTrashIcon />}
                                 type='outline2'
                                 size='large'
                                 name={selectNum > 0 ? "删除" : "清空"}
-                                onClick={() => setShowReason({visible: true, type: "del"})}
+                                onClick={onShowDelPlugin}
                             />
                         </div>
                     </div>
@@ -334,7 +431,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         checked={check}
                                         onCheck={optCheck}
                                         img={data.head_img}
-                                        title={data.script_name}
+                                        title={info.index + data.script_name}
                                         help={data.help || ""}
                                         time={data.updated_at}
                                         subTitle={optSubTitle}
@@ -347,23 +444,33 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                             loading={loading}
                             hasMore={hasMore}
                             updateList={onUpdateList}
+                            showIndex={showPluginIndex.current}
+                            setShowIndex={setShowPluginIndex}
                         />
                     </PluginsList>
                 </PluginsContainer>
                 <ModifyAuthorModal
                     visible={showModifyAuthor}
                     setVisible={setShowModifyAuthor}
-                    pluginNum={selectNum}
+                    plugins={selectList}
+                    total={response.pagemeta.total}
                     onOK={onModifyAuthor}
                 />
                 <ReasonModal
                     visible={showReason.visible}
-                    setVisible={() => setShowReason({visible: false, type: ""})}
+                    setVisible={onCancelReason}
                     type={showReason.type}
-                    onOK={() => {
-                        if (showReason.type === "del") onDelPlugin()
-                    }}
+                    total={!!activeDelPlugin ? 1 : selectNum || response.pagemeta.total}
+                    onOK={onReasonCallback}
                 />
+                {showBatchDownload && (
+                    <YakitGetOnlinePlugin
+                        visible={showBatchDownload}
+                        setVisible={(v) => {
+                            setShowBatchDownload(v)
+                        }}
+                    />
+                )}
             </PluginsLayout>
         </>
     )
@@ -372,12 +479,13 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 interface ModifyAuthorModalProps {
     visible: boolean
     setVisible: (show: boolean) => any
-    pluginNum: number
+    plugins: string[]
+    total: number
     onOK: () => any
 }
 /** @name 批量修改插件作者 */
 const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
-    const {visible, setVisible, pluginNum, onOK} = props
+    const {visible, setVisible, plugins, total, onOK} = props
 
     const [loading, setLoading] = useState<boolean>(false)
     const [list, setList] = useState<{img: string; name: string; id: string}[]>([
@@ -418,7 +526,6 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
         }
     ])
     const [value, setValue] = useState<string>("")
-
     const {run} = useDebounceFn(
         (value?: string) => {
             setLoading(true)
@@ -433,6 +540,33 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
         }
     )
 
+    const [submitLoading, setSubmitLoading] = useState<boolean>(false)
+    const [status, setStatus] = useState<"" | "error">("")
+    const submit = useMemoizedFn(() => {
+        if (!value) {
+            setStatus("error")
+            return
+        }
+        console.log(value)
+        setSubmitLoading(true)
+        setTimeout(() => {
+            onOK()
+            setSubmitLoading(false)
+        }, 1000)
+    })
+    const cancel = useMemoizedFn(() => {
+        if (submitLoading) return
+        setVisible(false)
+    })
+
+    useEffect(() => {
+        if (!visible) {
+            setValue("")
+            setStatus("")
+            setSubmitLoading(false)
+        }
+    }, [visible])
+
     return (
         <YakitModal
             title='批量修改插件作者'
@@ -440,9 +574,12 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
             type='white'
             centered={true}
             closable={true}
+            keyboard={false}
             visible={visible}
-            onCancel={() => setVisible(false)}
-            onOk={onOK}
+            cancelButtonProps={{loading: submitLoading}}
+            confirmLoading={submitLoading}
+            onCancel={cancel}
+            onOk={submit}
         >
             <div className={styles["modify-author-modal-body"]}>
                 <Form.Item
@@ -450,9 +587,11 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
                     label={<>作者：</>}
                     help={
                         <>
-                            共选择了 <span className={styles["modify-author-hint-span"]}>{pluginNum}</span> 个插件
+                            共选择了{" "}
+                            <span className={styles["modify-author-hint-span"]}>{plugins.length || total}</span> 个插件
                         </>
                     }
+                    validateStatus={status}
                 >
                     <YakitSelect
                         placeholder='请选择...'
@@ -462,7 +601,10 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
                         allowClear={true}
                         value={value}
                         onSearch={run}
-                        onChange={(value, option: any) => setValue(value)}
+                        onChange={(value, option: any) => {
+                            setValue(value)
+                            if (value) setStatus("")
+                        }}
                     >
                         {list.map((item) => (
                             <YakitSelect.Option key={item.name} value={item.id} record={item}>
@@ -481,13 +623,14 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
 
 interface ReasonModalProps {
     visible: boolean
-    setVisible: (show: boolean) => any
+    setVisible: () => any
     type?: string
+    total?: number
     onOK: (reason: string) => any
 }
 /** @name 原因说明 */
 export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
-    const {visible, setVisible, type = "nopass", onOK} = props
+    const {visible, setVisible, type = "nopass", total, onOK} = props
 
     const title = useMemo(() => {
         if (type === "nopass") return "不通过原因"
@@ -501,7 +644,10 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
 
     const [value, setValue] = useState<string>("")
     const onSubmit = useMemoizedFn(() => {
-        if (!value) return
+        if (!value) {
+            yakitNotify("error", "请输入删除原因!")
+            return
+        }
         onOK(value)
     })
 
@@ -513,8 +659,9 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
             centered={true}
             closable={true}
             maskClosable={false}
+            keyboard={false}
             visible={visible}
-            onCancel={() => setVisible(false)}
+            onCancel={setVisible}
             onOk={onSubmit}
         >
             <div className={styles["reason-modal-body"]}>
@@ -525,6 +672,11 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
                     maxLength={150}
                     onChange={(e) => setValue(e.target.value)}
                 />
+                {total && (
+                    <div className={styles["hint-wrapper"]}>
+                        共选择了 <span className={styles["total-num"]}>{total || 0}</span> 个插件
+                    </div>
+                )}
             </div>
         </YakitModal>
     )
