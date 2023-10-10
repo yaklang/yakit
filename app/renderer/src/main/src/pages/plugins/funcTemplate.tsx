@@ -31,7 +31,6 @@ import {
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
     OutlineSearchIcon,
-    OutlineThumbdownIcon,
     OutlineThumbupIcon,
     OutlineViewgridIcon,
     OutlineViewlistIcon,
@@ -45,8 +44,7 @@ import {
     SolidPluginProtScanIcon,
     SolidSparklesPluginIcon,
     SolidDocumentSearchPluginIcon,
-    SolidCollectionPluginIcon,
-    SolidCloudpluginIcon
+    SolidCollectionPluginIcon
 } from "@/assets/icon/colors"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -212,6 +210,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
             mediaQuery.removeEventListener("change", mediaHandle)
         }
     }, [])
+
     const [search, setSearch] = useControllableValue<PluginSearchParams>(props)
     const [showPopver, setShowPopver] = useState<boolean>(false)
 
@@ -498,6 +497,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
     const {
         isList,
         data,
+        keyName = "uuid",
         gridNode,
         gridHeight,
         listNode,
@@ -507,7 +507,9 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
         updateList,
         id,
         listClassName,
-        gridClassName
+        gridClassName,
+        showIndex,
+        setShowIndex
     } = props
 
     // useWhyDidYouUpdate("ListShowContainer", {...props})
@@ -532,12 +534,15 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
                     id={listId}
                     isList={isList}
                     data={data}
+                    keyName={keyName}
                     render={listNode}
                     optHeight={listHeight}
                     loading={loading}
                     hasMore={hasMore}
                     updateList={updateList}
                     listClassName={listClassName}
+                    showIndex={showIndex}
+                    setShowIndex={setShowIndex}
                 />
             </div>
             <div
@@ -548,12 +553,15 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
                     id={gridId}
                     isList={isList}
                     data={data}
+                    keyName={keyName}
                     render={gridNode}
                     optHeight={gridHeight}
                     loading={loading}
                     hasMore={hasMore}
                     updateList={updateList}
                     gridClassName={gridClassName}
+                    showIndex={showIndex}
+                    setShowIndex={setShowIndex}
                 />
             </div>
         </div>
@@ -562,7 +570,20 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
 
 /** @name 插件列表布局列表 */
 export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
-    const {isList, data, render, optHeight, loading, hasMore, updateList, id, listClassName} = props
+    const {
+        isList,
+        data,
+        render,
+        keyName,
+        optHeight,
+        loading,
+        hasMore,
+        updateList,
+        id,
+        listClassName,
+        showIndex,
+        setShowIndex
+    } = props
 
     // useWhyDidYouUpdate("ListList", {...props})
 
@@ -578,12 +599,21 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
         return {scrollTop, clientHeight, scrollHeight}
     })
     const listwrapperRef = useRef<HTMLDivElement>(null)
-    const [list] = useVirtualList(data, {
+    const [list, scrollTo] = useVirtualList(data, {
         containerTarget: listContainerRef,
         wrapperTarget: listwrapperRef,
         itemHeight: optHeight || 73,
         overscan: 50
     })
+
+    const [inView] = useInViewport(listContainerRef)
+    const oldInView = useRef<boolean>(!!inView)
+    useEffect(() => {
+        if (!oldInView.current && inView) {
+            scrollTo(showIndex || 0)
+        }
+        oldInView.current = !!inView
+    }, [inView])
 
     const onScrollCapture = useThrottleFn(
         () => {
@@ -595,6 +625,8 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
 
             if (listContainerRef && listContainerRef.current) {
                 const {scrollTop, clientHeight, scrollHeight} = fetchListHeight()
+                if (setShowIndex) setShowIndex(Math.round(scrollTop / optHeight))
+
                 const scrollBottom = scrollHeight - scrollTop - clientHeight
                 if (scrollBottom <= optHeight * 3) {
                     updateList()
@@ -630,7 +662,7 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
             <div ref={listwrapperRef}>
                 {list.map((ele) => {
                     return (
-                        <div key={(ele.data || {})["uuid"]} className={styles["list-opt"]}>
+                        <div key={(ele.data || {})[keyName]} className={styles["list-opt"]}>
                             {render(ele)}
                         </div>
                     )
@@ -703,12 +735,25 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
 
 /** @name 插件网格布局列表 */
 export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
-    const {isList, data, render, optHeight, loading, hasMore, updateList, id, gridClassName} = props
+    const {
+        isList,
+        data,
+        render,
+        keyName,
+        optHeight,
+        loading,
+        hasMore,
+        updateList,
+        id,
+        gridClassName,
+        showIndex,
+        setShowIndex
+    } = props
 
     // useWhyDidYouUpdate("ListList", {...props})
 
+    // 计算网格列数
     const bodyRef = useSize(document.querySelector("body"))
-    const gridContainerRef = useRef<HTMLDivElement>(null)
     const gridCol = useMemo(() => {
         const width = bodyRef?.width || 900
         if (width >= 1156 && width < 1480) return 3
@@ -716,29 +761,49 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
         if (width >= 1736) return 5
         return 2
     }, [bodyRef])
-    // 列表最小高度
-    const wrapperHeight = useMemo(() => {
-        const count = data.length || 0
-        const rows = Math.ceil(count / gridCol)
-        return rows * optHeight + rows * 16
+    // 展示的数据
+    const shwoData = useMemo(() => {
+        const len = data.length
+        const rowNum = Math.ceil(len / gridCol)
+        const arr: any[] = []
+        for (let i = 0; i < rowNum; i++) {
+            const order = i * gridCol
+            const newArr = data.slice(order, order + gridCol)
+            arr.push(newArr)
+        }
+        return arr
     }, [data, gridCol])
 
-    useEffect(() => {
-        // 不执行非网格布局逻辑
-        if (isList) return
-
-        if (loading) return
-        if (!hasMore) return
-        if (wrapperHeight === 0) return
-
-        if (gridContainerRef && gridContainerRef.current) {
-            const clientHeight = gridContainerRef.current?.clientHeight || 0
-            if (wrapperHeight <= clientHeight + optHeight) {
-                updateList()
-            }
+    const containerRef = useRef<HTMLDivElement>(null)
+    // 获取组件高度相关数据
+    const fetchListHeight = useMemoizedFn(() => {
+        const {scrollTop, clientHeight, scrollHeight} = containerRef.current || {
+            scrollTop: 0,
+            clientHeight: 0,
+            scrollHeight: 0
         }
-    }, [wrapperHeight, loading, gridContainerRef.current?.clientHeight])
+        return {scrollTop, clientHeight, scrollHeight}
+    })
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const [list, scrollTo] = useVirtualList(shwoData, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: optHeight,
+        overscan: 10
+    })
 
+    const [inView] = useInViewport(containerRef)
+    const oldInView = useRef<boolean>(!!inView)
+    useEffect(() => {
+        console.log("inView", inView, oldInView.current)
+        if (!oldInView.current && inView) {
+            console.log("showIndex", showIndex)
+            scrollTo(Math.floor((showIndex || 0) / gridCol))
+        }
+        oldInView.current = !!inView
+    }, [inView, gridCol])
+
+    // 滚动加载
     const onScrollCapture = useThrottleFn(
         () => {
             // 不执行非网格布局逻辑
@@ -747,13 +812,10 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
             if (loading) return
             if (!hasMore) return
 
-            // 网格布局
-            if (gridContainerRef && gridContainerRef.current) {
-                const {scrollTop, clientHeight, scrollHeight} = gridContainerRef.current || {
-                    scrollTop: 0,
-                    clientHeight: 0,
-                    scrollHeight: 0
-                }
+            if (containerRef && containerRef.current) {
+                const {scrollTop, clientHeight, scrollHeight} = fetchListHeight()
+                if (setShowIndex) setShowIndex(Math.round(scrollTop / (optHeight + 16)) * gridCol + 1)
+
                 const scrollBottom = scrollHeight - scrollTop - clientHeight
                 if (scrollBottom <= optHeight * 2) {
                     updateList()
@@ -762,42 +824,149 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
         },
         {wait: 200, leading: false}
     )
+
+    // 首屏数据不够时自动加载下一页
+    useEffect(() => {
+        // 不执行非网格布局逻辑
+        if (isList) return
+
+        if (loading) return
+        if (!hasMore) return
+
+        if (containerRef && containerRef.current && wrapperRef && wrapperRef.current) {
+            const {clientHeight} = fetchListHeight()
+            const wrapperHeight = wrapperRef.current?.clientHeight || 0
+            if (wrapperHeight < clientHeight) {
+                updateList()
+            }
+        }
+    }, [loading, hasMore, containerRef.current?.clientHeight])
+
+    // const bodyRef = useSize(document.querySelector("body"))
+    // const gridContainerRef = useRef<HTMLDivElement>(null)
+    // const gridCol = useMemo(() => {
+    //     const width = bodyRef?.width || 900
+    //     if (width >= 1156 && width < 1480) return 3
+    //     if (width >= 1480 && width < 1736) return 4
+    //     if (width >= 1736) return 5
+    //     return 2
+    // }, [bodyRef])
+    // // 列表最小高度
+    // const wrapperHeight = useMemo(() => {
+    //     const count = data.length || 0
+    //     const rows = Math.ceil(count / gridCol)
+    //     return rows * optHeight + rows * 16
+    // }, [data, gridCol])
+
+    // useEffect(() => {
+    //     // 不执行非网格布局逻辑
+    //     if (isList) return
+
+    //     if (loading) return
+    //     if (!hasMore) return
+    //     if (wrapperHeight === 0) return
+
+    //     if (gridContainerRef && gridContainerRef.current) {
+    //         const clientHeight = gridContainerRef.current?.clientHeight || 0
+    //         if (wrapperHeight <= clientHeight + optHeight) {
+    //             updateList()
+    //         }
+    //     }
+    // }, [wrapperHeight, loading, gridContainerRef.current?.clientHeight])
+
+    // const onScrollCapture = useThrottleFn(
+    //     () => {
+    //         // 不执行非网格布局逻辑
+    //         if (isList) return
+
+    //         if (loading) return
+    //         if (!hasMore) return
+
+    //         // 网格布局
+    //         if (gridContainerRef && gridContainerRef.current) {
+    //             const {scrollTop, clientHeight, scrollHeight} = gridContainerRef.current || {
+    //                 scrollTop: 0,
+    //                 clientHeight: 0,
+    //                 scrollHeight: 0
+    //             }
+    //             const scrollBottom = scrollHeight - scrollTop - clientHeight
+    //             if (scrollBottom <= optHeight * 2) {
+    //                 updateList()
+    //             }
+    //         }
+    //     },
+    //     {wait: 200, leading: false}
+    // )
+
     return (
+        // <div
+        //     ref={gridContainerRef}
+        //     className={classNames(styles["grid-list-wrapper"], gridClassName)}
+        //     id={id}
+        //     onScroll={() => onScrollCapture.run()}
+        // >
+        //     <div style={{minHeight: wrapperHeight}} className={styles["grid-list-body"]}>
+        //         <ul className={styles["ul-wrapper"]}>
+        //             {data.map((item, index) => {
+        //                 const rowNum = Math.floor(index / gridCol)
+        //                 const colNum = index % gridCol
+        //                 return (
+        //                     <li
+        //                         key={item[keyName]}
+        //                         style={{
+        //                             zIndex: index + 1,
+        //                             transform: `translate(${colNum * 100}%, ${rowNum * 100}%)`
+        //                         }}
+        //                         className={classNames(styles["li-style"], {
+        //                             [styles["li-first-style"]]: colNum === 0,
+        //                             [styles["li-last-style"]]: colNum === gridCol - 1
+        //                         })}
+        //                     >
+        //                         {render({index: index, data: item})}
+        //                     </li>
+        //                 )
+        //             })}
+        //         </ul>
+        //     </div>
+        //     {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
+        //     {data.length > 0 && loading && (
+        //         <div className={styles["loading-wrapper"]}>
+        //             <YakitSpin wrapperClassName={styles["loading-style"]} />
+        //         </div>
+        //     )}
+        // </div>
         <div
-            ref={gridContainerRef}
+            ref={containerRef}
             className={classNames(styles["grid-list-wrapper"], gridClassName)}
             id={id}
             onScroll={() => onScrollCapture.run()}
         >
-            <div style={{minHeight: wrapperHeight}} className={styles["grid-list-body"]}>
-                <ul className={styles["ul-wrapper"]}>
-                    {data.map((item, index) => {
-                        const rowNum = Math.floor(index / gridCol)
-                        const colNum = index % gridCol
-                        return (
-                            <li
-                                key={item["uuid"]}
-                                style={{
-                                    zIndex: index + 1,
-                                    transform: `translate(${colNum * 100}%, ${rowNum * 100}%)`
-                                }}
-                                className={classNames(styles["li-style"], {
-                                    [styles["li-first-style"]]: colNum === 0,
-                                    [styles["li-last-style"]]: colNum === gridCol - 1
-                                })}
-                            >
-                                {render({index: index, data: item})}
-                            </li>
-                        )
-                    })}
-                </ul>
+            <div ref={wrapperRef}>
+                {list.map((ele) => {
+                    const itemArr: any[] = ele.data
+                    return (
+                        <div
+                            key={`${itemArr.map((item) => item[keyName]).join("-")}`}
+                            className={styles["row-wrapper"]}
+                        >
+                            {itemArr.map((item, index) => {
+                                const order = ele.index * gridCol + index
+                                return (
+                                    <div key={item[keyName]} className={styles["item-wrapper"]}>
+                                        {render({index: order, data: item})}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )
+                })}
+                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
+                {data.length > 0 && loading && (
+                    <div className={styles["loading-wrapper"]}>
+                        <YakitSpin wrapperClassName={styles["loading-style"]} />
+                    </div>
+                )}
             </div>
-            {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
-            {data.length > 0 && loading && (
-                <div className={styles["loading-wrapper"]}>
-                    <YakitSpin wrapperClassName={styles["loading-style"]} />
-                </div>
-            )}
         </div>
     )
 })

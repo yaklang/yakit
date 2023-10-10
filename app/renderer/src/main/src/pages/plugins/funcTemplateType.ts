@@ -88,6 +88,8 @@ export interface ListShowContainerProps<T> {
     isList: boolean
     /** 插件列表数据 */
     data: T[]
+    /** 布局-item组件-key的字段名 */
+    keyName?: string
     /** 网格布局-item组件 */
     gridNode: (info: {index: number; data: T}) => ReactNode
     /** 网格布局-行高 */
@@ -108,6 +110,10 @@ export interface ListShowContainerProps<T> {
     listClassName?: string
     /**宫格className */
     gridClassName?: string
+    /** 当前展示的插件index */
+    showIndex?: number
+    /** 修改当前展示的插件index */
+    setShowIndex?: (i: number) => any
 }
 
 export interface ListListProps<T> {
@@ -117,6 +123,8 @@ export interface ListListProps<T> {
     data: T[]
     /** 列表布局-item组件 */
     render: (info: {index: number; data: T}) => ReactNode
+    /** 列表布局-item组件-key的字段名 */
+    keyName: string
     /** 列表布局-行高 */
     optHeight: number
     /** 列表是否在加载状态 */
@@ -129,6 +137,10 @@ export interface ListListProps<T> {
     id?: string
     /**列表className */
     listClassName?: string
+    /** 当前展示的插件index */
+    showIndex?: number
+    /** 修改当前展示的插件index */
+    setShowIndex?: (i: number) => any
 }
 export interface ListLayoutOptProps {
     /** 插件详细信息 */
@@ -159,6 +171,8 @@ export interface GridListProps<T> {
     data: T[]
     /** 网格布局-item组件 */
     render: (info: {index: number; data: T}) => ReactNode
+    /** 网格布局-item组件-key的字段名 */
+    keyName: string
     /** 网格布局-行高 */
     optHeight: number
     /** 列表是否在加载状态 */
@@ -171,6 +185,10 @@ export interface GridListProps<T> {
     id?: string
     /**宫格className */
     gridClassName?: string
+    /** 当前展示的插件index */
+    showIndex?: number
+    /** 修改当前展示的插件index */
+    setShowIndex?: (i: number) => any
 }
 export interface GridLayoutOptProps {
     /** 插件详细信息 */
