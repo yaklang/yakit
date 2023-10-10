@@ -126,7 +126,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         dispatch({
             type: "remove",
             payload: {
-                item: removePlugin
+                itemList: [removePlugin]
             }
         })
     })
