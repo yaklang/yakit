@@ -113,9 +113,14 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                 echartsElements[index].appendChild(img)
             })
         }
-        // word报告不要附录 table添加边框
-        const wordStr:string = contentHTML.outerHTML.substring(0, contentHTML.outerHTML.indexOf("附录：")).replace(/<table(.*?)>/g, '<table$1 border="1">')
-        
+        // word报告不要附录 table添加边框 移除南丁格尔玫瑰图点击详情(图像中已含)
+        const wordStr: string = contentHTML.outerHTML
+            .substring(0, contentHTML.outerHTML.indexOf("附录："))
+            .replace(/<table(.*?)>/g, '<table$1 border="1">')
+            .replace(/<div[^>]*id=("nightingle-rose-title"|"nightingle-rose-content")[^>]*>[\s\S]*?<\/div>/g, "")
+
+        // console.log("wordStr---", wordStr)
+
         saveAs(
             //保存文件到本地
             htmlDocx.asBlob(wordStr), //将html转为docx
@@ -205,7 +210,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         // 此处定时器为了确保已处理其余任务
         setTimeout(() => {
             exportToWord()
-        }, 200)
+        }, 300)
     }
 
     const dowloadMenu = (
@@ -265,7 +270,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     extra={
                         <Space>
                             <YakitButton
-                                size="small"
+                                size='small'
                                 onClick={() => {
                                     showModal({
                                         title: "RAW DATA",
@@ -287,7 +292,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                 visible={show}
                                 onVisibleChange={(visible) => setShow(visible)}
                             >
-                                <YakitButton size="small">下载</YakitButton>
+                                <YakitButton size='small'>下载</YakitButton>
                             </YakitPopover>
                         </Space>
                     }
