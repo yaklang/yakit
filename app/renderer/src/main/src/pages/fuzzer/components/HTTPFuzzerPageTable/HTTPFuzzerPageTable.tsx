@@ -608,6 +608,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             if (!editor || !currentSelectItem) return
             onAddOverlayWidget(editor, currentSelectItem, showResponseInfoSecondEditor)
         }, [currentSelectItem, showResponseInfoSecondEditor])
+        const onExecResults = useMemoizedFn(() => {
+            if (currentSelectItem) {
+                onViewExecResults(currentSelectItem.ExtractedResults)
+            }
+        })
         return (
             <div style={{overflowY: "hidden", height: "100%"}}>
                 <YakitResizeBox
@@ -683,6 +688,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             extraEditorProps={{
                                 isShowSelectRangeMenu: true
                             }}
+                            extra={
+                                <YakitButton size='small' type='secondary2' onClick={onExecResults}>
+                                    提取数据
+                                </YakitButton>
+                            }
                         />
                     }
                     {...ResizeBoxProps}
