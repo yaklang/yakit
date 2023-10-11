@@ -227,7 +227,7 @@
 
 .payload-extract-content {
     @extend .display-column-center;
-    background-color: var(--yakit-border-color);
+    background-color: var(--yakit-card-background-color);
     flex: 1;
     height: 100%;
     justify-content: flex-start;
@@ -276,6 +276,16 @@
     &-body {
         padding: 12px 0px 12px 12px;
         overflow-y: auto;
+        &-item-label {
+            @extend .display-flex-center;
+            align-items: center;
+            line-height: 16px;
+        }
+        &-item-value {
+            @extend .display-flex-center;
+            align-items: flex-start;
+            line-height: 16px;
+        }
     }
 }
 .resize-card-icon {

@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Form, Modal, Result, Space, Popover, Tooltip, Divider} from "antd"
+import {Form, Modal, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
 import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
@@ -45,7 +45,7 @@ import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -929,7 +929,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
             }
-
             if (data.Ok) {
                 if (r.MatchedByMatcher) {
                     yakitNotify("success", `匹配成功: ${r.Url}`)
@@ -2457,14 +2456,28 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
                 {fuzzerResponse.Payloads?.length === 0 && "暂无"}
             </div>
             <div
-                className={styles["payload-extract-content-body"]}
-                style={{display: type === "extractContent" ? "" : "none"}}
+                className={classNames(styles["payload-extract-content-body"], "yakit-descriptions")}
+                style={{display: type === "extractContent" ? "" : "none", padding: 0}}
             >
-                {fuzzerResponse.ExtractedResults.map((item) => (
-                    <p>
-                        {item.Key}:{item.Value}
-                    </p>
-                ))}
+                <Descriptions bordered size='small' column={2}>
+                    {fuzzerResponse.ExtractedResults.map((item, index) => (
+                        <Descriptions.Item
+                            label={
+                                <div className={styles["payload-extract-content-body-item-label"]}>
+                                    <span>{item.Key}</span>
+                                    <CopyComponents copyText={item.Key} />
+                                </div>
+                            }
+                            span={2}
+                        >
+                            <div className={styles["payload-extract-content-body-item-value"]}>
+                                <span>{item.Value || "-"}</span>
+                                <CopyComponents copyText={item.Value} />
+                            </div>
+                        </Descriptions.Item>
+                    ))}
+                </Descriptions>
+
                 {fuzzerResponse.ExtractedResults?.length === 0 && "暂无"}
             </div>
         </div>
