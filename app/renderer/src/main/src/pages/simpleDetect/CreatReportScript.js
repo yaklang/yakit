@@ -477,10 +477,14 @@ if len(noPotentialRisks) == 0 {
         if titleVerbose == "" {
             titleVerbose = info.Title
         }
+        addr = "-"
+        if info.IP != "" {
+            addr = sprintf(\`%v:%v\`, info.IP, info.Port)
+        }
         if !str.Contains(info.Severity, "info") {
             _line = append(_line, {
                 "序号": { "value": index + 1, "sort": 1},
-                "网站地址": { "value": sprintf(\`%v:%v\`, info.IP, info.Port), "sort": 2},
+                "网站地址": { "value": addr, "sort": 2},
                 "漏洞情况": { "value": titleVerbose, "sort": 3},
                 "威胁风险": { "value": level, "sort": 4}
             })
@@ -635,10 +639,13 @@ if len(weakPassWordRisks) != 0 {
          if str.Contains(riskIns.Severity, "low") {
              level = "低危"
          }
-
+         addr = "-"
+         if riskIns.IP != "" {
+            addr = riskIns.IP
+         }
          showWeakPassWordFormLine = append(
              showWeakPassWordFormLine,
-             [k+1, riskIns.IP, riskIns.TitleVerbose, level],
+             [k+1, addr, riskIns.TitleVerbose, level],
          )
      }
 
@@ -660,7 +667,10 @@ if len(infoPotentialRisk) > 0 {
         if titleVerbose == "" {
             titleVerbose = infoRisk.Title
         }
-        addr := sprintf(\`%v:%v\`, infoRisk.Host, infoRisk.Port)
+        addr = "-"
+        if infoRisk.Host != "" {
+            addr = sprintf(\`%v:%v\`, infoRisk.Host, infoRisk.Port)
+        }
         infoPotentialRiskList = append(infoPotentialRiskList, {
             "标题": {
                 "sort": 1,
@@ -709,7 +719,10 @@ func showReport(risks) {
         }
         request, _ := codec.StrconvUnquote(riskIns.QuotedRequest)
         response, _ := codec.StrconvUnquote(riskIns.QuotedResponse)
-        addr := sprintf(\`%v:%v\`, riskIns.Host, riskIns.Port)
+        addr = "-"
+        if riskIns.Host != "" {
+            addr = sprintf(\`%v:%v\`, riskIns.Host, riskIns.Port)
+        }
         
         titleVerbose = riskIns.TitleVerbose
         if titleVerbose == "" {
@@ -831,7 +844,10 @@ func showCVEReport(risks, riskSeverity) {
             if complexity == "" {
                 complexity = "UNKNOWN"
             }
-            addr := sprintf(\`%v:%v\`, cve.Host, cve.Port)
+            addr = "-"
+            if cve.Host != "" {
+                addr = sprintf(\`%v:%v\`, cve.Host, cve.Port)
+            }
             parameter = "-"
             if customHasPrefix(cve.Parameter, "cpe") {
             \tparameter = cve.Parameter
