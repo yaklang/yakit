@@ -58,24 +58,24 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const [domain, setDomain, getDomain] = useGetState("")
     const [records, setRecords, getRecords] = useGetState<DNSLogEvent[]>([])
     const [loading, setLoading] = useState(false)
-    const [btnLoading,setBtnLoading] = useState(false)
+    const [btnLoading, setBtnLoading] = useState(false)
     const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(true)
     const [autoQuery, setAutoQuery] = useState(false)
     const [isLocal, setIsLocal, getIsLocal] = useGetState(true)
     const [expandRows, setExpandRows] = useState<string[]>([])
     const [dnsLogType, setDnsLogType] = useState<"builtIn" | "custom">("builtIn")
-    const [selectedMode, setSelectedMode,getSelectedMode] = useGetState<string>() // 在组件状态中保存选中的值
+    const [selectedMode, setSelectedMode, getSelectedMode] = useGetState<string>() // 在组件状态中保存选中的值
     const DNS_LOG_PAGE_UPDATE_TOKEN_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_CACHE"
     const DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE"
     const openDetails = useRef<DNSLogEvent>()
-    
+
     useEffect(() => {
         // 初始化-查看菜单是否开启dnslog并请求获取参数fDNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE
         ipcRenderer.invoke("dnslog-page-to-menu")
         // 获取菜单发送的配置参数
         ipcRenderer.on(
             "dnslog-menu-to-page-callback",
-            (e, data: { token: string; domain: string; onlyARecord: boolean,dnsMode:string,useLocal:boolean }) => {
+            (e, data: { token: string; domain: string; onlyARecord: boolean, dnsMode: string, useLocal: boolean }) => {
                 setOnlyARecord(data.onlyARecord)
                 if (getToken() !== data.token || getDomain() !== data.domain) {
                     setToken(data.token || "")
@@ -90,7 +90,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         // 查看单条数据的详情
         ipcRenderer.on("dnslog-info-details-callback", (e, info: DNSLogEvent) => {
             openDetails.current = info
-            if(getRecords().length!==0){
+            if (getRecords().length !== 0) {
                 openDetailsItem()
             }
         })
@@ -102,8 +102,8 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
     // 打开单条数据
     const openDetailsItem = useMemoizedFn(() => {
-        
-        if(openDetails.current){
+
+        if (openDetails.current) {
             for (let item of getRecords()) {
                 if (item.RemoteAddr === openDetails.current.RemoteAddr && item.Timestamp === openDetails.current.Timestamp) {
                     setExpandRows(item.Index !== undefined ? [`${item.Index}`] : [])
@@ -112,11 +112,18 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             }
             openDetails.current = undefined
         }
-        
+
     })
 
     // 同步给菜单里dnslog新的参数
-    const sendMenuDnslog = useMemoizedFn((data: { dnsLogType:"builtIn"|"custom",token: string; domain: string; onlyARecord: boolean,DNSMode?:string,UseLocal?:boolean }) => {
+    const sendMenuDnslog = useMemoizedFn((data: {
+        dnsLogType: "builtIn" | "custom",
+        token: string;
+        domain: string;
+        onlyARecord: boolean,
+        DNSMode?: string,
+        UseLocal?: boolean
+    }) => {
         ipcRenderer.invoke("dnslog-page-change-menu", data)
     })
 
@@ -125,7 +132,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
         setLoading(true)
         const DNSMode = selectedMode || ""
         const UseLocal = selectedMode === "内置" ? false : isLocal
-        
+
         ipcRenderer
             .invoke("RequireDNSLogDomain", {
                 Addr: "",
@@ -135,7 +142,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             .then((rsp: { Domain: string; Token: string }) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
-                sendMenuDnslog({dnsLogType,token: rsp.Token, domain: rsp.Domain, onlyARecord,DNSMode,UseLocal})
+                sendMenuDnslog({dnsLogType, token: rsp.Token, domain: rsp.Domain, onlyARecord, DNSMode, UseLocal})
             })
             .catch((e) => {
                 failed(`error: ${e}`)
@@ -146,7 +153,12 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 // 用于 MenuDNSLog 生成域名时读取此处数据
                 setRemoteValue(
                     DNS_LOG_PAGE_UPDATE_TOKEN,
-                    JSON.stringify({type: "builtIn", Addr: "", DNSMode, UseLocal})
+                    JSON.stringify({
+                        type: "builtIn",
+                        Addr: "",
+                        DNSMode,
+                        UseLocal: DNSMode === "内置" ? false : UseLocal
+                    })
                 )
                 // 用于缓存历史勾选项
                 setRemoteValue(
@@ -160,9 +172,9 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             })
     })
 
-    const queryDNSLogByToken = (loading=true) => {
-        loading&&setLoading(true)
-        
+    const queryDNSLogByToken = (loading = true) => {
+        loading && setLoading(true)
+
         ipcRenderer
             .invoke("QueryDNSLogByToken", {
                 Token: getToken(),
@@ -183,9 +195,9 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         .reverse()
                 )
             })
-            .finally(()=>{
+            .finally(() => {
                 setLoading(false)
-                if(openDetails.current) openDetailsItem()
+                if (openDetails.current) openDetailsItem()
             })
     }
 
@@ -261,7 +273,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             .then((rsp: { Domain: string; Token: string }) => {
                 setToken(rsp.Token)
                 setDomain(rsp.Domain)
-                sendMenuDnslog({dnsLogType,token: rsp.Token, domain: rsp.Domain, onlyARecord: onlyARecord})
+                sendMenuDnslog({dnsLogType, token: rsp.Token, domain: rsp.Domain, onlyARecord: onlyARecord})
             })
             .catch((e) => {
                 failed(`error: ${e}`)
@@ -269,7 +281,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 setDomain("")
             })
             .finally(() => {
-                if(params&&params?.length>0){
+                if (params && params?.length > 0) {
                     // 用于 MenuDNSLog 生成域名时读取此处数据
                     setRemoteValue(DNS_LOG_PAGE_UPDATE_TOKEN, JSON.stringify({type: "custom", ScriptName: params}))
                     // 用于缓存历史勾选项
@@ -282,8 +294,8 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             })
     })
 
-    const queryDNSLogTokenByScript = (loading=true) => {
-        loading&&setLoading(true)
+    const queryDNSLogTokenByScript = (loading = true) => {
+        loading && setLoading(true)
         ipcRenderer
             .invoke("QueryDNSLogTokenByScript", {Token: token, ScriptName: params || ""})
             .then((rsp: { Events: DNSLogEvent[] }) => {
@@ -300,7 +312,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                         .reverse()
                 )
             })
-            .finally(()=>{
+            .finally(() => {
                 setLoading(false)
             })
     }
@@ -310,9 +322,9 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             return
         }
         setRecords([])
-        dnsLogType === "builtIn"?queryDNSLogByToken():queryDNSLogTokenByScript()
+        dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
         const id = setInterval(() => {
-            dnsLogType === "builtIn"?queryDNSLogByToken(false):queryDNSLogTokenByScript(false)
+            dnsLogType === "builtIn" ? queryDNSLogByToken(false) : queryDNSLogTokenByScript(false)
         }, 5000)
 
         return () => {
@@ -396,7 +408,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                     style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
                                     type={"vertical"}
                                 />
-                                <Form.Item colon={false} style={{height:24}}>
+                                <Form.Item colon={false} style={{height: 24}}>
                                     <YakitButton
                                         type='primary'
                                         htmlType='submit'
@@ -434,7 +446,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                     style={{top: 6, margin: "0px 16px 0px 0px", height: "1em"}}
                                     type={"vertical"}
                                 />
-                                <Form.Item colon={false} style={{height:24}}>
+                                <Form.Item colon={false} style={{height: 24}}>
                                     <YakitButton
                                         type='primary'
                                         htmlType='submit'
@@ -461,7 +473,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
             }
             bordered={false}
             // style={{overflowY: "auto"}}
-            bodyStyle={{overflow:"auto"}}
+            bodyStyle={{overflow: "auto"}}
         >
             <Space direction={"vertical"} style={{width: "100%"}}>
                 <Form size={"small"} layout='inline'>
@@ -478,7 +490,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                     checked={onlyARecord}
                                     onChange={(flag) => {
                                         setOnlyARecord(flag)
-                                        sendMenuDnslog({dnsLogType,token, domain, onlyARecord: flag})
+                                        sendMenuDnslog({dnsLogType, token, domain, onlyARecord: flag})
                                     }}
                                 />
                             </Form.Item>
@@ -497,7 +509,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             size={"small"}
                             type={"text"}
                             onClick={() => {
-                                if(token.length===0){
+                                if (token.length === 0) {
                                     warn("请先生成可用域名")
                                     return
                                 }
