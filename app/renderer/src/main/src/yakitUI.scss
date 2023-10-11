@@ -28,6 +28,26 @@ html {
 
     // 背景颜色
     --yakit-background-color-color: #ffffff;
+
+    // 表格行标注颜色
+    --yakit-table-select-row-bg-color-red: rgba(246, 84, 74, 1);
+    --yakit-table-select-row-bg-color-green: rgba(86, 201, 145, 0.2);
+    --yakit-table-select-row-bg-color-blue: rgba(74, 148, 248, 0.2);
+    --yakit-table-select-row-bg-color-yellow: rgba(255, 213, 131, 0.2);
+    --yakit-table-select-row-bg-color-orange: rgba(255, 182, 96, 0.2);
+    --yakit-table-select-row-bg-color-purple: rgba(136, 99, 247, 0.2);
+    --yakit-table-select-row-bg-color-lakeBlue: rgba(41, 188, 208, 0.2);
+    --yakit-table-select-row-bg-color-cyan: rgba(53, 216, 238, 0.2);
+    --yakit-table-select-row-bg-color-bluePurple: rgba(218, 95, 221, 0.2);
+    --yakit-table-select-row-bg-color-grey: rgba(180, 187, 202, 0.2);
+
+    // 表格移入背景颜色
+    --yakit-table-hover-row-bg-color-red: rgba(235, 73, 63, 1);
+
+    // 表格行选中背景颜色
+    --yakit-table-active-row-bg-color-red: rgba(211, 58, 48, 1);
+    // 表格字体颜色
+    --yakit-table-text-color: rgba(0, 0, 0, 0.85);
 }
 
 // 老UI主题色

@@ -372,6 +372,7 @@
                     border-bottom: 1px solid var(--yakit-primary-3) !important;
                     border-top: 1px solid var(--yakit-primary-3) !important;
                     background-color: var(--yakit-primary-1) !important;
+                    color: var(--yakit-table-text-color);
                 }
 
                 .virtual-table-batch-active-row {
@@ -388,6 +389,18 @@
                 }
                 .virtual-table-hover-row {
                     background-color: var(--yakit-card-background-color);
+                    color: var(--yakit-table-text-color);
+                }
+
+                .virtual-table-hover-row-red {
+                    background-color: var(--yakit-table-hover-row-bg-color-red);
+                    &:hover {
+                        background-color: var(--yakit-table-hover-row-bg-color-red);
+                    }
+                }
+
+                .virtual-table-active-row-red {
+                    background-color: var(--yakit-table-active-row-bg-color-red) !important;
                 }
 
                 .virtual-table-active-row + .virtual-table-row-cell {

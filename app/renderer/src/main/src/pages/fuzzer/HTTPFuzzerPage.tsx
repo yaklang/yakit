@@ -925,7 +925,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Headers: data.Headers || [],
                 UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
                 Count: count,
-                cellClassName: data.MatchedByMatcher ? `color-opacity-bg-${data.HitColor}` : ""
+                cellClassName: data.MatchedByMatcher ? `color-opacity-bg-${data.HitColor} color-text-${data.HitColor} color-font-weight-${data.HitColor}` : ""
             } as FuzzerResponse
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
