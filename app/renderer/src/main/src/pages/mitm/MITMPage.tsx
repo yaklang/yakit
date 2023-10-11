@@ -262,7 +262,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 tip += `下游代理:${downstreamProxy}`
             }
             if (openRepRuleFlag) {
-                tip += '|启用替换规则'
+                tip += "|启用替换规则"
             }
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
@@ -534,7 +534,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             />
                             <YakitButton
                                 type='text'
-                                colors="danger"
+                                colors='danger'
                                 onClick={() => {
                                     if (checkList.length > 0) onSelectAll(false)
                                 }}
