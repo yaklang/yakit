@@ -53,6 +53,7 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {menuBodyHeight} from "@/pages/globalVariable"
+import {CopyText} from "../HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1154,8 +1155,8 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
 export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> = React.memo((props) => {
     const {list = []} = props
     return (
-        <div className={styles["extract-results"]}>
-            <Descriptions size={"small"} bordered={true} column={1}>
+        <div className={classNames(styles["extract-results"], "yakit-descriptions")}>
+            {/* <Descriptions size={"small"} bordered={true} column={1}>
                 {list.map((i) => {
                     return (
                         <Descriptions.Item
@@ -1167,6 +1168,13 @@ export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> =
                     )
                     // return <p key={i.Key}>{`${i.Key}: ${i.Value}`}</p>
                 })}
+            </Descriptions> */}
+            <Descriptions bordered size='small' column={2}>
+                {list.map((item, index) => (
+                    <Descriptions.Item label={<CopyText copyText={item.Key} />} span={2}>
+                        {item.Value ? <CopyText copyText={item.Value} /> : ""}
+                    </Descriptions.Item>
+                ))}
             </Descriptions>
         </div>
     )

@@ -93,6 +93,7 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
+import {CopyableField} from "@/utils/inputUtil"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1052,7 +1053,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             title: "调试 / 插入热加载代码",
             width: "80%",
             footer: null,
-            maskClosable:false,
+            maskClosable: false,
             content: (
                 <HTTPFuzzerHotPatch
                     initialHotPatchCode={hotPatchCodeRef.current}
@@ -2462,25 +2463,26 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
             >
                 <Descriptions bordered size='small' column={2}>
                     {fuzzerResponse.ExtractedResults.map((item, index) => (
-                        <Descriptions.Item
-                            label={
-                                <div className={styles["payload-extract-content-body-item-label"]}>
-                                    <span>{item.Key}</span>
-                                    <CopyComponents copyText={item.Key} />
-                                </div>
-                            }
-                            span={2}
-                        >
-                            <div className={styles["payload-extract-content-body-item-value"]}>
-                                <span>{item.Value || "-"}</span>
-                                <CopyComponents copyText={item.Value} />
-                            </div>
+                        <Descriptions.Item label={<CopyText copyText={item.Key} />} span={2}>
+                            {item.Value ? <CopyText copyText={item.Value} /> : ""}
                         </Descriptions.Item>
                     ))}
                 </Descriptions>
 
                 {fuzzerResponse.ExtractedResults?.length === 0 && "暂无"}
             </div>
+        </div>
+    )
+})
+interface CopyTextProps {
+    copyText: string
+}
+export const CopyText: React.FC<CopyTextProps> = React.memo((props) => {
+    const {copyText} = props
+    return (
+        <div className={styles["payload-extract-content-body-item-label"]}>
+            <span>{copyText}</span>
+            <CopyComponents copyText={copyText} />
         </div>
     )
 })
