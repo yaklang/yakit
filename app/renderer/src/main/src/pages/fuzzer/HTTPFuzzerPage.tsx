@@ -1052,6 +1052,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             title: "调试 / 插入热加载代码",
             width: "80%",
             footer: null,
+            maskClosable:false,
             content: (
                 <HTTPFuzzerHotPatch
                     initialHotPatchCode={hotPatchCodeRef.current}
