@@ -1,4 +1,4 @@
-import React, {useCallback, useContext, useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     ExtraSettingProps,
     FuzzerSequenceProps,
@@ -7,7 +7,8 @@ import {
     SequenceItemProps,
     SequenceProps,
     SequenceResponseHeardProps,
-    SequenceResponseProps
+    SequenceResponseProps,
+    SequenceResponseRefProps
 } from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -34,12 +35,11 @@ import {
 } from "ahooks"
 import {
     OutlineArrowcirclerightIcon,
-    OutlineCogIcon,
     OutlinePencilaltIcon,
     OutlinePlussmIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {Divider, Form, Result, Tooltip} from "antd"
+import {Divider, Result, Tooltip} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
@@ -62,29 +62,30 @@ import {
     emptyFuzzer
 } from "../HTTPFuzzerPage"
 import {randomString} from "@/utils/randomUtil"
-import {getLocalValue, getRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {HTTP_PACKET_EDITOR_Response_Info, NewHTTPPacketEditor} from "@/utils/editors"
+import {HTTP_PACKET_EDITOR_Response_Info} from "@/utils/editors"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {
     MatcherValueProps,
     ExtractorValueProps,
-    MatchingAndExtraction
+    MatchingAndExtraction,
+    MatcherAndExtractionRefProps,
+    MatcherAndExtractionValueProps
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {InheritLineIcon, InheritArrowIcon} from "./icon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {ArrowsExpandIcon, ArrowsRetractIcon, PencilAltIcon} from "@/assets/newIcon"
+import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
 import {WebFuzzerNewEditor} from "../WebFuzzerNewEditor/WebFuzzerNewEditor"
 import {shallow} from "zustand/shallow"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {PageNodeItemProps, WebFuzzerPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {ShareImportExportData} from "../components/ShareImportExportData"
-// import { ResponseCard } from "./ResponseCard"
+import {monacoEditorWrite} from "../fuzzerTemplates"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
@@ -175,6 +176,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzTokenRef = useRef<string>(randomString(60))
     const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
+    const sequenceResponseRef = useRef<SequenceResponseRefProps>({
+        validate: () => new Promise(() => {})
+    })
 
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
@@ -632,7 +636,21 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 httpParams.push(httpParamsItem)
             }
         })
+        // console.log("httpParams", httpParams)
         return httpParams
+    })
+
+    const isShowSequenceResponse = useMemo(() => {
+        return currentSequenceItem && currentSequenceItem.id && currentSelectRequest
+    }, [currentSequenceItem, currentSelectRequest])
+
+    const onValidateMatcherAndExtraction = useMemoizedFn(async () => {
+        if (isShowSequenceResponse && sequenceResponseRef && sequenceResponseRef.current) {
+            await sequenceResponseRef.current.validate()
+            onStartExecution()
+        } else {
+            onStartExecution()
+        }
     })
 
     const onStartExecution = useMemoizedFn(() => {
@@ -716,6 +734,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const onSetShowAllResponse = useMemoizedFn(() => {
         setShowAllResponse(false)
     })
+
+    const setHotPatchCode = useMemoizedFn((val) => {
+        hotPatchCodeRef.current = val
+    })
+    const setHotPatchCodeWithParamGetter = useMemoizedFn((val) => {
+        hotPatchCodeWithParamGetterRef.current = val
+    })
     return (
         <>
             <div
@@ -742,7 +767,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 </YakitButton>
                             ) : (
                                 <YakitButton
-                                    onClick={() => onStartExecution()}
+                                    onClick={onValidateMatcherAndExtraction}
                                     icon={<SolidPlayIcon className={styles["play-icon"]} />}
                                     type={"primary"}
                                 >
@@ -831,7 +856,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     </div>
                 </div>
                 <div className={classNames(styles["fuzzer-sequence-content"])}>
-                    {currentSequenceItem && currentSequenceItem.id && currentSelectRequest ? (
+                    {currentSequenceItem && isShowSequenceResponse ? (
                         <>
                             <SequenceResponseHeard
                                 currentSequenceItemName={currentSequenceItem.name}
@@ -843,13 +868,17 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 onShowAll={() => {
                                     setShowAllResponse(true)
                                 }}
-                                getHttpParams={getHttpParams}
                             />
                             <SequenceResponse
+                                ref={sequenceResponseRef}
                                 requestInfo={currentSelectRequest}
                                 responseInfo={currentSelectResponse}
                                 loading={loading}
                                 extractedMap={extractedMap.get(currentSequenceItem.id) || new Map()}
+                                hotPatchCode={hotPatchCodeRef.current}
+                                hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
+                                setHotPatchCode={setHotPatchCode}
+                                setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
                             />
                         </>
                     ) : (
@@ -1141,8 +1170,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         disabled,
         onShowAll,
         currentSequenceItemName,
-        currentSequenceItemPageName,
-        getHttpParams
+        currentSequenceItemPageName
     } = props
     const {
         onlyOneResponse: httpResponse,
@@ -1191,346 +1219,441 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
     )
 })
 
-const SequenceResponse: React.FC<SequenceResponseProps> = React.memo((props) => {
-    const {requestInfo, responseInfo, loading, extractedMap} = props
-    const {
-        id: responseInfoId,
-        onlyOneResponse: httpResponse,
-        successFuzzer,
-        failedFuzzer,
-        successCount,
-        failedCount
-    } = responseInfo || {
-        id: "0",
-        onlyOneResponse: {...emptyFuzzer},
-        successFuzzer: [],
-        failedFuzzer: [],
-        successCount: 0,
-        failedCount: 0
-    }
-    const {request, advancedConfigValue, pageId} = requestInfo || {
-        request: "",
-        advancedConfigValue: {...defaultAdvancedConfigValue}
-    }
-    const [showSuccess, setShowSuccess] = useState(true)
-    const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
-    const [affixSearch, setAffixSearch] = useState<string>("")
-    const [defaultResponseSearch, setDefaultResponseSearch] = useState<string>("")
-    const [isRefresh, setIsRefresh] = useState<boolean>(false)
-
-    const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
-    const [hotPatchCode, setHotPatchCode] = useState<string>("")
-    const [hotPatchCodeWithParamGetter, setHotPatchCodeWithParamGetter] = useState<string>("")
-
-    const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
-    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
-
-    // 匹配器和提取器相关
-    const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
-    const [type, setType] = useState<MatchingAndExtraction>("matchers")
-    const [matcherAndExtractionHttpResponse, setMatcherAndExtractionHttpResponse] = useState<string>("")
-    const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
-
-    const secondNodeRef = useRef(null)
-    const secondNodeSize = useSize(secondNodeRef)
-
-    const successTableRef = useRef<any>()
-    const requestHttpRef = useRef<string>(request)
-
-    const cachedTotal: number = useCreation(() => {
-        return failedCount + successCount
-    }, [failedCount, successCount])
-    const onlyOneResponse: boolean = useCreation(() => {
-        return cachedTotal === 1
-    }, [cachedTotal])
-
-    const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
-        (s) => ({
-            queryPagesDataById: s.queryPagesDataById,
-            updatePagesDataCacheById: s.updatePagesDataCacheById
-        }),
-        shallow
-    )
-
-    useEffect(() => {
-        getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
-            .then((data) => {
-                setShowResponseInfoSecondEditor(data === "false" ? false : true)
-            })
-            .catch(() => {
-                setShowResponseInfoSecondEditor(true)
-            })
-    }, [])
-
-    useEffect(() => {
-        if (!pageId) return
-        requestHttpRef.current = request
-        setRefreshTrigger(!refreshTrigger)
-    }, [pageId, request])
-
-    useUpdateEffect(() => {
-        if (successTableRef.current) {
-            successTableRef.current.setCurrentSelectItem(undefined)
-            successTableRef.current.setFirstFull(true)
+const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
+    React.forwardRef((props, ref) => {
+        const {
+            requestInfo,
+            responseInfo,
+            loading,
+            extractedMap,
+            hotPatchCode,
+            setHotPatchCode,
+            hotPatchCodeWithParamGetter,
+            setHotPatchCodeWithParamGetter
+        } = props
+        const {
+            id: responseInfoId,
+            onlyOneResponse: httpResponse,
+            successFuzzer,
+            failedFuzzer,
+            successCount,
+            failedCount
+        } = responseInfo || {
+            id: "0",
+            onlyOneResponse: {...emptyFuzzer},
+            successFuzzer: [],
+            failedFuzzer: [],
+            successCount: 0,
+            failedCount: 0
         }
-        setIsRefresh(!isRefresh)
-        setQuery({})
-    }, [responseInfoId])
-
-    const onSetRequestHttp = useMemoizedFn((i: string) => {
-        requestHttpRef.current = i
-        onUpdatePageInfo(i, pageId || "")
-    })
-    const onUpdatePageInfo = useDebounceFn(
-        (value: string, pId: string) => {
-            if (!pId) return
-            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pId)
-            if (!currentItem) return
-            if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
-                if (value === currentItem.pageParamsInfo.webFuzzerPageInfo.request) return
-                const newCurrentItem: PageNodeItemProps = {
-                    ...currentItem,
-                    pageParamsInfo: {
-                        webFuzzerPageInfo: {
-                            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
-                            request: value
-                        }
-                    }
-                }
-                updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
-            }
-        },
-        {wait: 200, leading: true}
-    ).run
-
-    const [firstFull, setFirstFull] = useState<boolean>(false)
-    const [secondFull, setSecondFull] = useState<boolean>(false)
-    const ResizeBoxProps = useCreation(() => {
-        let p = {
-            firstRatio: "50%",
-            secondRatio: "50%"
+        const {request, advancedConfigValue, pageId} = requestInfo || {
+            request: "",
+            advancedConfigValue: {...defaultAdvancedConfigValue}
         }
-        if (secondFull) {
-            p.firstRatio = "0%"
-        }
-        if (firstFull) {
-            p.secondRatio = "0%"
-            p.firstRatio = "100%"
-        }
-        return p
-    }, [firstFull, secondFull])
+        const [showSuccess, setShowSuccess] = useState(true)
+        const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
+        const [affixSearch, setAffixSearch] = useState<string>("")
+        const [defaultResponseSearch, setDefaultResponseSearch] = useState<string>("")
+        const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
-    const firstNodeExtra = () => (
-        <>
-            <div className={styles["resize-card-icon"]} onClick={() => setFirstFull(!firstFull)}>
-                {firstFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
-            </div>
-        </>
-    )
+        const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
 
-    const secondNodeTitle = () => (
-        <>
-            <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>
-            <SecondNodeTitle
-                cachedTotal={cachedTotal}
-                onlyOneResponse={onlyOneResponse}
-                rsp={httpResponse}
-                successFuzzerLength={(successFuzzer || []).length}
-                failedFuzzerLength={(failedFuzzer || []).length}
-                showSuccess={showSuccess}
-                setShowSuccess={(v) => {
-                    setShowSuccess(v)
-                    setQuery({})
-                }}
-            />
-        </>
-    )
+        const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
+        const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
-    const secondNodeExtra = () => (
-        <>
-            <SecondNodeExtra
-                onlyOneResponse={onlyOneResponse}
-                cachedTotal={cachedTotal}
-                rsp={httpResponse}
-                valueSearch={affixSearch}
-                onSearchValueChange={(value) => {
-                    setAffixSearch(value)
-                    if (value === "" && defaultResponseSearch !== "") {
-                        setDefaultResponseSearch("")
-                    }
-                }}
-                onSearch={() => {
-                    setDefaultResponseSearch(affixSearch)
-                }}
-                successFuzzer={successFuzzer}
-                secondNodeSize={secondNodeSize}
-                query={query}
-                setQuery={(q) => setQuery({...q})}
-                sendPayloadsType='fuzzerSequence'
-                setShowExtra={setShowExtra}
-                showResponseInfoSecondEditor={showResponseInfoSecondEditor}
-                setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
-            />
-            <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
-                {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
-            </div>
-        </>
-    )
-    /**调试匹配器和提取器 */
-    const onDebug = useMemoizedFn((response: string) => {
-        setMatcherAndExtractionHttpResponse(response)
-        setVisibleDrawer(true)
-    })
-    const matcherValue: MatcherValueProps = useMemo(() => {
-        return {
+        // 匹配器和提取器相关
+        const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
+        const [type, setType] = useState<MatchingAndExtraction>("matchers")
+        const [matcherAndExtractionHttpResponse, setMatcherAndExtractionHttpResponse] = useState<string>("")
+        const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
+        const [matcherValue, setMatcherValue] = useState<MatcherValueProps>({
             filterMode: advancedConfigValue.filterMode,
             matchersList: advancedConfigValue.matchers || [],
             matchersCondition: advancedConfigValue.matchersCondition,
             hitColor: advancedConfigValue.hitColor || "red"
-        }
-    }, [advancedConfigValue])
-    const extractorValue: ExtractorValueProps = useMemo(() => {
-        return {
+        })
+        const [extractorValue, setExtractorValue] = useState<ExtractorValueProps>({
             extractorList: advancedConfigValue.extractors || []
-        }
-    }, [advancedConfigValue])
-    /**关闭匹配器或提取器 */
-    const onCloseMatcherAndExtractionDrawer = useMemoizedFn(() => {
-        setVisibleDrawer(false)
-    })
-    /**保存匹配器/提取器数据 */
-    const onSaveMatcherAndExtractionDrawer = useMemoizedFn(
-        (matcher: MatcherValueProps, extractor: ExtractorValueProps) => {
+        })
+
+        const secondNodeRef = useRef(null)
+        const secondNodeSize = useSize(secondNodeRef)
+
+        const successTableRef = useRef<any>()
+        const requestHttpRef = useRef<string>(request)
+
+        const webFuzzerNewEditorRef = useRef<any>()
+
+        const cachedTotal: number = useCreation(() => {
+            return failedCount + successCount
+        }, [failedCount, successCount])
+        const onlyOneResponse: boolean = useCreation(() => {
+            return cachedTotal === 1
+        }, [cachedTotal])
+
+        const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
+            (s) => ({
+                queryPagesDataById: s.queryPagesDataById,
+                updatePagesDataCacheById: s.updatePagesDataCacheById
+            }),
+            shallow
+        )
+        useImperativeHandle(
+            ref,
+            () => ({
+                validate: onValidateMatcherAndExtraction
+            }),
+            []
+        )
+
+        const responseViewerRef = useRef<MatcherAndExtractionRefProps>({
+            validate: () => new Promise(() => {})
+        })
+        const onValidateMatcherAndExtraction = useMemoizedFn(() => {
+            return new Promise((resolve: (val: boolean) => void, reject) => {
+                try {
+                    if (showMatcherAndExtraction && responseViewerRef.current) {
+                        responseViewerRef.current
+                            .validate()
+                            .then((data: MatcherAndExtractionValueProps) => {
+                                onSaveMatcherAndExtractionDrawer(data.matcher, data.extractor)
+                            })
+                            .finally(() => {
+                                resolve(true)
+                            })
+                    } else {
+                        resolve(true)
+                    }
+                } catch (error) {
+                    reject(false)
+                    yakitNotify("error", "匹配器和提取器验证失败:" + error)
+                }
+            })
+        })
+        useEffect(() => {
+            getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
+                .then((data) => {
+                    setShowResponseInfoSecondEditor(data === "false" ? false : true)
+                })
+                .catch(() => {
+                    setShowResponseInfoSecondEditor(true)
+                })
+        }, [])
+
+        useEffect(() => {
             if (!pageId) return
-            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
-            if (!currentItem) return
-            if (
-                currentItem.pageParamsInfo.webFuzzerPageInfo &&
-                currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue
-            ) {
-                const newCurrentItem: PageNodeItemProps = {
-                    ...currentItem,
-                    pageParamsInfo: {
-                        webFuzzerPageInfo: {
-                            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
-                            advancedConfigValue: {
-                                ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
-                                filterMode: matcher.filterMode,
-                                matchers: matcher.matchersList || [],
-                                matchersCondition: matcher.matchersCondition,
-                                hitColor: matcher.hitColor || "red",
-                                extractors: extractor.extractorList || []
+            requestHttpRef.current = request
+            setRefreshTrigger(!refreshTrigger)
+        }, [pageId, request])
+
+        useUpdateEffect(() => {
+            if (successTableRef.current) {
+                successTableRef.current.setCurrentSelectItem(undefined)
+                successTableRef.current.setFirstFull(true)
+            }
+            setIsRefresh(!isRefresh)
+            setQuery({})
+        }, [responseInfoId])
+
+        useUpdateEffect(() => {
+            setMatcherValue({
+                filterMode: advancedConfigValue.filterMode,
+                matchersList: advancedConfigValue.matchers || [],
+                matchersCondition: advancedConfigValue.matchersCondition,
+                hitColor: advancedConfigValue.hitColor || "red"
+            })
+            setExtractorValue({
+                extractorList: advancedConfigValue.extractors || []
+            })
+        }, [advancedConfigValue])
+
+        const onSetRequestHttp = useMemoizedFn((i: string) => {
+            requestHttpRef.current = i
+            onUpdatePageInfo(i, pageId || "")
+        })
+        const onUpdatePageInfo = useDebounceFn(
+            (value: string, pId: string) => {
+                if (!pId) return
+                const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pId)
+                if (!currentItem) return
+                if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
+                    if (value === currentItem.pageParamsInfo.webFuzzerPageInfo.request) return
+                    const newCurrentItem: PageNodeItemProps = {
+                        ...currentItem,
+                        pageParamsInfo: {
+                            webFuzzerPageInfo: {
+                                ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                                request: value
                             }
                         }
                     }
+                    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
                 }
-                updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+            },
+            {wait: 200, leading: true}
+        ).run
+
+        const [firstFull, setFirstFull] = useState<boolean>(false)
+        const [secondFull, setSecondFull] = useState<boolean>(false)
+        const ResizeBoxProps = useCreation(() => {
+            let p = {
+                firstRatio: "50%",
+                secondRatio: "50%"
             }
-        }
-    )
-    return (
-        <>
-            <YakitResizeBox
-                firstMinSize={380}
-                secondMinSize={480}
-                isShowDefaultLineStyle={false}
-                style={{overflow: "hidden"}}
-                lineStyle={{display: firstFull || secondFull ? "none" : ""}}
-                secondNodeStyle={{padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480}}
-                firstNodeStyle={{padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : ""}}
-                {...ResizeBoxProps}
-                firstNode={
-                    <WebFuzzerNewEditor
-                        refreshTrigger={refreshTrigger}
-                        request={requestHttpRef.current}
-                        setRequest={(i) => onSetRequestHttp(i)}
-                        isHttps={advancedConfigValue.isHttps}
-                        hotPatchCode={hotPatchCode}
-                        hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
-                        setHotPatchCode={setHotPatchCode}
-                        setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
-                        firstNodeExtra={firstNodeExtra}
+            if (secondFull) {
+                p.firstRatio = "0%"
+            }
+            if (firstFull) {
+                p.secondRatio = "0%"
+                p.firstRatio = "100%"
+            }
+            return p
+        }, [firstFull, secondFull])
+
+        const firstNodeExtra = () => (
+            <>
+                <YakitButton
+                    size='small'
+                    type='primary'
+                    onClick={() => {
+                        hotPatchTrigger()
+                    }}
+                >
+                    热加载
+                </YakitButton>
+                <div className={styles["resize-card-icon"]} onClick={() => setFirstFull(!firstFull)}>
+                    {firstFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                </div>
+            </>
+        )
+
+        const secondNodeTitle = () => (
+            <>
+                <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>
+                <SecondNodeTitle
+                    cachedTotal={cachedTotal}
+                    onlyOneResponse={onlyOneResponse}
+                    rsp={httpResponse}
+                    successFuzzerLength={(successFuzzer || []).length}
+                    failedFuzzerLength={(failedFuzzer || []).length}
+                    showSuccess={showSuccess}
+                    setShowSuccess={(v) => {
+                        setShowSuccess(v)
+                        setQuery({})
+                    }}
+                />
+            </>
+        )
+
+        const secondNodeExtra = () => (
+            <>
+                <SecondNodeExtra
+                    onlyOneResponse={onlyOneResponse}
+                    cachedTotal={cachedTotal}
+                    rsp={httpResponse}
+                    valueSearch={affixSearch}
+                    onSearchValueChange={(value) => {
+                        setAffixSearch(value)
+                        if (value === "" && defaultResponseSearch !== "") {
+                            setDefaultResponseSearch("")
+                        }
+                    }}
+                    onSearch={() => {
+                        setDefaultResponseSearch(affixSearch)
+                    }}
+                    successFuzzer={successFuzzer}
+                    secondNodeSize={secondNodeSize}
+                    query={query}
+                    setQuery={(q) => setQuery({...q})}
+                    sendPayloadsType='fuzzerSequence'
+                    setShowExtra={setShowExtra}
+                    showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                    setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+                />
+                <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
+                    {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                </div>
+            </>
+        )
+        /**调试匹配器和提取器 */
+        const onDebug = useMemoizedFn((response: string) => {
+            setMatcherAndExtractionHttpResponse(response)
+            setVisibleDrawer(true)
+        })
+        /**关闭匹配器或提取器 */
+        const onCloseMatcherAndExtractionDrawer = useMemoizedFn(() => {
+            setVisibleDrawer(false)
+        })
+        /**保存匹配器/提取器数据 */
+        const onSaveMatcherAndExtractionDrawer = useMemoizedFn(
+            (matcher: MatcherValueProps, extractor: ExtractorValueProps) => {
+                if (!pageId) return
+                const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
+                if (!currentItem) return
+                if (
+                    currentItem.pageParamsInfo.webFuzzerPageInfo &&
+                    currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue
+                ) {
+                    const newCurrentItem: PageNodeItemProps = {
+                        ...currentItem,
+                        pageParamsInfo: {
+                            webFuzzerPageInfo: {
+                                ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                                advancedConfigValue: {
+                                    ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
+                                    filterMode: matcher.filterMode,
+                                    matchers: matcher.matchersList || [],
+                                    matchersCondition: matcher.matchersCondition,
+                                    hitColor: matcher.hitColor || "red",
+                                    extractors: extractor.extractorList || []
+                                }
+                            }
+                        }
+                    }
+                    updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+                    setMatcherValue({
+                        filterMode: matcher.filterMode,
+                        matchersList: matcher.matchersList || [],
+                        matchersCondition: matcher.matchersCondition,
+                        hitColor: matcher.hitColor || "red"
+                    })
+                    setExtractorValue({
+                        extractorList: extractor.extractorList || []
+                    })
+                }
+            }
+        )
+        const hotPatchTrigger = useMemoizedFn(() => {
+            let m = showYakitModal({
+                title: "调试 / 插入热加载代码",
+                width: "80%",
+                footer: null,
+                content: (
+                    <HTTPFuzzerHotPatch
+                        initialHotPatchCode={hotPatchCode}
+                        initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                        onInsert={(tag) => {
+                            if (webFuzzerNewEditorRef.current.reqEditor)
+                                monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
+                            m.destroy()
+                        }}
+                        onSaveCode={(code) => {
+                            setHotPatchCode(code)
+                            setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
+                        }}
+                        onSaveHotPatchCodeWithParamGetterCode={(code) => {
+                            setHotPatchCodeWithParamGetter(code)
+                            setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+                        }}
                     />
-                }
-                secondNode={
-                    <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
-                        {onlyOneResponse ? (
-                            <ResponseViewer
-                                fuzzerResponse={httpResponse}
-                                defaultResponseSearch={defaultResponseSearch}
-                                webFuzzerValue={httpResponse.ResponseRaw}
-                                showMatcherAndExtraction={showMatcherAndExtraction}
-                                setShowMatcherAndExtraction={setShowMatcherAndExtraction}
-                                matcherValue={matcherValue}
-                                extractorValue={extractorValue}
-                                defActiveKey={""}
-                                defActiveType={type}
-                                onSaveMatcherAndExtraction={onSaveMatcherAndExtractionDrawer}
-                                showExtra={showExtra}
-                                setShowExtra={setShowExtra}
-                                showResponseInfoSecondEditor={showResponseInfoSecondEditor}
-                                setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
-                                secondNodeTitle={secondNodeTitle}
-                                secondNodeExtra={secondNodeExtra}
-                            />
-                        ) : (
-                            <>
-                                <div
-                                    className={classNames(styles["resize-card"], styles["resize-card-second"])}
-                                    style={{display: firstFull ? "none" : ""}}
-                                >
-                                    <div className={classNames(styles["resize-card-heard"])}>
-                                        <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
-                                        <div className={styles["resize-card-heard-extra"]}></div>
-                                        {secondNodeExtra()}
+                )
+            })
+        })
+        return (
+            <>
+                <YakitResizeBox
+                    firstMinSize={380}
+                    secondMinSize={480}
+                    isShowDefaultLineStyle={false}
+                    style={{overflow: "hidden"}}
+                    lineStyle={{display: firstFull || secondFull ? "none" : ""}}
+                    secondNodeStyle={{padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480}}
+                    firstNodeStyle={{padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : ""}}
+                    {...ResizeBoxProps}
+                    firstNode={
+                        <WebFuzzerNewEditor
+                            ref={webFuzzerNewEditorRef}
+                            refreshTrigger={refreshTrigger}
+                            request={requestHttpRef.current}
+                            setRequest={(i) => onSetRequestHttp(i)}
+                            isHttps={advancedConfigValue.isHttps}
+                            hotPatchCode={hotPatchCode}
+                            hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                            setHotPatchCode={setHotPatchCode}
+                            setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
+                            firstNodeExtra={firstNodeExtra}
+                        />
+                    }
+                    secondNode={
+                        <div ref={secondNodeRef} style={{height: "100%", overflow: "hidden"}}>
+                            {onlyOneResponse ? (
+                                <ResponseViewer
+                                    ref={responseViewerRef}
+                                    fuzzerResponse={httpResponse}
+                                    defaultResponseSearch={defaultResponseSearch}
+                                    webFuzzerValue={httpResponse.ResponseRaw}
+                                    showMatcherAndExtraction={showMatcherAndExtraction}
+                                    setShowMatcherAndExtraction={setShowMatcherAndExtraction}
+                                    matcherValue={matcherValue}
+                                    extractorValue={extractorValue}
+                                    defActiveKey={""}
+                                    defActiveType={type}
+                                    onSaveMatcherAndExtraction={onSaveMatcherAndExtractionDrawer}
+                                    showExtra={showExtra}
+                                    setShowExtra={setShowExtra}
+                                    showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                                    setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+                                    secondNodeTitle={secondNodeTitle}
+                                    secondNodeExtra={secondNodeExtra}
+                                />
+                            ) : (
+                                <>
+                                    <div
+                                        className={classNames(styles["resize-card"], styles["resize-card-second"])}
+                                        style={{display: firstFull ? "none" : ""}}
+                                    >
+                                        <div className={classNames(styles["resize-card-heard"])}>
+                                            <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
+                                            <div className={styles["resize-card-heard-extra"]}></div>
+                                            {secondNodeExtra()}
+                                        </div>
+                                        {cachedTotal > 1 ? (
+                                            <>
+                                                {showSuccess && (
+                                                    <HTTPFuzzerPageTable
+                                                        ref={successTableRef}
+                                                        isRefresh={isRefresh}
+                                                        success={showSuccess}
+                                                        data={successFuzzer}
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        extractedMap={extractedMap}
+                                                        isEnd={loading}
+                                                        onDebug={onDebug}
+                                                    />
+                                                )}
+                                                {!showSuccess && (
+                                                    <HTTPFuzzerPageTable
+                                                        isRefresh={isRefresh}
+                                                        success={showSuccess}
+                                                        data={failedFuzzer}
+                                                        query={query}
+                                                        setQuery={setQuery}
+                                                        isEnd={loading}
+                                                        extractedMap={extractedMap}
+                                                    />
+                                                )}
+                                            </>
+                                        ) : (
+                                            <Result status={"warning"} title={"请执行序列后进行查看"} />
+                                        )}
                                     </div>
-                                    {cachedTotal > 1 ? (
-                                        <>
-                                            {showSuccess && (
-                                                <HTTPFuzzerPageTable
-                                                    ref={successTableRef}
-                                                    isRefresh={isRefresh}
-                                                    success={showSuccess}
-                                                    data={successFuzzer}
-                                                    query={query}
-                                                    setQuery={setQuery}
-                                                    extractedMap={extractedMap}
-                                                    isEnd={loading}
-                                                    onDebug={onDebug}
-                                                />
-                                            )}
-                                            {!showSuccess && (
-                                                <HTTPFuzzerPageTable
-                                                    isRefresh={isRefresh}
-                                                    success={showSuccess}
-                                                    data={failedFuzzer}
-                                                    query={query}
-                                                    setQuery={setQuery}
-                                                    isEnd={loading}
-                                                    extractedMap={extractedMap}
-                                                />
-                                            )}
-                                        </>
-                                    ) : (
-                                        <Result status={"warning"} title={"请执行序列后进行查看"} />
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                }
-            />
-            <MatcherAndExtractionDrawer
-                visibleDrawer={visibleDrawer}
-                defActiveType={type}
-                httpResponse={matcherAndExtractionHttpResponse}
-                // defActiveKey={defActiveKey}
-                defActiveKey=''
-                matcherValue={matcherValue}
-                extractorValue={extractorValue}
-                onClose={onCloseMatcherAndExtractionDrawer}
-                onSave={onSaveMatcherAndExtractionDrawer}
-            />
-        </>
-    )
-})
+                                </>
+                            )}
+                        </div>
+                    }
+                />
+                <MatcherAndExtractionDrawer
+                    visibleDrawer={visibleDrawer}
+                    defActiveType={type}
+                    httpResponse={matcherAndExtractionHttpResponse}
+                    defActiveKey=''
+                    matcherValue={matcherValue}
+                    extractorValue={extractorValue}
+                    onClose={onCloseMatcherAndExtractionDrawer}
+                    onSave={onSaveMatcherAndExtractionDrawer}
+                />
+            </>
+        )
+    })
+)

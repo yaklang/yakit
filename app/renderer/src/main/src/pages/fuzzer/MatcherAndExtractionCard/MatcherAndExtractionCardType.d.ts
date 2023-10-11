@@ -1,14 +1,12 @@
-import { ReactNode } from "react"
-import { FilterMode } from '../HTTPFuzzerPage'
+import {ReactNode} from "react"
+import {FilterMode} from "../HTTPFuzzerPage"
 
 export type MatchingAndExtraction = "matchers" | "extractors"
 
-export interface MatcherAndExtractionCardProps extends MatcherAndExtractionProps {
-
-}
+export interface MatcherAndExtractionCardProps extends MatcherAndExtractionProps {}
 
 export interface MatcherAndExtractionProps {
-    ref?:any
+    ref?: React.ForwardedRef<MatcherAndExtractionRefProps>
     httpResponse: string
     onClose: () => void
     onSave: (m: MatcherValueProps, e: ExtractorValueProps) => void
@@ -18,11 +16,19 @@ export interface MatcherAndExtractionProps {
     defActiveType: MatchingAndExtraction
 }
 
+export interface MatcherAndExtractionRefProps {
+    validate: () => Promise<MatcherAndExtractionValueProps>
+}
+export interface MatcherAndExtractionValueProps {
+    matcher: MatcherValueProps
+    extractor: ExtractorValueProps
+}
+
 export interface MatcherValueProps {
     filterMode: FilterMode
     /**@name filterMode为onlyMatch,才会设置该值*/
     hitColor: string
-    matchersCondition: 'and' | 'or'
+    matchersCondition: "and" | "or"
     matchersList: HTTPResponseMatcher[]
 }
 
@@ -43,7 +49,7 @@ export interface ExtractorCollapseProps extends MatcherAndExtractorProps {
 }
 
 interface MatcherAndExtractorProps {
-    isSmallMode:boolean
+    isSmallMode: boolean
     type: MatchingAndExtraction
     /**@name 不可编辑状态，不展示删除等相关操作按钮;且默认打开所有的Panel,不可点击关闭/打开等操作 */
     notEditable?: boolean
@@ -74,40 +80,40 @@ export interface HTTPResponseExtractor {
 export interface labelNodeItemProps {
     label: string
     children: ReactNode
-    column?:boolean
-    className?:string
-    labelClassName?:string
+    column?: boolean
+    className?: string
+    labelClassName?: string
 }
 
 export interface MatcherItemProps extends MatcherItemAndExtractorItemProps {
     matcherItem: HTTPResponseMatcher
-    httpResponse: string;
+    httpResponse: string
 }
 
 export interface ExtractorItemProps extends MatcherItemAndExtractorItemProps {
     extractorItem: HTTPResponseExtractor
-    httpResponse: string;
+    httpResponse: string
 }
 
 interface MatcherItemAndExtractorItemProps {
-    isSmallMode?:boolean
+    isSmallMode?: boolean
     /**@name 不可编辑状态，不展示删除等相关操作按钮;且默认打开所有的Panel,不可点击关闭/打开等操作 */
     notEditable?: boolean
     onEdit: (f: string, v: any) => void
 }
 
 export interface MatchHTTPResponseParams {
-    Matchers: HTTPResponseMatcher[];
-    MatcherCondition: string;
-    IsHTTPS?: boolean;
-    HTTPResponse: string;
-    HTTPRequest?: string;
+    Matchers: HTTPResponseMatcher[]
+    MatcherCondition: string
+    IsHTTPS?: boolean
+    HTTPResponse: string
+    HTTPRequest?: string
 }
 
 export interface ColorSelectProps {
     size?: "small" | "large" | "max"
     value?: string
-    onChange?: (value: string) => void;
+    onChange?: (value: string) => void
 }
 
 export interface MatcherAndExtractionValueListProps {
@@ -117,20 +123,20 @@ export interface MatcherAndExtractionValueListProps {
     notEditable?: boolean
     onEditGroup: (group: string[]) => void
     onAddGroup: () => void
-    httpResponse: string;
+    httpResponse: string
 }
 
-export interface ExtractionResultsContentProps{
-    list:{Key: string; Value: string}[]
+export interface ExtractionResultsContentProps {
+    list: {Key: string; Value: string}[]
 }
 
-export interface MatcherAndExtractionDrawerProps{
-    visibleDrawer:boolean
-    defActiveType:MatchingAndExtraction
+export interface MatcherAndExtractionDrawerProps {
+    visibleDrawer: boolean
+    defActiveType: MatchingAndExtraction
     httpResponse: string
     defActiveKey: string
     matcherValue: MatcherValueProps
     extractorValue: ExtractorValueProps
-    onClose:()=>void
+    onClose: () => void
     onSave: (m: MatcherValueProps, e: ExtractorValueProps) => void
 }

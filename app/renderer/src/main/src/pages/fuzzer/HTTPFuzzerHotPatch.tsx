@@ -16,6 +16,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import styles from "./HTTPFuzzerHotPatch.module.scss"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {yakitNotify} from "@/utils/notification"
 
 export interface HTTPFuzzerHotPatchProp {
     onInsert?: (s: string) => any
@@ -98,175 +99,186 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     }, [])
 
     return (
-        <Form
-            onSubmitCapture={(e) => {
-                e.preventDefault()
+        <div className={styles["http-fuzzer-hotPatch"]}>
+            <Form
+                onSubmitCapture={(e) => {
+                    e.preventDefault()
 
-                if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
-                if (props.onSaveHotPatchCodeWithParamGetterCode)
-                    props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
+                    if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
+                    if (props.onSaveHotPatchCodeWithParamGetterCode)
+                        props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
 
-                setLoading(true)
-                ipcRenderer
-                    .invoke("StringFuzzer", {...params})
-                    .then((response: {Results: Uint8Array[]}) => {
-                        const data: string[] = (response.Results || []).map((buf) => new Buffer(buf).toString("utf8"))
-                        showYakitDrawer({
-                            title: "HotPatch Tag Result",
-                            width: "45%",
-                            content: (
-                                <AutoCard
-                                    size={"small"}
-                                    bordered={false}
-                                    title={<span style={{color: "var(--yakit-header-color)"}}>结果展示</span>}
-                                    extra={
-                                        <Space>
-                                            <YakitButton
-                                                type='text'
-                                                onClick={() => {
-                                                    callCopyToClipboard(data.join("\n"))
+                    setLoading(true)
+                    ipcRenderer
+                        .invoke("StringFuzzer", {...params})
+                        .then((response: {Results: Uint8Array[]}) => {
+                            const data: string[] = (response.Results || []).map((buf) =>
+                                new Buffer(buf).toString("utf8")
+                            )
+                            showYakitDrawer({
+                                title: "HotPatch Tag Result",
+                                width: "45%",
+                                content: (
+                                    <AutoCard
+                                        size={"small"}
+                                        bordered={false}
+                                        title={<span style={{color: "var(--yakit-header-color)"}}>结果展示</span>}
+                                        extra={
+                                            <Space>
+                                                <YakitButton
+                                                    type='text'
+                                                    onClick={() => {
+                                                        callCopyToClipboard(data.join("\n"))
+                                                    }}
+                                                >
+                                                    复制 Fuzz 结果
+                                                </YakitButton>
+                                                <YakitButton
+                                                    type='text'
+                                                    onClick={() => {
+                                                        callCopyToClipboard(params.Template)
+                                                    }}
+                                                >
+                                                    {" "}
+                                                    复制 Fuzz 标签
+                                                </YakitButton>
+                                            </Space>
+                                        }
+                                    >
+                                        <YakEditor value={data.join("\r\n")} readOnly={true} />
+                                    </AutoCard>
+                                )
+                            })
+                        })
+                        .finally(() => setTimeout(() => setLoading(false), 300))
+                }}
+                layout={"vertical"}
+                // labelCol={{span: 5}} wrapperCol={{span: 14}}
+            >
+                <Form.Item
+                    label={
+                        <Space>
+                            模版内容
+                            <YakitButton
+                                type='text'
+                                onClick={() => {
+                                    callCopyToClipboard(params.Template)
+                                }}
+                            >
+                                点击复制
+                            </YakitButton>
+                            {props.onInsert && (
+                                <YakitButton
+                                    type={"primary"}
+                                    onClick={() => {
+                                        if (props.onInsert) props.onInsert(params.Template)
+                                        if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
+                                    }}
+                                >
+                                    插入编辑器位置
+                                </YakitButton>
+                            )}
+                            {/*<Tooltip title={<>{`支持：{{params(...)}} 标签`}</>}>*/}
+                            {/*    <YakitCheckbox*/}
+                            {/*        checked={dynamicParam}*/}
+                            {/*        onChange={(e) => {*/}
+                            {/*            setDynamicParam(e.target.checked)*/}
+                            {/*        }}*/}
+                            {/*    >*/}
+                            {/*        预加载参数展开*/}
+                            {/*    </YakitCheckbox>*/}
+                            {/*</Tooltip>*/}
+                        </Space>
+                    }
+                >
+                    <div style={{height: 60}}>
+                        <YakEditor
+                            type={"http"}
+                            value={params.Template}
+                            setValue={(Template) => setParams({...getParams(), Template})}
+                        />
+                    </div>
+                </Form.Item>
+                <Form.Item
+                    label={
+                        <Space style={{lineHeight: "16px"}}>
+                            热加载代码
+                            {props.onSaveCode && (
+                                <YakitButton
+                                    type={"primary"}
+                                    onClick={() => {
+                                        try {
+                                            if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
+                                            setTimeout(() => {
+                                                yakitNotify("success", "保存成功")
+                                            }, 100)
+                                        } catch (error) {
+                                            yakitNotify("error", "保存失败:" + error)
+                                        }
+                                    }}
+                                >
+                                    保存
+                                </YakitButton>
+                            )}
+                            <div>
+                                <YakitPopconfirm
+                                    title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
+                                    onConfirm={() => {
+                                        if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
+
+                                        setParams({...params, HotPatchCode: HotPatchDefaultContent})
+                                    }}
+                                >
+                                    <YakitButton icon={<RefreshIcon />} type='text' />
+                                </YakitPopconfirm>
+                                <YakitPopover
+                                    title={"扩大编辑器"}
+                                    content={
+                                        <>
+                                            <YakitRadioButtons
+                                                value={hotPatchEditorHeight}
+                                                onChange={(e) => {
+                                                    setHotPatchEditorHeight(e.target.value)
                                                 }}
-                                            >
-                                                复制 Fuzz 结果
-                                            </YakitButton>
-                                            <YakitButton
-                                                type='text'
-                                                onClick={() => {
-                                                    callCopyToClipboard(params.Template)
-                                                }}
-                                            >
-                                                {" "}
-                                                复制 Fuzz 标签
-                                            </YakitButton>
-                                        </Space>
+                                                buttonStyle='solid'
+                                                options={[
+                                                    {
+                                                        value: 250,
+                                                        label: "小"
+                                                    },
+                                                    {
+                                                        value: 400,
+                                                        label: "中"
+                                                    },
+                                                    {
+                                                        value: 600,
+                                                        label: "大"
+                                                    }
+                                                ]}
+                                            />
+                                        </>
                                     }
                                 >
-                                    <YakEditor value={data.join("\r\n")} readOnly={true} />
-                                </AutoCard>
-                            )
-                        })
-                    })
-                    .finally(() => setTimeout(() => setLoading(false), 300))
-            }}
-            layout={"vertical"}
-            // labelCol={{span: 5}} wrapperCol={{span: 14}}
-        >
-            <Form.Item
-                label={
-                    <Space>
-                        模版内容
-                        <YakitButton
-                            type='text'
-                            onClick={() => {
-                                callCopyToClipboard(params.Template)
-                            }}
-                        >
-                            点击复制
-                        </YakitButton>
-                        {props.onInsert && (
-                            <YakitButton
-                                type={"primary"}
-                                onClick={() => {
-                                    if (props.onInsert) props.onInsert(params.Template)
-                                    if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
-                                }}
-                            >
-                                插入编辑器位置
-                            </YakitButton>
-                        )}
-                        {/*<Tooltip title={<>{`支持：{{params(...)}} 标签`}</>}>*/}
-                        {/*    <YakitCheckbox*/}
-                        {/*        checked={dynamicParam}*/}
-                        {/*        onChange={(e) => {*/}
-                        {/*            setDynamicParam(e.target.checked)*/}
-                        {/*        }}*/}
-                        {/*    >*/}
-                        {/*        预加载参数展开*/}
-                        {/*    </YakitCheckbox>*/}
-                        {/*</Tooltip>*/}
-                    </Space>
-                }
-            >
-                <div style={{height: 60}}>
-                    <YakEditor
-                        type={"http"}
-                        value={params.Template}
-                        setValue={(Template) => setParams({ ...getParams(), Template })}
-                    />
-                </div>
-            </Form.Item>
-            <Form.Item
-                label={
-                    <Space style={{lineHeight: "16px"}}>
-                        热加载代码
-                        {props.onSaveCode && (
-                            <YakitButton
-                                type={"primary"}
-                                onClick={() => {
-                                    if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
-                                }}
-                            >
-                                保存
-                            </YakitButton>
-                        )}
-                        <div>
-                            <YakitPopconfirm
-                                title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
-                                onConfirm={() => {
-                                    if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
-
-                                    setParams({...params, HotPatchCode: HotPatchDefaultContent})
-                                }}
-                            >
-                                <YakitButton icon={<RefreshIcon />} type='text' />
-                            </YakitPopconfirm>
-                            <YakitPopover
-                                title={"扩大编辑器"}
-                                content={
-                                    <>
-                                        <YakitRadioButtons
-                                            value={hotPatchEditorHeight}
-                                            onChange={(e) => {
-                                                setHotPatchEditorHeight(e.target.value)
-                                            }}
-                                            buttonStyle='solid'
-                                            options={[
-                                                {
-                                                    value: 250,
-                                                    label: "小"
-                                                },
-                                                {
-                                                    value: 400,
-                                                    label: "中"
-                                                },
-                                                {
-                                                    value: 600,
-                                                    label: "大"
-                                                }
-                                            ]}
-                                        />
-                                    </>
-                                }
-                            >
-                                <YakitButton icon={<FullscreenOutlined />} type='text' />
-                            </YakitPopover>
-                        </div>
-                    </Space>
-                }
-            >
-                <div style={{height: hotPatchEditorHeight}}>
-                    <YakEditor
-                        type={"yak"}
-                        value={params.HotPatchCode}
-                        setValue={(HotPatchCode) => setParams({ ...getParams(), HotPatchCode })}
-                    />
-                </div>
-            </Form.Item>
-            <Form.Item help={"调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 300 条"}>
-                <YakitButton loading={loading} type='primary' htmlType='submit'>
-                    调试执行
-                </YakitButton>
-            </Form.Item>
-        </Form>
+                                    <YakitButton icon={<FullscreenOutlined />} type='text' />
+                                </YakitPopover>
+                            </div>
+                        </Space>
+                    }
+                >
+                    <div style={{height: hotPatchEditorHeight}}>
+                        <YakEditor
+                            type={"yak"}
+                            value={params.HotPatchCode}
+                            setValue={(HotPatchCode) => setParams({...getParams(), HotPatchCode})}
+                        />
+                    </div>
+                </Form.Item>
+                <Form.Item help={"调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 300 条"}>
+                    <YakitButton loading={loading} type='primary' htmlType='submit'>
+                        调试执行
+                    </YakitButton>
+                </Form.Item>
+            </Form>
+        </div>
     )
 }

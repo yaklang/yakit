@@ -1,6 +1,7 @@
 import {WebFuzzerPageInfoProps} from "../../../store/pageInfo"
 import {FuzzerResponse, FuzzerRequestProps} from "../HTTPFuzzerPage"
 import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {MatcherAndExtractionRefProps} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
 /**
  * @description 序列props
@@ -98,17 +99,41 @@ export interface FuzzerSequenceResponse {
 }
 /**
  * @description 请求和响应
+ * @property {React.ForwardedRef<SequenceResponseRefProps>} responseViewerRef 返回包调试匹配器和提取器时,验证是否保存
  * @property {boolean} loading 是否还在请求中
  * @property {FuzzerRequestProps} requestInfo
  * @property {ResponseProps} responseInfo
+ * @property {Map<string, string>} extractedMap 返回包提取的响应数据
+ * @property {string} hotPatchCode 热加载代码
+ * @property {string} hotPatchCodeWithParamGetter 热加载相关,具体不清楚,现在好像暂时没有用这个
+ * @function setHotPatchCode
+ * @function setHotPatchCodeWithParamGetter
  */
 export interface SequenceResponseProps {
+    ref?: React.ForwardedRef<SequenceResponseRefProps>
     loading: boolean
     requestInfo?: WebFuzzerPageInfoProps
     responseInfo?: ResponseProps
     extractedMap: Map<string, string>
+    hotPatchCode: string
+    hotPatchCodeWithParamGetter: string
+    setHotPatchCode: (s: string) => void
+    setHotPatchCodeWithParamGetter: (s: string) => void
 }
 
+export interface SequenceResponseRefProps{
+    validate:() => Promise<boolean>
+}
+/**
+ * @description 返回响应头部
+ * @property {boolean} disabled 展示全部按钮禁用状态
+ * @property {number} droppedCount 丢弃响应数
+ * @property {string} currentSequenceItemName 当前选中序列名称
+ * @property {string} currentSequenceItemPageName 当前选中页面名称
+ * @property {AdvancedConfigValueProps} advancedConfigValue 当前选中序列对应的页面高级配置数据
+ * @property {ResponseProps} responseInfo 当前选中序列响应包数据详情
+ * @function onShowAll 展示全部
+ */
 export interface SequenceResponseHeardProps {
     disabled: boolean
     droppedCount: number
@@ -117,9 +142,14 @@ export interface SequenceResponseHeardProps {
     advancedConfigValue?: AdvancedConfigValueProps
     responseInfo?: ResponseProps
     onShowAll: () => void
-    getHttpParams: () => FuzzerRequestProps[]
 }
 
+/**
+ * @description 展示全部的card
+ * @property {boolean} showAllResponse 展示全部
+ * @property {Map<string, ResponseProps>} responseMap 所有响应数据
+ * @function setShowAllResponse
+ */
 export interface ResponseCardProps {
     showAllResponse: boolean
     responseMap: Map<string, ResponseProps>

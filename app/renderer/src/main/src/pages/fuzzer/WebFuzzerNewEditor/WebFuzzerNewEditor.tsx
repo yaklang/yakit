@@ -68,24 +68,22 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 width: "80%",
                 footer: null,
                 content: (
-                    <div className={styles["http-fuzzer-hotPatch"]}>
-                        <HTTPFuzzerHotPatch
-                            initialHotPatchCode={hotPatchCode}
-                            initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
-                            onInsert={(tag) => {
-                                if (reqEditor) monacoEditorWrite(reqEditor, tag)
-                                m.destroy()
-                            }}
-                            onSaveCode={(code) => {
-                                setHotPatchCode(code)
-                                setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
-                            }}
-                            onSaveHotPatchCodeWithParamGetterCode={(code) => {
-                                setHotPatchCodeWithParamGetter(code)
-                                setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
-                            }}
-                        />
-                    </div>
+                    <HTTPFuzzerHotPatch
+                        initialHotPatchCode={hotPatchCode}
+                        initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+                        onInsert={(tag) => {
+                            if (reqEditor) monacoEditorWrite(reqEditor, tag)
+                            m.destroy()
+                        }}
+                        onSaveCode={(code) => {
+                            setHotPatchCode(code)
+                            setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
+                        }}
+                        onSaveHotPatchCodeWithParamGetterCode={(code) => {
+                            setHotPatchCodeWithParamGetter(code)
+                            setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+                        }}
+                    />
                 )
             })
         })

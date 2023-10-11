@@ -16,7 +16,8 @@ import {
     ExtractorItemProps,
     MatcherAndExtractionValueListProps,
     ExtractionResultsContentProps,
-    MatcherAndExtractionDrawerProps
+    MatcherAndExtractionDrawerProps,
+    MatcherAndExtractionValueProps
 } from "./MatcherAndExtractionCardType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {NewHTTPPacketEditor} from "@/utils/editors"
@@ -226,9 +227,9 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             )
         }, [extractor.extractorList])
         const onValidate = useMemoizedFn(() => {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve: (val: MatcherAndExtractionValueProps) => void, reject) => {
                 const matcherAndExtractor = onClearEmptyGroups()
-                const data = {
+                const data: MatcherAndExtractionValueProps = {
                     matcher: {
                         ...matcher,
                         matchersList: matcherAndExtractor.newMatchersList
