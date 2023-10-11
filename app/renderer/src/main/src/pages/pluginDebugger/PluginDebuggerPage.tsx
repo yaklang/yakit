@@ -3,14 +3,7 @@ import {Divider, Empty, Space, Tag} from "antd"
 import {useMemoizedFn, useUpdateEffect, usePrevious} from "ahooks"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {AutoCard} from "@/components/AutoCard"
-import {
-    OutlineCogIcon,
-    OutlineEyeIcon,
-    OutlinePlayIcon,
-    OutlinePuzzleIcon,
-    OutlineSparklesIcon,
-    OutlineStopIcon
-} from "@/assets/icon/outline"
+import {OutlineEyeIcon, OutlinePuzzleIcon, OutlineSparklesIcon} from "@/assets/icon/outline"
 import {SelectOne} from "@/utils/inputUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {debugYakitModal, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -32,10 +25,10 @@ import {YakScript} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {SmokingEvaluateResponse} from "@/pages/pluginDebugger/SmokingEvaluate"
 import {DataCompareModal} from "../compare/DataCompare"
-import styles from "./PluginDebuggerPage.module.scss"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import { SolidCogIcon, SolidPlayIcon, SolidStopIcon } from "@/assets/icon/solid"
+import {SolidCogIcon, SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
+import styles from "./PluginDebuggerPage.module.scss"
 const {YakitTabPane} = YakitTabs
 
 export interface PluginDebuggerPageProp {
