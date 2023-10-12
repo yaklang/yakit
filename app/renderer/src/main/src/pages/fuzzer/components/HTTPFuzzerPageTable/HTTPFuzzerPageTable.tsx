@@ -689,7 +689,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 isShowSelectRangeMenu: true
                             }}
                             extra={
-                                <YakitButton size='small' type='secondary2' onClick={onExecResults}>
+                                <YakitButton size='small' onClick={onExecResults}>
                                     提取数据
                                 </YakitButton>
                             }
