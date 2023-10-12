@@ -94,6 +94,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 import {CopyableField} from "@/utils/inputUtil"
+import { YakitCopyText } from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -2466,26 +2467,14 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
             >
                 <Descriptions bordered size='small' column={2}>
                     {fuzzerResponse.ExtractedResults.map((item, index) => (
-                        <Descriptions.Item label={<CopyText copyText={item.Key} />} span={2}>
-                            {item.Value ? <CopyText copyText={item.Value} /> : ""}
+                        <Descriptions.Item label={<YakitCopyText showText={item.Key} />} span={2}>
+                            {item.Value ? <YakitCopyText showText={item.Value} /> : ""}
                         </Descriptions.Item>
                     ))}
                 </Descriptions>
 
                 {fuzzerResponse.ExtractedResults?.length === 0 && "暂无"}
             </div>
-        </div>
-    )
-})
-interface CopyTextProps {
-    copyText: string
-}
-export const CopyText: React.FC<CopyTextProps> = React.memo((props) => {
-    const {copyText} = props
-    return (
-        <div className={styles["payload-extract-content-body-item-label"]}>
-            <span>{copyText}</span>
-            <CopyComponents copyText={copyText} />
         </div>
     )
 })

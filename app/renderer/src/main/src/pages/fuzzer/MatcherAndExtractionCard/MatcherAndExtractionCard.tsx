@@ -53,7 +53,7 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {menuBodyHeight} from "@/pages/globalVariable"
-import {CopyText} from "../HTTPFuzzerPage"
+import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1171,8 +1171,8 @@ export const ExtractionResultsContent: React.FC<ExtractionResultsContentProps> =
             </Descriptions> */}
             <Descriptions bordered size='small' column={2}>
                 {list.map((item, index) => (
-                    <Descriptions.Item label={<CopyText copyText={item.Key} />} span={2}>
-                        {item.Value ? <CopyText copyText={item.Value} /> : ""}
+                    <Descriptions.Item label={<YakitCopyText showText={item.Key} />} span={2}>
+                        {item.Value ? <YakitCopyText showText={item.Value} /> : ""}
                     </Descriptions.Item>
                 ))}
             </Descriptions>
