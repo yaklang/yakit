@@ -116,7 +116,7 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref}>
+        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="vertical-bar">
             <div className={classNames(styles["echart-item"], styles["echart-item-vertical-bar"])} ref={chartRef}></div>
         </div>
     )
@@ -267,7 +267,7 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref}>
+        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="stacked-vertical-bar">
             <div
                 className={classNames(styles["echart-item"], styles["echart-item-stacked-vertical-bar"])}
                 ref={chartRef}
@@ -420,7 +420,8 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={classNames(styles["echarts-box"],styles["echarts-box-hollow-pie"])} ref={ref}>
+        <div className={classNames(styles["echarts-box"],styles["echarts-box-hollow-pie"])} ref={ref} 
+        data-type="echarts-box" echart-type="hollow-pie">
             <div className={classNames(styles["echart-item"], styles["echart-item-hollow-pie"])} ref={chartRef}></div>
         </div>
     )
@@ -595,7 +596,7 @@ export const MultiPie: React.FC<MultiPieProps> = (props) => {
         }
     }, [size?.width])
     return (
-        <div className={styles["echarts-box"]} ref={ref}>
+        <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="multi-pie">
             <div className={classNames(styles["echart-item"], styles["echart-item-multi-pie"])} ref={chartRef}></div>
         </div>
     )
@@ -761,7 +762,7 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
     return (
         <>
             {Array.isArray(data) && (
-                <div className={styles["echarts-box"]} ref={ref}>
+                <div className={styles["echarts-box"]} ref={ref} data-type="echarts-box" echart-type="nightingle-rose">
                     <div
                         className={classNames(styles["echart-item"], styles["echart-item-nightingle-rose"])}
                         ref={chartRef}
@@ -769,8 +770,8 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
                     {details && (
                         <div className={styles["echart-detail"]}>
                             <div className={styles["echart-detail-item"]}>
-                                <div className={styles["echart-detail-item-title"]}>{details.name}</div>
-                                <div className={styles["echart-detail-item-content"]}>{details.content}</div>
+                                <div className={styles["echart-detail-item-title"]} id="nightingle-rose-title">{details.name}</div>
+                                <div className={styles["echart-detail-item-content"]} id="nightingle-rose-content">{details.content}</div>
                             </div>
                         </div>
                     )}
@@ -785,18 +786,18 @@ interface EchartsCardProps {
     dataSource: any[]
 }
 
-// 卡片
+// 卡片 (为了生成word样式-改成标签内样式)
 export const EchartsCard: React.FC<EchartsCardProps> = (props) => {
     const {dataTitle, dataSource} = props
     return (
         <>
-            <div className={styles["echarts-card-head"]}>{dataTitle}</div>
-            <div className={styles["echarts-card"]}>
+            <div style={{fontSize:18,padding:"10px 0",fontWeight:"bold",color:"rgb(70, 70, 70)"}}>{dataTitle}</div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
                 {dataSource.map((item: any) => {
                     return (
-                        <div className={styles["echarts-card-item"]}>
-                            <div className={styles["echarts-card-title"]}>{item.key_verbose || item.key}</div>
-                            <div className={styles["echarts-card-content"]}>{item.value}</div>
+                        <div style={{height:66,width:"46%",padding:10,border:"1px solid #cbcbcb",boxSizing:"content-box"}}>
+                            <div style={{color:"#666"}}>{item.key_verbose || item.key}</div>
+                            <div style={{marginTop:10,fontSize:24}}>{item.value}</div>
                         </div>
                     )
                 })}

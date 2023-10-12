@@ -11,7 +11,13 @@ import html2pdf from "html2pdf.js"
 import styles from "./ReportViewer.module.scss"
 import {isEnterpriseEdition} from "@/utils/envfile"
 import {openABSFileLocated} from "../../utils/openWebsite"
-import {useThrottleFn, useGetState} from "ahooks"
+import classNames from "classnames"
+import htmlDocx from "html-docx-js/dist/html-docx"
+import {saveAs} from "file-saver"
+import html2canvas from "html2canvas"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 export interface ReportViewerProp {
     id?: number
 }
@@ -20,7 +26,8 @@ const {ipcRenderer} = window.require("electron")
 
 export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     const [loading, setLoading] = useState(false)
-    const [SpinLoading, setSpinLoading] = useState(false)
+    const [SpinLoading, setSpinLoading] = useState<boolean>(false)
+    const [wordSpinLoading, setWordSpinLoading] = useState<boolean>(false)
     const [report, setReport] = useState<Report>({
         From: "",
         Hash: "",
@@ -30,9 +37,10 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         PublishedAt: 0,
         Title: "-"
     })
-    const [reportItems, setReportItems, getReportItems] = useGetState<ReportItem[]>([])
-    const [renderReportItems, setRenderReportItems, getRenderReportItems] = useGetState<ReportItem[]>([])
+    const [show, setShow] = useState<boolean>(false)
+    const [reportItems, setReportItems] = useState<ReportItem[]>([])
     const divRef = useRef<any>(null)
+    const isEchartsToImg = useRef<boolean>(true)
 
     useEffect(() => {
         if ((props?.id || 0) <= 0) {
@@ -42,7 +50,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             })
             return
         }
-
+        isEchartsToImg.current = true
         setLoading(true)
         ipcRenderer
             .invoke("QueryReport", {Id: props.id})
@@ -60,23 +68,66 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             const items = report.JsonRaw && report.JsonRaw !== "-" && (JSON.parse(report.JsonRaw) as ReportItem[])
             if (!!items && items.length > 0) {
                 setReportItems(items)
-                setRenderReportItems(items.slice(0, 15))
             }
         } catch (e) {
             failed(`Parse Report[${props.id}]'s items failed`)
         }
     }, [report])
 
-    const loadReport = useThrottleFn(
-        () => {
-            let listLength = getReportItems().length
-            let renderLength = getRenderReportItems().length
-            if (listLength > renderLength) {
-                setRenderReportItems(getReportItems().slice(0, renderLength + 15))
-            }
-        },
-        {wait: 500}
-    )
+    // 下载报告
+    const exportToWord = async () => {
+        const contentHTML = divRef.current
+
+        if (isEchartsToImg.current) {
+            isEchartsToImg.current = false
+            // 使用html2canvas将ECharts图表转换为图像
+            const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
+            const promises = Array.from(echartsElements).map(async (element) => {
+                // @ts-ignore
+                const echartType: string = element.getAttribute("echart-type")
+                let options = {}
+                // 适配各种图表
+                if (echartType === "vertical-bar") {
+                    options = {scale: 0.8, windowWidth: 1200}
+                } else if (echartType === "hollow-pie") {
+                    options = {scale: 1, windowWidth: 1000}
+                } else if (echartType === "stacked-vertical-bar") {
+                    options = {scale: 0.8, windowWidth: 1200}
+                } else if (echartType === "multi-pie") {
+                    options = {scale: 0.8, windowWidth: 1200}
+                } else if (echartType === "nightingle-rose") {
+                    options = {scale: 0.8, windowWidth: 1200}
+                }
+
+                const canvas = await html2canvas(element as HTMLElement, options)
+                return canvas.toDataURL("image/jpeg")
+            })
+
+            const echartsImages = await Promise.all(promises)
+
+            // 将图像插入到contentHTML中
+            echartsImages.forEach((imageDataUrl, index) => {
+                const img = document.createElement("img")
+                img.src = imageDataUrl
+                img.style.display = "none"
+                echartsElements[index].appendChild(img)
+            })
+        }
+        // word报告不要附录 table添加边框 移除南丁格尔玫瑰图点击详情(图像中已含)
+        const wordStr: string = contentHTML.outerHTML
+            .substring(0, contentHTML.outerHTML.indexOf("附录："))
+            .replace(/<table(.*?)>/g, '<table$1 border="1">')
+            .replace(/<div[^>]*id=("nightingle-rose-title"|"nightingle-rose-content")[^>]*>[\s\S]*?<\/div>/g, "")
+
+        // console.log("wordStr---", wordStr)
+
+        saveAs(
+            //保存文件到本地
+            htmlDocx.asBlob(wordStr), //将html转为docx
+            `${report.Title}.doc`
+        )
+        setWordSpinLoading(false)
+    }
 
     if (report.Id <= 0) {
         return (
@@ -107,7 +158,6 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         setSpinLoading(true)
         setTimeout(() => {
             if (!divRef || !divRef.current) return
-            setRenderReportItems(reportItems)
             const div = divRef.current
             html2pdf()
                 .from(div)
@@ -151,9 +201,62 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
             })
     }
 
+    // 下载Word
+    const downloadWord = () => {
+        if (!divRef || !divRef.current) return
+
+        setWordSpinLoading(true)
+
+        // 此处定时器为了确保已处理其余任务
+        setTimeout(() => {
+            exportToWord()
+        }, 300)
+    }
+
+    const dowloadMenu = (
+        <YakitMenu
+            selectedKeys={[]}
+            data={
+                isEnterpriseEdition()
+                    ? [
+                          {
+                              key: "html",
+                              label: "HTML"
+                          },
+                          {
+                              key: "word",
+                              label: "Word"
+                          }
+                      ]
+                    : [
+                          {
+                              key: "pdf",
+                              label: "Pdf"
+                          }
+                      ]
+            }
+            onClick={({key}) => {
+                setShow(false)
+                switch (key) {
+                    case "html":
+                        downloadHtml()
+                        return
+                    case "word":
+                        downloadWord()
+                        return
+                    case "pdf":
+                        downloadPdf()
+                        return
+                    default:
+                        return
+                }
+            }}
+        ></YakitMenu>
+    )
+
     return (
         <div className={styles["report-viewer"]}>
-            <Spin spinning={SpinLoading}>
+            <Spin spinning={SpinLoading || wordSpinLoading}>
                 <AutoCard
                     size={"small"}
                     bordered={false}
@@ -166,8 +269,8 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     bodyStyle={{paddingLeft: 20, overflow: "hidden"}}
                     extra={
                         <Space>
-                            <a
-                                href={"#"}
+                            <YakitButton
+                                size='small'
                                 onClick={() => {
                                     showModal({
                                         title: "RAW DATA",
@@ -181,32 +284,22 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                 }}
                             >
                                 RAW
-                            </a>
-                            <a
-                                href={"#"}
-                                onClick={() => {
-                                    isEnterpriseEdition() ? downloadHtml() : downloadPdf()
-                                }}
+                            </YakitButton>
+                            <YakitPopover
+                                overlayClassName={classNames(styles["ui-op-setting-dropdown"])}
+                                placement={"bottom"}
+                                content={dowloadMenu}
+                                visible={show}
+                                onVisibleChange={(visible) => setShow(visible)}
                             >
-                                下载
-                            </a>
+                                <YakitButton size='small'>下载</YakitButton>
+                            </YakitPopover>
                         </Space>
                     }
                 >
-                    <div
-                        ref={divRef}
-                        style={{overflow: "auto", height: "100%"}}
-                        onScroll={() => {
-                            const {scrollTop, clientHeight, scrollHeight} = divRef.current
-                            const isAtBottom = scrollTop + clientHeight > scrollHeight - 20
-                            // 监听是否滚动到接近底部
-                            if (isAtBottom) {
-                                loadReport.run()
-                            }
-                        }}
-                    >
+                    <div ref={divRef} style={{overflow: "auto", height: "100%"}}>
                         <Space direction={"vertical"} style={{width: "100%"}}>
-                            {renderReportItems.map((i, index) => {
+                            {reportItems.map((i, index) => {
                                 return <ReportItemRender item={i} key={index} />
                             })}
                         </Space>

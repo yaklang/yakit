@@ -4,7 +4,7 @@ import {ReportMarkdownBlock} from "./markdownRender"
 import {YakEditor} from "../../../utils/editors"
 import {AutoCard} from "../../../components/AutoCard"
 import {Tag} from "antd"
-import {JSONTableRender, ReportMergeTable, RiskTable} from "./jsonTableRender"
+import {FoldTable, JSONTableRender, ReportMergeTable, RiskTable} from "./jsonTableRender"
 import {PieGraph} from "../../graph/PieGraph"
 import {BarGraph} from "../../graph/BarGraph"
 import {EchartsCard, HollowPie, MultiPie, NightingleRose, StackedVerticalBar, VerticalOptionBar} from "./EchartsInit"
@@ -21,8 +21,6 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
             return <ReportMarkdownBlock item={props.item} />
         case "json-table":
             return <JSONTableRender item={props.item} />
-        case "search-json-table":
-            return <ReportMergeTable data={content} />
         case "pie-graph":
             try {
                 return (
@@ -77,6 +75,8 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                     return <HollowPie data={newData.data} title={newData.title} />
                 } else if (newData.type === "fix-list") {
                     return <FoldHoleCard data={newData.data} />
+                } else if (newData.type === "info-risk-list") {
+                    return <FoldTable data={newData} />
                 } else {
                     // kv图 南丁格尔玫瑰图 多层饼环
                     const content = typeof newData === "string" ? JSON.parse(newData) : newData
@@ -102,6 +102,8 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                                 return <RiskTable data={content} />
                             case "potential-risks-list":
                                 return <RiskTable data={content} />
+                            case "search-json-table":
+                                return <ReportMergeTable data={content} />
                             default:
                                 return (
                                     <AutoCard
