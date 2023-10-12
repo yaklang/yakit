@@ -560,10 +560,7 @@ message PcapMetadata {
 message QueryTrafficPacketRequest {
   Paging Pagination = 1;
 
-  // FromNow is deprecated
-  bool FromNow = 2;
-
-  int64 TimestampNow = 13;
+  int64 TimestampNow = 2;
   string SessionId = 3;
   string LinkLayerTypes = 4;
   string NetworkLayerTypes = 5;
@@ -638,8 +635,7 @@ message TrafficPacket {
   int64 TransportEndpointPortDst = 14;
 
   string SessionId = 15;
-  string Id = 16;
-  int64 IdInt = 17;
+  int64 Id = 16;
 }
 
 message QueryTrafficPacketResponse {
