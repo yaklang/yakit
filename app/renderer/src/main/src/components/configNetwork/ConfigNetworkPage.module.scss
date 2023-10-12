@@ -1,8 +1,9 @@
 .certificate-box {
     margin-top: 10px;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    flex-wrap: wrap; /* 这里设置为wrap */
+    gap: 8px;
 
     .certificate-item {
         display: flex;
@@ -21,6 +22,135 @@
             cursor: pointer;
             &:hover {
                 color: var(--yakit-primary-4);
+            }
+        }
+    }
+
+    .certificate-succee {
+        background-color: rgba(41, 188, 208, 0.1);
+    }
+
+    .certificate-fail {
+        background-color: rgba(244, 115, 107, 0.1);
+    }
+
+    .certificate-card {
+        width: 104px;
+        height: 136px;
+        border-radius: 4px;
+
+        position: relative;
+        .decorate {
+            position: absolute;
+            right: 0px;
+        }
+        .union {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+        }
+        .card-hide {
+            width: 0;
+            height: 0;
+            border-left: 17px solid transparent;
+            border-right: 17px solid transparent;
+            border-bottom: 17px solid #fff;
+            position: absolute;
+            right: -12px;
+            top: -3px;
+            transform: rotate(45deg);
+        }
+        .close {
+            display: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 20px;
+            border: 2px solid #fff;
+            background: #f0f1f3;
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            box-sizing: content-box;
+            height: 12px;
+            width: 12px;
+            overflow: hidden;
+            transition: all 0.2s ease-in-out;
+            svg {
+                position: relative;
+                top: -6px;
+                left: 0px;
+                height: 12px;
+                width: 12px;
+                color: #85899e;
+            }
+            &:hover {
+                background-color: var(--yakit-primary-5);
+                svg {
+                    color: #ffffff;
+                }
+            }
+        }
+        .fail-main {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            padding: 16px 20px 18px;
+            .title {
+                color: #000;
+                text-align: center;
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 20px;
+                margin-bottom: 8px;
+            }
+            .content {
+                color: #f6544a;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px;
+                margin-bottom: 8px;
+            }
+            &:hover {
+                .close {
+                    display: block;
+                }
+            }
+        }
+        .success-main {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            padding: 16px 20px 18px;
+            .title {
+                color: #000;
+                text-align: center;
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 20px;
+                margin-bottom: 8px;
+            }
+            .content {
+                color: #b4bbca;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px;
+                margin-bottom: 8px;
+            }
+            .password {
+                color: #000;
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 20px;
+            }
+            &:hover {
+                .close {
+                    display: block;
+                }
             }
         }
     }

@@ -243,7 +243,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     label='下游代理'
                     name='downstreamProxy'
                     help={
-                        "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描"
+                        "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描，代理如有密码格式为：http://user:pass@ip:port"
                     }
                 >
                     <YakitAutoComplete

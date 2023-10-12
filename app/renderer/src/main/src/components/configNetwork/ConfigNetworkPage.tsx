@@ -15,6 +15,10 @@ import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {InputCertificateForm} from "@/pages/mitm/MITMServerStartForm/MITMAddTLS"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import cloneDeep from "lodash/cloneDeep"
+import {CloseIcon, RectangleFailIcon, RectangleSucceeIcon, UnionIcon} from "./icon"
+import {SolidCheckCircleIcon, SolidLockClosedIcon} from "@/assets/icon/solid"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import classNames from "classnames"
 
 export interface ConfigNetworkPageProp {}
 
@@ -161,6 +165,75 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         }
     })
 
+    const failCard = useMemoizedFn(() => {
+        return (
+            <div className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
+                <div className={styles["decorate"]}>
+                    <RectangleFailIcon />
+                </div>
+                <div className={styles["card-hide"]}></div>
+                <div className={styles["fail-main"]}>
+                    <div className={styles["close"]} onClick={()=>{
+                        console.log("del");
+                    }}>
+                        <CloseIcon />
+                    </div>
+                    <div className={styles["title"]}>证书 1</div>
+                    <SolidLockClosedIcon />
+                    <div className={styles["content"]}>未解密</div>
+                    <YakitButton
+                        type='outline2'
+                        onClick={() => {
+                            const m = showYakitModal({
+                                title: "密码解锁",
+                                content: (
+                                    <div style={{padding: 20}}>
+                                        <YakitInput.Password placeholder='请输入证书密码' allowClear />
+                                    </div>
+                                ),
+                                onCancel: () => {
+                                    m.destroy()
+                                },
+                                onOk: () => {
+                                    console.log("submit")
+                                },
+                                width: 400
+                            })
+                        }}
+                    >
+                        密码解锁
+                    </YakitButton>
+                </div>
+            </div>
+        )
+    })
+
+    const succeeCard = useMemoizedFn(() => {
+        return (
+            <div className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
+                <div className={styles["decorate"]}>
+                    <RectangleSucceeIcon />
+                </div>
+                <div className={styles["union"]}>
+                    <UnionIcon />
+                </div>
+                <div className={styles["card-hide"]}></div>
+
+                <div className={styles["success-main"]}>
+                    <div className={styles["close"]} onClick={()=>{
+                        console.log("del");
+                    }}>
+                        <CloseIcon />
+                    </div>
+                    <div className={styles["title"]}>证书 2</div>
+                    <SolidCheckCircleIcon />
+                    <div className={styles["content"]}>可用</div>
+                    <div className={styles["password"]}>******</div>
+                </div>
+            </div>
+        )
+    })
+
     const certificateList = useMemo(() => {
         return (
             <div className={styles["certificate-box"]}>
@@ -196,6 +269,17 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             </div>
                         )
                     })}
+                {failCard()}
+                {succeeCard()}
+
+                {failCard()}
+                {succeeCard()}
+                {failCard()}
+                {succeeCard()}
+                {failCard()}
+                {succeeCard()}
+                {failCard()}
+                {succeeCard()}
             </div>
         )
     }, [certificateParams])
