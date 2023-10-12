@@ -1378,6 +1378,19 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         </>
     )
 
+    const getNewCurrentPage = useMemoizedFn(() => {
+        const params = {
+            Pagination: {Limit: 1, Order: "", OrderBy: "", Page: 1},
+            Keyword: "",
+            FuzzerTabIndex: props.id
+        }
+        ipcRenderer
+            .invoke("QueryHistoryHTTPFuzzerTaskEx", params)
+            .then((data: {Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema}) => {
+                setCurrentPage(Number(data.Total) + 1)
+            })
+    })
+
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
             <React.Suspense fallback={<>加载中...</>}>
@@ -1416,7 +1429,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     setRedirectedResponse(undefined)
                                     sendFuzzerSettingInfo()
                                     onValidateHTTPFuzzer()
-                                    setCurrentPage(1)
+                                    getNewCurrentPage()
                                 }}
                                 icon={<PaperAirplaneIcon />}
                                 type={"primary"}
