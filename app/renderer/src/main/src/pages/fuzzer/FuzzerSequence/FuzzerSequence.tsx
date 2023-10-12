@@ -1525,10 +1525,12 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         )
         const hotPatchTrigger = useMemoizedFn(() => {
             let m = showYakitModal({
-                title: "调试 / 插入热加载代码",
+                title: null,
                 width: "80%",
                 footer: null,
-                maskClosable:false,
+                maskClosable: false,
+                closable: false,
+                style: {top: "10%"},
                 content: (
                     <HTTPFuzzerHotPatch
                         initialHotPatchCode={hotPatchCode}
@@ -1546,6 +1548,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                             setHotPatchCodeWithParamGetter(code)
                             setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                         }}
+                        onCancel={() => m.destroy()}
                     />
                 )
             })

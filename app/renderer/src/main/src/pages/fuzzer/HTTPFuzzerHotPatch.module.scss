@@ -8,9 +8,6 @@
 }
 
 .http-fuzzer-hotPatch {
-    padding: 24px;
-    max-height: 80vh;
-    overflow-y: auto;
     :global {
         .ant-form {
             color: var(--yakit-header-color);
@@ -22,6 +19,38 @@
         .ant-form-item-extra {
             color: var(--yakit-helper-text-color);
             font-size: 12px;
+        }
+    }
+    .http-fuzzer-hotPatch-form{
+        padding: 24px;
+        overflow-y: auto;
+        max-height: 80vh;
+    }
+    .http-fuzzer-hotPatch-heard {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        grid-gap: 16px;
+        gap: 16px;
+        height: 41px;
+        background: var(--haeder-footer-background);
+        border-bottom: 1px solid var(--header-footer-border);
+        border-radius: 4px 4px 0px 0px;
+        font-weight: 600;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--yakit-header-color);
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--yakit-helper-text-color);
+            cursor: pointer;
+            &:hover {
+                color: var(--yakit-primary-4);
+            }
         }
     }
 }

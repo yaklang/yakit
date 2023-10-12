@@ -64,10 +64,12 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         }, [reqEditor])
         const hotPatchTrigger = useMemoizedFn(() => {
             let m = showYakitModal({
-                title: "调试 / 插入热加载代码",
+                title: null,
                 width: "80%",
                 footer: null,
                 maskClosable: false,
+                closable:false,
+                style:{ top: '10%' },
                 content: (
                     <HTTPFuzzerHotPatch
                         initialHotPatchCode={hotPatchCode}
@@ -84,6 +86,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                             setHotPatchCodeWithParamGetter(code)
                             setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                         }}
+                        onCancel={() => m.destroy()}
                     />
                 )
             })

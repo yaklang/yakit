@@ -5,9 +5,9 @@ import {callCopyToClipboard} from "../../utils/basic"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {AutoCard} from "../../components/AutoCard"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {useGetState} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {RefreshIcon} from "@/assets/newIcon"
-import {FullscreenOutlined} from "@ant-design/icons/lib"
+import {ExclamationCircleOutlined, FullscreenOutlined} from "@ant-design/icons/lib"
 import {SelectOne} from "@/utils/inputUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -17,11 +17,15 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import styles from "./HTTPFuzzerHotPatch.module.scss"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {yakitNotify} from "@/utils/notification"
+import {OutlineXIcon} from "@/assets/icon/outline"
+import {WEB_FUZZ_HOTPATCH_CODE} from "./HTTPFuzzerPage"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 export interface HTTPFuzzerHotPatchProp {
     onInsert?: (s: string) => any
     onSaveCode?: (code: string) => any
     onSaveHotPatchCodeWithParamGetterCode?: (code: string) => any
+    onCancel: () => void
     initialHotPatchCode?: string
     initialHotPatchCodeWithParamGetter?: string
 }
@@ -98,8 +102,38 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
         }
     }, [])
 
+    const onClose = useMemoizedFn(async () => {
+        const remoteData = await getRemoteValue(WEB_FUZZ_HOTPATCH_CODE)
+        if (remoteData !== params.HotPatchCode) {
+            let m = YakitModalConfirm({
+                width: 420,
+                type: "white",
+                onCancelText: "不保存",
+                onOkText: "保存",
+                icon: <ExclamationCircleOutlined />,
+                style: {top: "20%"},
+                onOk: () => {
+                    if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
+                    props.onCancel()
+                    m.destroy()
+                },
+                onCancel: () => {
+                    props.onCancel()
+                    m.destroy()
+                },
+                content: "是否保存修改的【热加载代码】"
+            })
+        } else {
+            props.onCancel()
+        }
+    })
+
     return (
         <div className={styles["http-fuzzer-hotPatch"]}>
+            <div className={styles["http-fuzzer-hotPatch-heard"]}>
+                <span>调试 / 插入热加载代码</span>
+                <OutlineXIcon onClick={onClose} />
+            </div>
             <Form
                 onSubmitCapture={(e) => {
                     e.preventDefault()
@@ -153,7 +187,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         .finally(() => setTimeout(() => setLoading(false), 300))
                 }}
                 layout={"vertical"}
-                // labelCol={{span: 5}} wrapperCol={{span: 14}}
+                className={styles["http-fuzzer-hotPatch-form"]}
             >
                 <Form.Item
                     label={
