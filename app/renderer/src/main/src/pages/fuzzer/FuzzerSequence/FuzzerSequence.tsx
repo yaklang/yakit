@@ -86,6 +86,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {monacoEditorWrite} from "../fuzzerTemplates"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
+import {ShareImportExportData} from "../components/ShareImportExportData"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
@@ -869,6 +870,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 onShowAll={() => {
                                     setShowAllResponse(true)
                                 }}
+                                getHttpParams={getHttpParams}
                             />
                             <SequenceResponse
                                 ref={sequenceResponseRef}
@@ -1171,7 +1173,8 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         disabled,
         onShowAll,
         currentSequenceItemName,
-        currentSequenceItemPageName
+        currentSequenceItemPageName,
+        getHttpParams
     } = props
     const {
         onlyOneResponse: httpResponse,
@@ -1191,6 +1194,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
     const onlyOneResponse: boolean = useCreation(() => {
         return cachedTotal === 1
     }, [cachedTotal])
+
     return (
         <div className={styles["sequence-response-heard"]}>
             <div className={styles["sequence-response-heard-left"]}>
@@ -1211,8 +1215,13 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                 />
             </div>
             <div>
-                <ShareImportExportData module='fuzzer' supportShare={false} supportImport={true} getFuzzerRequestParams={getHttpParams} />
-                <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()} style={{ marginLeft: 8 }}>
+                <ShareImportExportData
+                    module='fuzzer'
+                    supportShare={false}
+                    supportImport={true}
+                    getFuzzerRequestParams={getHttpParams}
+                />
+                <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()} style={{marginLeft: 8}}>
                     展示全部响应
                 </YakitButton>
             </div>

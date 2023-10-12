@@ -168,10 +168,10 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
             style={{height: "100%"}}
             onValuesChange={onValuesChange}
         >
-            <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked'>
+            <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' style={{ marginBottom: 4 }}>
                 <YakitSwitch />
             </Form.Item>
-            <Form.Item label='请求类型' name='reqType'>
+            <Form.Item label='请求类型' name='reqType' style={{ marginBottom: 4 }}>
                 <YakitRadioButtons
                     size='small'
                     buttonStyle='solid'
@@ -190,16 +190,21 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
             {reqType === "raw" ? (
                 <div className={styles.rawEditor}>
                     <NewHTTPPacketEditor
-                        noHeader={true}
                         originValue={params.RawHTTPRequest}
                         onChange={rawEditorChange}
                         noMinimap={true}
                         noLineNumber={true}
+                        showLineBreaksState={true}
+                        isShowBeautifyRender={false}
+                        hideSearch={true}
+                        noTitle={true}
+                        noHex={true}
+                        simpleMode={true}
                     />
                 </div>
             ) : (
                 <>
-                    <Form.Item label='HTTP方法' name='Method'>
+                    <Form.Item label='HTTP方法' name='Method' style={{ marginBottom: 4 }}>
                         <YakitSelect
                             options={["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT"].map((item) => ({
                                 value: item,
@@ -208,7 +213,7 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                             size='small'
                         />
                     </Form.Item>
-                    <Form.Item label='请求路径' name='Path'>
+                    <Form.Item label='请求路径' name='Path' style={{ marginBottom: 4 }}>
                         <YakitSelect
                             allowClear
                             options={["/", "/admin"].map((item) => ({value: item, label: item}))}

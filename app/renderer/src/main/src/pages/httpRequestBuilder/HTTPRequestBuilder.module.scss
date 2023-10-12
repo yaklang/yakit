@@ -1,6 +1,6 @@
 @use "../fuzzer/HTTPFuzzerPageShare.module.scss" as HTTPFuzzerPageShare;
 .rawEditor {
-    height: calc(100% - 96px);
+    height: calc(100% - 96px - 12px);
 }
 
 .variable-list {

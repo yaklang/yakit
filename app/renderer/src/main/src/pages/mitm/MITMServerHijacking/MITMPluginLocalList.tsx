@@ -37,7 +37,7 @@ import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
-import { getReleaseEditionName } from "@/utils/envfile"
+import {getReleaseEditionName} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -446,9 +446,19 @@ interface PluginGroupProps {
     setSelectGroup: (y: YakFilterRemoteObj[]) => void
     isSelectAll: boolean
     wrapperClassName?: string
+    isShowAddBtn?: boolean
+    isShowDelIcon?: boolean
 }
 export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
-    const {checkList, selectGroup, setSelectGroup, isSelectAll, wrapperClassName} = props
+    const {
+        checkList,
+        selectGroup,
+        setSelectGroup,
+        isSelectAll,
+        wrapperClassName,
+        isShowAddBtn = true,
+        isShowDelIcon = true
+    } = props
     const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     /**
@@ -521,6 +531,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                         selectGroup={selectGroup}
                         setSelectGroup={setSelectGroup}
                         onDeletePlugin={onDeletePlugin}
+                        isShowDelIcon={isShowDelIcon}
                     />
                 }
                 onVisibleChange={setVisible}
@@ -539,20 +550,22 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                     )}
                 </div>
             </Dropdown>
-            <YakitButton
-                type='text'
-                onClick={() => {
-                    if (checkList.length === 0) {
-                        info("选中数据未获取")
-                        return
-                    }
-                    setAddGroupVisible(true)
-                }}
-                disabled={isSelectAll}
-            >
-                添加至组
-                <PlusCircleIcon className={style["plus-circle"]} />
-            </YakitButton>
+            {isShowAddBtn && (
+                <YakitButton
+                    type='text'
+                    onClick={() => {
+                        if (checkList.length === 0) {
+                            info("选中数据未获取")
+                            return
+                        }
+                        setAddGroupVisible(true)
+                    }}
+                    disabled={isSelectAll}
+                >
+                    添加至组
+                    <PlusCircleIcon className={style["plus-circle"]} />
+                </YakitButton>
+            )}
             <AddPluginGroup
                 pugGroup={pugGroup}
                 visible={addGroupVisible}
@@ -679,9 +692,10 @@ interface PluginGroupListProps {
     selectGroup: YakFilterRemoteObj[]
     setSelectGroup: (p: YakFilterRemoteObj[]) => void
     onDeletePlugin: (p: YakFilterRemoteObj) => void
+    isShowDelIcon: boolean
 }
 const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
-    const {pugGroup, selectGroup, setSelectGroup, onDeletePlugin} = props
+    const {pugGroup, selectGroup, setSelectGroup, onDeletePlugin, isShowDelIcon} = props
     const [visibleRemove, setVisibleRemove] = useState<boolean>(false)
     const [deletePlugin, setDeletePlugin] = useState<YakFilterRemoteObj>()
     const onSelect = useMemoizedFn((selectItem: YakFilterRemoteObj) => {
@@ -713,13 +727,15 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                     </div>
                     <div className={style["plugin-group-item-right"]}>
                         <span className={style["plugin-group-item-length"]}>{item.value.length}</span>
-                        <TrashIcon
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                setVisibleRemove(true)
-                                setDeletePlugin(item)
-                            }}
-                        />
+                        {isShowDelIcon && (
+                            <TrashIcon
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setVisibleRemove(true)
+                                    setDeletePlugin(item)
+                                }}
+                            />
+                        )}
                     </div>
                 </div>
             ))}

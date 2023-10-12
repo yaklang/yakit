@@ -1560,6 +1560,7 @@ export interface YakModuleListProp {
     onSetUser?: (u: PluginUserInfoLocalProps) => void
     setIsRequest?: (s: boolean) => void
     emptyNode?: ReactNode
+    targetRef?: React.RefObject<any>
 }
 
 export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
@@ -1585,7 +1586,8 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         setIsSelectAll,
         onSetUser,
         setIsRequest,
-        emptyNode
+        emptyNode,
+        targetRef
     } = props
 
     // 全局登录状态
@@ -1726,6 +1728,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
         <Spin spinning={listBodyLoading}>
             {(response.Data.length === 0 && emptyNode) || (
                 <RollingLoadList<YakScript>
+                    targetRef={targetRef}
                     isGridLayout={isGridLayout}
                     numberRoll={numberLocalRoll}
                     isRef={isRef}

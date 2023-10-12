@@ -14,9 +14,11 @@ import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
  * @param {string} iconColor 复制Icon文字
  */
 
+export type YakitTagColor = "danger" | "info" | "success" | "warning" | "purple" | "blue" | "cyan" | "bluePurple" | "white"
+
 export interface YakitTagProps extends Omit<TagProps, "color"> {
     size?: YakitSizeType
-    color?: "danger" | "info" | "success" | "warning" | "purple" | "blue" | "cyan" | "bluePurple" | "white"
+    color?: YakitTagColor
     disable?: boolean
     enableCopy?: boolean
     onAfterCopy?: (e: MouseEvent) => void

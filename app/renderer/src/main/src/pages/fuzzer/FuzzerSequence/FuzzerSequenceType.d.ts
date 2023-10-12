@@ -141,7 +141,8 @@ export interface SequenceResponseHeardProps {
     currentSequenceItemPageName: string
     advancedConfigValue?: AdvancedConfigValueProps
     responseInfo?: ResponseProps
-    onShowAll: () => void
+    onShowAll: () => void,
+    getHttpParams: () => FuzzerRequestProps[]
 }
 
 /**

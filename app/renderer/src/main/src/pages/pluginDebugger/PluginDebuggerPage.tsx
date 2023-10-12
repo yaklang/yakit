@@ -1,11 +1,14 @@
-import React, {useEffect, useState} from "react"
-import {Divider, Empty, Space, Tag} from "antd"
+import React, {useEffect, useState, useRef} from "react"
+import {Divider, Space} from "antd"
 import {useMemoizedFn, useUpdateEffect, usePrevious} from "ahooks"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {AutoCard} from "@/components/AutoCard"
 import {OutlineEyeIcon, OutlinePuzzleIcon, OutlineSparklesIcon} from "@/assets/icon/outline"
 import {SelectOne} from "@/utils/inputUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {debugYakitModal, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {NewHTTPPacketEditor} from "@/utils/editors"
@@ -20,15 +23,22 @@ import {
     HTTPRequestBuilderParams
 } from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {SimplePluginList} from "@/components/SimplePluginList"
 import {YakScript} from "@/pages/invoker/schema"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {SmokingEvaluateResponse} from "@/pages/pluginDebugger/SmokingEvaluate"
 import {DataCompareModal} from "../compare/DataCompare"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {SolidCogIcon, SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
+import classNames from "classnames"
 import styles from "./PluginDebuggerPage.module.scss"
+import {
+    PluginGroup,
+    PluginSearch,
+    TagsAndGroupRender,
+    YakFilterRemoteObj
+} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
+import {YakModuleList} from "../yakitStore/YakitStorePage"
+import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
 const {YakitTabPane} = YakitTabs
 
 export interface PluginDebuggerPageProp {
@@ -41,9 +51,9 @@ export interface PluginDebuggerPageProp {
 const {ipcRenderer} = window.require("electron")
 
 const pluginTypeData = [
-    {text: "端口扫描", value: "port-scan", tagVal: "PORT-SCAN"},
-    {text: "MITM", value: "mitm", tagVal: "MITM"},
-    {text: "Yaml-PoC", value: "nuclei", tagVal: "Nuclei-Yaml"}
+    {text: "端口扫描", value: "port-scan", tagVal: "PORT-SCAN", tagColor: "success"},
+    {text: "MITM", value: "mitm", tagVal: "MITM", tagColor: "blue"},
+    {text: "Yaml-PoC", value: "nuclei", tagVal: "Nuclei-Yaml", tagColor: "purple"}
 ]
 
 type PluginTypes = "port-scan" | "mitm" | "nuclei"
@@ -144,11 +154,9 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
     return (
         <div className={styles.pluginDebuggerPage}>
             <YakitResizeBox
-                freeze={false}
+                isVer={false}
                 firstMinSize={300}
                 firstRatio={"300px"}
-                firstNodeStyle={{maxWidth: 300}}
-                secondNodeStyle={{minWidth: "calc(100% - 300px)"}}
                 firstNode={
                     <AutoCard
                         title='配置调试请求'
@@ -209,7 +217,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                 setRefreshEditor={setRefreshEditor}
                                 setIsCancelFlag={setIsCancelFlag}
                             ></SecondNodeHeader>
-                            <div style={{height: "100%"}}>
+                            <div style={{height: "calc(100% - 34px)"}}>
                                 <NewHTTPPacketEditor
                                     key={refreshEditor}
                                     language={pluginType === "nuclei" ? "yaml" : "yak"}
@@ -247,7 +255,9 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                     }}
                                 />
                             ) : (
-                                <Empty description={"点击【执行插件】以开始"} />
+                                <div className={styles.emptyPosition}>
+                                    <YakitEmpty description={"点击【执行插件】以开始"} />
+                                </div>
                             )}
                         </YakitTabPane>
                     </YakitTabs>
@@ -287,17 +297,14 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
 
         // 选择要调试的插件
         const handleSelectDebugPlugin = useMemoizedFn(() => {
-            showYakitDrawer({
-                title: "选择要调试的插件",
+            const m = showYakitDrawer({
+                title: <div className={styles["debug-plugin-drawer-title"]}>选择要调试的插件</div>,
                 width: "30%",
                 placement: "left",
                 content: (
                     <div style={{height: "100%"}}>
-                        <SimplePluginList
-                            autoSelectAll={false}
-                            pluginTypes={"port-scan,mitm,nuclei"}
-                            singleSelectMode={true}
-                            onPluginClick={(script: YakScript) => {
+                        <PluginCont
+                            onPluginItemClicked={(script) => {
                                 switch (script.Type) {
                                     case "mitm":
                                     case "nuclei":
@@ -309,12 +316,13 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                                         setCurrentPluginName(script.ScriptName)
                                         setRefreshEditor(Math.random())
                                         setScript(script)
+                                        m.destroy()
                                         return
                                     default:
                                         yakitFailed("暂不支持的插件类型")
                                 }
                             }}
-                        />
+                        ></PluginCont>
                     </div>
                 )
             })
@@ -370,9 +378,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
         return (
             <div className={styles["secondNodeHeader"]}>
                 <Space>
-                    {!generateYamlTemplate && (
-                        <YakitButton type='outline2' icon={<SolidCogIcon />} onClick={handleSelectDebugPlugin} />
-                    )}
+                    <YakitButton type='outline2' icon={<SolidCogIcon />} onClick={handleSelectDebugPlugin} />
                     <span>插件代码配置</span>
                     {!currentPluginName && !generateYamlTemplate && (
                         <SelectOne
@@ -389,9 +395,14 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                     )}
                     {code && (
                         <>
-                            <Tag color={"purple"} style={{marginRight: 0, marginLeft: 8}}>
+                            <YakitTag
+                                color={
+                                    pluginTypeData.find((item) => item.value === pluginType)?.tagColor as YakitTagColor
+                                }
+                                style={{marginRight: 0, marginLeft: 8}}
+                            >
                                 {pluginTypeData.find((item) => item.value === pluginType)?.tagVal}
-                            </Tag>
+                            </YakitTag>
                             {currentPluginName && <span className={styles.currentPluginName}>{currentPluginName}</span>}
                         </>
                     )}
@@ -405,26 +416,26 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                         >
                             自动评分
                         </YakitButton>
-                        {
-                            <PluginBaseInspect
-                                type={pluginType}
-                                code={code}
-                                visible={pluginBaseInspectVisible}
-                                setVisible={setPluginBaseInspectVisible}
-                            ></PluginBaseInspect>
-                        }
-                    </>
-                    {generateYamlTemplate ? (
-                        <YakitButton type='primary' icon={<OutlinePuzzleIcon />} onClick={handleSkipAddYakitScriptPage}>
-                            存为插件
-                        </YakitButton>
-                    ) : (
-                        currentPluginName && (
+                        <PluginBaseInspect
+                            type={pluginType}
+                            code={code}
+                            visible={pluginBaseInspectVisible}
+                            setVisible={setPluginBaseInspectVisible}
+                        ></PluginBaseInspect>
+                        {currentPluginName ? (
                             <YakitButton icon={<OutlinePuzzleIcon />} onClick={openCompareModal}>
                                 合并代码
                             </YakitButton>
-                        )
-                    )}
+                        ) : (
+                            <YakitButton
+                                type='primary'
+                                icon={<OutlinePuzzleIcon />}
+                                onClick={handleSkipAddYakitScriptPage}
+                            >
+                                存为插件
+                            </YakitButton>
+                        )}
+                    </>
                 </Space>
             </div>
         )
@@ -458,10 +469,9 @@ const PluginBaseInspect: React.FC<PluginBaseInspectProps> = React.memo((props) =
             .invoke("SmokingEvaluatePlugin", {PluginType: type, Code: code})
             .then((rsp: SmokingEvaluateResponse) => {
                 if (!visible) return
-                console.log(123, rsp)
                 setResponse(rsp)
             })
-            .catch((e) => {
+            .catch((e: any) => {
                 yakitNotify("error", `插件基础测试失败: ${e}`)
             })
             .finally(() => {
@@ -546,6 +556,108 @@ const PluginBaseInspect: React.FC<PluginBaseInspectProps> = React.memo((props) =
                 )}
             </div>
         </YakitModal>
+    )
+})
+
+// 插件列表
+interface PluginContProps {
+    onPluginItemClicked: (i: YakScript) => void
+}
+const PluginCont: React.FC<PluginContProps> = React.memo(({onPluginItemClicked}) => {
+    const [tags, setTags] = useState<string[]>([])
+    const [searchKeyword, setSearchKeyword] = useState<string>("")
+    const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
+    const [includedScriptNames, setIncludedScriptNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
+    const [total, setTotal] = useState<number>(0)
+    const [refreshYakModuleList, setRefreshYakModuleList] = useState<number>(Math.random()) // 刷新插件列表
+    const pluginListRef = useRef<any>()
+
+    useUpdateEffect(() => {
+        let newScriptNames: string[] = []
+        selectGroup.forEach((ele) => {
+            newScriptNames = [...newScriptNames, ...ele.value]
+        })
+        setIncludedScriptNames(Array.from(new Set(newScriptNames)))
+        setRefreshYakModuleList(Math.random())
+    }, [selectGroup])
+
+    return (
+        <div className={styles["plugin-cont"]}>
+            <div className={styles["plugin-search-wrap"]}>
+                <PluginSearch
+                    tag={tags}
+                    searchKeyword={searchKeyword}
+                    setTag={(val) => {
+                        setTags(val)
+                        setRefreshYakModuleList(Math.random())
+                    }}
+                    setSearchKeyword={setSearchKeyword}
+                    onSearch={() => {
+                        setRefreshYakModuleList(Math.random())
+                    }}
+                />
+            </div>
+
+            <PluginGroup
+                selectGroup={selectGroup}
+                setSelectGroup={setSelectGroup}
+                checkList={[]}
+                isSelectAll={false}
+                isShowAddBtn={false}
+                isShowDelIcon={false}
+            />
+            <div className={styles["total-warp"]}>
+                Total <span className={styles["total-number"]}>{total}</span>
+            </div>
+            <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={setSelectGroup} />
+            <div className={styles["plugin-list-wrap"]} ref={pluginListRef}>
+                <YakModuleList
+                    key={refreshYakModuleList}
+                    targetRef={pluginListRef}
+                    emptyNode={<></>}
+                    queryLocal={{
+                        Tag: tags,
+                        Type: "port-scan,mitm,nuclei",
+                        IncludedScriptNames: includedScriptNames,
+                        Keyword: searchKeyword,
+                        Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+                    }}
+                    itemHeight={44}
+                    onClicked={(script) => {}}
+                    setTotal={(t) => {
+                        setTotal(t || 0)
+                    }}
+                    onYakScriptRender={(i: YakScript, maxWidth?: number) => {
+                        return (
+                            <div className={styles["plugin-local-item"]}>
+                                <div className={styles["plugin-local-left"]}>
+                                    <div className={styles["plugin-local-info"]}>
+                                        <div
+                                            className={styles["plugin-local-info-left"]}
+                                            onClick={() => onPluginItemClicked(i)}
+                                        >
+                                            {i.HeadImg && (
+                                                <img
+                                                    alt=''
+                                                    src={i.HeadImg}
+                                                    className={classNames(styles["plugin-local-headImg"])}
+                                                />
+                                            )}
+                                            <span className={classNames(styles["plugin-local-scriptName"])}>
+                                                {i.ScriptName}
+                                            </span>
+                                        </div>
+                                        <div className={styles["plugin-local-info-right"]}>
+                                            <PluginLocalInfoIcon plugin={i} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    }}
+                />
+            </div>
+        </div>
     )
 })
 
