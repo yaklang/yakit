@@ -63,6 +63,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     selectedFlow?: HTTPFlow
 
     refresh?: boolean
+    defaultFold?: boolean
 }
 
 const {Text} = Typography
@@ -459,7 +460,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh} = props
+    const {id, selectedFlow, refresh, defaultFold = false} = props
     const [flow, setFlow] = useState<HTTPFlow>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
     const [flowResponse,setFlowResponse] = useState<Uint8Array>()
@@ -469,7 +470,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
-    const [isFold, setFold] = useState<boolean>(false)
+    const [isFold, setFold] = useState<boolean>(defaultFold)
     const lastIdRef = useRef<number>()
 
     useEffect(() => {
@@ -479,6 +480,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     useUpdateEffect(() => {
         update(true)
     }, [refresh])
+
+    useUpdateEffect(() => {
+        setRemoteValue("HISTORY_FOLD", JSON.stringify(isFold))
+    }, [isFold])
 
     const update = useMemoizedFn((isSkip: boolean = false) => {
         if (!id) {
