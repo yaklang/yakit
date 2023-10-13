@@ -72,12 +72,12 @@ export const mePluginTypeList = [
 /**公开/私密 */
 const onlinePluginTypeList = [
     {
-        key: "1",
+        key: "0", // 公开
         name: pluginStatusToName["1"],
         icon: <SolidCloudpluginIcon />
     },
     {
-        key: "2",
+        key: "1", // 私密
         name: pluginStatusToName["2"],
         icon: <SolidPrivatepluginIcon />
     }
@@ -94,7 +94,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
 
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
     const [searchUser, setSearchUser] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [pluginState, setPluginState] = useState<string[]>(["1"])
+    const [pluginState, setPluginState] = useState<string[]>(["0"])
 
     const [isSelectUserNum, setIsSelectUserNum] = useState<boolean>(false) // 我的插件是否有勾选
     const [isSelectRecycleNum, setIsSelectRecycleNum] = useState<boolean>(false) // 回收站是否有勾选
