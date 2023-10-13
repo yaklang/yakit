@@ -38,6 +38,11 @@ export interface GlobalNetworkConfig {
     EnableSystemProxyFromEnv: boolean
 }
 
+export interface IsSetGlobalNetworkConfig {
+    Pkcs12Bytes: Uint8Array
+    Pkcs12Password?: Uint8Array
+}
+
 interface ClientCertificatePem {
     CrtPem: Uint8Array
     KeyPem: Uint8Array
@@ -111,15 +116,24 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         ipcRenderer
             .invoke("fetch-file-content", file.path)
             .then((res) => {
-                currentIndex.current += 1
-                setCertificateParams([
-                    ...(certificateParams || []),
-                    {
-                        name: `证书${currentIndex.current}`,
-                        Pkcs12Bytes: StringToUint8Array(res),
-                        Pkcs12Password: new Uint8Array()
-                    }
-                ])
+                // 验证证书是否需要密码
+                ipcRenderer
+                    .invoke("IsSetGlobalNetworkConfigPassWord", {
+                        Pkcs12Bytes: StringToUint8Array(res)
+                    } as IsSetGlobalNetworkConfig)
+                    .then((result:boolean) => {
+                        console.log("ddd",result);
+                        
+                    })
+                // currentIndex.current += 1
+                // setCertificateParams([
+                //     ...(certificateParams || []),
+                //     {
+                //         name: `证书${currentIndex.current}`,
+                //         Pkcs12Bytes: StringToUint8Array(res),
+                //         Pkcs12Password: new Uint8Array()
+                //     }
+                // ])
             })
             .catch(() => {
                 failed("无法获取该文件内容，请检查后后重试！")
@@ -284,15 +298,6 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             </div>
                         )
                     })}
-                {failCard()}
-                {succeeCard()}
-
-                {failCard()}
-                {succeeCard()}
-                {failCard()}
-                {succeeCard()}
-                {failCard()}
-                {succeeCard()}
                 {failCard()}
                 {succeeCard()}
             </div>

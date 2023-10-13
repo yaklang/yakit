@@ -33,6 +33,22 @@ module.exports = (win, getClient) => {
         return await asyncSetGlobalNetworkConfig(params)
     })
 
+    // asyncIsSetGlobalNetworkConfigPassWord wrapper
+    const asyncIsSetGlobalNetworkConfigPassWord = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().IsSetGlobalNetworkConfigPassWord(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("IsSetGlobalNetworkConfigPassWord", async (e, params) => {
+        return await asyncIsSetGlobalNetworkConfigPassWord(params)
+    })
+
     // asyncResetGlobalNetworkConfig wrapper
     const asyncResetGlobalNetworkConfig = (params) => {
         return new Promise((resolve, reject) => {
