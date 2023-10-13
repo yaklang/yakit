@@ -60,3 +60,7 @@ export interface PluginOnlineDetailBackProps {
     selectList: string[]
     allCheck: boolean
 }
+
+export interface NavigationBars{
+    
+}
