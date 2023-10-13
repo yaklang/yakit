@@ -126,6 +126,9 @@ export declare namespace API {
      * 是否显示审核状态筛选
      */
     showStatusSearch?: boolean;
+    /**
+     * 判断是否首次登录
+     */
     loginTime?: number;
   }
   export interface UserAuthorityRequest {
@@ -347,6 +350,10 @@ export declare namespace API {
     head_img: string;
     from_platform: string;
   }
+  export interface PostInstallPackageResponse {
+    filepath: string;
+    packagePath: string;
+  }
   export interface PluginTypeListResponse {
     data: PluginTypeList[];
   }
@@ -360,6 +367,173 @@ export declare namespace API {
   export interface PluginTopSearch {
     member: string;
     score: number;
+  }
+  export interface PluginsWhere {
+    token?: string;
+    is_private?: boolean[];
+    keywords?: string;
+    plugin_type?: string[];
+    tags?: string[];
+    user_name?: string;
+    user_id?: number;
+    /**
+     * 当天 day, 本周 week
+     */
+    time_search?: string;
+    group?: string[];
+    /**
+     * 默认首页 mine 个人, recycle 回收站 check 审核页面
+     */
+    listType?: string;
+    /**
+     * 审核状态,0待审核，1通过审核，2审核不通过
+     */
+    status?: number[];
+    /**
+     * 勾选删除
+     */
+    uuid?: string[];
+    page?: number;
+    limit?: number;
+    /**
+     * 根据插件名批量搜索
+     */
+    script_name?: string[];
+  }
+  export interface PluginsSearchResponse {
+    data: PluginsSearch[];
+  }
+  export interface PluginsSearchRequest {
+    /**
+     * 默认首页 mine 个人, recycle 回收站 check 审核页面
+     */
+    listType?: string;
+    token?: string;
+  }
+  export interface PluginsSearchData {
+    value: string;
+    count: number;
+    label: string;
+  }
+  export interface PluginsSearch {
+    groupKey: string;
+    groupName: string;
+    data: PluginsSearchData[];
+  }
+  export interface PluginsRiskDetail {
+    cweId: number;
+    /**
+     * 漏洞类型
+     */
+    riskType: string;
+    /**
+     * 漏洞描述
+     */
+    description: string;
+    /**
+     * 修复建议
+     */
+    solution: string;
+  }
+  export interface PluginsResponse {
+    id: number;
+    uuid: string;
+  }
+  export interface PluginsRequest {
+    type?: string;
+    content?: string;
+    params?: YakitPluginParam[];
+    help?: string;
+    tags?: string[];
+    script_name: string;
+    published_at?: number;
+    default_open: boolean;
+    enable_plugin_selector?: boolean;
+    plugin_selector_types?: string;
+    is_general_module?: boolean;
+    download_total?: number;
+    contributors?: string;
+    is_private?: boolean;
+    /**
+     * 复制插件id
+     */
+    base_plugin_id?: number;
+    group?: string;
+    riskType?: string;
+    riskDetail?: PluginsRiskDetail[];
+    /**
+     * 补充说明
+     */
+    annotation?: string;
+    isCorePlugin?: boolean;
+    isDnsLog?: boolean;
+    uuid?: string;
+  }
+  export interface PluginsListResponse extends Paging {
+    data: PluginsDetail[];
+  }
+  export interface PluginsDetail extends GormBaseModel {
+    type: string;
+    script_name: string;
+    default_open: boolean;
+    tags: string;
+    content: string;
+    params?: YakitPluginParam[];
+    authors: string;
+    user_id?: number;
+    head_img: string;
+    /**
+     * 插件发布的时间
+     */
+    published_at: number;
+    /**
+     * 下载次数
+     */
+    downloaded_total: number;
+    /**
+     * 获得推荐的次数
+     */
+    stars: number;
+    /**
+     * 审核状态
+     */
+    status: number;
+    official: boolean;
+    /**
+     * 当前用户是否已点赞
+     */
+    is_stars: boolean;
+    help?: string;
+    enable_plugin_selector?: boolean;
+    plugin_selector_types?: string;
+    is_general_module?: boolean;
+    comment_num: number;
+    contributors?: string;
+    uuid: string;
+    is_private: boolean;
+    /**
+     * 提交修改插件合并的的人
+     */
+    submitter?: string;
+    /**
+     * 复制源插件
+     */
+    base_plugin_id?: number;
+    /**
+     * 复制源插件名
+     */
+    base_script_name?: string;
+    group?: string;
+    riskType?: string;
+    riskDetail?: PluginsRiskDetail[];
+    /**
+     * 补充说明
+     */
+    risk_annotation?: string;
+    /**
+     * 是否为内置插件
+     */
+    isCorePlugin?: boolean;
   }
   export interface PluginIncreResponse {
     day_incre_num: number;
@@ -535,6 +709,15 @@ export declare namespace API {
     root_id?: number;
     message?: string;
   }
+  export interface NavigationBarsResponse {
+    data: NavigationBarsListResponse[];
+  }
+  export interface NavigationBarsListResponse {
+    card: string;
+    link?: string;
+    otherLink?: string;
+    sort?: number;
+  }
   export interface MergePluginRequest {
     /**
      * 申请列表id
@@ -551,6 +734,9 @@ export declare namespace API {
     enable_plugin_selector?: boolean;
     plugin_selector_types?: string;
     is_general_module?: boolean;
+  }
+  export interface IsExtractCodeResponse {
+    is_extract_code: boolean;
   }
   export interface GormBaseModel {
     id: number;
