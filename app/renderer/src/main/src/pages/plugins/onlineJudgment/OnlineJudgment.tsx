@@ -57,7 +57,6 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
             ipcRenderer
                 .invoke("fetch-netWork-status-by-request-interface")
                 .then((res) => {
-                    console.log("res", res)
                     if (res.code === -1) {
                         yakitNotify("error", res.message)
                     }
@@ -166,6 +165,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
             setLoginShow(false)
             getNetWork()
         })
+
         return initLoading ? (
             <YakitSpin wrapperClassName={styles["online-spin"]} />
         ) : (
