@@ -27,7 +27,7 @@ import {
     useGetState,
     useInViewport,
     useLongPress,
-    useMemoizedFn,
+    useMemoizedFn, useMount,
     useThrottleFn,
     useUpdateEffect
 } from "ahooks"
@@ -78,6 +78,8 @@ import {shallow} from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
 import {RemoteGV} from "@/yakitGV"
 import {PageNodeItemProps, PageProps, usePageInfo} from "@/store/pageInfo"
+import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex";
+
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
 
@@ -102,7 +104,7 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
             {
                 label: (
                     <div className={styles["right-menu-item"]}>
-                        <OutlinePlusIcon />
+                        <OutlinePlusIcon/>
                         新建组
                     </div>
                 ),
@@ -307,6 +309,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [bugTestValue, setBugTestValue] = useState<BugInfoProps[]>([])
     const [bugUrl, setBugUrl] = useState<string>("")
 
+    // 在组件启动的时候，执行一次，用于初始化服务端推送（DuplexConnection）
+    useEffect(() => {
+        startupDuplexConn()
+        return () => {
+            // 当组件销毁的时候，关闭DuplexConnection
+            closeDuplexConn()
+        }
+    }, [])
+
     // 打开tab页面
     useEffect(() => {
         // 写成HOC是否好点呢，现在一个页面启动就是一个函数
@@ -385,7 +396,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
-    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean; request: Uint8Array}) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array }) => {
         openMenuPage(
             {route: YakitRoute.WebsocketFuzzer},
             {
@@ -397,7 +408,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
     /** 数据对比*/
-    const addDataCompare = useMemoizedFn((res: {leftData: string; rightData: string}) => {
+    const addDataCompare = useMemoizedFn((res: { leftData: string; rightData: string }) => {
         openMenuPage(
             {route: YakitRoute.DataCompare},
             {
@@ -443,7 +454,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {})
+                .catch(() => {
+                })
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === YakitRoute.PoC)
@@ -618,7 +630,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }, [])
 
     /** ---------- 操作系统 start ---------- */
-    // 系统类型
+        // 系统类型
     const [system, setSystem] = useState<string>("")
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
@@ -874,7 +886,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 if (item.Data.length === 0) {
                     const m = showModal({
                         title: "导入插件",
-                        content: <DownloadAllPlugin type='modal' onClose={() => m.destroy()} />
+                        content: <DownloadAllPlugin type='modal' onClose={() => m.destroy()}/>
                     })
                     return m
                 }
@@ -936,7 +948,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 // 触发获取web-fuzzer的缓存
                 fetchFuzzerList()
             }
-        } catch (error) {}
+        } catch (error) {
+        }
     })
 
     const getFuzzerSequenceCache = useMemoizedFn(() => {
@@ -953,131 +966,132 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 获取数据库中缓存的web-fuzzer页面信息
     const fetchFuzzerList = useMemoizedFn(() => {
         try {
-        // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
-        if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1) return
-        setLoading(true)
-        getRemoteProjectValue(RemoteGV.FuzzerCache)
-            .then((res: any) => {
-                const cache = JSON.parse(res || "[]")
-                // 菜单在代码内的名字
-                const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
-                const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
-                const tabName = routeKeyToLabel.get(key) || menuName
-                let pageNodeInfo: PageProps = {
-                    pageList: [],
-                    routeKey: YakitRoute.HTTPFuzzer,
-                    singleNode: false
-                }
-                let multipleNodeListLength: number = 0
-                const multipleNodeList: MultipleNodeInfo[] = cache.filter((ele) => ele.groupId === "0")
-                const pLength = multipleNodeList.length
-                const defaultCache = {
-                    proxy: proxyRef.current || [],
-                    dnsServers: dnsServersRef.current || [],
-                    etcHosts: etcHostsRef.current || []
-                }
-                for (let index = 0; index < pLength; index++) {
-                    const parentItem: MultipleNodeInfo = multipleNodeList[index]
-                    const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
-                    const cLength = childrenList.length
-                    const groupChildrenList: MultipleNodeInfo[] = []
+            // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
+            if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1) return
+            setLoading(true)
+            getRemoteProjectValue(RemoteGV.FuzzerCache)
+                .then((res: any) => {
+                    const cache = JSON.parse(res || "[]")
+                    // 菜单在代码内的名字
+                    const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
+                    const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
+                    const tabName = routeKeyToLabel.get(key) || menuName
+                    let pageNodeInfo: PageProps = {
+                        pageList: [],
+                        routeKey: YakitRoute.HTTPFuzzer,
+                        singleNode: false
+                    }
+                    let multipleNodeListLength: number = 0
+                    const multipleNodeList: MultipleNodeInfo[] = cache.filter((ele) => ele.groupId === "0")
+                    const pLength = multipleNodeList.length
+                    const defaultCache = {
+                        proxy: proxyRef.current || [],
+                        dnsServers: dnsServersRef.current || [],
+                        etcHosts: etcHostsRef.current || []
+                    }
+                    for (let index = 0; index < pLength; index++) {
+                        const parentItem: MultipleNodeInfo = multipleNodeList[index]
+                        const childrenList = cache.filter((ele) => ele.groupId === parentItem.id)
+                        const cLength = childrenList.length
+                        const groupChildrenList: MultipleNodeInfo[] = []
 
-                    for (let j = 0; j < cLength; j++) {
-                        const childItem: MultipleNodeInfo = childrenList[j]
-                        const nodeItem = {
-                            ...childItem
+                        for (let j = 0; j < cLength; j++) {
+                            const childItem: MultipleNodeInfo = childrenList[j]
+                            const nodeItem = {
+                                ...childItem
+                            }
+                            groupChildrenList.push({...nodeItem})
+                            const newNodeItem = {
+                                id: `${randomString(8)}-${j + 1}`,
+                                routeKey: YakitRoute.HTTPFuzzer,
+                                pageGroupId: nodeItem.groupId,
+                                pageId: nodeItem.id,
+                                pageName: nodeItem.verbose,
+                                pageParamsInfo: {
+                                    webFuzzerPageInfo: {
+                                        pageId: nodeItem.id,
+                                        advancedConfigValue: {
+                                            ...defaultAdvancedConfigValue,
+                                            ...defaultCache,
+                                            ...nodeItem.pageParams
+                                        },
+                                        request: nodeItem.pageParams?.request || ""
+                                    }
+                                },
+                                sortFieId: nodeItem.sortFieId,
+                                expand: nodeItem.expand,
+                                color: nodeItem.color
+                            }
+                            pageNodeInfo.pageList.push(newNodeItem)
                         }
-                        groupChildrenList.push({...nodeItem})
-                        const newNodeItem = {
-                            id: `${randomString(8)}-${j + 1}`,
+                        if (cLength > 0) {
+                            multipleNodeListLength += cLength
+                        } else {
+                            multipleNodeListLength += 1
+                            parentItem.pageParams = {
+                                ...parentItem.pageParams
+                            }
+                        }
+                        parentItem.groupChildren = groupChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId"))
+
+                        const pageListItem = {
+                            id: `${randomString(8)}-${index + 1}`,
                             routeKey: YakitRoute.HTTPFuzzer,
-                            pageGroupId: nodeItem.groupId,
-                            pageId: nodeItem.id,
-                            pageName: nodeItem.verbose,
+                            pageGroupId: parentItem.groupId,
+                            pageId: parentItem.id,
+                            pageName: parentItem.verbose,
                             pageParamsInfo: {
                                 webFuzzerPageInfo: {
-                                    pageId: nodeItem.id,
+                                    pageId: parentItem.id,
                                     advancedConfigValue: {
                                         ...defaultAdvancedConfigValue,
                                         ...defaultCache,
-                                        ...nodeItem.pageParams
+                                        ...parentItem.pageParams
                                     },
-                                    request: nodeItem.pageParams?.request || ""
+                                    request: parentItem.pageParams?.request || ""
                                 }
                             },
-                            sortFieId: nodeItem.sortFieId,
-                            expand: nodeItem.expand,
-                            color: nodeItem.color
+                            sortFieId: parentItem.sortFieId,
+                            expand: parentItem.expand,
+                            color: parentItem.color
                         }
-                        pageNodeInfo.pageList.push(newNodeItem)
+                        pageNodeInfo.pageList.push({...pageListItem})
                     }
-                    if (cLength > 0) {
-                        multipleNodeListLength += cLength
+                    const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
+                    if (newMultipleNodeList.length === 0) return
+                    // console.log("multipleNodeList", multipleNodeList)
+                    // console.log("pageNodeInfo", pageNodeInfo)
+                    const webFuzzerPage = {
+                        routeKey: key,
+                        verbose: tabName,
+                        menuName: menuName,
+                        route: YakitRoute.HTTPFuzzer,
+                        pluginId: undefined,
+                        pluginName: undefined,
+                        singleNode: undefined,
+                        multipleNode: multipleNodeList,
+                        multipleLength: multipleNodeListLength
+                    }
+                    const oldPageCache = [...pageCache]
+                    const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
+                    if (index === -1) {
+                        oldPageCache.push(webFuzzerPage)
                     } else {
-                        multipleNodeListLength += 1
-                        parentItem.pageParams = {
-                            ...parentItem.pageParams
-                        }
+                        oldPageCache.splice(index, 1, webFuzzerPage)
                     }
-                    parentItem.groupChildren = groupChildrenList.sort((a, b) => compareAsc(a, b, "sortFieId"))
-
-                    const pageListItem = {
-                        id: `${randomString(8)}-${index + 1}`,
-                        routeKey: YakitRoute.HTTPFuzzer,
-                        pageGroupId: parentItem.groupId,
-                        pageId: parentItem.id,
-                        pageName: parentItem.verbose,
-                        pageParamsInfo: {
-                            webFuzzerPageInfo: {
-                                pageId: parentItem.id,
-                                advancedConfigValue: {
-                                    ...defaultAdvancedConfigValue,
-                                    ...defaultCache,
-                                    ...parentItem.pageParams
-                                },
-                                request: parentItem.pageParams?.request || ""
-                            }
-                        },
-                        sortFieId: parentItem.sortFieId,
-                        expand: parentItem.expand,
-                        color: parentItem.color
+                    // console.log('oldPageCache',oldPageCache);
+                    setPageCache(oldPageCache)
+                    setCurrentTabKey(key)
+                    setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
+                    const lastPage = multipleNodeList[multipleNodeList.length - 1]
+                    if (lastPage && lastPage.id.includes("group")) {
+                        // 最后一个是组的时候，需要设置当前选中组
+                        setSelectGroupId(YakitRoute.HTTPFuzzer, lastPage.id)
                     }
-                    pageNodeInfo.pageList.push({...pageListItem})
-                }
-                const newMultipleNodeList = multipleNodeList.sort((a, b) => compareAsc(a, b, "sortFieId"))
-                if (newMultipleNodeList.length === 0) return
-                // console.log("multipleNodeList", multipleNodeList)
-                // console.log("pageNodeInfo", pageNodeInfo)
-                const webFuzzerPage = {
-                    routeKey: key,
-                    verbose: tabName,
-                    menuName: menuName,
-                    route: YakitRoute.HTTPFuzzer,
-                    pluginId: undefined,
-                    pluginName: undefined,
-                    singleNode: undefined,
-                    multipleNode: multipleNodeList,
-                    multipleLength: multipleNodeListLength
-                }
-                const oldPageCache = [...pageCache]
-                const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
-                if (index === -1) {
-                    oldPageCache.push(webFuzzerPage)
-                } else {
-                    oldPageCache.splice(index, 1, webFuzzerPage)
-                }
-                // console.log('oldPageCache',oldPageCache);
-                setPageCache(oldPageCache)
-                setCurrentTabKey(key)
-                setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
-                const lastPage = multipleNodeList[multipleNodeList.length - 1]
-                if (lastPage && lastPage.id.includes("group")) {
-                    // 最后一个是组的时候，需要设置当前选中组
-                    setSelectGroupId(YakitRoute.HTTPFuzzer, lastPage.id)
-                }
-            })
-            .catch((e) => {})
-            .finally(() => setTimeout(() => setLoading(false), 200))
+                })
+                .catch((e) => {
+                })
+                .finally(() => setTimeout(() => setLoading(false), 200))
         } catch (error) {
             yakitNotify("error", "fetchFuzzerList失败:" + error)
         }
@@ -1166,12 +1180,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 setBugTestValue(
                                     value
                                         ? [
-                                              {
-                                                  filter: record?.filter,
-                                                  key: record?.key,
-                                                  title: record?.title
-                                              }
-                                          ]
+                                            {
+                                                filter: record?.filter,
+                                                key: record?.key,
+                                                title: record?.title
+                                            }
+                                        ]
                                         : []
                                 )
                             }}
@@ -1218,7 +1232,8 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
                     setCurrentTabKey(key)
                 }
             }
-        } catch (error) {}
+        } catch (error) {
+        }
     })
     /** ---------- 拖拽排序 end ---------- */
     return (
@@ -1272,7 +1287,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                     >
                         {pageItem.singleNode ? (
                             <React.Suspense fallback={<>loading page ...</>}>
-                                <PageItem routeKey={pageItem.route} params={pageItem.pageParams} />
+                                <PageItem routeKey={pageItem.route} params={pageItem.pageParams}/>
                             </React.Suspense>
                         ) : (
                             <SubTabList
@@ -1358,7 +1373,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             type: "white",
             onCancelText: "取消",
             onOkText: "关闭所有",
-            icon: <ExclamationCircleOutlined />,
+            icon: <ExclamationCircleOutlined/>,
             onOk: () => {
                 // const newPage: PageCache | undefined = pageCache.find((p) => p.route === YakitRoute.NewHome)
                 const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
@@ -1387,7 +1402,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             type: "white",
             onCancelText: "取消",
             onOkText: "关闭其他",
-            icon: <ExclamationCircleOutlined />,
+            icon: <ExclamationCircleOutlined/>,
             onOk: () => {
                 if (pageCache.length <= 0) return
                 const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
@@ -1566,7 +1581,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             emiter.emit("onRefWebFuzzer")
         }
     }, [type])
-    const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
+    const onSetType = useMemoizedFn((e, res: { type: WebFuzzerType }) => {
         if (!inViewport) return
         setType(res.type)
         if (type === res.type && res.type === "config") {
@@ -1581,7 +1596,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             ref.focus()
         }, 100)
     })
-    const onAddGroup = useMemoizedFn((e, res: {pageId: string}) => {
+    const onAddGroup = useMemoizedFn((e, res: { pageId: string }) => {
         if (!inViewport) return
         const {index} = getPageItemById(subPage, res.pageId)
         if (index === -1) return
@@ -1621,7 +1636,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         })
         return newData
     }, [subPage])
-    const onSelectSubMenuById = useMemoizedFn((e, res: {pageId: string}) => {
+    const onSelectSubMenuById = useMemoizedFn((e, res: { pageId: string }) => {
         if (!inViewport) return
         const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
         if (index === -1) return
@@ -1660,7 +1675,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     pluginId={pageItem.pluginId || 0}
                     selectSubMenuId={selectSubMenu.id || "0"}
                 />
-                <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
+                <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType}/>
             </div>
         </div>
     )
@@ -1939,7 +1954,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     moveOutOfGroupAndInGroup(result)
                 }
                 /** 移动排序 ---------end--------- */
-            } catch (error) {}
+            } catch (error) {
+            }
         })
         /** @description 组外向组内移动合并 */
         const mergingGroup = useMemoizedFn((result: DragDropContextResultProps) => {
@@ -2263,7 +2279,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 setTimeout(() => {
                     onScrollTabMenu()
                 }, 200)
-            } catch (error) {}
+            } catch (error) {
+            }
         })
         const onAddSubPage = useMemoizedFn(() => {
             if (getSubPageTotal(subPage) >= 100) {
@@ -2403,7 +2420,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 const node = {
                     label: (
                         <div className={styles["right-menu-item"]} key={groupItem.id}>
-                            <div className={classNames(styles["item-color-block"], `color-bg-${groupItem.color}`)} />
+                            <div className={classNames(styles["item-color-block"], `color-bg-${groupItem.color}`)}/>
                             <span>{labelText}</span>
                         </div>
                     ),
@@ -2657,7 +2674,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     type: "white",
                     onCancelText: "取消",
                     onOkText: "关闭其他",
-                    icon: <ExclamationCircleOutlined />,
+                    icon: <ExclamationCircleOutlined/>,
                     onOk: () => {
                         const newSubPage: MultipleNodeInfo[] = [item]
                         onSetSelectSubMenu(item)
@@ -2693,7 +2710,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     type: "white",
                     onCancelText: "取消",
                     onOkText: "关闭组内其他",
-                    icon: <ExclamationCircleOutlined />,
+                    icon: <ExclamationCircleOutlined/>,
                     onOk: () => {
                         const groupItem = subPage[index]
                         subPage[index].groupChildren = [item]
@@ -2859,7 +2876,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     type: "white",
                     onCancelText: "取消",
                     onOkText: "关闭组",
-                    icon: <ExclamationCircleOutlined />,
+                    icon: <ExclamationCircleOutlined/>,
                     onOk: () => {
                         getIsCloseGroupTip()
                         onCloseGroup(groupItem)
@@ -2868,7 +2885,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     onCancel: () => {
                         m.destroy()
                     },
-                    content: <CloseGroupContent />
+                    content: <CloseGroupContent/>
                 })
             } else {
                 onCloseGroup(groupItem)
@@ -2895,7 +2912,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 type: "white",
                 onCancelText: "取消",
                 onOkText: "关闭其他",
-                icon: <ExclamationCircleOutlined />,
+                icon: <ExclamationCircleOutlined/>,
                 onOk: () => {
                     const newPage = [{...groupItem}]
                     onSetSelectSubMenu(groupItem)
@@ -3065,7 +3082,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                     })}
                                     ref={scrollLeftIconRef}
                                 >
-                                    <OutlineChevrondoubleleftIcon />
+                                    <OutlineChevrondoubleleftIcon/>
                                 </div>
                                 <div
                                     className={classNames(styles["tab-menu-sub"], {
@@ -3120,7 +3137,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                     })}
                                     ref={scrollRightIconRef}
                                 >
-                                    <OutlineChevrondoublerightIcon />
+                                    <OutlineChevrondoublerightIcon/>
                                 </div>
                                 {pageItem.hideAdd !== true && (
                                     <OutlinePlusIcon
@@ -3197,7 +3214,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                         >
                             <div className={styles["tab-menu-item-verbose-wrapper"]}>
                                 <div className={styles["tab-menu-item-verbose"]}>
-                                    <SolidDocumentTextIcon className={styles["document-text-icon"]} />
+                                    <SolidDocumentTextIcon className={styles["document-text-icon"]}/>
                                     <span className='content-ellipsis'>{subItem.verbose || ""}</span>
                                 </div>
                                 <RemoveIcon
@@ -3446,7 +3463,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
                             }}
                             key={color}
                         >
-                            {group.color === color && <CheckIcon className={styles["check-icon"]} />}
+                            {group.color === color && <CheckIcon className={styles["check-icon"]}/>}
                         </div>
                     ))}
                 </div>
@@ -3486,7 +3503,7 @@ const CloseGroupContent: React.FC = React.memo(() => {
         <div className={styles["close-group-content"]}>
             <div>是否关闭当前组,关闭后,组内的页面也会关闭</div>
             <label className={styles["close-group-check"]}>
-                <YakitCheckbox checked={tipChecked} onChange={(e) => onChecked(e.target.checked)} />
+                <YakitCheckbox checked={tipChecked} onChange={(e) => onChecked(e.target.checked)}/>
                 不再提示
             </label>
         </div>
@@ -3534,7 +3551,7 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
             )}
             <div className={styles["tab-menu-item-verbose-wrapper"]}>
                 <div className={styles["tab-menu-item-verbose"]}>
-                    <SolidDocumentTextIcon className={styles["document-text-icon"]} />
+                    <SolidDocumentTextIcon className={styles["document-text-icon"]}/>
                     <span className='content-ellipsis'>{item.verbose || ""}</span>
                 </div>
                 <RemoveIcon
@@ -3557,7 +3574,7 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
         type: "white",
         onCancelText: "不保存",
         onOkText: "保存",
-        icon: <ExclamationCircleOutlined />,
+        icon: <ExclamationCircleOutlined/>,
         ...(props || {}),
         onOk: () => {
             if (props?.onOk) {
@@ -3574,7 +3591,7 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
                 }}
                 className='modal-remove-icon'
             >
-                <RemoveIcon />
+                <RemoveIcon/>
             </div>
         ),
         content: <div style={{paddingTop: 8}}>{props?.content}</div>
