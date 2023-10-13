@@ -1048,7 +1048,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const menu = (
         <YakitMenu
             width={142}
-            selectedKeys={[engineMode]}
+            selectedKeys={[]}
             data={GetUIOpSettingMenu() as YakitMenuItemProps[]}
             onClick={({key}) => menuSelect(key)}
         />

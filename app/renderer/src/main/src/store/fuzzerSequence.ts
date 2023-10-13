@@ -4,17 +4,15 @@
 
 import {SequenceProps} from "@/pages/fuzzer/FuzzerSequence/FuzzerSequenceType"
 import {setRemoteProjectValue} from "@/utils/kv"
-import {create} from "zustand"
 import {subscribeWithSelector, persist, createJSONStorage} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {RemoteGV} from "@/yakitGV"
 import {yakitNotify} from "@/utils/notification"
-import { createWithEqualityFn } from "zustand/traditional"
+import {createWithEqualityFn} from "zustand/traditional"
 
 interface FuzzerSequenceProps {
     fuzzerSequenceList: FuzzerSequenceListProps[]
     fuzzerSequenceCacheData: FuzzerSequenceCacheDataProps[]
-    hotPatchCode: string
 
     addFuzzerSequenceList: (f: FuzzerSequenceListProps) => void
     /**删除 fuzzerSequenceList 的同时也会删除 fuzzerSequenceCacheData中的 groupId相同的数据*/
@@ -32,7 +30,6 @@ interface FuzzerSequenceProps {
     removeGroupOther: (groupId: string, id: string) => void
     /**通过传入id的数据，删除组内的数据 */
     removeWithinGroupDataById: (groupId: string, id: string) => void
-    setHotPatchCodeVal: (hotPatchCode: string) => void
 }
 
 export interface FuzzerListProps {}
@@ -51,7 +48,6 @@ export const useFuzzerSequence = createWithEqualityFn<FuzzerSequenceProps>()(
             (set, get) => ({
                 fuzzerSequenceList: [],
                 fuzzerSequenceCacheData: [],
-                hotPatchCode: "",
                 addFuzzerSequenceList: (val) => {
                     const s = get()
                     if (!s) return
@@ -163,15 +159,7 @@ export const useFuzzerSequence = createWithEqualityFn<FuzzerSequenceProps>()(
                             fuzzerSequenceCacheData: [...newVal]
                         })
                     }
-                },
-                setHotPatchCodeVal: (values: string) => {
-                    const s = get()
-                    if (!s) return
-                    set({
-                        ...s,
-                        hotPatchCode: values
-                    })
-                },
+                }
             }),
             {
                 name: "fuzzer-sequence",

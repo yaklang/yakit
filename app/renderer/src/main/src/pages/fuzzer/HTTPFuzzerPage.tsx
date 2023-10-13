@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Form, Modal, Result, Space, Popover, Tooltip, Divider} from "antd"
+import {Form, Modal, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
 import {IMonacoEditor, NewHTTPPacketEditor, HTTP_PACKET_EDITOR_Response_Info} from "../../utils/editors"
 import {showDrawer, showModal} from "../../utils/showModal"
 import {monacoEditorWrite} from "./fuzzerTemplates"
@@ -8,6 +8,7 @@ import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
 import {failed, info, yakitFailed, yakitNotify} from "../../utils/notification"
 import {
+    useControllableValue,
     useCreation,
     useDebounceFn,
     useGetState,
@@ -20,7 +21,6 @@ import {
 import {getRemoteValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {PayloadManagerPage} from "../payloadManager/PayloadManager"
-import {fuzzerInfoProp} from "../MainOperator"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
 import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
@@ -45,7 +45,7 @@ import classNames from "classnames"
 import {PaginationSchema} from "../invoker/schema"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -71,7 +71,8 @@ import {
     ExtractorValueProps,
     HTTPResponseExtractor,
     HTTPResponseMatcher,
-    MatcherAndExtractionProps,
+    MatcherAndExtractionRefProps,
+    MatcherAndExtractionValueProps,
     MatcherValueProps,
     MatchingAndExtraction
 } from "./MatcherAndExtractionCard/MatcherAndExtractionCardType"
@@ -81,9 +82,7 @@ import {MatcherAndExtraction} from "./MatcherAndExtractionCard/MatcherAndExtract
 import _ from "lodash"
 import {YakitRoute} from "@/routes/newRoute"
 import {defaultLabel, FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
-import {execCodec} from "@/utils/encodec"
 import {WebFuzzerNewEditor} from "./WebFuzzerNewEditor/WebFuzzerNewEditor"
-import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import {
     OutlineAnnotationIcon,
     OutlineBeakerIcon,
@@ -94,7 +93,8 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
-import {useFuzzerSequence} from "@/store/fuzzerSequence"
+import {CopyableField} from "@/utils/inputUtil"
+import { YakitCopyText } from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -488,13 +488,6 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
 }
 
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
-    const {hotPatchCode, setHotPatchCodeVal} = useFuzzerSequence(
-        (s) => ({
-            hotPatchCode: s.hotPatchCode,
-            setHotPatchCodeVal: s.setHotPatchCodeVal
-        }),
-        shallow
-    )
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
@@ -563,6 +556,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const fuzzerRef = useRef<any>()
     const [inViewport = true] = useInViewport(fuzzerRef)
 
+    const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
     useEffect(() => {
@@ -573,17 +567,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             .catch(() => {
                 setShowResponseInfoSecondEditor(true)
             })
-        getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
-            if (!remoteData) {
-                return
-            }
-            setHotPatchCode(`${remoteData}`)
-        })
-        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
-            if (!!remoteData) {
-                setHotPatchCodeWithParamGetter(`${remoteData}`)
-            }
-        })
         /** 有分享内容按照分享内容中的 advancedConfig 为准 */
         getRemoteValue(WEB_FUZZ_Advanced_Config_Switch_Checked).then((c) => {
             if (c === "") {
@@ -599,16 +582,33 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [])
     useEffect(() => {
         if (inViewport) {
-            onUpdateRequest()
-            emiter.on("onRefWebFuzzer", onUpdateRequest)
+            onRefWebFuzzerValue()
+            emiter.on("onRefWebFuzzer", onRefWebFuzzerValue)
         }
         return () => {
-            emiter.off("onRefWebFuzzer", onUpdateRequest)
+            emiter.off("onRefWebFuzzer", onRefWebFuzzerValue)
         }
     }, [inViewport])
     const onSetFuzzerAdvancedConfig = useMemoizedFn(() => {
         if (inViewport) onSetAdvancedConfig(!advancedConfig)
     })
+    const onRefWebFuzzerValue = useMemoizedFn(() => {
+        if (!inViewport) return
+        getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
+            if (!remoteData) {
+                return
+            }
+            setHotPatchCode(`${remoteData}`)
+        })
+        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
+            if (!!remoteData) {
+                setHotPatchCodeWithParamGetter(`${remoteData}`)
+            }
+        })
+        onUpdateRequest()
+        onUpdateAdvancedConfigValue()
+    })
+    /**更新请求包 */
     const onUpdateRequest = useMemoizedFn(() => {
         if (!inViewport) return
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
@@ -618,6 +618,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (requestRef.current === newRequest) return
         requestRef.current = newRequest || defaultPostTemplate
         refreshRequest()
+    })
+    /**从数据中心获取页面最新得高级配置数据,目前只有提取器和匹配器相关数据 */
+    const onUpdateAdvancedConfigValue = useMemoizedFn(() => {
+        if (!inViewport) return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        if (!currentItem) return
+        let newAdvancedConfigValue = currentItem.pageParamsInfo.webFuzzerPageInfo?.advancedConfigValue
+        if (!newAdvancedConfigValue) return
+        setAdvancedConfigValue({...newAdvancedConfigValue})
     })
 
     useEffect(() => {
@@ -750,13 +759,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 })
         })
     })
-    const responseViewerRef = useRef<any>()
+    const responseViewerRef = useRef<MatcherAndExtractionRefProps>({
+        validate: () => new Promise(() => {})
+    })
 
     const onValidateHTTPFuzzer = useMemoizedFn(() => {
         if (showMatcherAndExtraction && responseViewerRef.current) {
             responseViewerRef.current
                 .validate()
-                .then((data: {matcher: MatcherValueProps; extractor: ExtractorValueProps}) => {
+                .then((data: MatcherAndExtractionValueProps) => {
                     setAdvancedConfigValue({
                         ...advancedConfigValue,
                         filterMode: data.matcher.filterMode || "drop",
@@ -780,7 +791,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         return {
             ...advancedConfigValueToFuzzerRequests(advancedConfigValue),
             RequestRaw: Buffer.from(requestRef.current, "utf8"), // StringToUint8Array(request, "utf8"),
-            HotPatchCode: hotPatchCode,
+            HotPatchCode: hotPatchCodeRef.current,
             HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
             FuzzerTabIndex: props.id
         }
@@ -920,7 +931,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
             }
-
             if (data.Ok) {
                 if (r.MatchedByMatcher) {
                     yakitNotify("success", `匹配成功: ${r.Url}`)
@@ -1041,29 +1051,31 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
-            title: "调试 / 插入热加载代码",
+            title: null,
             width: "80%",
             footer: null,
+            maskClosable: false,
+            closable:false,
+            style:{ top: '10%' },
             content: (
-                <div className={styles["http-fuzzer-hotPatch"]}>
-                    <HTTPFuzzerHotPatch
-                        initialHotPatchCode={hotPatchCode}
-                        initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
-                        onInsert={(tag) => {
-                            if (webFuzzerNewEditorRef.current.reqEditor)
-                                monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
-                            m.destroy()
-                        }}
-                        onSaveCode={(code) => {
-                            setHotPatchCode(code)
-                            setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
-                        }}
-                        onSaveHotPatchCodeWithParamGetterCode={(code) => {
-                            setHotPatchCodeWithParamGetter(code)
-                            setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
-                        }}
-                    />
-                </div>
+                <HTTPFuzzerHotPatch
+                    initialHotPatchCode={hotPatchCodeRef.current}
+                    initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
+                    onInsert={(tag) => {
+                        if (webFuzzerNewEditorRef.current.reqEditor)
+                            monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
+                        m.destroy()
+                    }}
+                    onSaveCode={(code) => {
+                        setHotPatchCode(code)
+                        setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
+                    }}
+                    onSaveHotPatchCodeWithParamGetterCode={(code) => {
+                        setHotPatchCodeWithParamGetter(code)
+                        setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+                    }}
+                    onCancel={()=>m.destroy()}
+                />
             )
         })
     })
@@ -1183,7 +1195,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setActiveKey(activeKey)
     })
     const setHotPatchCode = useMemoizedFn((v: string) => {
-        setHotPatchCodeVal(v)
+        hotPatchCodeRef.current = v
     })
     const setHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
         hotPatchCodeWithParamGetterRef.current = v
@@ -1560,7 +1572,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             request={requestRef.current}
                             setRequest={onSetRequest}
                             isHttps={advancedConfigValue.isHttps}
-                            hotPatchCode={hotPatchCode}
+                            hotPatchCode={hotPatchCodeRef.current}
                             hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                             setHotPatchCode={setHotPatchCode}
                             setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
@@ -2177,7 +2189,7 @@ const EditorOverlayWidget: React.FC<EditorOverlayWidgetProps> = React.memo((prop
 })
 
 interface ResponseViewerProps {
-    ref?: any
+    ref?: React.ForwardedRef<MatcherAndExtractionRefProps>
     fuzzerResponse: FuzzerResponse
     defaultResponseSearch: string
     system?: string
@@ -2204,8 +2216,6 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         const {
             fuzzerResponse,
             defaultResponseSearch,
-            showMatcherAndExtraction,
-            setShowMatcherAndExtraction,
             showExtra,
             setShowExtra,
             extractorValue,
@@ -2219,6 +2229,12 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             secondNodeTitle,
             secondNodeExtra
         } = props
+
+        const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {
+            defaultValuePropName: "showMatcherAndExtraction",
+            valuePropName: "showMatcherAndExtraction",
+            trigger: "setShowMatcherAndExtraction"
+        })
         const [reason, setReason] = useState<string>("未知原因")
 
         const [activeKey, setActiveKey] = useState<string>("")
@@ -2255,6 +2271,33 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                         setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
                         setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
                     }
+                },
+                showMatcherAndExtraction: {
+                    menu: [
+                        {type: "divider"},
+                        {
+                            key: "show-matchers",
+                            label: "匹配器"
+                        },
+                        {
+                            key: "show-extractors",
+                            label: "提取器"
+                        }
+                    ],
+                    onRun: (editor, key) => {
+                        switch (key) {
+                            case "show-matchers":
+                                setShowMatcherAndExtraction(true)
+                                setActiveType("matchers")
+                                break
+                            case "show-extractors":
+                                setShowMatcherAndExtraction(true)
+                                setActiveType("extractors")
+                                break
+                            default:
+                                break
+                        }
+                    }
                 }
             }
         }, [showResponseInfoSecondEditor])
@@ -2280,6 +2323,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             }
             return overlayWidget
         }, [fuzzerResponse])
+        const onClose = useMemoizedFn(() => {
+            setShowMatcherAndExtraction(false)
+        })
         return (
             <>
                 <YakitResizeBox
@@ -2350,7 +2396,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             {showMatcherAndExtraction ? (
                                 <MatcherAndExtraction
                                     ref={ref}
-                                    onClose={() => setShowMatcherAndExtraction(false)}
+                                    onClose={onClose}
                                     onSave={onSaveMatcherAndExtraction}
                                     httpResponse={Uint8ArrayToString(fuzzerResponse.ResponseRaw)}
                                     matcherValue={matcherValue}
@@ -2429,14 +2475,17 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
                 {fuzzerResponse.Payloads?.length === 0 && "暂无"}
             </div>
             <div
-                className={styles["payload-extract-content-body"]}
-                style={{display: type === "extractContent" ? "" : "none"}}
+                className={classNames(styles["payload-extract-content-body"], "yakit-descriptions")}
+                style={{display: type === "extractContent" ? "" : "none", padding: 0}}
             >
-                {fuzzerResponse.ExtractedResults.map((item) => (
-                    <p>
-                        {item.Key}:{item.Value}
-                    </p>
-                ))}
+                <Descriptions bordered size='small' column={2}>
+                    {fuzzerResponse.ExtractedResults.map((item, index) => (
+                        <Descriptions.Item label={<YakitCopyText showText={item.Key} />} span={2}>
+                            {item.Value ? <YakitCopyText showText={item.Value} /> : ""}
+                        </Descriptions.Item>
+                    ))}
+                </Descriptions>
+
                 {fuzzerResponse.ExtractedResults?.length === 0 && "暂无"}
             </div>
         </div>

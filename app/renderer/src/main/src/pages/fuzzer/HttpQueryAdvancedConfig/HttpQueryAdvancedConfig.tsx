@@ -32,6 +32,7 @@ import {
     ColorSelect,
     ExtractorItem,
     MatcherAndExtractionCard,
+    MatcherAndExtractionDrawer,
     MatcherItem,
     defMatcherAndExtractionCode,
     extractorTypeList,
@@ -52,7 +53,6 @@ import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
-import {menuBodyHeight} from "@/pages/globalVariable"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -113,10 +113,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     )
     const filterMode = useMemo(() => advancedConfigValue.filterMode, [advancedConfigValue.filterMode])
     const hitColor = useMemo(() => advancedConfigValue.hitColor || "red", [advancedConfigValue.hitColor])
-
-    const heightDrawer = useMemo(() => {
-        return menuBodyHeight.firstTabMenuBodyHeight - 40
-    }, [menuBodyHeight.firstTabMenuBodyHeight])
 
     useEffect(() => {
         setHttpResponse(defaultHttpResponse)
@@ -315,7 +311,20 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         document.body.removeChild(tempElement)
         return width
     }
-
+    const onClose = useMemoizedFn(() => {
+        setVisibleDrawer(false)
+    })
+    const onSave = useMemoizedFn((matcher, extractor) => {
+        const v = form.getFieldsValue()
+        onSetValue({
+            ...v,
+            filterMode: matcher.filterMode,
+            hitColor: matcher.hitColor || "red",
+            matchersCondition: matcher.matchersCondition,
+            matchers: matcher.matchersList || [],
+            extractors: extractor.extractorList || []
+        })
+    })
     return (
         <div
             className={classNames(styles["http-query-advanced-config"])}
@@ -970,36 +979,16 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 </YakitCollapse>
                 <div className={styles["to-end"]}>已经到底啦～</div>
             </Form>
-            <YakitDrawer
-                mask={false}
-                visible={visibleDrawer}
-                width='100vh'
-                headerStyle={{display: "none"}}
-                style={{height: visibleDrawer ? heightDrawer : 0}}
-                contentWrapperStyle={{height: heightDrawer, boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
-                bodyStyle={{padding: 0}}
-                placement='bottom'
-            >
-                <MatcherAndExtractionCard
-                    defActiveType={type}
-                    httpResponse={httpResponse}
-                    defActiveKey={defActiveKey}
-                    matcherValue={{filterMode, matchersList: matchersList || [], matchersCondition, hitColor}}
-                    extractorValue={{extractorList: extractorList || []}}
-                    onClose={() => setVisibleDrawer(false)}
-                    onSave={(matcher, extractor) => {
-                        const v = form.getFieldsValue()
-                        onSetValue({
-                            ...v,
-                            filterMode: matcher.filterMode,
-                            hitColor: matcher.hitColor || "red",
-                            matchersCondition: matcher.matchersCondition,
-                            matchers: matcher.matchersList || [],
-                            extractors: extractor.extractorList || []
-                        })
-                    }}
-                />
-            </YakitDrawer>
+            <MatcherAndExtractionDrawer
+                visibleDrawer={visibleDrawer}
+                defActiveType={type}
+                httpResponse={httpResponse}
+                defActiveKey={defActiveKey}
+                matcherValue={{filterMode, matchersList: matchersList || [], matchersCondition, hitColor}}
+                extractorValue={{extractorList: extractorList || []}}
+                onClose={onClose}
+                onSave={onSave}
+            />
         </div>
     )
 })

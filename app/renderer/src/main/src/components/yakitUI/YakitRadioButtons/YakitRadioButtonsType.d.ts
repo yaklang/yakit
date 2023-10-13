@@ -1,14 +1,15 @@
 import {RadioGroupProps} from "antd"
+import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
 
 /**
  * @description: 按钮单选框Props
- * @deprecated optionType 弃用
- * @param {"small" | "middle" | "large" | "maxLarge"} size  默认middle
  * @augments RadioGroupProps 继承antd的 RadioGroupProps 默认属性
- * @params {string} className RadioGroup  className
+ * @property {YakitSizeType} size  默认middle
+ * @property {string} className
+ * @property {string} wrapClassName
  */
-export interface YakitRadioButtonsProps extends Omit<RadioGroupProps, "size"> {
-    size?: "small" | "middle" | "large" | "maxLarge"
+export interface YakitRadioButtonsProps extends Omit<RadioGroupProps, "size" | "optionType"> {
+    size?: YakitSizeType
     className?: string
     wrapClassName?: string
 }

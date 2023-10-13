@@ -13,7 +13,6 @@ import classNames from "classnames"
 /**
  * @description YakitSpinProps 的属性
  * @augments YakitSpinProps 继承antd的 SpinProps 默认属性
- * @param {"small" | "middle" | "large" } size  默认middle
  */
 export const YakitSpin: React.FC<YakitSpinProps> = (props) => {
     return (
