@@ -4,12 +4,11 @@ import {ManyMultiSelectForString, SelectOne, SwitchItem} from "@/utils/inputUtil
 import {Divider, Form, Popconfirm, Space, Upload} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {yakitInfo, warn, failed} from "@/utils/notification"
+import {yakitInfo, warn, failed, yakitNotify} from "@/utils/notification"
 import {AutoSpin} from "@/components/AutoSpin"
 import {setTimeout} from "timers"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import styles from "./ConfigNetworkPage.module.scss"
-import {RemoveIcon} from "@/assets/newIcon"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {InputCertificateForm} from "@/pages/mitm/MITMServerStartForm/MITMAddTLS"
@@ -53,6 +52,7 @@ interface ClientCertificatePfx {
     name: string
     Pkcs12Bytes: Uint8Array
     Pkcs12Password: Uint8Array
+    password?: boolean
 }
 
 interface ClientCertificates {
@@ -116,24 +116,35 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         ipcRenderer
             .invoke("fetch-file-content", file.path)
             .then((res) => {
+                currentIndex.current += 1
                 // 验证证书是否需要密码
                 ipcRenderer
                     .invoke("IsSetGlobalNetworkConfigPassWord", {
                         Pkcs12Bytes: StringToUint8Array(res)
                     } as IsSetGlobalNetworkConfig)
-                    .then((result:boolean) => {
-                        console.log("ddd",result);
-                        
+                    .then((result: {IsSetPassWord: boolean}) => {
+                        if (result.IsSetPassWord) {
+                            setCertificateParams([
+                                ...(certificateParams || []),
+                                {
+                                    name: `证书${currentIndex.current}`,
+                                    Pkcs12Bytes: StringToUint8Array(res),
+                                    Pkcs12Password: new Uint8Array()
+                                }
+                            ])
+                        } else {
+                            // 需要密码
+                            setCertificateParams([
+                                ...(certificateParams || []),
+                                {
+                                    name: `证书${currentIndex.current}`,
+                                    Pkcs12Bytes: StringToUint8Array(res),
+                                    Pkcs12Password: new Uint8Array(),
+                                    password: true
+                                }
+                            ])
+                        }
                     })
-                // currentIndex.current += 1
-                // setCertificateParams([
-                //     ...(certificateParams || []),
-                //     {
-                //         name: `证书${currentIndex.current}`,
-                //         Pkcs12Bytes: StringToUint8Array(res),
-                //         Pkcs12Password: new Uint8Array()
-                //     }
-                // ])
             })
             .catch(() => {
                 failed("无法获取该文件内容，请检查后后重试！")
@@ -153,8 +164,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     const submit = useMemoizedFn((e) => {
         e.preventDefault()
         if (format === 1) {
-            if (!certificateParams) {
+            if (!(Array.isArray(certificateParams)&&certificateParams.length>0)) {
                 warn("请添加证书")
+                return
+            }
+            const certificate = certificateParams.filter((item)=>item.password!==true)
+            if(certificate.length===0){
+                warn("无效证书")
                 return
             }
             const obj: ClientCertificatePem = {
@@ -162,7 +178,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 CrtPem: new Uint8Array(),
                 KeyPem: new Uint8Array()
             }
-            const ClientCertificates = certificateParams.map((item) => {
+            const ClientCertificates = certificate.map((item) => {
                 const {Pkcs12Bytes, Pkcs12Password} = item
                 return {Pkcs12Bytes, Pkcs12Password, ...obj}
             })
@@ -188,9 +204,16 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         }
     })
 
-    const failCard = useMemoizedFn(() => {
+    const closeCard = useMemoizedFn((item: ClientCertificatePfx) => {
+        if (Array.isArray(certificateParams)) {
+            let cache: ClientCertificatePfx[] = certificateParams.filter((itemIn) => item.name !== itemIn.name)
+            setCertificateParams(cache)
+        }
+    })
+
+    const failCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
         return (
-            <div className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
+            <div key={key} className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
                 <div className={styles["decorate"]}>
                     <RectangleFailIcon />
                 </div>
@@ -199,12 +222,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     <div
                         className={styles["close"]}
                         onClick={() => {
-                            console.log("del")
+                            closeCard(item)
                         }}
                     >
                         <CloseIcon />
                     </div>
-                    <div className={styles["title"]}>证书 1</div>
+                    <div className={styles["title"]}>{item.name}</div>
                     <SolidLockClosedIcon />
                     <div className={styles["content"]}>未解密</div>
                     <YakitButton
@@ -214,14 +237,43 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 title: "密码解锁",
                                 content: (
                                     <div style={{padding: 20}}>
-                                        <YakitInput.Password placeholder='请输入证书密码' allowClear />
+                                        <YakitInput.Password
+                                            placeholder='请输入证书密码'
+                                            allowClear
+                                            onChange={(e) => {
+                                                const {value} = e.target
+                                                if (Array.isArray(certificateParams)) {
+                                                    certificateParams[key].Pkcs12Password =
+                                                        value.length > 0 ? StringToUint8Array(value) : new Uint8Array()
+                                                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
+                                                    setCertificateParams(cache)
+                                                }
+                                            }}
+                                        />
                                     </div>
                                 ),
                                 onCancel: () => {
                                     m.destroy()
                                 },
                                 onOk: () => {
-                                    console.log("submit")
+                                    ipcRenderer
+                                        .invoke("IsSetGlobalNetworkConfigPassWord", {
+                                            Pkcs12Bytes: item.Pkcs12Bytes,
+                                            Pkcs12Password: item.Pkcs12Password
+                                        } as IsSetGlobalNetworkConfig)
+                                        .then((result: {IsSetPassWord: boolean}) => {
+                                            console.log("item.Pkcs12Password--",item.Pkcs12Password,result);
+                                            if(result.IsSetPassWord){
+                                                if (Array.isArray(certificateParams)) {
+                                                    certificateParams[key].password = false
+                                                    let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
+                                                    setCertificateParams(cache)
+                                                }
+                                            }
+                                            else{
+                                                failed(`密码错误`)
+                                            }
+                                        })
                                 },
                                 width: 400
                             })
@@ -234,9 +286,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         )
     })
 
-    const succeeCard = useMemoizedFn(() => {
+    const succeeCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
         return (
-            <div className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
+            <div key={key} className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
                 <div className={styles["decorate"]}>
                     <RectangleSucceeIcon />
                 </div>
@@ -249,12 +301,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     <div
                         className={styles["close"]}
                         onClick={() => {
-                            console.log("del")
+                            closeCard(item)
                         }}
                     >
                         <CloseIcon />
                     </div>
-                    <div className={styles["title"]}>证书 2</div>
+                    <div className={styles["title"]}>{item.name}</div>
                     <SolidCheckCircleIcon />
                     <div className={styles["content"]}>可用</div>
                     <div className={styles["password"]}>******</div>
@@ -268,38 +320,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             <div className={styles["certificate-box"]}>
                 {Array.isArray(certificateParams) &&
                     certificateParams.map((item, index) => {
-                        return (
-                            <div className={styles["certificate-item"]}>
-                                <div className={styles["certificate-path"]}>{item.name}：</div>
-                                <div className={styles["input-box"]}>
-                                    <YakitInput
-                                        placeholder='请输入证书密码'
-                                        allowClear
-                                        size='small'
-                                        value={item?.Pkcs12Password && Uint8ArrayToString(item.Pkcs12Password)}
-                                        onChange={(e) => {
-                                            const {value} = e.target
-                                            certificateParams[index].Pkcs12Password =
-                                                value.length > 0 ? StringToUint8Array(value) : new Uint8Array()
-                                            let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
-                                            setCertificateParams(cache)
-                                        }}
-                                    />
-                                </div>
-
-                                <RemoveIcon
-                                    onClick={() => {
-                                        let cache: ClientCertificatePfx[] = certificateParams.filter(
-                                            (itemIn) => item.name !== itemIn.name
-                                        )
-                                        setCertificateParams(cache)
-                                    }}
-                                />
-                            </div>
-                        )
+                        if (item.password) return failCard(item, index)
+                        return succeeCard(item, index)
                     })}
-                {failCard()}
-                {succeeCard()}
             </div>
         )
     }, [certificateParams])

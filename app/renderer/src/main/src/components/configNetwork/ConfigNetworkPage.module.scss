@@ -5,27 +5,6 @@
     flex-wrap: wrap; /* 这里设置为wrap */
     gap: 8px;
 
-    .certificate-item {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        .certificate-path {
-            font-size: 12px;
-        }
-        .input-box {
-            flex: 1;
-        }
-        svg {
-            width: 16px;
-            height: 16px;
-            color: var(--yakit-helper-text-color);
-            cursor: pointer;
-            &:hover {
-                color: var(--yakit-primary-4);
-            }
-        }
-    }
-
     .certificate-succee {
         background-color: rgba(41, 188, 208, 0.1);
     }
