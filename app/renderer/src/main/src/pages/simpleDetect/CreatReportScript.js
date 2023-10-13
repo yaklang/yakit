@@ -348,7 +348,7 @@ for target,risks = range targetToRisks {
     }
     
     allCount = criticalCount +highCount + warningCount + lowCount
-    if len(infoPotentialRisk) == 0 {
+    if riskLevel != "安全" {
         ipRisksStr = append(ipRisksStr, {
             "资产": {"value": target, "jump_link": target, "sort": 1},
             "风险等级": {"value": riskLevel,"color": colorTag, "sort": 2},
