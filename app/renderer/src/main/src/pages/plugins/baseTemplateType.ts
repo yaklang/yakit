@@ -140,7 +140,7 @@ export interface PluginFilterParams {
     tags?: string[]
     /** 插件组 */
     groups?: string[]
-    /** 插件状态(公开/私密) */
+    /** 插件状态(公开 0 /私密 1) */
     state?: string[]
 }
 /** 插件搜索条件 */
@@ -156,6 +156,8 @@ export interface PluginSearchParams {
 export interface PluginListPageMeta {
     page: number
     limit: number
+    order?: "asc" | "desc" | string
+    order_by?: string
 }
 /** ---------- 插件列表相关 end ---------- */
 
