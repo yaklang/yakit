@@ -684,7 +684,7 @@ if len(infoPotentialRisk) > 0 {
                  "sort": 3,
                  "value": infoRisk.Severity
             },
-            "标漏洞类型": {
+            "漏洞类型": {
                   "sort": 4,
                   "value": infoRisk.RiskTypeVerbose
             }, 
