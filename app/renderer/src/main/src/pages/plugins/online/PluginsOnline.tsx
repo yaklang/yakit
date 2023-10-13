@@ -25,11 +25,11 @@ import {openExternalWebsite} from "@/utils/openWebsite"
 import card1 from "./card1.png"
 import card2 from "./card2.png"
 import card3 from "./card3.png"
-import qrCode from "./qrCode.png"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {
+    NavigationBars,
     PluginOnlineDetailBackProps,
     PluginsListRefProps,
     PluginsOnlineHeardProps,
@@ -59,6 +59,8 @@ import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginL
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginsOnline.module.scss"
+import {NetWorkApi} from "@/services/fetch"
+import {PluginsQueryProps, apiFetchOnlineList, convertRequestParams} from "../utils"
 
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
     const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
@@ -144,7 +146,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
     const [filters, setFilters] = useState<PluginFilterParams>(
-        cloneDeep({...defaultFilter, tags: ["Weblogic", "威胁情报"]})
+        cloneDeep({...defaultFilter, tags: []})
     )
 
     const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
@@ -186,19 +188,14 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                       limit: response.pagemeta.limit || 20
                   }
 
-            const query = {
-                ...params,
-                ...search,
-                ...filters
-            }
+            const query: PluginsQueryProps = convertRequestParams(filters, search, params)
             if (!showFilter) {
                 query["status"] = []
                 query["plugin_type"] = []
                 query["tags"] = []
             }
-            // console.log("query", reset, {...query})
             try {
-                const res = await apiFetchList(query)
+                const res = await apiFetchOnlineList(query)
                 if (!res.data) res.data = []
                 dispatch({
                     type: "add",
@@ -527,35 +524,32 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     )
 })
 
-const cardImg = [
-    {
-        id: "1",
-        imgUrl: card1,
-        link: "https://yaklang.com/products/intro/",
-        isQRCode: false
-    },
-    {
-        id: "2",
-        imgUrl: card2,
-        link: "https://yaklang.com/products/intro/",
-        isQRCode: true
-    },
-    {
-        id: "3",
-        imgUrl: card3,
-        link: "https://space.bilibili.com/437503777",
-        isQRCode: false
-    }
-]
-
 const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props) => {
     const {onSearch} = props
     const [search, setSearch] = useControllableValue<PluginSearchParams>(props)
     const [visibleQRCode, setVisibleQRCode] = useState<boolean>(false)
     const [codeUrl, setCodeUrl] = useState<string>("")
+    const [cardImg, setCardImg] = useState<API.NavigationBarsListResponse[]>([])
+    useEffect(() => {
+        getBars()
+    }, [])
+    /**获取导航卡片 */
+    const getBars = useMemoizedFn(() => {
+        NetWorkApi<NavigationBars, API.NavigationBarsResponse>({
+            method: "get",
+            url: "navigation/bars"
+        })
+            .then((res: API.NavigationBarsResponse) => {
+                setCardImg(res.data || [])
+            })
+            .catch((err) => {
+                yakitNotify("error", "获取卡片导航失败:" + err)
+            })
+            .finally(() => {})
+    })
     const onImgClick = useMemoizedFn((ele) => {
-        if (ele.isQRCode) {
-            setCodeUrl(ele.link)
+        if (ele.otherLink) {
+            setCodeUrl(ele.otherLink)
             setVisibleQRCode(true)
         } else {
             openExternalWebsite(ele.link)
@@ -577,9 +571,9 @@ const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props)
             <div className={styles["plugin-online-heard-card"]}>
                 {cardImg.map((ele) => (
                     <img
-                        key={ele.id}
+                        key={ele.card}
                         className={styles["plugin-online-heard-card-img"]}
-                        src={ele.imgUrl}
+                        src={ele.card}
                         alt=''
                         onClick={() => onImgClick(ele)}
                     />
@@ -600,7 +594,7 @@ const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props)
                         </div>
                     </div>
                     <div className={styles["yakit-modal-code-content"]}>
-                        <img alt='' src={qrCode} className={styles["yakit-modal-code-content-url"]} />
+                        <img alt='' src={codeUrl} className={styles["yakit-modal-code-content-url"]} />
                         <span className={styles["yakit-modal-code-content-tip"]}>微信扫码关注公众号</span>
                     </div>
                 </div>
