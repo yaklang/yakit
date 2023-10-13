@@ -591,4 +591,17 @@ module.exports = (win, getClient) => {
     ipcMain.handle("RequestYakURL", async (e, params) => {
         return await asyncRequestYakURL(params)
     })
+
+
+    const streamDuplexConnectionMap = new Map();
+    ipcMain.handle("cancel-DuplexConnection", handlerHelper.cancelHandler(streamDuplexConnectionMap));
+    ipcMain.handle("DuplexConnection", (e, params, token) => {
+        let stream = streamDuplexConnectionMap.get(token)
+        if (stream) {
+            stream.write(params)
+            return
+        }
+        stream = getClient().DuplexConnection(params);
+        handlerHelper.registerHandler(win, stream, streamDuplexConnectionMap, token)
+    })
 }

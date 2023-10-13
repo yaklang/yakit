@@ -540,6 +540,16 @@ service Yak {
   rpc QueryTrafficSession(QueryTrafficSessionRequest) returns (QueryTrafficSessionResponse);
   rpc QueryTrafficPacket(QueryTrafficPacketRequest) returns (QueryTrafficPacketResponse);
   rpc QueryTrafficTCPReassembled(QueryTrafficTCPReassembledRequest) returns (QueryTrafficTCPReassembledResponse);
+
+  rpc DuplexConnection(stream DuplexConnectionRequest) returns (stream DuplexConnectionResponse);
+}
+
+message DuplexConnectionRequest {
+  bytes Data = 1;
+}
+
+message DuplexConnectionResponse {
+  bytes Data = 1;
 }
 
 message PcapMetadataRequest {
@@ -673,7 +683,10 @@ message SuricataConfig {
 }
 
 message PcapXResponse {
-
+  int64 PacketFrameCounter = 1;
+  int64 NetInterfaceTransferKBPerSeconds = 2;
+  int64 TCPReassembledCount = 3;
+  int64 TrafficSessionCount = 4;
 }
 
 message RequestYakURLParams {

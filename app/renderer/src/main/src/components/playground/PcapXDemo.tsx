@@ -10,6 +10,7 @@ import {failed, info} from "@/utils/notification";
 import {useMemoizedFn} from "ahooks";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {PacketListDemo} from "@/components/playground/PacketListDemo";
+import {debugYakitModal, debugYakitModalAny} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 
 export interface PcapXDemoProp {
 
@@ -104,7 +105,7 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
                 }} value={firstRequest.NetInterfaceList.join(",")} help={<div>
                     <>选择需要抓包的网卡：</>
                     {
-                        pcapMeta?.DefaultPublicNetInterface && <>默认网卡: {pcapMeta?.DefaultPublicNetInterface}({
+                        pcapMeta?.DefaultPublicNetInterface && <>默认网卡: {pcapMeta?.DefaultPublicNetInterface.Name}({
                             pcapMeta?.DefaultPublicNetInterface.Addr
                         })</>
                     }

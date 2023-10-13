@@ -14,7 +14,7 @@ const {ipcRenderer} = window.require("electron");
 export const TrafficDemo: React.FC<TrafficDemoProp> = React.memo((props) => {
     const [data, setData] = React.useState<TrafficSession[]>([]);
     const [loading, setLoading] = React.useState(false);
-    const [pagination, setPagination] = React.useState({Page: 1, Limit: 1000});
+    const [pagination, setPagination] = React.useState({Page: 1, Limit: 50});
     const [total, setTotal] = React.useState(0);
     const [params, setParams] = React.useState({});
 
