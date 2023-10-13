@@ -368,6 +368,7 @@ jobs:
       # 上传 release asset
       - name: Upload Release Asset (Windows)
         uses: actions/upload-release-asset@v1
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
