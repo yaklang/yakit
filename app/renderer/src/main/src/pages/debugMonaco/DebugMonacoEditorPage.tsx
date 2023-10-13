@@ -25,7 +25,7 @@ a=1&b=2 Content-Length: a
 {{null(1)}}
 `)
     const [languageType, setLangType] = useState(MONACO_SPEC_WEBFUZZER_REQUEST);
-    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree" | string>("traffic-session");
+    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree" | string>("pcapx");
 
     useEffect(() => {
         if (!languageType) {
