@@ -79,7 +79,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                                             </YakitButton>
                                         }
                                     >
-                                        {item.data.map((listItem) => {
+                                        {(item.data || []).map((listItem) => {
                                             const checked = (selecteds[item.groupKey] || []).includes(listItem.value)
                                             return (
                                                 <label
