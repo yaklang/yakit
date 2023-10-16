@@ -133,7 +133,7 @@ export interface PluginEditorDiffProps {}
 /** 插件通用过滤条件 */
 export interface PluginFilterParams {
     /** 插件类型 */
-    type?: string[]
+    plugin_type?: string[]
     /** 审核状态 */
     status?: string[]
     /** 标签 */
@@ -141,7 +141,7 @@ export interface PluginFilterParams {
     /** 插件组 */
     groups?: string[]
     /** 插件状态(公开 0 /私密 1) */
-    state?: string[]
+    plugin_private?: string[]
 }
 /** 插件搜索条件 */
 export interface PluginSearchParams {
