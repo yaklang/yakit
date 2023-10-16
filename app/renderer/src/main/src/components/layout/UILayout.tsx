@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useCreation, useDebounce, useGetState, useMemoizedFn} from "ahooks"
 import {Form, Input, Progress, Select, Spin, Tooltip} from "antd"
 import Draggable from "react-draggable"
@@ -583,9 +583,23 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         visible: false
     })
     const [projectModalLoading, setProjectModalLoading] = useState<boolean>(false)
+    const [ProjectName,setProjectName] = useState<string>()
     const fetchCurrentProject = useMemoizedFn(() => {
-        ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => setCurrentProject(rsp || undefined))
+        ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => {
+            if(rsp&&rsp.ProjectName) setProjectName(rsp.ProjectName)
+            setCurrentProject(rsp || undefined)
+        })
     })
+
+    const getAppTitleName:string = useMemo(()=>{
+        // 引擎未连接或便携版 显示默认title
+        if(!engineLink || isEnpriTraceAgent()) return getReleaseEditionName()
+        else {
+            return ProjectName?
+                ProjectName.length>10?`${ProjectName.slice(0,10)}...`:ProjectName
+                :getReleaseEditionName()
+        }
+    },[ProjectName,engineLink])
 
     /** funcDomain组件的回调事件 */
     const typeCallback = useMemoizedFn((type: YakitSettingCallbackType) => {
@@ -998,7 +1012,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 ></div>
 
                                 <div className={classNames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
-                                    {getReleaseEditionName()}-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
+                                    {getAppTitleName}-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
                                 </div>
 
                                 <div className={styles["header-left"]}>
@@ -1106,7 +1120,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 ></div>
 
                                 <div className={classNames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
-                                    {getReleaseEditionName()}-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
+                                    {getAppTitleName}-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
                                 </div>
 
                                 <div className={styles["header-left"]}>
