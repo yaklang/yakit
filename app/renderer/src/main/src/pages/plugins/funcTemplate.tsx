@@ -186,7 +186,7 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
 })
 
 export const funcSearchType: {value: string; label: string}[] = [
-    {value: "user", label: "按作者"},
+    {value: "userName", label: "按作者"},
     {value: "keyword", label: "关键字"}
 ]
 /** @name 带屏幕宽度自适应的搜索内容组件 */
@@ -1057,9 +1057,11 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
 
                     <div className={styles["content-wrapper"]}>
                         <div className={styles["tags-wrapper"]}>
-                            <YakitTag color={pluginTypeToName[type].color as any}>
-                                {pluginTypeToName[type].name}
-                            </YakitTag>
+                            {pluginTypeToName[type] && pluginTypeToName[type].name && (
+                                <YakitTag color={pluginTypeToName[type]?.color as any}>
+                                    {pluginTypeToName[type]?.name}
+                                </YakitTag>
+                            )}
                             <div className={classNames(styles["tag-list"], "yakit-content-single-ellipsis")}>
                                 {tagList.map((item) => {
                                     return (

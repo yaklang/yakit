@@ -20,18 +20,19 @@ import {
     OutlineSwitchverticalIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {useMemoizedFn, useDebounceFn, useGetState, useControllableValue, useLockFn, useUpdateEffect} from "ahooks"
+import {
+    useMemoizedFn,
+    useDebounceFn,
+    useControllableValue,
+    useLockFn,
+    useUpdateEffect} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
-import card1 from "./card1.png"
-import card2 from "./card2.png"
-import card3 from "./card3.png"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {
     NavigationBars,
     PluginOnlineDetailBackProps,
-    PluginsListRefProps,
     PluginsOnlineHeardProps,
     PluginsOnlineListProps,
     PluginsOnlineProps,
@@ -40,12 +41,9 @@ import {
 } from "./PluginsOnlineType"
 import cloneDeep from "lodash/cloneDeep"
 import {API} from "@/services/swagger/resposeType"
-import {apiFetchList, ssfilters} from "../test"
 import {
     PluginsContainer,
     PluginsLayout,
-    defaultFilter,
-    defaultResponse,
     defaultSearch,
     pluginTypeList
 } from "../baseTemplate"
@@ -55,12 +53,13 @@ import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import styles from "./PluginsOnline.module.scss"
+import {NetWorkApi} from "@/services/fetch"
+import {PluginsQueryProps, apiFetchGroupStatisticsOnline, apiFetchOnlineList, convertRequestParams} from "../utils"
+import {useStore} from "@/store"
 
 import classNames from "classnames"
 import "../plugins.scss"
-import styles from "./PluginsOnline.module.scss"
-import {NetWorkApi} from "@/services/fetch"
-import {PluginsQueryProps, apiFetchOnlineList, convertRequestParams} from "../utils"
 
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
     const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
@@ -145,15 +144,17 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [allCheck, setAllCheck] = useState<boolean>(false)
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
-    const [filters, setFilters] = useState<PluginFilterParams>(
-        cloneDeep({...defaultFilter, tags: []})
-    )
+    const [filters, setFilters] = useState<PluginFilterParams>({
+        plugin_type: [],
+        tags: []
+    })
 
     const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
         defaultValuePropName: "searchValue",
         valuePropName: "searchValue",
         trigger: "setSearchValue"
     })
+    const [pluginGroupList, setPluginGroupList] = useState<API.PluginsSearch[]>([])
 
     const [timeType, setTimeType] = useState<string>("所有时间")
     const [heatType, setHeatType] = useState<string>("当前最热")
@@ -168,6 +169,17 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [activeDelPlugin, setActiveDelPlugin] = useState<YakitPluginOnlineDetail>()
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
+
+    const userInfo = useStore((s) => s.userInfo)
+
+    // 请求数据
+    useUpdateEffect(() => {
+        fetchList(true)
+    }, [refresh, filters])
+
+    useEffect(() => {
+        getPluginGroupList()
+    }, [userInfo.isLogin])
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -187,41 +199,43 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                       page: response.pagemeta.page + 1,
                       limit: response.pagemeta.limit || 20
                   }
-
-            const query: PluginsQueryProps = convertRequestParams(filters, search, params)
+            const newFilters = {
+                ...filters
+            }
             if (!showFilter) {
-                query["status"] = []
-                query["plugin_type"] = []
-                query["tags"] = []
+                // newFilters["type"] = []
+                newFilters["tags"] = []
             }
-            try {
-                const res = await apiFetchOnlineList(query)
-                if (!res.data) res.data = []
-                dispatch({
-                    type: "add",
-                    payload: {
-                        response: {...res}
-                    }
-                })
-                setTimeout(() => {
-                    setLoading(false)
-                }, 300)
-            } catch (error) {
-                yakitNotify("error", "请求数据失败:" + error)
-            }
+            const query: PluginsQueryProps = convertRequestParams(newFilters, search, params)
+
+            const res = await apiFetchOnlineList(query)
+            if (!res.data) res.data = []
+            setHasMore(res.data.length !== +res.pagemeta.total)
+            dispatch({
+                type: "add",
+                payload: {
+                    response: {...res}
+                }
+            })
+            setTimeout(() => {
+                setLoading(false)
+            }, 300)
         })
     )
 
-    // 请求数据
-    useUpdateEffect(() => {
-        fetchList(true)
-    }, [refresh])
+    /**获取分组统计列表 */
+    const getPluginGroupList = useMemoizedFn(() => {
+        apiFetchGroupStatisticsOnline().then((res) => {
+            setPluginGroupList(res.data)
+        })
+    })
+
     // 滚动更多加载
     const onUpdateList = useMemoizedFn((reset?: boolean) => {
         fetchList()
     })
     const onSetActive = useMemoizedFn((type: string[]) => {
-        setFilters({...filters, type: type})
+        setFilters({...filters, plugin_type: type})
     })
     /**下载 */
     const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {
@@ -333,7 +347,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             <PluginsLayout
                 title={isShowRoll ? <></> : "插件商店"}
                 hidden={!!plugin}
-                subTitle={<TypeSelect active={filters.type || []} list={pluginTypeList} setActive={onSetActive} />}
+                subTitle={
+                    <TypeSelect active={filters.plugin_type || []} list={pluginTypeList} setActive={onSetActive} />
+                }
                 extraHeader={
                     <div className='extra-header-wrapper'>
                         {!isShowRoll && (
@@ -369,7 +385,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                     setVisible={setShowFilter}
                     selecteds={filters as Record<string, string[]>}
                     onSelect={setFilters}
-                    groupList={ssfilters}
+                    groupList={pluginGroupList}
                     filterClassName={classNames({
                         [styles["list-overflow-hidden"]]: isShowRoll
                     })}
