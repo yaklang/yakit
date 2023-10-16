@@ -330,6 +330,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
 
         // 点击存为插件 跳转新建插件页面
         const handleSkipAddYakitScriptPage = useMemoizedFn(() => {
+            setPluginBaseInspectVisible(false)
             ipcRenderer.invoke("send-to-tab", {
                 type: YakitRoute.AddYakitScript,
                 data: {
@@ -356,6 +357,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                     />
                 ),
                 onOk: () => {
+                    setPluginBaseInspectVisible(false)
                     // TODO 发送到本地插件
                     onSaveYakScript(m)
                 },
@@ -421,6 +423,32 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                             code={code}
                             visible={pluginBaseInspectVisible}
                             setVisible={setPluginBaseInspectVisible}
+                            renderBtnsFn={(score) => {
+                                return (
+                                    <>
+                                        {score > 55 && (
+                                            <div className={styles["controls-btns"]}>
+                                                {currentPluginName ? (
+                                                    <YakitButton
+                                                        icon={<OutlinePuzzleIcon />}
+                                                        onClick={openCompareModal}
+                                                    >
+                                                        合并代码
+                                                    </YakitButton>
+                                                ) : (
+                                                    <YakitButton
+                                                        type='primary'
+                                                        icon={<OutlinePuzzleIcon />}
+                                                        onClick={handleSkipAddYakitScriptPage}
+                                                    >
+                                                        存为插件
+                                                    </YakitButton>
+                                                )}
+                                            </div>
+                                        )}
+                                    </>
+                                )
+                            }}
                         ></PluginBaseInspect>
                         {currentPluginName ? (
                             <YakitButton icon={<OutlinePuzzleIcon />} onClick={openCompareModal}>
@@ -442,14 +470,16 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
     }
 )
 
+// 插件评分
 interface PluginBaseInspectProps {
     type: string
     code: string
     visible: boolean
-    setVisible: (value: boolean) => any
+    setVisible: (value: boolean) => void
+    renderBtnsFn: (score: number) => React.ReactNode
 }
 const PluginBaseInspect: React.FC<PluginBaseInspectProps> = React.memo((props) => {
-    const {type, code, visible, setVisible} = props
+    const {type, code, visible, setVisible, renderBtnsFn} = props
 
     const [loading, setLoading] = useState<boolean>(true)
     const [response, setResponse] = useState<SmokingEvaluateResponse>()
@@ -552,6 +582,7 @@ const PluginBaseInspect: React.FC<PluginBaseInspectProps> = React.memo((props) =
                                 （表现{response.Score < 55 ? "不佳" : "良好"}）
                             </div>
                         </div>
+                        {renderBtnsFn(+response.Score)}
                     </div>
                 )}
             </div>
