@@ -3,6 +3,8 @@ import cloneDeep from "lodash/cloneDeep"
 import {YakitPluginListOnlineResponse} from "./online/PluginsOnlineType"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import {yakitNotify} from "@/utils/notification"
+import {isCommunityEdition} from "@/utils/envfile"
 
 // 删除对象里值为 undefined 的键值对
 const delObjectInvalidValue = (obj: Record<string, any>) => {
@@ -29,17 +31,17 @@ export const convertRequestParams = (
         keywords: search.type === "keyword" ? search.keyword : "", //关键字
         user_name: search.type === "userName" ? search.userName : "", // 作者
         // filter
-        plugin_type: filter.type, //插件类型
+        plugin_type: filter.plugin_type, //插件类型
         status: filter.status?.map((ele) => Number(ele)) || [], // 审核状态
         tags: filter.tags, // tag搜索
-        is_private: filter.state?.map((ele) => !!Number(ele)), // 公开0 false;私密1 true\
-        // 插件商店
-        
+        is_private: filter.plugin_private?.map((ele) => ele === "true"), // 公开0 false;私密1 true
+
         // 企业版
         group: filter.groups
     }
     return delObjectInvalidValue(data)
 }
+
 export interface PluginsQueryProps extends API.PluginsWhere {
     order: PluginListPageMeta["order"]
     order_by: PluginListPageMeta["order_by"]
@@ -80,12 +82,15 @@ export const apiFetchOnlineList: (query: PluginsQueryProps) => Promise<YakitPlug
             }
             apiFetchList(newQuery)
                 .then((res: YakitPluginListOnlineResponse) => {
+                    console.log("res", res)
                     resolve(res)
                 })
                 .catch((err) => {
+                    yakitNotify("error", "获取插件商店列表失败:" + err)
                     reject(err)
                 })
         } catch (error) {
+            yakitNotify("error", "获取插件商店列表失败:" + error)
             reject(error)
         }
     })
@@ -104,9 +109,11 @@ export const apiFetchMineList: (query: PluginsQueryProps) => Promise<YakitPlugin
                     resolve(res)
                 })
                 .catch((err) => {
+                    yakitNotify("error", "获取我的插件列表失败:" + err)
                     reject(err)
                 })
         } catch (error) {
+            yakitNotify("error", "获取我的插件列表失败:" + error)
             reject(error)
         }
     })
@@ -125,9 +132,11 @@ export const apiFetchRecycleList: (query: PluginsQueryProps) => Promise<YakitPlu
                     resolve(res)
                 })
                 .catch((err) => {
+                    yakitNotify("error", "获取回收站列表失败:" + err)
                     reject(err)
                 })
         } catch (error) {
+            yakitNotify("error", "获取回收站列表失败:" + error)
             reject(error)
         }
     })
@@ -146,9 +155,132 @@ export const apiFetchCheckList: (query: PluginsQueryProps) => Promise<YakitPlugi
                     resolve(res)
                 })
                 .catch((err) => {
+                    yakitNotify("error", "获取插件审核列表失败:" + err)
                     reject(err)
                 })
         } catch (error) {
+            yakitNotify("error", "获取插件审核列表失败:" + error)
+            reject(error)
+        }
+    })
+}
+
+/**线上插件左侧统计接口基础版 */
+const apiFetchGroupStatistics: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.PluginsSearchRequest, API.PluginsSearchResponse>({
+                method: "post",
+                url: "plugins/search",
+                data: {...query}
+            })
+                .then((res: API.PluginsSearchResponse) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    reject(err)
+                })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**插件商店左侧统计 */
+export const apiFetchGroupStatisticsOnline: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (
+    query
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...query,
+                listType: ""
+            }
+            apiFetchGroupStatistics(newQuery)
+                .then((res: API.PluginsSearchResponse) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取插件商店统计数据失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取插件商店统计数据失败:" + error)
+            reject(error)
+        }
+    })
+}
+
+/**我的插件左侧统计 */
+export const apiFetchGroupStatisticsMine: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (
+    query
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...query,
+                listType: "mine"
+            }
+            apiFetchGroupStatistics(newQuery)
+                .then((res: API.PluginsSearchResponse) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取我的插件统计数据失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取我的插件统计数据失败:" + error)
+            reject(error)
+        }
+    })
+}
+
+/**插件审核左侧统计 */
+export const apiFetchGroupStatisticsCheck: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (
+    query
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...query,
+                listType: "check"
+            }
+            apiFetchGroupStatistics(newQuery)
+                .then((res: API.PluginsSearchResponse) => {
+                    if (isCommunityEdition()) {
+                        // 插件类型、Tag、审核状态
+                        const newData = (res.data || []).filter((ele) => ele.groupName !== "插件分组")
+                        resolve({
+                            ...res,
+                            data: newData
+                        })
+                    } else {
+                        // 插件类型、Tag、审核状态、插件组（线上分组）
+                        const newData = (res.data || []).map((ele) => {
+                            if (ele.groupName === "插件分组") {
+                                const newList = (ele.data || []).map((n) => ({
+                                    ...n,
+                                    label: n.label.replace(/^"+|"+$/g, "")
+                                }))
+                                return {
+                                    ...ele,
+                                    data: newList
+                                }
+                            }
+                            return ele
+                        })
+                        resolve({
+                            data: newData
+                        })
+                    }
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取插件审核统计数据失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取插件审核统计数据失败:" + error)
             reject(error)
         }
     })
