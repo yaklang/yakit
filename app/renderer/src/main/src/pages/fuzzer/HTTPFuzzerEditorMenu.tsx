@@ -148,6 +148,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     const [inputValue, setInputValue] = useState<string>()
     const [isEnterSimple, setEnterSimple] = useState<boolean>(false)
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable-editor")
+    // 是否中文输入中
+    const isComposition = useRef<boolean>(false)
     // 是否在拖拽中
     const isDragging = useRef<boolean>(false)
     // 鼠标是否进入main
@@ -279,7 +281,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             onMouseLeave={() => {
                 isMainEnter.current = false
                 setTimeout(() => {
-                    if (!isSimpleEnter.current && !isDragging.current) {
+                    if (!isSimpleEnter.current && !isDragging.current && !isComposition.current) {
                         setEnterSimple(false)
                     }
                 }, 100)
@@ -309,11 +311,18 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     onMouseLeave={() => {
                         isSimpleEnter.current = false
                         setTimeout(() => {
-                            if (!isDragging.current && !isMainEnter.current) setEnterSimple(false)
+                            if (!isDragging.current && !isMainEnter.current && !isComposition.current)
+                                setEnterSimple(false)
                         }, 100)
                     }}
                     onMouseEnter={() => {
                         isSimpleEnter.current = true
+                    }}
+                    onCompositionStart={() => {
+                        isComposition.current = true
+                    }}
+                    onCompositionEnd={() => {
+                        isComposition.current = false
                     }}
                     style={{
                         ...directionStyle(editorInfo, false),
