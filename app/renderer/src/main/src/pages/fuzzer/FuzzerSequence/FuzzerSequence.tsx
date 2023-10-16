@@ -35,6 +35,7 @@ import {
 } from "ahooks"
 import {
     OutlineArrowcirclerightIcon,
+    OutlineCodeIcon,
     OutlinePencilaltIcon,
     OutlinePlussmIcon,
     OutlineTrashIcon
@@ -45,7 +46,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
 import {LabelNodeItem, MatcherAndExtractionDrawer} from "../MatcherAndExtractionCard/MatcherAndExtractionCard"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {yakitNotify} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {YakitRoute} from "@/routes/newRoute"
 import {
     FuzzerExtraShow,
@@ -87,6 +88,7 @@ import {monacoEditorWrite} from "../fuzzerTemplates"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {ShareImportExportData} from "../components/ShareImportExportData"
+import { showByRightContext } from "@/components/yakitUI/YakitMenu/showByRightContext"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
@@ -1195,6 +1197,53 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         return cachedTotal === 1
     }, [cachedTotal])
 
+    const handleGenerateYaml = useMemoizedFn((e: {clientX: number; clientY: number}) => {
+        showByRightContext(
+            {
+                width: 150,
+                data: [
+                    {key: "pathTemplate", label: "生成为 Path 模板"},
+                    {key: "rawTemplate", label: "生成为 Raw 模板"}
+                ],
+                onClick: ({key}) => {
+                    switch (key) {
+                        case "pathTemplate":
+                            handleSkipPluginDebuggerPage("path")
+                            break
+                        case "rawTemplate":
+                            handleSkipPluginDebuggerPage("raw")
+                            break
+                        default:
+                            break
+                    }
+                }
+            },
+            e.clientX,
+            e.clientY
+        )
+    })
+    // 跳转插件调试页面
+    const handleSkipPluginDebuggerPage = async (tempType: "path" | "raw") => {
+        const requests = getHttpParams()
+        const params = {
+            Requests: {Requests: Array.isArray(requests) ? requests : [getHttpParams()]},
+            TemplateType: tempType
+        }
+        try {
+            const {Status, YamlContent} = await ipcRenderer.invoke("ExportHTTPFuzzerTaskToYaml", params)
+            if (Status.Ok) {
+                ipcRenderer.invoke("send-to-tab", {
+                    type: "**debug-plugin",
+                    data: {generateYamlTemplate: true, YamlContent}
+                })
+            } else {
+                throw new Error(Status.Reason)
+            }
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
+
     return (
         <div className={styles["sequence-response-heard"]}>
             <div className={styles["sequence-response-heard-left"]}>
@@ -1214,13 +1263,22 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                     httpResponse={httpResponse}
                 />
             </div>
-            <div>
+            <div style={{ display: 'flex' }}>
                 <ShareImportExportData
                     module='fuzzer'
                     supportShare={false}
                     supportImport={true}
                     getFuzzerRequestParams={getHttpParams}
                 />
+                <Divider type='vertical' style={{margin: 8}} />
+                <YakitButton
+                    type='primary'
+                    icon={<OutlineCodeIcon />}
+                    onClick={handleGenerateYaml}
+                    onContextMenuCapture={handleGenerateYaml}
+                >
+                    生成 Yaml 模板
+                </YakitButton>
                 <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()} style={{marginLeft: 8}}>
                     展示全部响应
                 </YakitButton>

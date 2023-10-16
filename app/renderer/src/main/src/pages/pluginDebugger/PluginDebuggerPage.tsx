@@ -157,6 +157,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                 isVer={false}
                 firstMinSize={300}
                 firstRatio={"300px"}
+                secondMinSize={700}
                 firstNode={
                     <AutoCard
                         title='配置调试请求'
@@ -217,7 +218,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                 setRefreshEditor={setRefreshEditor}
                                 setIsCancelFlag={setIsCancelFlag}
                             ></SecondNodeHeader>
-                            <div style={{height: "calc(100% - 34px)"}}>
+                            <div style={{height: "calc(100% - 40px)"}}>
                                 <NewHTTPPacketEditor
                                     key={refreshEditor}
                                     language={pluginType === "nuclei" ? "yaml" : "yak"}
