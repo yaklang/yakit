@@ -333,6 +333,9 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             contextMenu={mitmManualRightMenu}
             editorOperationRecord="MITM_Manual_EDITOR_RECORF"
             webFuzzerValue={currentIsForResponse?requestPacket:undefined}
+            extraEditorProps={{
+                isShowSelectRangeMenu: true
+            }}
         />
     )
 })
