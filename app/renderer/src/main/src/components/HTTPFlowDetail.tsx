@@ -745,7 +745,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             {isFold && (
                 <div className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}>
                     <div
-                        className={classNames(styles["http-history-icon-box"], styles["http-history-icon-paading-box"])}
+                        className={classNames(styles["http-history-icon-box"])}
+                        style={{height:32}}
                     >
                         <Tooltip placement='top' title='向左展开'>
                             <SideBarCloseIcon
