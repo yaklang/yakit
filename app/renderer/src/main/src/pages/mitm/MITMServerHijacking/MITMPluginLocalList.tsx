@@ -273,6 +273,7 @@ interface YakitGetOnlinePluginProps {
 /**
  * 额外使用该组件的组件:
  * 1、GlobalState
+ * 2、PluginDebuggerPage
  */
 export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
     const {visible, setVisible} = props

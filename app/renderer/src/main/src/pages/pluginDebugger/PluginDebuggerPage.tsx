@@ -35,10 +35,14 @@ import {
     PluginGroup,
     PluginSearch,
     TagsAndGroupRender,
-    YakFilterRemoteObj
+    YakFilterRemoteObj,
+    YakitGetOnlinePlugin
 } from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {YakModuleList} from "../yakitStore/YakitStorePage"
 import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
+import {CloudDownloadIcon, ImportIcon} from "@/assets/newIcon"
+import {queryYakScriptList} from "../yakitStore/network"
+import {ImportLocalPlugin} from "../mitm/MITMPage"
 const {YakitTabPane} = YakitTabs
 
 export interface PluginDebuggerPageProp {
@@ -304,7 +308,8 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                 placement: "left",
                 content: (
                     <div style={{height: "100%"}}>
-                        <PluginCont
+                        <PluginContList
+                            queryPluginType={["port-scan", "mitm", "nuclei"]}
                             onPluginItemClicked={(script) => {
                                 switch (script.Type) {
                                     case "mitm":
@@ -323,7 +328,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                                         yakitFailed("暂不支持的插件类型")
                                 }
                             }}
-                        ></PluginCont>
+                        ></PluginContList>
                     </div>
                 )
             })
@@ -591,11 +596,12 @@ const PluginBaseInspect: React.FC<PluginBaseInspectProps> = React.memo((props) =
     )
 })
 
-// 插件列表
-interface PluginContProps {
+// 单选插件列表
+interface PluginContListProps {
+    queryPluginType: string[]
     onPluginItemClicked: (i: YakScript) => void
 }
-const PluginCont: React.FC<PluginContProps> = React.memo(({onPluginItemClicked}) => {
+const PluginContList: React.FC<PluginContListProps> = React.memo(({queryPluginType, onPluginItemClicked}) => {
     const [tags, setTags] = useState<string[]>([])
     const [searchKeyword, setSearchKeyword] = useState<string>("")
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
@@ -603,6 +609,32 @@ const PluginCont: React.FC<PluginContProps> = React.memo(({onPluginItemClicked})
     const [total, setTotal] = useState<number>(0)
     const [refreshYakModuleList, setRefreshYakModuleList] = useState<number>(Math.random()) // 刷新插件列表
     const pluginListRef = useRef<any>()
+    const [initialTotal, setInitialTotal] = useState<number>(0) // 初始插件总数
+    const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
+    const [visibleImport, setVisibleImport] = useState<boolean>(false)
+
+    useEffect(() => {
+        getAllSatisfyScript()
+    }, [])
+
+    const getAllSatisfyScript = useMemoizedFn(() => {
+        queryYakScriptList(
+            queryPluginType + "",
+            (data, t) => {
+                setInitialTotal(t || 0)
+            },
+            undefined,
+            20,
+            1,
+            searchKeyword,
+            {
+                IncludedScriptNames: includedScriptNames,
+                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+            },
+            undefined,
+            tags
+        )
+    })
 
     useUpdateEffect(() => {
         let newScriptNames: string[] = []
@@ -612,6 +644,35 @@ const PluginCont: React.FC<PluginContProps> = React.memo(({onPluginItemClicked})
         setIncludedScriptNames(Array.from(new Set(newScriptNames)))
         setRefreshYakModuleList(Math.random())
     }, [selectGroup])
+
+    const onRenderEmptyNode = useMemoizedFn(() => {
+        if (Number(total) === 0 && (tags.length > 0 || searchKeyword || includedScriptNames.length > 0)) {
+            return (
+                <div className={styles["plugin-empty"]}>
+                    <YakitEmpty title={null} description='搜索结果“空”' />
+                </div>
+            )
+        }
+        if (Number(initialTotal) === 0) {
+            return (
+                <div className={styles["plugin-empty"]}>
+                    <YakitEmpty description='可一键获取官方云端插件，或导入外部插件源' />
+                    <div className={styles["plugin-buttons"]}>
+                        <YakitButton
+                            type='outline1'
+                            icon={<CloudDownloadIcon />}
+                            onClick={() => setVisibleOnline(true)}
+                        >
+                            获取云端插件
+                        </YakitButton>
+                        <YakitButton type='outline1' icon={<ImportIcon />} onClick={() => setVisibleImport(true)}>
+                            导入插件源
+                        </YakitButton>
+                    </div>
+                </div>
+            )
+        }
+    })
 
     return (
         <div className={styles["plugin-cont"]}>
@@ -646,10 +707,10 @@ const PluginCont: React.FC<PluginContProps> = React.memo(({onPluginItemClicked})
                 <YakModuleList
                     key={refreshYakModuleList}
                     targetRef={pluginListRef}
-                    emptyNode={<></>}
+                    emptyNode={onRenderEmptyNode()}
                     queryLocal={{
                         Tag: tags,
-                        Type: "port-scan,mitm,nuclei",
+                        Type: queryPluginType + "",
                         IncludedScriptNames: includedScriptNames,
                         Keyword: searchKeyword,
                         Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
@@ -686,6 +747,22 @@ const PluginCont: React.FC<PluginContProps> = React.memo(({onPluginItemClicked})
                                 </div>
                             </div>
                         )
+                    }}
+                />
+                {/* 获取云端插件 */}
+                <YakitGetOnlinePlugin
+                    visible={visibleOnline}
+                    setVisible={(v) => {
+                        setVisibleOnline(v)
+                        setRefreshYakModuleList(Math.random())
+                    }}
+                />
+                {/* 导入插件源 */}
+                <ImportLocalPlugin
+                    visible={visibleImport}
+                    setVisible={(v) => {
+                        setVisibleImport(v)
+                        setRefreshYakModuleList(Math.random())
                     }}
                 />
             </div>

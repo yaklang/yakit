@@ -188,6 +188,15 @@
     }
     .plugin-list-wrap {
         height: calc(100% - 135px);
+        .plugin-empty {
+            margin-top: 48px;
+            .plugin-buttons {
+                display: flex;
+                gap: 8px;
+                justify-content: center;
+                margin-top: 16px;
+            }
+        }
         .plugin-local-item {
             display: flex;
             align-items: center;
