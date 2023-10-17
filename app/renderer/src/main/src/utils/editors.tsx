@@ -420,7 +420,8 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                     bracketPairColorization: {
                                         enabled: true,
                                         independentColorPoolPerBracketType: true
-                                    }
+                                    },
+                                    fixedOverflowWidgets:true
                                 }}
                             />
                         </div>
