@@ -460,6 +460,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
         isShowAddBtn = true,
         isShowDelIcon = true
     } = props
+    
     const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     /**

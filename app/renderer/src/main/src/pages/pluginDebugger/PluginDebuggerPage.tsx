@@ -43,6 +43,8 @@ import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
 import {CloudDownloadIcon, ImportIcon} from "@/assets/newIcon"
 import {queryYakScriptList} from "../yakitStore/network"
 import {ImportLocalPlugin} from "../mitm/MITMPage"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {log} from "console"
 const {YakitTabPane} = YakitTabs
 
 export interface PluginDebuggerPageProp {
@@ -310,23 +312,50 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                     <div style={{height: "100%"}}>
                         <PluginContList
                             queryPluginType={["port-scan", "mitm", "nuclei"]}
-                            onPluginItemClicked={(script) => {
-                                switch (script.Type) {
-                                    case "mitm":
-                                    case "nuclei":
-                                    // @ts-ignore
-                                    case "port-scan":
-                                        setPluginType(script.Type as any)
-                                        setCode(script.Content)
-                                        setOriginCode(script.Content)
-                                        setCurrentPluginName(script.ScriptName)
-                                        setRefreshEditor(Math.random())
-                                        setScript(script)
-                                        m.destroy()
-                                        return
-                                    default:
-                                        yakitFailed("暂不支持的插件类型")
-                                }
+                            singleChoice={true}
+                            isShowDelIcon={false}
+                            isShowAddBtn={false}
+                            renderPluginItem={(i, itemClickFun) => {
+                                return (
+                                    <div className={styles["plugin-local-info"]} style={{paddingLeft: 6}}>
+                                        <div
+                                            className={styles["plugin-local-info-left"]}
+                                            onClick={() => {
+                                                itemClickFun(i) // 必须调用
+                                                switch (i.Type) {
+                                                    case "mitm":
+                                                    case "nuclei":
+                                                    // @ts-ignore
+                                                    case "port-scan":
+                                                        setPluginType(i.Type as any)
+                                                        setCode(i.Content)
+                                                        setOriginCode(i.Content)
+                                                        setCurrentPluginName(i.ScriptName)
+                                                        setRefreshEditor(Math.random())
+                                                        setScript(i)
+                                                        m.destroy()
+                                                        return
+                                                    default:
+                                                        yakitFailed("暂不支持的插件类型")
+                                                }
+                                            }}
+                                        >
+                                            {i.HeadImg && (
+                                                <img
+                                                    alt=''
+                                                    src={i.HeadImg}
+                                                    className={classNames(styles["plugin-local-headImg"])}
+                                                />
+                                            )}
+                                            <span className={classNames(styles["plugin-local-scriptName"])}>
+                                                {i.ScriptName}
+                                            </span>
+                                        </div>
+                                        <div className={styles["plugin-local-info-right"]}>
+                                            <PluginLocalInfoIcon plugin={i} />
+                                        </div>
+                                    </div>
+                                )
                             }}
                         ></PluginContList>
                     </div>
@@ -596,178 +625,254 @@ const PluginBaseInspect: React.FC<PluginBaseInspectProps> = React.memo((props) =
     )
 })
 
-// 单选插件列表
+// 插件列表
 interface PluginContListProps {
-    queryPluginType: string[]
-    onPluginItemClicked: (i: YakScript) => void
+    singleChoice?: boolean // 是否单选
+    queryPluginType: string[] // 查询插件类型
+    isShowDelIcon?: boolean // 是否支持插件组删除Icon显示
+    isShowAddBtn?: boolean // 是否支持添加插件组
+    onSelectedPlugins?: (i: YakScript[]) => void // 实际加载出来选中得插件数组
+    renderPluginItem: (i: YakScript, itemClickFun: (i: YakScript) => void) => React.ReactNode // 渲染每一项
 }
-const PluginContList: React.FC<PluginContListProps> = React.memo(({queryPluginType, onPluginItemClicked}) => {
-    const [tags, setTags] = useState<string[]>([])
-    const [searchKeyword, setSearchKeyword] = useState<string>("")
-    const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
-    const [includedScriptNames, setIncludedScriptNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
-    const [total, setTotal] = useState<number>(0)
-    const [refreshYakModuleList, setRefreshYakModuleList] = useState<number>(Math.random()) // 刷新插件列表
-    const pluginListRef = useRef<any>()
-    const [initialTotal, setInitialTotal] = useState<number>(0) // 初始插件总数
-    const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
-    const [visibleImport, setVisibleImport] = useState<boolean>(false)
+const PluginContList: React.FC<PluginContListProps> = React.memo(
+    ({
+        singleChoice = false,
+        queryPluginType,
+        isShowDelIcon = true,
+        isShowAddBtn = true,
+        onSelectedPlugins,
+        renderPluginItem
+    }) => {
+        const [tags, setTags] = useState<string[]>([])
+        const [searchKeyword, setSearchKeyword] = useState<string>("")
+        const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
+        const [includedScriptNames, setIncludedScriptNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
+        const [total, setTotal] = useState<number>(0)
+        const [refreshYakModuleList, setRefreshYakModuleList] = useState<number>(Math.random()) // 刷新插件列表
+        const pluginListRef = useRef<any>()
+        const [initialTotal, setInitialTotal] = useState<number>(0) // 初始插件总数
+        const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
+        const [visibleImport, setVisibleImport] = useState<boolean>(false)
+        const [selectedPlugins, setSelectedPlugins] = useState<YakScript[]>([])
+        const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
 
-    useEffect(() => {
-        getAllSatisfyScript()
-    }, [])
+        useEffect(() => {
+            getAllSatisfyScript()
+        }, [])
 
-    const getAllSatisfyScript = useMemoizedFn(() => {
-        queryYakScriptList(
-            queryPluginType + "",
-            (data, t) => {
-                setInitialTotal(t || 0)
-            },
-            undefined,
-            20,
-            1,
-            searchKeyword,
-            {
-                IncludedScriptNames: includedScriptNames,
-                Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
-            },
-            undefined,
-            tags
-        )
-    })
-
-    useUpdateEffect(() => {
-        let newScriptNames: string[] = []
-        selectGroup.forEach((ele) => {
-            newScriptNames = [...newScriptNames, ...ele.value]
+        const getAllSatisfyScript = useMemoizedFn(() => {
+            queryYakScriptList(
+                queryPluginType + "",
+                (data, t) => {
+                    setInitialTotal(t || 0)
+                },
+                undefined,
+                20,
+                1,
+                searchKeyword,
+                {
+                    IncludedScriptNames: includedScriptNames,
+                    Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+                },
+                undefined,
+                tags
+            )
         })
-        setIncludedScriptNames(Array.from(new Set(newScriptNames)))
-        setRefreshYakModuleList(Math.random())
-    }, [selectGroup])
 
-    const onRenderEmptyNode = useMemoizedFn(() => {
-        if (Number(total) === 0 && (tags.length > 0 || searchKeyword || includedScriptNames.length > 0)) {
-            return (
-                <div className={styles["plugin-empty"]}>
-                    <YakitEmpty title={null} description='搜索结果“空”' />
-                </div>
-            )
-        }
-        if (Number(initialTotal) === 0) {
-            return (
-                <div className={styles["plugin-empty"]}>
-                    <YakitEmpty description='可一键获取官方云端插件，或导入外部插件源' />
-                    <div className={styles["plugin-buttons"]}>
-                        <YakitButton
-                            type='outline1'
-                            icon={<CloudDownloadIcon />}
-                            onClick={() => setVisibleOnline(true)}
-                        >
-                            获取云端插件
-                        </YakitButton>
-                        <YakitButton type='outline1' icon={<ImportIcon />} onClick={() => setVisibleImport(true)}>
-                            导入插件源
-                        </YakitButton>
+        useEffect(() => {
+            onSelectedPlugins && onSelectedPlugins(selectedPlugins)
+        }, [selectedPlugins])
+
+        useUpdateEffect(() => {
+            let newScriptNames: string[] = []
+            selectGroup.forEach((ele) => {
+                newScriptNames = [...newScriptNames, ...ele.value]
+            })
+            setIncludedScriptNames(Array.from(new Set(newScriptNames)))
+            setRefreshYakModuleList(Math.random())
+        }, [selectGroup])
+
+        const onRenderEmptyNode = useMemoizedFn(() => {
+            if (Number(total) === 0 && (tags.length > 0 || searchKeyword || includedScriptNames.length > 0)) {
+                return (
+                    <div className={styles["plugin-empty"]}>
+                        <YakitEmpty title={null} description='搜索结果“空”' />
                     </div>
-                </div>
-            )
+                )
+            }
+            if (Number(initialTotal) === 0) {
+                return (
+                    <div className={styles["plugin-empty"]}>
+                        <YakitEmpty description='可一键获取官方云端插件，或导入外部插件源' />
+                        <div className={styles["plugin-buttons"]}>
+                            <YakitButton
+                                type='outline1'
+                                icon={<CloudDownloadIcon />}
+                                onClick={() => setVisibleOnline(true)}
+                            >
+                                获取云端插件
+                            </YakitButton>
+                            <YakitButton type='outline1' icon={<ImportIcon />} onClick={() => setVisibleImport(true)}>
+                                导入插件源
+                            </YakitButton>
+                        </div>
+                    </div>
+                )
+            }
+        })
+
+        const handleSelectAll = (checked: boolean) => {
+            setIsSelectAll(checked)
+            if (!checked) {
+                setSelectedPlugins([])
+            }
         }
-    })
 
-    return (
-        <div className={styles["plugin-cont"]}>
-            <div className={styles["plugin-search-wrap"]}>
-                <PluginSearch
-                    tag={tags}
-                    searchKeyword={searchKeyword}
-                    setTag={(val) => {
-                        setTags(val)
-                        setRefreshYakModuleList(Math.random())
-                    }}
-                    setSearchKeyword={setSearchKeyword}
-                    onSearch={() => {
-                        setRefreshYakModuleList(Math.random())
-                    }}
+        const handleCheckboxClicked = (checked: boolean, i: YakScript) => {
+            let copySelectedPlugins = structuredClone(selectedPlugins)
+            if (checked) {
+                copySelectedPlugins.push(i)
+            } else {
+                copySelectedPlugins = copySelectedPlugins.filter((item) => item.UUID !== i.UUID)
+            }
+            setIsSelectAll(copySelectedPlugins.length == total)
+            setSelectedPlugins(copySelectedPlugins)
+        }
+
+        const handlePluginItemClicked = (i: YakScript) => {
+            let copySelectedPlugins = structuredClone(selectedPlugins)
+            const index = copySelectedPlugins.findIndex((item) => item.UUID === i.UUID)
+            if (index > -1) {
+                copySelectedPlugins.splice(index, 1)
+            } else {
+                copySelectedPlugins.push(i)
+            }
+            setIsSelectAll(copySelectedPlugins.length == total)
+            setSelectedPlugins(copySelectedPlugins)
+        }
+
+        return (
+            <div className={styles["plugin-cont"]}>
+                <div className={styles["plugin-search-wrap"]}>
+                    <PluginSearch
+                        tag={tags}
+                        searchKeyword={searchKeyword}
+                        setTag={(val) => {
+                            setTags(val)
+                            setIsSelectAll(false)
+                            setRefreshYakModuleList(Math.random())
+                        }}
+                        setSearchKeyword={setSearchKeyword}
+                        onSearch={() => {
+                            setIsSelectAll(false)
+                            setRefreshYakModuleList(Math.random())
+                        }}
+                    />
+                </div>
+
+                <PluginGroup
+                    selectGroup={selectGroup}
+                    setSelectGroup={setSelectGroup}
+                    checkList={selectedPlugins.map((item) => item.ScriptName)}
+                    isSelectAll={isSelectAll}
+                    isShowAddBtn={isShowAddBtn}
+                    isShowDelIcon={isShowDelIcon}
                 />
-            </div>
-
-            <PluginGroup
-                selectGroup={selectGroup}
-                setSelectGroup={setSelectGroup}
-                checkList={[]}
-                isSelectAll={false}
-                isShowAddBtn={false}
-                isShowDelIcon={false}
-            />
-            <div className={styles["total-warp"]}>
-                Total <span className={styles["total-number"]}>{total}</span>
-            </div>
-            <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={setSelectGroup} />
-            <div className={styles["plugin-list-wrap"]} ref={pluginListRef}>
-                <YakModuleList
-                    key={refreshYakModuleList}
-                    targetRef={pluginListRef}
-                    emptyNode={onRenderEmptyNode()}
-                    queryLocal={{
-                        Tag: tags,
-                        Type: queryPluginType + "",
-                        IncludedScriptNames: includedScriptNames,
-                        Keyword: searchKeyword,
-                        Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
-                    }}
-                    itemHeight={44}
-                    onClicked={(script) => {}}
-                    setTotal={(t) => {
-                        setTotal(t || 0)
-                    }}
-                    onYakScriptRender={(i: YakScript, maxWidth?: number) => {
-                        return (
-                            <div className={styles["plugin-local-item"]}>
-                                <div className={styles["plugin-local-left"]}>
-                                    <div className={styles["plugin-local-info"]}>
-                                        <div
-                                            className={styles["plugin-local-info-left"]}
-                                            onClick={() => onPluginItemClicked(i)}
-                                        >
-                                            {i.HeadImg && (
-                                                <img
-                                                    alt=''
-                                                    src={i.HeadImg}
-                                                    className={classNames(styles["plugin-local-headImg"])}
-                                                />
-                                            )}
-                                            <span className={classNames(styles["plugin-local-scriptName"])}>
-                                                {i.ScriptName}
-                                            </span>
-                                        </div>
-                                        <div className={styles["plugin-local-info-right"]}>
-                                            <PluginLocalInfoIcon plugin={i} />
-                                        </div>
+                <div style={{display: "flex", justifyContent: "space-between", marginBottom: 8}}>
+                    <div className={styles["plugin-list-info"]}>
+                        {!singleChoice && (
+                            <div className={styles["plugin-list-check"]}>
+                                <YakitCheckbox
+                                    checked={isSelectAll}
+                                    onChange={(e) => handleSelectAll(e.target.checked)}
+                                    indeterminate={!isSelectAll && selectedPlugins.length > 0}
+                                />
+                                <span className={styles["plugin-list-check-text"]}>全选</span>
+                            </div>
+                        )}
+                        <div className={styles["number-warp"]}>
+                            Total <span className={styles["number-color"]}>{total}</span>
+                            {!singleChoice && (
+                                <>
+                                    <Divider type='vertical' style={{margin: "0 8px", height: 12, top: 0}} />
+                                    Selected
+                                    <span className={styles["number-color"]}>&nbsp;{selectedPlugins.length}</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                    {!singleChoice && (
+                        <div className={styles["selected-clearAll"]}>
+                            <YakitButton
+                                type='text'
+                                colors='danger'
+                                onClick={() => {
+                                    setSelectedPlugins([])
+                                    setIsSelectAll(false)
+                                }}
+                                disabled={selectedPlugins.length === 0}
+                            >
+                                清&nbsp;空
+                            </YakitButton>
+                        </div>
+                    )}
+                </div>
+                <TagsAndGroupRender selectGroup={selectGroup} setSelectGroup={setSelectGroup} />
+                <div className={styles["plugin-list-wrap"]} ref={pluginListRef}>
+                    <YakModuleList
+                        key={refreshYakModuleList}
+                        targetRef={pluginListRef}
+                        emptyNode={onRenderEmptyNode()}
+                        queryLocal={{
+                            Tag: tags,
+                            Type: queryPluginType + "",
+                            IncludedScriptNames: includedScriptNames,
+                            Keyword: searchKeyword,
+                            Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
+                        }}
+                        itemHeight={44}
+                        onClicked={(script) => {}}
+                        setTotal={(t) => {
+                            setTotal(t || 0)
+                        }}
+                        isSelectAll={isSelectAll}
+                        onSelectList={setSelectedPlugins}
+                        onYakScriptRender={(i: YakScript, maxWidth?: number) => {
+                            return (
+                                <div className={styles["plugin-local-item"]}>
+                                    <div className={styles["plugin-local-left"]}>
+                                        {!singleChoice && (
+                                            <YakitCheckbox
+                                                checked={!!selectedPlugins.find((item) => item.UUID === i.UUID)}
+                                                onChange={(e) => handleCheckboxClicked(e.target.checked, i)}
+                                            />
+                                        )}
+                                        {renderPluginItem(i, handlePluginItemClicked)}
                                     </div>
                                 </div>
-                            </div>
-                        )
-                    }}
-                />
-                {/* 获取云端插件 */}
-                <YakitGetOnlinePlugin
-                    visible={visibleOnline}
-                    setVisible={(v) => {
-                        setVisibleOnline(v)
-                        setRefreshYakModuleList(Math.random())
-                    }}
-                />
-                {/* 导入插件源 */}
-                <ImportLocalPlugin
-                    visible={visibleImport}
-                    setVisible={(v) => {
-                        setVisibleImport(v)
-                        setRefreshYakModuleList(Math.random())
-                    }}
-                />
+                            )
+                        }}
+                    />
+                    {/* 获取云端插件 */}
+                    <YakitGetOnlinePlugin
+                        visible={visibleOnline}
+                        setVisible={(v) => {
+                            setVisibleOnline(v)
+                            setRefreshYakModuleList(Math.random())
+                        }}
+                    />
+                    {/* 导入插件源 */}
+                    <ImportLocalPlugin
+                        visible={visibleImport}
+                        setVisible={(v) => {
+                            setVisibleImport(v)
+                            setRefreshYakModuleList(Math.random())
+                        }}
+                    />
+                </div>
             </div>
-        </div>
-    )
-})
+        )
+    }
+)
 
 export default PluginDebuggerPage

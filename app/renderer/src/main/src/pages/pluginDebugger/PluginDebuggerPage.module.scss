@@ -162,8 +162,8 @@
             }
         }
         .controls-btns {
-            text-align: center;
             margin-top: 15px;
+            text-align: center;
         }
     }
 }
@@ -178,13 +178,29 @@
     .plugin-search-wrap {
         margin-bottom: 16px;
     }
-    .total-warp {
-        margin-bottom: 8px;
-        color: var(--yakit-helper-text-color);
-        font-size: 12px;
-        .total-number {
-            color: var(--yakit-primary-5) !important;
+    .plugin-list-info {
+        display: flex;
+        align-items: center;
+        .plugin-list-check {
+            display: flex;
+            align-items: center;
+            margin-right: 16px;
+            .plugin-list-check-text {
+                margin-left: 4px;
+                color: var(--yakit-header-color);
+                font-size: 12px;
+            }
         }
+        .number-warp {
+            color: var(--yakit-helper-text-color);
+            font-size: 12px;
+            .number-color {
+                color: var(--yakit-primary-5) !important;
+            }
+        }
+    }
+    .selected-clearAll {
+        align-self: flex-end;
     }
     .plugin-list-wrap {
         height: calc(100% - 135px);
@@ -192,9 +208,10 @@
             margin-top: 48px;
             .plugin-buttons {
                 display: flex;
-                gap: 8px;
                 justify-content: center;
                 margin-top: 16px;
+
+                gap: 8px;
             }
         }
         .plugin-local-item {
@@ -211,7 +228,6 @@
                 display: flex;
                 align-items: center;
                 flex: 1;
-                width: calc(100% - 44px);
                 padding-left: 2px;
 
                 gap: 8px;
@@ -219,11 +235,11 @@
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    width: calc(100% - 24px);
+                    width: 100%;
                     .plugin-local-info-left {
                         display: flex;
                         align-items: center;
-                        width: calc(100% - 72px);
+
                         cursor: pointer;
                         .plugin-local-headImg {
                             width: 28px;
