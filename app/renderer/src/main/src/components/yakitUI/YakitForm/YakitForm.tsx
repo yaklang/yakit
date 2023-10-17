@@ -26,7 +26,9 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
         setContent,
         formItemClassName,
         showDefHelp = true,
-        selectType = "file"
+        selectType = "file",
+        renderType = "input",
+        textareaProps = {}
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>("")
@@ -65,52 +67,108 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
                 .finally(() => setTimeout(() => setUploadLoading(false), 200))
         }
     })
+
+    const renderContentValue = useMemoizedFn(() => {
+        switch (renderType) {
+            case "textarea":
+                return (
+                    <YakitInput.TextArea
+                        placeholder='请输入绝对路径'
+                        value={fileName || name}
+                        {...textareaProps}
+                        onChange={(e) => {
+                            setName(e.target.value)
+                            if (setFileName) setFileName(e.target.value)
+                            if (textareaProps.onChange) textareaProps.onChange(e)
+                            e.stopPropagation()
+                        }}
+                        onPressEnter={(e) => {
+                            e.stopPropagation()
+                            const index = name.lastIndexOf(".")
+                            if (selectType === "file" && index === -1) {
+                                failed("请输入正确的路径")
+                                return
+                            }
+                            const type = name.substring(index, name.length)
+                            getContent(name, type)
+                            if (textareaProps.onPressEnter) textareaProps.onPressEnter(e)
+                        }}
+                        onFocus={(e) => {
+                            e.stopPropagation()
+                            if (textareaProps.onFocus) textareaProps.onFocus(e)
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            if (textareaProps.onClick) textareaProps.onClick(e)
+                        }}
+                        onBlur={(e) => {
+                            e.stopPropagation()
+                            if (!name) return
+                            const index = name.lastIndexOf(".")
+                            if (selectType === "file" && index === -1) {
+                                failed("请输入正确的路径")
+                                return
+                            }
+                            const type = name.substring(index, name.length)
+                            getContent(name, type)
+                            if (textareaProps.onBlur) textareaProps.onBlur(e)
+                        }}
+                    />
+                )
+
+            default:
+                return (
+                    <YakitInput
+                        placeholder='请输入绝对路径'
+                        size={size}
+                        value={fileName || name}
+                        {...InputProps}
+                        onChange={(e) => {
+                            setName(e.target.value)
+                            if (setFileName) setFileName(e.target.value)
+                            if (InputProps.onChange) InputProps.onChange(e)
+                            e.stopPropagation()
+                        }}
+                        onPressEnter={(e) => {
+                            e.stopPropagation()
+                            const index = name.lastIndexOf(".")
+                            if (selectType === "file" && index === -1) {
+                                failed("请输入正确的路径")
+                                return
+                            }
+                            const type = name.substring(index, name.length)
+                            getContent(name, type)
+                            if (InputProps.onPressEnter) InputProps.onPressEnter(e)
+                        }}
+                        onFocus={(e) => {
+                            e.stopPropagation()
+                            if (InputProps.onFocus) InputProps.onFocus(e)
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            if (InputProps.onClick) InputProps.onClick(e)
+                        }}
+                        onBlur={(e) => {
+                            e.stopPropagation()
+                            if (!name) return
+                            const index = name.lastIndexOf(".")
+                            if (selectType === "file" && index === -1) {
+                                failed("请输入正确的路径")
+                                return
+                            }
+                            const type = name.substring(index, name.length)
+                            getContent(name, type)
+                            if (InputProps.onBlur) InputProps.onBlur(e)
+                        }}
+                    />
+                )
+        }
+    })
+
     const renderContent = useMemoizedFn((helpNode: ReactNode) => {
         return (
             <Spin spinning={uploadLoading}>
-                <YakitInput
-                    placeholder='请输入绝对路径'
-                    size={size}
-                    value={fileName || name}
-                    {...InputProps}
-                    onChange={(e) => {
-                        setName(e.target.value)
-                        if (setFileName) setFileName(e.target.value)
-                        if (InputProps.onChange) InputProps.onChange(e)
-                        e.stopPropagation()
-                    }}
-                    onPressEnter={(e) => {
-                        e.stopPropagation()
-                        const index = name.lastIndexOf(".")
-                        if (selectType === "file" && index === -1) {
-                            failed("请输入正确的路径")
-                            return
-                        }
-                        const type = name.substring(index, name.length)
-                        getContent(name, type)
-                        if (InputProps.onPressEnter) InputProps.onPressEnter(e)
-                    }}
-                    onFocus={(e) => {
-                        e.stopPropagation()
-                        if (InputProps.onFocus) InputProps.onFocus(e)
-                    }}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        if (InputProps.onClick) InputProps.onClick(e)
-                    }}
-                    onBlur={(e) => {
-                        e.stopPropagation()
-                        if (!name) return
-                        const index = name.lastIndexOf(".")
-                        if (selectType === "file" && index === -1) {
-                            failed("请输入正确的路径")
-                            return
-                        }
-                        const type = name.substring(index, name.length)
-                        getContent(name, type)
-                        if (InputProps.onBlur) InputProps.onBlur(e)
-                    }}
-                />
+                {renderContentValue()}
                 <div
                     className={classNames(styles["dragger-help-middle"], {
                         [styles["dragger-help-small"]]: size === "small",
