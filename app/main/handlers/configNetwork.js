@@ -33,10 +33,10 @@ module.exports = (win, getClient) => {
         return await asyncSetGlobalNetworkConfig(params)
     })
 
-    // asyncIsSetGlobalNetworkConfigPassWord wrapper
-    const asyncIsSetGlobalNetworkConfigPassWord = (params) => {
+    // asyncValidP12PassWord wrapper
+    const asyncValidP12PassWord = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().IsSetGlobalNetworkConfigPassWord(params, (err, data) => {
+            getClient().ValidP12PassWord(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -45,8 +45,8 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    ipcMain.handle("IsSetGlobalNetworkConfigPassWord", async (e, params) => {
-        return await asyncIsSetGlobalNetworkConfigPassWord(params)
+    ipcMain.handle("ValidP12PassWord", async (e, params) => {
+        return await asyncValidP12PassWord(params)
     })
 
     // asyncResetGlobalNetworkConfig wrapper

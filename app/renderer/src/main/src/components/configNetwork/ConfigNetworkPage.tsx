@@ -119,7 +119,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 
                 // 验证证书是否需要密码
                 ipcRenderer
-                    .invoke("IsSetGlobalNetworkConfigPassWord", {
+                    .invoke("ValidP12PassWord", {
                         Pkcs12Bytes: res
                     } as IsSetGlobalNetworkConfig)
                     .then((result: {IsSetPassWord: boolean}) => {
@@ -256,7 +256,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 },
                                 onOk: () => {
                                     ipcRenderer
-                                        .invoke("IsSetGlobalNetworkConfigPassWord", {
+                                        .invoke("ValidP12PassWord", {
                                             Pkcs12Bytes: item.Pkcs12Bytes,
                                             Pkcs12Password: item.Pkcs12Password
                                         } as IsSetGlobalNetworkConfig)
