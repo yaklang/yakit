@@ -90,7 +90,6 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         isShowLoading.current = false
         // setParams(defaultParams)
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
-            console.log("GetGlobalNetworkConfig", rsp)
             const {ClientCertificates} = rsp
             if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0 && format === 1) {
                 let newArr = ClientCertificates.map((item, index) => {
@@ -114,21 +113,23 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             return false
         }
         ipcRenderer
-            .invoke("fetch-file-content", file.path)
+            .invoke("fetch-certificate-content", file.path)
             .then((res) => {
                 currentIndex.current += 1
+                
                 // 验证证书是否需要密码
                 ipcRenderer
                     .invoke("IsSetGlobalNetworkConfigPassWord", {
-                        Pkcs12Bytes: StringToUint8Array(res)
+                        Pkcs12Bytes: res
                     } as IsSetGlobalNetworkConfig)
                     .then((result: {IsSetPassWord: boolean}) => {
+                        
                         if (result.IsSetPassWord) {
                             setCertificateParams([
                                 ...(certificateParams || []),
                                 {
                                     name: `证书${currentIndex.current}`,
-                                    Pkcs12Bytes: StringToUint8Array(res),
+                                    Pkcs12Bytes: res,
                                     Pkcs12Password: new Uint8Array()
                                 }
                             ])
@@ -138,7 +139,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 ...(certificateParams || []),
                                 {
                                     name: `证书${currentIndex.current}`,
-                                    Pkcs12Bytes: StringToUint8Array(res),
+                                    Pkcs12Bytes: res,
                                     Pkcs12Password: new Uint8Array(),
                                     password: true
                                 }
@@ -146,15 +147,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         }
                     })
             })
-            .catch(() => {
-                failed("无法获取该文件内容，请检查后后重试！")
+            .catch((e) => {
+                failed(`无法获取该文件内容，请检查后后重试！${e}`)
             })
         return false
     })
 
     const ipcSubmit = useMemoizedFn((params: GlobalNetworkConfig) => {
-        console.log("SetGlobalNetworkConfig", params)
-
         ipcRenderer.invoke("SetGlobalNetworkConfig", params).then(() => {
             yakitInfo("更新配置成功")
             update()
@@ -262,12 +261,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             Pkcs12Password: item.Pkcs12Password
                                         } as IsSetGlobalNetworkConfig)
                                         .then((result: {IsSetPassWord: boolean}) => {
-                                            console.log("item.Pkcs12Password--",item.Pkcs12Password,result);
                                             if(result.IsSetPassWord){
                                                 if (Array.isArray(certificateParams)) {
                                                     certificateParams[key].password = false
                                                     let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
                                                     setCertificateParams(cache)
+                                                    m.destroy()
                                                 }
                                             }
                                             else{
@@ -377,55 +376,6 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             />
                         )}
                         <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                            其他配置
-                        </Divider>
-                        <Form.Item label={"禁用IP"}>
-                            <YakitInput.TextArea
-                                autoSize={{minRows: 1, maxRows: 3}}
-                                allowClear
-                                size='small'
-                                value={params.DisallowIPAddress.join(",")}
-                                onChange={(e) => {
-                                    const {value} = e.target
-                                    setParams({...params, DisallowIPAddress: value.split(",")})
-                                }}
-                            />
-                        </Form.Item>
-                        <Form.Item label={"禁用域名"}>
-                            <YakitInput.TextArea
-                                autoSize={{minRows: 1, maxRows: 3}}
-                                allowClear
-                                size='small'
-                                value={params.DisallowDomain.join(",")}
-                                onChange={(e) => {
-                                    const {value} = e.target
-                                    setParams({...params, DisallowDomain: value.split(",")})
-                                }}
-                            />
-                        </Form.Item>
-                        <Form.Item label={"全局代理"}>
-                            <YakitInput
-                                allowClear
-                                size='small'
-                                value={params.GlobalProxy.join(",")}
-                                onChange={(e) => {
-                                    const {value} = e.target
-                                    setParams({...params, GlobalProxy: value.split(",")})
-                                }}
-                            />
-                        </Form.Item>
-                        <Form.Item
-                            label={"系统代理"}
-                            tooltip='开启以后如未配置代理，会默认走系统代理；如配置其他代理，其优先级高于系统代理'
-                        >
-                            <YakitSwitch
-                                checked={params.EnableSystemProxyFromEnv}
-                                onChange={(EnableSystemProxyFromEnv) =>
-                                    setParams({...params, EnableSystemProxyFromEnv})
-                                }
-                            />
-                        </Form.Item>
-                        <Divider orientation={"left"} style={{marginTop: "0px"}}>
                             TLS 客户端证书（双向认证）
                         </Divider>
                         <Form.Item label={"选择格式"}>
@@ -478,7 +428,55 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 }}
                             />
                         )}
-
+                        <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                            其他配置
+                        </Divider>
+                        <Form.Item label={"禁用IP"} tooltip='配置禁用IP后，yakit将会过滤不会访问，配置多个IP用逗号分隔'>
+                            <YakitInput.TextArea
+                                autoSize={{minRows: 1, maxRows: 3}}
+                                allowClear
+                                size='small'
+                                value={params.DisallowIPAddress.join(",")}
+                                onChange={(e) => {
+                                    const {value} = e.target
+                                    setParams({...params, DisallowIPAddress: value.split(",")})
+                                }}
+                            />
+                        </Form.Item>
+                        <Form.Item label={"禁用域名"} tooltip='配置禁用域名后，yakit将会过滤不会访问，配置多个域名用逗号分隔'>
+                            <YakitInput.TextArea
+                                autoSize={{minRows: 1, maxRows: 3}}
+                                allowClear
+                                size='small'
+                                value={params.DisallowDomain.join(",")}
+                                onChange={(e) => {
+                                    const {value} = e.target
+                                    setParams({...params, DisallowDomain: value.split(",")})
+                                }}
+                            />
+                        </Form.Item>
+                        <Form.Item label={"全局代理"}>
+                            <YakitInput
+                                allowClear
+                                size='small'
+                                value={params.GlobalProxy.join(",")}
+                                onChange={(e) => {
+                                    const {value} = e.target
+                                    setParams({...params, GlobalProxy: value.split(",")})
+                                }}
+                            />
+                        </Form.Item>
+                        <Form.Item
+                            label={"系统代理"}
+                            tooltip='开启以后如未配置代理，会默认走系统代理；如配置其他代理，其优先级高于系统代理'
+                        >
+                            <YakitSwitch
+                                checked={params.EnableSystemProxyFromEnv}
+                                onChange={(EnableSystemProxyFromEnv) =>
+                                    setParams({...params, EnableSystemProxyFromEnv})
+                                }
+                            />
+                        </Form.Item>
                         <Form.Item colon={false} label={" "}>
                             <Space>
                                 <YakitButton type='primary' htmlType='submit'>

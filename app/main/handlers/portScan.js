@@ -40,6 +40,24 @@ module.exports = (win, getClient) => {
         })
     }
 
+    // 获取证书(ps:asyncFetchFileContent此方法读取有误)
+    const asyncFetchCertificate = (params) => {
+        return new Promise((resolve, reject) => {
+            // 读取 .pfx 文件
+            FS.readFile(params, (err, data) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(data)
+                }
+  
+            // 处理 .pfx 文件的内容，例如解析证书
+            // 这里可能需要使用 `crypto` 模块进行进一步的处理
+            // 例如：crypto.createCredentials
+            });
+        })
+    }
+
 
     const streamSimpleDetectMap = new Map();
 
@@ -123,5 +141,10 @@ module.exports = (win, getClient) => {
     // 获取URL的IP地址
     ipcMain.handle("fetch-file-content", async (e, params) => {
         return await asyncFetchFileContent(params)
+    })
+
+    // 获取证书内容
+    ipcMain.handle("fetch-certificate-content", async (e, params) => {
+        return await asyncFetchCertificate(params)
     })
 }
