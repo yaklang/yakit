@@ -189,7 +189,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     // 请求数据
     useUpdateEffect(() => {
         fetchList(true)
-    }, [refresh, filters, otherSearch])
+    }, [userInfo.isLogin, refresh, filters, otherSearch])
 
     useEffect(() => {
         getPluginGroupList()
@@ -303,46 +303,26 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         if (value) setSelectList([])
         setAllCheck(value)
     })
-    const onLikeClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-        dispatch({
-            type: "unLikeAndLike",
-            payload: {
-                item: {
-                    ...data
-                }
-            }
-        })
-    })
-    const onCommentClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-        yakitNotify("success", "评论~~~")
-    })
-    const onDownloadClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-        dispatch({
-            type: "download",
-            payload: {
-                item: {
-                    ...data
-                }
-            }
-        })
-        yakitNotify("success", "下载~~~")
-    })
+
     /** 单项额外操作组件 */
     const optExtraNode = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         return (
             <OnlineExtraOperate
+                data={data}
+                isLogin={userInfo.isLogin}
+                dispatch={dispatch}
                 likeProps={{
                     active: data.is_stars,
-                    likeNumber: data.starsCountString || "",
-                    onLikeClick: () => onLikeClick(data)
+                    likeNumber: data.starsCountString || ""
+                    // onLikeClick: () => onLikeClick(data)
                 }}
                 commentProps={{
-                    commentNumber: data.commentCountString || "",
-                    onCommentClick: () => onCommentClick(data)
+                    commentNumber: data.commentCountString || ""
+                    // onCommentClick: () => onCommentClick(data)
                 }}
                 downloadProps={{
-                    downloadNumber: data.downloadedTotalString || "",
-                    onDownloadClick: () => onDownloadClick(data)
+                    downloadNumber: data.downloadedTotalString || ""
+                    // onDownloadClick: () => onDownloadClick(data)
                 }}
             />
         )
@@ -611,7 +591,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 updateList={onUpdateList}
                             />
                         ) : (
-                            <YakitEmpty title='数据为空' />
+                            <YakitEmpty title='暂无数据' />
                         )}
                     </PluginsList>
                 </PluginsContainer>
