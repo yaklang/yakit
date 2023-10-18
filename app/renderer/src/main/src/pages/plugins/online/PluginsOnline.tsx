@@ -47,10 +47,13 @@ import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginL
 import styles from "./PluginsOnline.module.scss"
 import {NetWorkApi} from "@/services/fetch"
 import {
+    DownloadOnlinePluginsRequest,
     PluginsQueryProps,
+    apiDownloadOnlinePlugin,
     apiFetchGroupStatisticsOnline,
     apiFetchOnlineList,
-    convertOnlineRequestParams
+    convertDownloadOnlinePluginBatchRequestParams,
+    convertPluginsRequestParams
 } from "../utils"
 import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -190,6 +193,10 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useUpdateEffect(() => {
         fetchList(true)
     }, [userInfo.isLogin, refresh, filters, otherSearch])
+    useUpdateEffect(() => {
+        if (visibleOnline) return
+        fetchList(true)
+    }, [visibleOnline])
 
     useEffect(() => {
         getPluginGroupList()
@@ -238,7 +245,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             }
 
             const query: PluginsQueryProps = {
-                ...convertOnlineRequestParams(newFilters, search, params),
+                ...convertPluginsRequestParams(newFilters, search, params),
                 time_search: otherSearch.timeType.key === "allTimes" ? "" : otherSearch.timeType.key,
                 order_by: otherSearch.heatType.key
             }
@@ -279,7 +286,33 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     })
     /**下载 */
     const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {
-        setVisibleOnline(true)
+        if (selectNum === 0) {
+            // 全部下载
+            setVisibleOnline(true)
+        } else {
+            // 批量下载
+            let downloadParams: DownloadOnlinePluginsRequest = {}
+            if (allCheck) {
+                downloadParams = {
+                    ...convertDownloadOnlinePluginBatchRequestParams(filters, search)
+                }
+            } else {
+                downloadParams = {
+                    UUID: selectList
+                }
+            }
+            setLoading(true)
+            apiDownloadOnlinePlugin(downloadParams)
+                .then(() => {
+                    fetchList(true)
+                    yakitNotify("success", "下载成功")
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                )
+        }
     })
 
     /** 单项勾选|取消勾选 */

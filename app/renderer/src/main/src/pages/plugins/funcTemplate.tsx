@@ -60,9 +60,8 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
 import {SolidThumbUpIcon} from "@/assets/newIcon"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
-import {YakitPluginOnlineDetail} from "./online/PluginsOnlineType"
 import {yakitNotify} from "@/utils/notification"
-import {PluginStarsRequest, apiDownloadOnlinePlugin, apiPluginStars} from "./utils"
+import {DownloadOnlinePluginsRequest, PluginStarsRequest, apiDownloadOnlinePlugin, apiPluginStars} from "./utils"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -1325,8 +1324,11 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
     })
     const onDownloadClick = useMemoizedFn((e) => {
         e.stopPropagation()
+        const download: DownloadOnlinePluginsRequest = {
+            UUID: [data.uuid]
+        }
         setDownloadLoading(true)
-        apiDownloadOnlinePlugin()
+        apiDownloadOnlinePlugin(download)
             .then(() => {
                 dispatch({
                     type: "download",
