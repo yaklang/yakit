@@ -2,7 +2,7 @@ import {ReactNode} from "react"
 import {YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitMenuProp} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {DropDownProps} from "antd"
-import {PluginSearchParams} from "./baseTemplateType"
+import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
 
 export interface TypeSelectOpt {
     /** 唯一标识符 */
@@ -10,15 +10,15 @@ export interface TypeSelectOpt {
     /** 类型名称 */
     name: string
     /** 类型icon */
-    icon: ReactNode
+    icon?: ReactNode
 }
 export interface TypeSelectProps {
     /** 已选中的类型数组 */
-    active: string[]
+    active: TypeSelectOpt[]
     /** 所有类型的列表 */
     list: TypeSelectOpt[]
     /** 设置选中的类型 */
-    setActive: (value: string[]) => any
+    setActive: (value: TypeSelectOpt[]) => any
 }
 
 export interface FuncBtnProps extends YakitButtonProp {
@@ -69,10 +69,11 @@ export interface PluginsListProps {
     total: number
     /** 已勾选插件数量 */
     selected: number
-    /** 搜索条件(已选tag) */
-    tag: string[]
+    /** 搜索条件(左侧已选item) */
+    filters: PluginFilterParams
     /** 删除搜索条件(已选tag) */
-    onDelTag: (value?: string) => any
+    setFilters: (filters: PluginFilterParams) => void
+
     /** 表头拓展元素 */
     extraHeader?: ReactNode
     children: ReactNode
@@ -255,4 +256,13 @@ export interface OnlineExtraOperateProps {
         downloadNumber: string
         onDownloadClick: () => void
     }
+}
+
+export interface TagShowOpt {
+    /** 组的标识符 */
+    tagType: string
+    /** 名称 */
+    label: string
+    /** 值 */
+    value: string
 }

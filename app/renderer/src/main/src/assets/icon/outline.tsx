@@ -4950,3 +4950,55 @@ const OutlinePayload = () => (
 export const OutlinePayloadIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlinePayload} {...props} />
 }
+
+const OutlineClose = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M9 3V21' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
+        <path
+            d='M16 15L13 12L16 9'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  Icon/Outline/close
+ */
+export const OutlineCloseIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineClose} {...props} />
+}
+
+const OutlineOpen = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M9 3V21' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round' />
+        <path
+            d='M14 9L17 12L14 15'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+/**
+ * @description:  Icon/Outline/open
+ */
+export const OutlineOpenIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineOpen} {...props} />
+}

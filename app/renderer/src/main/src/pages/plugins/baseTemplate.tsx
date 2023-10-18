@@ -1404,9 +1404,9 @@ export const filterToName: Record<string, string> = {
 }
 
 export const defaultFilter: PluginFilterParams = {
-    plugin_type: ["yak", "mitm", "codec", "packet-hack", "port-scan"],
-    status: ["0"],
-    plugin_private: ["1"]
+    // plugin_type: ["yak", "mitm", "codec", "packet-hack", "port-scan"],
+    // status: ["0"],
+    // plugin_private: ["1"]
 }
 export const defaultSearch: PluginSearchParams = {
     keyword: "",
