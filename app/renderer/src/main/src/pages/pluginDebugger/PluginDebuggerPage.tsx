@@ -44,7 +44,6 @@ import {CloudDownloadIcon, ImportIcon} from "@/assets/newIcon"
 import {queryYakScriptList} from "../yakitStore/network"
 import {ImportLocalPlugin} from "../mitm/MITMPage"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {log} from "console"
 const {YakitTabPane} = YakitTabs
 
 export interface PluginDebuggerPageProp {

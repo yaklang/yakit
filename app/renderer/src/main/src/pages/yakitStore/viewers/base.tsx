@@ -441,66 +441,57 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
     const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [flow, setFlow] = useState<HTTPFlow>()
-    const [refreshHTTPFlowDetailRequestAndResponse, setRefreshHTTPFlowDetailRequestAndResponse] = useState<number>(
-        Math.random()
-    )
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
 
-    const getHTTPFlowById = useDebounceFn(
-        (id: number, rowDate: HTTPFlow) => {
-            setFlowRequestLoad(false)
-            setFlowResponseLoad(false)
-            setFlow(rowDate)
-            setFlowRequest(undefined)
-            setFlowResponse(undefined)
-            setOnlyShowFirstNode(false)
+    const getHTTPFlowById = (id: number, rowDate: HTTPFlow) => {
+        setFlowRequestLoad(false)
+        setFlowResponseLoad(false)
+        setFlow(rowDate)
+        setFlowRequest(undefined)
+        setFlowResponse(undefined)
+        setOnlyShowFirstNode(false)
 
-            // 是否获取Request
-            let isGetRequest: boolean = true
-            let isGetResponse: boolean = true
+        // 是否获取Request
+        let isGetRequest: boolean = true
+        let isGetResponse: boolean = true
 
-            // 请求不为空直接使用
-            if (Uint8ArrayToString(rowDate.Request)) {
-                isGetRequest = false
-                setFlowRequest(rowDate.Request)
-                setRefreshHTTPFlowDetailRequestAndResponse(Math.random())
-            }
-            if (Uint8ArrayToString(rowDate.Response)) {
-                isGetResponse = false
-                setFlowResponse(rowDate.Response)
-                setRefreshHTTPFlowDetailRequestAndResponse(Math.random())
-            }
-            // 请求或响应只要有一个为0就走接口拿取数据
-            if (isGetRequest || isGetResponse) {
-                isGetRequest && setFlowRequestLoad(true)
-                isGetResponse && setFlowResponseLoad(true)
-                ipcRenderer
-                    .invoke("GetHTTPFlowById", {Id: id})
-                    .then((i: HTTPFlow) => {
-                        if (i.Id == lasetIdRef.current) {
-                            if (isGetRequest) {
-                                setFlowRequest(i?.Request)
-                            }
-                            if (isGetResponse) {
-                                setFlowResponse(i?.Response)
-                            }
-                            setFlow(i)
-                            setRefreshHTTPFlowDetailRequestAndResponse(Math.random())
+        // 请求不为空直接使用
+        if (Uint8ArrayToString(rowDate.Request)) {
+            isGetRequest = false
+            setFlowRequest(rowDate.Request)
+        }
+        if (Uint8ArrayToString(rowDate.Response)) {
+            isGetResponse = false
+            setFlowResponse(rowDate.Response)
+        }
+        // 请求或响应只要有一个为0就走接口拿取数据
+        if (isGetRequest || isGetResponse) {
+            isGetRequest && setFlowRequestLoad(true)
+            isGetResponse && setFlowResponseLoad(true)
+            ipcRenderer
+                .invoke("GetHTTPFlowById", {Id: id})
+                .then((i: HTTPFlow) => {
+                    if (i.Id == lasetIdRef.current) {
+                        if (isGetRequest) {
+                            setFlowRequest(i?.Request)
                         }
-                    })
-                    .catch((e: any) => {
-                        yakitNotify("error", `Query HTTPFlow failed: ${e}`)
-                    })
-                    .finally(() => {
-                        setTimeout(() => {
-                            setFlowRequestLoad(false)
-                            setFlowResponseLoad(false)
-                        }, 300)
-                    })
-            }
-        },
-        {wait: 200, leading: true, trailing: false}
-    ).run
+                        if (isGetResponse) {
+                            setFlowResponse(i?.Response)
+                        }
+                        setFlow(i)
+                    }
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setFlowRequestLoad(false)
+                        setFlowResponseLoad(false)
+                    }, 300)
+                })
+        }
+    }
 
     const ResizeBoxProps = useCreation(() => {
         let p = {
@@ -540,7 +531,6 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                 secondNode={
                     flow && !onlyShowFirstNode ? (
                         <HTTPFlowDetailRequestAndResponse
-                            key={refreshHTTPFlowDetailRequestAndResponse}
                             id={flow.Id}
                             defaultHttps={flow?.IsHTTPS}
                             flow={flow}
