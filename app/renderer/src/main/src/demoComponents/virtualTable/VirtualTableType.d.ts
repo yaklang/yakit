@@ -25,4 +25,7 @@ export interface VirtualTableProps<T> {
     rowKey: string
     loadMore: (fromInfo?: T) => Promise<{data: T[]}>
     columns: ColumnProps<T>[]
+
+    onTouchTop?: () => any
+    onTouchBottom?: () => any
 }

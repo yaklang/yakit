@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
-import {useGetState, useInfiniteScroll} from "ahooks";
+import {useGetState, useInfiniteScroll, useMemoizedFn} from "ahooks";
 import {TrafficPacket} from "@/models/Traffic";
 import {Paging} from "@/utils/yakQueryHTTPFlow";
 import {info} from "@/utils/notification";
@@ -21,96 +21,118 @@ interface PacketScrollData {
 }
 
 export const PacketListDemo: React.FC<PacketListProp> = (props) => {
-    return <div style={{height: "100%", overflowY: "hidden"}}>
-        <div style={{height: 200, overflowY: "auto"}}>
-            <DemoVirtualTable<TrafficPacket>
-                rowKey={"Id"}
-                columns={[
-                    {headerTitle: "Id", key: "Id", width: 100, colRender: (item) => item.Id},
-                    {headerTitle: "链路层", key: "LinkLayerType", width: 100, colRender: (item) => item.LinkLayerType},
-                    {headerTitle: "网络层", key: "NetworkLayerType", width: 100, colRender: (item) => item.NetworkLayerType},
-                    {
-                        headerTitle: "传输层",
-                        key: "TransportLayerType",
-                        width: 100,
-                        colRender: (item) => item.TransportLayerType
-                    },
-                    {
-                        headerTitle: "源IP",
-                        key: "NetworkEndpointIPSrc",
-                        width: 100,
-                        colRender: (item) => item.NetworkEndpointIPSrc
-                    },
-                    {
-                        headerTitle: "源端口",
-                        key: "TransportEndpointPortSrc",
-                        width: 100,
-                        colRender: (item) => item.TransportEndpointPortSrc
-                    },
-                    {
-                        headerTitle: "目的IP",
-                        key: "NetworkEndpointIPDst",
-                        width: 100,
-                        colRender: (item) => item.NetworkEndpointIPDst
-                    },
-                    {
-                        headerTitle: "目的端口",
-                        key: "TransportEndpointPortDst",
-                        width: 100,
-                        colRender: (item) => item.TransportEndpointPortDst
-                    },
-                ]}
-                isTopLoadMore={false}
-                isStop={true}
-                loadMore={data => {
-                    return new Promise((resolve, reject) => {
-                        if (!data) {
-                            info("加载初始化数据")
-                            ipcRenderer.invoke("QueryTrafficPacket", {
-                                Pagination: genDefaultPagination(),
-                                FromId: 0,
-                            }).then((rsp: {
-                                Data: TrafficPacket[],
-                                Total: number,
-                                Pagination: Paging,
-                            }) => {
-                                resolve({
-                                    data: rsp.Data,
+    const [clearTrigger, setClearTrigger] = useState(false);
+    const timestampNow = useMemo(() => {
+        return Math.floor(Date.now() / 1000)
+    }, []);
+    const [isStop, setIsStop] = useState(false);
+
+    const clear = useMemoizedFn(() => {
+        setClearTrigger(!clearTrigger)
+    })
+
+    useEffect(() => {
+        setIsStop(false)
+        return () => {
+            setIsStop(true)
+        }
+    }, [])
+
+    return <YakitResizeBox
+        isVer={true}
+        firstNode={<div style={{background: "#eeeeee", height: "100%", overflowY: "hidden"}}>
+            <div style={{height: "400px"}}>
+                <DemoVirtualTable<TrafficPacket>
+                    rowKey={"Id"}
+                    columns={[
+                        {headerTitle: "Id", key: "Id", width: 100, colRender: (item) => item.Id},
+                        {headerTitle: "链路层", key: "LinkLayerType", width: 100, colRender: (item) => item.LinkLayerType},
+                        {
+                            headerTitle: "网络层",
+                            key: "NetworkLayerType",
+                            width: 100,
+                            colRender: (item) => item.NetworkLayerType
+                        },
+                        {
+                            headerTitle: "传输层",
+                            key: "TransportLayerType",
+                            width: 100,
+                            colRender: (item) => item.TransportLayerType
+                        },
+                        {
+                            headerTitle: "源IP",
+                            key: "NetworkEndpointIPSrc",
+                            width: 100,
+                            colRender: (item) => item.NetworkEndpointIPSrc
+                        },
+                        {
+                            headerTitle: "源端口",
+                            key: "TransportEndpointPortSrc",
+                            width: 100,
+                            colRender: (item) => item.TransportEndpointPortSrc
+                        },
+                        {
+                            headerTitle: "目的IP",
+                            key: "NetworkEndpointIPDst",
+                            width: 100,
+                            colRender: (item) => item.NetworkEndpointIPDst
+                        },
+                        {
+                            headerTitle: "目的端口",
+                            key: "TransportEndpointPortDst",
+                            width: 100,
+                            colRender: (item) => item.TransportEndpointPortDst
+                        },
+                    ]}
+                    isTopLoadMore={false}
+                    isStop={isStop}
+                    wait={200}
+                    loadMore={data => {
+                        return new Promise((resolve, reject) => {
+                            if (!data) {
+                                // info("加载初始化数据")
+                                ipcRenderer.invoke("QueryTrafficPacket", {
+                                    Pagination: genDefaultPagination(),
+                                    FromId: 0,
+                                    TimestampNow: timestampNow,
+                                }).then((rsp: {
+                                    Data: TrafficPacket[],
+                                    Total: number,
+                                    Pagination: Paging,
+                                }) => {
+                                    resolve({
+                                        data: rsp.Data,
+                                    })
+                                    return
                                 })
                                 return
-                            })
-                            return
-                        } else {
-                            info(`加载更多页 From ${data.Id}`)
-                            ipcRenderer.invoke("QueryTrafficPacket", {
-                                Pagination: genDefaultPagination(),
-                                FromId: data.Id,
-                            }).then((rsp: {
-                                Data: TrafficPacket[],
-                                Total: number,
-                                Pagination: Paging,
-                            }) => {
-                                resolve({
-                                    data: rsp.Data,
+                            } else {
+                                // info(`加载更多页 From ${data.Id}`)
+                                ipcRenderer.invoke("QueryTrafficPacket", {
+                                    Pagination: {...genDefaultPagination(), Limit: 50},
+                                    FromId: data.Id,
+                                    TimestampNow: timestampNow,
+                                }).then((rsp: {
+                                    Data: TrafficPacket[],
+                                    Total: number,
+                                    Pagination: Paging,
+                                }) => {
+                                    resolve({
+                                        data: rsp.Data,
+                                    })
+                                    return
                                 })
                                 return
-                            })
-                            return
-                        }
-                    })
-                }}
-            />
-        </div>
-    </div>
-    // return <YakitResizeBox
-    //     isVer={true}
-    //     firstNode={<div style={{background: "#eeeeee", overflowY: "hidden"}}>
-    //
-    //     </div>}
-    //     secondNode={<div>
-    //         seconds
-    //     </div>}
-    // />
+                            }
+                        })
+                    }}
+                />
+            </div>
+        </div>}
+        secondNode={<div>
+            seconds
+        </div>}
+    />
 }
 
 export const PacketListDemo1: React.FC<PacketListProp> = (props) => {

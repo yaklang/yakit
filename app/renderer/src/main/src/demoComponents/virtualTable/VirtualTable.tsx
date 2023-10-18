@@ -1,4 +1,4 @@
-import {memo, useEffect, useRef} from "react"
+import {memo, useEffect, useMemo, useRef} from "react"
 import {VirtualTableProps} from "./VirtualTableType"
 import {useGetState, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -12,6 +12,9 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
 
     const [loading, setLoading, getLoading] = useGetState<boolean>(false)
     const [data, setData, getData] = useGetState<any[]>([])
+    const dataMemo = useMemo(() => {
+        return data
+    }, [data])
 
     const containerRef = useRef<HTMLDivElement>(null)
     const fetchListHeight = useMemoizedFn(() => {
@@ -23,11 +26,11 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
         return {scrollTop, clientHeight, scrollHeight}
     })
     const wrapperRef = useRef<HTMLDivElement>(null)
-    const [list] = useVirtualList(data, {
+    const [list] = useVirtualList(dataMemo, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 40,
-        overscan: 10
+        overscan: 10,
     })
 
     // 滚动条置底|置顶
@@ -43,14 +46,6 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
             }
         }
     })
-
-    useEffect(()=>{
-        loadMore(undefined).then(data => {
-            setData(data.data)
-        }).catch(e => {
-            failed(e.message)
-        })
-    }, [loadMore])
 
     const fetchList = useMemoizedFn(() => {
         if (getLoading()) return
@@ -88,15 +83,27 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
 
     useEffect(() => {
         if (isStop) {
-            clearTime()
             return
         }
 
         fetchList()
-
-        clearTime()
         timeRef.current = setInterval(fetchList, wait)
+        return () => {
+            clearTime()
+        }
+
+
     }, [isStop])
+
+    useEffect(() => {
+        if (containerRef?.current) {
+            if (containerRef.current.scrollTop > data.length * 40 + 80) {
+                if (wrapperRef?.current) {
+                    wrapperRef.current.style.height = "0px"
+                }
+            }
+        }
+    })
 
     // 清空数据
     useEffect(() => {
@@ -181,11 +188,11 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                                 </div>
                             )
                         })}
-                        {!isTopLoadMore && loading && (
-                            <div className='loading-wrapper'>
-                                <YakitSpin className='loading-style'/>
-                            </div>
-                        )}
+                        {/*{!isTopLoadMore && loading && (*/}
+                        {/*    <div className='loading-wrapper'>*/}
+                        {/*        <YakitSpin className='loading-style'/>*/}
+                        {/*    </div>*/}
+                        {/*)}*/}
                     </div>
                 </div>
             </div>
