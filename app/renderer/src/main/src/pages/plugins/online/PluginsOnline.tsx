@@ -20,18 +20,14 @@ import {
     OutlineSwitchverticalIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {
-    useMemoizedFn,
-    useDebounceFn,
-    useControllableValue,
-    useLockFn,
-    useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useControllableValue, useLockFn, useUpdateEffect, useInViewport} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {
     NavigationBars,
+    OtherSearchProps,
     PluginOnlineDetailBackProps,
     PluginsOnlineHeardProps,
     PluginsOnlineListProps,
@@ -41,12 +37,7 @@ import {
 } from "./PluginsOnlineType"
 import cloneDeep from "lodash/cloneDeep"
 import {API} from "@/services/swagger/resposeType"
-import {
-    PluginsContainer,
-    PluginsLayout,
-    defaultSearch,
-    pluginTypeList
-} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout, defaultSearch, pluginTypeList} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {PluginsOnlineDetail} from "./PluginsOnlineDetail"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
@@ -55,8 +46,15 @@ import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import styles from "./PluginsOnline.module.scss"
 import {NetWorkApi} from "@/services/fetch"
-import {PluginsQueryProps, apiFetchGroupStatisticsOnline, apiFetchOnlineList, convertRequestParams} from "../utils"
+import {
+    PluginsQueryProps,
+    apiFetchGroupStatisticsOnline,
+    apiFetchOnlineList,
+    convertOnlineRequestParams
+} from "../utils"
 import {useStore} from "@/store"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {TypeSelectOpt} from "../funcTemplateType"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -71,6 +69,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
     const pluginsOnlineRef = useRef<HTMLDivElement>(null)
     const pluginsOnlineHeardRef = useRef<HTMLDivElement>(null)
     const pluginsOnlineListRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(pluginsOnlineListRef)
 
     useEffect(() => {
         window.addEventListener("scroll", handleScroll, true)
@@ -123,6 +122,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
                     <div className={styles["plugins-online-list"]} ref={pluginsOnlineListRef}>
                         <PluginsOnlineList
                             refresh={refresh}
+                            inViewport={inViewport}
                             plugin={plugin}
                             setPlugin={setPlugin}
                             isShowRoll={isShowRoll}
@@ -136,7 +136,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
     )
 })
 const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, ref) => {
-    const {refresh, isShowRoll, plugin, setPlugin} = props
+    const {refresh, isShowRoll, plugin, setPlugin, inViewport} = props
 
     /** 插件展示(列表|网格) */
     const [isList, setIsList] = useState<boolean>(true)
@@ -150,17 +150,29 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     })
 
     const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
+        defaultValue: {
+            ...props.searchValue
+        },
         defaultValuePropName: "searchValue",
         valuePropName: "searchValue",
         trigger: "setSearchValue"
     })
     const [pluginGroupList, setPluginGroupList] = useState<API.PluginsSearch[]>([])
 
-    const [timeType, setTimeType] = useState<string>("所有时间")
-    const [heatType, setHeatType] = useState<string>("当前最热")
+    const [otherSearch, setOtherSearch] = useState<OtherSearchProps>({
+        timeType: {
+            key: "allTimes",
+            label: "所有时间"
+        },
+        heatType: {
+            key: "updated_at",
+            label: "默认排序"
+        }
+    })
 
     // const [response, setResponse] = useState<API.YakitPluginListResponse>(cloneDeep(defaultResponse))
     const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
+    const [initTotal, setInitTotal] = useState<number>(0)
 
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
@@ -171,11 +183,13 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [showFilter, setShowFilter] = useState<boolean>(true)
 
     const userInfo = useStore((s) => s.userInfo)
-
+    useEffect(() => {
+        getInitTotal()
+    }, [inViewport])
     // 请求数据
     useUpdateEffect(() => {
         fetchList(true)
-    }, [refresh, filters])
+    }, [refresh, filters, otherSearch])
 
     useEffect(() => {
         getPluginGroupList()
@@ -187,12 +201,32 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         else return selectList.length
     }, [allCheck, selectList])
 
+    const getInitTotal = useMemoizedFn(() => {
+        apiFetchOnlineList({
+            page: 1,
+            limit: 1,
+
+            is_private: [],
+            keywords: "",
+            plugin_type: [],
+            tags: [],
+            user_name: "",
+            user_id: 0,
+            time_search: "",
+            group: [],
+            listType: "",
+            status: [],
+            script_name: [],
+            token: ""
+        }).then((res) => {
+            setInitTotal(+res.pagemeta.total)
+        })
+    })
+
     const fetchList = useLockFn(
         useMemoizedFn(async (reset?: boolean) => {
             if (loading) return
-
             setLoading(true)
-
             const params: PluginListPageMeta = !!reset
                 ? {page: 1, limit: 20}
                 : {
@@ -202,15 +236,16 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             const newFilters = {
                 ...filters
             }
-            if (!showFilter) {
-                // newFilters["type"] = []
-                newFilters["tags"] = []
-            }
-            const query: PluginsQueryProps = convertRequestParams(newFilters, search, params)
 
+            const query: PluginsQueryProps = {
+                ...convertOnlineRequestParams(newFilters, search, params),
+                time_search: otherSearch.timeType.key === "allTimes" ? "" : otherSearch.timeType.key,
+                order_by: otherSearch.heatType.key
+            }
             const res = await apiFetchOnlineList(query)
             if (!res.data) res.data = []
-            setHasMore(res.data.length !== +res.pagemeta.total)
+            const length = res.data.length + response.data.length
+            setHasMore(length < +res.pagemeta.total)
             dispatch({
                 type: "add",
                 payload: {
@@ -234,18 +269,19 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const onUpdateList = useMemoizedFn((reset?: boolean) => {
         fetchList()
     })
-    const onSetActive = useMemoizedFn((type: string[]) => {
-        setFilters({...filters, plugin_type: type})
+    const onSetActive = useMemoizedFn((type: TypeSelectOpt[]) => {
+        const newType: API.PluginsSearchData[] = type.map((ele) => ({
+            value: ele.key,
+            label: ele.name,
+            count: 0
+        }))
+        setFilters({...filters, plugin_type: newType})
     })
     /**下载 */
     const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {
         setVisibleOnline(true)
     })
 
-    const onDelTag = useMemoizedFn((value?: string) => {
-        if (!value) setFilters({...filters, tags: []})
-        else setFilters({...filters, tags: (filters.tags || []).filter((item) => item !== value)})
-    })
     /** 单项勾选|取消勾选 */
     const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
         try {
@@ -327,6 +363,14 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const onSearch = useMemoizedFn(() => {
         fetchList(true)
     })
+    const pluginTypeSelect: TypeSelectOpt[] = useMemo(() => {
+        return (
+            filters.plugin_type?.map((ele) => ({
+                key: ele.value,
+                name: ele.label
+            })) || []
+        )
+    }, [filters.plugin_type])
     return (
         <>
             {!!plugin && (
@@ -347,9 +391,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             <PluginsLayout
                 title={isShowRoll ? <></> : "插件商店"}
                 hidden={!!plugin}
-                subTitle={
-                    <TypeSelect active={filters.plugin_type || []} list={pluginTypeList} setActive={onSetActive} />
-                }
+                subTitle={<TypeSelect active={pluginTypeSelect} list={pluginTypeList} setActive={onSetActive} />}
                 extraHeader={
                     <div className='extra-header-wrapper'>
                         {!isShowRoll && (
@@ -383,7 +425,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                     loading={loading && response.pagemeta.page === 1}
                     visible={showFilter}
                     setVisible={setShowFilter}
-                    selecteds={filters as Record<string, string[]>}
+                    selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
                     groupList={pluginGroupList}
                     filterClassName={classNames({
@@ -397,8 +439,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         setIsList={setIsList}
                         total={response.pagemeta.total}
                         selected={selectNum}
-                        tag={filters.tags || []}
-                        onDelTag={onDelTag}
+                        filters={filters}
+                        setFilters={setFilters}
                         visible={showFilter}
                         setVisible={setShowFilter}
                         extraHeader={
@@ -406,28 +448,52 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 <FuncFilterPopover
                                     maxWidth={1200}
                                     icon={<OutlineCalendarIcon />}
-                                    name={timeType}
+                                    name={otherSearch.timeType.label as string}
                                     menu={{
                                         type: "grey",
                                         data: [
-                                            {key: "toDay", label: "今日"},
-                                            {key: "thisWeek", label: "本周"},
-                                            {key: "thisMonth", label: "本月"},
+                                            {key: "day", label: "今日"},
+                                            {key: "week", label: "本周"},
+                                            {key: "month", label: "本月"},
                                             {key: "allTimes", label: "所有时间"}
                                         ],
                                         onClick: ({key}) => {
                                             switch (key) {
-                                                case "toDay":
-                                                    setTimeType("今日")
+                                                case "day":
+                                                    setOtherSearch({
+                                                        ...otherSearch,
+                                                        timeType: {
+                                                            key: "day",
+                                                            label: "今日"
+                                                        }
+                                                    })
                                                     break
-                                                case "thisWeek":
-                                                    setTimeType("本周")
+                                                case "week":
+                                                    setOtherSearch({
+                                                        ...otherSearch,
+                                                        timeType: {
+                                                            key: "week",
+                                                            label: "本周"
+                                                        }
+                                                    })
                                                     break
-                                                case "thisMonth":
-                                                    setTimeType("本月")
+                                                case "month":
+                                                    setOtherSearch({
+                                                        ...otherSearch,
+                                                        timeType: {
+                                                            key: "month",
+                                                            label: "本月"
+                                                        }
+                                                    })
                                                     break
                                                 case "allTimes":
-                                                    setTimeType("所有时间")
+                                                    setOtherSearch({
+                                                        ...otherSearch,
+                                                        timeType: {
+                                                            key: "allTimes",
+                                                            label: "所有时间"
+                                                        }
+                                                    })
                                                     break
                                                 default:
                                                     return
@@ -440,24 +506,42 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 <FuncFilterPopover
                                     maxWidth={1200}
                                     icon={<OutlineSwitchverticalIcon />}
-                                    name={heatType}
+                                    name={otherSearch.heatType.label as string}
                                     menu={{
                                         data: [
-                                            {key: "currentHottest", label: "当前最热"},
-                                            {key: "mostLikes", label: "点赞最多"},
-                                            {key: "downloadMost", label: "下载最多"}
+                                            {key: "updated_at", label: "默认排序"},
+                                            {key: "stars", label: "点赞最多"},
+                                            {key: "download_total", label: "下载最多"}
                                         ],
                                         className: styles["func-filter-dropdown-menu"],
                                         onClick: ({key}) => {
                                             switch (key) {
-                                                case "currentHottest":
-                                                    setHeatType("当前最热")
+                                                case "updated_at":
+                                                    setOtherSearch({
+                                                        ...otherSearch,
+                                                        heatType: {
+                                                            key: "updated_at",
+                                                            label: "默认排序"
+                                                        }
+                                                    })
                                                     break
-                                                case "mostLikes":
-                                                    setHeatType("点赞最多")
+                                                case "stars":
+                                                    setOtherSearch({
+                                                        ...otherSearch,
+                                                        heatType: {
+                                                            key: "stars",
+                                                            label: "点赞最多"
+                                                        }
+                                                    })
                                                     break
-                                                case "downloadMost":
-                                                    setHeatType("下载最多")
+                                                case "download_total":
+                                                    setOtherSearch({
+                                                        ...otherSearch,
+                                                        heatType: {
+                                                            key: "download_total",
+                                                            label: "下载最多"
+                                                        }
+                                                    })
                                                     break
                                                 default:
                                                     return
@@ -471,60 +555,64 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                             </div>
                         }
                     >
-                        <ListShowContainer<YakitPluginOnlineDetail>
-                            id='online'
-                            isList={isList}
-                            data={response.data}
-                            listClassName={classNames({
-                                [styles["list-overflow-hidden"]]: isShowRoll
-                            })}
-                            gridClassName={classNames({
-                                [styles["list-overflow-hidden"]]: isShowRoll
-                            })}
-                            gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                const {data} = info
-                                const check = allCheck || selectList.includes(data.uuid)
-                                return (
-                                    <GridLayoutOpt
-                                        data={data}
-                                        checked={check}
-                                        onCheck={optCheck}
-                                        title={data.script_name}
-                                        type={data.type}
-                                        tags={data.tags}
-                                        help={data.help || ""}
-                                        img={data.head_img || ""}
-                                        user={data.authors || ""}
-                                        // prImgs={data.prs}
-                                        time={data.updated_at}
-                                        extraFooter={optExtraNode}
-                                        onClick={optClick}
-                                    />
-                                )
-                            }}
-                            gridHeight={210}
-                            listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                const {data} = info
-                                const check = allCheck || selectList.includes(data.uuid)
-                                return (
-                                    <ListLayoutOpt
-                                        data={data}
-                                        checked={check}
-                                        onCheck={optCheck}
-                                        img={data.head_img}
-                                        title={data.script_name}
-                                        help={data.help || ""}
-                                        time={data.updated_at}
-                                        extraNode={optExtraNode}
-                                        onClick={optClick}
-                                    />
-                                )
-                            }}
-                            listHeight={73}
-                            loading={loading}
-                            hasMore={hasMore}
-                            updateList={onUpdateList}
-                        />
+                        {initTotal > 0 ? (
+                            <ListShowContainer<YakitPluginOnlineDetail>
+                                id='online'
+                                isList={isList}
+                                data={response.data}
+                                listClassName={classNames({
+                                    [styles["list-overflow-hidden"]]: isShowRoll
+                                })}
+                                gridClassName={classNames({
+                                    [styles["list-overflow-hidden"]]: isShowRoll
+                                })}
+                                gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
+                                    const {data} = info
+                                    const check = allCheck || selectList.includes(data.uuid)
+                                    return (
+                                        <GridLayoutOpt
+                                            data={data}
+                                            checked={check}
+                                            onCheck={optCheck}
+                                            title={data.script_name}
+                                            type={data.type}
+                                            tags={data.tags}
+                                            help={data.help || ""}
+                                            img={data.head_img || ""}
+                                            user={data.authors || ""}
+                                            // prImgs={data.prs}
+                                            time={data.updated_at}
+                                            extraFooter={optExtraNode}
+                                            onClick={optClick}
+                                        />
+                                    )
+                                }}
+                                gridHeight={210}
+                                listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
+                                    const {data} = info
+                                    const check = allCheck || selectList.includes(data.uuid)
+                                    return (
+                                        <ListLayoutOpt
+                                            data={data}
+                                            checked={check}
+                                            onCheck={optCheck}
+                                            img={data.head_img}
+                                            title={data.script_name}
+                                            help={data.help || ""}
+                                            time={data.updated_at}
+                                            extraNode={optExtraNode}
+                                            onClick={optClick}
+                                        />
+                                    )
+                                }}
+                                listHeight={73}
+                                loading={loading}
+                                hasMore={hasMore}
+                                updateList={onUpdateList}
+                            />
+                        ) : (
+                            <YakitEmpty title='数据为空' />
+                        )}
                     </PluginsList>
                 </PluginsContainer>
             </PluginsLayout>
