@@ -370,7 +370,7 @@ export const convertDownloadOnlinePluginBatchRequestParams = (
 }
 
 /**下载插件 */
-export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => Promise<API.ActionSucceeded> = (
+export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (
     query
 ) => {
     return new Promise((resolve, reject) => {
