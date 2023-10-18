@@ -23,7 +23,8 @@ import {
     useMemoizedFn,
     useSize,
     useThrottleFn,
-    useVirtualList} from "ahooks"
+    useVirtualList
+} from "ahooks"
 import {
     OutlineCalendarIcon,
     OutlineClouddownloadIcon,
@@ -45,6 +46,7 @@ import {
     SolidDocumentSearchPluginIcon,
     SolidCollectionPluginIcon
 } from "@/assets/icon/colors"
+import {LoadingOutlined} from "@ant-design/icons"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
@@ -58,6 +60,9 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
 import {SolidThumbUpIcon} from "@/assets/newIcon"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
+import {YakitPluginOnlineDetail} from "./online/PluginsOnlineType"
+import {yakitNotify} from "@/utils/notification"
+import {PluginStarsRequest, apiDownloadOnlinePlugin, apiPluginStars} from "./utils"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -495,7 +500,11 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                                         <div className={styles["plugins-list-tag-total"]}>
                                             {showTagList.map((item) => {
                                                 return (
-                                                    <Tooltip title={item.label} placement='top' overlayClassName='plugins-tooltip'>
+                                                    <Tooltip
+                                                        title={item.label}
+                                                        placement='top'
+                                                        overlayClassName='plugins-tooltip'
+                                                    >
                                                         <YakitTag
                                                             key={item.value}
                                                             closable
@@ -1277,30 +1286,80 @@ export const TagsListShow: React.FC<TagsListShowProps> = memo((props) => {
 
 /** @name 线上插件额外操作 */
 export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props) => {
-    const {likeProps, commentProps, downloadProps} = props
+    const {data, isLogin, dispatch, likeProps, commentProps, downloadProps} = props
+    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
+    const [starsLoading, setStarsLoading] = useState<boolean>(false)
     const onLikeClick = useMemoizedFn((e) => {
         e.stopPropagation()
-        likeProps.onLikeClick()
+        if (!isLogin) {
+            yakitNotify("error", "登录才可以进行点赞")
+            return
+        }
+        const pluginStarsRequest: PluginStarsRequest = {
+            id: data.id,
+            operation: data.is_stars ? "remove" : "add"
+        }
+        setStarsLoading(true)
+        apiPluginStars(pluginStarsRequest)
+            .then(() => {
+                dispatch({
+                    type: "unLikeAndLike",
+                    payload: {
+                        item: {
+                            ...data
+                        }
+                    }
+                })
+                if (likeProps.onLikeClick) likeProps.onLikeClick(data)
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setStarsLoading(false)
+                }, 200)
+            )
     })
     const onCommentClick = useMemoizedFn((e) => {
         e.stopPropagation()
-        commentProps.onCommentClick()
+        yakitNotify("success", "评论~~~")
+        // commentProps.onCommentClick()
     })
     const onDownloadClick = useMemoizedFn((e) => {
         e.stopPropagation()
-        downloadProps.onDownloadClick()
+        setDownloadLoading(true)
+        apiDownloadOnlinePlugin()
+            .then(() => {
+                dispatch({
+                    type: "download",
+                    payload: {
+                        item: {
+                            ...data
+                        }
+                    }
+                })
+                if (downloadProps.onDownloadClick) downloadProps.onDownloadClick(data)
+                yakitNotify("success", "下载成功")
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setDownloadLoading(false)
+                }, 200)
+            )
     })
     return (
         <div className={styles["online-extra-operate-wrapper"]}>
-            <div
-                className={classNames(styles["like-operate"], {
-                    [styles["like-operate-active"]]: likeProps.active
-                })}
-                onClick={onLikeClick}
-            >
-                {likeProps.active ? <SolidThumbUpIcon /> : <OutlineThumbupIcon />}
-                <span>{likeProps.likeNumber}</span>
-            </div>
+            {starsLoading ? (
+                <LoadingOutlined className={styles["plugin-loading"]} />
+            ) : (
+                <div
+                    className={classNames(styles["like-operate"], {
+                        [styles["like-operate-active"]]: likeProps.active
+                    })}
+                    onClick={onLikeClick}
+                >
+                    {likeProps.active ? <SolidThumbUpIcon /> : <OutlineThumbupIcon />}
+                    <span>{likeProps.likeNumber}</span>
+                </div>
+            )}
             {/* 功能开发中,暂时注释 */}
             {/* <div className='divider-style' />
             <div className={styles["comment-operate"]} onClick={onCommentClick}>
@@ -1308,10 +1367,14 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
                 <span>{commentProps.commentNumber}</span>
             </div> */}
             <div className='divider-style' />
-            <div className={styles["download-operate"]} onClick={onDownloadClick}>
-                <OutlineClouddownloadIcon />
-                <span>{downloadProps.downloadNumber}</span>
-            </div>
+            {downloadLoading ? (
+                <LoadingOutlined className={styles["plugin-loading"]} />
+            ) : (
+                <div className={styles["download-operate"]} onClick={onDownloadClick}>
+                    <OutlineClouddownloadIcon />
+                    <span>{downloadProps.downloadNumber}</span>
+                </div>
+            )}
         </div>
     )
 })
