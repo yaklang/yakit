@@ -376,7 +376,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
             ipcRenderer.invoke("send-to-tab", {
                 type: YakitRoute.AddYakitScript,
                 data: {
-                    moduleType: "nuclei",
+                    moduleType: pluginType,
                     content: code
                 }
             })
