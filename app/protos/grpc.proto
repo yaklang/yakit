@@ -162,6 +162,8 @@ service Yak {
   rpc QueryYakScriptLocalAll(Empty) returns (QueryYakScriptLocalAndUserResponse);
   rpc QueryYakScriptByNames(QueryYakScriptByNamesRequest) returns (QueryYakScriptByNamesResponse);
   rpc QueryYakScriptByIsCore(QueryYakScriptByIsCoreRequest) returns (QueryYakScriptByIsCoreResponse);
+  rpc QueryYakScriptRiskDetailByCWE(QueryYakScriptRiskDetailByCWERequest) returns (QueryYakScriptRiskDetailByCWEResponse);
+  rpc YakScriptRiskTypeList(Empty) returns (YakScriptRiskTypeListResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -417,6 +419,11 @@ service Yak {
   rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
   rpc DeleteLocalPluginsByWhere(DeleteLocalPluginsByWhereRequest) returns (Empty);
   rpc DownloadOnlinePluginByScriptNames(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
+  // NewOnline 插件下载
+  rpc DownloadOnlinePlugins(DownloadOnlinePluginsRequest) returns(stream DownloadOnlinePluginProgress);
+  rpc DownloadOnlinePluginBatch(DownloadOnlinePluginsRequest) returns (Empty);
+  rpc DownloadOnlinePluginByPluginName(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
+
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
 
@@ -1866,6 +1873,22 @@ message DownloadOnlinePluginByIdsRequest {
   repeated string UUID = 3;
 }
 
+message DownloadOnlinePluginsRequest {
+    string Token = 1;
+    repeated bool IsPrivate = 2;
+    string  Keywords = 3;
+    repeated string PluginType = 4;
+    repeated string  Tags = 5;
+    string   UserName = 6;
+    int64  UserId = 7;
+    string TimeSearch = 8;
+    repeated string Group = 9;
+    string   ListType = 10;
+    repeated int64 Status = 11;
+    repeated string UUID = 12;
+    repeated string ScriptName = 13;
+}
+
 message DownloadOnlinePluginByScriptNamesRequest {
   repeated string ScriptNames = 1;
   string Token = 2;
@@ -2027,6 +2050,26 @@ message QueryYakScriptByNamesResponse {
 
 message QueryYakScriptByIsCoreResponse {
   repeated YakScript Data = 1;
+}
+
+message QueryYakScriptRiskDetailByCWERequest {
+  string CWEId = 1;
+}
+
+message QueryYakScriptRiskDetailByCWEResponse {
+  int64 Id = 1;
+  string CWEName = 2;
+  string Description = 3;
+  string CWESolution = 4;
+}
+
+message YakScriptRiskTypeListResponse {
+  repeated RiskTypeLists Data = 1;
+}
+
+message RiskTypeLists {
+  string RiskType = 1;
+  string CWEId = 2;
 }
 
 message ExtractDataToFileRequest {
