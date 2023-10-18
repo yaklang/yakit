@@ -5,7 +5,6 @@ import {NetWorkApi, requestConfig} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
 import {isCommunityEdition} from "@/utils/envfile"
-import {useStore} from "@/store"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -19,8 +18,8 @@ const delObjectInvalidValue = (obj: Record<string, any>) => {
     return data
 }
 
-// 开发参数 转换为 接口参数
-export const convertOnlineRequestParams = (
+// 开发参数 转换为 plugins接口参数
+export const convertPluginsRequestParams = (
     filter: PluginFilterParams,
     search: PluginSearchParams,
     pageParams: PluginListPageMeta
@@ -334,11 +333,49 @@ export const apiPluginStars: (query: PluginStarsRequest) => Promise<API.ActionSu
         }
     })
 }
+
+export interface DownloadOnlinePluginsRequest {
+    Token?: string
+    IsPrivate?: boolean[]
+    Keywords?: string
+    PluginType?: string[]
+    Tags?: string[]
+    UserName?: string
+    UserId?: string
+    TimeSearch?: string
+    Group?: string[]
+    ListType?: string
+    Status?: number[]
+    UUID?: string[]
+    ScriptName?: string[]
+}
+// 开发参数 转换为 DownloadOnlinePluginBatch接口类型
+export const convertDownloadOnlinePluginBatchRequestParams = (
+    filter: PluginFilterParams,
+    search: PluginSearchParams,
+): DownloadOnlinePluginsRequest => {
+    const data: DownloadOnlinePluginsRequest = {
+        // search
+        Keywords: search.type === "keyword" ? search.keyword : "",
+        UserName: search.type === "userName" ? search.userName : "",
+
+        // filter
+        PluginType: filter.plugin_type?.map((ele) => ele.value),
+        Status: filter.status?.map((ele) => Number(ele.value)) || [],
+        Tags: filter.tags?.map((ele) => ele.value) || [],
+        IsPrivate: filter.plugin_private?.map((ele) => ele.value === "true") || [],
+        Group: filter.plugin_group?.map((ele) => ele.value) || []
+    }
+    return delObjectInvalidValue(data)
+}
+
 /**下载插件 */
-export const apiDownloadOnlinePlugin: (query?: PluginStarsRequest) => Promise<API.ActionSucceeded> = (query) => {
+export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => Promise<API.ActionSucceeded> = (
+    query
+) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("DownloadOnlinePluginById", query)
+            .invoke("DownloadOnlinePluginBatch", query)
             .then((res) => {
                 ipcRenderer.invoke("change-main-menu")
                 resolve(res)
