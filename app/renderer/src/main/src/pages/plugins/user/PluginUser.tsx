@@ -53,6 +53,8 @@ import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 import {PrivatePluginIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {API} from "@/services/swagger/resposeType"
+import {TypeSelectOpt} from "../funcTemplateType"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -94,12 +96,16 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
 
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
     const [searchUser, setSearchUser] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [pluginState, setPluginState] = useState<string[]>(["0"])
 
     const [isSelectUserNum, setIsSelectUserNum] = useState<boolean>(false) // 我的插件是否有勾选
     const [isSelectRecycleNum, setIsSelectRecycleNum] = useState<boolean>(false) // 回收站是否有勾选
 
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
+    const [filters, setFilters] = useState<PluginFilterParams>({
+        plugin_type: [],
+        tags: [],
+        plugin_private: []
+    })
     const [refreshUser, setRefreshUser] = useState<boolean>(false)
     const [refreshRecycle, setRefreshRecycle] = useState<boolean>(false)
 
@@ -126,8 +132,13 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {
         setVisibleOnline(true)
     })
-    const onSetActive = useMemoizedFn((state: string[]) => {
-        setPluginState(state)
+    const onSetActive = useMemoizedFn((pluginPrivate: TypeSelectOpt[]) => {
+        const newPluginPrivate: API.PluginsSearchData[] = pluginPrivate.map((ele) => ({
+            value: ele.key,
+            label: ele.name,
+            count: 0
+        }))
+        setFilters({...filters, plugin_private: newPluginPrivate})
     })
     const onBack = useMemoizedFn((backValues: PluginUserDetailBackProps) => {
         setPlugin(undefined)
@@ -145,6 +156,14 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         }),
         {wait: 200, leading: true}
     ).run
+    const pluginPrivateSelect: TypeSelectOpt[] = useMemo(() => {
+        return (
+            filters.plugin_private?.map((ele) => ({
+                key: ele.value,
+                name: ele.label
+            })) || []
+        )
+    }, [filters.plugin_private])
     return (
         <OnlineJudgment>
             {!!plugin && (
@@ -170,7 +189,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                 hidden={!!plugin}
                 subTitle={
                     userPluginType === "myOnlinePlugin" && (
-                        <TypeSelect active={pluginState} list={onlinePluginTypeList} setActive={onSetActive} />
+                        <TypeSelect active={pluginPrivateSelect} list={onlinePluginTypeList} setActive={onSetActive} />
                     )
                 }
                 extraHeader={
@@ -356,10 +375,6 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             })
         )
 
-        const onDelTag = useMemoizedFn((value?: string) => {
-            if (!value) setFilters({...filters, tags: []})
-            else setFilters({...filters, tags: (filters.tags || []).filter((item) => item !== value)})
-        })
         /** 单项勾选|取消勾选 */
         const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
             // 全选情况时的取消勾选
@@ -481,7 +496,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                     loading={loading && isLoadingRef.current}
                     visible={showFilter}
                     setVisible={setShowFilter}
-                    selecteds={filters as Record<string, string[]>}
+                    selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
                     groupList={ssfilters}
                 >
@@ -492,8 +507,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                         setIsList={setIsList}
                         total={response.pagemeta.total}
                         selected={selectNum}
-                        tag={filters.tags || []}
-                        onDelTag={onDelTag}
+                        filters={filters}
+                        setFilters={setFilters}
                         visible={showFilter}
                         setVisible={setShowFilter}
                     >
@@ -669,6 +684,9 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
         })
         // 调用还原的接口
     })
+    const onSetFilters=useMemoizedFn(()=>{
+
+    })
     return (
         <>
             <PluginsList
@@ -678,8 +696,8 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
                 setIsList={setIsList}
                 total={response.pagemeta.total}
                 selected={selectNum}
-                tag={[]}
-                onDelTag={onDelTag}
+                filters={{}}
+                setFilters={onSetFilters}
                 visible={true}
                 setVisible={onSetVisible}
             >

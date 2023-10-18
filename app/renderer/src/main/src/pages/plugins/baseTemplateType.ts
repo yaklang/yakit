@@ -2,6 +2,7 @@ import {RollingLoadListProps} from "@/components/RollingLoadList/RollingLoadList
 import {FilterPanelGroupItem} from "@/components/businessUI/FilterPanel/FilterPanelType"
 import {ReactNode} from "react"
 import {PluginBaseParamProps, PluginParamDataProps, PluginSettingParamProps} from "./pluginsType"
+import {API} from "@/services/swagger/resposeType"
 
 export interface PluginsLayoutProps {
     /** 页面标题 */
@@ -24,9 +25,9 @@ export interface PluginsContainerProps {
     /** 设置是否可见 */
     setVisible: (show: boolean) => any
     /** 选中数据 */
-    selecteds: Record<string, string[]>
+    selecteds: Record<string, API.PluginsSearchData[]>
     /** 选中数据回调 */
-    onSelect: (value: Record<string, string[] | string>) => any
+    onSelect: (value: Record<string, API.PluginsSearchData[]>) => any
     /** 数据展示列表 */
     groupList: FilterPanelGroupItem[]
     /** ClassName */
@@ -133,15 +134,15 @@ export interface PluginEditorDiffProps {}
 /** 插件通用过滤条件 */
 export interface PluginFilterParams {
     /** 插件类型 */
-    plugin_type?: string[]
+    plugin_type?: API.PluginsSearchData[]
     /** 审核状态 */
-    status?: string[]
+    status?: API.PluginsSearchData[]
     /** 标签 */
-    tags?: string[]
+    tags?: API.PluginsSearchData[]
     /** 插件组 */
-    groups?: string[]
+    plugin_group?: API.PluginsSearchData[]
     /** 插件状态(公开 0 /私密 1) */
-    plugin_private?: string[]
+    plugin_private?: API.PluginsSearchData[]
 }
 /** 插件搜索条件 */
 export interface PluginSearchParams {
@@ -151,12 +152,14 @@ export interface PluginSearchParams {
     userName: string
     /** 搜索类型 */
     type: "keyword" | "userName"
+    /**时间类型搜索 默认 为所有时间, 当天 day, 本周 week, 本月 month, 年 year */
+    time_search?: "day" | "week" | "month" | "year"
 }
 /** 插件列表页码条件 */
 export interface PluginListPageMeta {
     page: number
     limit: number
-    order?: "asc" | "desc" | string
+    order?: "asc" | "desc"
     order_by?: string
 }
 /** ---------- 插件列表相关 end ---------- */

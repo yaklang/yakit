@@ -25,6 +25,8 @@ import {useStore} from "@/store"
 import {PluginsLocalDetail} from "./PluginsLocalDetail"
 import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
 import {yakitNotify} from "@/utils/notification"
+import {TypeSelectOpt} from "../funcTemplateType"
+import {API} from "@/services/swagger/resposeType"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
@@ -107,8 +109,13 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const onUpdateList = useMemoizedFn((reset?: boolean) => {
         fetchList()
     })
-    const onSetActive = useMemoizedFn((type: string[]) => {
-        setFilters({...filters, type: type})
+    const onSetActive = useMemoizedFn((type: TypeSelectOpt[]) => {
+        const newType: API.PluginsSearchData[] = type.map((ele) => ({
+            value: ele.key,
+            label: ele.name,
+            count: 0
+        }))
+        setFilters({...filters, plugin_type: newType})
     })
     /**下载 */
     const onDownload = useMemoizedFn((value?: YakScript) => {})
@@ -117,10 +124,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         if (value) setSelectList([])
         setAllCheck(value)
     })
-    const onDelTag = useMemoizedFn((value?: string) => {
-        if (!value) setFilters({...filters, tags: []})
-        else setFilters({...filters, tags: (filters.tags || []).filter((item) => item !== value)})
-    })
+
     /** 单项勾选|取消勾选 */
     const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
         // 全选情况时的取消勾选
@@ -166,9 +170,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         dispatch({
             type: "remove",
             payload: {
-                itemList: [{
-                    ...data
-                }]
+                itemList: [
+                    {
+                        ...data
+                    }
+                ]
             }
         })
     })
@@ -187,6 +193,14 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const onSearch = useMemoizedFn(() => {
         fetchList(true)
     })
+    const pluginTypeSelect: TypeSelectOpt[] = useMemo(() => {
+        return (
+            filters.plugin_type?.map((ele) => ({
+                key: ele.value,
+                name: ele.label
+            })) || []
+        )
+    }, [filters.plugin_type])
     return (
         <>
             {!!plugin && (
@@ -207,7 +221,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             <PluginsLayout
                 title='本地插件'
                 hidden={!!plugin}
-                subTitle={<TypeSelect active={filters.type || []} list={pluginTypeList} setActive={onSetActive} />}
+                subTitle={<TypeSelect active={pluginTypeSelect} list={pluginTypeList} setActive={onSetActive} />}
                 extraHeader={
                     <div className='extra-header-wrapper'>
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
@@ -262,7 +276,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     loading={loading && response.Pagination.Page === 1}
                     visible={showFilter}
                     setVisible={setShowFilter}
-                    selecteds={filters as Record<string, string[]>}
+                    selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
                     groupList={ssfilters}
                 >
@@ -273,8 +287,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                         setIsList={setIsList}
                         total={response.Total}
                         selected={selectNum}
-                        tag={filters.tags || []}
-                        onDelTag={onDelTag}
+                        filters={filters}
+                        setFilters={setFilters}
                         visible={showFilter}
                         setVisible={setShowFilter}
                     >
