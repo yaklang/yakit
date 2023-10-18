@@ -116,14 +116,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             .invoke("fetch-certificate-content", file.path)
             .then((res) => {
                 currentIndex.current += 1
-                
+
                 // 验证证书是否需要密码
                 ipcRenderer
                     .invoke("ValidP12PassWord", {
                         Pkcs12Bytes: res
                     } as IsSetGlobalNetworkConfig)
                     .then((result: {IsSetPassWord: boolean}) => {
-                        
                         if (result.IsSetPassWord) {
                             setCertificateParams([
                                 ...(certificateParams || []),
@@ -163,12 +162,16 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     const submit = useMemoizedFn((e) => {
         e.preventDefault()
         if (format === 1) {
-            if (!(Array.isArray(certificateParams)&&certificateParams.length>0)) {
-                warn("请添加证书")
-                return
-            }
-            const certificate = certificateParams.filter((item)=>item.password!==true)
-            if(certificate.length===0){
+            // if (!(Array.isArray(certificateParams)&&certificateParams.length>0)) {
+            //     warn("请添加证书")
+            //     return
+            // }
+
+            if (
+                Array.isArray(certificateParams) &&
+                certificateParams.length > 0 &&
+                certificateParams.filter((item) => item.password === true).length === certificateParams.length
+            ) {
                 warn("无效证书")
                 return
             }
@@ -177,11 +180,15 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 CrtPem: new Uint8Array(),
                 KeyPem: new Uint8Array()
             }
+            const certificate = (certificateParams || []).filter((item) => item.password !== true)
             const ClientCertificates = certificate.map((item) => {
                 const {Pkcs12Bytes, Pkcs12Password} = item
                 return {Pkcs12Bytes, Pkcs12Password, ...obj}
             })
-            const newParams: GlobalNetworkConfig = {...params, ClientCertificates}
+            const newParams: GlobalNetworkConfig = {
+                ...params,
+                ClientCertificates: ClientCertificates.length > 0 ? ClientCertificates : undefined
+            }
             ipcSubmit(newParams)
         }
         if (format === 2) {
@@ -261,15 +268,14 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             Pkcs12Password: item.Pkcs12Password
                                         } as IsSetGlobalNetworkConfig)
                                         .then((result: {IsSetPassWord: boolean}) => {
-                                            if(result.IsSetPassWord){
+                                            if (result.IsSetPassWord) {
                                                 if (Array.isArray(certificateParams)) {
                                                     certificateParams[key].password = false
                                                     let cache: ClientCertificatePfx[] = cloneDeep(certificateParams)
                                                     setCertificateParams(cache)
                                                     m.destroy()
                                                 }
-                                            }
-                                            else{
+                                            } else {
                                                 failed(`密码错误`)
                                             }
                                         })
@@ -443,7 +449,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 }}
                             />
                         </Form.Item>
-                        <Form.Item label={"禁用域名"} tooltip='配置禁用域名后，yakit将会过滤不会访问，配置多个域名用逗号分隔'>
+                        <Form.Item
+                            label={"禁用域名"}
+                            tooltip='配置禁用域名后，yakit将会过滤不会访问，配置多个域名用逗号分隔'
+                        >
                             <YakitInput.TextArea
                                 autoSize={{minRows: 1, maxRows: 3}}
                                 allowClear
