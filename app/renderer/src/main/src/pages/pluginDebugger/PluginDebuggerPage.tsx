@@ -71,6 +71,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
     const [pluginExecuting, setPluginExecuting] = useState<boolean>(false)
     const [showPluginExec, setShowPluginExec] = useState<boolean>(false)
     const [code, setCode] = useState<string>(PortScanPluginTemplate)
+    const [originCode, setOriginCode] = useState<string>("")
     const [currentPluginName, setCurrentPluginName] = useState<string>("")
     const [tabActiveKey, setTabActiveKey] = useState<string>("code")
     const [operator, setOperator] = useState<{start: () => any; cancel: () => any}>()
@@ -219,7 +220,9 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                 pluginType={pluginType}
                                 setPluginType={setPluginType}
                                 code={code}
+                                originCode={originCode}
                                 setCode={setCode}
+                                setOriginCode={setOriginCode}
                                 setRefreshEditor={setRefreshEditor}
                                 setIsCancelFlag={setIsCancelFlag}
                             ></SecondNodeHeader>
@@ -242,6 +245,8 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                 setPluginType={setPluginType}
                                 code={code}
                                 setCode={setCode}
+                                originCode={originCode}
+                                setOriginCode={setOriginCode}
                                 setRefreshEditor={setRefreshEditor}
                                 setIsCancelFlag={setIsCancelFlag}
                             ></SecondNodeHeader>
@@ -283,6 +288,8 @@ interface SecondNodeHeaderProps {
     setCode: (i: string) => void
     setRefreshEditor: (i: number) => void
     setIsCancelFlag: (i: boolean) => void
+    originCode: string
+    setOriginCode: (i: string) => void
 }
 
 const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
@@ -295,9 +302,10 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
         setCode,
         setCurrentPluginName,
         setRefreshEditor,
-        setIsCancelFlag
+        setIsCancelFlag,
+        originCode,
+        setOriginCode
     }) => {
-        const [originCode, setOriginCode] = useState<string>("")
         const [script, setScript] = useState<YakScript>()
         const [pluginBaseInspectVisible, setPluginBaseInspectVisible] = useState<boolean>(false)
 
