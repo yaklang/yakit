@@ -3,6 +3,8 @@ import {YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitMenuProp} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {DropDownProps} from "antd"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
+import { YakitPluginOnlineDetail } from "./online/PluginsOnlineType"
+import { OnlinePluginAppAction } from "./pluginReducer"
 
 export interface TypeSelectOpt {
     /** 唯一标识符 */
@@ -243,18 +245,21 @@ export interface AuthorImgProps {
  * @property downloadProps 下载的props,包括激活状态和数量
  */
 export interface OnlineExtraOperateProps {
+    data:YakitPluginOnlineDetail
+    isLogin:boolean
+    dispatch:React.Dispatch<OnlinePluginAppAction>
     likeProps: {
         active: boolean
         likeNumber: string
-        onLikeClick: () => void
+        onLikeClick?: (data:YakitPluginOnlineDetail) => void
     }
     commentProps: {
         commentNumber: string
-        onCommentClick: () => void
+        // onCommentClick: () => void
     }
     downloadProps: {
         downloadNumber: string
-        onDownloadClick: () => void
+        onDownloadClick?: (data:YakitPluginOnlineDetail) => void
     }
 }
 
