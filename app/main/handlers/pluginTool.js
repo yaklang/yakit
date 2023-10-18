@@ -82,6 +82,23 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
     })
 
+    const asyncDownloadOnlinePluginBatch = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginBatch(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 新版-下载插件
+    ipcMain.handle("DownloadOnlinePluginBatch", async (e, params) => {
+        params.Token = USER_INFO.token
+        return await asyncDownloadOnlinePluginBatch(params)
+    })
+    
     const asyncDeletePluginByUserID = (params) => {
         return new Promise((resolve, reject) => {
             getClient().DeletePluginByUserID(params, (err, data) => {
