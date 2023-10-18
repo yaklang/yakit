@@ -65,7 +65,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const isLoadingRef = useRef<boolean>(true)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
-    const [filters, setFilters, getFilters] = useGetState<PluginFilterParams>(cloneDeep(defaultFilter))
+    const [filters, setFilters, getFilters] = useGetState<PluginFilterParams>({
+        status: [],
+        plugin_type: [],
+        tags: [],
+        plugin_group: []
+    })
     const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
     const [hasMore, setHasMore] = useState<boolean>(true)
@@ -230,12 +235,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     /** 插件展示(列表|网格) */
     const [isList, setIsList] = useState<boolean>(false)
 
-    // 删除选中的筛选tags
-    const onDelTag = useMemoizedFn((value?: string) => {
-        if (!value) setFilters({...getFilters(), tags: []})
-        else setFilters({...getFilters(), tags: (getFilters().tags || []).filter((item) => item !== value)})
-    })
-
     // 当前展示的插件序列
     const showPluginIndex = useRef<number>(0)
     const setShowPluginIndex = useMemoizedFn((index: number) => {
@@ -297,7 +296,22 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const optClick = useMemoizedFn((data: API.YakitPluginDetail) => {
         setPlugin({...data})
     })
-
+    const pluginStatusSelect: TypeSelectOpt[] = useMemo(() => {
+        return (
+            filters.status?.map((ele) => ({
+                key: ele.value,
+                name: ele.label
+            })) || []
+        )
+    }, [filters.status])
+    const onSetActive = useMemoizedFn((status: TypeSelectOpt[]) => {
+        const newStatus: API.PluginsSearchData[] = status.map((ele) => ({
+            value: ele.key,
+            label: ele.name,
+            count: 0
+        }))
+        setFilters({...filters, status: newStatus})
+    })
     return (
         <>
             {!!plugin && (
@@ -320,13 +334,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             <PluginsLayout
                 title='插件管理'
                 hidden={!!plugin}
-                subTitle={
-                    <TypeSelect
-                        active={filters.status || []}
-                        list={StatusType}
-                        setActive={(status: string[]) => setFilters({...getFilters(), status: status})}
-                    />
-                }
+                subTitle={<TypeSelect active={pluginStatusSelect} list={StatusType} setActive={onSetActive} />}
                 extraHeader={
                     <div className='extra-header-wrapper'>
                         <FuncSearch
@@ -379,7 +387,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     loading={loading && isLoadingRef.current}
                     visible={showFilter}
                     setVisible={setShowFilter}
-                    selecteds={filters as Record<string, string[]>}
+                    selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={onFilter.run}
                     groupList={ssfilters}
                 >
@@ -390,8 +398,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         setIsList={setIsList}
                         total={response.pagemeta.total}
                         selected={selectNum}
-                        tag={filters.tags || []}
-                        onDelTag={onDelTag}
+                        filters={filters}
+                        setFilters={setFilters}
                         visible={showFilter}
                         setVisible={setShowFilter}
                     >
