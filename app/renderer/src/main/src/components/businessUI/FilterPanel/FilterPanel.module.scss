@@ -20,6 +20,21 @@
             font-size: 12px;
             line-height: 16px;
         }
+        .panel-header-icon {
+            color: var(--yakit-body-text-color);
+            width: 16px;
+            height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+            &:hover {
+                color: var(--yakit-primary-4);
+            }
+            path {
+                stroke-width: 1.5;
+            }
+        }
     }
     .panel-content {
         flex: 1 0 0;
