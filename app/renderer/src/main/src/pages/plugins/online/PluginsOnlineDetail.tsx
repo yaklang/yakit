@@ -12,6 +12,7 @@ import {PluginsOnlineDetailProps, YakitPluginListOnlineResponse, YakitPluginOnli
 import {PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
 import {OnlinePluginAppAction, thousandthConversion} from "../pluginReducer"
+import {useStore} from "@/store"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -39,6 +40,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
     const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
 
+    const userInfo = useStore((s) => s.userInfo)
+
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return response.pagemeta.total
@@ -64,14 +67,6 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     })
     const onLikeClick = useMemoizedFn(() => {
         if (plugin) {
-            dispatch({
-                type: "unLikeAndLike",
-                payload: {
-                    item: {
-                        ...plugin
-                    }
-                }
-            })
             const newLikeItem = {...plugin}
             if (newLikeItem.is_stars) {
                 newLikeItem.is_stars = false
@@ -90,20 +85,11 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     })
     const onDownloadClick = useMemoizedFn(() => {
         if (plugin) {
-            dispatch({
-                type: "download",
-                payload: {
-                    item: {
-                        ...plugin
-                    }
-                }
-            })
             const newDownloadItem = {...plugin}
             newDownloadItem.downloaded_total = newDownloadItem.downloaded_total + 1
             newDownloadItem.downloadedTotalString = thousandthConversion(newDownloadItem.downloaded_total)
             setPlugin({...newDownloadItem})
         }
-        yakitNotify("success", "下载~~~")
     })
     /** 单项勾选|取消勾选 */
     const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
@@ -194,14 +180,17 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                                 extraNode={
                                     <div className={styles["plugin-info-extra-header"]}>
                                         <OnlineExtraOperate
+                                            data={plugin}
+                                            isLogin={userInfo.isLogin}
+                                            dispatch={dispatch}
                                             likeProps={{
                                                 active: plugin.is_stars,
                                                 likeNumber: plugin.starsCountString || "",
                                                 onLikeClick: onLikeClick
                                             }}
                                             commentProps={{
-                                                commentNumber: plugin.commentCountString || "",
-                                                onCommentClick: onCommentClick
+                                                commentNumber: plugin.commentCountString || ""
+                                                // onCommentClick: onCommentClick
                                             }}
                                             downloadProps={{
                                                 downloadNumber: plugin.downloadedTotalString || "",

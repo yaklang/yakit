@@ -44,13 +44,12 @@ export const convertOnlineRequestParams = (
     return delObjectInvalidValue(data)
 }
 
-export interface PluginsQueryProps extends API.PluginsWhereListRequest, PluginListPageMeta {}
 /**插件商店这边需要token */
 function PluginNetWorkApi<T extends {token?: string}, D>(params: requestConfig<T>): Promise<D> {
     return new Promise(async (resolve, reject) => {
         try {
             const userInfo = await ipcRenderer.invoke("get-login-user-info", {})
-            if (params.data && userInfo) {
+            if (params.data && userInfo.isLogin) {
                 params.data.token = userInfo.token
             }
         } catch (error) {}
@@ -62,6 +61,10 @@ function PluginNetWorkApi<T extends {token?: string}, D>(params: requestConfig<T
         }
     })
 }
+/**
+ * @description  /plugins 接口请求的定义
+ */
+export interface PluginsQueryProps extends API.PluginsWhereListRequest, PluginListPageMeta {}
 /**线上插件基础接口 */
 const apiFetchList: (query: PluginsQueryProps) => Promise<YakitPluginListOnlineResponse> = (query) => {
     return new Promise((resolve, reject) => {
@@ -299,5 +302,50 @@ export const apiFetchGroupStatisticsCheck: (query?: API.PluginsSearchRequest) =>
             yakitNotify("error", "获取插件审核统计数据失败:" + error)
             reject(error)
         }
+    })
+}
+
+/**
+ * @description 接口/yakit/plugin/stars 请求参数
+ */
+export interface PluginStarsRequest {
+    id: number
+    operation: "remove" | "add"
+}
+/**线上插件点赞 */
+export const apiPluginStars: (query: PluginStarsRequest) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            NetWorkApi<PluginStarsRequest, API.ActionSucceeded>({
+                method: "post",
+                url: "yakit/plugin/stars",
+                params: {...query}
+            })
+                .then((res: API.ActionSucceeded) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "点赞失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "点赞失败:" + error)
+            reject(error)
+        }
+    })
+}
+/**下载插件 */
+export const apiDownloadOnlinePlugin: (query?: PluginStarsRequest) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("DownloadOnlinePluginById", query)
+            .then((res) => {
+                ipcRenderer.invoke("change-main-menu")
+                resolve(res)
+            })
+            .catch((e) => {
+                yakitNotify("error", "下载失败:" + e)
+                reject()
+            })
     })
 }

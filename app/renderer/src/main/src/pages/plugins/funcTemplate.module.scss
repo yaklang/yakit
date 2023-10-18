@@ -963,7 +963,12 @@
     path {
         stroke-width: 1.5;
     }
-
+    .plugin-loading {
+        @extend %operate-base;
+        &:hover {
+            background-color: initial;
+        }
+    }
     .like-operate {
         @extend %operate-base;
     }
