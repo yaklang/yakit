@@ -1,12 +1,14 @@
 import {API} from "@/services/swagger/resposeType"
 import {Ref} from "react"
 import {PluginSearchParams} from "../baseTemplateType"
+import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 
 export interface PluginsOnlineProps {}
 
 export interface PluginsOnlineListProps {
     /**刷新数据 */
     refresh: boolean
+    inViewport: boolean
     plugin: YakitPluginOnlineDetail | undefined
     searchValue: PluginSearchParams
     setSearchValue: (s: PluginSearchParams) => void
@@ -61,6 +63,9 @@ export interface PluginOnlineDetailBackProps {
     allCheck: boolean
 }
 
-export interface NavigationBars{
-    
+export interface NavigationBars {}
+
+export interface OtherSearchProps {
+    timeType: YakitMenuItemProps
+    heatType: YakitMenuItemProps
 }

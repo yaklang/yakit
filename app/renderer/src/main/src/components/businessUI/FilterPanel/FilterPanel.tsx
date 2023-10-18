@@ -7,6 +7,9 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {Tooltip} from "antd"
+import {OutlineCloseIcon} from "@/assets/icon/outline"
+import {API} from "@/services/swagger/resposeType"
 
 import styles from "./FilterPanel.module.scss"
 import classNames from "classnames"
@@ -37,21 +40,26 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
         selected[key] = []
         onSelect({...selected})
     })
-    const onCheck = useMemoizedFn((groupKey: string, value: string, check: boolean) => {
+    const onCheck = useMemoizedFn((groupKey: string, data: API.PluginsSearchData, check: boolean) => {
         const selected = {...selecteds}
         if (check) {
-            selected[groupKey] = [...(selected[groupKey] || []), value]
+            selected[groupKey] = [...(selected[groupKey] || []), data]
         } else {
-            selected[groupKey] = (selected[groupKey] || []).filter((item) => item !== value)
+            selected[groupKey] = (selected[groupKey] || []).filter((item) => item.value !== data.value)
         }
         onSelect({...selected})
+    })
+    const onClose = useMemoizedFn(() => {
+        setVisible(false)
     })
     return (
         <div className={classNames(styles["filter-panel-wrapper"], wrapperClassName || "")}>
             <div className={styles["filter-panel-container"]}>
                 <div className={styles["panel-header"]}>
                     <span className={styles["header-title"]}>高级筛选</span>
-                    <YakitSwitch checked={visible} onChange={setVisible} />
+                    <Tooltip title='收起筛选' placement='top' overlayClassName='plugins-tooltip'>
+                        <OutlineCloseIcon className={styles["panel-header-icon"]} onClick={onClose} />
+                    </Tooltip>
                 </div>
                 <div className={styles["panel-content"]}>
                     <YakitSpin spinning={loading}>
@@ -80,7 +88,10 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                                         }
                                     >
                                         {(item.data || []).map((listItem) => {
-                                            const checked = (selecteds[item.groupKey] || []).includes(listItem.value)
+                                            const checked =
+                                                (selecteds[item.groupKey] || []).findIndex(
+                                                    (ele) => ele.value === listItem.value
+                                                ) !== -1
                                             return (
                                                 <label
                                                     className={classNames(styles["list-item"], {
@@ -92,7 +103,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                                                         <YakitCheckbox
                                                             checked={checked}
                                                             onChange={(e) =>
-                                                                onCheck(item.groupKey, listItem.value, e.target.checked)
+                                                                onCheck(item.groupKey, listItem, e.target.checked)
                                                             }
                                                         />
                                                         <span

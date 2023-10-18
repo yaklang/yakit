@@ -12,6 +12,7 @@ import {
     ListShowContainerProps,
     OnlineExtraOperateProps,
     PluginsListProps,
+    TagShowOpt,
     TagsListShowProps,
     TypeSelectProps
 } from "./funcTemplateType"
@@ -22,14 +23,12 @@ import {
     useMemoizedFn,
     useSize,
     useThrottleFn,
-    useVirtualList,
-    useWhyDidYouUpdate
-} from "ahooks"
+    useVirtualList} from "ahooks"
 import {
     OutlineCalendarIcon,
-    OutlineChatIcon,
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
+    OutlineOpenIcon,
     OutlineSearchIcon,
     OutlineThumbupIcon,
     OutlineViewgridIcon,
@@ -57,9 +56,8 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {PluginsGridCheckIcon} from "./icon"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {SolidThumbUpIcon} from "@/assets/newIcon"
-import {PluginSearchParams} from "./baseTemplateType"
+import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -89,11 +87,20 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
                     <div
                         key={item.key}
                         className={classNames(styles["type-select-opt"], {
-                            [styles["type-select-active"]]: active.includes(item.key)
+                            [styles["type-select-active"]]: active.findIndex((ele) => ele.key === item.key) !== -1
                         })}
                         onClick={() => {
-                            if (active.includes(item.key)) setActive(active.filter((el) => el !== item.key))
-                            else setActive(active.concat([item.key]))
+                            if (active.findIndex((ele) => ele.key === item.key) !== -1)
+                                setActive(active.filter((el) => el.key !== item.key))
+                            else
+                                setActive(
+                                    active.concat([
+                                        {
+                                            key: item.key,
+                                            name: item.name
+                                        }
+                                    ])
+                                )
                         }}
                     >
                         {item.icon}
@@ -121,12 +128,21 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
                                             <div
                                                 key={item.key}
                                                 className={classNames(styles["opt-wrapper"], {
-                                                    [styles["opt-active"]]: active.includes(item.key)
+                                                    [styles["opt-active"]]:
+                                                        active.findIndex((ele) => ele.key === item.key) !== -1
                                                 })}
                                                 onClick={() => {
-                                                    if (active.includes(item.key))
-                                                        setActive(active.filter((el) => el !== item.key))
-                                                    else setActive(active.concat([item.key]))
+                                                    if (active.findIndex((ele) => ele.key === item.key) !== -1)
+                                                        setActive(active.filter((el) => el.key !== item.key))
+                                                    else
+                                                        setActive(
+                                                            active.concat([
+                                                                {
+                                                                    key: item.key,
+                                                                    name: item.name
+                                                                }
+                                                            ])
+                                                        )
                                                 }}
                                             >
                                                 {item.name}
@@ -386,8 +402,8 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
         setIsList,
         total,
         selected,
-        tag,
-        onDelTag,
+        filters,
+        setFilters,
         extraHeader,
         children,
         visible,
@@ -402,18 +418,47 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
     }, [checked, selected])
 
     const [tagShow, setTagShow] = useState<boolean>(false)
-    const tagLength = useMemo(() => {
-        return tag.length
-    }, [tag])
+    const onExpend = useMemoizedFn(() => {
+        setVisible(true)
+    })
+    const onDelTag = useMemoizedFn((value: TagShowOpt) => {
+        if (filters.hasOwnProperty(value.tagType)) {
+            const list: TagShowOpt[] = filters[value.tagType]
+            filters[value.tagType] = list.filter((ele) => ele.value !== value.value)
+            setFilters({...filters})
+        }
+    })
 
+    const onDelAllTag = useMemoizedFn(() => {
+        let newFilters: PluginFilterParams = {}
+        Object.keys(filters).forEach((key) => {
+            newFilters[key] = []
+        })
+        setFilters(newFilters)
+    })
+
+    const showTagList = useMemo(() => {
+        let list: TagShowOpt[] = []
+        Object.entries(filters).forEach(([key, value]) => {
+            const itemList = (value || []).map((ele) => ({tagType: key, label: ele.label, value: ele.value}))
+            if (itemList.length > 0) {
+                list = [...list, ...itemList]
+            }
+        })
+        return list
+    }, [filters])
+    const tagLength = useMemo(() => {
+        return showTagList.length
+    }, [showTagList])
     return (
         <div className={styles["plugins-list"]}>
             <div className={styles["list-header"]}>
                 <div className={styles["header-body"]}>
                     {!visible && (
                         <div className={styles["header-body-filter"]}>
-                            <span className={styles["header-body-filter-title"]}>高级筛选</span>
-                            <YakitSwitch checked={visible} onChange={setVisible} />
+                            <Tooltip title='展开筛选' placement='topLeft' overlayClassName='plugins-tooltip'>
+                                <OutlineOpenIcon className={styles["panel-header-icon"]} onClick={onExpend} />
+                            </Tooltip>
                         </div>
                     )}
                     <div className={styles["body-check"]}>
@@ -436,12 +481,11 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                     {tagLength > 0 && (
                         <div className={styles["body-filter-tag"]}>
                             {tagLength <= 2 ? (
-                                tag.map((item) => {
+                                showTagList.map((item) => {
                                     return (
-                                        <div key={item} className={styles["tag-opt"]}>
-                                            {item}
-                                            <OutlineXIcon onClick={() => onDelTag(item)} />
-                                        </div>
+                                        <YakitTag key={item.value} color='info' closable onClose={() => onDelTag(item)}>
+                                            {item.label}
+                                        </YakitTag>
                                     )
                                 })
                             ) : (
@@ -449,17 +493,22 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                                     overlayClassName={styles["plugins-list-tag-total-popover"]}
                                     content={
                                         <div className={styles["plugins-list-tag-total"]}>
-                                            {tag.map((item) => {
+                                            {showTagList.map((item) => {
                                                 return (
-                                                    <div key={`total-${item}`} className={styles["tag-opt"]}>
-                                                        {item}
-                                                        <OutlineXIcon onClick={() => onDelTag(item)} />
-                                                    </div>
+                                                    <Tooltip title={item.label} placement='top' overlayClassName='plugins-tooltip'>
+                                                        <YakitTag
+                                                            key={item.value}
+                                                            closable
+                                                            onClose={() => onDelTag(item)}
+                                                        >
+                                                            {item.label}
+                                                        </YakitTag>
+                                                    </Tooltip>
                                                 )
                                             })}
                                         </div>
                                     }
-                                    trigger='click'
+                                    trigger='hover'
                                     onVisibleChange={setTagShow}
                                     placement='bottomLeft'
                                 >
@@ -471,7 +520,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                                         <span>
                                             筛选条件 <span className={styles["total-style"]}>{tagLength}</span>
                                         </span>
-                                        <OutlineXIcon onClick={() => onDelTag()} />
+                                        <OutlineXIcon onClick={() => onDelAllTag()} />
                                     </div>
                                 </YakitPopover>
                             )}
@@ -795,9 +844,7 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
     const [inView] = useInViewport(containerRef)
     const oldInView = useRef<boolean>(!!inView)
     useEffect(() => {
-        console.log("inView", inView, oldInView.current)
         if (!oldInView.current && inView) {
-            console.log("showIndex", showIndex)
             scrollTo(Math.floor((showIndex || 0) / gridCol))
         }
         oldInView.current = !!inView
