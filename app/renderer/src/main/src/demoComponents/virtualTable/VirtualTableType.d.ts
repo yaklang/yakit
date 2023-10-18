@@ -26,4 +26,3 @@ export interface VirtualTableProps<T> {
     loadMore: (fromInfo?: T) => Promise<{data: T[]}>
     columns: ColumnProps<T>[]
 }
-n

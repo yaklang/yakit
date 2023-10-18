@@ -4,6 +4,7 @@ import {useGetState, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import "../demoStyle.scss"
+import {failed} from "@/utils/notification";
 
 /** @name 自动加载的虚拟表格 */
 export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p) => {
@@ -42,6 +43,15 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
             }
         }
     })
+
+    useEffect(()=>{
+        loadMore(undefined).then(data => {
+            setData(data.data)
+        }).catch(e => {
+            failed(e.message)
+        })
+    }, [loadMore])
+
     const fetchList = useMemoizedFn(() => {
         if (getLoading()) return
 
@@ -55,7 +65,8 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                 const list = !!isTopLoadMore ? res.data.concat(getData()) : getData().concat(res.data)
                 setData([...list])
             })
-            .catch(() => {})
+            .catch(() => {
+            })
             .finally(() => {
                 setTimeout(() => {
                     if (!isBreakRef.current) onScrollY(!isTopLoadMore)
@@ -63,7 +74,6 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                 }, 300)
             })
     })
-
     // 是否中断自动请求
     const isBreakRef = useRef<boolean>(false)
 
@@ -96,8 +106,8 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
     // 设置|取消定时器
     const setTime = useMemoizedFn((isSet: boolean) => {
         if (isSet) {
-            if(isStop)return
-            
+            if (isStop) return
+
             isBreakRef.current = false
             if (!!timeRef.current) return
             timeRef.current = setInterval(fetchList, wait)
@@ -147,7 +157,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                         {!loading && data.length === 0 && <div className={"no-more-wrapper"}>暂无数据</div>}
                         {isTopLoadMore && loading && (
                             <div className='loading-wrapper'>
-                                <YakitSpin className='loading-style' />
+                                <YakitSpin className='loading-style'/>
                             </div>
                         )}
                         {list.map((el) => {
@@ -173,7 +183,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                         })}
                         {!isTopLoadMore && loading && (
                             <div className='loading-wrapper'>
-                                <YakitSpin className='loading-style' />
+                                <YakitSpin className='loading-style'/>
                             </div>
                         )}
                     </div>
