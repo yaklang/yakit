@@ -72,7 +72,7 @@ const apiFetchList: (query: PluginsQueryProps) => Promise<YakitPluginListOnlineR
                 params: {
                     page: query.page,
                     limit: query.limit,
-                    order: query.order||'desc',
+                    order: query.order || "desc",
                     order_by: query.order_by
                 },
                 data: {...query}
