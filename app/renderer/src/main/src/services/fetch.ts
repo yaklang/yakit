@@ -24,7 +24,7 @@ type AxiosResponseProps<T = any, D = any> = Merge<
     }
 >
 
-interface requestConfig<T = any> extends AxiosRequestConfig<T> {
+export interface requestConfig<T = any> extends AxiosRequestConfig<T> {
     params?: T
     /** @name 自定义接口域名 */
     diyHome?: string
