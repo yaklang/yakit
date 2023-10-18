@@ -84,6 +84,7 @@ export interface PluginResultUIProp {
     cardStyleType?: number
     runtimeId?: string
     fromPlugin?: string
+    defaultActive?: string
 }
 
 export interface TooltipTitleProps {
@@ -179,7 +180,12 @@ const renderCard = (infoList, type) => {
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
     const {loading, results, featureType = [], feature = [], progress, script, statusCards, cardStyleType} = props
-    const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0")
+    const [active, setActive] = useState(() => {
+        if (props.defaultActive) {
+            return props.defaultActive
+        }
+        return props.defaultConsole ? "console" : "feature-0"
+    })
     const xtermRef = useRef(null)
     const timer = useRef<any>(null)
     const [pageCode, setPageCode] = useState<number>(1)
@@ -323,6 +329,13 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         </YakitTabs.YakitTabPane>
                     )
                 })}
+                {!!props.runtimeId && (
+                    <YakitTabs.YakitTabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
+                        <div style={{width: "100%", height: "100%", paddingTop: 12, paddingBottom: 40}}>
+                            <CurrentHttpFlow runtimeId={props.runtimeId}></CurrentHttpFlow>
+                        </div>
+                    </YakitTabs.YakitTabPane>
+                )}
                 <YakitTabs.YakitTabPane
                     tab={"基础插件信息 / 日志"}
                     key={finalFeatures.length > 0 ? "log" : "feature-0"}
@@ -398,13 +411,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         <EngineConsole isMini={true} />
                     </div>
                 </YakitTabs.YakitTabPane>
-                {!!props.runtimeId && (
-                    <YakitTabs.YakitTabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
-                        <div style={{width: "100%", height: "100%", paddingTop: 12, paddingBottom: 40}}>
-                            <CurrentHttpFlow runtimeId={props.runtimeId}></CurrentHttpFlow>
-                        </div>
-                    </YakitTabs.YakitTabPane>
-                )}
                 {/*{props.fromPlugin && <YakitTabs.YakitTabPane tab={"插件所有流量"} key={"current-plugin-flow"}>*/}
                 {/*    <div style={{width: "100%", height: "100%"}}>*/}
                 {/*        <HTTPFlowTable*/}

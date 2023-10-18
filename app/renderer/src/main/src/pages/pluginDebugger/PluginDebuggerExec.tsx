@@ -78,6 +78,7 @@ export const PluginDebuggerExec: React.FC<PluginDebuggerExecProp> = (props) => {
             statusCards={infoState.statusState}
             runtimeId={runtimeId}
             fromPlugin={props.pluginName}
+            defaultActive="current-http-flow"
         />
     )
 };

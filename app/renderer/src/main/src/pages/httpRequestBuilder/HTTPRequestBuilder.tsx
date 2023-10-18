@@ -168,6 +168,11 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
             style={{height: "100%"}}
             onValuesChange={onValuesChange}
         >
+            {reqType === "template" && (
+                <Form.Item label='扫描目标' name='Input' style={{marginBottom: 4}}>
+                    <YakitInput.TextArea placeholder='请输入扫描目标' size='small' />
+                </Form.Item>
+            )}
             <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' style={{marginBottom: 4}}>
                 <YakitSwitch />
             </Form.Item>
@@ -223,9 +228,6 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                             maxTagCount='responsive'
                             placeholder='请输入...'
                         />
-                    </Form.Item>
-                    <Form.Item label='请求目标' name='Input'>
-                        <YakitInput placeholder='请输入...' size='small' />
                     </Form.Item>
                     <Divider style={{margin: 0}} />
                     <YakitCollapse
