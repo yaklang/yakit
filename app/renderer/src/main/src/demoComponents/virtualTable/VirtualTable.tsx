@@ -11,6 +11,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
         isHideHeader = false,
         isTopLoadMore,
         isStop,
+        isScrollUpdate = false,
         triggerClear,
         wait = 1000,
         rowKey,
@@ -41,6 +42,9 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
 
     // 滚动条置底|置顶
     const onScrollY = useMemoizedFn((isBottom: boolean) => {
+        // 触底更新时才有滚动条不跟随更新效果
+        if (!isTopLoadMore && !isScrollUpdate) return
+
         if (isBottom) {
             if (containerRef && containerRef.current) {
                 const {scrollHeight} = fetchListHeight()
@@ -131,6 +135,9 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
     const onScrollCapture = useThrottleFn(
         () => {
             if (containerRef && containerRef.current) {
+                // 触底更新时才有滚动条不跟随更新效果
+                if (!isTopLoadMore && !isScrollUpdate) return
+
                 const {scrollTop, clientHeight, scrollHeight} = fetchListHeight()
 
                 if (!!isTopLoadMore) {
