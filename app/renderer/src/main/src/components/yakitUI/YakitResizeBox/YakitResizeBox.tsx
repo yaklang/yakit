@@ -251,10 +251,14 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         const secondSize = `${dragSecondSize.current - size}px`
         if (isVer) {
             first.style.height = firstSize
+            first.style.maxHeight = firstSize
             second.style.height = secondSize
+            second.style.maxHeight = secondSize
         } else {
             first.style.width = firstSize
+            first.style.maxWidth = firstSize
             second.style.width = secondSize
+            second.style.maxWidth = secondSize
         }
     })
 
@@ -268,10 +272,14 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
 
         if (isVer) {
             first.style.height = firstSize
+            first.style.maxHeight = firstSize
             second.style.height = secondSize
+            second.style.maxHeight = secondSize
         } else {
             first.style.width = firstSize
+            first.style.maxWidth = firstSize
             second.style.width = secondSize
+            second.style.maxWidth = secondSize
         }
 
         if (onMouseUp) onMouseUp()
@@ -294,12 +302,16 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                 const firstHeight = (bodySize * firstSize) / (firstSize + secondSize)
                 const secondHeight = (bodySize * secondSize) / (firstSize + secondSize)
                 first.style.height = `${firstHeight}px`
+                first.style.maxHeight = `${firstHeight}px`
                 second.style.height = `${secondHeight}px`
+                second.style.maxHeight = `${secondHeight}px`
             } else {
                 const firstWidth = (bodySize * firstSize) / (firstSize + secondSize)
                 const secondWidth = (bodySize * secondSize) / (firstSize + secondSize)
                 first.style.width = `${firstWidth}px`
+                first.style.maxWidth = `${firstWidth}px`
                 second.style.width = `${secondWidth}px`
+                second.style.maxWidth = `${secondWidth}px`
             }
         }
     }

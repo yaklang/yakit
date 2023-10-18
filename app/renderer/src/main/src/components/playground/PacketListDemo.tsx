@@ -41,7 +41,6 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
     return <YakitResizeBox
         isVer={true}
         firstNode={<div style={{background: "#eeeeee", height: "100%", overflowY: "hidden"}}>
-            <div style={{height: "400px"}}>
                 <DemoVirtualTable<TrafficPacket>
                     rowKey={"Id"}
                     columns={[
@@ -127,7 +126,6 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                         })
                     }}
                 />
-            </div>
         </div>}
         secondNode={<div>
             seconds

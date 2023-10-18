@@ -4,17 +4,23 @@ import {useGetState, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import "../demoStyle.scss"
-import {failed} from "@/utils/notification";
 
 /** @name 自动加载的虚拟表格 */
 export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p) => {
-    const {isHideHeader = false, isTopLoadMore, isStop, triggerClear, wait = 1000, rowKey, loadMore, columns} = p
+    const {
+        isHideHeader = false,
+        isTopLoadMore,
+        isStop,
+        triggerClear,
+        wait = 1000,
+        rowKey,
+        loadMore,
+        columns,
+        rowClick
+    } = p
 
     const [loading, setLoading, getLoading] = useGetState<boolean>(false)
     const [data, setData, getData] = useGetState<any[]>([])
-    const dataMemo = useMemo(() => {
-        return data
-    }, [data])
 
     const containerRef = useRef<HTMLDivElement>(null)
     const fetchListHeight = useMemoizedFn(() => {
@@ -26,11 +32,11 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
         return {scrollTop, clientHeight, scrollHeight}
     })
     const wrapperRef = useRef<HTMLDivElement>(null)
-    const [list] = useVirtualList(dataMemo, {
+    const [list] = useVirtualList(data, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 40,
-        overscan: 10,
+        overscan: 10
     })
 
     // 滚动条置底|置顶
@@ -60,8 +66,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                 const list = !!isTopLoadMore ? res.data.concat(getData()) : getData().concat(res.data)
                 setData([...list])
             })
-            .catch(() => {
-            })
+            .catch(() => {})
             .finally(() => {
                 setTimeout(() => {
                     if (!isBreakRef.current) onScrollY(!isTopLoadMore)
@@ -91,10 +96,9 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
         return () => {
             clearTime()
         }
-
-
     }, [isStop])
 
+    // 开发模式生效，防止因热加载清空数据引起的UI样式缓存问题
     useEffect(() => {
         if (containerRef?.current) {
             if (containerRef.current.scrollTop > data.length * 40 + 80) {
@@ -105,7 +109,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
         }
     })
 
-    // 清空数据
+    // 外界手动清空数据
     useEffect(() => {
         setData([])
     }, [triggerClear])
@@ -123,6 +127,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
             isBreakRef.current = true
         }
     })
+    // 滚动事件(节流)
     const onScrollCapture = useThrottleFn(
         () => {
             if (containerRef && containerRef.current) {
@@ -162,15 +167,21 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                 <div ref={containerRef} className='list-container' onScroll={() => onScrollCapture.run()}>
                     <div ref={wrapperRef}>
                         {!loading && data.length === 0 && <div className={"no-more-wrapper"}>暂无数据</div>}
-                        {isTopLoadMore && loading && (
+                        {/* {isTopLoadMore && loading && (
                             <div className='loading-wrapper'>
-                                <YakitSpin className='loading-style'/>
+                                <YakitSpin className='loading-style' />
                             </div>
-                        )}
+                        )} */}
                         {list.map((el) => {
                             const {data, index} = el
                             return (
-                                <div key={data[rowKey] || index} className='row-wrapper'>
+                                <div
+                                    key={data[rowKey] || index}
+                                    className='row-wrapper'
+                                    onClick={() => {
+                                        if (rowClick) rowClick(data)
+                                    }}
+                                >
                                     {columns.map((item, i) => {
                                         const {key, colRender, width} = item
                                         return (
@@ -180,7 +191,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                                                 className='col-wrapper'
                                             >
                                                 <div className='content-body yakit-single-line-ellipsis'>
-                                                    {!!colRender ? colRender(data) : data[key]}
+                                                    {!!colRender ? colRender(data) : data[key] || "-"}
                                                 </div>
                                             </div>
                                         )
