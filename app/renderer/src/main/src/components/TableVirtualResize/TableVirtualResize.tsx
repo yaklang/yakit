@@ -1440,12 +1440,14 @@ const CellRender = React.memo(
                 className={classNames(styles["virtual-table-row-cell"], item.data["cellClassName"], {
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
                     [styles["virtual-table-active-row"]]: isSelect,
+                    [styles["virtual-table-active-row-red"]]: isSelect && item.data["cellClassName"] && item.data["cellClassName"].indexOf("color-opacity-bg-red") !== -1,
                     [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
+                    [styles["virtual-table-hover-row-red"]]: mouseCellId === item.data[renderKey] && item.data["cellClassName"] && item.data["cellClassName"].indexOf("color-opacity-bg-red") !== -1,
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
                     [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
-                    [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"]
+                    [styles["virtual-table-row-cell-disabled"]]: item.data["disabled"] || item.data["Disabled"],
                 })}
                 onClick={(e) => {
                     // @ts-ignore
@@ -1633,8 +1635,10 @@ const CellRenderDrop = React.memo(
                 className={classNames(styles["virtual-table-row-cell"], item.data["cellClassName"], {
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
                     [styles["virtual-table-active-row"]]: isSelect,
+                    [styles["virtual-table-active-row-red"]]: isSelect && item.data["cellClassName"] && item.data["cellClassName"].indexOf("color-opacity-bg-red") !== -1,
                     [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
+                    [styles["virtual-table-hover-row-red"]]: mouseCellId === item.data[renderKey] && item.data["cellClassName"] && item.data["cellClassName"].indexOf("color-opacity-bg-red") !== -1,
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
                     [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,

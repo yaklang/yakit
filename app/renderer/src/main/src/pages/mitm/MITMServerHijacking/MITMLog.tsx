@@ -81,9 +81,9 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
     const [inViewport] = useInViewport(logRef)
 
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
-    const [flowResponse,setFlowResponse] = useState<Uint8Array>()
-    const [flowRequestLoad,setFlowRequestLoad] = useState<boolean>(false)
-    const [flowResponseLoad,setFlowResponseLoad] = useState<boolean>(false)
+    const [flowResponse, setFlowResponse] = useState<Uint8Array>()
+    const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
+    const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
 
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
@@ -104,7 +104,11 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                 title: "状态码",
                 dataKey: "StatusCode",
                 width: 100,
-                render: (text) => <div className={styles["status-code"]}>{text}</div>
+                render: (text, rowData) => (
+                    <div className={classNames({[styles["status-code"]]: !hasRedOpacityBg(rowData.cellClassName)})}>
+                        {text}
+                    </div>
+                )
             },
             {
                 title: "URL",
@@ -139,7 +143,8 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                             {rowData.BodyLength !== -1 && (
                                 <div
                                     className={classNames({
-                                        [styles["body-length-text-red"]]: rowData.BodyLength > 1000000
+                                        [styles["body-length-text-red"]]:
+                                            rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
                                     })}
                                 >
                                     {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
@@ -170,7 +175,12 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                                         })
                                 }}
                             >
-                                <ChromeFrameSvgIcon className={styles["icon-style"]} />
+                                <ChromeFrameSvgIcon
+                                    className={classNames({
+                                        [styles["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                    })}
+                                    style={{color: hasRedOpacityBg(rowData.cellClassName) ? "#fff" : undefined}}
+                                />
                             </a>
                             <div className={styles["divider-style"]}></div>
                             <a
@@ -181,7 +191,12 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                                     })
                                 }}
                             >
-                                <ArrowCircleRightSvgIcon className={styles["icon-style"]} />
+                                <ArrowCircleRightSvgIcon
+                                    className={classNames({
+                                        [styles["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                    })}
+                                    style={{color: hasRedOpacityBg(rowData.cellClassName) ? "#fff" : undefined}}
+                                />
                             </a>
                         </div>
                     )
@@ -189,6 +204,9 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             }
         ]
     }, [statusCode])
+    // 背景颜色是否标注为红色
+    const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
+
     const update = () => {
         if (!inViewport) {
             return
@@ -310,32 +328,32 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
             setFlowResponse(undefined)
 
             // 是否获取Request
-            let isGetRequest:boolean = true
-            let isGetResponse:boolean = true
+            let isGetRequest: boolean = true
+            let isGetResponse: boolean = true
 
             // 请求不为空直接使用
-            if(Uint8ArrayToString(rowDate.Request)){
+            if (Uint8ArrayToString(rowDate.Request)) {
                 isGetRequest = false
                 setFlowRequest(rowDate.Request)
                 setFirstFull(false)
             }
-            if(Uint8ArrayToString(rowDate.Response)){
+            if (Uint8ArrayToString(rowDate.Response)) {
                 isGetResponse = false
                 setFlowResponse(rowDate.Response)
                 setFirstFull(false)
             }
             // 请求或响应只要有一个为0就走接口拿取数据
-            if(isGetRequest || isGetResponse){
-                isGetRequest&&setFlowRequestLoad(true)
-                isGetResponse&&setFlowResponseLoad(true)
+            if (isGetRequest || isGetResponse) {
+                isGetRequest && setFlowRequestLoad(true)
+                isGetResponse && setFlowResponseLoad(true)
                 ipcRenderer
                     .invoke("GetHTTPFlowById", {Id: id})
                     .then((i: HTTPFlow) => {
                         if (i.Id == lasetIdRef.current) {
-                            if(isGetRequest){
+                            if (isGetRequest) {
                                 setFlowRequest(i?.Request)
                             }
-                            if(isGetResponse){
+                            if (isGetResponse) {
                                 setFlowResponse(i?.Response)
                             }
                             setFlow(i)
@@ -347,8 +365,8 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                     })
                     .finally(() => {
                         setTimeout(() => {
-                        setFlowRequestLoad(false)
-                        setFlowResponseLoad(false)
+                            setFlowRequestLoad(false)
+                            setFlowResponseLoad(false)
                         }, 300)
                     })
             }

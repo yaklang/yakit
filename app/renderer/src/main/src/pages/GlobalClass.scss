@@ -109,6 +109,12 @@ $keyColor: map-keys($colors);
     .color-opacity-bg-#{"" + $name} {
         background-color: map-get($currentColor, "opacityBackgroundColor");
     }
+    .color-text-#{"" + $name} {
+        color: map-get($currentColor, "textColor") !important;
+    }
+    .color-font-weight-#{"" + $name} {
+        font-weight: map-get($currentColor, "fontWeight");
+    }
 }
 
 // ========================== notification start ==========================

@@ -161,7 +161,16 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: "状态",
                           dataKey: "StatusCode",
-                          render: (v) => (v ? <div style={{color: StatusCodeToColor(v)}}>{`${v}`}</div> : "-"),
+                          render: (v, rowData) =>
+                              v ? (
+                                  <div
+                                      style={{
+                                          color: !hasRedOpacityBg(rowData.cellClassName) ? StatusCodeToColor(v) : ""
+                                      }}
+                                  >{`${v}`}</div>
+                              ) : (
+                                  "-"
+                              ),
                           width: 90,
                           sorterProps: {
                               sorter: true
@@ -235,7 +244,16 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           sorterProps: {
                               sorter: true
                           },
-                          render: (v) => (v ? <div style={{color: DurationMsToColor(v)}}>{`${v}`}</div> : "-")
+                          render: (v, rowData) =>
+                              v ? (
+                                  <div
+                                      style={{
+                                          color: !hasRedOpacityBg(rowData.cellClassName) ? DurationMsToColor(v) : ""
+                                      }}
+                                  >{`${v}`}</div>
+                              ) : (
+                                  "-"
+                              )
                       },
                       {
                           title: "Payloads",
@@ -285,10 +303,17 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           title: "响应相似度",
                           dataKey: "BodySimilarity",
                           width: 120,
-                          render: (v) => {
+                          render: (v, rowData) => {
                               const text = parseFloat(`${v}`).toFixed(3)
                               return text ? (
-                                  <div style={{color: text.startsWith("1.00") ? "var(--yakit-success-5)" : undefined}}>
+                                  <div
+                                      style={{
+                                          color:
+                                              !hasRedOpacityBg(rowData.cellClassName) && text.startsWith("1.00")
+                                                  ? "var(--yakit-success-5)"
+                                                  : undefined
+                                      }}
+                                  >
                                       {text}
                                   </div>
                               ) : (
@@ -347,6 +372,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                               })
                                                           }
                                                       }}
+                                                      style={{
+                                                          color: !hasRedOpacityBg(record.cellClassName) ? "" : "#fff"
+                                                      }}
                                                   />
                                               </Tooltip>
                                               <Divider type='vertical' style={{margin: 0}} />
@@ -354,6 +382,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                       )}
 
                                       <ArrowCircleRightSvgIcon
+                                          style={{
+                                              color: !hasRedOpacityBg(record.cellClassName) ? "" : "#fff"
+                                          }}
                                           onClick={(e) => {
                                               e.stopPropagation()
                                               onDetails(record, index)
@@ -394,6 +425,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       }
                   ]
         }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData, isShowDebug])
+
+        // 背景颜色是否标注为红色
+        const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
 
         useThrottleEffect(
             () => {
