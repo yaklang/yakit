@@ -36,7 +36,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 40,
-        overscan: 10
+        overscan: 300
     })
 
     // 滚动条置底|置顶

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {Form, Select, Space} from "antd";
-import {ManyMultiSelectForString} from "@/utils/inputUtil";
+import {CopyableField, ManyMultiSelectForString, OneLine} from "@/utils/inputUtil";
 import {PcapMetadata} from "@/models/Traffic";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
@@ -11,6 +11,7 @@ import {useMemoizedFn} from "ahooks";
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {PacketListDemo} from "@/components/playground/PacketListDemo";
 import {debugYakitModal, debugYakitModalAny} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
+import {DemoItemSelectMultiForString} from "@/demoComponents/itemSelect/ItemSelect";
 
 export interface PcapXDemoProp {
 
@@ -98,18 +99,39 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
             <Form onSubmitCapture={e => {
                 e.preventDefault()
             }} labelCol={{span: 5}} wrapperCol={{span: 14}} size={"small"}>
-                <ManyMultiSelectForString data={(pcapMeta?.AvailablePcapDevices || []).map(i => ({
-                    value: i.Name, label: `${i.Name} ${i.IP}`
-                }))} label={"网卡"} setValue={(data) => {
-                    setFirstRequest({...firstRequest, NetInterfaceList: data.split(",")})
-                }} value={firstRequest.NetInterfaceList.join(",")} help={<div>
-                    <>选择需要抓包的网卡：</>
-                    {
-                        pcapMeta?.DefaultPublicNetInterface && <>默认网卡: {pcapMeta?.DefaultPublicNetInterface.Name}({
-                            pcapMeta?.DefaultPublicNetInterface.Addr
-                        })</>
-                    }
-                </div>}/>
+                <DemoItemSelectMultiForString
+                    data={(pcapMeta?.AvailablePcapDevices || []).map(i => ({
+                        value: i.Name, label: `${i.Name} ${i.IP}`
+                    }))}
+                    label={"网卡"}
+                    setValue={(data) => {
+                        setFirstRequest({...firstRequest, NetInterfaceList: data.split(",")})
+                    }}
+                    value={firstRequest.NetInterfaceList.join(",")}
+                    help={<Space>
+                        {
+                            pcapMeta?.DefaultPublicNetInterface &&
+                            <div>默认网卡: {pcapMeta?.DefaultPublicNetInterface.Name}</div>
+                        }
+                    </Space>}
+                    disabled={loading}
+                />
+                <DemoItemSelectMultiForString
+                    data={(pcapMeta?.AvailableSessionTypes || []).map(i => ({value: i.Value, label: i.Key}))}
+                    label={"会话协议"}
+                />
+                <DemoItemSelectMultiForString
+                    data={(pcapMeta?.AvailableLinkLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
+                    label={"链路层协议"}
+                />
+                <DemoItemSelectMultiForString
+                    data={(pcapMeta?.AvailableNetworkLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
+                    label={"网络层协议"}
+                />
+                <DemoItemSelectMultiForString
+                    data={(pcapMeta?.AvailableTransportLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
+                    label={"传输层协议"}
+                />
             </Form>
         </AutoCard>}
         firstRatio={'300px'}

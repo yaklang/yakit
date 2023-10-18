@@ -43,7 +43,7 @@ a=1&b=2 Content-Length: a
                 {value: "http-monaco-editor", text: "HTTP 数据包编辑器"},
                 {value: "fs-tree", text: "文件系统树"},
             ]} formItemStyle={{margin: 0}} value={mode} setValue={setMode}/>}
-            size={"small"} bodyStyle={{padding: 0}}
+            size={"small"} bodyStyle={{padding: 0, overflow: "hidden"}}
         >
             {
                 (() => {

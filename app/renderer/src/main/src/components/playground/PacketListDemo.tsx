@@ -9,7 +9,8 @@ import {DemoVirtualTable} from "@/demoComponents/virtualTable/VirtualTable";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 
 export interface PacketListProp {
-
+    onLoadingChanged?: (loading: boolean) => void
+    onClickRow?: (row?: TrafficPacket) => void
 }
 
 const {ipcRenderer} = window.require("electron");
@@ -23,6 +24,7 @@ interface PacketScrollData {
 export const PacketListDemo: React.FC<PacketListProp> = (props) => {
     const [clearTrigger, setClearTrigger] = useState(false);
     const timestampNow = useMemo(() => {
+        // return 0
         return Math.floor(Date.now() / 1000)
     }, []);
     const [isStop, setIsStop] = useState(false);
@@ -40,92 +42,92 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
 
     return <YakitResizeBox
         isVer={true}
-        firstNode={<div style={{background: "#eeeeee", height: "100%", overflowY: "hidden"}}>
-                <DemoVirtualTable<TrafficPacket>
-                    rowKey={"Id"}
-                    columns={[
-                        {headerTitle: "Id", key: "Id", width: 100, colRender: (item) => item.Id},
-                        {headerTitle: "链路层", key: "LinkLayerType", width: 100, colRender: (item) => item.LinkLayerType},
-                        {
-                            headerTitle: "网络层",
-                            key: "NetworkLayerType",
-                            width: 100,
-                            colRender: (item) => item.NetworkLayerType
-                        },
-                        {
-                            headerTitle: "传输层",
-                            key: "TransportLayerType",
-                            width: 100,
-                            colRender: (item) => item.TransportLayerType
-                        },
-                        {
-                            headerTitle: "源IP",
-                            key: "NetworkEndpointIPSrc",
-                            width: 100,
-                            colRender: (item) => item.NetworkEndpointIPSrc
-                        },
-                        {
-                            headerTitle: "源端口",
-                            key: "TransportEndpointPortSrc",
-                            width: 100,
-                            colRender: (item) => item.TransportEndpointPortSrc
-                        },
-                        {
-                            headerTitle: "目的IP",
-                            key: "NetworkEndpointIPDst",
-                            width: 100,
-                            colRender: (item) => item.NetworkEndpointIPDst
-                        },
-                        {
-                            headerTitle: "目的端口",
-                            key: "TransportEndpointPortDst",
-                            width: 100,
-                            colRender: (item) => item.TransportEndpointPortDst
-                        },
-                    ]}
-                    isTopLoadMore={false}
-                    isStop={isStop}
-                    wait={200}
-                    loadMore={data => {
-                        return new Promise((resolve, reject) => {
-                            if (!data) {
-                                // info("加载初始化数据")
-                                ipcRenderer.invoke("QueryTrafficPacket", {
-                                    Pagination: genDefaultPagination(),
-                                    FromId: 0,
-                                    TimestampNow: timestampNow,
-                                }).then((rsp: {
-                                    Data: TrafficPacket[],
-                                    Total: number,
-                                    Pagination: Paging,
-                                }) => {
-                                    resolve({
-                                        data: rsp.Data,
-                                    })
-                                    return
+        firstNode={<div style={{height: "100%", overflowY: "hidden"}}>
+            <DemoVirtualTable<TrafficPacket>
+                rowKey={"Id"}
+                columns={[
+                    {headerTitle: "Id", key: "Id", width: 100, colRender: (item) => item.Id},
+                    {headerTitle: "链路层", key: "LinkLayerType", width: 100, colRender: (item) => item.LinkLayerType},
+                    {
+                        headerTitle: "网络层",
+                        key: "NetworkLayerType",
+                        width: 100,
+                        colRender: (item) => item.NetworkLayerType
+                    },
+                    {
+                        headerTitle: "传输层",
+                        key: "TransportLayerType",
+                        width: 100,
+                        colRender: (item) => item.TransportLayerType
+                    },
+                    {
+                        headerTitle: "源IP",
+                        key: "NetworkEndpointIPSrc",
+                        width: 100,
+                        colRender: (item) => item.NetworkEndpointIPSrc
+                    },
+                    {
+                        headerTitle: "源端口",
+                        key: "TransportEndpointPortSrc",
+                        width: 100,
+                        colRender: (item) => item.TransportEndpointPortSrc
+                    },
+                    {
+                        headerTitle: "目的IP",
+                        key: "NetworkEndpointIPDst",
+                        width: 100,
+                        colRender: (item) => item.NetworkEndpointIPDst
+                    },
+                    {
+                        headerTitle: "目的端口",
+                        key: "TransportEndpointPortDst",
+                        width: 100,
+                        colRender: (item) => item.TransportEndpointPortDst
+                    },
+                ]}
+                isTopLoadMore={false}
+                isStop={isStop}
+                wait={200}
+                loadMore={data => {
+                    return new Promise((resolve, reject) => {
+                        if (!data) {
+                            // info("加载初始化数据")
+                            ipcRenderer.invoke("QueryTrafficPacket", {
+                                Pagination: genDefaultPagination(),
+                                FromId: 0,
+                                TimestampNow: timestampNow,
+                            }).then((rsp: {
+                                Data: TrafficPacket[],
+                                Total: number,
+                                Pagination: Paging,
+                            }) => {
+                                resolve({
+                                    data: rsp.Data,
                                 })
                                 return
-                            } else {
-                                // info(`加载更多页 From ${data.Id}`)
-                                ipcRenderer.invoke("QueryTrafficPacket", {
-                                    Pagination: {...genDefaultPagination(), Limit: 50},
-                                    FromId: data.Id,
-                                    TimestampNow: timestampNow,
-                                }).then((rsp: {
-                                    Data: TrafficPacket[],
-                                    Total: number,
-                                    Pagination: Paging,
-                                }) => {
-                                    resolve({
-                                        data: rsp.Data,
-                                    })
-                                    return
+                            })
+                            return
+                        } else {
+                            // info(`加载更多页 From ${data.Id}`)
+                            ipcRenderer.invoke("QueryTrafficPacket", {
+                                Pagination: {...genDefaultPagination(), Limit: 50},
+                                FromId: data.Id,
+                                TimestampNow: timestampNow,
+                            }).then((rsp: {
+                                Data: TrafficPacket[],
+                                Total: number,
+                                Pagination: Paging,
+                            }) => {
+                                resolve({
+                                    data: rsp.Data,
                                 })
                                 return
-                            }
-                        })
-                    }}
-                />
+                            })
+                            return
+                        }
+                    })
+                }}
+            />
         </div>}
         secondNode={<div>
             seconds
