@@ -1,7 +1,7 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {failed, info} from "@/utils/notification"
+import {failed, info, yakitNotify} from "@/utils/notification"
 import style from "../MITMPage.module.scss"
 import ReactResizeDetector from "react-resize-detector"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -38,6 +38,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
 import {getReleaseEditionName} from "@/utils/envfile"
+import {DownloadOnlinePluginsRequest} from "@/pages/plugins/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -267,6 +268,8 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
 })
 
 interface YakitGetOnlinePluginProps {
+    /**@name 'online'默认首页 mine 个人, recycle 回收站 check 审核页面" */
+    listType?: "online" | "mine" | "recycle" | "check"
     visible: boolean
     setVisible: (b: boolean) => void
 }
@@ -276,7 +279,7 @@ interface YakitGetOnlinePluginProps {
  * 2、PluginDebuggerPage
  */
 export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
-    const {visible, setVisible} = props
+    const {listType = "online", visible, setVisible} = props
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)
     useEffect(() => {
@@ -284,6 +287,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
             return
         }
         ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
+            console.log('data',data)
             const p = Math.floor(data.Progress * 100)
             setPercent(p)
         })
@@ -294,7 +298,9 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
                 ipcRenderer.invoke("change-main-menu")
             }, 200)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+            yakitNotify('error','下载失败:'+e)
+        })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
@@ -303,9 +309,9 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     }, [taskToken])
     useEffect(() => {
         if (visible) {
-            const addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
+            const addParams: DownloadOnlinePluginsRequest = {ListType: listType === "online" ? "" : listType}
             ipcRenderer
-                .invoke("DownloadOnlinePluginAll", addParams, taskToken)
+                .invoke("DownloadOnlinePlugins", addParams, taskToken)
                 .then(() => {})
                 .catch((e) => {
                     failed(`添加失败:${e}`)
