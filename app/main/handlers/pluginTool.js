@@ -1,5 +1,5 @@
-const {ipcMain} = require("electron")
-const {USER_INFO} = require("../state")
+const { ipcMain } = require("electron")
+const { USER_INFO } = require("../state")
 const handlerHelper = require("./handleStreamWithContext")
 
 module.exports = (win, getClient) => {
@@ -40,7 +40,7 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
-                if (params.OnlineID&&params.UUID) win.webContents.send("ref-plugin-operator", {pluginOnlineId: params.OnlineID,pluginUUID:params.UUID})
+                if (params.OnlineID && params.UUID) win.webContents.send("ref-plugin-operator", { pluginOnlineId: params.OnlineID, pluginUUID: params.UUID })
                 resolve(data)
             })
         })
@@ -98,7 +98,41 @@ module.exports = (win, getClient) => {
         params.Token = USER_INFO.token
         return await asyncDownloadOnlinePluginBatch(params)
     })
-    
+
+    const asyncDownloadOnlinePlugins = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePlugins(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 新版-下载所有插件
+    ipcMain.handle("DownloadOnlinePlugins", async (e, params) => {
+        params.Token = USER_INFO.token
+        return await asyncDownloadOnlinePlugins(params)
+    })
+
+    const asyncDownloadOnlinePluginByPluginName = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginByPluginName(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 新版-根据插件名称下载插件
+    ipcMain.handle("DownloadOnlinePluginByPluginName", async (e, params) => {
+        params.Token = USER_INFO.token
+        return await asyncDownloadOnlinePluginByPluginName(params)
+    })
+
     const asyncDeletePluginByUserID = (params) => {
         return new Promise((resolve, reject) => {
             getClient().DeletePluginByUserID(params, (err, data) => {
@@ -160,7 +194,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryYakScriptLocalAndUser", async (e, params) => {
         return await asyncQueryYakScriptLocalAndUser(params)
     })
- 
+
     const asyncQueryYakScriptByOnlineGroup = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryYakScriptByOnlineGroup(params, (err, data) => {
@@ -202,7 +236,7 @@ module.exports = (win, getClient) => {
                 }
                 resolve(data)
             })
-        }) 
+        })
     }
     // 统计
     ipcMain.handle("GetYakScriptTagsAndType", async (e, params) => {
