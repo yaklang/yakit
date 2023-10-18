@@ -1,10 +1,13 @@
 import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "./baseTemplateType"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitPluginListOnlineResponse} from "./online/PluginsOnlineType"
-import {NetWorkApi} from "@/services/fetch"
+import {NetWorkApi, requestConfig} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
 import {isCommunityEdition} from "@/utils/envfile"
+import {useStore} from "@/store"
+
+const {ipcRenderer} = window.require("electron")
 
 // 删除对象里值为 undefined 的键值对
 const delObjectInvalidValue = (obj: Record<string, any>) => {
@@ -17,7 +20,7 @@ const delObjectInvalidValue = (obj: Record<string, any>) => {
 }
 
 // 开发参数 转换为 接口参数
-export const convertRequestParams = (
+export const convertOnlineRequestParams = (
     filter: PluginFilterParams,
     search: PluginSearchParams,
     pageParams: PluginListPageMeta
@@ -25,38 +28,51 @@ export const convertRequestParams = (
     const data: PluginsQueryProps = {
         page: pageParams.page,
         limit: pageParams.limit,
-        order: pageParams.order || "",
+        order: pageParams.order || "desc",
         order_by: pageParams.order_by || "",
         // search
-        keywords: search.type === "keyword" ? search.keyword : "", //关键字
-        user_name: search.type === "userName" ? search.userName : "", // 作者
-        // filter
-        plugin_type: filter.plugin_type, //插件类型
-        status: filter.status?.map((ele) => Number(ele)) || [], // 审核状态
-        tags: filter.tags, // tag搜索
-        is_private: filter.plugin_private?.map((ele) => ele === "true"), // 公开0 false;私密1 true
+        keywords: search.type === "keyword" ? search.keyword : "",
+        user_name: search.type === "userName" ? search.userName : "",
 
-        // 企业版
-        group: filter.groups
+        // filter
+        plugin_type: filter.plugin_type?.map((ele) => ele.value),
+        status: filter.status?.map((ele) => Number(ele.value)) || [],
+        tags: filter.tags?.map((ele) => ele.value) || [],
+        is_private: filter.plugin_private?.map((ele) => ele.value === "true") || [],
+        group: filter.plugin_group?.map((ele) => ele.value) || []
     }
     return delObjectInvalidValue(data)
 }
 
-export interface PluginsQueryProps extends API.PluginsWhere {
-    order: PluginListPageMeta["order"]
-    order_by: PluginListPageMeta["order_by"]
+export interface PluginsQueryProps extends API.PluginsWhereListRequest, PluginListPageMeta {}
+/**插件商店这边需要token */
+function PluginNetWorkApi<T extends {token?: string}, D>(params: requestConfig<T>): Promise<D> {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const userInfo = await ipcRenderer.invoke("get-login-user-info", {})
+            if (params.data && userInfo) {
+                params.data.token = userInfo.token
+            }
+        } catch (error) {}
+
+        try {
+            resolve(await NetWorkApi(params))
+        } catch (error) {
+            reject(error)
+        }
+    })
 }
 /**线上插件基础接口 */
 const apiFetchList: (query: PluginsQueryProps) => Promise<YakitPluginListOnlineResponse> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<PluginsQueryProps, YakitPluginListOnlineResponse>({
+            PluginNetWorkApi<PluginsQueryProps, YakitPluginListOnlineResponse>({
                 method: "get",
                 url: "plugins",
                 params: {
                     page: query.page,
                     limit: query.limit,
-                    order: query.order,
+                    order: query.order||'desc',
                     order_by: query.order_by
                 },
                 data: {...query}
@@ -82,7 +98,6 @@ export const apiFetchOnlineList: (query: PluginsQueryProps) => Promise<YakitPlug
             }
             apiFetchList(newQuery)
                 .then((res: YakitPluginListOnlineResponse) => {
-                    console.log("res", res)
                     resolve(res)
                 })
                 .catch((err) => {
@@ -169,13 +184,14 @@ export const apiFetchCheckList: (query: PluginsQueryProps) => Promise<YakitPlugi
 const apiFetchGroupStatistics: (query?: API.PluginsSearchRequest) => Promise<API.PluginsSearchResponse> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<API.PluginsSearchRequest, API.PluginsSearchResponse>({
+            PluginNetWorkApi<API.PluginsSearchRequest, API.PluginsSearchResponse>({
                 method: "post",
                 url: "plugins/search",
                 data: {...query}
             })
                 .then((res: API.PluginsSearchResponse) => {
-                    resolve(res)
+                    const data: API.PluginsSearch[] = res.data.filter((ele) => (ele.data || []).length > 0)
+                    resolve({...res, data})
                 })
                 .catch((err) => {
                     reject(err)
