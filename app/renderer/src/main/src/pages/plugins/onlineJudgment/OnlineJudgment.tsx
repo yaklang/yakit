@@ -44,6 +44,10 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
         )
 
         useEffect(() => {
+            JudgingStatus()
+        }, [networkState.online, userInfo.isLogin])
+
+        const JudgingStatus = useMemoizedFn(() => {
             if (isJudgingLogin && !userInfo.isLogin) {
                 setInitLoading(false)
                 setLoading(false)
@@ -63,7 +67,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                     })
                 }
             }
-        }, [networkState.online, userInfo.isLogin])
+        })
 
         const getNetWork = useMemoizedFn(() => {
             setLoading(true)
@@ -143,7 +147,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                                 title='暂无访问权限'
                                 description='登录后即可访问该页面'
                             />
-                            <YakitButton className={styles["refresh-button"]} type='outline1' onClick={onLogin}>
+                            <YakitButton className={styles["refresh-button"]} type='outline1' onClick={() => onLogin()}>
                                 立即登录
                             </YakitButton>
                         </>
@@ -176,7 +180,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
         })
         const onLoadingCancel = useMemoizedFn(() => {
             setLoginShow(false)
-            getNetWork()
+            JudgingStatus()
         })
 
         return initLoading ? (

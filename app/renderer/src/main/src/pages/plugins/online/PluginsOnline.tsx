@@ -95,7 +95,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
             if (id === "pluginsOnline") {
                 const {scrollHeight, clientHeight} = e.target
                 const maxScrollTop = Math.max(0, scrollHeight - clientHeight)
-                if (scrollTop === maxScrollTop) {
+                if (!Math.trunc(Math.abs(scrollTop - maxScrollTop))) {
                     setIsShowRoll(false)
                 } else {
                     setIsShowRoll(true)
