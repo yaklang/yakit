@@ -331,9 +331,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 })}
                 {!!props.runtimeId && (
                     <YakitTabs.YakitTabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
-                        <div style={{width: "100%", height: "100%", paddingTop: 12, paddingBottom: 40}}>
-                            <CurrentHttpFlow runtimeId={props.runtimeId}></CurrentHttpFlow>
-                        </div>
+                        <CurrentHttpFlow runtimeId={props.runtimeId}></CurrentHttpFlow>
                     </YakitTabs.YakitTabPane>
                 )}
                 <YakitTabs.YakitTabPane
@@ -345,7 +343,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                             {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
                             <AutoCard
                                 size={"small"}
-                                hoverable={true}
+                                hoverable={false}
                                 bordered={true}
                                 title={
                                     <Space>
@@ -512,7 +510,7 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
     }, [onlyShowFirstNode])
 
     return (
-        <>
+        <div style={{width: "100%", height: "calc(100% - 34px)", paddingBottom: 12}}>
             <YakitResizeBox
                 isVer={true}
                 lineStyle={{display: onlyShowFirstNode ? "none" : ""}}
@@ -532,6 +530,11 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         onSearch={setHighlightSearch}
                         onlyShowFirstNode={onlyShowFirstNode}
                         setOnlyShowFirstNode={setOnlyShowFirstNode}
+                        httpHistoryTableTitleStyle={{
+                            borderLeft: "1px solid var(--yakit-border-color)",
+                            borderRight: "1px solid var(--yakit-border-color)",
+                            paddingTop: 12
+                        }}
                     />
                 }
                 secondNode={
@@ -553,7 +556,7 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                 }
                 {...ResizeBoxProps}
             />
-        </>
+        </div>
     )
 }
 

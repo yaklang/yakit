@@ -415,6 +415,7 @@ export interface HTTPFlowTableProp {
     onlyShowFirstNode?: boolean
     setOnlyShowFirstNode?: (i: boolean) => void
     refresh?: boolean
+    httpHistoryTableTitleStyle?: React.CSSProperties
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -2284,7 +2285,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     query={params}
                     titleHeight={38}
                     renderTitle={
-                        <div className={style["http-history-table-title"]}>
+                        <div className={style["http-history-table-title"]} style={{ ...props.httpHistoryTableTitleStyle }}>
                             <div
                                 className={classNames(
                                     style["http-history-table-title-space-between"],

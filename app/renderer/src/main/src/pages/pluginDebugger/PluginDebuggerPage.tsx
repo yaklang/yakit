@@ -216,27 +216,29 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                         className={styles.rightYakitTabs}
                     >
                         <YakitTabPane tab='源码' key='code' className={styles.tabPane}>
-                            <SecondNodeHeader
-                                generateYamlTemplate={generateYamlTemplate}
-                                currentPluginName={currentPluginName}
-                                setCurrentPluginName={setCurrentPluginName}
-                                pluginType={pluginType}
-                                setPluginType={setPluginType}
-                                code={code}
-                                originCode={originCode}
-                                setCode={setCode}
-                                setOriginCode={setOriginCode}
-                                setRefreshEditor={setRefreshEditor}
-                                setIsCancelFlag={setIsCancelFlag}
-                            ></SecondNodeHeader>
-                            <div style={{height: "calc(100% - 40px)"}}>
-                                <NewHTTPPacketEditor
-                                    key={refreshEditor}
-                                    language={pluginType === "nuclei" ? "yaml" : "yak"}
-                                    noHeader={true}
-                                    originValue={StringToUint8Array(code)}
-                                    onChange={(val) => setCode(Uint8ArrayToString(val))}
-                                />
+                            <div style={{height: "100%", paddingBottom: 12}}>
+                                <SecondNodeHeader
+                                    generateYamlTemplate={generateYamlTemplate}
+                                    currentPluginName={currentPluginName}
+                                    setCurrentPluginName={setCurrentPluginName}
+                                    pluginType={pluginType}
+                                    setPluginType={setPluginType}
+                                    code={code}
+                                    originCode={originCode}
+                                    setCode={setCode}
+                                    setOriginCode={setOriginCode}
+                                    setRefreshEditor={setRefreshEditor}
+                                    setIsCancelFlag={setIsCancelFlag}
+                                ></SecondNodeHeader>
+                                <div style={{height: "calc(100% - 34px)"}}>
+                                    <NewHTTPPacketEditor
+                                        key={refreshEditor}
+                                        language={pluginType === "nuclei" ? "yaml" : "yak"}
+                                        noHeader={true}
+                                        originValue={StringToUint8Array(code)}
+                                        onChange={(val) => setCode(Uint8ArrayToString(val))}
+                                    />
+                                </div>
                             </div>
                         </YakitTabPane>
                         <YakitTabPane tab='执行结果' key='execResult'>
@@ -434,7 +436,6 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                     <span>插件代码配置</span>
                     {!currentPluginName && !generateYamlTemplate && (
                         <YakitRadioButtons
-                            size='small'
                             buttonStyle='solid'
                             value={pluginType}
                             options={pluginTypeData.map((item) => ({value: item.value, label: item.text}))}
