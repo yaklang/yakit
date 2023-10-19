@@ -353,7 +353,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                             : ""}
                                     </Space>
                                 }
-                                style={{marginBottom: 20, marginRight: 2}}
+                                style={{marginBottom: 20, marginRight: 2, marginTop: -1}}
                                 bodyStyle={{overflowY: "auto"}}
                             >
                                 <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
