@@ -1,10 +1,10 @@
 import React, {useEffect, useState, useRef} from "react"
-import {Divider, Space} from "antd"
+import {Divider, RadioChangeEvent, Space, Tooltip} from "antd"
 import {useMemoizedFn, useUpdateEffect, usePrevious} from "ahooks"
+import classNames from "classnames"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {AutoCard} from "@/components/AutoCard"
 import {OutlineEyeIcon, OutlinePuzzleIcon, OutlineSparklesIcon} from "@/assets/icon/outline"
-import {SelectOne} from "@/utils/inputUtil"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
@@ -28,9 +28,7 @@ import {SmokingEvaluateResponse} from "@/pages/pluginDebugger/SmokingEvaluate"
 import {DataCompareModal} from "../compare/DataCompare"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {SolidCogIcon, SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
-import classNames from "classnames"
-import styles from "./PluginDebuggerPage.module.scss"
+import {SolidCogIcon, SolidPlayIcon, SolidStopIcon, SolidStoreIcon} from "@/assets/icon/solid"
 import {
     PluginGroup,
     PluginSearch,
@@ -44,6 +42,8 @@ import {CloudDownloadIcon, ImportIcon} from "@/assets/newIcon"
 import {queryYakScriptList} from "../yakitStore/network"
 import {ImportLocalPlugin} from "../mitm/MITMPage"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import styles from "./PluginDebuggerPage.module.scss"
 const {YakitTabPane} = YakitTabs
 
 export interface PluginDebuggerPageProp {
@@ -164,6 +164,8 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                 firstMinSize={300}
                 firstRatio={"300px"}
                 secondMinSize={700}
+                lineDirection='left'
+                firstNodeStyle={{padding: 0}}
                 firstNode={
                     <AutoCard
                         title='配置调试请求'
@@ -309,6 +311,11 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
         const [script, setScript] = useState<YakScript>()
         const [pluginBaseInspectVisible, setPluginBaseInspectVisible] = useState<boolean>(false)
 
+        const handleChangePluginType = ({target: {value}}: RadioChangeEvent) => {
+            setIsCancelFlag(false)
+            setPluginType(value)
+        }
+
         // 选择要调试的插件
         const handleSelectDebugPlugin = useMemoizedFn(() => {
             const m = showYakitDrawer({
@@ -422,19 +429,17 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
         return (
             <div className={styles["secondNodeHeader"]}>
                 <Space>
-                    <YakitButton type='outline2' icon={<SolidCogIcon />} onClick={handleSelectDebugPlugin} />
+                    <Tooltip title="选择本地插件进行调试">
+                        <YakitButton type='outline2' icon={<SolidCogIcon />} onClick={handleSelectDebugPlugin} />
+                    </Tooltip>
                     <span>插件代码配置</span>
                     {!currentPluginName && !generateYamlTemplate && (
-                        <SelectOne
-                            formItemStyle={{margin: 0, padding: 0}}
-                            label={""}
-                            data={pluginTypeData}
+                        <YakitRadioButtons
+                            size='small'
+                            buttonStyle='solid'
                             value={pluginType}
-                            setValue={(val) => {
-                                setIsCancelFlag(false)
-                                setPluginType(val)
-                            }}
-                            oldTheme={false}
+                            options={pluginTypeData.map((item) => ({value: item.value, label: item.text}))}
+                            onChange={handleChangePluginType}
                         />
                     )}
                     {code && (
@@ -480,7 +485,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                                                 ) : (
                                                     <YakitButton
                                                         type='primary'
-                                                        icon={<OutlinePuzzleIcon />}
+                                                        icon={<SolidStoreIcon />}
                                                         onClick={handleSkipAddYakitScriptPage}
                                                     >
                                                         存为插件
@@ -499,7 +504,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                         ) : (
                             <YakitButton
                                 type='primary'
-                                icon={<OutlinePuzzleIcon />}
+                                icon={<SolidStoreIcon />}
                                 onClick={handleSkipAddYakitScriptPage}
                             >
                                 存为插件

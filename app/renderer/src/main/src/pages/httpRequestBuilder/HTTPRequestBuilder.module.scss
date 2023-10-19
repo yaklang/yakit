@@ -3,6 +3,17 @@
     height: calc(100% - 72px - 12px);
 }
 
+.arg-keys-list {
+    :global {
+        .ant-collapse-header {
+            padding-right: 0 !important;
+        }
+        .ant-collapse-content-box {
+            padding-right: 0 !important;
+        }
+    }
+}
+
 .variable-list {
     color: var(--yakit-helper-text-color);
 
@@ -62,10 +73,6 @@
                     white-space: nowrap;
                     text-overflow: ellipsis;
                 }
-            }
-
-            .ant-radio-button-wrapper {
-                padding: 0px 8px;
             }
         }
     }

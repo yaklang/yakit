@@ -168,11 +168,6 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
             style={{height: "100%"}}
             onValuesChange={onValuesChange}
         >
-            {reqType === "template" && (
-                <Form.Item label='扫描目标' name='Input' style={{marginBottom: 4}}>
-                    <YakitInput.TextArea placeholder='请输入扫描目标' size='small' />
-                </Form.Item>
-            )}
             <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' style={{marginBottom: 4}}>
                 <YakitSwitch />
             </Form.Item>
@@ -210,6 +205,9 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                 </div>
             ) : (
                 <>
+                    <Form.Item label='扫描目标' name='Input' style={{marginBottom: 4}}>
+                        <YakitInput.TextArea placeholder='请输入扫描目标' size='small' />
+                    </Form.Item>
                     <Form.Item label='HTTP方法' name='Method' style={{marginBottom: 4}}>
                         <YakitSelect
                             options={["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT"].map((item) => ({
@@ -219,7 +217,7 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                             size='small'
                         />
                     </Form.Item>
-                    <Form.Item label='请求路径' name='Path' style={{marginBottom: 4}}>
+                    <Form.Item label='请求路径' name='Path' style={{marginBottom: 12}}>
                         <YakitSelect
                             allowClear
                             options={["/", "/admin"].map((item) => ({value: item, label: item}))}
@@ -234,10 +232,12 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                         destroyInactivePanel={false}
                         activeKey={activeKey}
                         onChange={(key) => setActiveKey(key as string[])}
+                        wrapperClassName={styles["arg-keys-list"]}
                     >
                         <YakitPanel
                             header='GET 参数'
                             key='GET 参数'
+                            className={styles["arg-keys-list-panel"]}
                             extra={
                                 <>
                                     <YakitButton
