@@ -172,11 +172,11 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     }
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
-    // 1秒后显示
+    // 0.8秒后显示
     useEffect(() => {
         setTimeout(() => {
             setBoxHidden(false)
-        }, 1000)
+        }, 800)
     }, [])
     // 5秒无操作自动关闭
     const closeTimeoutFun = useMemoizedFn(() => {
@@ -746,13 +746,13 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
     const isSimpleEnter = useRef<boolean>(false)
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
-    // 1秒后显示
+    // 0.8秒后显示
     useEffect(() => {
         fizzRangeTimeoutId.current = undefined
         fizzRangeTimeoutId.current = closeTimeoutFun()
         setTimeout(() => {
             setBoxHidden(false)
-        }, 1000)
+        }, 800)
     }, [])
     // 5秒无操作自动关闭
     const closeTimeoutFun = useMemoizedFn(() => {
@@ -872,13 +872,13 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
     const [menuHeight, setMenuHeight] = useState<number>()
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
-    // 1秒后显示
+    // 0.8秒后显示
     useEffect(() => {
         fizzRangeTimeoutId.current = undefined
         fizzRangeTimeoutId.current = closeTimeoutFun()
         setTimeout(() => {
             setBoxHidden(false)
-        }, 1000)
+        }, 800)
     }, [])
     // 5秒无操作自动关闭
     const closeTimeoutFun = useMemoizedFn(() => {
