@@ -310,6 +310,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                                 break;
                             case "hijack-current-response":
                                 onSetHijackResponseType("onlyOne")
+                                setTimeout(()=>{forward()},200)
                                 break;
                             default:
                                 break;
