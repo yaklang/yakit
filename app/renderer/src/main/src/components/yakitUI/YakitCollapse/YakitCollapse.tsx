@@ -15,7 +15,6 @@ const {Panel} = Collapse
  */
 export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
     const {type = "default", wrapperClassName, wrapperStyle, ...restProps} = props
-    console.log(123, wrapperClassName);
     
     return (
         <div

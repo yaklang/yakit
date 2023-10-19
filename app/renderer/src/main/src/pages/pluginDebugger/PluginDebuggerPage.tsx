@@ -43,6 +43,7 @@ import {queryYakScriptList} from "../yakitStore/network"
 import {ImportLocalPlugin} from "../mitm/MITMPage"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import imageLoadErrorDefault from "@/assets/imageLoadErrorDefault.png"
 import styles from "./PluginDebuggerPage.module.scss"
 const {YakitTabPane} = YakitTabs
 
@@ -354,13 +355,11 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                                                 }
                                             }}
                                         >
-                                            {i.HeadImg && (
-                                                <img
-                                                    alt=''
-                                                    src={i.HeadImg}
-                                                    className={classNames(styles["plugin-local-headImg"])}
-                                                />
-                                            )}
+                                            <img
+                                                alt=''
+                                                src={i.HeadImg || imageLoadErrorDefault}
+                                                className={classNames(styles["plugin-local-headImg"])}
+                                            />
                                             <span className={classNames(styles["plugin-local-scriptName"])}>
                                                 {i.ScriptName}
                                             </span>
@@ -429,7 +428,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
         return (
             <div className={styles["secondNodeHeader"]}>
                 <Space>
-                    <Tooltip title="选择本地插件进行调试">
+                    <Tooltip title='选择本地插件进行调试'>
                         <YakitButton type='outline2' icon={<SolidCogIcon />} onClick={handleSelectDebugPlugin} />
                     </Tooltip>
                     <span>插件代码配置</span>
