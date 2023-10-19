@@ -35,6 +35,7 @@ export interface GlobalNetworkConfig {
     DisallowDomain: string[]
     GlobalProxy: string[]
     EnableSystemProxyFromEnv: boolean
+    SkipSaveHTTPFlow: boolean
 }
 
 export interface IsSetGlobalNetworkConfig {
@@ -74,7 +75,8 @@ const defaultParams: GlobalNetworkConfig = {
     DisallowIPAddress: [],
     DisallowDomain: [],
     GlobalProxy: [],
-    EnableSystemProxyFromEnv: false
+    EnableSystemProxyFromEnv: false,
+    SkipSaveHTTPFlow: false
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -486,6 +488,17 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 }
                             />
                         </Form.Item>
+                        <Form.Item
+                            label={"保存HTTP流量"}
+                            tooltip='打开则会保存MITM以外的流量数据到History表中'
+                        >
+                            <YakitSwitch
+                                checked={!params.SkipSaveHTTPFlow}
+                                onChange={(val) =>
+                                    setParams({...params, SkipSaveHTTPFlow:!val})
+                                }
+                            />
+                        </Form.Item>
                         <Form.Item colon={false} label={" "}>
                             <Space>
                                 <YakitButton type='primary' htmlType='submit'>
@@ -495,6 +508,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     title={"确定需要重置网络配置吗？"}
                                     onConfirm={() => {
                                         ipcRenderer.invoke("ResetGlobalNetworkConfig", {}).then(() => {
+                                            update()
                                             yakitInfo("重置配置成功")
                                         })
                                     }}
