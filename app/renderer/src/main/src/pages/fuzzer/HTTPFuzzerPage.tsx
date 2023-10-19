@@ -1585,8 +1585,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     isShowDefaultLineStyle={false}
                     style={{overflow: "hidden"}}
                     lineStyle={{display: firstFull || secondFull ? "none" : ""}}
-                    secondNodeStyle={{padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480}}
-                    firstNodeStyle={{padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : ""}}
+                    secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
+                    firstNodeStyle={{padding: secondFull ? 0 : undefined, display: secondFull ? "none" : ""}}
                     {...ResizeBoxProps}
                     firstNode={
                         <WebFuzzerNewEditor
