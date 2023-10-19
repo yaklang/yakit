@@ -510,7 +510,7 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
     }, [onlyShowFirstNode])
 
     return (
-        <div style={{width: "100%", height: "calc(100% - 34px)", paddingBottom: 12}}>
+        <>
             <YakitResizeBox
                 isVer={true}
                 lineStyle={{display: onlyShowFirstNode ? "none" : ""}}
@@ -556,7 +556,7 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                 }
                 {...ResizeBoxProps}
             />
-        </div>
+        </>
     )
 }
 

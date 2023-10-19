@@ -242,39 +242,43 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                             </div>
                         </YakitTabPane>
                         <YakitTabPane tab='执行结果' key='execResult'>
-                            <SecondNodeHeader
-                                generateYamlTemplate={generateYamlTemplate}
-                                currentPluginName={currentPluginName}
-                                setCurrentPluginName={setCurrentPluginName}
-                                pluginType={pluginType}
-                                setPluginType={setPluginType}
-                                code={code}
-                                setCode={setCode}
-                                originCode={originCode}
-                                setOriginCode={setOriginCode}
-                                setRefreshEditor={setRefreshEditor}
-                                setIsCancelFlag={setIsCancelFlag}
-                            ></SecondNodeHeader>
-                            {showPluginExec ? (
-                                <PluginDebuggerExec
+                            <div style={{height: "100%", paddingBottom: 12}}>
+                                <SecondNodeHeader
+                                    generateYamlTemplate={generateYamlTemplate}
+                                    currentPluginName={currentPluginName}
+                                    setCurrentPluginName={setCurrentPluginName}
                                     pluginType={pluginType}
-                                    pluginName={currentPluginName}
-                                    builder={builder}
+                                    setPluginType={setPluginType}
                                     code={code}
-                                    targets={builder.Input || ""}
-                                    onOperator={(obj) => {
-                                        yakitNotify("info", "初始化插件调试成功")
-                                        setOperator(obj)
-                                    }}
-                                    onExecuting={(result) => {
-                                        setPluginExecuting(result)
-                                    }}
-                                />
-                            ) : (
-                                <div className={styles.emptyPosition}>
-                                    <YakitEmpty description={"点击【执行插件】以开始"} />
-                                </div>
-                            )}
+                                    setCode={setCode}
+                                    originCode={originCode}
+                                    setOriginCode={setOriginCode}
+                                    setRefreshEditor={setRefreshEditor}
+                                    setIsCancelFlag={setIsCancelFlag}
+                                ></SecondNodeHeader>
+                                {showPluginExec ? (
+                                    <div style={{ height: "calc(100% - 34px)" }}>
+                                        <PluginDebuggerExec
+                                            pluginType={pluginType}
+                                            pluginName={currentPluginName}
+                                            builder={builder}
+                                            code={code}
+                                            targets={builder.Input || ""}
+                                            onOperator={(obj) => {
+                                                yakitNotify("info", "初始化插件调试成功")
+                                                setOperator(obj)
+                                            }}
+                                            onExecuting={(result) => {
+                                                setPluginExecuting(result)
+                                            }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className={styles.emptyPosition}>
+                                        <YakitEmpty description={"点击【执行插件】以开始"} />
+                                    </div>
+                                )}
+                            </div>
                         </YakitTabPane>
                     </YakitTabs>
                 }
