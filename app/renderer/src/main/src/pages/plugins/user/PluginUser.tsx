@@ -165,7 +165,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         )
     }, [filters.plugin_private])
     return (
-        <OnlineJudgment>
+        <OnlineJudgment isJudgingLogin={true}>
             {!!plugin && (
                 <PluginUserDetail
                     info={plugin}
