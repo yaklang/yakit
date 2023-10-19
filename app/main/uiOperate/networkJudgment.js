@@ -46,22 +46,8 @@ const asyncFetchPrivateDomainUrl = (win, params) => {
                 httpsAgent: new https.Agent({ rejectUnauthorized: false }), // 忽略 HTTPS 错误
             })
             service({
-                url: "yakit/plugin/unlogged",
+                url: "navigation/bars",
                 method: 'get',
-                params: {
-                    page: 1,
-                    order_by: "id",
-                    limit: 1,
-                    bind_me: false,
-                    recycle: false
-                },
-                data: {
-                    page: 1,
-                    order_by: "id",
-                    limit: 1,
-                    bind_me: false,
-                    recycle: false
-                },
                 timeout: 30 * 1000,
             })
                 .then((res) => {
