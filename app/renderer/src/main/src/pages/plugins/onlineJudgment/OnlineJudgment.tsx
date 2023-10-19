@@ -14,11 +14,13 @@ import {yakitNotify} from "@/utils/notification"
 import styles from "./OnlineJudgment.module.scss"
 import Login from "@/pages/Login"
 import {isCommunityEdition} from "@/utils/envfile"
+import {useStore} from "@/store"
 
 const {ipcRenderer} = window.require("electron")
 
 export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
     forwardRef((props, ref) => {
+        const {isJudgingLogin} = props
         const networkState = useNetwork()
         const [initLoading, setInitLoading] = useState<boolean>(true)
         const [loading, setLoading] = useState<boolean>(true)
@@ -28,6 +30,8 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
             code: 200,
             message: ""
         })
+
+        const userInfo = useStore((s) => s.userInfo)
 
         useImperativeHandle(
             ref,
@@ -40,17 +44,26 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
         )
 
         useEffect(() => {
-            if (networkState.online) {
-                getNetWork()
-            } else {
+            if (isJudgingLogin && !userInfo.isLogin) {
                 setInitLoading(false)
                 setLoading(false)
                 setOnlineResponseStatus({
-                    code: -1,
-                    message: ""
+                    code: 401,
+                    message: "未登录"
                 })
+            } else {
+                if (networkState.online) {
+                    getNetWork()
+                } else {
+                    setInitLoading(false)
+                    setLoading(false)
+                    setOnlineResponseStatus({
+                        code: -1,
+                        message: ""
+                    })
+                }
             }
-        }, [networkState.online])
+        }, [networkState.online, userInfo.isLogin])
 
         const getNetWork = useMemoizedFn(() => {
             setLoading(true)
@@ -170,7 +183,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
             <YakitSpin wrapperClassName={styles["online-spin"]} />
         ) : (
             <>
-                {onlineResponseStatus.code !== -1 ? (
+                {onlineResponseStatus.code === 200 ? (
                     props.children
                 ) : (
                     <YakitSpin spinning={loading}>
