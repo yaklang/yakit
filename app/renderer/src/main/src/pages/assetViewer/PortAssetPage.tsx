@@ -173,6 +173,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     const [queryList, setQueryList] = useState<QueryListProps>()
     const [currentSelectItem, setCurrentSelectItem] = useState<PortAsset>()
     const [scrollToIndex, setScrollToIndex] = useState<number>()
+    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
 
     const portAssetRef = useRef(null)
     const [inViewport] = useInViewport(portAssetRef)
@@ -571,24 +572,16 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         }, 100)
     })
 
-    const ResizeBoxProps = useCreation(() => {
-        let p = {
-            secondRatio: "0%",
-            firstRatio: "100%"
-        }
-        if (currentSelectItem) {
-            p.firstRatio = "60%"
-            p.secondRatio = "40%"
-        }
-        return p
-    }, [currentSelectItem])
     return (
         <div ref={portAssetRef} className={styles["portAsset-content"]} style={{ display: "flex", flexDirection: "row" }}>
             <div style={{ flex: 1, overflow: "hidden" }}>
                 <YakitResizeBox
                     isVer={true}
                     firstMinSize={150}
-                    secondMinSize={100}
+                    freeze={!onlyShowFirstNode}
+                    firstRatio={onlyShowFirstNode ? "100%" : "60%"}
+                    secondRatio={onlyShowFirstNode ? "0%" : "40%"}
+                    secondMinSize={onlyShowFirstNode ? "0px" : 100}
                     firstNode={
                         <div className={styles["portAsset"]}>
                             <div className={styles["portAsset-head"]}>
@@ -765,14 +758,18 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     columns={columns}
                                     onRowContextMenu={onRowContextMenu}
                                     onSetCurrentRow={(val) => {
-                                        if (val?.Id !== currentSelectItem?.Id) {
-                                            setCurrentSelectItem(val)
-                                        }
-
                                         if (!currentSelectItem) {
                                             const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
                                             setScrollToIndex(index)
                                         }
+                                        if (val?.Id !== currentSelectItem?.Id) {
+                                            setCurrentSelectItem(val)
+                                            setOnlyShowFirstNode&&setOnlyShowFirstNode(false)
+                                        }
+                                        else{
+                                            setOnlyShowFirstNode&&setOnlyShowFirstNode(!onlyShowFirstNode)
+                                        }
+                                        
                                     }}
                                     enableDrag={true}
                                     onChange={onTableChange}
@@ -783,12 +780,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     }
                     secondNode={
                         <>
-                            {currentSelectItem ? (
+                            {!onlyShowFirstNode && currentSelectItem && (
                                 <div className={classNames("yakit-descriptions", styles["port-description"])}>
                                     <PortAssetDescription port={currentSelectItem} />
                                 </div>
-                            ) : (
-                                <></>
                             )}
                         </>
                     }
@@ -797,7 +792,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         display: currentSelectItem ? "" : "none",
                     }}
                     lineStyle={{ display: currentSelectItem?.Id ? "" : "none" }}
-                    {...ResizeBoxProps}
+                    // {...ResizeBoxProps}
                 ></YakitResizeBox>
             </div>
             <PortAssetQuery

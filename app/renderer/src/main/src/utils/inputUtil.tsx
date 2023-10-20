@@ -32,6 +32,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber";
+import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect";
 
 type TooltipPlacement =
     'top'
@@ -503,7 +504,7 @@ export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p)
         value = p.value?.split(sep) || []
     }
     return <Item label={p.label} help={p.help} style={p.formItemStyle}>
-        <Select
+        <YakitSelect
             disabled={p.disabled}
             style={{width: "200"}}
             allowClear={true}
@@ -522,7 +523,7 @@ export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p)
                     value={i.value.toString()}
                 >{i?.label?.toString()}</Select.Option>
             })}
-        </Select>
+        </YakitSelect>
     </Item>
 }
 

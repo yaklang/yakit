@@ -32,14 +32,14 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     })
     const [total, setTotal] = useState(0)
 
-    const update = useMemoizedFn((page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
+    const update = useMemoizedFn((page?: number, limit?: number, HTTPFlowHash?: string) => {
         const paginationProps = {
             Page: page || 1,
             Limit: limit || pagination.Limit,
         };
         setLoading(true)
         ipcRenderer.invoke("QueryMITMRuleExtractedData", {
-            ...params, ...extraParam ? extraParam : {}, Pagination: paginationProps,
+            ...params, Pagination: paginationProps, HTTPFlowHash:HTTPFlowHash?HTTPFlowHash:params.HTTPFlowHash
         }).then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
             setData(r.Data);
             setPagination(r.Pagination)
@@ -51,7 +51,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         if (!props.httpFlowHash) {
             return
         }
-        update(1, 10)
+        update(1, 10,props.httpFlowHash)
     }, [props.httpFlowHash])
 
     return <div className={styles["httpFlow-data-table"]}>

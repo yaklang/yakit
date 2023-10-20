@@ -46,7 +46,7 @@ const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
             zIndex={1001}
             width='50%'
         >
-            <InputCertificateForm reset={visible} ref={cerFormRef} />
+            <InputCertificateForm ref={cerFormRef} formProps={{layout:'vertical',style:{padding:"24px 16px"}}}/>
         </YakitModal>
     )
 })
@@ -54,11 +54,13 @@ const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
 export default MITMAddTLS
 
 interface InputCertificateFormProp {
+    isShowCerName?: boolean
     ref?: any
-    reset: boolean
+    formProps?: any
 }
 
-const InputCertificateForm: React.FC<InputCertificateFormProp> = React.forwardRef((props, ref) => {
+export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.forwardRef((props, ref) => {
+    const {isShowCerName = true,formProps} = props
     const [form] = Form.useForm()
     useImperativeHandle(
         ref,
@@ -69,10 +71,10 @@ const InputCertificateForm: React.FC<InputCertificateFormProp> = React.forwardRe
         []
     )
     return (
-        <Form className={styles["input-certificate-form"]} layout='vertical' form={form}>
-            <Form.Item name='CerName' rules={[{required: true, message: "该项必填"}]}>
+        <Form className={styles["input-certificate-form"]} form={form} {...formProps}>
+            {isShowCerName&&<Form.Item name='CerName' rules={[{required: true, message: "该项必填"}]}>
                 <YakitInput placeholder='请为你的证书对取一个名字（必填）' />
-            </Form.Item>
+            </Form.Item>}
             <Form.Item label={"客户端证书(PEM)"} name='CrtPem' rules={[{required: true, message: "该项必填"}]}>
                 <YakEditor
                     type={"html"}

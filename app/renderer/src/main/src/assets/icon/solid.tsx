@@ -915,7 +915,7 @@ const SolidCheckcircle = () => (
 /**
  * @description  Icon/Solid/Solidcheck-circle
  */
-export const SolidCheckcircleIcon = (props: Partial<IconProps>) => {
+export const SolidCheckCircleIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidCheckcircle} {...props} />
 }
 

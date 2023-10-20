@@ -74,5 +74,7 @@ export enum CodeGV {
     /** @name 历史版本下载页面 */
     HistoricalVersion = "https://github.com/yaklang/yakit/releases",
     /** @name public版本菜单模式 */
-    PublicMenuModeValue = "public"
+    PublicMenuModeValue = "public",
+    /** @name 菜单状态缓存 */
+    MenuExpand = "menu-expand"
 }

@@ -13,7 +13,7 @@ import {SortAscendingIcon, SortDescendingIcon} from "@/assets/newIcon"
 import {MenuCodec} from "./MenuCodec"
 import {MenuDNSLog} from "./MenuDNSLog"
 import {MenuMode} from "./MenuMode"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn,useUpdateEffect} from "ahooks"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {MenuPlugin} from "./MenuPlugin"
@@ -33,7 +33,7 @@ import {
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {getRemoteValue} from "@/utils/kv"
+import {getRemoteValue,setRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
 import styles from "./PublicMenu.module.scss"
@@ -52,12 +52,13 @@ export interface RouteToPageProps {
     pluginName?: string
 }
 interface PublicMenuProps {
+    defaultExpand: boolean
     onMenuSelect: (route: RouteToPageProps) => void
     setRouteToLabel: (data: Map<string, string>) => void
 }
 
 const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
-    const {onMenuSelect, setRouteToLabel} = props
+    const {onMenuSelect, setRouteToLabel,defaultExpand} = props
     // 登录用户状态信息
     const {userInfo} = useStore()
     // 本地菜单数据
@@ -82,7 +83,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
 
     const [activeMenu, setActiveMenu] = useState<number>(0)
     const [activeTool, setActiveTool] = useState<"codec" | "dnslog">("codec")
-    const [isExpand, setIsExpand] = useState<boolean>(true)
+    const [isExpand, setIsExpand] = useState<boolean>(defaultExpand)
 
     const routeToName = useRef<Map<string, string>>(new Map<string, string>())
     useEffect(() => {
@@ -96,6 +97,10 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         pluginNames.forEach((value, key) => routeToName.current.set(key, value))
         setRouteToLabel(routeToName.current)
     })
+
+    useUpdateEffect(() => {
+        setRemoteValue(CodeGV.MenuExpand, JSON.stringify(isExpand))
+    }, [isExpand])
 
     // 获取 基础工具菜单下的4个插件 是否存在于本地库内
     const fetchPluginToolInfo = useMemoizedFn(() => {

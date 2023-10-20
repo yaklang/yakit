@@ -45,7 +45,7 @@ import {
     shouldVerifyEnpriTraceLogin
 } from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
-import {RemoteGV} from "@/yakitGV"
+import {CodeGV, RemoteGV} from "@/yakitGV"
 import {EnterpriseLoginInfoIcon} from "@/assets/icons"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
@@ -556,6 +556,17 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
         return ""
     }
+
+    const [defaultExpand,setDefaultExpand] = useState<boolean>()
+    useEffect(()=>{
+        getRemoteValue(CodeGV.MenuExpand).then((result:string) => {
+            if (!result) setDefaultExpand(true)
+            try {
+                const expandResult:boolean = JSON.parse(result)
+                setDefaultExpand(expandResult)
+            } catch (e) {setDefaultExpand(true)}
+        })
+    },[])
     return (
         <>
             <WaterMark content={waterMarkStr()} style={{overflow:"hidden",height:"100%"}}>
@@ -579,14 +590,21 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                             }}
                         >
                             {isCommunityEdition() ? (
-                                <PublicMenu
-                                    onMenuSelect={openMenu}
-                                    setRouteToLabel={(val) => {
-                                        val.forEach((value, key) => {
-                                            routeKeyToLabel.current.set(key, value)
-                                        })
-                                    }}
-                                />
+                                <>
+                                {
+                                    typeof defaultExpand === 'boolean'&&
+                                    <PublicMenu
+                                        defaultExpand={defaultExpand}
+                                        onMenuSelect={openMenu}
+                                        setRouteToLabel={(val) => {
+                                            val.forEach((value, key) => {
+                                                routeKeyToLabel.current.set(key, value)
+                                            })
+                                        }}
+                                    />
+                                }
+                               </>
+                                
                             ) : (
                                 <HeardMenu
                                     onRouteMenuSelect={openMenu}

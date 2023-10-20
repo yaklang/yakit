@@ -33,6 +33,22 @@ module.exports = (win, getClient) => {
         return await asyncSetGlobalNetworkConfig(params)
     })
 
+    // asyncValidP12PassWord wrapper
+    const asyncValidP12PassWord = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ValidP12PassWord(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ValidP12PassWord", async (e, params) => {
+        return await asyncValidP12PassWord(params)
+    })
+
     // asyncResetGlobalNetworkConfig wrapper
     const asyncResetGlobalNetworkConfig = (params) => {
         return new Promise((resolve, reject) => {
