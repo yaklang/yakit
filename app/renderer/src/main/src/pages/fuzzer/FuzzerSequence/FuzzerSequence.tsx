@@ -88,7 +88,8 @@ import {monacoEditorWrite} from "../fuzzerTemplates"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {ShareImportExportData} from "../components/ShareImportExportData"
-import { showByRightContext } from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 
@@ -158,7 +159,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [sequenceList, setSequenceList] = useState<SequenceProps[]>(
         queryFuzzerSequenceCacheDataByGroupId(propsGroupId)
     )
-    
+
     const [errorIndex, setErrorIndex] = useState<number>(-1)
 
     const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
@@ -1197,31 +1198,6 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         return cachedTotal === 1
     }, [cachedTotal])
 
-    const handleGenerateYaml = useMemoizedFn((e: {clientX: number; clientY: number}) => {
-        showByRightContext(
-            {
-                width: 150,
-                data: [
-                    {key: "pathTemplate", label: "生成为 Path 模板"},
-                    {key: "rawTemplate", label: "生成为 Raw 模板"}
-                ],
-                onClick: ({key}) => {
-                    switch (key) {
-                        case "pathTemplate":
-                            handleSkipPluginDebuggerPage("path")
-                            break
-                        case "rawTemplate":
-                            handleSkipPluginDebuggerPage("raw")
-                            break
-                        default:
-                            break
-                    }
-                }
-            },
-            e.clientX,
-            e.clientY
-        )
-    })
     // 跳转插件调试页面
     const handleSkipPluginDebuggerPage = async (tempType: "path" | "raw") => {
         const requests = getHttpParams()
@@ -1263,7 +1239,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                     httpResponse={httpResponse}
                 />
             </div>
-            <div style={{ display: 'flex' }}>
+            <div style={{display: "flex"}}>
                 <ShareImportExportData
                     module='fuzzer'
                     supportShare={false}
@@ -1271,14 +1247,34 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                     getFuzzerRequestParams={getHttpParams}
                 />
                 <Divider type='vertical' style={{margin: 8}} />
-                <YakitButton
-                    type='primary'
-                    icon={<OutlineCodeIcon />}
-                    onClick={handleGenerateYaml}
-                    onContextMenuCapture={handleGenerateYaml}
+                <YakitDropdownMenu
+                    menu={{
+                        data: [
+                            {key: "pathTemplate", label: "生成为 Path 模板"},
+                            {key: "rawTemplate", label: "生成为 Raw 模板"}
+                        ],
+                        onClick: ({key}) => {
+                            switch (key) {
+                                case "pathTemplate":
+                                    handleSkipPluginDebuggerPage("path")
+                                    break
+                                case "rawTemplate":
+                                    handleSkipPluginDebuggerPage("raw")
+                                    break
+                                default:
+                                    break
+                            }
+                        }
+                    }}
+                    dropdown={{
+                        trigger: ["click"],
+                        placement: "bottom"
+                    }}
                 >
-                    生成 Yaml 模板
-                </YakitButton>
+                    <YakitButton type='primary' icon={<OutlineCodeIcon />}>
+                        生成 Yaml 模板
+                    </YakitButton>
+                </YakitDropdownMenu>
                 <YakitButton type='primary' disabled={disabled} onClick={() => onShowAll()} style={{marginLeft: 8}}>
                     展示全部响应
                 </YakitButton>
