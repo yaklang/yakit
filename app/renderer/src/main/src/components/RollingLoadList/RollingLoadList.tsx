@@ -22,6 +22,7 @@ interface RollingLoadListProps<T> {
     defCol?: number
     defOverscan?: number
     recalculation?: boolean //刷新局部 data中某个item值更新需要重新计算
+    targetRef?: React.RefObject<any>
 }
 
 const classNameWidth = {
@@ -48,7 +49,8 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         numberRoll,
         isGridLayout,
         defCol,
-        recalculation
+        recalculation,
+        targetRef
     } = props
     const [vlistHeigth, setVListHeight] = useState(600)
     const [col, setCol] = useState<number>()
@@ -192,6 +194,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 handleHeight={true}
                 refreshMode={"debounce"}
                 refreshRate={50}
+                targetRef={targetRef}
             />
             <div
                 className={`container ${classNameList || ""}`}

@@ -49,7 +49,7 @@ import {showModal} from "@/utils/showModal"
 import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {yakitNotify} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import debounce from "lodash/debounce"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
@@ -69,10 +69,10 @@ import HTTPFuzzerPage, {
     defaultAdvancedConfigValue,
     defaultPostTemplate
 } from "@/pages/fuzzer/HTTPFuzzerPage"
-import {KVPair} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {AdvancedConfigValueProps, KVPair} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {RenderFuzzerSequence, RenderSubPage} from "./renderSubPage/RenderSubPage"
 import {WebFuzzerType} from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType"
-import {useFuzzerSequence} from "@/store/fuzzerSequence"
+import {FuzzerSequenceCacheDataProps, useFuzzerSequence} from "@/store/fuzzerSequence"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
@@ -143,7 +143,7 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
  * 生成组id
  * @returns {string} 生成的组id
  */
-const generateGroupId = (gIndex?: number) => {
+export const generateGroupId = (gIndex?: number) => {
     const time = (new Date().getTime() + (gIndex || 0)).toString()
     const groupId = `[${randomString(6)}]-${time}-group`
     return groupId
@@ -341,7 +341,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "add-data-compare") addDataCompare(data)
             if (type === "**screen-recorder") openMenuPage({route: YakitRoute.ScreenRecorderPage})
             if (type === "**chaos-maker") openMenuPage({route: YakitRoute.DB_ChaosMaker})
-            if (type === "**debug-plugin") openMenuPage({route: YakitRoute.Beta_DebugPlugin})
+            if (type === "**debug-plugin") addPluginDebugger(data)
             if (type === "**debug-monaco-editor") openMenuPage({route: YakitRoute.Beta_DebugMonacoEditor})
             if (type === "**vulinbox-manager") openMenuPage({route: YakitRoute.Beta_VulinboxManager})
             if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
@@ -535,7 +535,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
     /** ---------- 新建插件 ---------- */
     const addYakScript = useMemoizedFn((res: any) => {
-        openMenuPage({route: YakitRoute.AddYakitScript})
+        const { moduleType = "yak", content = "" } = res || {}
+        openMenuPage(
+            {route: YakitRoute.AddYakitScript},
+            {
+                pageParams: {
+                    moduleType,
+                    content
+                }
+            }
+        )
     })
     /** ---------- 插件修改历史详情 ---------- */
     const addYakPluginJournalDetails = useMemoizedFn((res: any) => {
@@ -568,6 +577,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             )
         }
+    })
+    /** 插件调试 */
+    const addPluginDebugger = useMemoizedFn((res: any) => {
+        const { generateYamlTemplate = false, YamlContent = "" } = res || {}
+        openMenuPage(
+            {route: YakitRoute.Beta_DebugPlugin},
+            {
+                pageParams: {
+                    generateYamlTemplate,
+                    YamlContent
+                }
+            }
+        )
     })
     /**
      * @name 远程通信打开一个页面(新逻辑)
@@ -832,9 +854,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             })
         )
-        if (data.route === YakitRoute.AddYakitScript) {
-            setCurrentTabKey(YakitRoute.Plugin_Local)
-        }
         if (data.route === YakitRoute.HTTPFuzzer) {
             removeSubscribeClose(YakitRoute.HTTPFuzzer)
             // 关闭fuzzer一级页面时,清除缓存
@@ -901,19 +920,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPagesData, setSelectGroupId, addPagesDataCache, clearAllData} = usePageInfo(
+    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData} = usePageInfo(
         (s) => ({
             setPagesData: s.setPagesData,
             setSelectGroupId: s.setSelectGroupId,
             addPagesDataCache: s.addPagesDataCache,
+            pages: s.pages,
             clearAllData: s.clearAllData
         }),
         shallow
     )
-    const {setFuzzerSequenceCacheData, clearFuzzerSequence} = useFuzzerSequence(
+    const {setFuzzerSequenceCacheData, clearFuzzerSequence, addFuzzerSequenceCacheData} = useFuzzerSequence(
         (s) => ({
             setFuzzerSequenceCacheData: s.setFuzzerSequenceCacheData,
-            clearFuzzerSequence: s.clearFuzzerSequence
+            clearFuzzerSequence: s.clearFuzzerSequence,
+            addFuzzerSequenceCacheData: s.addFuzzerSequenceCacheData
         }),
         shallow
     )
@@ -1080,7 +1101,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     } else {
                         oldPageCache.splice(index, 1, webFuzzerPage)
                     }
-                    // console.log('oldPageCache',oldPageCache);
                     setPageCache(oldPageCache)
                     setCurrentTabKey(key)
                     setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
@@ -1090,8 +1110,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         setSelectGroupId(YakitRoute.HTTPFuzzer, lastPage.id)
                     }
                 })
-                .catch((e) => {
-                })
+                .catch((e) => {})
                 .finally(() => setTimeout(() => setLoading(false), 200))
         } catch (error) {
             yakitNotify("error", "fetchFuzzerList失败:" + error)
@@ -1124,6 +1143,105 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             sortFieId: order
         }
         addPagesDataCache(YakitRoute.HTTPFuzzer, newPageNode)
+    })
+
+    // 序列导入更新菜单
+    useEffect(() => {
+        emiter.on("onFuzzerSequenceImportUpdateMenu", onFuzzerSequenceImportUpdateMenu)
+        return () => {
+            emiter.off("onFuzzerSequenceImportUpdateMenu", onFuzzerSequenceImportUpdateMenu)
+        }
+    }, [])
+    const onFuzzerSequenceImportUpdateMenu = useMemoizedFn((data: string) => {
+        try {
+            const newGroupItem: MultipleNodeInfo = JSON.parse(data)
+            const index = pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
+            if (index === -1) return
+            const fuzzerMenuItem = structuredClone(pageCache[index])
+            newGroupItem.verbose = `未命名[${getGroupLength(fuzzerMenuItem.multipleNode)}]`
+            newGroupItem.sortFieId = fuzzerMenuItem.multipleNode.length + 1
+            newGroupItem.color = getColor(fuzzerMenuItem.multipleNode)
+            fuzzerMenuItem.multipleNode.push(newGroupItem)
+            pageCache[index] = fuzzerMenuItem
+            setPageCache([...pageCache])
+
+            // 页面数据
+            const groupChildrenLen = newGroupItem.groupChildren?.length || 0
+            const pageList: PageNodeItemProps[] = []
+            if (newGroupItem.groupChildren && groupChildrenLen > 0) {
+                for (let index = 0; index < groupChildrenLen; index++) {
+                    const nodeItem = newGroupItem.groupChildren[index]
+                    const newNodeItem: PageNodeItemProps = {
+                        id: `${randomString(8)}-${index + 1}`,
+                        routeKey: YakitRoute.HTTPFuzzer,
+                        pageGroupId: nodeItem.groupId,
+                        pageId: nodeItem.id,
+                        pageName: nodeItem.verbose,
+                        pageParamsInfo: {
+                            webFuzzerPageInfo: {
+                                pageId: nodeItem.id,
+                                advancedConfigValue: {
+                                    ...defaultAdvancedConfigValue,
+                                    ...nodeItem.pageParams?.advancedConfigValue
+                                },
+                                request: nodeItem.pageParams?.request || ""
+                            }
+                        },
+                        sortFieId: nodeItem.sortFieId
+                    }
+                    pageList.push(newNodeItem)
+                }
+
+                const pageListItem: PageNodeItemProps = {
+                    id: `${randomString(8)}-${index + 1}`,
+                    routeKey: YakitRoute.HTTPFuzzer,
+                    pageId: newGroupItem.id,
+                    pageGroupId: "0",
+                    pageName: newGroupItem.verbose,
+                    pageParamsInfo: {},
+                    sortFieId: newGroupItem.sortFieId,
+                    expand: newGroupItem.expand,
+                    color: newGroupItem.color
+                }
+                pageList.push(pageListItem)
+
+                const oldPageList = pages.get(YakitRoute.HTTPFuzzer)?.pageList
+                let pageNodeInfo: PageProps = {
+                    pageList: oldPageList || [],
+                    routeKey: YakitRoute.HTTPFuzzer,
+                    singleNode: false
+                }
+                pageNodeInfo.pageList = [...pageNodeInfo.pageList, ...pageList]
+
+                // console.table(pageNodeInfo.pageList)
+                setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
+            }
+
+            // fuzzer数据
+            const fuzzerSequenceData: FuzzerSequenceCacheDataProps = {
+                groupId: newGroupItem.id,
+                cacheData: []
+            }
+            newGroupItem.groupChildren?.forEach((ele, i) => {
+                const configData: AdvancedConfigValueProps = {
+                    ...defaultAdvancedConfigValue,
+                    ...ele.pageParams?.advancedConfigValue
+                }
+                const sequenceProps = {
+                    id: randomString(8) + `${i + 1}`,
+                    inheritCookies: !!configData.inheritCookies,
+                    inheritVariables: !!configData.inheritVariables,
+                    name: `Step [${i}]`,
+                    pageGroupId: newGroupItem.groupId,
+                    pageId: ele.id,
+                    pageName: ele.verbose
+                }
+                fuzzerSequenceData.cacheData = [...fuzzerSequenceData.cacheData, sequenceProps]
+            })
+            addFuzzerSequenceCacheData(fuzzerSequenceData.groupId, fuzzerSequenceData.cacheData)
+        } catch (error) {
+            yakitFailed(error + "")
+        }
     })
 
     /** ---------- web-fuzzer 缓存逻辑 end ---------- */

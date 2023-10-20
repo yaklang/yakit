@@ -1,7 +1,12 @@
 import React, {useEffect, useRef, useState, useMemo} from "react"
 import {YakScript} from "../../invoker/schema"
-import {Card, Col, Popover, Progress, Row, Space, Statistic, Tabs, Timeline, Tooltip, Pagination, Tag} from "antd"
-import {HTTPFlowTable, LogLevelToCode, TableFilterDropdownForm} from "../../../components/HTTPFlowTable/HTTPFlowTable"
+import {Card, Col, Popover, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag} from "antd"
+import {
+    HTTPFlow,
+    HTTPFlowTable,
+    LogLevelToCode,
+    TableFilterDropdownForm
+} from "../../../components/HTTPFlowTable/HTTPFlowTable"
 import {YakitLogFormatter} from "../../invoker/YakitLogFormatter"
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer"
 import {randomString} from "../../../utils/randomUtil"
@@ -24,7 +29,9 @@ import {
     useMemoizedFn,
     useUpdateEffect,
     useThrottleEffect,
-    useGetState
+    useGetState,
+    useCreation,
+    useInViewport
 } from "ahooks"
 import {Risk} from "@/pages/risks/schema"
 import {RisksViewer} from "@/pages/risks/RisksViewer"
@@ -35,12 +42,15 @@ import {CVXterm} from "@/components/CVXterm"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import {EngineLog} from "@/components/layout/EngineLog";
-import {EngineConsole} from "@/components/baseConsole/BaseConsole";
+import {EngineLog} from "@/components/layout/EngineLog"
+import {EngineConsole} from "@/components/baseConsole/BaseConsole"
 import {isEnpriTrace} from "@/utils/envfile"
-import {HTTPHistory} from "@/components/HTTPHistory";
-import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow";
-
+import {HTTPHistory} from "@/components/HTTPHistory"
+import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
+import YakitTabs from "@/components/yakitUI/YakitTabs/YakitTabs"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
+import {Uint8ArrayToString} from "@/utils/str"
 const {ipcRenderer} = window.require("electron")
 
 export interface StatusCardProps {
@@ -74,6 +84,7 @@ export interface PluginResultUIProp {
     cardStyleType?: number
     runtimeId?: string
     fromPlugin?: string
+    defaultActive?: string
 }
 
 export interface TooltipTitleProps {
@@ -132,7 +143,7 @@ const renderCard = (infoList, type) => {
                     {infoList.length > 0 && (
                         <Tooltip
                             color='#fff'
-                            title={<TooltipTitle list={infoList}/>}
+                            title={<TooltipTitle list={infoList} />}
                             overlayClassName='status-cards-info'
                             placement='topLeft'
                         >
@@ -169,7 +180,12 @@ const renderCard = (infoList, type) => {
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
     const {loading, results, featureType = [], feature = [], progress, script, statusCards, cardStyleType} = props
-    const [active, setActive] = useState(props.defaultConsole ? "console" : "feature-0")
+    const [active, setActive] = useState(() => {
+        if (props.defaultActive) {
+            return props.defaultActive
+        }
+        return props.defaultConsole ? "console" : "feature-0"
+    })
     const xtermRef = useRef(null)
     const timer = useRef<any>(null)
     const [pageCode, setPageCode] = useState<number>(1)
@@ -180,26 +196,26 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         if (props.onXtermRef) props.onXtermRef(xtermRef)
     }, [xtermRef])
 
-    let progressBars: { id: string; node: React.ReactNode }[] = []
+    let progressBars: {id: string; node: React.ReactNode}[] = []
     progress.forEach((v) => {
         progressBars.push({
             id: v.id,
             node: (
                 <Card size={"small"} hoverable={false} bordered={true} title={`任务进度ID：${v.id}`}>
-                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active'/>
+                    <Progress percent={parseInt((v.progress * 100).toFixed(0))} status='active' />
                 </Card>
             )
         })
     })
     // progressBars = progressBars.sort((a, b) => a.id.localeCompare(b.id));
 
-    const features: { feature: string; params: any; key: string }[] = featureType
+    const features: {feature: string; params: any; key: string}[] = featureType
         .filter((i) => {
             return i.level === "json-feature"
         })
         .map((i) => {
             try {
-                let res = JSON.parse(i.data) as { feature: string; params: any; key: string }
+                let res = JSON.parse(i.data) as {feature: string; params: any; key: string}
                 if (!res.key) {
                     res.key = randomString(50)
                 }
@@ -222,7 +238,11 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
 
     const newStatusCards = useMemo(() => {
         if (isEnpriTrace()) {
-            let newStatusCards = statusCards.filter((item) => ["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数", "SYN 扫描"].includes(item.tag))
+            let newStatusCards = statusCards.filter((item) =>
+                ["加载插件", "漏洞/风险", "开放端口数/已扫主机数", "存活主机数/扫描主机数", "SYN 扫描"].includes(
+                    item.tag
+                )
+            )
             return newStatusCards
         }
         return statusCards
@@ -285,10 +305,10 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             {progressBars.length > 0 && (
                 <div style={{marginTop: 4, marginBottom: 8}}>{progressBars.map((i) => i.node)}</div>
             )}
-            <Tabs
+            <YakitTabs
+                type='card'
                 style={{flex: 1, overflow: "hidden", minHeight: "55%"}}
                 className={"main-content-tabs no-theme-tabs"}
-                size={"small"}
                 activeKey={active}
                 onChange={(activeKey) => {
                     setActive(activeKey)
@@ -299,23 +319,31 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             >
                 {(finalFeatures || []).map((i, index) => {
                     return (
-                        <Tabs.TabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
+                        <YakitTabs.YakitTabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
                             <YakitFeatureRender
                                 params={i.params}
                                 feature={i.feature}
                                 execResultsLog={feature || []}
                                 excelName={YakitFeatureTabName(i.feature, i.params)}
                             />
-                        </Tabs.TabPane>
+                        </YakitTabs.YakitTabPane>
                     )
                 })}
-                <Tabs.TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
+                {!!props.runtimeId && (
+                    <YakitTabs.YakitTabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
+                        <CurrentHttpFlow runtimeId={props.runtimeId}></CurrentHttpFlow>
+                    </YakitTabs.YakitTabPane>
+                )}
+                <YakitTabs.YakitTabPane
+                    tab={"基础插件信息 / 日志"}
+                    key={finalFeatures.length > 0 ? "log" : "feature-0"}
+                >
                     {
                         <>
                             {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
                             <AutoCard
                                 size={"small"}
-                                hoverable={true}
+                                hoverable={false}
                                 bordered={true}
                                 title={
                                     <Space>
@@ -325,7 +353,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                             : ""}
                                     </Space>
                                 }
-                                style={{marginBottom: 20, marginRight: 2}}
+                                style={{marginBottom: 20, marginRight: 2, marginTop: -1}}
                                 bodyStyle={{overflowY: "auto"}}
                             >
                                 <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
@@ -348,16 +376,23 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                             </AutoCard>
                         </>
                     }
-                </Tabs.TabPane>
+                </YakitTabs.YakitTabPane>
                 {!!props?.risks && props.risks.length > 0 && (
-                    <Tabs.TabPane tab={<div>
-                        {`漏洞与风险`}
-                        <Tag style={{marginLeft: 4}} color={"red"}>{props.risks.length}</Tag>
-                    </div>} key={"risk"}>
+                    <YakitTabs.YakitTabPane
+                        tab={
+                            <div>
+                                {`漏洞与风险`}
+                                <Tag style={{marginLeft: 4}} color={"red"}>
+                                    {props.risks.length}
+                                </Tag>
+                            </div>
+                        }
+                        key={"risk"}
+                    >
                         <AutoCard bodyStyle={{overflowY: "auto"}}>
                             <Space direction={"vertical"} style={{width: "100%"}} size={12}>
                                 {props.risks.slice(0, 10).map((i) => {
-                                    return <RiskDetails info={i} shrink={true}/>
+                                    return <RiskDetails info={i} shrink={true} />
                                 })}
                                 {/* {props.risks.slice((pageCode-1)*10,pageCode*10).map(i => {
                                 return <RiskDetails info={i} shrink={true}/>
@@ -367,49 +402,163 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                             </div>} */}
                             </Space>
                         </AutoCard>
-                    </Tabs.TabPane>
+                    </YakitTabs.YakitTabPane>
                 )}
-                <Tabs.TabPane tab={"Console"} key={"console"}>
+                <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>
                     <div style={{width: "100%", height: "100%"}}>
-                        <EngineConsole isMini={true}/>
+                        <EngineConsole isMini={true} />
                     </div>
-                </Tabs.TabPane>
-                {!!props.runtimeId && <Tabs.TabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
-                    <div style={{width: "100%", height: "100%"}}>
-                        <HTTPFlowTable
-                            noHeader={true} inViewport={true}
-                            noDeleteAll={true}
-                            params={{
-                                RuntimeId: props.runtimeId,
-                                SourceType: "scan",
-                            }}
-                        />
-                    </div>
-                </Tabs.TabPane>}
-                {/*{props.fromPlugin && <Tabs.TabPane tab={"插件所有流量"} key={"current-plugin-flow"}>*/}
+                </YakitTabs.YakitTabPane>
+                {/*{props.fromPlugin && <YakitTabs.YakitTabPane tab={"插件所有流量"} key={"current-plugin-flow"}>*/}
                 {/*    <div style={{width: "100%", height: "100%"}}>*/}
                 {/*        <HTTPFlowTable*/}
                 {/*            noHeader={true}*/}
                 {/*            params={{FromPlugin: props.fromPlugin}}*/}
                 {/*        />*/}
                 {/*    </div>*/}
-                {/*</Tabs.TabPane>}*/}
+                {/*</YakitTabs.YakitTabPane>}*/}
                 {/*{!props.debugMode && props.onXtermRef ? (*/}
-                {/*    <Tabs.TabPane tab={"Console"} key={"console"}>*/}
+                {/*    <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>*/}
                 {/*        <div style={{width: "100%", height: "100%"}}>*/}
                 {/*            <CVXterm ref={xtermRef} options={{convertEol: true}}/>*/}
                 {/*        </div>*/}
-                {/*    </Tabs.TabPane>*/}
-                {/*) : <Tabs.TabPane tab={"Console"} key={"console"}>*/}
+                {/*    </YakitTabs.YakitTabPane>*/}
+                {/*) : <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>*/}
                 {/*    <div style={{width: "100%", height: "100%"}}>*/}
                 {/*        <EngineConsole isMini={true}/>*/}
                 {/*    </div>*/}
-                {/*</Tabs.TabPane>}*/}
-            </Tabs>
+                {/*</YakitTabs.YakitTabPane>}*/}
+            </YakitTabs>
             {/* </div> */}
         </div>
     )
 })
+
+interface CurrentHttpFlowProp {
+    runtimeId: string
+}
+const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
+    const [highlightSearch, setHighlightSearch] = useState("")
+    const lasetIdRef = useRef<number>()
+    const [flowRequest, setFlowRequest] = useState<Uint8Array>()
+    const [flowResponse, setFlowResponse] = useState<Uint8Array>()
+    const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
+    const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
+    const [flow, setFlow] = useState<HTTPFlow>()
+    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
+
+    const getHTTPFlowById = (id: number, rowDate: HTTPFlow) => {
+        setFlowRequestLoad(false)
+        setFlowResponseLoad(false)
+        setFlow(rowDate)
+        setFlowRequest(undefined)
+        setFlowResponse(undefined)
+        setOnlyShowFirstNode(false)
+
+        // 是否获取Request
+        let isGetRequest: boolean = true
+        let isGetResponse: boolean = true
+
+        // 请求不为空直接使用
+        if (Uint8ArrayToString(rowDate.Request)) {
+            isGetRequest = false
+            setFlowRequest(rowDate.Request)
+        }
+        if (Uint8ArrayToString(rowDate.Response)) {
+            isGetResponse = false
+            setFlowResponse(rowDate.Response)
+        }
+        // 请求或响应只要有一个为0就走接口拿取数据
+        if (isGetRequest || isGetResponse) {
+            isGetRequest && setFlowRequestLoad(true)
+            isGetResponse && setFlowResponseLoad(true)
+            ipcRenderer
+                .invoke("GetHTTPFlowById", {Id: id})
+                .then((i: HTTPFlow) => {
+                    if (i.Id == lasetIdRef.current) {
+                        if (isGetRequest) {
+                            setFlowRequest(i?.Request)
+                        }
+                        if (isGetResponse) {
+                            setFlowResponse(i?.Response)
+                        }
+                        setFlow(i)
+                    }
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setFlowRequestLoad(false)
+                        setFlowResponseLoad(false)
+                    }, 300)
+                })
+        }
+    }
+
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%"
+        }
+        if (onlyShowFirstNode) {
+            p.secondRatio = "0%"
+            p.firstRatio = "100%"
+        }
+        return p
+    }, [onlyShowFirstNode])
+
+    return (
+        <>
+            <YakitResizeBox
+                isVer={true}
+                lineStyle={{display: onlyShowFirstNode ? "none" : ""}}
+                firstNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined}}
+                firstNode={
+                    <HTTPFlowTable
+                        noDeleteAll={true}
+                        inViewport={false}
+                        params={{
+                            RuntimeId: props.runtimeId,
+                            SourceType: "scan"
+                        }}
+                        onSelected={(i) => {
+                            if (!i) return
+                            getHTTPFlowById(i.Id, i)
+                        }}
+                        onSearch={setHighlightSearch}
+                        onlyShowFirstNode={onlyShowFirstNode}
+                        setOnlyShowFirstNode={setOnlyShowFirstNode}
+                        httpHistoryTableTitleStyle={{
+                            borderLeft: "1px solid var(--yakit-border-color)",
+                            borderRight: "1px solid var(--yakit-border-color)",
+                            paddingTop: 12
+                        }}
+                    />
+                }
+                secondNode={
+                    flow && !onlyShowFirstNode ? (
+                        <HTTPFlowDetailRequestAndResponse
+                            id={flow.Id}
+                            defaultHttps={flow?.IsHTTPS}
+                            flow={flow}
+                            Tags={flow.Tags}
+                            noHeader={true}
+                            search={highlightSearch}
+                            flowRequest={flowRequest}
+                            flowResponse={flowResponse}
+                            flowRequestLoad={flowRequestLoad}
+                            flowResponseLoad={flowResponseLoad}
+                            sendToWebFuzzer={true}
+                        />
+                    ) : null
+                }
+                {...ResizeBoxProps}
+            />
+        </>
+    )
+}
 
 export interface YakitFeatureRenderProp {
     feature: string
@@ -659,8 +808,7 @@ export const YakitFeatureRender: React.FC<YakitFeatureRenderProp> = React.memo(
                                 page: 1,
                                 limit: 1,
                                 total: getTableData().length,
-                                onChange: () => {
-                                }
+                                onChange: () => {}
                             }}
                             onChange={onTableChange}
                         />

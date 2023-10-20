@@ -997,7 +997,7 @@ interface SetVariableItemProps {
     name: number
 }
 
-const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
+export const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
     const {name} = props
 
     return (

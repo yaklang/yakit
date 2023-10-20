@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {OutlineShareIcon, OutlineExportIcon, OutlineImportIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -18,12 +18,15 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {HTTPFlowsShareRequest, HTTPFlowsShareResponse, ShareDataProps} from "./shareDataType"
 import {isCommunityEdition} from "@/utils/envfile"
 import {saveABSFileAnotherOpen} from "@/utils/openWebsite"
-import {Uint8ArrayToString} from "@/utils/str"
+import {Uint8ArrayToString, StringToUint8Array} from "@/utils/str"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitRoute} from "@/routes/newRoute"
 import {FuzzerRequestProps} from "../../HTTPFuzzerPage"
 import {AdvancedConfigValueProps} from "../../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import emiter from "@/utils/eventBus/eventBus"
+import {randomString} from "@/utils/randomUtil"
+import {generateGroupId} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
+import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorContentType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -64,7 +67,9 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         matchersCondition: value.MatchersCondition === "and" ? "and" : "or",
         matchers: value.Matchers,
         extractors: value.Extractors,
-        params: value.Params
+        params: value.Params,
+        inheritCookies: value.InheritCookies,
+        inheritVariables: value.InheritVariables
     }
     return resProps
 }
@@ -195,7 +200,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
                 m.destroy()
             },
             onOk: (e) => {
-                console.log(123, yamlContRef.current)
+                // BUG 偶现编辑器有内容 yamlContRef.current没有值 暂不清楚原因
                 if (yamlContRef.current) {
                     execImportYaml()
                     m.destroy()
@@ -257,7 +262,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
                         }
                     })
                 } else {
-                    // TODO 导入序列
+                    assemblyFuzzerSequenceData(Requests.Requests)
                 }
             } else {
                 throw new Error(Status.Reason)
@@ -265,6 +270,42 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
         } catch (error) {
             yakitFailed(error + "")
         }
+    }
+
+    // 序列导出组装数据
+    const assemblyFuzzerSequenceData = (Requests: FuzzerRequestProps[]) => {
+        // 组装菜单组信息
+        const groupId = generateGroupId()
+        const groupChildren: MultipleNodeInfo[] = []
+        Requests.forEach((item, index) => {
+            const time = (new Date().getTime() + index).toString()
+            const tabId = `httpFuzzer-[${randomString(6)}]-${time}`
+            const childItem: MultipleNodeInfo = {
+                groupChildren: [],
+                groupId,
+                id: tabId,
+                pageParams: {
+                    id: tabId,
+                    advancedConfigValue: toFuzzerAdvancedConfigValue(item),
+                    request: Uint8ArrayToString(item.RequestRaw)
+                },
+                sortFieId: index + 1,
+                verbose: `WF-[${index + 1}]`
+            }
+            groupChildren.push(childItem)
+        })
+
+        // verbose sortFieId color 已发送事件到MainOperatorContent组装
+        const groupItem = {
+            groupChildren,
+            groupId: "0",
+            id: groupId,
+            sortFieId: 999,
+            expand: true,
+            verbose: "",
+            color: ""
+        }
+        emiter.emit("onFuzzerSequenceImportUpdateMenu", JSON.stringify(groupItem))
     }
 
     useEffect(() => {
@@ -353,15 +394,18 @@ const MultimodeImportYaml: React.FC<MultimodeImportYamlProp> = React.memo(({read
         }
     }, [])
 
-    const editorContChange = useMemoizedFn((count) => {
-        emiter.emit("onImportYamlEditorChange", Uint8ArrayToString(count))
-    })
+    const editorContChange = useDebounceFn(
+        (count) => {
+            emiter.emit("onImportYamlEditorChange", Uint8ArrayToString(count))
+        },
+        {wait: 100}
+    ).run
 
     return (
         <div className={styles.multimodeImportYaml} ref={multimodeImportYamlRef}>
             <NewHTTPPacketEditor
                 key={yamlContent}
-                originValue={new Buffer(yamlContent)}
+                originValue={StringToUint8Array(yamlContent)}
                 noHeader={true}
                 onChange={editorContChange}
             ></NewHTTPPacketEditor>
