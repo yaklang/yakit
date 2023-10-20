@@ -172,7 +172,7 @@ export interface FuzzerResponse {
     HeaderSimilarity?: number
     MatchedByFilter?: boolean
     Url?: string
-    // TaskId: string;
+    TaskId?: number;
     DNSDurationMs: number
     FirstByteDurationMs?: number
     TotalDurationMs: number
@@ -701,6 +701,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const proxyRef = useRef<string[]>([])
     const dnsServersRef = useRef<string[]>([])
     const etcHostsRef = useRef<KVPair[]>([])
+    const retryRef = useRef<boolean>(false)
     useEffect(() => {
         getCacheData()
     }, [])
@@ -817,7 +818,21 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-        ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
+        
+        if(retryRef.current){
+            retryRef.current = false
+            const retryTaskID = failedFuzzer.length>0?failedFuzzer[0].TaskId:undefined
+            if(retryTaskID){
+                const params = {...httpParams,RetryTaskID:parseInt(retryTaskID+"")}
+                const retryParams = _.omit(params, ['Request','RequestRaw'])
+                ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
+            }
+        }
+        else{
+            ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)  
+        }
+        
+        
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
@@ -1383,6 +1398,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setShowExtra={setShowExtra}
                 showResponseInfoSecondEditor={showResponseInfoSecondEditor}
                 setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+                showSuccess={showSuccess}
+                retrySubmit={()=>{
+                    retryRef.current = true
+                    setRedirectedResponse(undefined)
+                    sendFuzzerSettingInfo()
+                    onValidateHTTPFuzzer()
+                    getNewCurrentPage()
+                }}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -1562,8 +1585,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     isShowDefaultLineStyle={false}
                     style={{overflow: "hidden"}}
                     lineStyle={{display: firstFull || secondFull ? "none" : ""}}
-                    secondNodeStyle={{padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480}}
-                    firstNodeStyle={{padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : ""}}
+                    secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
+                    firstNodeStyle={{padding: secondFull ? 0 : undefined, display: secondFull ? "none" : ""}}
                     {...ResizeBoxProps}
                     firstNode={
                         <WebFuzzerNewEditor
@@ -1726,6 +1749,8 @@ interface SecondNodeExtraProps {
     setShowExtra: (b: boolean) => void
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
+    showSuccess?: boolean
+    retrySubmit?: ()=>void
 }
 
 /**
@@ -1747,7 +1772,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         size = "small",
         setShowExtra,
         showResponseInfoSecondEditor,
-        setShowResponseInfoSecondEditor
+        setShowResponseInfoSecondEditor,
+        showSuccess = true,
+        retrySubmit
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -1843,7 +1870,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             </div>
         )
     }
-    if (!onlyOneResponse && cachedTotal > 1) {
+    if (!onlyOneResponse && cachedTotal > 1 && showSuccess) {
         const searchNode = (
             <YakitInput.Search
                 size={size === "small" ? "small" : "middle"}
@@ -2077,6 +2104,15 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     <WebFuzzerResponseExtractor responses={successFuzzer} sendPayloadsType={sendPayloadsType} />
                 </YakitModal>
             </div>
+        )
+    }
+    if(!onlyOneResponse && cachedTotal > 1 && !showSuccess){
+        return (
+            <YakitButton type={"primary"} size="small" onClick={()=>{
+                retrySubmit&&retrySubmit()
+            }}>
+                一键重试
+            </YakitButton>
         )
     }
     return <></>

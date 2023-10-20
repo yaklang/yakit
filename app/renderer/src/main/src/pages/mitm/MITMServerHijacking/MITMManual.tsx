@@ -11,6 +11,7 @@ import classNames from "classnames"
 import {useResponsive} from "ahooks"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import { OtherMenuListProps, YakitEditorKeyCode } from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -57,7 +58,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
             >
                 <div className={styles["manual-select"]}>
                     <span className={styles["manual-select-label"]}>劫持响应:</span>
-                    <YakitSegmented
+                    {/* <YakitSegmented
                         value={hijackResponseType}
                         onChange={(v) => {
                             setHijackResponseType(v as "onlyOne" | "all" | "never")
@@ -76,7 +77,13 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                                 value: "never"
                             }
                         ]}
-                    />
+                    /> */}
+                    <YakitSwitch 
+                        checked={hijackResponseType==="all"}
+                        onChange={(val: boolean) => {
+                            if(val)setHijackResponseType("all")
+                            else setHijackResponseType("never")
+                    }}/>
                 </div>
                 <YakitButton
                     type='outline1'
@@ -303,6 +310,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                                 break;
                             case "hijack-current-response":
                                 onSetHijackResponseType("onlyOne")
+                                setTimeout(()=>{forward()},200)
                                 break;
                             default:
                                 break;
@@ -326,6 +334,9 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             contextMenu={mitmManualRightMenu}
             editorOperationRecord="MITM_Manual_EDITOR_RECORF"
             webFuzzerValue={currentIsForResponse?requestPacket:undefined}
+            extraEditorProps={{
+                isShowSelectRangeMenu: true
+            }}
         />
     )
 })

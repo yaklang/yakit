@@ -23,14 +23,13 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
-import {useThrottleFn} from "ahooks"
+import {useMemoizedFn, useThrottleFn} from "ahooks"
 const {ipcRenderer} = window.require("electron")
 
 export interface CountDirectionProps {
     x?: string
     y?: string
 }
-
 
 export interface EditorDetailInfoProps {
     direction: CountDirectionProps
@@ -44,7 +43,7 @@ export interface EditorDetailInfoProps {
     scrollTop: number
 }
 
-const directionStyle = (editorInfo,isCenter=true) => {
+const directionStyle = (editorInfo, isCenter = true) => {
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     let obj: any = {}
     if (direction) {
@@ -67,6 +66,9 @@ export interface HTTPFuzzerClickEditorMenuProps {
     insert: (v: QueryFuzzerLabelResponseProps) => void
     addLabel: () => void
     className?: string
+    // 是否开启关闭倒计时
+    fizzSelectTimeoutId?: any
+    closeTimeout?: boolean
 }
 
 export interface LabelDataProps {
@@ -138,7 +140,7 @@ export const defaultLabel: LabelDataProps[] = [
 export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
 
 export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps> = (props) => {
-    const {close, editorInfo, insert, addLabel} = props
+    const {close, editorInfo, insert, addLabel, fizzSelectTimeoutId, closeTimeout = true} = props
 
     const {direction, top = 0, left = 0, bottom = 0, right = 0, scrollTop = 0} = editorInfo || {}
     const [labelData, setLabelData] = useState<QueryFuzzerLabelResponseProps[]>([])
@@ -146,6 +148,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     const [inputValue, setInputValue] = useState<string>()
     const [isEnterSimple, setEnterSimple] = useState<boolean>(false)
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable-editor")
+    // 是否中文输入中
+    const isComposition = useRef<boolean>(false)
     // 是否在拖拽中
     const isDragging = useRef<boolean>(false)
     // 鼠标是否进入main
@@ -155,7 +159,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     // 菜单显示宽度
     const [menuWidth, setMenuWidth] = useState<number>()
     // 菜单显示高度
-    const [menuHeight,setMenuHeight] = useState<number>()
+    const [menuHeight, setMenuHeight] = useState<number>()
+    // 鼠标
     const getData = () => {
         ipcRenderer.invoke("QueryFuzzerLabel", {}).then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
@@ -166,13 +171,39 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         })
     }
 
+    const [boxHidden, setBoxHidden] = useState<boolean>(true)
+    // 0.8秒后显示
     useEffect(() => {
-        if (right - left < 720)  {
-            let width:number = Math.floor((right-left)/2)
+        setTimeout(() => {
+            setBoxHidden(false)
+        }, 800)
+    }, [])
+    // 5秒无操作自动关闭
+    const closeTimeoutFun = useMemoizedFn(() => {
+        const closeTimeoutId = setTimeout(() => {
+            close()
+        }, 5 * 1000)
+        // 返回timeoutId，以便稍后取消
+        return closeTimeoutId
+    })
+    useEffect(() => {
+        if (closeTimeout && fizzSelectTimeoutId) {
+            if (isMainEnter.current || isSimpleEnter.current) {
+                fizzSelectTimeoutId.current && clearTimeout(fizzSelectTimeoutId.current)
+            } else {
+                fizzSelectTimeoutId.current = undefined
+                fizzSelectTimeoutId.current = closeTimeoutFun()
+            }
+        }
+    }, [isMainEnter.current, isSimpleEnter.current])
+
+    useEffect(() => {
+        if (right - left < 720) {
+            let width: number = Math.floor((right - left) / 2)
             setMenuWidth(width)
         }
-        if(bottom - top < 700){
-            let height:number = Math.floor((bottom-top)/2 - 30)
+        if (bottom - top < 700) {
+            let height: number = Math.floor((bottom - top) / 2 - 30)
             setMenuHeight(height)
         }
         getData()
@@ -244,11 +275,13 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     ).run
     return (
         <div
-            className={classNames(styles["http-fuzzer-click-editor"])}
+            className={classNames(styles["http-fuzzer-click-editor"], {
+                [styles["box-hidden"]]: boxHidden
+            })}
             onMouseLeave={() => {
                 isMainEnter.current = false
                 setTimeout(() => {
-                    if (!isSimpleEnter.current && !isDragging.current) {
+                    if (!isSimpleEnter.current && !isDragging.current && !isComposition.current) {
                         setEnterSimple(false)
                     }
                 }, 100)
@@ -278,18 +311,31 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     onMouseLeave={() => {
                         isSimpleEnter.current = false
                         setTimeout(() => {
-                            if (!isDragging.current && !isMainEnter.current) setEnterSimple(false)
+                            if (!isDragging.current && !isMainEnter.current && !isComposition.current)
+                                setEnterSimple(false)
                         }, 100)
                     }}
                     onMouseEnter={() => {
                         isSimpleEnter.current = true
                     }}
-                    style={{...directionStyle(editorInfo, false),maxHeight:menuHeight?menuHeight:350,width:menuWidth?menuWidth:360}}
+                    onCompositionStart={() => {
+                        isComposition.current = true
+                    }}
+                    onCompositionEnd={() => {
+                        isComposition.current = false
+                    }}
+                    style={{
+                        ...directionStyle(editorInfo, false),
+                        maxHeight: menuHeight ? menuHeight : 350,
+                        width: menuWidth ? menuWidth : 360
+                    }}
                 >
                     <div className={styles["menu-header"]}>
                         <div className={styles["menu-header-left"]}>
                             常用标签
-                            {!(menuWidth&&menuWidth<220)&&<span className={styles["menu-header-left-count"]}>{labelData.length || ""}</span>}
+                            {!(menuWidth && menuWidth < 220) && (
+                                <span className={styles["menu-header-left-count"]}>{labelData.length || ""}</span>
+                            )}
                         </div>
                         <div className={styles["menu-header-opt"]}>
                             <YakitButton
@@ -328,7 +374,9 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                             style={{
                                                                 ...provided.draggableProps.style,
                                                                 top: provided.draggableProps.style?.top
-                                                                    ? provided.draggableProps.style?.top - top + scrollTop
+                                                                    ? provided.draggableProps.style?.top -
+                                                                      top +
+                                                                      scrollTop
                                                                     : "none",
                                                                 left: provided.draggableProps.style?.top
                                                                     ? provided.draggableProps.style?.left - left - 60
@@ -341,7 +389,12 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                 })}
                                                                 onClick={() => insertLabel(item)}
                                                             >
-                                                                <div className={styles["menu-list-item-info"]} style={{maxWidth:menuWidth?(menuWidth-100):260}}>
+                                                                <div
+                                                                    className={styles["menu-list-item-info"]}
+                                                                    style={{
+                                                                        maxWidth: menuWidth ? menuWidth - 100 : 260
+                                                                    }}
+                                                                >
                                                                     <DragSortIcon
                                                                         className={styles["drag-sort-icon"]}
                                                                     />
@@ -362,7 +415,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                             <div className={styles["title"]}>
                                                                                 {item.Description}
                                                                             </div>
-                                                                            {(!menuWidth||menuWidth>250) && (
+                                                                            {(!menuWidth || menuWidth > 250) && (
                                                                                 <div
                                                                                     className={classNames(
                                                                                         styles["sub-title"],
@@ -661,26 +714,28 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
 }
 
 export interface HTTPFuzzerRangeEditorMenuProps {
+    close: () => void
     editorInfo?: EditorDetailInfoProps
     insert: (v: any) => void
     rangeValue: string
     replace?: (v: string) => void
     hTTPFuzzerClickEditorMenuProps?: HTTPFuzzerClickEditorMenuProps
+    fizzRangeTimeoutId?: any
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
-    const {editorInfo, insert, rangeValue, replace, hTTPFuzzerClickEditorMenuProps} = props
+    const {close, editorInfo, insert, rangeValue, replace, hTTPFuzzerClickEditorMenuProps, fizzRangeTimeoutId} = props
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     // 菜单显示宽度
     const [menuWidth, setMenuWidth] = useState<number>()
     // 菜单显示高度
-    const [menuHeight,setMenuHeight] = useState<number>()
+    const [menuHeight, setMenuHeight] = useState<number>()
     useEffect(() => {
-        if (right - left < 720)  {
-            let width:number = Math.floor((right-left)/2)
+        if (right - left < 720) {
+            let width: number = Math.floor((right - left) / 2)
             setMenuWidth(width)
         }
-        if(bottom - top < 720){
-            let height:number = Math.floor((bottom-top)/2 - 30)
+        if (bottom - top < 720) {
+            let height: number = Math.floor((bottom - top) / 2 - 30)
             setMenuHeight(height)
         }
     }, [])
@@ -689,12 +744,45 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
     const isMainEnter = useRef<boolean>(false)
     // 鼠标是否进入simple
     const isSimpleEnter = useRef<boolean>(false)
+
+    const [boxHidden, setBoxHidden] = useState<boolean>(true)
+    // 0.8秒后显示
+    useEffect(() => {
+        fizzRangeTimeoutId.current = undefined
+        fizzRangeTimeoutId.current = closeTimeoutFun()
+        setTimeout(() => {
+            setBoxHidden(false)
+        }, 800)
+    }, [])
+    // 5秒无操作自动关闭
+    const closeTimeoutFun = useMemoizedFn(() => {
+        const closeTimeoutId = setTimeout(() => {
+            close()
+        }, 5 * 1000)
+        // 返回timeoutId，以便稍后取消
+        return closeTimeoutId
+    })
+
     return (
-        <div className={styles["http-fuzzer-range-editor-body"]} style={{display: "flex"}}>
-            {hTTPFuzzerClickEditorMenuProps&&<HTTPFuzzerClickEditorMenu
-                className={styles["range-click-editor-menu"]}
-                {...hTTPFuzzerClickEditorMenuProps}
-            />}
+        <div
+            className={classNames(styles["http-fuzzer-range-editor-body"], {
+                [styles["box-hidden"]]: boxHidden
+            })}
+            onMouseEnter={() => {
+                fizzRangeTimeoutId.current && clearTimeout(fizzRangeTimeoutId.current)
+            }}
+            onMouseLeave={() => {
+                fizzRangeTimeoutId.current = undefined
+                fizzRangeTimeoutId.current = closeTimeoutFun()
+            }}
+        >
+            {hTTPFuzzerClickEditorMenuProps && (
+                <HTTPFuzzerClickEditorMenu
+                    className={styles["range-click-editor-menu"]}
+                    closeTimeout={false}
+                    {...hTTPFuzzerClickEditorMenuProps}
+                />
+            )}
 
             <div className={styles["http-fuzzer-range-editor"]}>
                 <div className={styles["http-fuzzer-range-editor-simple"]}>
@@ -737,7 +825,11 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                 </div>
                 {segmentedType && (
                     <div
-                        style={{...directionStyle(editorInfo),maxHeight:menuHeight?menuHeight:360,width:menuWidth?menuWidth:360}}
+                        style={{
+                            ...directionStyle(editorInfo),
+                            maxHeight: menuHeight ? menuHeight : 360,
+                            width: menuWidth ? menuWidth : 360
+                        }}
                         className={classNames(styles["http-fuzzer-range-editor-menu"])}
                         onMouseLeave={() => {
                             isSimpleEnter.current = false
@@ -766,28 +858,60 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
 interface HTTPFuzzerRangeReadOnlyEditorMenuProps {
     editorInfo?: EditorDetailInfoProps
     rangeValue: string
+    fizzRangeTimeoutId?: any
+    close: () => void
 }
 
 export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnlyEditorMenuProps> = (props) => {
-    const {editorInfo, rangeValue} = props
+    const {editorInfo, rangeValue, fizzRangeTimeoutId, close} = props
     const [segmentedType, setSegmentedType] = useState<"decode">()
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
     // 菜单显示宽度
     const [menuWidth, setMenuWidth] = useState<number>()
     // 菜单显示高度
-    const [menuHeight,setMenuHeight] = useState<number>()
+    const [menuHeight, setMenuHeight] = useState<number>()
+
+    const [boxHidden, setBoxHidden] = useState<boolean>(true)
+    // 0.8秒后显示
     useEffect(() => {
-        if (right - left < 720)  {
-            let width:number = Math.floor((right-left)/2)
+        fizzRangeTimeoutId.current = undefined
+        fizzRangeTimeoutId.current = closeTimeoutFun()
+        setTimeout(() => {
+            setBoxHidden(false)
+        }, 800)
+    }, [])
+    // 5秒无操作自动关闭
+    const closeTimeoutFun = useMemoizedFn(() => {
+        const closeTimeoutId = setTimeout(() => {
+            close()
+        }, 5 * 1000)
+        // 返回timeoutId，以便稍后取消
+        return closeTimeoutId
+    })
+
+    useEffect(() => {
+        if (right - left < 720) {
+            let width: number = Math.floor((right - left) / 2)
             setMenuWidth(width)
         }
-        if(bottom - top < 500){
-            let height:number = Math.floor((bottom-top)/2 - 30)
+        if (bottom - top < 500) {
+            let height: number = Math.floor((bottom - top) / 2 - 30)
             setMenuHeight(height)
         }
     }, [])
     return (
-        <div className={styles["http-fuzzer-read-editor"]}>
+        <div
+            className={classNames(styles["http-fuzzer-read-editor"], {
+                [styles["box-hidden"]]: boxHidden
+            })}
+            onMouseEnter={() => {
+                fizzRangeTimeoutId.current && clearTimeout(fizzRangeTimeoutId.current)
+            }}
+            onMouseLeave={() => {
+                fizzRangeTimeoutId.current = undefined
+                fizzRangeTimeoutId.current = closeTimeoutFun()
+            }}
+        >
             <div className={styles["http-fuzzer-read-editor-simple"]}>
                 <div className={styles["show-box"]}>
                     <div className={styles["decode-box"]} onClick={() => setSegmentedType("decode")}>
@@ -798,7 +922,11 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
             </div>
             {segmentedType && (
                 <div
-                    style={{...directionStyle(editorInfo),maxHeight:menuHeight?menuHeight:250,width:menuWidth?menuWidth:360}}
+                    style={{
+                        ...directionStyle(editorInfo),
+                        maxHeight: menuHeight ? menuHeight : 250,
+                        width: menuWidth ? menuWidth : 360
+                    }}
                     className={classNames(styles["http-fuzzer-range-read-only-editor-menu"])}
                     onMouseLeave={() => setSegmentedType(undefined)}
                 >
