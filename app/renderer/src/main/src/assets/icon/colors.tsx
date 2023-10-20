@@ -187,3 +187,31 @@ const SolidPrivateplugin = () => (
 export const SolidPrivatepluginIcon = (props: Partial<IconProps>) => {
     return <Icon component={SolidPrivateplugin} {...props} />
 }
+
+
+const CheckCircleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path fillRule="evenodd" clipRule="evenodd" d="M12 21.6C17.302 21.6 21.6 17.302 21.6 12C21.6 6.69809 17.302 2.40002 12 2.40002C6.69809 2.40002 2.40002 6.69809 2.40002 12C2.40002 17.302 6.69809 21.6 12 21.6ZM16.4486 10.4486C16.9172 9.97992 16.9172 9.22013 16.4486 8.7515C15.9799 8.28287 15.2201 8.28287 14.7515 8.7515L10.8 12.703L9.24855 11.1515C8.77992 10.6829 8.02013 10.6829 7.5515 11.1515C7.08287 11.6201 7.08287 12.3799 7.5515 12.8486L9.9515 15.2486C10.4201 15.7172 11.1799 15.7172 11.6486 15.2486L16.4486 10.4486Z" fill="#56C991"/>
+    </svg>
+)
+
+/**
+ * @description  Icon/Solid/Check-circle 圆勾
+ */
+export const SolidCheckCircleIcon = (props: Partial<IconProps>) => {
+    return <Icon component={CheckCircleIcon} {...props} />
+}
+
+const SolidLockClosed = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path fillRule="evenodd" clipRule="evenodd" d="M6.0001 10.8V8.40002C6.0001 5.08632 8.68639 2.40002 12.0001 2.40002C15.3138 2.40002 18.0001 5.08632 18.0001 8.40002V10.8C19.3256 10.8 20.4001 11.8745 20.4001 13.2V19.2C20.4001 20.5255 19.3256 21.6 18.0001 21.6H6.0001C4.67461 21.6 3.6001 20.5255 3.6001 19.2V13.2C3.6001 11.8745 4.67461 10.8 6.0001 10.8ZM15.6001 8.40002V10.8H8.4001V8.40002C8.4001 6.4118 10.0119 4.80002 12.0001 4.80002C13.9883 4.80002 15.6001 6.4118 15.6001 8.40002Z" fill="#F6544A"/>
+    </svg>
+)
+
+/**
+ * @description  Icon/Solid/lock-closed 锁
+ */
+
+export const SolidLockClosedIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidLockClosed} {...props} />
+}
