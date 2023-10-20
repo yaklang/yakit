@@ -27,9 +27,11 @@ import {
     useGetState,
     useInViewport,
     useLongPress,
-    useMemoizedFn, useMount,
+    useMemoizedFn,
+    useMount,
     useThrottleFn,
-    useUpdateEffect
+    useUpdateEffect,
+    useWhyDidYouUpdate
 } from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
@@ -78,7 +80,7 @@ import {shallow} from "zustand/shallow"
 import {menuBodyHeight} from "@/pages/globalVariable"
 import {RemoteGV} from "@/yakitGV"
 import {PageNodeItemProps, PageProps, usePageInfo} from "@/store/pageInfo"
-import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex";
+import {startupDuplexConn, closeDuplexConn} from "@/utils/duplex/duplex"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -104,7 +106,7 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
             {
                 label: (
                     <div className={styles["right-menu-item"]}>
-                        <OutlinePlusIcon/>
+                        <OutlinePlusIcon />
                         新建组
                     </div>
                 ),
@@ -397,7 +399,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
-    const addWebsocketFuzzer = useMemoizedFn((res: { tls: boolean; request: Uint8Array }) => {
+    const addWebsocketFuzzer = useMemoizedFn((res: {tls: boolean; request: Uint8Array}) => {
         openMenuPage(
             {route: YakitRoute.WebsocketFuzzer},
             {
@@ -409,7 +411,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
     /** 数据对比*/
-    const addDataCompare = useMemoizedFn((res: { leftData: string; rightData: string }) => {
+    const addDataCompare = useMemoizedFn((res: {leftData: string; rightData: string}) => {
         openMenuPage(
             {route: YakitRoute.DataCompare},
             {
@@ -455,8 +457,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     setBugList(res ? JSON.parse(res) : [])
                     setBugTestShow(true)
                 })
-                .catch(() => {
-                })
+                .catch(() => {})
         }
         if (type === 2) {
             const filter = pageCache.filter((item) => item.route === YakitRoute.PoC)
@@ -631,7 +632,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }, [])
 
     /** ---------- 操作系统 start ---------- */
-        // 系统类型
+    // 系统类型
     const [system, setSystem] = useState<string>("")
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
@@ -887,7 +888,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 if (item.Data.length === 0) {
                     const m = showModal({
                         title: "导入插件",
-                        content: <DownloadAllPlugin type='modal' onClose={() => m.destroy()}/>
+                        content: <DownloadAllPlugin type='modal' onClose={() => m.destroy()} />
                     })
                     return m
                 }
@@ -949,8 +950,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 // 触发获取web-fuzzer的缓存
                 fetchFuzzerList()
             }
-        } catch (error) {
-        }
+        } catch (error) {}
     })
 
     const getFuzzerSequenceCache = useMemoizedFn(() => {
@@ -1090,8 +1090,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         setSelectGroupId(YakitRoute.HTTPFuzzer, lastPage.id)
                     }
                 })
-                .catch((e) => {
-                })
+                .catch((e) => {})
                 .finally(() => setTimeout(() => setLoading(false), 200))
         } catch (error) {
             yakitNotify("error", "fetchFuzzerList失败:" + error)
@@ -1181,12 +1180,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 setBugTestValue(
                                     value
                                         ? [
-                                            {
-                                                filter: record?.filter,
-                                                key: record?.key,
-                                                title: record?.title
-                                            }
-                                        ]
+                                              {
+                                                  filter: record?.filter,
+                                                  key: record?.key,
+                                                  title: record?.title
+                                              }
+                                          ]
                                         : []
                                 )
                             }}
@@ -1233,8 +1232,7 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
                     setCurrentTabKey(key)
                 }
             }
-        } catch (error) {
-        }
+        } catch (error) {}
     })
     /** ---------- 拖拽排序 end ---------- */
     return (
@@ -1269,7 +1267,6 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
 
 const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
     const {pageCache, currentTabKey, openMultipleMenuPage, onSetPageCache} = props
-
     return (
         <>
             {pageCache.map((pageItem, index) => {
@@ -1288,7 +1285,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                     >
                         {pageItem.singleNode ? (
                             <React.Suspense fallback={<>loading page ...</>}>
-                                <PageItem routeKey={pageItem.route} params={pageItem.pageParams}/>
+                                <PageItem routeKey={pageItem.route} params={pageItem.pageParams} />
                             </React.Suspense>
                         ) : (
                             <SubTabList
@@ -1374,7 +1371,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             type: "white",
             onCancelText: "取消",
             onOkText: "关闭所有",
-            icon: <ExclamationCircleOutlined/>,
+            icon: <ExclamationCircleOutlined />,
             onOk: () => {
                 // const newPage: PageCache | undefined = pageCache.find((p) => p.route === YakitRoute.NewHome)
                 const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
@@ -1403,7 +1400,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             type: "white",
             onCancelText: "取消",
             onOkText: "关闭其他",
-            icon: <ExclamationCircleOutlined/>,
+            icon: <ExclamationCircleOutlined />,
             onOk: () => {
                 if (pageCache.length <= 0) return
                 const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
@@ -1582,7 +1579,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             emiter.emit("onRefWebFuzzer")
         }
     }, [type])
-    const onSetType = useMemoizedFn((e, res: { type: WebFuzzerType }) => {
+    const onSetType = useMemoizedFn((e, res: {type: WebFuzzerType}) => {
         if (!inViewport) return
         setType(res.type)
         if (type === res.type && res.type === "config") {
@@ -1597,7 +1594,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             ref.focus()
         }, 100)
     })
-    const onAddGroup = useMemoizedFn((e, res: { pageId: string }) => {
+    const onAddGroup = useMemoizedFn((e, res: {pageId: string}) => {
         if (!inViewport) return
         const {index} = getPageItemById(subPage, res.pageId)
         if (index === -1) return
@@ -1637,7 +1634,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         })
         return newData
     }, [subPage])
-    const onSelectSubMenuById = useMemoizedFn((e, res: { pageId: string }) => {
+    const onSelectSubMenuById = useMemoizedFn((e, res: {pageId: string}) => {
         if (!inViewport) return
         const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
         if (index === -1) return
@@ -1676,7 +1673,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
                     pluginId={pageItem.pluginId || 0}
                     selectSubMenuId={selectSubMenu.id || "0"}
                 />
-                <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType}/>
+                <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
             </div>
         </div>
     )
@@ -1798,7 +1795,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 //滚动到最后边
                 scrollToRightMost()
             }
-            if (currentTabKey === YakitRoute.HTTPFuzzer) {
+            if (currentTabKey === YakitRoute.HTTPFuzzer && selectSubMenu.id !== "0") {
                 if (selectSubMenu.groupId === "0") {
                     setType("config")
                     removeCurrentSelectGroupId(YakitRoute.HTTPFuzzer)
@@ -1955,8 +1952,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     moveOutOfGroupAndInGroup(result)
                 }
                 /** 移动排序 ---------end--------- */
-            } catch (error) {
-            }
+            } catch (error) {}
         })
         /** @description 组外向组内移动合并 */
         const mergingGroup = useMemoizedFn((result: DragDropContextResultProps) => {
@@ -2280,8 +2276,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 setTimeout(() => {
                     onScrollTabMenu()
                 }, 200)
-            } catch (error) {
-            }
+            } catch (error) {}
         })
         const onAddSubPage = useMemoizedFn(() => {
             if (getSubPageTotal(subPage) >= 100) {
@@ -2421,7 +2416,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 const node = {
                     label: (
                         <div className={styles["right-menu-item"]} key={groupItem.id}>
-                            <div className={classNames(styles["item-color-block"], `color-bg-${groupItem.color}`)}/>
+                            <div className={classNames(styles["item-color-block"], `color-bg-${groupItem.color}`)} />
                             <span>{labelText}</span>
                         </div>
                     ),
@@ -2675,7 +2670,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     type: "white",
                     onCancelText: "取消",
                     onOkText: "关闭其他",
-                    icon: <ExclamationCircleOutlined/>,
+                    icon: <ExclamationCircleOutlined />,
                     onOk: () => {
                         const newSubPage: MultipleNodeInfo[] = [item]
                         onSetSelectSubMenu(item)
@@ -2711,7 +2706,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     type: "white",
                     onCancelText: "取消",
                     onOkText: "关闭组内其他",
-                    icon: <ExclamationCircleOutlined/>,
+                    icon: <ExclamationCircleOutlined />,
                     onOk: () => {
                         const groupItem = subPage[index]
                         subPage[index].groupChildren = [item]
@@ -2877,7 +2872,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     type: "white",
                     onCancelText: "取消",
                     onOkText: "关闭组",
-                    icon: <ExclamationCircleOutlined/>,
+                    icon: <ExclamationCircleOutlined />,
                     onOk: () => {
                         getIsCloseGroupTip()
                         onCloseGroup(groupItem)
@@ -2886,7 +2881,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     onCancel: () => {
                         m.destroy()
                     },
-                    content: <CloseGroupContent/>
+                    content: <CloseGroupContent />
                 })
             } else {
                 onCloseGroup(groupItem)
@@ -2913,7 +2908,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 type: "white",
                 onCancelText: "取消",
                 onOkText: "关闭其他",
-                icon: <ExclamationCircleOutlined/>,
+                icon: <ExclamationCircleOutlined />,
                 onOk: () => {
                     const newPage = [{...groupItem}]
                     onSetSelectSubMenu(groupItem)
@@ -3083,7 +3078,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                     })}
                                     ref={scrollLeftIconRef}
                                 >
-                                    <OutlineChevrondoubleleftIcon/>
+                                    <OutlineChevrondoubleleftIcon />
                                 </div>
                                 <div
                                     className={classNames(styles["tab-menu-sub"], {
@@ -3138,7 +3133,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                     })}
                                     ref={scrollRightIconRef}
                                 >
-                                    <OutlineChevrondoublerightIcon/>
+                                    <OutlineChevrondoublerightIcon />
                                 </div>
                                 {pageItem.hideAdd !== true && (
                                     <OutlinePlusIcon
@@ -3215,7 +3210,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                         >
                             <div className={styles["tab-menu-item-verbose-wrapper"]}>
                                 <div className={styles["tab-menu-item-verbose"]}>
-                                    <SolidDocumentTextIcon className={styles["document-text-icon"]}/>
+                                    <SolidDocumentTextIcon className={styles["document-text-icon"]} />
                                     <span className='content-ellipsis'>{subItem.verbose || ""}</span>
                                 </div>
                                 <RemoveIcon
@@ -3464,7 +3459,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
                             }}
                             key={color}
                         >
-                            {group.color === color && <CheckIcon className={styles["check-icon"]}/>}
+                            {group.color === color && <CheckIcon className={styles["check-icon"]} />}
                         </div>
                     ))}
                 </div>
@@ -3504,7 +3499,7 @@ const CloseGroupContent: React.FC = React.memo(() => {
         <div className={styles["close-group-content"]}>
             <div>是否关闭当前组,关闭后,组内的页面也会关闭</div>
             <label className={styles["close-group-check"]}>
-                <YakitCheckbox checked={tipChecked} onChange={(e) => onChecked(e.target.checked)}/>
+                <YakitCheckbox checked={tipChecked} onChange={(e) => onChecked(e.target.checked)} />
                 不再提示
             </label>
         </div>
@@ -3552,7 +3547,7 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
             )}
             <div className={styles["tab-menu-item-verbose-wrapper"]}>
                 <div className={styles["tab-menu-item-verbose"]}>
-                    <SolidDocumentTextIcon className={styles["document-text-icon"]}/>
+                    <SolidDocumentTextIcon className={styles["document-text-icon"]} />
                     <span className='content-ellipsis'>{item.verbose || ""}</span>
                 </div>
                 <RemoveIcon
@@ -3575,7 +3570,7 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
         type: "white",
         onCancelText: "不保存",
         onOkText: "保存",
-        icon: <ExclamationCircleOutlined/>,
+        icon: <ExclamationCircleOutlined />,
         ...(props || {}),
         onOk: () => {
             if (props?.onOk) {
@@ -3592,7 +3587,7 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
                 }}
                 className='modal-remove-icon'
             >
-                <RemoveIcon/>
+                <RemoveIcon />
             </div>
         ),
         content: <div style={{paddingTop: 8}}>{props?.content}</div>
