@@ -807,6 +807,9 @@ message GlobalNetworkConfig {
   // default proxy
   repeated string GlobalProxy = 9;
   bool EnableSystemProxyFromEnv = 10;
+
+  // default skip save HTTPFlow
+  bool SkipSaveHTTPFlow = 11;
 }
 
 message DiagnoseNetworkRequest {
@@ -3321,6 +3324,9 @@ message FuzzerRequest {
   bytes BatchTarget = 44;
   bool AfterRequested = 45;
   bool StopAtFirstMatch = 46;
+
+  // retry task id
+  int64 RetryTaskID = 47;
 }
 
 message KVPair {
@@ -3934,6 +3940,7 @@ message ExecRequest {
 
   // 这个是为了满足 Runner 的情况，属于特殊情况
   string RunnerParamRaw = 6;
+  bool NoDividedEngine = 7;
 }
 
 message ExecResult {

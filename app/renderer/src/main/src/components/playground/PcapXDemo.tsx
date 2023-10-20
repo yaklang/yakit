@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {Form, Select, Space} from "antd";
-import {CopyableField, ManyMultiSelectForString, OneLine} from "@/utils/inputUtil";
+import {CopyableField, ManyMultiSelectForString, OneLine, SelectOne} from "@/utils/inputUtil";
 import {PcapMetadata} from "@/models/Traffic";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
@@ -116,25 +116,38 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
                     </Space>}
                     disabled={loading}
                 />
-                <DemoItemSelectMultiForString
-                    data={(pcapMeta?.AvailableSessionTypes || []).map(i => ({value: i.Value, label: i.Key}))}
-                    label={"会话协议"}
-                />
-                <DemoItemSelectMultiForString
-                    data={(pcapMeta?.AvailableLinkLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
-                    label={"链路层协议"}
-                />
-                <DemoItemSelectMultiForString
-                    data={(pcapMeta?.AvailableNetworkLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
-                    label={"网络层协议"}
-                />
-                <DemoItemSelectMultiForString
-                    data={(pcapMeta?.AvailableTransportLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
-                    label={"传输层协议"}
-                />
+
+                {loading ? <>
+                    <DemoItemSelectMultiForString
+                        label={"视图表格"}
+                        data={[
+                            {value: "raw", label: "原始数据包"},
+                            {value: "tcp-reassembled", label: "TCP数据"},
+                            {value: "session", label: "活跃会话"},
+                        ]}
+                    />
+                    <DemoItemSelectMultiForString
+                        data={(pcapMeta?.AvailableSessionTypes || []).map(i => ({value: i.Value, label: i.Key}))}
+                        label={"会话协议"}
+                    />
+                    <DemoItemSelectMultiForString
+                        data={(pcapMeta?.AvailableLinkLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
+                        label={"链路层协议"}
+                    />
+                    <DemoItemSelectMultiForString
+                        data={(pcapMeta?.AvailableNetworkLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
+                        label={"网络层协议"}
+                    />
+                    <DemoItemSelectMultiForString
+                        data={(pcapMeta?.AvailableTransportLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
+                        label={"传输层协议"}
+                    />
+                </> : <>
+
+                </>}
             </Form>
         </AutoCard>}
-        firstRatio={'300px'}
+        firstRatio={'400px'}
         secondNode={<div style={{overflow: "hidden", height: '100%', background: "#fcfcfc"}}>
             <PacketListDemo/>
         </div>}
