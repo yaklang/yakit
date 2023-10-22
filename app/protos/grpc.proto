@@ -1180,6 +1180,10 @@ message QueryChaosMakerRuleRequest {
   Paging Pagination = 1;
   string RuleType = 2;
   repeated string Keywords = 3;
+
+  // offset
+  int64 FromId = 4;
+  int64 UntilId = 5;
 }
 
 message ImportsProfileDatabaseRequest {
@@ -2242,6 +2246,9 @@ message QueryRisksRequest {
   string Token = 6;
   bool WaitingVerified = 7;
   string Severity = 8;
+
+  int64 FromId = 9;
+  int64 UntilId = 10;
 }
 
 message QueryRisksResponse {

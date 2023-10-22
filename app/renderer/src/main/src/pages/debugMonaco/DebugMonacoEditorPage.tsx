@@ -7,6 +7,8 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import {YakURLTree} from "@/pages/yakURLTree/YakURLTree";
 import {TrafficDemo} from "@/components/playground/TrafficDemo";
 import {PcapXDemo} from "@/components/playground/PcapXDemo";
+import {DemoItemSelectOne} from "@/demoComponents/itemSelect/ItemSelect";
+import {RiskTableDemo} from "@/components/playground/RiskTableDemo";
 
 export interface DebugMonacoEditorPageProp {
 
@@ -25,7 +27,7 @@ a=1&b=2 Content-Length: a
 {{null(1)}}
 `)
     const [languageType, setLangType] = useState(MONACO_SPEC_WEBFUZZER_REQUEST);
-    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree" | string>("pcapx");
+    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree" | string>("risk-table");
 
     useEffect(() => {
         if (!languageType) {
@@ -37,17 +39,23 @@ a=1&b=2 Content-Length: a
 
     return <div style={{height: "100%"}}>
         <AutoCard
-            title={<SelectOne label={"调试组件"} data={[
-                {value: "pcapx", text: "抓包工具"},
-                {value: "traffic-session", text: "流量会话"},
-                {value: "http-monaco-editor", text: "HTTP 数据包编辑器"},
-                {value: "fs-tree", text: "文件系统树"},
+            title={<DemoItemSelectOne label={"调试组件"} data={[
+                {value: "chaos-maker-rule", label: "流量生成器规则"},
+                {value: "risk-table", label: "漏洞查询规则"},
+                {value: "pcapx", label: "抓包工具"},
+                {value: "traffic-session", label: "流量会话"},
+                {value: "http-monaco-editor", label: "HTTP 数据包编辑器"},
+                {value: "fs-tree", label: "文件系统树"},
             ]} formItemStyle={{margin: 0}} value={mode} setValue={setMode}/>}
             size={"small"} bodyStyle={{padding: 0, overflow: "hidden"}}
         >
             {
                 (() => {
                     switch (mode) {
+                        case "chaos-maker-rule":
+                            return <RiskTableDemo/>
+                        case "risk-table":
+                            return <RiskTableDemo/>
                         case "pcapx":
                             return <PcapXDemo/>
                         case "traffic-session":
