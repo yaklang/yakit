@@ -1738,6 +1738,7 @@ message IsMultipartFormDataRequestResult {
 
 message AutoDecodeRequest {
   string Data = 1;
+  repeated AutoDecodeResult ModifyResult = 2;
 }
 
 message AutoDecodeResult {
@@ -1745,6 +1746,7 @@ message AutoDecodeResult {
   string TypeVerbose = 2;
   bytes Origin = 3;
   bytes Result = 4;
+  bool Modify = 5;
 }
 
 message AutoDecodeResponse {
