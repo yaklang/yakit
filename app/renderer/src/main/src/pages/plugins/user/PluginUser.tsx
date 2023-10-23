@@ -6,34 +6,24 @@ import {
     GridLayoutOpt,
     ListLayoutOpt,
     ListShowContainer,
-    OnlineExtraOperate,
     PluginsList,
     TypeSelect
 } from "../funcTemplate"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
     OutlineClouddownloadIcon,
     OutlineDatabasebackupIcon,
     OutlineDotshorizontalIcon,
     OutlineLockclosedIcon,
     OutlineLockopenIcon,
+    OutlinePlusIcon,
     OutlineShareIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useMemoizedFn, useDebounceFn, useLockFn, useControllableValue} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useLockFn, useControllableValue, useInViewport} from "ahooks"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import cloneDeep from "lodash/cloneDeep"
-import {apiFetchList, ssfilters} from "../test"
-import {
-    PluginsContainer,
-    PluginsLayout,
-    defaultFilter,
-    defaultResponse,
-    defaultSearch,
-    pluginStatusToName,
-    statusTag
-} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout, defaultSearch, pluginStatusToName, statusTag} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
@@ -49,7 +39,7 @@ import {
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginUserDetail} from "./PluginUserDetail"
-import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
+import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 import {PrivatePluginIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
@@ -59,6 +49,25 @@ import {TypeSelectOpt} from "../funcTemplateType"
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginUser.module.scss"
+import {useStore} from "@/store"
+import {
+    DownloadOnlinePluginsRequest,
+    PluginGV,
+    PluginsQueryProps,
+    apiDeletePluginMine,
+    apiDownloadOnlinePlugin,
+    apiFetchGroupStatisticsMine,
+    apiFetchMineList,
+    apiFetchRecycleList,
+    apiUpdatePluginMine,
+    convertPluginsRequestParams
+} from "../utils"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+
+const {ipcRenderer} = window.require("electron")
 
 export const mePluginTypeList = [
     {
@@ -74,12 +83,12 @@ export const mePluginTypeList = [
 /**公开/私密 */
 const onlinePluginTypeList = [
     {
-        key: "0", // 公开
+        key: "1", // 公开
         name: pluginStatusToName["1"],
         icon: <SolidCloudpluginIcon />
     },
     {
-        key: "1", // 私密
+        key: "2", // 私密
         name: pluginStatusToName["2"],
         icon: <SolidPrivatepluginIcon />
     }
@@ -104,6 +113,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     const [filters, setFilters] = useState<PluginFilterParams>({
         plugin_type: [],
         tags: [],
+        status: [],
         plugin_private: []
     })
     const [refreshUser, setRefreshUser] = useState<boolean>(false)
@@ -116,10 +126,17 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         allCheck: false,
         // response: cloneDeep(initialOnlineState),
         selectList: [],
-        loadMoreData: () => {}
+        loadMoreData: () => {},
+        onRemovePluginBatchBefore: () => {}
     })
+    const pluginsListRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(pluginsListRef)
 
-    const onRemove = useMemoizedFn(() => {})
+    const userInfo = useStore((s) => s.userInfo)
+
+    const onRemove = useMemoizedFn(() => {
+        if (pluginUserListRef.current.onRemovePluginBatchBefore) pluginUserListRef.current.onRemovePluginBatchBefore()
+    })
     const onSwitchUserPluginType = useDebounceFn(
         useMemoizedFn((v) => {
             setUserPluginType(v as MePluginType)
@@ -159,7 +176,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     const pluginPrivateSelect: TypeSelectOpt[] = useMemo(() => {
         return (
             filters.plugin_private?.map((ele) => ({
-                key: ele.value,
+                key: ele.value === "true" ? "2" : "1",
                 name: ele.label
             })) || []
         )
@@ -193,7 +210,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     )
                 }
                 extraHeader={
-                    <div className='extra-header-wrapper'>
+                    <div className='extra-header-wrapper' ref={pluginsListRef}>
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
@@ -254,11 +271,15 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                 >
                     <PluginUserList
                         ref={pluginUserListRef}
+                        inViewport={inViewport}
+                        isLogin={userInfo.isLogin}
                         refresh={refreshUser}
                         setIsSelectUserNum={setIsSelectUserNum}
                         setPlugin={setPlugin}
                         searchValue={search}
                         setSearchValue={setSearch}
+                        filters={filters}
+                        setFilters={setFilters}
                         response={response}
                         dispatch={dispatch}
                         defaultAllCheck={allCheckUser}
@@ -273,6 +294,8 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                 >
                     <PluginRecycleList
                         refresh={refreshRecycle}
+                        inViewport={inViewport}
+                        isLogin={userInfo.isLogin}
                         searchValue={search}
                         setSearchValue={setSearch}
                         setIsSelectRecycleNum={setIsSelectRecycleNum}
@@ -293,18 +316,36 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
 
 const PluginUserList: React.FC<PluginUserListProps> = React.memo(
     forwardRef((props, ref) => {
-        const {refresh, setIsSelectUserNum, setPlugin, dispatch, response, defaultAllCheck, defaultSelectList} = props
+        const {
+            refresh,
+            isLogin,
+            inViewport,
+            setIsSelectUserNum,
+            setPlugin,
+            dispatch,
+            response,
+            defaultAllCheck,
+            defaultSelectList
+        } = props
         /** 是否为加载更多 */
         const [loading, setLoading] = useState<boolean>(false)
         /** 是否为首页加载 */
         const isLoadingRef = useRef<boolean>(true)
         const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
-        const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep({...defaultFilter}))
+
+        const [filters, setFilters] = useControllableValue<PluginFilterParams>(props, {
+            defaultValuePropName: "filters",
+            valuePropName: "filters",
+            trigger: "setFilters"
+        })
         const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
             defaultValuePropName: "searchValue",
             valuePropName: "searchValue",
             trigger: "setSearchValue"
         })
+
+        const [pluginUserGroupList, setPluginUserGroupList] = useState<API.PluginsSearch[]>([])
+        const [initTotal, setInitTotal] = useState<number>(0)
 
         const [isList, setIsList] = useState<boolean>(true)
         const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
@@ -312,6 +353,11 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         const [hasMore, setHasMore] = useState<boolean>(true)
 
         const [showFilter, setShowFilter] = useState<boolean>(true)
+        const [pluginRemoveCheck, setPluginRemoveCheck] = useState<boolean>(false)
+        const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
+
+        const removePluginRef = useRef<YakitPluginOnlineDetail>()
+        const userInfo = useStore((s) => s.userInfo)
 
         // 选中插件的数量
         const selectNum = useMemo(() => {
@@ -324,16 +370,33 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             () => ({
                 allCheck,
                 selectList,
-                loadMoreData: onUpdateList
+                loadMoreData: onUpdateList,
+                onRemovePluginBatchBefore
             }),
             [allCheck, selectList]
         )
-
+        useEffect(() => {
+            getInitTotal()
+            getPluginRemoveCheck()
+        }, [inViewport])
         // 页面初始化的首次列表请求
         useEffect(() => {
             fetchList(true)
-        }, [refresh])
-
+        }, [isLogin, refresh, filters])
+        useEffect(() => {
+            getPluginGroupList()
+        }, [isLogin])
+        useEffect(() => {
+            setIsSelectUserNum(selectList.length > 0)
+        }, [selectList.length])
+        const getInitTotal = useMemoizedFn(() => {
+            apiFetchMineList({
+                page: 1,
+                limit: 1
+            }).then((res) => {
+                setInitTotal(+res.pagemeta.total)
+            })
+        })
         const fetchList = useLockFn(
             useMemoizedFn(async (reset?: boolean) => {
                 if (loading) return
@@ -346,19 +409,11 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                           page: response.pagemeta.page + 1,
                           limit: response.pagemeta.limit || 20
                       }
-
-                const query = {
-                    ...params,
-                    ...search,
-                    ...filters
-                }
-                if (!showFilter) {
-                    query["status"] = []
-                    query["plugin_type"] = []
-                    query["tags"] = []
-                }
+                const query: PluginsQueryProps = convertPluginsRequestParams(filters, search, params)
                 try {
-                    const res = await apiFetchList(query)
+                    const res = await apiFetchMineList(query)
+                    const length = res.data.length + response.data.length
+                    setHasMore(length < +res.pagemeta.total)
                     if (!res.data) res.data = []
                     dispatch({
                         type: "add",
@@ -366,15 +421,24 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                             response: {...res}
                         }
                     })
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 300)
-                } catch (error) {
-                    yakitNotify("error", "请求数据失败:" + error)
-                }
+                } catch (error) {}
+                setTimeout(() => {
+                    setLoading(false)
+                }, 300)
             })
         )
-
+        /**获取插件删除的提醒记录状态 */
+        const getPluginRemoveCheck = useMemoizedFn(() => {
+            getRemoteValue(PluginGV.PluginRemoveCheck).then((data) => {
+                setPluginRemoveCheck(data === "true" ? true : false)
+            })
+        })
+        /**获取分组统计列表 */
+        const getPluginGroupList = useMemoizedFn(() => {
+            apiFetchGroupStatisticsMine().then((res) => {
+                setPluginUserGroupList(res.data)
+            })
+        })
         /** 单项勾选|取消勾选 */
         const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
             // 全选情况时的取消勾选
@@ -385,12 +449,10 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             }
             // 单项勾选回调
             if (value) {
-                setIsSelectUserNum(true)
                 setSelectList([...selectList, data.uuid])
             } else {
                 const newSelectList = selectList.filter((item) => item !== data.uuid)
                 setSelectList(newSelectList)
-                if (newSelectList.length === 0) setIsSelectUserNum(false)
             }
         })
         // 滚动更多加载
@@ -416,7 +478,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         const onUserSelect = useMemoizedFn((key: string, data: YakitPluginOnlineDetail) => {
             switch (key) {
                 case "share":
-                    yakitNotify("success", "分享~~~")
+                    onShare(data.uuid)
                     break
                 case "download":
                     onDownloadClick(data)
@@ -425,49 +487,136 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                     onUpdatePrivate(data)
                     break
                 case "remove":
-                    onRemovePlugin(data)
+                    removePluginRef.current = data
+                    onRemovePluginSingleBefore(data)
                     break
                 default:
                     break
             }
         })
+        const onShare = useMemoizedFn((uuid: string) => {
+            ipcRenderer.invoke("copy-clipboard", uuid).then(() => {
+                yakitNotify("success", "分享ID复制成功")
+            })
+        })
         /**下载 */
         const onDownloadClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            dispatch({
-                type: "download",
-                payload: {
-                    item: {
-                        ...data
-                    }
-                }
-            })
-            yakitNotify("success", "下载~~~")
+            let downloadParams: DownloadOnlinePluginsRequest = {
+                UUID: selectList
+            }
+            setLoading(true)
+            apiDownloadOnlinePlugin(downloadParams)
+                .then(() => {
+                    yakitNotify("success", "下载成功")
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                )
         })
         /**更改私有状态 */
         const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            dispatch({
-                type: "update",
-                payload: {
-                    item: {
-                        ...data,
-                        is_private: !data.is_private,
-                        status: data.is_private ? 0 : data.status
-                    }
+            const updateItem: API.UpdatePluginRequest = {
+                uuid: data.uuid,
+                is_private: `${!data.is_private}`
+            }
+            apiUpdatePluginMine(updateItem).then(() => {
+                const isPrivate: boolean = !data.is_private
+                let status: number = 0
+                if (userInfo.role === "ordinary") {
+                    // 为待审核
+                    status = 0
+                } else {
+                    // 为审核通过
+                    if (!isPrivate) status = 1
                 }
+                dispatch({
+                    type: "update",
+                    payload: {
+                        item: {
+                            ...data,
+                            is_private: isPrivate,
+                            status: status
+                        }
+                    }
+                })
             })
         })
-        /** 删除插件 */
-        const onRemovePlugin = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            const index = selectList.findIndex((ele) => ele === data.uuid)
-            if (index !== -1) {
-                optCheck(data, false)
+        /**单个删除之前操作 */
+        const onRemovePluginSingleBefore = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+            if (pluginRemoveCheck) {
+                onRemovePluginSingle(data)
+            } else {
+                setRemoveCheckVisible(true)
             }
-            dispatch({
-                type: "remove",
-                payload: {
-                    itemList: [data]
+        })
+        /** 批量删除插件之前操作 */
+        const onRemovePluginBatchBefore = useMemoizedFn(() => {
+            if (pluginRemoveCheck) {
+                onRemovePluginBatch()
+            } else {
+                setRemoveCheckVisible(true)
+            }
+        })
+        /**单个删除 */
+        const onRemovePluginSingle = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+            let deleteParams: API.PluginsWhereDeleteRequest = {
+                uuid: [data.uuid]
+            }
+            // console.log("单个删除", deleteParams)
+            // console.log("pluginRemoveCheck", pluginRemoveCheck)
+            apiDeletePluginMine(deleteParams).then(() => {
+                dispatch({
+                    type: "remove",
+                    payload: {
+                        itemList: [data]
+                    }
+                })
+                setRemoteValue(PluginGV.PluginRemoveCheck, `${pluginRemoveCheck}`)
+                const index = selectList.findIndex((ele) => ele === data.uuid)
+                if (index !== -1) {
+                    optCheck(data, false)
                 }
+                removePluginRef.current = undefined
+                setRemoveCheckVisible(false)
             })
+        })
+        /**批量删除 */
+        const onRemovePluginBatch = useMemoizedFn(() => {
+            // console.log("pluginRemoveCheck", pluginRemoveCheck)
+            if (!allCheck && selectList.length === 0) {
+                // 删除全部，清空
+                // console.log("全部清空")
+                apiDeletePluginMine().then(() => {
+                    fetchList(true)
+                    setRemoveCheckVisible(false)
+                })
+            } else {
+                // 批量删除
+                let deleteParams: API.PluginsWhereDeleteRequest = {}
+
+                if (allCheck) {
+                    deleteParams = {
+                        ...convertPluginsRequestParams(filters, search)
+                    }
+                } else {
+                    deleteParams = {
+                        uuid: selectList
+                    }
+                }
+                // console.log("批量删除", deleteParams)
+                apiDeletePluginMine(deleteParams).then(() => {
+                    setRemoveCheckVisible(false)
+                    setSelectList([])
+                    if (allCheck) {
+                        setAllCheck(false)
+                        setIsSelectUserNum(false)
+                    }
+                    fetchList(true)
+                    setRemoteValue(PluginGV.PluginRemoveCheck, `${pluginRemoveCheck}`)
+                })
+            }
         })
 
         /**全选 */
@@ -476,29 +625,24 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             setAllCheck(value)
             setIsSelectUserNum(value)
         })
+        /**新建插件 */
+        const onAddPlugin = useMemoizedFn(() => {})
+        const onPluginRemoveCheckOk = useMemoizedFn(() => {
+            if (removePluginRef.current) {
+                onRemovePluginSingle(removePluginRef.current)
+            } else {
+                onRemovePluginBatch()
+            }
+        })
         return (
             <>
-                {/* {!!plugin && (
-                    <PluginUserDetail
-                        info={plugin}
-                        defaultSelectList={selectList}
-                        allCheck={false}
-                        onCheck={() => {}}
-                        optCheck={() => {}}
-                        loading={false}
-                        response={response}
-                        onBack={onBack}
-                        loadMoreData={() => {}}
-                        defaultSearchValue={search}
-                    />
-                )} */}
                 <PluginsContainer
                     loading={loading && isLoadingRef.current}
                     visible={showFilter}
                     setVisible={setShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
-                    groupList={ssfilters}
+                    groupList={pluginUserGroupList}
                 >
                     <PluginsList
                         checked={allCheck}
@@ -512,64 +656,90 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                         visible={showFilter}
                         setVisible={setShowFilter}
                     >
-                        <ListShowContainer<YakitPluginOnlineDetail>
-                            isList={isList}
-                            data={response.data}
-                            gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                const {data} = info
-                                const check = allCheck || selectList.includes(data.uuid)
-                                return (
-                                    <GridLayoutOpt
-                                        data={data}
-                                        checked={check}
-                                        onCheck={optCheck}
-                                        title={data.script_name}
-                                        type={data.type}
-                                        tags={data.tags}
-                                        help={data.help || ""}
-                                        img={data.head_img || ""}
-                                        user={data.authors || ""}
-                                        // prImgs={data.prs}
-                                        time={data.updated_at}
-                                        subTitle={optSubTitle}
-                                        extraFooter={optExtraNode}
-                                        onClick={optClick}
-                                    />
-                                )
-                            }}
-                            gridHeight={210}
-                            listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                const {data} = info
-                                const check = allCheck || selectList.includes(data.uuid)
-                                return (
-                                    <ListLayoutOpt
-                                        data={data}
-                                        checked={check}
-                                        onCheck={optCheck}
-                                        img={data.head_img}
-                                        title={data.script_name}
-                                        help={data.help || ""}
-                                        time={data.updated_at}
-                                        subTitle={optSubTitle}
-                                        extraNode={optExtraNode}
-                                        onClick={optClick}
-                                    />
-                                )
-                            }}
-                            listHeight={73}
-                            loading={loading}
-                            hasMore={hasMore}
-                            updateList={onUpdateList}
-                        />
+                        {initTotal > 0 ? (
+                            <ListShowContainer<YakitPluginOnlineDetail>
+                                isList={isList}
+                                data={response.data}
+                                gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
+                                    const {data} = info
+                                    const check = allCheck || selectList.includes(data.uuid)
+                                    return (
+                                        <GridLayoutOpt
+                                            data={data}
+                                            checked={check}
+                                            onCheck={optCheck}
+                                            title={data.script_name}
+                                            type={data.type}
+                                            tags={data.tags}
+                                            help={data.help || ""}
+                                            img={data.head_img || ""}
+                                            user={data.authors || ""}
+                                            // prImgs={data.prs}
+                                            time={data.updated_at}
+                                            subTitle={optSubTitle}
+                                            extraFooter={optExtraNode}
+                                            onClick={optClick}
+                                        />
+                                    )
+                                }}
+                                gridHeight={210}
+                                listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
+                                    const {data} = info
+                                    const check = allCheck || selectList.includes(data.uuid)
+                                    return (
+                                        <ListLayoutOpt
+                                            data={data}
+                                            checked={check}
+                                            onCheck={optCheck}
+                                            img={data.head_img}
+                                            title={data.script_name}
+                                            help={data.help || ""}
+                                            time={data.updated_at}
+                                            subTitle={optSubTitle}
+                                            extraNode={optExtraNode}
+                                            onClick={optClick}
+                                        />
+                                    )
+                                }}
+                                listHeight={73}
+                                loading={loading}
+                                hasMore={hasMore}
+                                updateList={onUpdateList}
+                            />
+                        ) : (
+                            <div className={styles["plugin-user-empty"]}>
+                                <YakitEmpty title='暂无数据' description='可新建插件同步至云端，创建属于自己的插件' />
+                                <div className={styles["plugin-user-buttons"]}>
+                                    <YakitButton type='outline1' icon={<OutlinePlusIcon />} onClick={onAddPlugin}>
+                                        新建插件
+                                    </YakitButton>
+                                </div>
+                            </div>
+                        )}
                     </PluginsList>
                 </PluginsContainer>
+                <YakitHint
+                    visible={removeCheckVisible}
+                    title='是否要删除插件'
+                    content='确认删除插件后，插件将会放在回收站'
+                    onOk={onPluginRemoveCheckOk}
+                    onCancel={() => setRemoveCheckVisible(false)}
+                    footerExtra={
+                        <YakitCheckbox
+                            checked={pluginRemoveCheck}
+                            onChange={(e) => setPluginRemoveCheck(e.target.checked)}
+                        >
+                            下次不再提醒
+                        </YakitCheckbox>
+                    }
+                />
             </>
         )
     })
 )
 
 const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) => {
-    const {refresh, setIsSelectRecycleNum} = props
+    const {refresh, inViewport, isLogin, setIsSelectRecycleNum} = props
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
     const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
@@ -583,10 +753,24 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
     })
     const [allCheck, setAllCheck] = useState<boolean>(false)
 
+    const [initTotal, setInitTotal] = useState<number>(0)
+
+    useEffect(() => {
+        getInitTotal()
+    }, [inViewport])
     // 页面初始化的首次列表请求
     useEffect(() => {
         fetchList(true)
-    }, [refresh])
+    }, [isLogin, refresh])
+
+    const getInitTotal = useMemoizedFn(() => {
+        apiFetchRecycleList({
+            page: 1,
+            limit: 1
+        }).then((res) => {
+            setInitTotal(+res.pagemeta.total)
+        })
+    })
 
     const fetchList = useLockFn(
         useMemoizedFn(async (reset?: boolean) => {
@@ -601,12 +785,11 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
                       limit: response.pagemeta.limit || 20
                   }
 
-            const query = {
-                ...params,
-                ...search
-            }
+            const query: PluginsQueryProps = convertPluginsRequestParams({}, search, params)
             try {
-                const res = await apiFetchList(query)
+                const res = await apiFetchRecycleList(query)
+                const length = res.data.length + response.data.length
+                setHasMore(length < +res.pagemeta.total)
                 if (!res.data) res.data = []
                 dispatch({
                     type: "add",
@@ -684,9 +867,7 @@ const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo((props) =
         })
         // 调用还原的接口
     })
-    const onSetFilters=useMemoizedFn(()=>{
-
-    })
+    const onSetFilters = useMemoizedFn(() => {})
     return (
         <>
             <PluginsList

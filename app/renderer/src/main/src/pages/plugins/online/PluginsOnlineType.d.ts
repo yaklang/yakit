@@ -32,7 +32,7 @@ export interface YakitCombinationSearchCircleProps {
     onSearch: () => void
 }
 
-export interface YakitPluginOnlineDetail extends API.YakitPluginDetail {
+export interface YakitPluginOnlineDetail extends API.PluginsDetail {
     /**1.2k */
     starsCountString?: string
     /**1.2k */
@@ -41,7 +41,7 @@ export interface YakitPluginOnlineDetail extends API.YakitPluginDetail {
     downloadedTotalString?: string
 }
 
-export interface YakitPluginListOnlineResponse extends Omit<API.YakitPluginListResponse, "data"> {
+export interface YakitPluginListOnlineResponse extends Omit<API.PluginsListResponse, "data"> {
     data: YakitPluginOnlineDetail[]
 }
 
