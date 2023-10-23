@@ -731,6 +731,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             editerMenuFun(editor)
         }
     }, [editor, isShowSelectRangeMenu])
+    // 定时消失的定时器
+    const fizzSelectTimeoutId = useRef<NodeJS.Timeout>()
+    const fizzRangeTimeoutId = useRef<NodeJS.Timeout>()
     // 编辑器菜单
     const editerMenuFun = (editor: YakitIMonacoEditor) => {
         // 编辑器点击弹窗的唯一Id
@@ -752,6 +755,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 editor && insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
             }
         }
+        
         // 编辑器点击显示的菜单
         const fizzSelectWidget = {
             isOpen: false,
@@ -770,6 +774,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         <HTTPFuzzerClickEditorMenu
                             editorInfo={editorInfo.current}
                             close={() => closeFizzSelectWidget()}
+                            fizzSelectTimeoutId={fizzSelectTimeoutId}
                             insert={(v: QueryFuzzerLabelResponseProps) => {
                                 insertLabelFun(v)
                                 closeFizzSelectWidget()
@@ -821,12 +826,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                   rangeValue={
                                       (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
                                   }
+                                  close={() => closeFizzRangeWidget()}
+                                  fizzRangeTimeoutId={fizzRangeTimeoutId}
                               />,
                               domNode
                           )
                         : ReactDOM.render(
                               <HTTPFuzzerRangeEditorMenu
                                   editorInfo={editorInfo.current}
+                                  close={() => closeFizzRangeWidget()}
                                   insert={(fun: any) => {
                                       if (editor) {
                                           const selectedText =
@@ -861,6 +869,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                   rangeValue={
                                       (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
                                   }
+                                  fizzRangeTimeoutId={fizzRangeTimeoutId}
                                   hTTPFuzzerClickEditorMenuProps={
                                       readOnly
                                           ? undefined
@@ -909,11 +918,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         // 关闭点击的菜单
         const closeFizzSelectWidget = () => {
             fizzSelectWidget.isOpen = false
+            fizzSelectTimeoutId.current&&clearTimeout(fizzSelectTimeoutId.current)
             editor.removeContentWidget(fizzSelectWidget)
         }
         // 关闭选中的菜单
         const closeFizzRangeWidget = () => {
             fizzRangeWidget.isOpen = false
+            fizzRangeTimeoutId.current&&clearTimeout(fizzRangeTimeoutId.current)
             editor.removeContentWidget(fizzRangeWidget)
         }
 

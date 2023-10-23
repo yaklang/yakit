@@ -88,13 +88,17 @@ import {
     OutlineBeakerIcon,
     OutlineExportIcon,
     OutlinePayloadIcon,
-    OutlineXIcon
+    OutlineXIcon,
+    OutlineCodeIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 import {CopyableField} from "@/utils/inputUtil"
-import { YakitCopyText } from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import {useFuzzerSequence} from "@/store/fuzzerSequence"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import { YakitDropdownMenu } from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -172,7 +176,7 @@ export interface FuzzerResponse {
     HeaderSimilarity?: number
     MatchedByFilter?: boolean
     Url?: string
-    // TaskId: string;
+    TaskId?: number
     DNSDurationMs: number
     FirstByteDurationMs?: number
     TotalDurationMs: number
@@ -701,6 +705,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const proxyRef = useRef<string[]>([])
     const dnsServersRef = useRef<string[]>([])
     const etcHostsRef = useRef<KVPair[]>([])
+    const retryRef = useRef<boolean>(false)
     useEffect(() => {
         getCacheData()
     }, [])
@@ -817,7 +822,18 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
         setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-        ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
+
+        if (retryRef.current) {
+            retryRef.current = false
+            const retryTaskID = failedFuzzer.length > 0 ? failedFuzzer[0].TaskId : undefined
+            if (retryTaskID) {
+                const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "")}
+                const retryParams = _.omit(params, ["Request", "RequestRaw"])
+                ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
+            }
+        } else {
+            ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
+        }
     })
 
     const getProxyList = useMemoizedFn((proxyList) => {
@@ -925,7 +941,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Headers: data.Headers || [],
                 UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
                 Count: count,
-                cellClassName: data.MatchedByMatcher ? `color-opacity-bg-${data.HitColor} color-text-${data.HitColor} color-font-weight-${data.HitColor}` : ""
+                cellClassName: data.MatchedByMatcher
+                    ? `color-opacity-bg-${data.HitColor} color-text-${data.HitColor} color-font-weight-${data.HitColor}`
+                    : ""
             } as FuzzerResponse
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
@@ -1055,8 +1073,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             width: "80%",
             footer: null,
             maskClosable: false,
-            closable:false,
-            style:{ top: '10%' },
+            closable: false,
+            style: {top: "10%"},
             content: (
                 <HTTPFuzzerHotPatch
                     initialHotPatchCode={hotPatchCodeRef.current}
@@ -1074,7 +1092,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         setHotPatchCodeWithParamGetter(code)
                         setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                     }}
-                    onCancel={()=>m.destroy()}
+                    onCancel={() => m.destroy()}
                 />
             )
         })
@@ -1383,6 +1401,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setShowExtra={setShowExtra}
                 showResponseInfoSecondEditor={showResponseInfoSecondEditor}
                 setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+                showSuccess={showSuccess}
+                retrySubmit={() => {
+                    retryRef.current = true
+                    setRedirectedResponse(undefined)
+                    sendFuzzerSettingInfo()
+                    onValidateHTTPFuzzer()
+                    getNewCurrentPage()
+                }}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -1402,6 +1428,28 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setCurrentPage(Number(data.Total) + 1)
             })
     })
+    
+    // 跳转插件调试页面
+    const handleSkipPluginDebuggerPage = async (tempType: "path" | "raw") => {
+        const requests = getFuzzerRequestParams()
+        const params = {
+            Requests: {Requests: Array.isArray(requests) ? requests : [getFuzzerRequestParams()]},
+            TemplateType: tempType
+        }
+        try {
+            const {Status, YamlContent} = await ipcRenderer.invoke("ExportHTTPFuzzerTaskToYaml", params)
+            if (Status.Ok) {
+                ipcRenderer.invoke("send-to-tab", {
+                    type: "**debug-plugin",
+                    data: {generateYamlTemplate: true, YamlContent}
+                })
+            } else {
+                throw new Error(Status.Reason)
+            }
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
 
     return (
         <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
@@ -1553,7 +1601,35 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             getShareContent={getShareContent}
                             getFuzzerRequestParams={getFuzzerRequestParams}
                         />
-                        {/* <Divider type='vertical' style={{ margin: "0 8px" }} /> */}
+                        <Divider type='vertical' style={{margin: 8}} />
+                        <YakitDropdownMenu
+                            menu={{
+                                data: [
+                                    {key: "pathTemplate", label: "生成为 Path 模板"},
+                                    {key: "rawTemplate", label: "生成为 Raw 模板"}
+                                ],
+                                onClick: ({key}) => {
+                                    switch (key) {
+                                        case "pathTemplate":
+                                            handleSkipPluginDebuggerPage("path")
+                                            break
+                                        case "rawTemplate":
+                                            handleSkipPluginDebuggerPage("raw")
+                                            break
+                                        default:
+                                            break
+                                    }
+                                }
+                            }}
+                            dropdown={{
+                                trigger: ["click"],
+                                placement: "bottom"
+                            }}
+                        >
+                            <YakitButton type='primary' icon={<OutlineCodeIcon />}>
+                                生成 Yaml 模板
+                            </YakitButton>
+                        </YakitDropdownMenu>
                     </div>
                 </div>
                 <YakitResizeBox
@@ -1562,8 +1638,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     isShowDefaultLineStyle={false}
                     style={{overflow: "hidden"}}
                     lineStyle={{display: firstFull || secondFull ? "none" : ""}}
-                    secondNodeStyle={{padding: firstFull ? 0 : undefined, minWidth: firstFull ? 0 : 480}}
-                    firstNodeStyle={{padding: secondFull ? 0 : undefined, minWidth: secondFull ? 0 : ""}}
+                    secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
+                    firstNodeStyle={{padding: secondFull ? 0 : undefined, display: secondFull ? "none" : ""}}
                     {...ResizeBoxProps}
                     firstNode={
                         <WebFuzzerNewEditor
@@ -1726,6 +1802,8 @@ interface SecondNodeExtraProps {
     setShowExtra: (b: boolean) => void
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
+    showSuccess?: boolean
+    retrySubmit?: () => void
 }
 
 /**
@@ -1747,7 +1825,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         size = "small",
         setShowExtra,
         showResponseInfoSecondEditor,
-        setShowResponseInfoSecondEditor
+        setShowResponseInfoSecondEditor,
+        showSuccess = true,
+        retrySubmit
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -1843,7 +1923,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             </div>
         )
     }
-    if (!onlyOneResponse && cachedTotal > 1) {
+    if (!onlyOneResponse && cachedTotal > 1 && showSuccess) {
         const searchNode = (
             <YakitInput.Search
                 size={size === "small" ? "small" : "middle"}
@@ -2077,6 +2157,19 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     <WebFuzzerResponseExtractor responses={successFuzzer} sendPayloadsType={sendPayloadsType} />
                 </YakitModal>
             </div>
+        )
+    }
+    if (!onlyOneResponse && cachedTotal > 1 && !showSuccess) {
+        return (
+            <YakitButton
+                type={"primary"}
+                size='small'
+                onClick={() => {
+                    retrySubmit && retrySubmit()
+                }}
+            >
+                一键重试
+            </YakitButton>
         )
     }
     return <></>

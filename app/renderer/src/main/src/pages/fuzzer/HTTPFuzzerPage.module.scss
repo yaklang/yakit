@@ -58,6 +58,9 @@
                 line-height: 16px;
             }
         }
+        &-right {
+            display: flex;
+        }
     }
     .fuzzer-firstNode-extra {
         display: flex;

@@ -55,10 +55,11 @@ interface DataCompareModalProps {
     rightTitle?: string
     rightCode: string
     loadCallBack?:()=>void
+    readOnly?: boolean
 }
 
 export const DataCompareModal : React.FC<DataCompareModalProps> = (props) => {
-    const {onClose,leftCode,rightCode,leftTitle,rightTitle,loadCallBack} = props
+    const {onClose,leftCode,rightCode,leftTitle,rightTitle,loadCallBack,readOnly = false} = props
     useEffect(()=>{
         loadCallBack&&loadCallBack()
     })
@@ -80,7 +81,7 @@ export const DataCompareModal : React.FC<DataCompareModalProps> = (props) => {
                     </div>
                 </div>}
                 <div className={styles['code']}>
-                    <CodeComparison leftCode={leftCode} rightCode={rightCode} fontSize={12}/>  
+                    <CodeComparison leftCode={leftCode} rightCode={rightCode} fontSize={12} readOnly={readOnly} />  
                 </div>
             </div>
             {/* <div className={styles['footer']}>

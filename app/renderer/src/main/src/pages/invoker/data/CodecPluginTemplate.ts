@@ -55,3 +55,6 @@ Host: target.com
 
 }
 `
+export const YakTemplate = `yakit.AutoInitYakit()\n\n# Input your code!\n\n`
+
+export const NucleiYamlTemplate = `# Add your nuclei formatted PoC!`

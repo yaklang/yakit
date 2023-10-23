@@ -11,9 +11,9 @@ import {YakScriptRunner} from "./ExecYakScript"
 import {FullscreenOutlined, DeleteOutlined} from "@ant-design/icons"
 import {MITMPluginTemplate} from "./data/MITMPluginTamplate"
 import {PacketHackPluginTemplate} from "./data/PacketHackPluginTemplate"
-import {CodecPluginTemplate, CustomDnsLogPlatformTemplate} from "./data/CodecPluginTemplate"
+import {CodecPluginTemplate, CustomDnsLogPlatformTemplate, NucleiYamlTemplate, YakTemplate} from "./data/CodecPluginTemplate"
 import {PortScanPluginTemplate} from "./data/PortScanPluginTemplate"
-import {useCreation, useGetState, useMemoizedFn} from "ahooks"
+import {useCreation, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import "./YakScriptCreator.scss"
 import {queryYakScriptList} from "../yakitStore/network"
@@ -43,6 +43,8 @@ export interface YakScriptCreatorFormProp {
     setScript?: (i: YakScript) => any
     /** 是否是新建插件 */
     isCreate?: boolean
+    moduleType?: string
+    content?: string
 }
 
 /*
@@ -142,7 +144,7 @@ export interface FromLayoutProps {
 }
 
 const defParams = {
-    Content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n",
+    Content: YakTemplate,
     Tags: "",
     Author: "",
     Level: "",
@@ -167,7 +169,8 @@ const defParams = {
 }
 
 export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) => {
-    const {showButton = true, isCreate} = props
+    const {showButton = true, isCreate, moduleType = "yak", content = YakTemplate} = props
+    
     const defFromLayout = useCreation(() => {
         const col: FromLayoutProps = {
             labelCol: {span: 5},
@@ -176,7 +179,10 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         return col
     }, [])
     const [fromLayout, setFromLayout] = useState<FromLayoutProps>(defFromLayout)
-    const [params, setParams, getParams] = useGetState<YakScript>(props.modified || defParams)
+    const [params, setParams, getParams] = useGetState<YakScript>(() => {
+        const newDefaultVal = { ...defParams, Type: moduleType, Content: content || YakTemplate }
+        return props.modified || newDefaultVal
+    })
     const [paramsLoading, setParamsLoading] = useState(false)
     const [modified, setModified] = useState<YakScript | undefined>(props.modified)
     const [fullscreen, setFullscreen] = useState(false)
@@ -236,7 +242,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
         }
     }, [paramsLoading])
 
-    useEffect(() => {
+    useUpdateEffect(() => {
         //创建插件才会有模块类型的修改
         switch (params.Type) {
             case "mitm":
@@ -289,10 +295,11 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                 setParams({...params, Content: CodecPluginTemplate})
                 return
             case "nuclei":
-                setParams({...params, Content: "# Add your nuclei formatted PoC!"})
+                const templateVal = moduleType === "nuclei" ? content : NucleiYamlTemplate
+                setParams({...params, Content: templateVal})
                 return
             default:
-                setParams({...params, Content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n"})
+                setParams({...params, Content: YakTemplate})
                 return
         }
     }, [params.Type])

@@ -7,6 +7,7 @@ import {useInViewport, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
+import { getRemoteValue } from "@/utils/kv"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -34,6 +35,17 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setIsRefreshHistory(false)
         }
     }, [inViewport])
+
+    const [defaultFold,setDefaultFold] = useState<boolean>()
+    useEffect(()=>{
+        getRemoteValue("HISTORY_FOLD").then((result:string) => {
+            if (!result) setDefaultFold(false)
+            try {
+                const foldResult:boolean = JSON.parse(result)
+                setDefaultFold(foldResult)
+            } catch (e) {setDefaultFold(false)}
+        })
+    },[])
 
     return (
         <div ref={ref} style={{width: "100%", height: "100%", overflow: "hidden"}}>
@@ -69,7 +81,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     secondMinSize={onlyShowFirstNode ? "0px" : 50}
                     secondNode={() => (
                         <>
-                            {!onlyShowFirstNode && (
+                            {!onlyShowFirstNode && typeof defaultFold === 'boolean' && (
                                 <div style={{width: "100%", height: "100%"}}>
                                     <HTTPFlowDetailMini
                                         noHeader={true}
@@ -80,6 +92,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         sendToWebFuzzer={true}
                                         selectedFlow={selected}
                                         refresh={refresh}
+                                        defaultFold={defaultFold}
                                         // defaultHeight={detailHeight}
                                     />
                                 </div>

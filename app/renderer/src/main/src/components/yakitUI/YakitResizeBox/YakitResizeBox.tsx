@@ -4,6 +4,17 @@ import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
 import styles from "./YakitResizeBox.module.scss"
 
+// 将像素与number都返回为number
+const convertToNumber = (value:string | number):number|null => {
+    if (typeof value === 'string' && value.endsWith('px')) {
+      return parseInt(value, 10);
+    } else if (typeof value === 'number') {
+      return value;
+    } else {
+      return null;
+    }
+  }
+
 export interface YakitResizeLineProps {
     isVer?: boolean
     dragResize?: boolean
@@ -240,6 +251,31 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     const dragFirstSize = useRef<number>()
     const dragSecondSize = useRef<number>()
 
+    // 最小值（存在 firstMinSize + secondMinSize > 整个控件）对此特殊情况额外处理，按照比例直接分配
+    const [FirstMinSize,setFirstMinSize] = useState<string | number>(firstMinSize)
+    const [SecondMinSize,setSecondMinSize] = useState<string | number>(secondMinSize)
+    
+    // 特殊情况处理
+    const specialSizeFun = useMemoizedFn((size:number)=>{
+        const firstMin = convertToNumber(firstMinSize)
+        const secondMin = convertToNumber(secondMinSize)
+        if(firstMin&&secondMin){
+                const limitMax = size - 8 //(拖拽线条预留 8)
+                if(firstMin + secondMin > limitMax){
+                    const ratioFirst = firstMin / (firstMin + secondMin);
+                    const ratioSecond = secondMin / (firstMin + secondMin);
+                    const countFirst = Math.floor(limitMax * ratioFirst);
+                    const countSecond = Math.floor(limitMax * ratioSecond);
+                    // 考虑余数，将多余的部分分配给其中一个值
+                    const remainder = limitMax - (countFirst + countSecond);
+                    // 此处，将余数都分配给 First，可以根据需求调整
+                    const adjustedCountFirst = countFirst + remainder;
+                    setFirstMinSize(adjustedCountFirst)
+                    setSecondMinSize(countSecond)
+                }
+        }
+    })
+
     // 拖拽时移动
     const dragMoveSize = useMemoizedFn((size: number) => {
         if (!firstRef || !firstRef.current) return
@@ -331,11 +367,14 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         bodyResize()
     }, [bodyWidth, bodyHeight])
 
+    
+
     return (
         <div ref={bodyRef} style={{...style, flexFlow: `${isVer ? "column" : "row"}`}} className={styles["resize-box"]}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
+                    specialSizeFun(isVer?height:width)
                     // 第一次进入时记录宽高 优化后续性能
                     if (firstRenderRef.current) {
                         perBodyWidth.current = width
@@ -362,8 +401,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                 ref={firstRef}
                 style={{
                     width: isVer ? "100%" : firstRatio === "50%" ? `calc(100% - ${secondRatio})` : firstRatio,
-                    minWidth: isVer ? "auto" : firstMinSize,
-                    minHeight: isVer ? firstMinSize : "auto",
+                    minWidth: isVer ? "auto" : FirstMinSize,
+                    minHeight: isVer ? FirstMinSize : "auto",
                     height: isVer
                         ? firstRatio === "50%"
                             ? `calc(100% - ${secondRatio} - ${freeze ? "8px" : "0px"})`
@@ -408,8 +447,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                 ref={secondRef}
                 style={{
                     width: isVer ? "100%" : firstRatio === "50%" ? secondRatio : `calc(100% - ${firstRatio})`,
-                    minWidth: isVer ? "auto" : secondMinSize,
-                    minHeight: isVer ? secondMinSize : "auto",
+                    minWidth: isVer ? "auto" : SecondMinSize,
+                    minHeight: isVer ? SecondMinSize : "auto",
                     height: isVer
                         ? firstRatio === "50%"
                             ? secondRatio
@@ -427,8 +466,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                     isVer={isVer}
                     bodyRef={bodyRef}
                     resizeRef={lineRef}
-                    minSize={firstMinSize}
-                    maxSize={secondMinSize}
+                    minSize={FirstMinSize}
+                    maxSize={SecondMinSize}
                     onStart={moveStart}
                     onEnd={moveEnd}
                     onMouseUp={moveSize}

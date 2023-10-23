@@ -420,7 +420,8 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                     bracketPairColorization: {
                                         enabled: true,
                                         independentColorPoolPerBracketType: true
-                                    }
+                                    },
+                                    fixedOverflowWidgets:true
                                 }}
                             />
                         </div>
@@ -450,6 +451,7 @@ export interface HTTPPacketEditorProp extends HTTPPacketFuzzable {
     simpleMode?: boolean
     noHeader?: boolean
     loading?: boolean
+    noModeTag?: boolean
 
     noPacketModifier?: boolean
     noTitle?: boolean
@@ -726,9 +728,11 @@ export const HTTPPacketEditor: React.FC<HTTPPacketEditorProp> = React.memo((prop
                                     />
                                 )
                             ) : (
-                                <Form.Item style={{marginBottom: 0}}>
-                                    <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
-                                </Form.Item>
+                                !props.noModeTag && (
+                                    <Form.Item style={{marginBottom: 0}}>
+                                        <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
+                                    </Form.Item>
+                                )
                             )}
                             {mode === "text" && !props.hideSearch && !props.simpleMode && (
                                 <Input.Search
@@ -1085,6 +1089,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     simpleMode?: boolean
     noHeader?: boolean
     loading?: boolean
+    noModeTag?: boolean
 
     noPacketModifier?: boolean
     noTitle?: boolean
@@ -1505,9 +1510,11 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     />
                                 )
                             ) : (
-                                <Form.Item style={{marginBottom: 0}}>
-                                    <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
-                                </Form.Item>
+                                !props.noModeTag && (
+                                    <Form.Item style={{marginBottom: 0}}>
+                                        <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
+                                    </Form.Item>
+                                )
                             )}
                             {mode === "text" && !props.hideSearch && !props.simpleMode && (
                                 <Input.Search

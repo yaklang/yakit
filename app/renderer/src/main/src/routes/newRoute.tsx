@@ -119,6 +119,7 @@ import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
 import { FuzzerParamItem, AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import { HTTPResponseExtractor } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import { ConfigNetworkPage } from "@/components/configNetwork/ConfigNetworkPage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -199,6 +200,8 @@ export enum YakitRoute {
     Beta_VulinboxManager = "beta-vulinbox-manager",
     // 网络调试
     Beta_DiagnoseNetwork = "beta-diagnose-network",
+    // 配置全局
+    Beta_ConfigNetwork = "beta-config-network",
     //新版codec
     Beta_Codec = "beta-codec"
 }
@@ -277,6 +280,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-debug-monaco-editor": {label: "插件编辑器"},
     "beta-vulinbox-manager": {label: "Vulinbox 管理器"},
     "beta-diagnose-network": {label: "网络异常诊断"},
+    "beta-config-network": { label: "全局网络配置" },
     "beta-codec": {label: "新版codec"}
 }
 /** 页面路由(无法多开的页面) */
@@ -314,6 +318,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ControlAdminPage,
     YakitRoute.Beta_VulinboxManager,
     YakitRoute.Beta_DiagnoseNetwork,
+    YakitRoute.Beta_ConfigNetwork,
     YakitRoute.Beta_Codec
 ]
 /** 不需要软件安全边距的页面路由 */
@@ -332,7 +337,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DB_CVE,
     YakitRoute.HTTPFuzzer,
     YakitRoute.WebsiteTree,
-    YakitRoute.DB_Ports
+    YakitRoute.DB_Ports,
+    YakitRoute.Beta_DebugPlugin
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -389,6 +395,13 @@ export interface ComponentParams {
     // 数据对比
     leftData?: string
     rightData?: string
+
+    // 插件调试
+    generateYamlTemplate?: boolean
+    YamlContent?: string
+    // 新建插件
+    moduleType?: string
+    content?: string
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -523,7 +536,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 />
             )
         case YakitRoute.AddYakitScript:
-            return <AddYakitScript />
+            return <AddYakitScript moduleType={params.moduleType} content={params.content} />
         case YakitRoute.YakitPluginJournalDetails:
             return <YakitPluginJournalDetails YakitPluginJournalDetailsId={params?.YakScriptJournalDetailsId || 0} />
         case YakitRoute.OnlinePluginRecycleBin:
@@ -543,13 +556,15 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DB_ChaosMaker:
             return <ChaosMakerPage />
         case YakitRoute.Beta_DebugPlugin:
-            return <PluginDebuggerPage />
+            return <PluginDebuggerPage generateYamlTemplate={params.generateYamlTemplate} YamlContent={params.YamlContent}/>
         case YakitRoute.Beta_DebugMonacoEditor:
             return <DebugMonacoEditorPage />
         case YakitRoute.Beta_VulinboxManager:
             return <VulinboxManager />
         case YakitRoute.Beta_DiagnoseNetwork:
             return <DiagnoseNetworkPage />
+        case YakitRoute.Beta_ConfigNetwork:
+            return <ConfigNetworkPage />    
         case YakitRoute.Beta_Codec:
             return <NewCodecPage />
         default:

@@ -1,7 +1,6 @@
+import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 
-import { MatchingAndExtraction } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType";
-
-export type FilterMode = "drop" | "match" | 'onlyMatch'
+export type FilterMode = "drop" | "match" | "onlyMatch"
 export interface AdvancedConfigValueProps {
     // 请求包配置
     forceFuzz?: boolean
@@ -64,10 +63,16 @@ export interface AdvancedConfigValueProps {
     // 匹配器
     filterMode: FilterMode
     matchers: HTTPResponseMatcher[]
-    matchersCondition: 'and' | 'or'
+    matchersCondition: "and" | "or"
     hitColor: string
     //提取器
     extractors: HTTPResponseExtractor[]
+
+    // 序列
+    /**@name  */
+    inheritCookies?: boolean
+    /**@name  */
+    inheritVariables?: boolean
 }
 
 export interface FuzzerParamItem {
@@ -93,6 +98,6 @@ export interface HttpQueryAdvancedConfigProps {
 }
 
 export interface KVPair {
-    Key: string;
-    Value: string;
+    Key: string
+    Value: string
 }

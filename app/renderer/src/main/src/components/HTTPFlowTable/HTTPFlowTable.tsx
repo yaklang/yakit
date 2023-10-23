@@ -415,6 +415,7 @@ export interface HTTPFlowTableProp {
     onlyShowFirstNode?: boolean
     setOnlyShowFirstNode?: (i: boolean) => void
     refresh?: boolean
+    httpHistoryTableTitleStyle?: React.CSSProperties
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -2243,6 +2244,26 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             footer: null
         })
     })
+
+    const searchNode = useMemoizedFn(()=>{
+        return <YakitInput.Search
+            size='small'
+            placeholder='请输入关键词搜索'
+            value={params.Keyword}
+            onChange={(e) => {
+                setParams({...params, Keyword: e.target.value})
+            }}
+            style={{maxWidth: 200}}
+            onSearch={() => update(1)}
+            // 这个事件很关键哈，不要用 onChange
+            onBlur={(e) => {
+                if (props.onSearch) {
+                    props.onSearch(e.target.value)
+                }
+            }}
+        />
+    })
+    
     return (
         // <AutoCard bodyStyle={{padding: 0, margin: 0}} bordered={false}>
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
@@ -2264,7 +2285,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     query={params}
                     titleHeight={38}
                     renderTitle={
-                        <div className={style["http-history-table-title"]}>
+                        <div className={style["http-history-table-title"]} style={{ ...props.httpHistoryTableTitleStyle }}>
                             <div
                                 className={classNames(
                                     style["http-history-table-title-space-between"],
@@ -2358,23 +2379,34 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             <YakitSelect.Option value='websocket'>websocket</YakitSelect.Option>
                                         </YakitSelect>
                                     </div>
-                                    <YakitInput.Search
-                                        className={style["http-history-table-right-search"]}
-                                        placeholder='请输入关键词搜索'
-                                        value={params.Keyword}
-                                        onChange={(e) => {
-                                            setParams({...params, Keyword: e.target.value})
-                                        }}
-                                        onSearch={(v) => {
-                                            update(1)
-                                        }}
-                                        // 这个事件很关键哈，不要用 onChange
-                                        onBlur={(e) => {
-                                            if (props.onSearch) {
-                                                props.onSearch(e.target.value)
-                                            }
-                                        }}
-                                    />
+                                    {
+                                        size?.width&&size?.width<1000?
+                                        <YakitPopover 
+                                            trigger='click'
+                                            placement='bottomRight'
+                                            content={searchNode}>
+                                                <YakitButton icon={<SearchIcon />} type='outline2' />
+                                        </YakitPopover>:
+                                        <YakitInput.Search
+                                            className={style["http-history-table-right-search"]}
+                                            placeholder='请输入关键词搜索'
+                                            value={params.Keyword}
+                                            onChange={(e) => {
+                                                setParams({...params, Keyword: e.target.value})
+                                            }}
+                                            onSearch={(v) => {
+                                                update(1)
+                                            }}
+                                            // 这个事件很关键哈，不要用 onChange
+                                            onBlur={(e) => {
+                                                if (props.onSearch) {
+                                                    props.onSearch(e.target.value)
+                                                }
+                                            }}
+                                        />
+                                    }
+                                    
+                                    
                                     <div className={style["http-history-table-color-swatch"]}>
                                         <YakitPopover
                                             overlayClassName={style["http-history-table-color-popover"]}
@@ -2404,7 +2436,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             </YakitButton>
                                         </YakitPopover>
                                     </div>
-                                    {(selectedRowKeys.length === 0 && (
+                                    {size?.width&&size?.width>=1000&&<>{(selectedRowKeys.length === 0 && (
                                         <YakitButton
                                             type='outline2'
                                             disabled={selectedRowKeys.length === 0}
@@ -2517,6 +2549,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             </YakitButton>
                                         </YakitPopover>
                                     )}
+                                    </>}
                                     <div className={style["empty-button"]}>
                                         {!props.noDeleteAll && (
                                             <YakitDropdownMenu

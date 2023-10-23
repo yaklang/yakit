@@ -38,11 +38,13 @@ export const PluginDebuggerExec: React.FC<PluginDebuggerExecProp> = (props) => {
 
     const start = useMemoizedFn(() => {
         setLoading(true)
+        const copyBuilder = structuredClone(props.builder)
+        delete copyBuilder.Input
         ipcRenderer.invoke("DebugPlugin", {
             Code: props.code,
             PluginType: props.pluginType,
-            Input: props.targets,
-            HTTPRequestTemplate: props.builder,
+            Input: copyBuilder.IsRawHTTPRequest ? "" : props.targets,
+            HTTPRequestTemplate: copyBuilder,
         }, getToken()).then(() => {
             info("启动任务成功")
         })
@@ -64,7 +66,7 @@ export const PluginDebuggerExec: React.FC<PluginDebuggerExecProp> = (props) => {
         props.onExecuting(loading)
     }, [loading])
 
-    return <AutoCard bodyStyle={{padding: 10, overflow: "hidden"}}>
+    return (
         <PluginResultUI
             // script={script}
             loading={loading}
@@ -76,6 +78,7 @@ export const PluginDebuggerExec: React.FC<PluginDebuggerExecProp> = (props) => {
             statusCards={infoState.statusState}
             runtimeId={runtimeId}
             fromPlugin={props.pluginName}
+            defaultActive="current-http-flow"
         />
-    </AutoCard>
+    )
 };
