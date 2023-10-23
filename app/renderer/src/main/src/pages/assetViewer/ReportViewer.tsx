@@ -88,15 +88,15 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                 let options = {}
                 // 适配各种图表
                 if (echartType === "vertical-bar") {
-                    options = {scale: 0.8, windowWidth: 1200}
+                    options = {scale: 1, windowWidth: 1000,x:150,y:0}
                 } else if (echartType === "hollow-pie") {
                     options = {scale: 1, windowWidth: 1000}
                 } else if (echartType === "stacked-vertical-bar") {
-                    options = {scale: 0.8, windowWidth: 1200}
+                    options = {scale: 1, windowWidth: 1000,x:150,y:0}
                 } else if (echartType === "multi-pie") {
                     options = {scale: 0.8, windowWidth: 1200}
                 } else if (echartType === "nightingle-rose") {
-                    options = {scale: 0.8, windowWidth: 1200}
+                    options = {scale: 1, windowWidth: 1000,x:150,y:0,height:400}
                 }
 
                 const canvas = await html2canvas(element as HTMLElement, options)
