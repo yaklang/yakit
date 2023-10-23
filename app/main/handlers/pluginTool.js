@@ -99,21 +99,13 @@ module.exports = (win, getClient) => {
         return await asyncDownloadOnlinePluginBatch(params)
     })
 
-    const asyncDownloadOnlinePlugins = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().DownloadOnlinePlugins(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    // 新版-下载所有插件
-    ipcMain.handle("DownloadOnlinePlugins", async (e, params) => {
+    // 新版-下载所有插件 全部添加
+    const streamDownloadOnlinePluginsAll = new Map()
+    ipcMain.handle("cancel-DownloadOnlinePlugins", handlerHelper.cancelHandler(streamDownloadOnlinePluginsAll))
+    ipcMain.handle("DownloadOnlinePlugins", async (e, params, token) => {
         params.Token = USER_INFO.token
-        return await asyncDownloadOnlinePlugins(params)
+        let stream = getClient().DownloadOnlinePluginAll(params)
+        handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
     })
 
     const asyncDownloadOnlinePluginByPluginName = (params) => {
