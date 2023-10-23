@@ -11,6 +11,7 @@ import {
     ListListProps,
     ListShowContainerProps,
     OnlineExtraOperateProps,
+    OnlineRecycleExtraOperateProps,
     PluginsListProps,
     TagShowOpt,
     TagsListShowProps,
@@ -28,10 +29,12 @@ import {
 import {
     OutlineCalendarIcon,
     OutlineClouddownloadIcon,
+    OutlineDatabasebackupIcon,
     OutlineDotshorizontalIcon,
     OutlineOpenIcon,
     OutlineSearchIcon,
     OutlineThumbupIcon,
+    OutlineTrashIcon,
     OutlineViewgridIcon,
     OutlineViewlistIcon,
     OutlineXIcon
@@ -61,7 +64,12 @@ import YakitLogo from "@/assets/yakitLogo.png"
 import {SolidThumbUpIcon} from "@/assets/newIcon"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
 import {yakitNotify} from "@/utils/notification"
-import {DownloadOnlinePluginsRequest, PluginStarsRequest, apiDownloadOnlinePlugin, apiPluginStars} from "./utils"
+import {
+    DownloadOnlinePluginsRequest,
+    PluginStarsRequest,
+    apiDownloadOnlinePlugin,
+    apiPluginStars
+} from "./utils"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -1374,6 +1382,52 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
                     <span>{downloadProps.downloadNumber}</span>
                 </div>
             )}
+        </div>
+    )
+})
+
+export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps> = React.memo((props) => {
+    const {data, isLogin, onRemoveClick, onReductionClick} = props
+    const [removeLoading, setRemoveLoading] = useState<boolean>(false)
+    const [reductionLoading, setReductionLoading] = useState<boolean>(false)
+    const onRemove = useMemoizedFn(async (e) => {
+        e.stopPropagation()
+        if (!isLogin) {
+            yakitNotify("error", "登录才可以进行删除")
+            return
+        }
+        try {
+            setRemoveLoading(true)
+            await onRemoveClick(data)
+            setTimeout(() => {
+                setRemoveLoading(false)
+            }, 200)
+        } catch (error) {}
+    })
+    const onReduction = useMemoizedFn(async (e) => {
+        e.stopPropagation()
+        if (!isLogin) {
+            yakitNotify("error", "登录才可以进行还原")
+            return
+        }
+        try {
+            setReductionLoading(true)
+            await onReductionClick(data)
+            setTimeout(() => {
+                setReductionLoading(false)
+            }, 200)
+        } catch (error) {}
+    })
+    return (
+        <div className={styles["plugin-recycle-extra-node"]}>
+            {removeLoading ? (
+                <LoadingOutlined className={styles["plugin-loading"]} />
+            ) : (
+                <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onRemove} />
+            )}
+            <YakitButton icon={<OutlineDatabasebackupIcon />} onClick={onReduction} loading={reductionLoading}>
+                还原
+            </YakitButton>
         </div>
     )
 })

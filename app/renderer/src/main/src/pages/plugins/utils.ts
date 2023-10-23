@@ -25,7 +25,10 @@ const delObjectInvalidValue = (obj: Record<string, any>) => {
     return data
 }
 
-// 开发参数 转换为 plugins接口参数
+/**
+ * @name http接口公共参数转换(前端数据转接口参数)
+ * @description 适用api接口请求参数是否继承 API.PluginsWhere
+ */
 export const convertPluginsRequestParams = (
     filter: PluginFilterParams,
     search: PluginSearchParams,
@@ -87,7 +90,6 @@ const apiFetchList: (query: PluginsQueryProps) => Promise<YakitPluginListOnlineR
                 data: {...query}
             })
                 .then((res: YakitPluginListOnlineResponse) => {
-                    // console.log("apiFetchList", query, res)
                     resolve({
                         ...res,
                         data: res.data || []
@@ -157,6 +159,7 @@ export const apiFetchRecycleList: (query: PluginsQueryProps) => Promise<YakitPlu
             }
             apiFetchList(newQuery)
                 .then((res: YakitPluginListOnlineResponse) => {
+                    // console.log("回收站列表-apiFetchRecycleList", newQuery, res)
                     resolve(res)
                 })
                 .catch((err) => {
@@ -430,6 +433,7 @@ export const apiDeletePluginMine: (query?: API.PluginsWhereDeleteRequest) => Pro
             }
             apiDeletePlugin(newQuery)
                 .then((res: API.ActionSucceeded) => {
+                    // console.log("apiDeletePluginMine", newQuery, res)
                     resolve(res)
                 })
                 .catch((err) => {
@@ -508,6 +512,29 @@ export const apiUpdatePluginMine: (query: API.UpdatePluginRequest) => Promise<AP
                 })
         } catch (error) {
             yakitNotify("error", "公开/私密修改失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**彻底删除 只有回收站有彻底删除 /dump/plugins */
+export const apiDumpPlugin: (query?: API.PluginsWhereDeleteRequest) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.PluginsWhereDeleteRequest, API.ActionSucceeded>({
+                method: "delete",
+                url: "dump/plugins",
+                data: {...query, listType: "recycle"}
+            })
+                .then((res: API.ActionSucceeded) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "彻底删除插件失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "彻底删除插件失败：" + error)
             reject(error)
         }
     })
