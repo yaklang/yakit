@@ -211,20 +211,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const getInitTotal = useMemoizedFn(() => {
         apiFetchOnlineList({
             page: 1,
-            limit: 1,
-
-            is_private: [],
-            keywords: "",
-            plugin_type: [],
-            tags: [],
-            user_name: "",
-            user_id: 0,
-            time_search: "",
-            group: [],
-            listType: "",
-            status: [],
-            script_name: [],
-            token: ""
+            limit: 1
         }).then((res) => {
             setInitTotal(+res.pagemeta.total)
         })
@@ -240,25 +227,24 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                       page: response.pagemeta.page + 1,
                       limit: response.pagemeta.limit || 20
                   }
-            const newFilters = {
-                ...filters
-            }
-
             const query: PluginsQueryProps = {
-                ...convertPluginsRequestParams(newFilters, search, params),
+                ...convertPluginsRequestParams(filters, search, params),
                 time_search: otherSearch.timeType.key === "allTimes" ? "" : otherSearch.timeType.key,
                 order_by: otherSearch.heatType.key
             }
-            const res = await apiFetchOnlineList(query)
-            if (!res.data) res.data = []
-            const length = res.data.length + response.data.length
-            setHasMore(length < +res.pagemeta.total)
-            dispatch({
-                type: "add",
-                payload: {
-                    response: {...res}
-                }
-            })
+            try {
+                const res = await apiFetchOnlineList(query)
+                if (!res.data) res.data = []
+                const length = res.data.length + response.data.length
+                setHasMore(length < +res.pagemeta.total)
+                dispatch({
+                    type: "add",
+                    payload: {
+                        response: {...res}
+                    }
+                })
+            } catch (error) {}
+
             setTimeout(() => {
                 setLoading(false)
             }, 300)
