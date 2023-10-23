@@ -3,8 +3,8 @@ import {YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitMenuProp} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {DropDownProps} from "antd"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
-import { YakitPluginOnlineDetail } from "./online/PluginsOnlineType"
-import { OnlinePluginAppAction } from "./pluginReducer"
+import {YakitPluginOnlineDetail} from "./online/PluginsOnlineType"
+import {OnlinePluginAppAction} from "./pluginReducer"
 
 export interface TypeSelectOpt {
     /** 唯一标识符 */
@@ -240,18 +240,21 @@ export interface AuthorImgProps {
 }
 /**
  * @description 插件商店列表的额外操作
+ * @property data
+ * @property isLogin 登录状态
  * @property likeProps 点赞的props,包括激活状态和数量
  * @property commentProps 评论的props,包括激活状态和数量
  * @property downloadProps 下载的props,包括激活状态和数量
+ * @property dispatch 用于列表操作的
  */
 export interface OnlineExtraOperateProps {
-    data:YakitPluginOnlineDetail
-    isLogin:boolean
-    dispatch:React.Dispatch<OnlinePluginAppAction>
+    data: YakitPluginOnlineDetail
+    isLogin: boolean
+    dispatch: React.Dispatch<OnlinePluginAppAction>
     likeProps: {
         active: boolean
         likeNumber: string
-        onLikeClick?: (data:YakitPluginOnlineDetail) => void
+        onLikeClick?: (data: YakitPluginOnlineDetail) => void
     }
     commentProps: {
         commentNumber: string
@@ -259,7 +262,7 @@ export interface OnlineExtraOperateProps {
     }
     downloadProps: {
         downloadNumber: string
-        onDownloadClick?: (data:YakitPluginOnlineDetail) => void
+        onDownloadClick?: (data: YakitPluginOnlineDetail) => void
     }
 }
 
@@ -270,4 +273,17 @@ export interface TagShowOpt {
     label: string
     /** 值 */
     value: string
+}
+
+/**
+ * @property data
+ * @property isLogin
+ * @function onRemoveClick 删除回调
+ * @function onReductionClick 删除回调
+ */
+export interface OnlineRecycleExtraOperateProps {
+    isLogin: boolean
+    data: YakitPluginOnlineDetail
+    onRemoveClick: (data: YakitPluginOnlineDetail) => void
+    onReductionClick: (data: YakitPluginOnlineDetail) => void
 }
