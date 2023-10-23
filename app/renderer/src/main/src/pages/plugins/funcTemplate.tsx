@@ -87,15 +87,15 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
     return (
         <div className={styles["type-select-wrapper"]}>
             {list.map((item, index) => {
+                const select = active.findIndex((ele) => ele.key === item.key) !== -1
                 return (
                     <div
                         key={item.key}
                         className={classNames(styles["type-select-opt"], {
-                            [styles["type-select-active"]]: active.findIndex((ele) => ele.key === item.key) !== -1
+                            [styles["type-select-active"]]: select
                         })}
                         onClick={() => {
-                            if (active.findIndex((ele) => ele.key === item.key) !== -1)
-                                setActive(active.filter((el) => el.key !== item.key))
+                            if (select) setActive(active.filter((el) => el.key !== item.key))
                             else
                                 setActive(
                                     active.concat([
@@ -503,12 +503,9 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                                                         title={item.label}
                                                         placement='top'
                                                         overlayClassName='plugins-tooltip'
+                                                        key={item.value}
                                                     >
-                                                        <YakitTag
-                                                            key={item.value}
-                                                            closable
-                                                            onClose={() => onDelTag(item)}
-                                                        >
+                                                        <YakitTag closable onClose={() => onDelTag(item)}>
                                                             {item.label}
                                                         </YakitTag>
                                                     </Tooltip>
