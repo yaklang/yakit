@@ -5,8 +5,15 @@ import {NetWorkApi, requestConfig} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
 import {isCommunityEdition} from "@/utils/envfile"
+import {compareAsc} from "../yakitStore/viewers/base"
 
 const {ipcRenderer} = window.require("electron")
+
+/** 插件相关得缓存字段-键值变量 */
+export enum PluginGV {
+    /**@name 插件删除是否需要不再提醒的选中状态 */
+    PluginRemoveCheck = "plugin_remove_check"
+}
 
 // 删除对象里值为 undefined 的键值对
 const delObjectInvalidValue = (obj: Record<string, any>) => {
@@ -22,13 +29,13 @@ const delObjectInvalidValue = (obj: Record<string, any>) => {
 export const convertPluginsRequestParams = (
     filter: PluginFilterParams,
     search: PluginSearchParams,
-    pageParams: PluginListPageMeta
+    pageParams?: PluginListPageMeta
 ): PluginsQueryProps => {
     const data: PluginsQueryProps = {
-        page: pageParams.page,
-        limit: pageParams.limit,
-        order: pageParams.order || "desc",
-        order_by: pageParams.order_by || "",
+        page: pageParams?.page || 1,
+        limit: pageParams?.limit || 20,
+        order: pageParams?.order || "desc",
+        order_by: pageParams?.order_by || "",
         // search
         keywords: search.type === "keyword" ? search.keyword : "",
         user_name: search.type === "userName" ? search.userName : "",
@@ -80,7 +87,11 @@ const apiFetchList: (query: PluginsQueryProps) => Promise<YakitPluginListOnlineR
                 data: {...query}
             })
                 .then((res: YakitPluginListOnlineResponse) => {
-                    resolve(res)
+                    // console.log("apiFetchList", query, res)
+                    resolve({
+                        ...res,
+                        data: res.data || []
+                    })
                 })
                 .catch((err) => {
                     reject(err)
@@ -192,7 +203,9 @@ const apiFetchGroupStatistics: (query?: API.PluginsSearchRequest) => Promise<API
                 data: {...query}
             })
                 .then((res: API.PluginsSearchResponse) => {
-                    const data: API.PluginsSearch[] = res.data.filter((ele) => (ele.data || []).length > 0)
+                    const data: API.PluginsSearch[] = res.data
+                        .filter((ele) => (ele.data || []).length > 0)
+                        .sort((a, b) => compareAsc(a, b, "sort"))
                     resolve({...res, data})
                 })
                 .catch((err) => {
@@ -352,7 +365,7 @@ export interface DownloadOnlinePluginsRequest {
 // 开发参数 转换为 DownloadOnlinePluginBatch接口类型
 export const convertDownloadOnlinePluginBatchRequestParams = (
     filter: PluginFilterParams,
-    search: PluginSearchParams,
+    search: PluginSearchParams
 ): DownloadOnlinePluginsRequest => {
     const data: DownloadOnlinePluginsRequest = {
         // search
@@ -370,9 +383,7 @@ export const convertDownloadOnlinePluginBatchRequestParams = (
 }
 
 /**下载插件 */
-export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (
-    query
-) => {
+export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("DownloadOnlinePluginBatch", query)
@@ -384,5 +395,119 @@ export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => 
                 yakitNotify("error", "下载失败:" + e)
                 reject()
             })
+    })
+}
+
+/**线上删除插件接口基础版  删除（放到回收站） */
+const apiDeletePlugin: (query?: API.PluginsWhereDeleteRequest) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.PluginsWhereDeleteRequest, API.ActionSucceeded>({
+                method: "delete",
+                url: "plugins",
+                data: {...query}
+            })
+                .then((res: API.ActionSucceeded) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    reject(err)
+                })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**我的插件 删除插件接口 删除（放到回收站）*/
+export const apiDeletePluginMine: (query?: API.PluginsWhereDeleteRequest) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...query,
+                listType: "mine"
+            }
+            apiDeletePlugin(newQuery)
+                .then((res: API.ActionSucceeded) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "删除我的插件失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "删除我的插件失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**插件审核 删除插件接口 删除（放到回收站）*/
+export const apiDeletePluginCheck: (query?: API.PluginsWhereDeleteRequest) => Promise<API.ActionSucceeded> = (
+    query
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...query,
+                listType: "check"
+            }
+            apiDeletePlugin(newQuery)
+                .then((res: API.ActionSucceeded) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "删除插件失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "删除插件失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**更新插件接口基础班 /update/plugin */
+const apiUpdatePlugin: (query: API.UpdatePluginRequest) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.UpdatePluginRequest, API.ActionSucceeded>({
+                method: "post",
+                url: "update/plugin",
+                data: {...query}
+            })
+                .then((res: API.ActionSucceeded) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    reject(err)
+                })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**我的插件 修改私密公开 */
+export const apiUpdatePluginMine: (query: API.UpdatePluginRequest) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...query,
+                user_id: undefined,
+                is_official: undefined
+            }
+            apiUpdatePlugin(newQuery)
+                .then((res: API.ActionSucceeded) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "公开/私密修改失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "公开/私密修改失败：" + error)
+            reject(error)
+        }
     })
 }
