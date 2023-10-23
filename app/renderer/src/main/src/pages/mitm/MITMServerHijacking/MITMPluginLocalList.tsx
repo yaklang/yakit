@@ -287,7 +287,6 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
             return
         }
         ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
-            console.log('data',data)
             const p = Math.floor(data.Progress * 100)
             setPercent(p)
         })
@@ -299,7 +298,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
             }, 200)
         })
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-            yakitNotify('error','下载失败:'+e)
+            yakitNotify("error", "下载失败:" + e)
         })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
@@ -314,13 +313,13 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
                 .invoke("DownloadOnlinePlugins", addParams, taskToken)
                 .then(() => {})
                 .catch((e) => {
-                    failed(`添加失败:${e}`)
+                    failed(`下载失败:${e}`)
                 })
         }
     }, [visible])
     const StopAllPlugin = () => {
         ipcRenderer.invoke("cancel-DownloadOnlinePluginAll", taskToken).catch((e) => {
-            failed(`停止添加失败:${e}`)
+            failed(`停止下载:${e}`)
         })
     }
     return (
