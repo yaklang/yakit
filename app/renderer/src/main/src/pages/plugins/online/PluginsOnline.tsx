@@ -610,7 +610,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 updateList={onUpdateList}
                             />
                         ) : (
-                            <YakitEmpty title='暂无数据' />
+                            <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
                         )}
                     </PluginsList>
                 </PluginsContainer>

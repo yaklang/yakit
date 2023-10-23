@@ -25,6 +25,7 @@ export interface PluginUserListProps {
 }
 
 export interface PluginRecycleListProps {
+    ref?: any
     /**刷新数据 */
     refresh: boolean
     inViewport: boolean
@@ -32,14 +33,6 @@ export interface PluginRecycleListProps {
     searchValue: PluginSearchParams
     setIsSelectRecycleNum: (b: boolean) => void
     setSearchValue: (s: PluginSearchParams) => void
-}
-/**
- * @property onRemove 删除
- * @property onReduction 还原
- */
-export interface OnlineRecycleExtraOperateProps {
-    onRemove: () => void
-    onReduction: () => void
 }
 
 export interface OnlineUserExtraOperateProps {
@@ -52,7 +45,12 @@ export interface PluginUserListRefProps {
     loadMoreData: () => void
     onRemovePluginBatchBefore: () => void
 }
-
+export interface PluginRecycleListRefProps{
+    allCheck: boolean
+    selectList: string[]
+    onRemovePluginBatchBefore: () => void
+    onReductionPluginBatchBefore: () => void
+}
 export interface PluginUserDetailProps {
     info: YakitPluginOnlineDetail
     defaultAllCheck: boolean
