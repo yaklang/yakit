@@ -151,7 +151,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     })
     const onSetActive = useMemoizedFn((pluginPrivate: TypeSelectOpt[]) => {
         const newPluginPrivate: API.PluginsSearchData[] = pluginPrivate.map((ele) => ({
-            value: ele.key,
+            value: ele.key === "2" ? "true" : "false",
             label: ele.name,
             count: 0
         }))
