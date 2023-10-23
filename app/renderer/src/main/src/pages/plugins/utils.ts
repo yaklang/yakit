@@ -203,6 +203,7 @@ const apiFetchGroupStatistics: (query?: API.PluginsSearchRequest) => Promise<API
                 data: {...query}
             })
                 .then((res: API.PluginsSearchResponse) => {
+                    // console.log('apiFetchGroupStatistics',res)
                     const data: API.PluginsSearch[] = res.data
                         .filter((ele) => (ele.data || []).length > 0)
                         .sort((a, b) => compareAsc(a, b, "sort"))
