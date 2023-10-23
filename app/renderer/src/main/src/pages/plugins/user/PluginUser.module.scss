@@ -42,3 +42,13 @@
         stroke-width: 1.5;
     }
 }
+
+.plugin-user-empty {
+    margin-top: 48px;
+    .plugin-user-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 16px;
+    }
+}
