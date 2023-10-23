@@ -258,5 +258,8 @@ module.exports = {
         uiOp.forEach((item) => {
             require(path.join(__dirname, `./uiOperate/${item}`))(win, getClient)
         })
+
+        // new plugins store
+        require("./handlers/plugins").register(win, getClient)
     }
 }
