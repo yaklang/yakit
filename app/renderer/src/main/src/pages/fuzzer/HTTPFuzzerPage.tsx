@@ -1851,6 +1851,28 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         })
     }, [query])
 
+    // 导出数据的回调
+    useEffect(() => {
+        emiter.on("onGetExportFuzzerCallBack", onGetExportFuzzerCallBackEvent)
+        return () => {
+            emiter.off("onGetExportFuzzerCallBack", onGetExportFuzzerCallBackEvent)
+        }
+    }, [])
+
+    const onGetExportFuzzerCallBackEvent = useMemoizedFn((v)=>{
+        try {
+            const obj:{listTable:FuzzerResponse[],type:"all"|"payload"} = JSON.parse(v)
+            const {listTable,type} = obj
+            if(type==="all"){
+                exportHTTPFuzzerResponse(listTable)
+            }else{
+                exportPayloadResponse(listTable)
+            }
+        } catch (error) {
+            
+        }
+    })
+
     // const onViewExecResults = useMemoizedFn(() => {
     //     showYakitModal({
     //         title: "提取结果",
@@ -1949,6 +1971,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 }}
             />
         )
+
         return (
             <div className={styles["fuzzer-secondNode-extra"]}>
                 {+(secondNodeSize?.width || 0) >= 680 && searchNode}
@@ -2088,7 +2111,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            exportHTTPFuzzerResponse(successFuzzer)
+                                            emiter.emit("onGetExportFuzzer","all")
                                         }}
                                     >
                                         导出所有请求
@@ -2097,7 +2120,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            exportPayloadResponse(successFuzzer)
+                                            emiter.emit("onGetExportFuzzer","payload")
                                         }}
                                     >
                                         仅导出 Payload
@@ -2121,7 +2144,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            exportHTTPFuzzerResponse(successFuzzer)
+                                            emiter.emit("onGetExportFuzzer","all")
                                         }}
                                     >
                                         导出所有请求
@@ -2130,7 +2153,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            exportPayloadResponse(successFuzzer)
+                                            emiter.emit("onGetExportFuzzer","payload")
                                         }}
                                     >
                                         仅导出 Payload
