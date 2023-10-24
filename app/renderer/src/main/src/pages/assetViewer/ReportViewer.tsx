@@ -117,6 +117,7 @@ export const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         const wordStr: string = contentHTML.outerHTML
             .substring(0, contentHTML.outerHTML.indexOf("附录："))
             .replace(/<table(.*?)>/g, '<table$1 border="1">')
+            .replace(/<th(.*?)>/g, '<th$1 style="width: 10%">')
             .replace(/<div[^>]*id=("nightingle-rose-title"|"nightingle-rose-content")[^>]*>[\s\S]*?<\/div>/g, "")
 
         // console.log("wordStr---", wordStr)
