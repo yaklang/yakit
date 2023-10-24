@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Space, Table, Tabs, Tag} from "antd";
-import {ChaosMakerRule, ChaosMakerRuleGroup} from "@/pages/chaosmaker/ChaosMaker";
+import {ChaosMakerRuleGroup} from "@/pages/chaosmaker/ChaosMaker";
 import {useMemoizedFn} from "ahooks";
 import {
     genDefaultPagination,
@@ -13,6 +13,7 @@ import {showDrawer} from "@/utils/showModal";
 import {ChaosMakerOperators, ExecuteChaosMakerRuleRequest} from "@/pages/chaosmaker/ChaosMakerOperators";
 import {failed} from "@/utils/notification";
 import {ChaosMakerRunningSteps} from "@/pages/chaosmaker/ChaosMakerRunningSteps";
+import {ChaosMakerRule} from "@/models/ChaosMaker";
 
 export interface ChaosMakerRuleTableProp {
     groups?: ChaosMakerRuleGroup[]

@@ -64,4 +64,20 @@ module.exports = (win, getClient) => {
         stream.write(params);
         handlerHelper.registerHandler(win, stream, streamPcapXMap, token)
     })
+
+    // asyncQueryTrafficTCPReassembled wrapper
+    const asyncQueryTrafficTCPReassembled = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryTrafficTCPReassembled(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryTrafficTCPReassembled", async (e, params) => {
+        return await asyncQueryTrafficTCPReassembled(params)
+    })
 }

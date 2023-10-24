@@ -2,6 +2,7 @@ import React, {memo, useMemo} from "react"
 import {Form} from "antd"
 import {ItemSelectMultiForStringProps, ItemSelectOneProps} from "./ItemSelectType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons";
 
 const {Item} = Form
 
@@ -20,6 +21,27 @@ export const DemoItemSelectOne: React.FC<ItemSelectOneProps> = memo((p) => {
                 allowClear={allowClear}
                 options={data}
             ></YakitSelect>
+        </Item>
+    )
+})
+
+/** @name 表单项-单选下拉表 */
+export const DemoItemSelectButton: React.FC<ItemSelectOneProps> = memo((p) => {
+    const {label, help, formItemStyle, required, disabled, placeholder, size, allowClear, value, setValue, data} = p
+
+    return (
+        <Item label={label} help={help} style={{...formItemStyle}} required={required}>
+            <YakitRadioButtons
+                className={"select-one"}
+                disabled={p.disabled}
+                size={p.size}
+                value={p.value}
+                onChange={(e) => {
+                    p.setValue && p.setValue(e.target.value)
+                }}
+                buttonStyle='solid'
+                options={p.data}
+            />
         </Item>
     )
 })

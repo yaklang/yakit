@@ -9,6 +9,7 @@ import {TrafficDemo} from "@/components/playground/TrafficDemo";
 import {PcapXDemo} from "@/components/playground/PcapXDemo";
 import {DemoItemSelectOne} from "@/demoComponents/itemSelect/ItemSelect";
 import {RiskTableDemo} from "@/components/playground/RiskTableDemo";
+import {ChaosMakerRulesDemo} from "@/components/playground/ChaosMakerRulesDemo";
 
 export interface DebugMonacoEditorPageProp {
 
@@ -53,7 +54,7 @@ a=1&b=2 Content-Length: a
                 (() => {
                     switch (mode) {
                         case "chaos-maker-rule":
-                            return <RiskTableDemo/>
+                            return <ChaosMakerRulesDemo/>
                         case "risk-table":
                             return <RiskTableDemo/>
                         case "pcapx":

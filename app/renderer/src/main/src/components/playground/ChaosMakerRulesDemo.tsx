@@ -1,42 +1,44 @@
 import React, {useState} from "react";
-import {DemoVirtualTable} from "@/demoComponents/virtualTable/VirtualTable";
-import {genDefaultPagination} from "@/pages/invoker/schema";
-import {TrafficPacket} from "@/models/Traffic";
-import {Paging} from "@/utils/yakQueryHTTPFlow";
 import {Risk} from "@/pages/risks/schema";
-import {info} from "@/utils/notification";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
+import {DemoVirtualTable} from "@/demoComponents/virtualTable/VirtualTable";
+import {info} from "@/utils/notification";
+import {Paging} from "@/utils/yakQueryHTTPFlow";
 import {YakEditor} from "@/utils/editors";
+import {ChaosMakerRule} from "@/models/ChaosMaker";
 
-export interface RiskTableDemoProp {
+export interface ChaosMakerRulesDemoProp {
 
 }
 
 const {ipcRenderer} = window.require("electron");
 
-export const RiskTableDemo: React.FC<RiskTableDemoProp> = (props) => {
-    const [selected, setSelected] = useState<Risk>();
+export const ChaosMakerRulesDemo: React.FC<ChaosMakerRulesDemoProp> = (props) => {
+    const [selected, setSelected] = useState<ChaosMakerRule>();
 
     return <YakitResizeBox
         isVer={true}
         firstNode={<div style={{height: "100%", overflowY: "hidden"}}>
-            <DemoVirtualTable<Risk>
+            <DemoVirtualTable<ChaosMakerRule>
                 columns={[
                     {headerTitle: "ID", key: "Id", width: 80, colRender: i => i.Id},
-                    {headerTitle: "漏洞名称", key: "Title", width: 300, colRender: i => i.TitleVerbose || i.Title},
+                    {headerTitle: "规则", key: "Name", width: 300, colRender: i => i.NameZh || i.Name},
+                    {headerTitle: "类型", key: "RuleType", width: 100, colRender: i => i.RuleType},
+                    {headerTitle: "CVE", key: "CVE", width: 110, colRender: i => i.CVE},
+                    {headerTitle: "协议", key: "Protocol", width: 50, colRender: i => i.Protocol},
                 ]}
                 rowClick={data => {
                     setSelected(data)
                 }}
-                loadMore={(data: Risk | undefined) => {
+                loadMore={(data: ChaosMakerRule | undefined) => {
                     return new Promise((resolve, reject) => {
                         if (!data) {
                             // info("加载初始化数据")
-                            ipcRenderer.invoke("QueryRisks", {
+                            ipcRenderer.invoke("QueryChaosMakerRules", {
                                 Pagination: {Limit: 10, Page: 1, OrderBy: 'id', Order: "asc"}, // genDefaultPagination(),
                                 FromId: 0,
                             }).then((rsp: {
-                                Data: Risk[],
+                                Data: ChaosMakerRule[],
                             }) => {
                                 resolve({
                                     data: rsp.Data,
@@ -45,11 +47,11 @@ export const RiskTableDemo: React.FC<RiskTableDemoProp> = (props) => {
                             })
                             return
                         } else {
-                            ipcRenderer.invoke("QueryRisks", {
+                            ipcRenderer.invoke("QueryChaosMakerRules", {
                                 Pagination: {Limit: 10, Page: 1, OrderBy: 'id', Order: "asc"},
                                 FromId: data.Id,
                             }).then((rsp: {
-                                Data: Risk[],
+                                Data: ChaosMakerRule[],
                                 Total: number,
                                 Pagination: Paging,
                             }) => {

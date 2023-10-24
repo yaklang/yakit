@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {Form, Select, Space} from "antd";
 import {CopyableField, ManyMultiSelectForString, OneLine, SelectOne} from "@/utils/inputUtil";
-import {PcapMetadata} from "@/models/Traffic";
+import {PcapMetadata, TrafficPacket} from "@/models/Traffic";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {randomString} from "@/utils/randomUtil";
@@ -12,6 +12,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {PacketListDemo} from "@/components/playground/PacketListDemo";
 import {debugYakitModal, debugYakitModalAny} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {DemoItemSelectMultiForString} from "@/demoComponents/itemSelect/ItemSelect";
+import {YakEditor} from "@/utils/editors";
 
 export interface PcapXDemoProp {
 
