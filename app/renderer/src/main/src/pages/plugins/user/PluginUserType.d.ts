@@ -2,7 +2,7 @@ import {API} from "@/services/swagger/resposeType"
 import {MenuProps} from "antd"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {OnlinePluginAppAction} from "../pluginReducer"
-import { PluginFilterParams } from "../baseTemplateType"
+import {PluginFilterParams} from "../baseTemplateType"
 
 export interface PluginUserProps {}
 
@@ -22,6 +22,7 @@ export interface PluginUserListProps {
     setFilters: (s: PluginFilterParams) => void
     setIsSelectUserNum: (b: boolean) => void
     setPlugin: (p?: YakitPluginOnlineDetail) => void
+    onRefreshRecycleList: () => void
 }
 
 export interface PluginRecycleListProps {
@@ -33,6 +34,7 @@ export interface PluginRecycleListProps {
     searchValue: PluginSearchParams
     setIsSelectRecycleNum: (b: boolean) => void
     setSearchValue: (s: PluginSearchParams) => void
+    onRefreshUserList: () => void
 }
 
 export interface OnlineUserExtraOperateProps {
@@ -45,7 +47,7 @@ export interface PluginUserListRefProps {
     loadMoreData: () => void
     onRemovePluginBatchBefore: () => void
 }
-export interface PluginRecycleListRefProps{
+export interface PluginRecycleListRefProps {
     allCheck: boolean
     selectList: string[]
     onRemovePluginBatchBefore: () => void

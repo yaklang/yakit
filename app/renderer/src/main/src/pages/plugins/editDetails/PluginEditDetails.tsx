@@ -36,6 +36,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {SmokingEvaluateResponse} from "@/pages/pluginDebugger/SmokingEvaluate"
 import {PluginTestErrorIcon} from "../icon"
+import { PluginGV } from "../utils"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
@@ -117,7 +118,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         infoData = {
             ...infoData,
             tags: infoData.tags?.filter((item) => {
-                return item !== CodeGV.PluginYakDNSLogSwitch && item !== CodeGV.PluginCodecHttpSwitch
+                return item !== PluginGV.PluginYakDNSLogSwitch && item !== PluginGV.PluginCodecHttpSwitch
             })
         }
 
