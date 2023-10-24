@@ -17,6 +17,11 @@ export interface VirtualTableProps<T> {
     isTopLoadMore?: boolean
     /** 是否停止自动加载 */
     isStop?: boolean
+    /**
+     * 滚动条是否实时更新(只有触底自动加载生效)
+     * 滚动条不实时更新时，用户需要靠isStop进行自动更新的手动控制
+     */
+    isScrollUpdate?: boolean
     /** 触发数据清空 */
     triggerClear?: boolean
     /** 自动加载更多延迟(默认1000ms) */
@@ -25,5 +30,9 @@ export interface VirtualTableProps<T> {
     rowKey: string
     loadMore: (fromInfo?: T) => Promise<{data: T[]}>
     columns: ColumnProps<T>[]
+    /** 行点击回调 */
+    rowClick?: (info: T) => any
+
+    onTouchTop?: () => any
+    onTouchBottom?: () => any
 }
-n

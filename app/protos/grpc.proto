@@ -588,8 +588,12 @@ message QueryTrafficPacketRequest {
 message QueryTrafficTCPReassembledRequest {
   Paging Pagination = 1;
 
-  bool FromNow = 2;
+  bool FromNow = 2; // ignore it
   string SessionId = 3;
+
+  int64 FromId = 4;
+  int64 UntilId = 5;
+  int64 TimestampNow = 6;
 }
 
 message TrafficSession {
@@ -656,7 +660,11 @@ message QueryTrafficPacketResponse {
 }
 
 message TrafficTCPReassembled {
-
+  int64 Id = 1;
+  string SessionUuid = 2;
+  bytes Raw = 3;
+  int64 Seq = 4;
+  int64 Timestamp = 5;
 }
 
 message QueryTrafficTCPReassembledResponse {
@@ -669,7 +677,11 @@ message QueryTrafficSessionRequest {
   Paging Pagination = 1;
 
   // active traffic
-  bool FromNow = 2;
+  bool FromNow = 2; // ignore it, bad field
+
+  int64 FromId = 3;
+  int64 UntilId = 4;
+  int64 TimestampNow = 5;
 }
 
 message PcapXRequest {
@@ -1180,6 +1192,10 @@ message QueryChaosMakerRuleRequest {
   Paging Pagination = 1;
   string RuleType = 2;
   repeated string Keywords = 3;
+
+  // offset
+  int64 FromId = 4;
+  int64 UntilId = 5;
 }
 
 message ImportsProfileDatabaseRequest {
@@ -2242,6 +2258,9 @@ message QueryRisksRequest {
   string Token = 6;
   bool WaitingVerified = 7;
   string Severity = 8;
+
+  int64 FromId = 9;
+  int64 UntilId = 10;
 }
 
 message QueryRisksResponse {

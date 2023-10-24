@@ -1,4 +1,4 @@
-import {memo, useEffect, useRef} from "react"
+import {memo, useEffect, useMemo, useRef} from "react"
 import {VirtualTableProps} from "./VirtualTableType"
 import {useGetState, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -7,7 +7,18 @@ import "../demoStyle.scss"
 
 /** @name 自动加载的虚拟表格 */
 export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p) => {
-    const {isHideHeader = false, isTopLoadMore, isStop, triggerClear, wait = 1000, rowKey, loadMore, columns} = p
+    const {
+        isHideHeader = false,
+        isTopLoadMore,
+        isStop,
+        isScrollUpdate = false,
+        triggerClear,
+        wait = 1000,
+        rowKey,
+        loadMore,
+        columns,
+        rowClick
+    } = p
 
     const [loading, setLoading, getLoading] = useGetState<boolean>(false)
     const [data, setData, getData] = useGetState<any[]>([])
@@ -26,11 +37,14 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 40,
-        overscan: 10
+        overscan: 300
     })
 
     // 滚动条置底|置顶
     const onScrollY = useMemoizedFn((isBottom: boolean) => {
+        // 触底更新时才有滚动条不跟随更新效果
+        if (!isTopLoadMore && !isScrollUpdate) return
+
         if (isBottom) {
             if (containerRef && containerRef.current) {
                 const {scrollHeight} = fetchListHeight()
@@ -42,6 +56,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
             }
         }
     })
+
     const fetchList = useMemoizedFn(() => {
         if (getLoading()) return
 
@@ -63,7 +78,6 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                 }, 300)
             })
     })
-
     // 是否中断自动请求
     const isBreakRef = useRef<boolean>(false)
 
@@ -78,17 +92,28 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
 
     useEffect(() => {
         if (isStop) {
-            clearTime()
             return
         }
 
         fetchList()
-
-        clearTime()
         timeRef.current = setInterval(fetchList, wait)
+        return () => {
+            clearTime()
+        }
     }, [isStop])
 
-    // 清空数据
+    // 开发模式生效，防止因热加载清空数据引起的UI样式缓存问题
+    useEffect(() => {
+        if (containerRef?.current) {
+            if (containerRef.current.scrollTop > data.length * 40 + 80) {
+                if (wrapperRef?.current) {
+                    wrapperRef.current.style.height = "0px"
+                }
+            }
+        }
+    })
+
+    // 外界手动清空数据
     useEffect(() => {
         setData([])
     }, [triggerClear])
@@ -96,8 +121,8 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
     // 设置|取消定时器
     const setTime = useMemoizedFn((isSet: boolean) => {
         if (isSet) {
-            if(isStop)return
-            
+            if (isStop) return
+
             isBreakRef.current = false
             if (!!timeRef.current) return
             timeRef.current = setInterval(fetchList, wait)
@@ -106,9 +131,13 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
             isBreakRef.current = true
         }
     })
+    // 滚动事件(节流)
     const onScrollCapture = useThrottleFn(
         () => {
             if (containerRef && containerRef.current) {
+                // 触底更新时才有滚动条不跟随更新效果
+                if (!isTopLoadMore && !isScrollUpdate) return
+
                 const {scrollTop, clientHeight, scrollHeight} = fetchListHeight()
 
                 if (!!isTopLoadMore) {
@@ -145,15 +174,21 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                 <div ref={containerRef} className='list-container' onScroll={() => onScrollCapture.run()}>
                     <div ref={wrapperRef}>
                         {!loading && data.length === 0 && <div className={"no-more-wrapper"}>暂无数据</div>}
-                        {isTopLoadMore && loading && (
+                        {/* {isTopLoadMore && loading && (
                             <div className='loading-wrapper'>
                                 <YakitSpin className='loading-style' />
                             </div>
-                        )}
+                        )} */}
                         {list.map((el) => {
                             const {data, index} = el
                             return (
-                                <div key={data[rowKey] || index} className='row-wrapper'>
+                                <div
+                                    key={data[rowKey] || index}
+                                    className='row-wrapper'
+                                    onClick={() => {
+                                        if (rowClick) rowClick(data)
+                                    }}
+                                >
                                     {columns.map((item, i) => {
                                         const {key, colRender, width} = item
                                         return (
@@ -163,7 +198,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                                                 className='col-wrapper'
                                             >
                                                 <div className='content-body yakit-single-line-ellipsis'>
-                                                    {!!colRender ? colRender(data) : data[key]}
+                                                    {!!colRender ? colRender(data) : data[key] || "-"}
                                                 </div>
                                             </div>
                                         )
@@ -171,11 +206,11 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                                 </div>
                             )
                         })}
-                        {!isTopLoadMore && loading && (
-                            <div className='loading-wrapper'>
-                                <YakitSpin className='loading-style' />
-                            </div>
-                        )}
+                        {/*{!isTopLoadMore && loading && (*/}
+                        {/*    <div className='loading-wrapper'>*/}
+                        {/*        <YakitSpin className='loading-style'/>*/}
+                        {/*    </div>*/}
+                        {/*)}*/}
                     </div>
                 </div>
             </div>
