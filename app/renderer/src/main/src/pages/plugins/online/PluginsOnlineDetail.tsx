@@ -118,7 +118,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     if (!plugin) return null
     return (
         <PluginDetails<YakitPluginOnlineDetail>
-            title='插件管理'
+            title='插件商店'
             filterExtra={
                 <div className={"details-filter-extra-wrapper"}>
                     <YakitButton type='text2' icon={<OutlineFilterIcon />} />
@@ -209,6 +209,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                                 user={plugin.authors}
                                 pluginId={plugin.uuid}
                                 updated_at={plugin.updated_at}
+                                prImgs={[]}
                             />
                             <div className={styles["details-editor-wrapper"]}>
                                 <YakitEditor type={"yak"} value={plugin.content} />

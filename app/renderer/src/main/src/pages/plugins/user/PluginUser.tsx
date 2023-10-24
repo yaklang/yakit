@@ -29,7 +29,6 @@ import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
 import {
     OnlineUserExtraOperateProps,
-    PluginRecycleListProps,
     PluginRecycleListRefProps,
     PluginUserDetailBackProps,
     PluginUserListProps,
@@ -58,7 +57,6 @@ import {
     apiDownloadOnlinePlugin,
     apiFetchGroupStatisticsMine,
     apiFetchMineList,
-    apiFetchRecycleList,
     apiUpdatePluginMine,
     convertPluginsRequestParams
 } from "../utils"
@@ -98,14 +96,11 @@ const onlinePluginTypeList = [
 export type MePluginType = "myOnlinePlugin" | "recycle"
 
 export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
-    // ------我的插件中列表得一些参数start
     const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
     const [allCheckUser, setAllCheckUser] = useState<boolean>(false)
     const [selectListUser, setSelectListUser] = useState<string[]>([])
-    // ------ end
 
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
-    const [searchUser, setSearchUser] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
 
     const [isSelectUserNum, setIsSelectUserNum] = useState<boolean>(false) // 我的插件是否有勾选
     const [isSelectRecycleNum, setIsSelectRecycleNum] = useState<boolean>(false) // 回收站是否有勾选
@@ -196,6 +191,20 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
             })) || []
         )
     }, [filters.plugin_private])
+    /**在回收站时,刷新我的插件 */
+    const onRefreshUserList = useDebounceFn(
+        useMemoizedFn(() => {
+            setRefreshUser(!refreshUser)
+        }),
+        {wait: 500, leading: true}
+    ).run
+    /**在选中我的插件时,刷新回收站 */
+    const onRefreshRecycleList = useDebounceFn(
+        useMemoizedFn(() => {
+            setRefreshRecycle(!refreshRecycle)
+        }),
+        {wait: 500, leading: true}
+    ).run
     return (
         <OnlineJudgment isJudgingLogin={true}>
             {!!plugin && (
@@ -299,6 +308,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         dispatch={dispatch}
                         defaultAllCheck={allCheckUser}
                         defaultSelectList={selectListUser}
+                        onRefreshRecycleList={onRefreshRecycleList}
                     />
                 </div>
                 <div
@@ -315,6 +325,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         searchValue={search}
                         setSearchValue={setSearch}
                         setIsSelectRecycleNum={setIsSelectRecycleNum}
+                        onRefreshUserList={onRefreshUserList}
                     />
                 </div>
             </PluginsLayout>
@@ -341,11 +352,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             dispatch,
             response,
             defaultAllCheck,
-            defaultSelectList
+            defaultSelectList,
+            onRefreshRecycleList
         } = props
         /** 是否为加载更多 */
         const [loading, setLoading] = useState<boolean>(false)
-        /** 是否为首页加载 */
+        /** 是否为初次加载 */
         const isLoadingRef = useRef<boolean>(true)
         const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
 
@@ -395,13 +407,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             getInitTotal()
             getPluginRemoveCheck()
         }, [inViewport, refresh])
-        // 页面初始化的首次列表请求
         useEffect(() => {
             fetchList(true)
         }, [isLogin, refresh, filters])
         useEffect(() => {
             getPluginGroupList()
-        }, [isLogin])
+        }, [isLogin, inViewport])
         useEffect(() => {
             setIsSelectUserNum(selectList.length > 0)
         }, [selectList.length])
@@ -416,7 +427,9 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         const fetchList = useLockFn(
             useMemoizedFn(async (reset?: boolean) => {
                 if (loading) return
-
+                if (reset) {
+                    isLoadingRef.current = true
+                }
                 setLoading(true)
 
                 const params: PluginListPageMeta = !!reset
@@ -428,6 +441,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 const query: PluginsQueryProps = convertPluginsRequestParams(filters, search, params)
                 try {
                     const res = await apiFetchMineList(query)
+                    console.log("我的插件列表-apiFetchRecycleList", res)
                     const length = res.data.length + response.data.length
                     setHasMore(length < +res.pagemeta.total)
                     if (!res.data) res.data = []
@@ -440,12 +454,13 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 } catch (error) {}
                 setTimeout(() => {
                     setLoading(false)
+                    isLoadingRef.current = false
                 }, 300)
             })
         )
         /**获取插件删除的提醒记录状态 */
         const getPluginRemoveCheck = useMemoizedFn(() => {
-            getRemoteValue(PluginGV.PluginRemoveCheck).then((data) => {
+            getRemoteValue(PluginGV.UserPluginRemoveCheck).then((data) => {
                 setPluginRemoveCheck(data === "true" ? true : false)
             })
         })
@@ -533,8 +548,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         })
         /**更改私有状态 */
         const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            const updateItem: API.UpdatePluginRequest = {
-                uuid: data.uuid,
+            const updateItem: API.UpdatePluginsRequest = {
+                uuid: [data.uuid],
                 is_private: `${!data.is_private}`
             }
             apiUpdatePluginMine(updateItem).then(() => {
@@ -589,7 +604,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                         itemList: [data]
                     }
                 })
-                setRemoteValue(PluginGV.PluginRemoveCheck, `${pluginRemoveCheck}`)
+                setRemoteValue(PluginGV.UserPluginRemoveCheck, `${pluginRemoveCheck}`)
                 const index = selectList.findIndex((ele) => ele === data.uuid)
                 if (index !== -1) {
                     optCheck(data, false)
@@ -597,18 +612,22 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 removePluginRef.current = undefined
                 setRemoveCheckVisible(false)
                 getInitTotal()
+                getPluginGroupList()
+                onRefreshRecycleList()
             })
         })
         /**批量删除 */
         const onRemovePluginBatch = useMemoizedFn(() => {
-            // console.log("pluginRemoveCheck", pluginRemoveCheck)
             if (!allCheck && selectList.length === 0) {
                 // 删除全部，清空
-                // console.log("全部清空")
                 apiDeletePluginMine().then(() => {
-                    fetchList(true)
                     setRemoveCheckVisible(false)
+                    setSelectList([])
                     getInitTotal()
+                    getPluginGroupList()
+                    fetchList(true)
+                    onRefreshRecycleList()
+                    setRemoteValue(PluginGV.UserPluginRemoveCheck, `${pluginRemoveCheck}`)
                 })
             } else {
                 // 批量删除
@@ -623,7 +642,6 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                         uuid: selectList
                     }
                 }
-                // console.log("批量删除", deleteParams)
                 apiDeletePluginMine(deleteParams).then(() => {
                     setRemoveCheckVisible(false)
                     setSelectList([])
@@ -632,8 +650,10 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                         setIsSelectUserNum(false)
                     }
                     getInitTotal()
+                    getPluginGroupList()
                     fetchList(true)
-                    setRemoteValue(PluginGV.PluginRemoveCheck, `${pluginRemoveCheck}`)
+                    onRefreshRecycleList()
+                    setRemoteValue(PluginGV.UserPluginRemoveCheck, `${pluginRemoveCheck}`)
                 })
             }
         })
