@@ -258,8 +258,5 @@ module.exports = {
         uiOp.forEach((item) => {
             require(path.join(__dirname, `./uiOperate/${item}`))(win, getClient)
         })
-
-        // start chrome manager
-        require("./handlers/chromelauncher")(win, getClient)
     }
 }
