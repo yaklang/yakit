@@ -8,13 +8,13 @@ import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema
 import {DemoVirtualTable} from "@/demoComponents/virtualTable/VirtualTable";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {Form} from "antd";
-import {DemoItemSelectButton, DemoItemSelectOne} from "@/demoComponents/itemSelect/ItemSelect";
 import {YakEditor} from "@/utils/editors";
 import {AutoCard} from "@/components/AutoCard";
 import {DemoItemSwitch} from "@/demoComponents/itemSwitch/ItemSwitch";
 import {DemoPacketTable} from "@/components/playground/traffic/DemoPacketTable";
 import {DemoTCPReassembled} from "@/components/playground/traffic/DemoTCPReassembled";
 import {DemoTrafficSessionTable} from "@/components/playground/traffic/DemoTrafficSessionTable";
+import { DemoItemRadioButton } from "@/demoComponents/itemRadioAndCheckbox/RadioAndCheckbox";
 
 export interface PacketListProp {
     onLoadingChanged?: (loading: boolean) => void
@@ -48,7 +48,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
             bodyStyle={{overflow: "hidden", paddingLeft: 0, paddingRight: 0, paddingBottom: 0}}
             size={"small"} bordered={false}
             title={<Form layout={"inline"} onSubmitCapture={e => e.preventDefault()}>
-                <DemoItemSelectButton data={[
+                <DemoItemRadioButton data={[
                     {value: "packet", label: "数据包"},
                     {value: "session", label: "会话"},
                     {value: "tcp-reassembled", label: "TCP数据帧"},
