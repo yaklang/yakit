@@ -11,8 +11,21 @@ const {ipcRenderer} = window.require("electron")
 
 /** 插件相关得缓存字段-键值变量 */
 export enum PluginGV {
-    /**@name 插件删除是否需要不再提醒的选中状态 */
-    PluginRemoveCheck = "plugin_remove_check"
+    /**
+     * @name 插件删除是否需要不再提醒的选中状态
+     * @description 适用页面:我的插件、审核
+     */
+    UserPluginRemoveCheck = "user_plugin_remove_check",
+    /**
+     * @name 插件删除是否需要不再提醒的选中状态
+     * @description 适用页面:回收站
+     */
+    RecyclePluginRemoveCheck = "recycle_plugin_remove_check",
+
+    /** @name 插件信息-yak类型额外参数(用于自定义DNSLOG)对应tag值 */
+    PluginYakDNSLogSwitch = "custom-dnslog-platform",
+    /** @name 插件信息-codec类型额外参数(用于自定义HTTP数据包变形)对应tag值 */
+    PluginCodecHttpSwitch = "allow-custom-http-packet-mutate"
 }
 
 // 删除对象里值为 undefined 的键值对
@@ -159,7 +172,6 @@ export const apiFetchRecycleList: (query: PluginsQueryProps) => Promise<YakitPlu
             }
             apiFetchList(newQuery)
                 .then((res: YakitPluginListOnlineResponse) => {
-                    // console.log("回收站列表-apiFetchRecycleList", newQuery, res)
                     resolve(res)
                 })
                 .catch((err) => {
@@ -473,12 +485,12 @@ export const apiDeletePluginCheck: (query?: API.PluginsWhereDeleteRequest) => Pr
 }
 
 /**更新插件接口基础班 /update/plugin */
-const apiUpdatePlugin: (query: API.UpdatePluginRequest) => Promise<API.ActionSucceeded> = (query) => {
+const apiUpdatePlugin: (query: API.UpdatePluginsRequest) => Promise<API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<API.UpdatePluginRequest, API.ActionSucceeded>({
+            NetWorkApi<API.UpdatePluginsRequest, API.ActionSucceeded>({
                 method: "post",
-                url: "update/plugin",
+                url: "update/plugins",
                 data: {...query}
             })
                 .then((res: API.ActionSucceeded) => {
@@ -494,7 +506,7 @@ const apiUpdatePlugin: (query: API.UpdatePluginRequest) => Promise<API.ActionSuc
 }
 
 /**我的插件 修改私密公开 */
-export const apiUpdatePluginMine: (query: API.UpdatePluginRequest) => Promise<API.ActionSucceeded> = (query) => {
+export const apiUpdatePluginMine: (query: API.UpdatePluginsRequest) => Promise<API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {
         try {
             const newQuery = {
@@ -516,15 +528,18 @@ export const apiUpdatePluginMine: (query: API.UpdatePluginRequest) => Promise<AP
         }
     })
 }
-
-/**彻底删除 只有回收站有彻底删除 /dump/plugins */
-export const apiDumpPlugin: (query?: API.PluginsWhereDeleteRequest) => Promise<API.ActionSucceeded> = (query) => {
+/**彻底删除和还原得接口请求定义 */
+export interface PluginsRecycleRequest extends Omit<API.PluginsWhere, "listType"> {
+    uuid?: API.PluginsRecycle["uuid"]
+}
+/**彻底删除 只有回收站有 */
+export const apiRemoveRecyclePlugin: (query?: PluginsRecycleRequest) => Promise<API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<API.PluginsWhereDeleteRequest, API.ActionSucceeded>({
-                method: "delete",
-                url: "dump/plugins",
-                data: {...query, listType: "recycle"}
+            NetWorkApi<API.PluginsRecycleRequest, API.ActionSucceeded>({
+                method: "post",
+                url: "plugins/recycle",
+                data: {...query, listType: "recycle", dumpType: "true"}
             })
                 .then((res: API.ActionSucceeded) => {
                     resolve(res)
@@ -535,6 +550,29 @@ export const apiDumpPlugin: (query?: API.PluginsWhereDeleteRequest) => Promise<A
                 })
         } catch (error) {
             yakitNotify("error", "彻底删除插件失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**还原 只有回收站有 */
+export const apiReductionRecyclePlugin: (query?: PluginsRecycleRequest) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.PluginsRecycleRequest, API.ActionSucceeded>({
+                method: "post",
+                url: "plugins/recycle",
+                data: {...query, listType: "recycle", dumpType: "false"}
+            })
+                .then((res: API.ActionSucceeded) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "还原插件失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "还原插件失败：" + error)
             reject(error)
         }
     })
