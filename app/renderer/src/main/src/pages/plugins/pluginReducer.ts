@@ -101,7 +101,10 @@ export const pluginOnlineReducer = (
             if (itemList) {
                 const filters = (itemList || []).map((item) => item.uuid)
                 return {
-                    ...state,
+                    pagemeta: {
+                        ...state.pagemeta,
+                        total: Number(state.pagemeta.total) - 1
+                    },
                     data: state.data.filter((ele) => !filters.includes(ele.uuid))
                 }
             } else {
@@ -227,6 +230,7 @@ export const pluginLocalReducer = (
                 const filters = (itemList || []).map((item) => item.ScriptName)
                 return {
                     ...state,
+                    Total: Number(state.Total) - 1,
                     Data: state.Data.filter((ele) => !filters.includes(ele.ScriptName))
                 }
             } else {

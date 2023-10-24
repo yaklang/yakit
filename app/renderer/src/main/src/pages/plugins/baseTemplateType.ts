@@ -78,6 +78,8 @@ export interface PluginDetailHeaderProps {
     pluginId: string
     /** 更新时间 */
     updated_at: number
+    /**协作者信息 */
+    prImgs?:string[]
 }
 
 // 插件基础信息组件

@@ -64,12 +64,7 @@ import YakitLogo from "@/assets/yakitLogo.png"
 import {SolidThumbUpIcon} from "@/assets/newIcon"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
 import {yakitNotify} from "@/utils/notification"
-import {
-    DownloadOnlinePluginsRequest,
-    PluginStarsRequest,
-    apiDownloadOnlinePlugin,
-    apiPluginStars
-} from "./utils"
+import {DownloadOnlinePluginsRequest, PluginStarsRequest, apiDownloadOnlinePlugin, apiPluginStars} from "./utils"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -1387,7 +1382,7 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
 })
 
 export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps> = React.memo((props) => {
-    const {data, isLogin, onRemoveClick, onReductionClick} = props
+    const {data, isLogin, pluginRemoveCheck, onRemoveClick, onReductionClick, onRemoveOrReductionBefore} = props
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
     const [reductionLoading, setReductionLoading] = useState<boolean>(false)
     const onRemove = useMemoizedFn(async (e) => {
@@ -1397,11 +1392,15 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
             return
         }
         try {
-            setRemoveLoading(true)
-            await onRemoveClick(data)
-            setTimeout(() => {
-                setRemoveLoading(false)
-            }, 200)
+            if (pluginRemoveCheck) {
+                setRemoveLoading(true)
+                await onRemoveClick(data)
+                setTimeout(() => {
+                    setRemoveLoading(false)
+                }, 200)
+            } else {
+                onRemoveOrReductionBefore(data, "remove")
+            }
         } catch (error) {}
     })
     const onReduction = useMemoizedFn(async (e) => {

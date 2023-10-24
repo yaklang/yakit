@@ -75,6 +75,7 @@ import {API} from "@/services/swagger/resposeType"
 import {TypeSelectOpt} from "./funcTemplateType"
 import {YakEditor} from "@/utils/editors"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
+import {PluginGV} from "./utils"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
@@ -214,7 +215,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
 })
 /** @name 插件详情-头部信息(样式未调完整) */
 export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props) => {
-    const {pluginName, help, titleNode, tags, extraNode, img, user, pluginId, updated_at} = props
+    const {pluginName, help, titleNode, tags, extraNode, img, user, pluginId, updated_at, prImgs = []} = props
 
     const tagList = useMemo(() => {
         let arr: string[] = []
@@ -227,7 +228,14 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
     }, [tags])
 
     const [prShow, setPrShow] = useState<boolean>(false)
-
+    /** 贡献者数据 */
+    const contributes = useMemo(() => {
+        // 这是第二版需要的数据
+        if (prImgs.length <= 5) return {arr: prImgs, length: 0}
+        else {
+            return {arr: prImgs.slice(0, 5), length: prImgs.length - 5}
+        }
+    }, [prImgs])
     return (
         <div className={styles["plugin-detail-header-wrapper"]}>
             <div className={styles["header-wrapper"]}>
@@ -272,17 +280,19 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                         </div>
 
                         <div style={{marginRight: 8}} className={styles["divider-style"]}></div>
-                        <YakitPopover
-                            overlayClassName={styles["terminal-popover"]}
-                            placement='bottom'
-                            content={<>123</>}
-                            onVisibleChange={(show) => setPrShow(show)}
-                        >
-                            <YakitButton type='text2' isActive={prShow}>
-                                {`${7}位协作者`}
-                                {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
-                            </YakitButton>
-                        </YakitPopover>
+                        {contributes.length > 0 && (
+                            <YakitPopover
+                                overlayClassName={styles["terminal-popover"]}
+                                placement='bottom'
+                                content={<>123</>}
+                                onVisibleChange={(show) => setPrShow(show)}
+                            >
+                                <YakitButton type='text2' isActive={prShow}>
+                                    {`${contributes.length}位协作者`}
+                                    {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
+                                </YakitButton>
+                            </YakitPopover>
+                        )}
                     </div>
 
                     <div style={{marginLeft: 8}} className={styles["divider-style"]}></div>
@@ -714,13 +724,13 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                         <div className={styles["setting-switch"]}>
                             <div className={styles["switch-wrapper"]}>
                                 <YakitSwitch
-                                    checked={tags.includes(CodeGV.PluginYakDNSLogSwitch)}
+                                    checked={tags.includes(PluginGV.PluginYakDNSLogSwitch)}
                                     onChange={(check) => {
                                         if (check) {
-                                            const arr = tags.concat([CodeGV.PluginYakDNSLogSwitch])
+                                            const arr = tags.concat([PluginGV.PluginYakDNSLogSwitch])
                                             setTags([...arr])
                                         } else {
-                                            const arr = tags.filter((item) => item !== CodeGV.PluginYakDNSLogSwitch)
+                                            const arr = tags.filter((item) => item !== PluginGV.PluginYakDNSLogSwitch)
                                             setTags([...arr])
                                         }
                                     }}
@@ -734,13 +744,13 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                     <div className={styles["setting-switch"]}>
                         <div className={styles["switch-wrapper"]}>
                             <YakitSwitch
-                                checked={tags.includes(CodeGV.PluginCodecHttpSwitch)}
+                                checked={tags.includes(PluginGV.PluginCodecHttpSwitch)}
                                 onChange={(check) => {
                                     if (check) {
-                                        const arr = tags.concat([CodeGV.PluginCodecHttpSwitch])
+                                        const arr = tags.concat([PluginGV.PluginCodecHttpSwitch])
                                         setTags([...arr])
                                     } else {
-                                        const arr = tags.filter((item) => item !== CodeGV.PluginCodecHttpSwitch)
+                                        const arr = tags.filter((item) => item !== PluginGV.PluginCodecHttpSwitch)
                                         setTags([...arr])
                                     }
                                 }}
