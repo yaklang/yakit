@@ -180,10 +180,10 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
 
-    // 单项插件删除
-    const [activeDelPlugin, setActiveDelPlugin] = useState<YakitPluginOnlineDetail>()
-
     const [showFilter, setShowFilter] = useState<boolean>(true)
+
+    /** 是否为初次加载 */
+    const isLoadingRef = useRef<boolean>(true)
 
     const userInfo = useStore((s) => s.userInfo)
     useEffect(() => {
@@ -200,7 +200,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     useEffect(() => {
         getPluginGroupList()
-    }, [userInfo.isLogin])
+    }, [userInfo.isLogin, inViewport])
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -220,6 +220,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const fetchList = useLockFn(
         useMemoizedFn(async (reset?: boolean) => {
             if (loading) return
+            if (reset) {
+                isLoadingRef.current = true
+            }
             setLoading(true)
             const params: PluginListPageMeta = !!reset
                 ? {page: 1, limit: 20}
@@ -247,6 +250,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
             setTimeout(() => {
                 setLoading(false)
+                isLoadingRef.current = false
             }, 300)
         })
     )
@@ -421,7 +425,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 }
             >
                 <PluginsContainer
-                    loading={loading && response.pagemeta.page === 1}
+                    loading={loading && isLoadingRef.current}
                     visible={showFilter}
                     setVisible={setShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
@@ -579,7 +583,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             help={data.help || ""}
                                             img={data.head_img || ""}
                                             user={data.authors || ""}
-                                            // prImgs={data.prs}
+                                            // prImgs={[]}
                                             time={data.updated_at}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
