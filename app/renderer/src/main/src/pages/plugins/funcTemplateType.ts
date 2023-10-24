@@ -276,14 +276,18 @@ export interface TagShowOpt {
 }
 
 /**
- * @property data
- * @property isLogin
+ * @property {YakitPluginOnlineDetail} data
+ * @property {boolean} isLogin
+ * @property {boolean} pluginRemoveCheck 插件删除是否提示的记录字段
  * @function onRemoveClick 删除回调
  * @function onReductionClick 删除回调
+ * @function onRemoveOrReductionBefore 
  */
 export interface OnlineRecycleExtraOperateProps {
     isLogin: boolean
+    pluginRemoveCheck: boolean
     data: YakitPluginOnlineDetail
     onRemoveClick: (data: YakitPluginOnlineDetail) => void
     onReductionClick: (data: YakitPluginOnlineDetail) => void
+    onRemoveOrReductionBefore: (data: YakitPluginOnlineDetail,type: "remove" | "reduction") => void
 }
