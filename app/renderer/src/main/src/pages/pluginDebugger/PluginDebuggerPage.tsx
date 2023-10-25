@@ -113,8 +113,8 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
         }
     }
 
-    const setDefultTemplate = () => {
-        switch (pluginType) {
+    const setDefultTemplate = (v?:PluginTypes) => {
+        switch (v||pluginType) {
             case "mitm":
                 setCode(MITMPluginTemplate)
                 break
@@ -135,7 +135,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                     onOk: () => {
                         setPluginType(v)
                         setRefreshEditor(Math.random())
-                        setDefultTemplate()
+                        setDefultTemplate(v)
                         m.destroy()
                     },
                     content: <div style={{margin: 24}}>确认插件类型切换？</div>,
