@@ -62,12 +62,10 @@ const pluginTypeData = [
     {text: "Yaml-PoC", value: "nuclei", tagVal: "Nuclei-Yaml", tagColor: "purple"}
 ]
 
-type PluginTypes = "port-scan" | "mitm" | "nuclei"
+export type PluginTypes = "port-scan" | "mitm" | "nuclei"
 
 export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYamlTemplate, YamlContent}) => {
     const [pluginType, setPluginType] = useState<PluginTypes>(generateYamlTemplate ? "nuclei" : "port-scan")
-    const prevPluginType = usePrevious(pluginType)
-    const [isCancelFlag, setIsCancelFlag] = useState<boolean>(false)
     const [builder, setBuilder] = useState<HTTPRequestBuilderParams>(getDefaultHTTPRequestBuilderParams())
     const [pluginExecuting, setPluginExecuting] = useState<boolean>(false)
     const [showPluginExec, setShowPluginExec] = useState<boolean>(false)
@@ -129,27 +127,26 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
         }
     }
 
-    useUpdateEffect(() => {
-        if (!currentPluginName && !isCancelFlag) {
+    const handleChangePluginType = useMemoizedFn((v: PluginTypes) => {
+        if(!currentPluginName){
             if (!!code) {
                 const m = showYakitModal({
                     title: "切换类型将导致当前代码丢失",
                     onOk: () => {
+                        setPluginType(v)
                         setRefreshEditor(Math.random())
                         setDefultTemplate()
                         m.destroy()
                     },
                     content: <div style={{margin: 24}}>确认插件类型切换？</div>,
-                    onCancel: () => {
-                        setIsCancelFlag(true)
-                        setPluginType(prevPluginType as PluginTypes)
-                    }
+                    onCancel: () => {}
                 })
-            } else {
+            }
+            else {
                 setDefultTemplate()
             }
         }
-    }, [pluginType, isCancelFlag])
+    })
 
     useEffect(() => {
         if (generateYamlTemplate) {
@@ -204,7 +201,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                             </div>
                         }
                     >
-                        <HTTPRequestBuilder value={builder} setValue={setBuilder} />
+                        <HTTPRequestBuilder pluginType={pluginType} value={builder} setValue={setBuilder} />
                     </AutoCard>
                 }
                 secondNode={
@@ -228,7 +225,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                     setCode={setCode}
                                     setOriginCode={setOriginCode}
                                     setRefreshEditor={setRefreshEditor}
-                                    setIsCancelFlag={setIsCancelFlag}
+                                    handleChangePluginType={handleChangePluginType}
                                 ></SecondNodeHeader>
                                 <div style={{height: "calc(100% - 34px)"}}>
                                     <NewHTTPPacketEditor
@@ -254,7 +251,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                     originCode={originCode}
                                     setOriginCode={setOriginCode}
                                     setRefreshEditor={setRefreshEditor}
-                                    setIsCancelFlag={setIsCancelFlag}
+                                    handleChangePluginType={handleChangePluginType}
                                 ></SecondNodeHeader>
                                 {showPluginExec ? (
                                     <div style={{ height: "calc(100% - 34px)" }}>
@@ -291,14 +288,14 @@ interface SecondNodeHeaderProps {
     generateYamlTemplate: boolean
     currentPluginName: string
     setCurrentPluginName: (i: string) => void
-    pluginType: string
+    pluginType: PluginTypes
     setPluginType: (i: PluginTypes) => void
     code: string
     setCode: (i: string) => void
     setRefreshEditor: (i: number) => void
-    setIsCancelFlag: (i: boolean) => void
     originCode: string
     setOriginCode: (i: string) => void
+    handleChangePluginType: (v: PluginTypes) => void
 }
 
 const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
@@ -311,17 +308,12 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
         setCode,
         setCurrentPluginName,
         setRefreshEditor,
-        setIsCancelFlag,
         originCode,
-        setOriginCode
+        setOriginCode,
+        handleChangePluginType
     }) => {
         const [script, setScript] = useState<YakScript>()
         const [pluginBaseInspectVisible, setPluginBaseInspectVisible] = useState<boolean>(false)
-
-        const handleChangePluginType = ({target: {value}}: RadioChangeEvent) => {
-            setIsCancelFlag(false)
-            setPluginType(value)
-        }
 
         // 选择要调试的插件
         const handleSelectDebugPlugin = useMemoizedFn(() => {
@@ -443,7 +435,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                             buttonStyle='solid'
                             value={pluginType}
                             options={pluginTypeData.map((item) => ({value: item.value, label: item.text}))}
-                            onChange={handleChangePluginType}
+                            onChange={(e)=>handleChangePluginType(e.target.value)}
                         />
                     )}
                     {code && (
@@ -462,13 +454,13 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                 </Space>
                 <Space>
                     <>
-                        <YakitButton
+                        {pluginType!=="nuclei"&&<YakitButton
                             type='outline2'
                             icon={<OutlineSparklesIcon />}
                             onClick={() => setPluginBaseInspectVisible(true)}
                         >
                             自动评分
-                        </YakitButton>
+                        </YakitButton>}
                         <PluginBaseInspect
                             type={pluginType}
                             code={code}
