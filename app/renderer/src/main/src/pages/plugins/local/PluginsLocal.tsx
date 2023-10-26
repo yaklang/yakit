@@ -1,7 +1,7 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
 import {LocalExtraOperateProps, PluginLocalBackProps, PluginsLocalProps} from "./PluginsLocalType"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
-import {useLockFn, useMemoizedFn, useInViewport} from "ahooks"
+import {useLockFn, useMemoizedFn, useInViewport,useDebounceFn} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {defaultSearch, PluginsLayout, PluginsContainer, pluginTypeList} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
