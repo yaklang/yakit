@@ -117,6 +117,8 @@ export interface ListShowContainerProps<T> {
     showIndex?: number
     /** 修改当前展示的插件index */
     setShowIndex?: (i: number) => any
+    /**是否显示搜索结果为空 */
+    isShowSearchResultEmpty?: boolean
 }
 
 export interface ListListProps<T> {
