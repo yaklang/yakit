@@ -5,15 +5,14 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useNetwork, useMemoizedFn} from "ahooks"
 import React, {forwardRef, useState, useImperativeHandle, useEffect, useMemo} from "react"
 import {OnlineJudgmentProps, OnlineResponseStatusProps} from "./OnlineJudgmentType"
-import Online from "../online/online.png"
-import Server from "../online/server.png"
-import NoPermissions from "../online/no_permissions.png"
+import Online from "@/assets/online.png"
+import Server from "@/assets/server.png"
+import NoPermissions from "@/assets/no_permissions.png"
 
 import {yakitNotify} from "@/utils/notification"
 
 import styles from "./OnlineJudgment.module.scss"
 import Login from "@/pages/Login"
-import {isCommunityEdition} from "@/utils/envfile"
 import {useStore} from "@/store"
 
 const {ipcRenderer} = window.require("electron")
