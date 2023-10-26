@@ -1,5 +1,7 @@
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {LocalPluginAppAction} from "../pluginReducer"
+import {API} from "@/services/swagger/resposeType"
+import { PluginSearchParams } from "../baseTemplateType"
 
 export interface PluginsLocalProps {}
 
@@ -21,7 +23,7 @@ export interface PluginsLocalDetailProps {
     defaultAllCheck: boolean
     loading: boolean
     // onCheck: (value: boolean) => void
-    defaultSelectList: string[]
+    defaultSelectList: YakScript[]
     // optCheck: (data: YakScript, value: boolean) => void
     response: QueryYakScriptsResponse
     onBack: (q: PluginLocalBackProps) => void
@@ -32,6 +34,6 @@ export interface PluginsLocalDetailProps {
 
 export interface PluginLocalBackProps {
     search: PluginSearchParams
-    selectList: string[]
+    selectList: YakScript[]
     allCheck: boolean
 }
