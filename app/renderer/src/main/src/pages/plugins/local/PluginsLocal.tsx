@@ -6,7 +6,7 @@ import {
     PluginsLocalProps
 } from "./PluginsLocalType"
 import {SolidChevrondownIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
-import {useLockFn, useMemoizedFn, useInViewport, useDebounceFn, useLatest} from "ahooks"
+import {useMemoizedFn, useInViewport, useDebounceFn, useLatest} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {defaultSearch, PluginsLayout, PluginsContainer, pluginTypeList} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
