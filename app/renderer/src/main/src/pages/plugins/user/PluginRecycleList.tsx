@@ -153,7 +153,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
         const selectNum = useMemo(() => {
             if (allCheck) return response.pagemeta.total
             else return selectList.length
-        }, [allCheck, selectList])
+        }, [allCheck, selectList,response.pagemeta.total])
         const onSetVisible = useMemoizedFn(() => {})
         /** 单项额外操作组件 */
         const optExtraNode = useMemoizedFn((data: YakitPluginOnlineDetail) => {
