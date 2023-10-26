@@ -39,6 +39,7 @@ import {randomString} from "@/utils/randomUtil"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
 import {getReleaseEditionName} from "@/utils/envfile"
 import {DownloadOnlinePluginsRequest, PluginGV} from "@/pages/plugins/utils"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -295,9 +296,11 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
                 setPercent(0)
                 setVisible(false)
                 ipcRenderer.invoke("change-main-menu")
+                onRefLocalPluginList()
             }, 200)
         })
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+            onRefLocalPluginList()
             yakitNotify("error", "下载失败:" + e)
         })
         return () => {
@@ -320,8 +323,13 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     const StopAllPlugin = () => {
         ipcRenderer.invoke("cancel-DownloadOnlinePluginAll", taskToken).catch((e) => {
             failed(`停止下载:${e}`)
+            onRefLocalPluginList()
         })
     }
+    /**下载插件后需要更新 本地插件列表 */
+    const onRefLocalPluginList = useMemoizedFn(() => {
+        emiter.emit("onRefLocalPluginList", "")
+    })
     return (
         <YakitHint
             visible={visible}
