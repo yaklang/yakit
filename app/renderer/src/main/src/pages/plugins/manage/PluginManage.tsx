@@ -423,6 +423,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         user={data.authors || ""}
                                         // prImgs={data.prs}
                                         time={data.updated_at}
+                                        isCorePlugin={false}
+                                        official={false}
                                         subTitle={optSubTitle}
                                         extraFooter={optExtraNode}
                                         onClick={optClick}
@@ -442,6 +444,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         title={info.index + data.script_name}
                                         help={data.help || ""}
                                         time={data.updated_at}
+                                        type={""}
+                                        isCorePlugin={false}
+                                        official={false}
                                         subTitle={optSubTitle}
                                         extraNode={optExtraNode}
                                         onClick={optClick}

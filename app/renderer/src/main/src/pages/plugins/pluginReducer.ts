@@ -46,7 +46,8 @@ export const pluginOnlineReducer = (
     const {response, item, itemList} = action.payload
     switch (action.type) {
         case "add":
-            if (response?.pagemeta.page === 1) {
+            if (!response) return state
+            if (+response?.pagemeta.page === 1) {
                 return {
                     data:
                         (response?.data || []).map((ele) => ({
@@ -103,7 +104,7 @@ export const pluginOnlineReducer = (
                 return {
                     pagemeta: {
                         ...state.pagemeta,
-                        total: Number(state.pagemeta.total) - 1
+                        total: Number(state.pagemeta.total) - itemList.length
                     },
                     data: state.data.filter((ele) => !filters.includes(ele.uuid))
                 }
@@ -186,7 +187,8 @@ export const pluginLocalReducer = (
     const {response, item, itemList} = action.payload
     switch (action.type) {
         case "add":
-            if (response?.Pagination.Page === 1) {
+            if (!response) return state
+            if (+response?.Pagination.Page === 1) {
                 return {
                     Data: response?.Data || [],
                     Pagination: response?.Pagination || {
@@ -226,11 +228,11 @@ export const pluginLocalReducer = (
             }
 
         case "remove":
-            if (item) {
+            if (itemList) {
                 const filters = (itemList || []).map((item) => item.ScriptName)
                 return {
                     ...state,
-                    Total: Number(state.Total) - 1,
+                    Total: Number(state.Total) - itemList.length,
                     Data: state.Data.filter((ele) => !filters.includes(ele.ScriptName))
                 }
             } else {

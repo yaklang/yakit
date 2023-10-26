@@ -160,6 +160,12 @@ export interface ListLayoutOptProps {
     help: string
     /** 插件更新时间 */
     time: number
+    /** 插件类型 */
+    type: string
+    /** 是否为内置插件 */
+    isCorePlugin: boolean
+    /** 是否为官方插件 */
+    official: boolean
     /** 插件相关拓展节点 */
     subTitle?: (data: any) => ReactNode
     extraNode?: (data: any) => ReactNode
@@ -216,6 +222,10 @@ export interface GridLayoutOptProps {
     prImgs?: string[]
     /** 插件更新时间 */
     time: number
+    /** 是否为内置插件 */
+    isCorePlugin: boolean
+    /** 是否为官方插件 */
+    official: boolean
     /** 插件相关拓展节点 */
     subTitle?: (data: any) => ReactNode
     extraFooter?: (data: any) => ReactNode
@@ -281,7 +291,7 @@ export interface TagShowOpt {
  * @property {boolean} pluginRemoveCheck 插件删除是否提示的记录字段
  * @function onRemoveClick 删除回调
  * @function onReductionClick 删除回调
- * @function onRemoveOrReductionBefore 
+ * @function onRemoveOrReductionBefore
  */
 export interface OnlineRecycleExtraOperateProps {
     isLogin: boolean
@@ -289,5 +299,5 @@ export interface OnlineRecycleExtraOperateProps {
     data: YakitPluginOnlineDetail
     onRemoveClick: (data: YakitPluginOnlineDetail) => void
     onReductionClick: (data: YakitPluginOnlineDetail) => void
-    onRemoveOrReductionBefore: (data: YakitPluginOnlineDetail,type: "remove" | "reduction") => void
+    onRemoveOrReductionBefore: (data: YakitPluginOnlineDetail, type: "remove" | "reduction") => void
 }

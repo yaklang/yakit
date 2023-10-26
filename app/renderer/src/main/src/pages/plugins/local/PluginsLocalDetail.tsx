@@ -49,7 +49,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
 
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
-    const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
+    const [selectList, setSelectList] = useState<YakScript[]>(defaultSelectList)
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -121,13 +121,13 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         try {
             // 全选情况时的取消勾选
             if (allCheck) {
-                setSelectList(response.Data.map((item) => item.ScriptName).filter((item) => item !== data.ScriptName))
+                setSelectList(response.Data.filter((item) => item.ScriptName !== data.ScriptName))
                 setAllCheck(false)
                 return
             }
             // 单项勾选回调
-            if (value) setSelectList([...selectList, data.ScriptName])
-            else setSelectList(selectList.filter((item) => item !== data.ScriptName))
+            if (value) setSelectList([...selectList, data])
+            else setSelectList(selectList.filter((item) => item.ScriptName !== data.ScriptName))
         } catch (error) {
             yakitNotify("error", "勾选失败:" + error)
         }
@@ -137,6 +137,9 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         if (value) setSelectList([])
         setAllCheck(value)
     })
+    const checkList = useMemo(() => {
+        return selectList.map((ele) => ele.ScriptName)
+    }, [selectList])
     if (!plugin) return null
     return (
         <>
@@ -144,7 +147,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 title='本地插件'
                 filterNode={
                     <PluginGroup
-                        checkList={selectList}
+                        checkList={checkList}
                         selectGroup={selectGroup}
                         setSelectGroup={setSelectGroup}
                         isSelectAll={allCheck}
@@ -175,7 +178,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                     loadMoreData: loadMoreData,
                     classNameRow: "plugin-details-opt-wrapper",
                     renderRow: (info, i) => {
-                        const check = allCheck || selectList.includes(info.ScriptName)
+                        const check = allCheck || checkList.includes(info.ScriptName)
                         return (
                             <PluginDetailsListItem<YakScript>
                                 plugin={info}
