@@ -49,6 +49,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {OutputPluginForm} from "@/pages/yakitStore/PluginOperator"
+import emiter from "@/utils/eventBus/eventBus"
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -86,10 +87,15 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const selectNum = useMemo(() => {
         if (allCheck) return response.Total
         else return selectList.length
-    }, [allCheck, selectList])
+    }, [allCheck, selectList, response.Total])
 
     const userInfo = useStore((s) => s.userInfo)
-
+    useEffect(() => {
+        emiter.on("onRefLocalPluginList", onRefLocalPluginList)
+        return () => {
+            emiter.off("onRefLocalPluginList", onRefLocalPluginList)
+        }
+    }, [])
     useEffect(() => {
         getInitTotal()
         getPluginRemoveCheck()
@@ -101,6 +107,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     useEffect(() => {
         fetchList(true)
     }, [userInfo.isLogin, filters])
+
+    const onRefLocalPluginList = useMemoizedFn(() => {
+        fetchList(true)
+    })
 
     /**获取插件删除的提醒记录状态 */
     const getPluginRemoveCheck = useMemoizedFn(() => {
