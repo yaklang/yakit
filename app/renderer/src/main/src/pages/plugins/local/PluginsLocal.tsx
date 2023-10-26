@@ -1,7 +1,7 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
 import {LocalExtraOperateProps, PluginLocalBackProps, PluginsLocalProps} from "./PluginsLocalType"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
-import {useLockFn, useMemoizedFn, useInViewport,useDebounceFn} from "ahooks"
+import {useLockFn, useMemoizedFn, useInViewport, useDebounceFn, useLatest} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {defaultSearch, PluginsLayout, PluginsContainer, pluginTypeList} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
@@ -80,6 +80,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const pluginsLocalRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(pluginsLocalRef)
     const removePluginRef = useRef<YakScript>()
+    const latestLoadingRef = useLatest(loading)
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -123,7 +124,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 
     const fetchList = useLockFn(
         useMemoizedFn(async (reset?: boolean) => {
-            if (loading) return
+            if (latestLoadingRef.current) return
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -238,7 +239,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
      */
     const onSearch = useDebounceFn(
         useMemoizedFn(() => {
-        fetchList(true)
+            fetchList(true)
         }),
         {
             wait: 200
@@ -289,11 +290,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }
         getInitTotal()
         getPluginGroupListLocal()
-        fetchList(true)
         setRemoteValue(PluginGV.LocalPluginRemoveCheck, `${pluginRemoveCheck}`)
-        setTimeout(() => {
-            setLoading(false)
-        }, 200)
+        setLoading(false)
+        fetchList(true)
     })
     /**删除提示弹窗 */
     const onPluginRemoveCheckOk = useMemoizedFn(() => {
@@ -459,7 +458,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                             isCorePlugin={!!data.IsCorePlugin}
                                             official={!!data.OnlineOfficial}
                                             // prImgs={data.prs}
-                                            time={data.CreatedAt}
+                                            time={data.UpdatedAt}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
                                         />
@@ -477,7 +476,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                             img={data.HeadImg || ""}
                                             title={data.ScriptName}
                                             help={data.Help || ""}
-                                            time={data.CreatedAt}
+                                            time={data.UpdatedAt}
                                             type={data.Type}
                                             isCorePlugin={!!data.IsCorePlugin}
                                             official={!!data.OnlineOfficial}
