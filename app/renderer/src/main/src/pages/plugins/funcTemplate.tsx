@@ -65,6 +65,8 @@ import {SolidThumbUpIcon} from "@/assets/newIcon"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
 import {yakitNotify} from "@/utils/notification"
 import {DownloadOnlinePluginsRequest, PluginStarsRequest, apiDownloadOnlinePlugin, apiPluginStars} from "./utils"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import SearchResultEmpty from "@/assets/search_result_empty.png"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -244,16 +246,30 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
         })
     })
     const onValueChange = useMemoizedFn((e) => {
+        const {value} = e.target
         if (search.type === "keyword") {
-            setSearch({
+            const keywordSearch: PluginSearchParams = {
                 ...search,
                 keyword: e.target.value
-            })
-        } else {
+            }
             setSearch({
+                ...keywordSearch
+            })
+            // 清空输入框后搜索
+            if (!value && value !== search.keyword) {
+                onsearch(keywordSearch)
+            }
+        } else {
+            const userNameSearch: PluginSearchParams = {
                 ...search,
                 userName: e.target.value
+            }
+            setSearch({
+                ...userNameSearch
             })
+            if (!value && value !== search.userName) {
+                onsearch(userNameSearch)
+            }
         }
     })
     const onSearch = useMemoizedFn(() => {
@@ -572,7 +588,8 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
         listClassName,
         gridClassName,
         showIndex,
-        setShowIndex
+        setShowIndex,
+        isShowSearchResultEmpty
     } = props
 
     // useWhyDidYouUpdate("ListShowContainer", {...props})
@@ -587,7 +604,15 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
             return `${id}-grid`
         }
     }, [id])
-    return (
+    return isShowSearchResultEmpty ? (
+        <YakitEmpty
+            image={SearchResultEmpty}
+            imageStyle={{width: 274, height: 180, marginBottom: 24}}
+            title='搜索结果“空”'
+            style={{marginTop: 80}}
+            className={styles["empty-list"]}
+        />
+    ) : (
         <div className={styles["list-show-container"]}>
             <div
                 tabIndex={isList ? 0 : -1}
@@ -742,7 +767,8 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
 })
 /** @name 插件列表形式单个项组件 */
 export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
-    const {data, checked, onCheck, img, title, help, time,type,isCorePlugin,official, subTitle, extraNode, onClick} = props
+    const {data, checked, onCheck, img, title, help, time, type, isCorePlugin, official, subTitle, extraNode, onClick} =
+        props
 
     // 副标题组件
     const subtitle = useMemoizedFn(() => {
