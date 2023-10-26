@@ -727,7 +727,7 @@ export const apiDeleteYakScript: (query: DeleteYakScriptRequestProps) => Promise
                 Ids: query.Ids.map((ele) => Number(ele)) || []
             }
             ipcRenderer
-                .invoke("DeleteYakScript", newQuery)
+                .invoke("DeleteLocalPluginsByWhere", newQuery)
                 .then(() => {
                     ipcRenderer.invoke("change-main-menu")
                     resolve(null)
@@ -748,7 +748,7 @@ export interface DeleteLocalPluginsByWhereRequestProps {
     Keywords: string
     Type: string
     UserName: string
-    // UserId:number
+    Tags: string
 }
 /**
  * @name DeleteLocalPluginsByWhere 接口参数转换(前端数据转接口参数)
@@ -763,8 +763,8 @@ export const convertDeleteLocalPluginsByWhereRequestParams = (
         UserName: search.type === "userName" ? search.userName : "",
 
         // filter
-        Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(",")
-        // Tag: filter.tags?.map((ele) => ele.value) || []
+        Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
+        Tags: (filter.tags?.map((ele) => ele.value) || []).join(",")
     }
     return delObjectInvalidValue(data)
 }

@@ -19,7 +19,7 @@ import {
     OutlineShareIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useMemoizedFn, useDebounceFn, useLockFn, useControllableValue, useInViewport} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useLockFn, useControllableValue, useInViewport, useLatest} from "ahooks"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import cloneDeep from "lodash/cloneDeep"
@@ -388,6 +388,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
 
         const removePluginRef = useRef<YakitPluginOnlineDetail>()
+        const latestLoadingRef = useLatest(loading)
         const userInfo = useStore((s) => s.userInfo)
 
         // 选中插件的数量
@@ -435,7 +436,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         })
         const fetchList = useLockFn(
             useMemoizedFn(async (reset?: boolean) => {
-                if (loading) return
+                if (latestLoadingRef.current) return
                 if (reset) {
                     isLoadingRef.current = true
                 }
@@ -623,45 +624,41 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             })
         })
         /**批量删除 */
-        const onRemovePluginBatch = useMemoizedFn(() => {
-            if (!allCheck && selectList.length === 0) {
-                // 删除全部，清空
-                apiDeletePluginMine().then(() => {
-                    setRemoveCheckVisible(false)
-                    setSelectList([])
-                    getInitTotal()
-                    getPluginGroupList()
-                    fetchList(true)
-                    onRefreshRecycleList()
-                    setRemoteValue(PluginGV.UserPluginRemoveCheck, `${pluginRemoveCheck}`)
-                })
-            } else {
-                // 批量删除
-                let deleteParams: API.PluginsWhereDeleteRequest = {}
-
-                if (allCheck) {
-                    deleteParams = {
-                        ...convertPluginsRequestParams(filters, search)
-                    }
+        const onRemovePluginBatch = useMemoizedFn(async () => {
+            setLoading(true)
+            try {
+                if (!allCheck && selectList.length === 0) {
+                    // 删除全部，清空
+                    await apiDeletePluginMine()
                 } else {
-                    deleteParams = {
-                        uuid: selectList
-                    }
-                }
-                apiDeletePluginMine(deleteParams).then(() => {
-                    setRemoveCheckVisible(false)
-                    setSelectList([])
+                    // 批量删除
+                    let deleteParams: API.PluginsWhereDeleteRequest = {}
+
                     if (allCheck) {
-                        setAllCheck(false)
-                        setIsSelectUserNum(false)
+                        deleteParams = {
+                            ...convertPluginsRequestParams(filters, search)
+                        }
+                    } else {
+                        deleteParams = {
+                            uuid: selectList
+                        }
                     }
-                    getInitTotal()
-                    getPluginGroupList()
-                    fetchList(true)
-                    onRefreshRecycleList()
-                    setRemoteValue(PluginGV.UserPluginRemoveCheck, `${pluginRemoveCheck}`)
-                })
+                    await apiDeletePluginMine(deleteParams)
+                }
+            } catch (error) {}
+
+            setRemoveCheckVisible(false)
+            setSelectList([])
+            if (allCheck) {
+                setAllCheck(false)
+                setIsSelectUserNum(false)
             }
+            getInitTotal()
+            getPluginGroupList()
+            onRefreshRecycleList()
+            setRemoteValue(PluginGV.UserPluginRemoveCheck, `${pluginRemoveCheck}`)
+            setLoading(false)
+            fetchList(true)
         })
 
         /**全选 */
