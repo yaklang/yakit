@@ -538,9 +538,15 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
 
                 <div className={styles["header-extra"]}>
                     {extraHeader || null}
-                    <div className={styles["is-list-btn"]} onClick={() => setIsList(!isList)}>
-                        {isList ? <OutlineViewgridIcon /> : <OutlineViewlistIcon />}
-                    </div>
+                    <Tooltip
+                        className='plugins-tooltip'
+                        placement='topRight'
+                        title={isList ? "切换至宫格视图" : "切换至列表视图"}
+                    >
+                        <div className={styles["is-list-btn"]} onClick={() => setIsList(!isList)}>
+                            {isList ? <OutlineViewgridIcon /> : <OutlineViewlistIcon />}
+                        </div>
+                    </Tooltip>
                 </div>
             </div>
 
@@ -736,7 +742,7 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
 })
 /** @name 插件列表形式单个项组件 */
 export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
-    const {data, checked, onCheck, img, title, help, time, subTitle, extraNode, onClick} = props
+    const {data, checked, onCheck, img, title, help, time,type,isCorePlugin,official, subTitle, extraNode, onClick} = props
 
     // 副标题组件
     const subtitle = useMemoizedFn(() => {
@@ -755,11 +761,11 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
     })
 
     const authorImgNode = useMemo(() => {
-        if (data.isCorePlugin) {
-            return <AuthorImg icon={pluginTypeToName[data.type].icon} />
+        if (isCorePlugin) {
+            return <AuthorImg icon={pluginTypeToName[type].icon} />
         }
-        return <AuthorImg src={img || ""} builtInIcon={data.official ? "official" : undefined} />
-    }, [data.isCorePlugin])
+        return <AuthorImg src={img || ""} builtInIcon={official ? "official" : undefined} />
+    }, [isCorePlugin])
 
     return (
         <div className={styles["list-layout-opt-wrapper"]} onClick={onclick}>
@@ -1039,6 +1045,8 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
         user,
         prImgs = [],
         time,
+        isCorePlugin,
+        official,
         subTitle,
         extraFooter,
         onClick
@@ -1084,11 +1092,11 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
         }
     }, [prImgs])
     const authorImgNode = useMemo(() => {
-        if (data.isCorePlugin) {
-            return <AuthorImg icon={pluginTypeToName[data.type].icon} />
+        if (isCorePlugin) {
+            return <AuthorImg icon={pluginTypeToName[type].icon} />
         }
-        return <AuthorImg src={img || ""} builtInIcon={data.official ? "official" : undefined} />
-    }, [data.isCorePlugin])
+        return <AuthorImg src={img || ""} builtInIcon={official ? "official" : undefined} />
+    }, [isCorePlugin])
     return (
         <div className={styles["grid-layout-opt-wrapper"]} onClick={onclick}>
             <div

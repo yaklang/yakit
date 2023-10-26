@@ -14,3 +14,13 @@
         margin-left: 4px;
     }
 }
+
+.plugin-local-empty {
+    margin-top: 48px;
+    .plugin-local-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 16px;
+    }
+}
