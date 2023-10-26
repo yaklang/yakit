@@ -536,7 +536,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         // 关键字搜索
                         if (query?.keyWord) {
                             const responseString = Uint8ArrayToString(record.ResponseRaw)
-                            keyWordIsPush = responseString.includes(query.keyWord)
+                            const payloadsString = (record.Payloads||[]).join("")
+                            keyWordIsPush = (responseString+payloadsString).includes(query.keyWord)
                         }
                         // 状态码搜索
                         if (query?.StatusCode && query?.StatusCode?.length > 0) {
