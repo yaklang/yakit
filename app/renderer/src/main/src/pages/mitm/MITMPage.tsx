@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useRef, useState, useMemo} from "react"
 import {Form, Modal, notification, Typography} from "antd"
 import {failed, info, success, yakitFailed} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
@@ -17,7 +17,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {RemoveIcon} from "@/assets/newIcon"
-import {setLocalValue} from "@/utils/kv"
+import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {loadLocalYakitPluginCode, loadNucleiPoCFromLocal, loadYakitPluginCode} from "../yakitStore/YakitStorePage"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -41,6 +41,7 @@ import classNames from "classnames"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import { ExclamationCircleOutlined } from "@ant-design/icons"
+import {PluginGV} from "../plugins/utils"
 
 const {Text} = Typography
 const {Item} = Form
@@ -915,19 +916,66 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
 })
 
 interface AddPluginGroupProps {
-    pugGroup: YakFilterRemoteObj[]
     visible: boolean
     setVisible: (b: boolean) => void
-    onOk: (v: YakFilterRemoteObj) => void
+    onOk?: (v: YakFilterRemoteObj[]) => void
     checkList: string[]
 }
 
-export const AddPluginGroup: React.FC<AddPluginGroupProps> = React.memo((props) => {
-    const {pugGroup, visible, setVisible, checkList, onOk} = props
+export const AddLocalPluginGroup: React.FC<AddPluginGroupProps> = React.memo((props) => {
+    const {visible, setVisible, checkList, onOk} = props
     const [name, setName] = useState<string>("")
+    const [cacheData, setCacheData] = useState<YakFilterRemoteObj[]>([])
     useEffect(() => {
         setName("")
+        getLocalPluginGroup()
     }, [visible])
+    const getLocalPluginGroup = useMemoizedFn(() => {
+        getRemoteValue(PluginGV.Fetch_Local_Plugin_Group).then((data: string) => {
+            try {
+                if (!!data) {
+                    const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
+                    setCacheData(cacheData)
+                }
+            } catch (error) {
+                failed("获取插件组失败:" + error)
+            }
+        })
+    })
+    /**
+     * @description 保存插件组
+     */
+    const onSave = useMemoizedFn(() => {
+        try {
+            let obj = {
+                name,
+                value: checkList
+            }
+            if (cacheData.length > 0) {
+                const index: number = cacheData.findIndex((item) => item.name === name)
+                // 本地中存在插件组名称
+                if (index >= 0) {
+                    cacheData[index].value = Array.from(new Set([...cacheData[index].value, ...checkList]))
+                    if (onOk) onOk([...cacheData])
+                    setRemoteValue(PluginGV.Fetch_Local_Plugin_Group, JSON.stringify(cacheData))
+                } else {
+                    const newArr = [...cacheData, obj]
+                    if (onOk) onOk(newArr)
+                    setRemoteValue(PluginGV.Fetch_Local_Plugin_Group, JSON.stringify(newArr))
+                }
+            } else {
+                if (onOk) onOk([obj])
+                setRemoteValue(PluginGV.Fetch_Local_Plugin_Group, JSON.stringify([obj]))
+            }
+            setVisible(false)
+            info("添加插件组成功")
+        } catch (error) {
+            failed("添加插件组失败:" + error)
+        }
+    })
+    const pugGroup = useMemo(() => {
+        return cacheData.map((ele) => ({value: ele.name, label: ele.name})) || []
+    }, [cacheData])
     return (
         <YakitModal visible={visible} onCancel={() => setVisible(false)} footer={null} closable={false}>
             <div className={style["plugin-group-modal"]}>
@@ -943,7 +991,7 @@ export const AddPluginGroup: React.FC<AddPluginGroupProps> = React.memo((props) 
                         defaultActiveFirstOption={false}
                         value={name}
                         onChange={(value) => setName(value)}
-                        options={pugGroup.map((ele) => ({value: ele.name, label: ele.name}))}
+                        options={pugGroup}
                         filterOption={(inputValue, option) => {
                             if (option?.value && typeof option?.value === "string") {
                                 return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
@@ -966,16 +1014,7 @@ export const AddPluginGroup: React.FC<AddPluginGroupProps> = React.memo((props) 
                     >
                         取消
                     </YakitButton>
-                    <YakitButton
-                        type='primary'
-                        size='large'
-                        onClick={() =>
-                            onOk({
-                                name,
-                                value: checkList
-                            })
-                        }
-                    >
+                    <YakitButton type='primary' size='large' onClick={onSave}>
                         确定
                     </YakitButton>
                 </div>
