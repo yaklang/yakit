@@ -85,7 +85,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
             e.stopPropagation()
             const {scrollTop, id} = e.target
             if (id === "online-list" || id === "online-grid") {
-                if (scrollTop === 0) {
+                if (scrollTop === 1) {
                     setIsShowRoll(true)
                     if (pluginsOnlineRef.current) {
                         pluginsOnlineRef.current.scrollTop -= 54
@@ -585,6 +585,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             user={data.authors || ""}
                                             // prImgs={[]}
                                             time={data.updated_at}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={!!data.isCorePlugin}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
                                         />
@@ -603,6 +605,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             title={data.script_name}
                                             help={data.help || ""}
                                             time={data.updated_at}
+                                            type={data.type}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={!!data.official}
                                             extraNode={optExtraNode}
                                             onClick={optClick}
                                         />

@@ -404,6 +404,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             [allCheck, selectList]
         )
         useEffect(() => {
+            setSelectList(defaultSelectList)
+        }, [defaultSelectList])
+        useEffect(() => {
+            setAllCheck(defaultAllCheck)
+        }, [defaultAllCheck])
+        useEffect(() => {
             getInitTotal()
             getPluginRemoveCheck()
         }, [inViewport, refresh])
@@ -441,7 +447,6 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 const query: PluginsQueryProps = convertPluginsRequestParams(filters, search, params)
                 try {
                     const res = await apiFetchMineList(query)
-                    console.log("我的插件列表-apiFetchRecycleList", res)
                     const length = res.data.length + response.data.length
                     setHasMore(length < +res.pagemeta.total)
                     if (!res.data) res.data = []
@@ -595,9 +600,11 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             let deleteParams: API.PluginsWhereDeleteRequest = {
                 uuid: [data.uuid]
             }
-            // console.log("单个删除", deleteParams)
-            // console.log("pluginRemoveCheck", pluginRemoveCheck)
             apiDeletePluginMine(deleteParams).then(() => {
+                const index = selectList.findIndex((ele) => ele === data.uuid)
+                if (index !== -1) {
+                    optCheck(data, false)
+                }
                 dispatch({
                     type: "remove",
                     payload: {
@@ -605,10 +612,6 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                     }
                 })
                 setRemoteValue(PluginGV.UserPluginRemoveCheck, `${pluginRemoveCheck}`)
-                const index = selectList.findIndex((ele) => ele === data.uuid)
-                if (index !== -1) {
-                    optCheck(data, false)
-                }
                 removePluginRef.current = undefined
                 setRemoveCheckVisible(false)
                 getInitTotal()
@@ -715,6 +718,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                                             user={data.authors || ""}
                                             // prImgs={data.prs}
                                             time={data.updated_at}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={!!data.isCorePlugin}
                                             subTitle={optSubTitle}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
@@ -734,6 +739,9 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                                             title={data.script_name}
                                             help={data.help || ""}
                                             time={data.updated_at}
+                                            type={data.type}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={!!data.official}
                                             subTitle={optSubTitle}
                                             extraNode={optExtraNode}
                                             onClick={optClick}
