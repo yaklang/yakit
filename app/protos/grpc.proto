@@ -597,12 +597,8 @@ message QueryTrafficPacketRequest {
 message QueryTrafficTCPReassembledRequest {
   Paging Pagination = 1;
 
-  bool FromNow = 2; // ignore it
+  bool FromNow = 2;
   string SessionId = 3;
-
-  int64 FromId = 4;
-  int64 UntilId = 5;
-  int64 TimestampNow = 6;
 }
 
 message TrafficSession {
@@ -669,11 +665,7 @@ message QueryTrafficPacketResponse {
 }
 
 message TrafficTCPReassembled {
-  int64 Id = 1;
-  string SessionUuid = 2;
-  bytes Raw = 3;
-  int64 Seq = 4;
-  int64 Timestamp = 5;
+
 }
 
 message QueryTrafficTCPReassembledResponse {
@@ -686,11 +678,7 @@ message QueryTrafficSessionRequest {
   Paging Pagination = 1;
 
   // active traffic
-  bool FromNow = 2; // ignore it, bad field
-
-  int64 FromId = 3;
-  int64 UntilId = 4;
-  int64 TimestampNow = 5;
+  bool FromNow = 2;
 }
 
 message PcapXRequest {
