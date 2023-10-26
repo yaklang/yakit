@@ -58,6 +58,7 @@ import {
     apiFetchGroupStatisticsMine,
     apiFetchMineList,
     apiUpdatePluginMine,
+    convertDownloadOnlinePluginBatchRequestParams,
     convertPluginsRequestParams
 } from "../utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -118,11 +119,14 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
     const [userPluginType, setUserPluginType] = useState<MePluginType>("myOnlinePlugin")
 
+    const [downloadLoading, setDownloadLoading] = useState<boolean>(false) // 我的插件批量下载
+
     const pluginUserListRef = useRef<PluginUserListRefProps>({
         allCheck: false,
         selectList: [],
         loadMoreData: () => {},
-        onRemovePluginBatchBefore: () => {}
+        onRemovePluginBatchBefore: () => {},
+        onDownloadBatch: () => {}
     })
 
     const pluginRecycleListRef = useRef<PluginRecycleListRefProps>({
@@ -156,8 +160,12 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     /**新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {})
     /**下载 */
-    const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {
-        setVisibleOnline(true)
+    const onDownload = useMemoizedFn(() => {
+        if (isSelectUserNum) {
+            if (pluginUserListRef.current.onDownloadBatch) pluginUserListRef.current.onDownloadBatch()
+        } else {
+            setVisibleOnline(true)
+        }
     })
     const onSetActive = useMemoizedFn((pluginPrivate: TypeSelectOpt[]) => {
         const newPluginPrivate: API.PluginsSearchData[] = pluginPrivate.map((ele) => ({
@@ -249,7 +257,8 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                                         type='outline2'
                                         size='large'
                                         name={isSelectUserNum ? "下载" : "一键下载"}
-                                        onClick={() => onDownload()}
+                                        onClick={onDownload}
+                                        loading={downloadLoading}
                                     />
                                     <FuncBtn
                                         maxWidth={1050}
@@ -257,7 +266,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                                         type='outline2'
                                         size='large'
                                         name={isSelectUserNum ? "删除" : "清空"}
-                                        onClick={() => onRemove()}
+                                        onClick={onRemove}
                                     />
                                     <FuncBtn
                                         maxWidth={1050}
@@ -312,6 +321,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         defaultAllCheck={allCheckUser}
                         defaultSelectList={selectListUser}
                         onRefreshRecycleList={onRefreshRecycleList}
+                        setDownloadLoading={setDownloadLoading}
                     />
                 </div>
                 <div
@@ -356,10 +366,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             response,
             defaultAllCheck,
             defaultSelectList,
-            onRefreshRecycleList
+            onRefreshRecycleList,
+            setDownloadLoading
         } = props
         /** 是否为加载更多 */
         const [loading, setLoading] = useState<boolean>(false)
+
         /** 是否为初次加载 */
         const isLoadingRef = useRef<boolean>(true)
         const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
@@ -395,7 +407,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         const selectNum = useMemo(() => {
             if (allCheck) return response.pagemeta.total
             else return selectList.length
-        }, [allCheck, selectList])
+        }, [allCheck, selectList, response.pagemeta.total])
 
         useImperativeHandle(
             ref,
@@ -403,7 +415,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 allCheck,
                 selectList,
                 loadMoreData: onUpdateList,
-                onRemovePluginBatchBefore
+                onRemovePluginBatchBefore,
+                onDownloadBatch
             }),
             [allCheck, selectList]
         )
@@ -424,8 +437,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             getPluginGroupList()
         }, [isLogin, inViewport])
         useEffect(() => {
-            setIsSelectUserNum(selectList.length > 0)
-        }, [selectList.length])
+            setIsSelectUserNum(selectList.length > 0 || allCheck)
+        }, [selectList.length, allCheck])
         const getInitTotal = useMemoizedFn(() => {
             apiFetchMineList({
                 page: 1,
@@ -542,18 +555,28 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         /**下载 */
         const onDownloadClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
             let downloadParams: DownloadOnlinePluginsRequest = {
-                UUID: selectList
+                UUID: [data.uuid]
             }
-            setLoading(true)
             apiDownloadOnlinePlugin(downloadParams)
-                .then(() => {
-                    yakitNotify("success", "下载成功")
-                })
-                .finally(() =>
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
-                )
+        })
+        /**批量下载 */
+        const onDownloadBatch = useMemoizedFn(() => {
+            let downloadParams: DownloadOnlinePluginsRequest = {}
+            if (allCheck) {
+                downloadParams = {
+                    ...convertDownloadOnlinePluginBatchRequestParams(filters, search)
+                }
+            } else {
+                downloadParams = {
+                    UUID: selectList
+                }
+            }
+            setDownloadLoading(true)
+            apiDownloadOnlinePlugin(downloadParams).finally(() =>
+                setTimeout(() => {
+                    setDownloadLoading(false)
+                }, 200)
+            )
         })
         /**更改私有状态 */
         const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
