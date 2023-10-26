@@ -2021,7 +2021,7 @@ message QueryYakScriptRiskDetailByCWERequest {
 }
 
 message QueryYakScriptRiskDetailByCWEResponse {
-  int64 Id = 1;
+  string Id = 1;
   string CWEName = 2;
   string Description = 3;
   string CWESolution = 4;
