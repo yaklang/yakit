@@ -15,7 +15,7 @@ import {
     PluginGV
 } from "../utils"
 import {PluginRecycleListProps} from "./PluginUserType"
-import {useMemoizedFn, useLockFn, useControllableValue} from "ahooks"
+import {useMemoizedFn, useLockFn, useControllableValue, useLatest} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -47,6 +47,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
         const operatePluginRef = useRef<YakitPluginOnlineDetail>() //记录删除或者还原的操作插件
         /** 是否为初次加载 */
         const isLoadingRef = useRef<boolean>(true)
+        const latestLoadingRef = useLatest(loading)
 
         useImperativeHandle(
             ref,
@@ -88,7 +89,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
 
         const fetchList = useLockFn(
             useMemoizedFn(async (reset?: boolean) => {
-                if (loading) return
+                if (latestLoadingRef.current) return
                 if (reset) {
                     isLoadingRef.current = true
                 }
@@ -180,45 +181,41 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
             onRemoveOrReductionPluginBatch("false")
         })
         /**批量删除和还原 */
-        const onRemoveOrReductionPluginBatch = useMemoizedFn((dumpType: "true" | "false") => {
+        const onRemoveOrReductionPluginBatch = useMemoizedFn(async (dumpType: "true" | "false") => {
             // true 彻底删除, false还原
-
-            if (!allCheck && selectList.length === 0) {
-                // 删除全部，清空
-                if (dumpType === "true") {
-                    apiRemoveRecyclePlugin().then(() => {
-                        onBatchRemoveOrReductionPluginAfter()
-                    })
-                } else {
-                    apiReductionRecyclePlugin().then(() => {
-                        onBatchRemoveOrReductionPluginAfter()
-                    })
-                }
-            } else {
-                // 批量删除
-                let deleteParams: PluginsRecycleRequest = {}
-
-                if (allCheck) {
-                    deleteParams = {
-                        ...deleteParams,
-                        ...convertPluginsRequestParams({}, search)
+            setLoading(true)
+            try {
+                if (!allCheck && selectList.length === 0) {
+                    // 删除全部，清空
+                    if (dumpType === "true") {
+                        await apiRemoveRecyclePlugin()
+                    } else {
+                        await apiReductionRecyclePlugin()
                     }
                 } else {
-                    deleteParams = {
-                        ...deleteParams,
-                        uuid: selectList
+                    // 批量删除
+                    let deleteParams: PluginsRecycleRequest = {}
+
+                    if (allCheck) {
+                        deleteParams = {
+                            ...deleteParams,
+                            ...convertPluginsRequestParams({}, search)
+                        }
+                    } else {
+                        deleteParams = {
+                            ...deleteParams,
+                            uuid: selectList
+                        }
+                    }
+                    if (dumpType === "true") {
+                        await apiRemoveRecyclePlugin(deleteParams)
+                    } else {
+                        await apiReductionRecyclePlugin(deleteParams)
                     }
                 }
-                if (dumpType === "true") {
-                    apiRemoveRecyclePlugin(deleteParams).then(() => {
-                        onBatchRemoveOrReductionPluginAfter()
-                    })
-                } else {
-                    apiReductionRecyclePlugin(deleteParams).then(() => {
-                        onBatchRemoveOrReductionPluginAfter()
-                    })
-                }
-            }
+            } catch (error) {}
+
+            onBatchRemoveOrReductionPluginAfter()
         })
         /**当pluginRemoveCheck为true，需要提示的时候，把当前操作的插件记录下来 */
         const onRemoveOrReductionBefore = useMemoizedFn((data: YakitPluginOnlineDetail) => {
@@ -270,10 +267,11 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
             }
             operatePluginRef.current = undefined
             getInitTotal()
-            fetchList(true)
             setRemoveCheckVisible(false)
             onRefreshUserList() // 刷新我的插件列表
             setRemoteValue(PluginGV.RecyclePluginRemoveCheck, `${pluginRemoveCheck}`)
+            setLoading(false)
+            fetchList(true)
         })
         const onSetFilters = useMemoizedFn(() => {})
         const onPluginRemoveCheckOk = useLockFn(
