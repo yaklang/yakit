@@ -20,7 +20,15 @@ import {
     OutlineSwitchverticalIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {useMemoizedFn, useDebounceFn, useControllableValue, useLockFn, useUpdateEffect, useInViewport} from "ahooks"
+import {
+    useMemoizedFn,
+    useDebounceFn,
+    useControllableValue,
+    useLockFn,
+    useUpdateEffect,
+    useInViewport,
+    useLatest
+} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
@@ -147,6 +155,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [allCheck, setAllCheck] = useState<boolean>(false)
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
+    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
     const [filters, setFilters] = useState<PluginFilterParams>({
         plugin_type: [],
         tags: []
@@ -184,6 +193,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     /** 是否为初次加载 */
     const isLoadingRef = useRef<boolean>(true)
+    const latestLoadingRef = useLatest(loading)
 
     const userInfo = useStore((s) => s.userInfo)
     useEffect(() => {
@@ -206,7 +216,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const selectNum = useMemo(() => {
         if (allCheck) return response.pagemeta.total
         else return selectList.length
-    }, [allCheck, selectList])
+    }, [allCheck, selectList, response.pagemeta.total])
 
     const getInitTotal = useMemoizedFn(() => {
         apiFetchOnlineList({
@@ -219,7 +229,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     const fetchList = useLockFn(
         useMemoizedFn(async (reset?: boolean) => {
-            if (loading) return
+            if (latestLoadingRef.current) return
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -275,7 +285,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setFilters({...filters, plugin_type: newType})
     })
     /**下载 */
-    const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {
+    const onDownload = useMemoizedFn(() => {
         if (selectNum === 0) {
             // 全部下载
             setVisibleOnline(true)
@@ -291,17 +301,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                     UUID: selectList
                 }
             }
-            setLoading(true)
-            apiDownloadOnlinePlugin(downloadParams)
-                .then(() => {
-                    fetchList(true)
-                    yakitNotify("success", "下载成功")
-                })
-                .finally(() =>
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
-                )
+            setDownloadLoading(true)
+            apiDownloadOnlinePlugin(downloadParams).finally(() =>
+                setTimeout(() => {
+                    setDownloadLoading(false)
+                }, 200)
+            )
         }
     })
 
@@ -368,7 +373,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
      */
     const onSearch = useDebounceFn(
         useMemoizedFn(() => {
-        fetchList(true)
+            fetchList(true)
         }),
         {
             wait: 200
@@ -419,7 +424,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 type='outline2'
                                 size='large'
                                 name={selectNum > 0 ? "下载" : "一键下载"}
-                                onClick={() => onDownload()}
+                                onClick={onDownload}
+                                loading={downloadLoading}
                             />
                             <FuncBtn
                                 maxWidth={1050}

@@ -23,6 +23,7 @@ export interface PluginUserListProps {
     setIsSelectUserNum: (b: boolean) => void
     setPlugin: (p?: YakitPluginOnlineDetail) => void
     onRefreshRecycleList: () => void
+    setDownloadLoading: (b: boolean) => void
 }
 
 export interface PluginRecycleListProps {
@@ -46,6 +47,7 @@ export interface PluginUserListRefProps {
     selectList: string[]
     loadMoreData: () => void
     onRemovePluginBatchBefore: () => void
+    onDownloadBatch:()=>void
 }
 export interface PluginRecycleListRefProps {
     allCheck: boolean
