@@ -122,6 +122,7 @@ export interface YakScript {
     OnlineOfficial?: boolean
     OnlineGroup?: string
     IsCorePlugin?: boolean
+    UpdatedAt: number
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
@@ -164,4 +165,14 @@ export interface ExecResult {
     Id?: number,
     Progress: number
     RuntimeID?: string
+}
+
+export interface TagsAndType {
+    Value: string
+    Total: number
+}
+
+export interface GetYakScriptTagsAndTypeResponse {
+    Type: TagsAndType[]
+    Tag: TagsAndType[]
 }

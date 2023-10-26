@@ -62,6 +62,7 @@ import {DownloadOnlinePluginProps} from "../YakitPluginInfoOnline/YakitPluginInf
 
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import "../YakitStorePage.scss"
+import { PluginGV } from "@/pages/plugins/utils"
 
 const {Search} = Input
 const {Option} = Select
@@ -979,7 +980,7 @@ const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         // 动态加载设置项
         settingRender
     } = props
-    const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_COMMON_DATA`
+    const FILTER_CACHE_LIST_DATA = PluginGV.Fetch_Local_Plugin_Group
     const [form] = Form.useForm()
     const layout = {
         labelCol: {span: 5},

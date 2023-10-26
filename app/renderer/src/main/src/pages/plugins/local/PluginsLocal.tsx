@@ -1,9 +1,9 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
 import {LocalExtraOperateProps, PluginLocalBackProps, PluginsLocalProps} from "./PluginsLocalType"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
-import {useLockFn, useMemoizedFn} from "ahooks"
+import {useLockFn, useMemoizedFn, useInViewport, useDebounceFn, useLatest} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
-import {defaultFilter, defaultSearch, PluginsLayout, PluginsContainer, pluginTypeList} from "../baseTemplate"
+import {defaultSearch, PluginsLayout, PluginsContainer, pluginTypeList} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {
     TypeSelect,
@@ -15,10 +15,9 @@ import {
     GridLayoutOpt,
     ListLayoutOpt
 } from "../funcTemplate"
-import {apiFetchLocalList, ssfilters} from "../test"
 import {SolidChevronDownIcon} from "@/assets/newIcon"
-import {PaginationSchema, YakScript} from "@/pages/invoker/schema"
-import {OutlineClouduploadIcon, OutlineExportIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
+import {OutlineClouduploadIcon, OutlineExportIcon, OutlinePlusIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useStore} from "@/store"
@@ -27,9 +26,30 @@ import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
 import {yakitNotify} from "@/utils/notification"
 import {TypeSelectOpt} from "../funcTemplateType"
 import {API} from "@/services/swagger/resposeType"
+import {Tooltip} from "antd"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
+import {
+    DeleteLocalPluginsByWhereRequestProps,
+    DeleteYakScriptRequestProps,
+    PluginGV,
+    apiDeleteLocalPluginsByWhere,
+    apiDeleteYakScript,
+    apiFetchGroupStatisticsLocal,
+    apiQueryYakScript,
+    apiQueryYakScriptTotal,
+    convertDeleteLocalPluginsByWhereRequestParams,
+    convertLocalPluginsRequestParams
+} from "../utils"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {AddLocalPluginGroup} from "@/pages/mitm/MITMPage"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {OutputPluginForm} from "@/pages/yakitStore/PluginOperator"
+import emiter from "@/utils/eventBus/eventBus"
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -39,69 +59,113 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [isList, setIsList] = useState<boolean>(true)
 
     const [plugin, setPlugin] = useState<YakScript>()
-    const [filters, setFilters] = useState<PluginFilterParams>(
-        cloneDeep({...defaultFilter, tags: ["漏洞检测", "信息泄露"]})
-    )
+    const [filters, setFilters] = useState<PluginFilterParams>({plugin_type: [], tags: []})
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
+    const [initTotal, setInitTotal] = useState<number>(0)
     const [hasMore, setHasMore] = useState<boolean>(true)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
 
     const [allCheck, setAllCheck] = useState<boolean>(false)
-    const [selectList, setSelectList] = useState<string[]>([])
+    const [selectList, setSelectList] = useState<YakScript[]>([])
+
+    const [pluginGroupList, setPluginGroupList] = useState<API.PluginsSearch[]>([])
+    const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
+
+    const [pluginRemoveCheck, setPluginRemoveCheck] = useState<boolean>(false)
+    const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
+
+    /** 是否为初次加载 */
+    const isLoadingRef = useRef<boolean>(true)
+    const pluginsLocalRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(pluginsLocalRef)
+    const removePluginRef = useRef<YakScript>()
+    const latestLoadingRef = useLatest(loading)
+
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return response.Total
         else return selectList.length
-    }, [allCheck, selectList])
+    }, [allCheck, selectList, response.Total])
 
     const userInfo = useStore((s) => s.userInfo)
+    useEffect(() => {
+        emiter.on("onRefLocalPluginList", onRefLocalPluginList)
+        return () => {
+            emiter.off("onRefLocalPluginList", onRefLocalPluginList)
+        }
+    }, [])
+    useEffect(() => {
+        getInitTotal()
+        getPluginRemoveCheck()
+    }, [inViewport])
+    useEffect(() => {
+        getPluginGroupListLocal()
+    }, [userInfo.isLogin, inViewport])
     // 页面初始化的首次列表请求
     useEffect(() => {
         fetchList(true)
-    }, [])
+    }, [userInfo.isLogin, filters])
+
+    const onRefLocalPluginList = useMemoizedFn(() => {
+        fetchList(true)
+    })
+
+    /**获取插件删除的提醒记录状态 */
+    const getPluginRemoveCheck = useMemoizedFn(() => {
+        getRemoteValue(PluginGV.LocalPluginRemoveCheck).then((data) => {
+            setPluginRemoveCheck(data === "true" ? true : false)
+        })
+    })
+
+    const getInitTotal = useMemoizedFn(() => {
+        apiQueryYakScriptTotal().then((res) => {
+            setInitTotal(+res.Total)
+        })
+    })
+
+    /**获取分组统计列表 */
+    const getPluginGroupListLocal = useMemoizedFn(() => {
+        apiFetchGroupStatisticsLocal().then((res: API.PluginsSearchResponse) => {
+            setPluginGroupList(res.data)
+        })
+    })
 
     const fetchList = useLockFn(
         useMemoizedFn(async (reset?: boolean) => {
-            if (loading) return
-
+            if (latestLoadingRef.current) return
+            if (reset) {
+                isLoadingRef.current = true
+            }
             setLoading(true)
 
-            const params: PaginationSchema = !!reset
-                ? {Page: 1, Limit: 20, Order: "", OrderBy: ""}
+            const params: PluginListPageMeta = !!reset
+                ? {page: 1, limit: 20}
                 : {
-                      Page: response.Pagination.Page + 1,
-                      Limit: response.Pagination.Limit || 20,
-                      Order: "",
-                      OrderBy: ""
+                      page: response.Pagination.Page + 1,
+                      limit: response.Pagination.Limit || 20
                   }
 
-            const query = {
-                ...params,
-                ...search,
-                ...filters
+            const query: QueryYakScriptRequest = {
+                ...convertLocalPluginsRequestParams(filters, search, params)
             }
-            if (!showFilter) {
-                query["plugin_type"] = []
-                query["tags"] = []
-            }
-            // console.log("query", !!reset, {...query})
             try {
-                const res = await apiFetchLocalList(query)
+                const res = await apiQueryYakScript(query)
                 if (!res.Data) res.Data = []
+                const length = res.Data.length + response.Data.length
+                setHasMore(length < +res.Total)
                 dispatch({
                     type: "add",
                     payload: {
                         response: res
                     }
                 })
-                setTimeout(() => {
-                    setLoading(false)
-                }, 300)
-            } catch (error) {
-                yakitNotify("error", "请求数据失败:" + error)
-            }
+            } catch (error) {}
+            setTimeout(() => {
+                isLoadingRef.current = false
+                setLoading(false)
+            }, 300)
         })
     )
 
@@ -117,8 +181,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }))
         setFilters({...filters, plugin_type: newType})
     })
-    /**下载 */
-    const onDownload = useMemoizedFn((value?: YakScript) => {})
     /**全选 */
     const onCheck = useMemoizedFn((value: boolean) => {
         if (value) setSelectList([])
@@ -129,20 +191,20 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
         // 全选情况时的取消勾选
         if (allCheck) {
-            setSelectList(response.Data.map((item) => item.ScriptName).filter((item) => item !== data.ScriptName))
+            setSelectList(response.Data.filter((item) => item.ScriptName !== data.ScriptName))
             setAllCheck(false)
             return
         }
         // 单项勾选回调
-        if (value) setSelectList([...selectList, data.ScriptName])
-        else setSelectList(selectList.filter((item) => item !== data.ScriptName))
+        if (value) setSelectList([...selectList, data])
+        else setSelectList(selectList.filter((item) => item.ScriptName !== data.ScriptName))
     })
     /** 单项额外操作组件 */
     const optExtraNode = useMemoizedFn((data: YakScript) => {
         return (
             <LocalExtraOperate
                 isOwn={userInfo.user_id === data.UserId}
-                onRemovePlugin={() => onRemovePlugin(data)}
+                onRemovePlugin={() => onRemovePluginBefore(data)}
                 onExportPlugin={() => onExportPlugin(data)}
                 onEditPlugin={() => onEditPlugin(data)}
                 onUploadPlugin={() => onUploadPlugin(data)}
@@ -159,24 +221,16 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**导出 */
     const onExportPlugin = useMemoizedFn((data: YakScript) => {
-        yakitNotify("success", "导出~~~")
+        onExport([data.Id])
     })
-    /**删除 */
-    const onRemovePlugin = useMemoizedFn((data: YakScript) => {
-        const index = selectList.findIndex((ele) => ele === data.ScriptName)
-        if (index !== -1) {
-            optCheck(data, false)
+    /**单个删除插件之前操作  */
+    const onRemovePluginBefore = useMemoizedFn((data: YakScript) => {
+        removePluginRef.current = data
+        if (pluginRemoveCheck) {
+            onRemovePluginSingle(data)
+        } else {
+            setRemoveCheckVisible(true)
         }
-        dispatch({
-            type: "remove",
-            payload: {
-                itemList: [
-                    {
-                        ...data
-                    }
-                ]
-            }
-        })
     })
     /** 单项点击回调 */
     const optClick = useMemoizedFn((data: YakScript) => {
@@ -190,9 +244,17 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         setAllCheck(backValues.allCheck)
         setSelectList(backValues.selectList)
     })
-    const onSearch = useMemoizedFn(() => {
-        fetchList(true)
-    })
+    /**
+     * @description 此方法防抖不要加leading：true,会影响search拿到最新得值，用useLatest也拿不到最新得；如若需要leading：true，则需要使用setTimeout包fetchList
+     */
+    const onSearch = useDebounceFn(
+        useMemoizedFn(() => {
+            fetchList(true)
+        }),
+        {
+            wait: 200
+        }
+    ).run
     const pluginTypeSelect: TypeSelectOpt[] = useMemo(() => {
         return (
             filters.plugin_type?.map((ele) => ({
@@ -201,6 +263,94 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             })) || []
         )
     }, [filters.plugin_type])
+    /**打开添加至分组的弹窗 */
+    const onAddToGroup = useMemoizedFn(() => {
+        setAddGroupVisible(true)
+    })
+    /**批量删除插件之前操作  */
+    const onRemovePluginBatchBefore = useMemoizedFn(() => {
+        if (pluginRemoveCheck) {
+            onRemovePluginBatch()
+        } else {
+            setRemoveCheckVisible(true)
+        }
+    })
+    /**批量删除 */
+    const onRemovePluginBatch = useMemoizedFn(async () => {
+        setLoading(true)
+        try {
+            if (allCheck) {
+                //带条件删除全部
+                const deleteAllParams: DeleteLocalPluginsByWhereRequestProps = {
+                    ...convertDeleteLocalPluginsByWhereRequestParams(filters, search)
+                }
+                await apiDeleteLocalPluginsByWhere(deleteAllParams)
+            } else {
+                // 批量删除
+                let deleteBatchParams: DeleteYakScriptRequestProps = {
+                    Ids: (selectList || []).map((ele) => ele.Id)
+                }
+                await apiDeleteYakScript(deleteBatchParams)
+            }
+        } catch (error) {}
+        setRemoveCheckVisible(false)
+        setSelectList([])
+        if (allCheck) {
+            setAllCheck(false)
+        }
+        getInitTotal()
+        getPluginGroupListLocal()
+        setRemoteValue(PluginGV.LocalPluginRemoveCheck, `${pluginRemoveCheck}`)
+        setLoading(false)
+        fetchList(true)
+    })
+    /**删除提示弹窗 */
+    const onPluginRemoveCheckOk = useMemoizedFn(() => {
+        if (removePluginRef.current) {
+            onRemovePluginSingle(removePluginRef.current)
+        } else {
+            onRemovePluginBatch()
+        }
+    })
+    /**单个删除 */
+    const onRemovePluginSingle = useMemoizedFn((data: YakScript) => {
+        let deleteParams: DeleteYakScriptRequestProps = {
+            Ids: [data.Id]
+        }
+        apiDeleteYakScript(deleteParams).then(() => {
+            const index = selectList.findIndex((ele) => ele.ScriptName === data.ScriptName)
+            if (index !== -1) {
+                optCheck(data, false)
+            }
+            dispatch({
+                type: "remove",
+                payload: {
+                    itemList: [data]
+                }
+            })
+            removePluginRef.current = undefined
+            setRemoveCheckVisible(false)
+            getInitTotal()
+            getPluginGroupListLocal()
+            setRemoteValue(PluginGV.LocalPluginRemoveCheck, `${pluginRemoveCheck}`)
+        })
+    })
+    /**导出插件 */
+    const onExport = useMemoizedFn((Ids: number[]) => {
+        showYakitModal({
+            title: "导出插件配置",
+            width: "40%",
+            footer: null,
+            content: (
+                <div style={{padding: 24}}>
+                    <OutputPluginForm YakScriptIds={Ids} isSelectAll={allCheck} />
+                </div>
+            )
+        })
+    })
+    const checkList = useMemo(() => {
+        return selectList.map((ele) => ele.ScriptName)
+    }, [selectList])
     return (
         <>
             {!!plugin && (
@@ -223,7 +373,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 hidden={!!plugin}
                 subTitle={<TypeSelect active={pluginTypeSelect} list={pluginTypeList} setActive={onSetActive} />}
                 extraHeader={
-                    <div className='extra-header-wrapper'>
+                    <div className='extra-header-wrapper' ref={pluginsLocalRef}>
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
@@ -242,17 +392,21 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                         {key: "export", label: "导出"},
                                         {key: "upload", label: "上传"},
                                         {key: "remove", label: "删除"},
-                                        {key: "addToGroup", label: "添加至分组"}
+                                        {key: "addToGroup", label: "添加至分组", disabled: allCheck}
                                     ],
                                     onClick: ({key}) => {
                                         switch (key) {
                                             case "export":
+                                                const Ids: number[] = selectList.map((ele) => Number(ele.Id))
+                                                onExport(Ids)
                                                 break
                                             case "upload":
                                                 break
                                             case "remove":
+                                                onRemovePluginBatchBefore()
                                                 break
                                             case "addToGroup":
+                                                onAddToGroup()
                                                 break
                                             default:
                                                 return
@@ -273,12 +427,12 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 }
             >
                 <PluginsContainer
-                    loading={loading && response.Pagination.Page === 1}
+                    loading={loading && isLoadingRef.current}
                     visible={showFilter}
                     setVisible={setShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
-                    groupList={ssfilters}
+                    groupList={pluginGroupList}
                 >
                     <PluginsList
                         checked={allCheck}
@@ -292,57 +446,91 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                         visible={showFilter}
                         setVisible={setShowFilter}
                     >
-                        <ListShowContainer<YakScript>
-                            id='local'
-                            isList={isList}
-                            data={response.Data || []}
-                            gridNode={(info: {index: number; data: YakScript}) => {
-                                const {data} = info
-                                const check = allCheck || selectList.includes(data.ScriptName)
-                                return (
-                                    <GridLayoutOpt
-                                        data={data}
-                                        checked={check}
-                                        onCheck={optCheck}
-                                        title={data.ScriptName}
-                                        type={data.Type}
-                                        tags={data.Tags}
-                                        help={data.Help || ""}
-                                        img={data.HeadImg || ""}
-                                        user={data.Author || ""}
-                                        // prImgs={data.prs}
-                                        time={data.CreatedAt}
-                                        extraFooter={optExtraNode}
-                                        onClick={optClick}
-                                    />
-                                )
-                            }}
-                            gridHeight={210}
-                            listNode={(info: {index: number; data: YakScript}) => {
-                                const {data} = info
-                                const check = allCheck || selectList.includes(data.ScriptName)
-                                return (
-                                    <ListLayoutOpt
-                                        data={data}
-                                        checked={check}
-                                        onCheck={optCheck}
-                                        img={data.HeadImg || ""}
-                                        title={data.ScriptName}
-                                        help={data.Help || ""}
-                                        time={data.CreatedAt}
-                                        extraNode={optExtraNode}
-                                        onClick={optClick}
-                                    />
-                                )
-                            }}
-                            listHeight={73}
-                            loading={loading}
-                            hasMore={hasMore}
-                            updateList={onUpdateList}
-                        />
+                        {initTotal > 0 ? (
+                            <ListShowContainer<YakScript>
+                                id='local'
+                                isList={isList}
+                                data={response.Data || []}
+                                gridNode={(info: {index: number; data: YakScript}) => {
+                                    const {data} = info
+                                    const check = allCheck || checkList.includes(data.ScriptName)
+                                    return (
+                                        <GridLayoutOpt
+                                            data={data}
+                                            checked={check}
+                                            onCheck={optCheck}
+                                            title={data.ScriptName}
+                                            type={data.Type}
+                                            tags={data.Tags}
+                                            help={data.Help || ""}
+                                            img={data.HeadImg || ""}
+                                            user={data.Author || ""}
+                                            isCorePlugin={!!data.IsCorePlugin}
+                                            official={!!data.OnlineOfficial}
+                                            // prImgs={data.prs}
+                                            time={data.UpdatedAt}
+                                            extraFooter={optExtraNode}
+                                            onClick={optClick}
+                                        />
+                                    )
+                                }}
+                                gridHeight={210}
+                                listNode={(info: {index: number; data: YakScript}) => {
+                                    const {data} = info
+                                    const check = allCheck || checkList.includes(data.ScriptName)
+                                    return (
+                                        <ListLayoutOpt
+                                            data={data}
+                                            checked={check}
+                                            onCheck={optCheck}
+                                            img={data.HeadImg || ""}
+                                            title={data.ScriptName}
+                                            help={data.Help || ""}
+                                            time={data.UpdatedAt}
+                                            type={data.Type}
+                                            isCorePlugin={!!data.IsCorePlugin}
+                                            official={!!data.OnlineOfficial}
+                                            extraNode={optExtraNode}
+                                            onClick={optClick}
+                                        />
+                                    )
+                                }}
+                                listHeight={73}
+                                loading={loading}
+                                hasMore={hasMore}
+                                updateList={onUpdateList}
+                                isShowSearchResultEmpty={+response.Total === 0}
+                            />
+                        ) : (
+                            <div className={styles["plugin-local-empty"]}>
+                                <YakitEmpty
+                                    title='暂无数据'
+                                    description='可新建插件同步至云端，创建属于自己的插件'
+                                    style={{marginTop: 80}}
+                                />
+                                <div className={styles["plugin-local-buttons"]}>
+                                    <YakitButton type='outline1' icon={<OutlinePlusIcon />} onClick={onNewAddPlugin}>
+                                        新建插件
+                                    </YakitButton>
+                                </div>
+                            </div>
+                        )}
                     </PluginsList>
                 </PluginsContainer>
             </PluginsLayout>
+            <AddLocalPluginGroup visible={addGroupVisible} setVisible={setAddGroupVisible} checkList={checkList} />
+            <YakitHint
+                visible={removeCheckVisible}
+                title='是否要删除插件'
+                content='确认删除插件后，插件将会放在回收站'
+                onOk={onPluginRemoveCheckOk}
+                onCancel={() => setRemoveCheckVisible(false)}
+                footerExtra={
+                    <YakitCheckbox checked={pluginRemoveCheck} onChange={(e) => setPluginRemoveCheck(e.target.checked)}>
+                        下次不再提醒
+                    </YakitCheckbox>
+                }
+            />
         </>
     )
 })
@@ -367,11 +555,17 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
     })
     return (
         <div className={styles["local-extra-operate-wrapper"]}>
-            <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
+            <Tooltip title='删除' destroyTooltipOnHide={true}>
+                <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
+            </Tooltip>
             <div className='divider-style' />
-            <YakitButton type='text2' icon={<OutlineExportIcon onClick={onExport} />} />
+            <Tooltip title='导出' destroyTooltipOnHide={true}>
+                <YakitButton type='text2' icon={<OutlineExportIcon onClick={onExport} />} />
+            </Tooltip>
             <div className='divider-style' />
-            <YakitButton type='text2' icon={<OutlinePencilaltIcon onClick={onEdit} />} />
+            <Tooltip title='编辑' destroyTooltipOnHide={true}>
+                <YakitButton type='text2' icon={<OutlinePencilaltIcon onClick={onEdit} />} />
+            </Tooltip>
             {isOwn && (
                 <>
                     <div className='divider-style' />

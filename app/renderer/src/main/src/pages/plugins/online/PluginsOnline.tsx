@@ -20,7 +20,15 @@ import {
     OutlineSwitchverticalIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {useMemoizedFn, useDebounceFn, useControllableValue, useLockFn, useUpdateEffect, useInViewport} from "ahooks"
+import {
+    useMemoizedFn,
+    useDebounceFn,
+    useControllableValue,
+    useLockFn,
+    useUpdateEffect,
+    useInViewport,
+    useLatest
+} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
@@ -85,7 +93,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
             e.stopPropagation()
             const {scrollTop, id} = e.target
             if (id === "online-list" || id === "online-grid") {
-                if (scrollTop === 0) {
+                if (scrollTop === 1) {
                     setIsShowRoll(true)
                     if (pluginsOnlineRef.current) {
                         pluginsOnlineRef.current.scrollTop -= 54
@@ -147,6 +155,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [allCheck, setAllCheck] = useState<boolean>(false)
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
+    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
     const [filters, setFilters] = useState<PluginFilterParams>({
         plugin_type: [],
         tags: []
@@ -184,6 +193,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     /** 是否为初次加载 */
     const isLoadingRef = useRef<boolean>(true)
+    const latestLoadingRef = useLatest(loading)
 
     const userInfo = useStore((s) => s.userInfo)
     useEffect(() => {
@@ -206,7 +216,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const selectNum = useMemo(() => {
         if (allCheck) return response.pagemeta.total
         else return selectList.length
-    }, [allCheck, selectList])
+    }, [allCheck, selectList, response.pagemeta.total])
 
     const getInitTotal = useMemoizedFn(() => {
         apiFetchOnlineList({
@@ -219,7 +229,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     const fetchList = useLockFn(
         useMemoizedFn(async (reset?: boolean) => {
-            if (loading) return
+            if (latestLoadingRef.current) return
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -275,7 +285,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setFilters({...filters, plugin_type: newType})
     })
     /**下载 */
-    const onDownload = useMemoizedFn((value?: YakitPluginOnlineDetail) => {
+    const onDownload = useMemoizedFn(() => {
         if (selectNum === 0) {
             // 全部下载
             setVisibleOnline(true)
@@ -291,17 +301,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                     UUID: selectList
                 }
             }
-            setLoading(true)
-            apiDownloadOnlinePlugin(downloadParams)
-                .then(() => {
-                    fetchList(true)
-                    yakitNotify("success", "下载成功")
-                })
-                .finally(() =>
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
-                )
+            setDownloadLoading(true)
+            apiDownloadOnlinePlugin(downloadParams).finally(() =>
+                setTimeout(() => {
+                    setDownloadLoading(false)
+                }, 200)
+            )
         }
     })
 
@@ -363,9 +368,17 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setAllCheck(backValues.allCheck)
         setSelectList(backValues.selectList)
     })
-    const onSearch = useMemoizedFn(() => {
-        fetchList(true)
-    })
+    /**
+     * @description 此方法防抖不要加leading：true,会影响search拿到最新得值，用useLatest也拿不到最新得；如若需要leading：true，则需要使用setTimeout包fetchList
+     */
+    const onSearch = useDebounceFn(
+        useMemoizedFn(() => {
+            fetchList(true)
+        }),
+        {
+            wait: 200
+        }
+    ).run
     const pluginTypeSelect: TypeSelectOpt[] = useMemo(() => {
         return (
             filters.plugin_type?.map((ele) => ({
@@ -411,7 +424,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 type='outline2'
                                 size='large'
                                 name={selectNum > 0 ? "下载" : "一键下载"}
-                                onClick={() => onDownload()}
+                                onClick={onDownload}
+                                loading={downloadLoading}
                             />
                             <FuncBtn
                                 maxWidth={1050}
@@ -585,6 +599,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             user={data.authors || ""}
                                             // prImgs={[]}
                                             time={data.updated_at}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={!!data.isCorePlugin}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
                                         />
@@ -603,6 +619,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             title={data.script_name}
                                             help={data.help || ""}
                                             time={data.updated_at}
+                                            type={data.type}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={!!data.official}
                                             extraNode={optExtraNode}
                                             onClick={optClick}
                                         />

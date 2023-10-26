@@ -6,6 +6,10 @@ import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
 import {isCommunityEdition} from "@/utils/envfile"
 import {compareAsc} from "../yakitStore/viewers/base"
+import {GetYakScriptTagsAndTypeResponse, QueryYakScriptRequest, QueryYakScriptsResponse} from "../invoker/schema"
+import {pluginTypeToName} from "./baseTemplate"
+import {FILTER_CACHE_LIST_DATA} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -21,11 +25,21 @@ export enum PluginGV {
      * @description 适用页面:回收站
      */
     RecyclePluginRemoveCheck = "recycle_plugin_remove_check",
+    /**
+     * @name 插件删除是否需要不再提醒的选中状态
+     * @description 适用页面:本地插件
+     */
+    LocalPluginRemoveCheck = "local_plugin_remove_check",
 
     /** @name 插件信息-yak类型额外参数(用于自定义DNSLOG)对应tag值 */
     PluginYakDNSLogSwitch = "custom-dnslog-platform",
     /** @name 插件信息-codec类型额外参数(用于自定义HTTP数据包变形)对应tag值 */
-    PluginCodecHttpSwitch = "allow-custom-http-packet-mutate"
+    PluginCodecHttpSwitch = "allow-custom-http-packet-mutate",
+    /**
+     * @name 本地插件组缓存字段 filter_cache_list_common_data
+     * @description 第一版本地插件组还是在本地，第二版后端给接口
+     */
+    Fetch_Local_Plugin_Group = "FILTER_CACHE_LIST_COMMON_DATA"
 }
 
 // 删除对象里值为 undefined 的键值对
@@ -218,7 +232,6 @@ const apiFetchGroupStatistics: (query?: API.PluginsSearchRequest) => Promise<API
                 data: {...query}
             })
                 .then((res: API.PluginsSearchResponse) => {
-                    // console.log('apiFetchGroupStatistics',res)
                     const data: API.PluginsSearch[] = res.data
                         .filter((ele) => (ele.data || []).length > 0)
                         .sort((a, b) => compareAsc(a, b, "sort"))
@@ -405,6 +418,9 @@ export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => 
             .invoke("DownloadOnlinePluginBatch", query)
             .then((res) => {
                 ipcRenderer.invoke("change-main-menu")
+                // 插件商店、我的插件、插件管理页面 下载插件后需要更新 本地插件列表
+                emiter.emit("onRefLocalPluginList", "")
+                yakitNotify("success", "下载成功")
                 resolve(res)
             })
             .catch((e) => {
@@ -445,7 +461,6 @@ export const apiDeletePluginMine: (query?: API.PluginsWhereDeleteRequest) => Pro
             }
             apiDeletePlugin(newQuery)
                 .then((res: API.ActionSucceeded) => {
-                    // console.log("apiDeletePluginMine", newQuery, res)
                     resolve(res)
                 })
                 .catch((err) => {
@@ -573,6 +588,208 @@ export const apiReductionRecyclePlugin: (query?: PluginsRecycleRequest) => Promi
                 })
         } catch (error) {
             yakitNotify("error", "还原插件失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name QueryYakScript接口参数转换(前端数据转接口参数)
+ */
+export const convertLocalPluginsRequestParams = (
+    filter: PluginFilterParams,
+    search: PluginSearchParams,
+    pageParams?: PluginListPageMeta
+): QueryYakScriptRequest => {
+    const data: QueryYakScriptRequest = {
+        Pagination: {
+            Limit: pageParams?.limit || 10,
+            Page: pageParams?.page || 1,
+            OrderBy: "updated_at",
+            Order: "desc"
+        },
+        // search
+        Keyword: search.type === "keyword" ? search.keyword : "",
+        UserName: search.type === "userName" ? search.userName : "",
+
+        // filter
+        Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
+        Tag: filter.tags?.map((ele) => ele.value) || []
+    }
+    return delObjectInvalidValue(data)
+}
+/**本地，获取插件 QueryYakScript 接口基础版 */
+export const apiQueryYakScriptBase: (query?: QueryYakScriptRequest) => Promise<QueryYakScriptsResponse> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("QueryYakScript", query)
+                .then((item: QueryYakScriptsResponse) => {
+                    resolve(item)
+                })
+                .catch((e: any) => {
+                    reject(e)
+                })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+/**本地，获取插件列表 */
+export const apiQueryYakScript: (query?: QueryYakScriptRequest) => Promise<QueryYakScriptsResponse> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            apiQueryYakScriptBase(query)
+                .then((item: QueryYakScriptsResponse) => {
+                    resolve(item)
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "获取本地插件失败:" + e)
+                    reject(e)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取本地插件失败:" + error)
+            reject(error)
+        }
+    })
+}
+/**本地，获取插件总数 */
+export const apiQueryYakScriptTotal: () => Promise<QueryYakScriptsResponse> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            const query: QueryYakScriptRequest = {
+                Pagination: {
+                    Page: 1,
+                    Limit: 1,
+                    Order: "",
+                    OrderBy: ""
+                }
+            }
+            apiQueryYakScriptBase(query)
+                .then((item: QueryYakScriptsResponse) => {
+                    resolve(item)
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "获取本地插件总数失败:" + e)
+                    reject(e)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取本地插件总数失败:" + error)
+            reject(error)
+        }
+    })
+}
+/**本地插件列表分组 */
+export const apiFetchGroupStatisticsLocal: () => Promise<API.PluginsSearchResponse> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("GetYakScriptTagsAndType", {})
+                .then((res: GetYakScriptTagsAndTypeResponse) => {
+                    const data = [
+                        {
+                            groupKey: "plugin_type",
+                            groupName: "插件类型",
+                            sort: 1,
+                            data: (res["Type"] || []).map((ele) => ({
+                                label: pluginTypeToName[ele.Value]?.name || ele.Value,
+                                value: ele.Value,
+                                count: ele.Total
+                            }))
+                        },
+                        {
+                            groupKey: "tags",
+                            groupName: "Tag",
+                            sort: 2,
+                            data: (res["Tag"] || []).map((ele) => ({
+                                label: ele.Value,
+                                value: ele.Value,
+                                count: ele.Total
+                            }))
+                        }
+                    ].filter((ele) => ele.data.length > 0)
+                    resolve({data})
+                })
+                .catch((e) => {
+                    yakitNotify("error", `获取本地插件统计数据展示错误:${e}`)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取本地插件统计数据展示错误:" + error)
+            reject(error)
+        }
+    })
+}
+/** grpc接口 DeleteYakScript 请求参数 */
+export interface DeleteYakScriptRequestProps {
+    Ids: number[]
+}
+/**本地，批量删除插件 */
+export const apiDeleteYakScript: (query: DeleteYakScriptRequestProps) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery: DeleteYakScriptRequestProps = {
+                Ids: query.Ids.map((ele) => Number(ele)) || []
+            }
+            ipcRenderer
+                .invoke("DeleteLocalPluginsByWhere", newQuery)
+                .then(() => {
+                    ipcRenderer.invoke("change-main-menu")
+                    resolve(null)
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "批量删除本地插件失败:" + e)
+                    reject(e)
+                })
+        } catch (error) {
+            yakitNotify("error", "批量删除本地插件失败:" + error)
+            reject(error)
+        }
+    })
+}
+
+/** grpc接口 DeleteLocalPluginsByWhere 请求参数 */
+export interface DeleteLocalPluginsByWhereRequestProps {
+    Keywords: string
+    Type: string
+    UserName: string
+    Tags: string
+}
+/**
+ * @name DeleteLocalPluginsByWhere 接口参数转换(前端数据转接口参数)
+ */
+export const convertDeleteLocalPluginsByWhereRequestParams = (
+    filter: PluginFilterParams,
+    search: PluginSearchParams
+): DeleteLocalPluginsByWhereRequestProps => {
+    const data: DeleteLocalPluginsByWhereRequestProps = {
+        // search
+        Keywords: search.type === "keyword" ? search.keyword : "",
+        UserName: search.type === "userName" ? search.userName : "",
+
+        // filter
+        Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
+        Tags: (filter.tags?.map((ele) => ele.value) || []).join(",")
+    }
+    return delObjectInvalidValue(data)
+}
+/**本地，带条件的全部删除 */
+export const apiDeleteLocalPluginsByWhere: (query: DeleteLocalPluginsByWhereRequestProps) => Promise<null> = (
+    query
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("DeleteLocalPluginsByWhere", query)
+                .then(() => {
+                    ipcRenderer.invoke("change-main-menu")
+                    resolve(null)
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "DeleteLocalPluginsByWhere删除本地插件失败:" + e)
+                    reject(e)
+                })
+        } catch (error) {
+            yakitNotify("error", "DeleteLocalPluginsByWhere删除本地插件失败:" + error)
             reject(error)
         }
     })
