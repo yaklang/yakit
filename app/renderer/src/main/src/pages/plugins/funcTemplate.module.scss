@@ -392,6 +392,12 @@
     }
 }
 // --------------------
+.empty-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
 .list-show-container {
     width: 100%;
     height: 100%;
@@ -985,7 +991,6 @@
     }
 }
 // --------------------
-
 
 .plugin-recycle-extra-node {
     display: flex;
