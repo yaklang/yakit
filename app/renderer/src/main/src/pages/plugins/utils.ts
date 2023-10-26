@@ -9,6 +9,7 @@ import {compareAsc} from "../yakitStore/viewers/base"
 import {GetYakScriptTagsAndTypeResponse, QueryYakScriptRequest, QueryYakScriptsResponse} from "../invoker/schema"
 import {pluginTypeToName} from "./baseTemplate"
 import {FILTER_CACHE_LIST_DATA} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -417,6 +418,9 @@ export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => 
             .invoke("DownloadOnlinePluginBatch", query)
             .then((res) => {
                 ipcRenderer.invoke("change-main-menu")
+                // 插件商店、我的插件、插件管理页面 下载插件后需要更新 本地插件列表
+                emiter.emit("onRefLocalPluginList", "")
+                yakitNotify("success", "下载成功")
                 resolve(res)
             })
             .catch((e) => {
