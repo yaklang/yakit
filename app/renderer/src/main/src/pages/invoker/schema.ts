@@ -165,3 +165,13 @@ export interface ExecResult {
     Progress: number
     RuntimeID?: string
 }
+
+export interface TagsAndType {
+    Value: string
+    Total: number
+}
+
+export interface GetYakScriptTagsAndTypeResponse {
+    Type: TagsAndType[]
+    Tag: TagsAndType[]
+}

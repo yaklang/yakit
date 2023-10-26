@@ -322,6 +322,8 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                                             user={data.authors || ""}
                                             // prImgs={data.prs}
                                             time={data.updated_at}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={!!data.isCorePlugin}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
                                         />
@@ -340,6 +342,9 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                                             title={data.script_name}
                                             help={data.help || ""}
                                             time={data.updated_at}
+                                            type={data.type}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={!!data.official}
                                             extraNode={optExtraNode}
                                             onClick={optClick}
                                         />
