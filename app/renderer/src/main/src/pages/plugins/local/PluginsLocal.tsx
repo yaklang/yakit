@@ -468,7 +468,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                             isCorePlugin={!!data.IsCorePlugin}
                                             official={!!data.OnlineOfficial}
                                             // prImgs={data.prs}
-                                            time={data.UpdatedAt}
+                                            time={data.UpdatedAt || 0}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
                                         />
@@ -486,7 +486,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                             img={data.HeadImg || ""}
                                             title={data.ScriptName}
                                             help={data.Help || ""}
-                                            time={data.UpdatedAt}
+                                            time={data.UpdatedAt || 0}
                                             type={data.Type}
                                             isCorePlugin={!!data.IsCorePlugin}
                                             official={!!data.OnlineOfficial}
