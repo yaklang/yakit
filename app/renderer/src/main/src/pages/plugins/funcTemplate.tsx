@@ -1293,7 +1293,6 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
                     }
                 })
                 if (downloadProps.onDownloadClick) downloadProps.onDownloadClick(data)
-                yakitNotify("success", "下载成功")
             })
             .finally(() =>
                 setTimeout(() => {

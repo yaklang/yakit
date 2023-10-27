@@ -13,6 +13,8 @@ import {PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
 import {OnlinePluginAppAction, thousandthConversion} from "../pluginReducer"
 import {useStore} from "@/store"
+import {PluginComment} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
+import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -217,11 +219,15 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                             </div>
                         </div>
                     </TabPane>
-                    <TabPane tab='评论' key='comment' disabled={true}>
-                        <div>评论</div>
+                    <TabPane tab='评论' key='comment'>
+                        <div className={styles["plugin-comment-wrapper"]} id='online-plugin-info-scroll'>
+                            <PluginComment isLogin={userInfo.isLogin} plugin={plugin} />
+                        </div>
                     </TabPane>
-                    <TabPane tab='日志' key='log' disabled={true}>
-                        <div>日志</div>
+                    <TabPane tab='日志' key='log'>
+                        <div className={styles["plugin-log-wrapper"]}>
+                            <YakitPluginOnlineJournal pluginId={plugin.id} />
+                        </div>
                     </TabPane>
                 </Tabs>
             </div>

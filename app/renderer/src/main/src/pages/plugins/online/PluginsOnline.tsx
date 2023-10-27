@@ -198,7 +198,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const userInfo = useStore((s) => s.userInfo)
     useEffect(() => {
         getInitTotal()
-    }, [inViewport])
+    }, [userInfo.isLogin, inViewport])
     // 请求数据
     useUpdateEffect(() => {
         fetchList(true)
