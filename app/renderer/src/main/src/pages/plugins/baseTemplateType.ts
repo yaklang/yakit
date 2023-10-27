@@ -198,3 +198,10 @@ export interface PluginDetailsListItemProps<T> {
     extra?: (data: T) => ReactNode
     onPluginClick: (plugin: T) => void
 }
+
+export interface PluginContributesListItemProps {
+    /**协作者头像 */
+    contributesHeadImg: string
+    /**协作者名字 */
+    contributesName: string
+}
