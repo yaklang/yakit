@@ -416,6 +416,8 @@ export interface HTTPFlowTableProp {
     setOnlyShowFirstNode?: (i: boolean) => void
     refresh?: boolean
     httpHistoryTableTitleStyle?: React.CSSProperties
+    // 筛选控件隐藏
+    onlyShowSearch?: boolean
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -728,7 +730,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 }
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
-    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh} = props
+    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false} = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -2292,8 +2294,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     style["http-history-table-row"]
                                 )}
                             >
-                                <div className={classNames(style["http-history-table-flex"])}>
-                                    {SourceType.map((tag) => (
+                                <div style={onlyShowSearch?{marginLeft:8}:{}} className={classNames(style["http-history-table-flex"])}>
+                                    {!onlyShowSearch&&SourceType.map((tag) => (
                                         <YakitCheckableTag
                                             key={tag.value}
                                             checked={!!params.SourceType?.split(",").includes(tag.value)}
@@ -2344,6 +2346,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     </div>
                                 </div>
                                 <div className={style["http-history-table-right"]}>
+                                    {!onlyShowSearch&&<>
                                     <YakitButton
                                         type='text'
                                         onClick={() => {
@@ -2379,6 +2382,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             <YakitSelect.Option value='websocket'>websocket</YakitSelect.Option>
                                         </YakitSelect>
                                     </div>
+                                    </>}
                                     {
                                         size?.width&&size?.width<1000?
                                         <YakitPopover 
@@ -2406,7 +2410,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         />
                                     }
                                     
-                                    
+                                    {!onlyShowSearch&&<>
                                     <div className={style["http-history-table-color-swatch"]}>
                                         <YakitPopover
                                             overlayClassName={style["http-history-table-color-popover"]}
@@ -2549,7 +2553,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             </YakitButton>
                                         </YakitPopover>
                                     )}
-                                    </>}
+                                    </>}</>}
                                     <div className={style["empty-button"]}>
                                         {!props.noDeleteAll && (
                                             <YakitDropdownMenu

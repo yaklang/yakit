@@ -25,6 +25,14 @@ export interface TrafficSession {
     SNI: string;
 }
 
+export interface TrafficTCPReassembled {
+    Id: number;
+    SessionUuid: string;
+    Raw: Uint8Array;
+    Seq: number;
+    Timestamp: number;
+}
+
 export interface TrafficPacket {
     LinkLayerType: string;
     NetworkLayerType: string;

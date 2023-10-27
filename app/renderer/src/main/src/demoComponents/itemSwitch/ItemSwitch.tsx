@@ -10,7 +10,7 @@ export const DemoItemSwitch: React.FC<ItemSwitchProps> = memo((p) => {
     const {label, help, formItemStyle, required, size, disabled, value, setValue} = p
 
     return (
-        <Item label={label} help={help} style={{...formItemStyle}} required={required}>
+        <Item label={label} help={help} style={{marginBottom: 0, ...formItemStyle}} required={required}>
             <YakitSwitch
                 size={size}
                 disabled={disabled}

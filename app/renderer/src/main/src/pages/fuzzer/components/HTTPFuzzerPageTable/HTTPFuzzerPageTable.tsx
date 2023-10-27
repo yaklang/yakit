@@ -28,6 +28,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -535,7 +536,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         // 关键字搜索
                         if (query?.keyWord) {
                             const responseString = Uint8ArrayToString(record.ResponseRaw)
-                            keyWordIsPush = responseString.includes(query.keyWord)
+                            const payloadsString = (record.Payloads||[]).join("")
+                            keyWordIsPush = (responseString+payloadsString).includes(query.keyWord)
                         }
                         // 状态码搜索
                         if (query?.StatusCode && query?.StatusCode?.length > 0) {
@@ -592,6 +594,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 yakitFailed("搜索失败:" + error)
             }
         })
+
+        const onGetExportFuzzerEvent = useMemoizedFn((type:"all"|"payload")=>{
+            emiter.emit("onGetExportFuzzerCallBack",JSON.stringify({listTable,type}))
+        })
+
+        // 获取最新table值 用于筛选
+        useEffect(() => {
+            emiter.on("onGetExportFuzzer", onGetExportFuzzerEvent)
+            return () => {
+                emiter.off("onGetExportFuzzer", onGetExportFuzzerEvent)
+            }
+        }, [])
 
         const onRowClick = useMemoizedFn((val) => {
             if (val?.UUID === currentSelectItem?.UUID) {

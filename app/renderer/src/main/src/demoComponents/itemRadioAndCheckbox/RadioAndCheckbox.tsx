@@ -33,7 +33,7 @@ export const DemoItemRadioButton: React.FC<ItemRadioProps> = memo((p) => {
     return (
         <Item label={label} help={help} style={{...formItemStyle}} required={required}>
             <YakitRadioButtons
-                // className='demo-item-radio-button-wrapper'
+                className='demo-item-radio-button-wrapper'
                 disabled={disabled}
                 size={size}
                 value={value}
