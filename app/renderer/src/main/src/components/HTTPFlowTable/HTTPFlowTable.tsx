@@ -409,6 +409,8 @@ export interface HTTPFlowTableProp {
     tableHeight?: number
     paginationPosition?: "topRight" | "bottomRight"
     params?: YakQueryHTTPFlowRequest
+    // 是否展示Table Title默认展示
+    showHTTPFlowTableTitle?: boolean
     inViewport?: boolean
     onSearch?: (i: string) => any
     title?: string
@@ -703,7 +705,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 }
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
-    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false} = props
+    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,showHTTPFlowTableTitle=true} = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -2852,6 +2854,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             </div>
                         </div>
                     }
+                    isShowTitle={showHTTPFlowTableTitle}
                     isReset={isReset}
                     isRefresh={isRefresh}
                     renderKey='Id'

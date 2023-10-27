@@ -17,10 +17,11 @@ export interface HTTPPacketFuzzable {
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {
     websocket?: boolean
-    title?: string
+    showHTTPFlowTableTitle?: boolean
 }
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
+    const {showHTTPFlowTableTitle} = props
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
     const {isRefreshHistory, setIsRefreshHistory} = useStore()
@@ -61,6 +62,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                       } as YakQueryHTTPFlowRequest)
                                     : undefined
                             }
+                            showHTTPFlowTableTitle={showHTTPFlowTableTitle}
                             // tableHeight={200}
                             // tableHeight={selected ? 164 : undefined}
                             onSelected={(i) => {
@@ -68,7 +70,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             }}
                             paginationPosition={"topRight"}
                             onSearch={setHighlightSearch}
-                            title={props?.title}
                             onlyShowFirstNode={onlyShowFirstNode}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
                             refresh={refresh}

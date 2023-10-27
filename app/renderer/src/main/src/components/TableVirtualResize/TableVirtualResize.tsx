@@ -111,6 +111,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         isReset,
         titleHeight,
         renderTitle,
+        isShowTitle = true,
         getTableRef,
         currentIndex,
         isRefresh,
@@ -903,6 +904,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
+            {isShowTitle&&<>
             {renderTitle ? (
                 renderTitle
             ) : (
@@ -935,13 +937,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     )}
                 </div>
             )}
+            </>}
             {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
                 <Spin spinning={loading !== undefined ? loading && pagination?.page == 1 : false}>
                     <div
                         className={classNames(styles["virtual-table-body"])}
                         style={{
                             maxHeight:
-                                ((renderTitle || title || extra) &&
+                                ((renderTitle || title || extra) && isShowTitle &&
                                     `calc(100% - ${titleHeight ? titleHeight : 42}px)`) ||
                                 "100%"
                         }}
