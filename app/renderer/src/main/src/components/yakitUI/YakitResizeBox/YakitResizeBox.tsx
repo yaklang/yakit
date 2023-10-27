@@ -5,15 +5,15 @@ import classNames from "classnames"
 import styles from "./YakitResizeBox.module.scss"
 
 // 将像素与number都返回为number
-const convertToNumber = (value:string | number):number|null => {
-    if (typeof value === 'string' && value.endsWith('px')) {
-      return parseInt(value, 10);
-    } else if (typeof value === 'number') {
-      return value;
+const convertToNumber = (value: string | number): number | null => {
+    if (typeof value === "string" && value.endsWith("px")) {
+        return parseInt(value, 10)
+    } else if (typeof value === "number") {
+        return value
     } else {
-      return null;
+        return null
     }
-  }
+}
 
 export interface YakitResizeLineProps {
     isVer?: boolean
@@ -56,7 +56,7 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
         max = 100
     }
 
-    const lineRef = useRef(null)
+    const lineRef = useRef<HTMLDivElement>(null)
 
     const start = useRef<any>(null)
     const first = useRef<any>(null)
@@ -69,7 +69,7 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
     const mouseDown = (event: any) => {
         if (!lineRef || !lineRef.current) return
         let isVer = getIsVer()
-        const line = lineRef.current as unknown as HTMLDivElement
+        const line = lineRef.current
         // willChange性能优化
         line.style.willChange = "transform"
         if (onStart) onStart()
@@ -85,7 +85,7 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
 
     const mouseMove = (event) => {
         if (isMove.current) {
-            const body = bodyRef.current as unknown as HTMLDivElement
+            const body = bodyRef.current
             const line = lineRef.current as unknown as HTMLDivElement
             let isVer = getIsVer()
             let dragResize = getDragResize()
@@ -147,8 +147,8 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
     useEffect(() => {
         if (!bodyRef || !bodyRef.current) return
         if (!resizeRef || !resizeRef.current) return
-        const body = bodyRef.current as unknown as HTMLDivElement
-        const resize = resizeRef.current as unknown as HTMLDivElement
+        const body = bodyRef.current
+        const resize = resizeRef.current
 
         resize.addEventListener("mousedown", mouseDown)
         body.addEventListener("mousemove", mouseMove)
@@ -236,11 +236,11 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         onMouseUp
     } = props
 
-    const bodyRef = useRef(null)
-    const firstRef = useRef(null)
-    const secondRef = useRef(null)
-    const lineRef = useRef(null)
-    const maskRef = useRef(null)
+    const bodyRef = useRef<HTMLDivElement>(null)
+    const firstRef = useRef<HTMLDivElement>(null)
+    const secondRef = useRef<HTMLDivElement>(null)
+    const lineRef = useRef<HTMLDivElement>(null)
+    const maskRef = useRef<HTMLDivElement>(null)
     const [bodyWidth, setBodyWidth] = useState<number>(0)
     const [bodyHeight, setBodyHeight] = useState<number>(0)
     let firstRenderRef = useRef<boolean>(true)
@@ -252,27 +252,27 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     const dragSecondSize = useRef<number>()
 
     // 最小值（存在 firstMinSize + secondMinSize > 整个控件）对此特殊情况额外处理，按照比例直接分配
-    const [FirstMinSize,setFirstMinSize] = useState<string | number>(firstMinSize)
-    const [SecondMinSize,setSecondMinSize] = useState<string | number>(secondMinSize)
-    
+    const [FirstMinSize, setFirstMinSize] = useState<string | number>(firstMinSize)
+    const [SecondMinSize, setSecondMinSize] = useState<string | number>(secondMinSize)
+
     // 特殊情况处理
-    const specialSizeFun = useMemoizedFn((size:number)=>{
+    const specialSizeFun = useMemoizedFn((size: number) => {
         const firstMin = convertToNumber(firstMinSize)
         const secondMin = convertToNumber(secondMinSize)
-        if(firstMin&&secondMin){
-                const limitMax = size - 8 //(拖拽线条预留 8)
-                if(firstMin + secondMin > limitMax){
-                    const ratioFirst = firstMin / (firstMin + secondMin);
-                    const ratioSecond = secondMin / (firstMin + secondMin);
-                    const countFirst = Math.floor(limitMax * ratioFirst);
-                    const countSecond = Math.floor(limitMax * ratioSecond);
-                    // 考虑余数，将多余的部分分配给其中一个值
-                    const remainder = limitMax - (countFirst + countSecond);
-                    // 此处，将余数都分配给 First，可以根据需求调整
-                    const adjustedCountFirst = countFirst + remainder;
-                    setFirstMinSize(adjustedCountFirst)
-                    setSecondMinSize(countSecond)
-                }
+        if (firstMin && secondMin) {
+            const limitMax = size - 8 //(拖拽线条预留 8)
+            if (firstMin + secondMin > limitMax) {
+                const ratioFirst = firstMin / (firstMin + secondMin)
+                const ratioSecond = secondMin / (firstMin + secondMin)
+                const countFirst = Math.floor(limitMax * ratioFirst)
+                const countSecond = Math.floor(limitMax * ratioSecond)
+                // 考虑余数，将多余的部分分配给其中一个值
+                const remainder = limitMax - (countFirst + countSecond)
+                // 此处，将余数都分配给 First，可以根据需求调整
+                const adjustedCountFirst = countFirst + remainder
+                setFirstMinSize(adjustedCountFirst)
+                setSecondMinSize(countSecond)
+            }
         }
     })
 
@@ -281,8 +281,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         if (!firstRef || !firstRef.current) return
         if (!secondRef || !secondRef.current) return
         if (!dragFirstSize.current || !dragSecondSize.current) return
-        const first = firstRef.current as unknown as HTMLDivElement
-        const second = secondRef.current as unknown as HTMLDivElement
+        const first = firstRef.current
+        const second = secondRef.current
         const firstSize = `${dragFirstSize.current + size}px`
         const secondSize = `${dragSecondSize.current - size}px`
         if (isVer) {
@@ -301,8 +301,8 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     const moveSize = useMemoizedFn((size: number) => {
         if (!firstRef || !firstRef.current) return
         if (!secondRef || !secondRef.current) return
-        const first = firstRef.current as unknown as HTMLDivElement
-        const second = secondRef.current as unknown as HTMLDivElement
+        const first = firstRef.current
+        const second = secondRef.current
         const firstSize = `${isVer ? first.clientHeight + size : first.clientWidth + size}px`
         const secondSize = `${isVer ? second.clientHeight - size : second.clientWidth - size}px`
 
@@ -325,9 +325,9 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         if (!bodyRef || !bodyRef.current) return
         if (!firstRef || !firstRef.current) return
         if (!secondRef || !secondRef.current) return
-        const body = bodyRef.current as unknown as HTMLDivElement
-        const first = firstRef.current as unknown as HTMLDivElement
-        const second = secondRef.current as unknown as HTMLDivElement
+        const body = bodyRef.current
+        const first = firstRef.current
+        const second = secondRef.current
         const bodySize = bodysize || (isVer ? body.clientHeight : body.clientWidth)
         const firstSize = isVer ? first.clientHeight : first.clientWidth
         const secondSize = isVer ? second.clientHeight : second.clientWidth
@@ -354,13 +354,13 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     // 拖动开始 - 鼠标按下
     const moveStart = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "block"
+        maskRef.current.style.display = "block"
         // 实时拖动缓存
         if (!firstRef || !firstRef.current) return
         if (!secondRef || !secondRef.current) return
         if (dragResize) {
-            const first = firstRef.current as unknown as HTMLDivElement
-            const second = secondRef.current as unknown as HTMLDivElement
+            const first = firstRef.current
+            const second = secondRef.current
             dragFirstSize.current = isVer ? first.clientHeight : first.clientWidth
             dragSecondSize.current = isVer ? second.clientHeight : second.clientWidth
         }
@@ -368,7 +368,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     // 拖动结束 - 鼠标抬起
     const moveEnd = useMemoizedFn(() => {
         if (!maskRef || !maskRef.current) return
-        ;(maskRef.current as unknown as HTMLDivElement).style.display = "none"
+        maskRef.current.style.display = "none"
         // 实时拖动缓存-还原
         dragFirstSize.current = undefined
         dragSecondSize.current = undefined
@@ -379,14 +379,12 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         bodyResize()
     }, [bodyWidth, bodyHeight])
 
-    
-
     return (
         <div ref={bodyRef} style={{...style, flexFlow: `${isVer ? "column" : "row"}`}} className={styles["resize-box"]}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
-                    specialSizeFun(isVer?height:width)
+                    specialSizeFun(isVer ? height : width)
                     // 第一次进入时记录宽高 优化后续性能
                     if (firstRenderRef.current) {
                         perBodyWidth.current = width
