@@ -63,8 +63,10 @@ const asyncFetchPrivateDomainUrl = (win, params) => {
                             message: err.response.statusText,
                         })
                     } else {
+                        // err.code === 'ECONNREFUSED':1.服务器未启动服务;
+                        // 其余情况都是按连接超时处理，提示用户网络问题
                         resolve({
-                            code: -1,
+                            code: err.code === 'ECONNREFUSED' ? 500 : -1,
                             message: err.message,
                         })
                     }
