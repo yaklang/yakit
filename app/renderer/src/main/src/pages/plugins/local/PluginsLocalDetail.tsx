@@ -299,7 +299,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     img={plugin.HeadImg || ""}
                                     user={plugin.Author}
                                     pluginId={plugin.UUID}
-                                    updated_at={plugin.CreatedAt}
+                                    updated_at={plugin.UpdatedAt || 0}
                                 />
                                 <div className={styles["details-editor-wrapper"]}>
                                     <YakitEditor type={"yak"} value={plugin.Content} />
