@@ -159,6 +159,7 @@ export const apiFetchMineList: (query: PluginsQueryProps) => Promise<YakitPlugin
         try {
             const newQuery = {
                 ...query,
+                order_by: query.order_by || "updated_at",
                 listType: "mine"
             }
             apiFetchList(newQuery)
@@ -182,6 +183,7 @@ export const apiFetchRecycleList: (query: PluginsQueryProps) => Promise<YakitPlu
         try {
             const newQuery = {
                 ...query,
+                order_by: query.order_by || "updated_at",
                 listType: "recycle"
             }
             apiFetchList(newQuery)
@@ -500,37 +502,17 @@ export const apiDeletePluginCheck: (query?: API.PluginsWhereDeleteRequest) => Pr
     })
 }
 
-/**更新插件接口基础班 /update/plugin */
-const apiUpdatePlugin: (query: API.UpdatePluginsRequest) => Promise<API.ActionSucceeded> = (query) => {
+/**我的插件 修改私密公开 */
+export const apiUpdatePluginPrivateMine: (query: API.UpPluginsPrivateRequest) => Promise<API.ActionSucceeded> = (
+    query
+) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<API.UpdatePluginsRequest, API.ActionSucceeded>({
+            NetWorkApi<API.UpPluginsPrivateRequest, API.ActionSucceeded>({
                 method: "post",
-                url: "update/plugins",
+                url: "up/plugins/private",
                 data: {...query}
             })
-                .then((res: API.ActionSucceeded) => {
-                    resolve(res)
-                })
-                .catch((err) => {
-                    reject(err)
-                })
-        } catch (error) {
-            reject(error)
-        }
-    })
-}
-
-/**我的插件 修改私密公开 */
-export const apiUpdatePluginMine: (query: API.UpdatePluginsRequest) => Promise<API.ActionSucceeded> = (query) => {
-    return new Promise((resolve, reject) => {
-        try {
-            const newQuery = {
-                ...query,
-                user_id: undefined,
-                is_official: undefined
-            }
-            apiUpdatePlugin(newQuery)
                 .then((res: API.ActionSucceeded) => {
                     resolve(res)
                 })
