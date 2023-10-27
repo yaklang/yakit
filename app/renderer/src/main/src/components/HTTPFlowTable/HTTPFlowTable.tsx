@@ -704,6 +704,8 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
     return Math.ceil(v)
 }
 
+export const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
+
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,showHTTPFlowTableTitle=true} = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
@@ -770,7 +772,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const sortRef = useRef<SortProps>(defSort)
 
     const tableRef = useRef<any>(null)
-    const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
     const boxHeightRef = useRef<number>()
 
@@ -903,9 +904,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         } else {
             // 持久化存储
             setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
-            // setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify({
-            //     data:[],
-            // }))
             let idArr: number[] = []
             let urlArr: string[] = []
             shieldData.data.map((item) => {
@@ -1374,6 +1372,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const newArr = filterNonUnique([...shieldData.data, value])
         const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
+        // 持久化存储
+        setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(newObj))
     }
 
     const onColorSure = useMemoizedFn(() => {

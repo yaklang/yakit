@@ -7,7 +7,7 @@ import {MITMResponse} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
 import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
 import {MITMLog, MITMLogHeardExtra} from "./MITMLog"
-import {ShieldData} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {HTTP_FLOW_TABLE_SHIELD_DATA, ShieldData} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMPluginLogViewer} from "../MITMPluginLogViewer"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
@@ -16,6 +16,7 @@ import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useStore} from "@/store/mitmState"
+import { HTTPHistory } from "@/components/HTTPHistory"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -243,7 +244,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
         // 持久化存储
-        setRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA", JSON.stringify(newObj))
+        setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(newObj))
     })
     /**
      * @description 切换劫持类型
@@ -356,13 +357,16 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             // 自动放行
             case "log":
                 return (
-                    <MITMLog
-                        shieldData={shieldData}
-                        setShieldData={(lists) => {
-                            setRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA", JSON.stringify(lists))
-                            setShieldData(lists)
-                        }}
-                    />
+                    <>
+                        {/* <MITMLog
+                            shieldData={shieldData}
+                            setShieldData={(lists) => {
+                                setRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA", JSON.stringify(lists))
+                                setShieldData(lists)
+                            }}
+                        /> */}
+                        <HTTPHistory showHTTPFlowTableTitle={false}/>
+                    </>
                 )
             // 被动日志
             case "passive":
