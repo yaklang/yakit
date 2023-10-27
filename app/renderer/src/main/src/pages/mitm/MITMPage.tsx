@@ -39,6 +39,7 @@ import {
 import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
 import classNames from "classnames"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 const {Text} = Typography
 const {Item} = Form
@@ -661,7 +662,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         return p
     }, [isFullScreenSecondNode, isFullScreenFirstNode])
     return (
-        <ResizeBox
+        <YakitResizeBox
             isVer={false}
             firstNode={() => (
                 <div
@@ -683,8 +684,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     {onRenderSecondNode()}
                 </div>
             )}
-            secondNodeStyle={{padding: isFullScreenFirstNode ? 0 : undefined}}
-            firstNodeStyle={{padding: isFullScreenSecondNode ? 0 : undefined}}
+            secondNodeStyle={{padding: isFullScreenFirstNode ? 0 : undefined,display:isFullScreenFirstNode?"none":""}}
+            firstNodeStyle={{padding: isFullScreenSecondNode ? 0 : undefined,display:isFullScreenSecondNode?"none":""}}
             {...ResizeBoxProps}
         />
     )

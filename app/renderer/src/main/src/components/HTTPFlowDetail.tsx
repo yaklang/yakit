@@ -64,6 +64,8 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
 
     refresh?: boolean
     defaultFold?: boolean
+
+    pageType?: "MITM"
 }
 
 const {Text} = Typography
@@ -460,7 +462,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh, defaultFold = false} = props
+    const {id, selectedFlow, refresh, defaultFold = false,pageType} = props
     const [flow, setFlow] = useState<HTTPFlow>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
     const [flowResponse,setFlowResponse] = useState<Uint8Array>()
@@ -601,6 +603,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [infoType])
 
     const mainCol: number = useMemo(() => {
+        if(pageType==="MITM"){
+            return 24
+        }
         let col: number = 19
         if (isFold) {
             col = 24
@@ -623,6 +628,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         />
                     )}
                 </Col>
+                {pageType!=="MITM"&&<>
                 {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
                     <Col span={5}>
                         <NewHTTPPacketEditor
@@ -746,8 +752,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         </div>
                     </Col>
                 )}
+                </>}
             </Row>
-            {isFold && (
+            {isFold && pageType!=="MITM" && (
                 <div className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}>
                     <div
                         className={classNames(styles["http-history-icon-box"])}

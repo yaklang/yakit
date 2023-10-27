@@ -66,6 +66,7 @@ import {HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts, HTTPFlowTableFr
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon} from "../layout/icons"
 import {ExportSelect} from "../DataExport/DataExport"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -409,8 +410,6 @@ export interface HTTPFlowTableProp {
     tableHeight?: number
     paginationPosition?: "topRight" | "bottomRight"
     params?: YakQueryHTTPFlowRequest
-    // 是否展示Table Title默认展示
-    showHTTPFlowTableTitle?: boolean
     inViewport?: boolean
     onSearch?: (i: string) => any
     title?: string
@@ -420,6 +419,8 @@ export interface HTTPFlowTableProp {
     httpHistoryTableTitleStyle?: React.CSSProperties
     // 筛选控件隐藏
     onlyShowSearch?: boolean
+    // 此控件显示的页面
+    pageType?: "MITM"
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -707,7 +708,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 export const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
-    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,showHTTPFlowTableTitle=true} = props
+    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,showHTTPFlowTableTitle=true,pageType} = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -898,11 +899,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [compareRight])
 
     useEffect(() => {
+        if(pageType==="MITM"){
+            emiter.emit("onGetMITMShieldDataEvent",JSON.stringify(shieldData))
+        }
         // 判断是否第一次加载页面
         if (isOneceLoading.current) {
             getShieldList()
         } else {
-            // 持久化存储
             setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
             let idArr: number[] = []
             let urlArr: string[] = []
@@ -1368,13 +1371,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
     // 取消屏蔽筛选
-    const cancleFilter = (value) => {
+    const cancleFilter = useMemoizedFn((value) => {
         const newArr = filterNonUnique([...shieldData.data, value])
         const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
-        // 持久化存储
-        setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(newObj))
-    }
+    })
+
+    const cancleMitmFilter = useMemoizedFn((str: string) => {
+        const value = JSON.parse(str)
+        cancleFilter(value)
+    })
+
+    useEffect(() => {
+        pageType==="MITM"&&emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
+        return () => {
+            emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
+        }
+    }, [])
 
     const onColorSure = useMemoizedFn(() => {
         if (isShowColor) {
@@ -2854,7 +2867,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             </div>
                         </div>
                     }
-                    isShowTitle={showHTTPFlowTableTitle}
+                    isShowTitle={pageType!=="MITM"}
                     isReset={isReset}
                     isRefresh={isRefresh}
                     renderKey='Id'

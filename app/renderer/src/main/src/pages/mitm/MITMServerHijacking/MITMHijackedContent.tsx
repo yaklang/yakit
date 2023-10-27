@@ -30,8 +30,6 @@ interface MITMHijackedContentProps {
     statusCards: StatusCardProps[]
 }
 
-// 保留数组中非重复数据
-const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
     const {status, setStatus, isFullScreen, setIsFullScreen, logs, statusCards} = props
@@ -67,15 +65,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     const [modifiedPacket, setModifiedPacket] = useState<Uint8Array>(new Buffer([]))
 
-    // 屏蔽数据
-    const [shieldData, setShieldData] = useState<ShieldData>({
-        data: []
-    })
-
     const [width, setWidth] = useState<number>(0)
-
-    const hijackedContentRef = useRef<any>()
-    const [inViewport] = useInViewport(hijackedContentRef)
 
     const {setIsRefreshHistory} = useStore()
 
@@ -99,22 +89,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             allowHijackedResponseByRequest(currentPacketId)
         }
     }, [hijackResponseType, currentPacketId])
-    useEffect(() => {
-        //获取屏蔽数据
-        getRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA")
-            .then((data) => {
-                if (!data) return
-                try {
-                    const cacheData = JSON.parse(data)
-                    setShieldData({
-                        data: cacheData?.data || []
-                    })
-                } catch (e) {
-                    yakitFailed(`加载屏蔽参数失败: ${e}`)
-                }
-            })
-            .finally(() => {})
-    }, [inViewport])
     // 自动转发劫持，进行的操作
     const forwardHandler = useMemoizedFn((e: any, msg: MITMResponse) => {
         if (msg?.RemoteAddr) {
@@ -239,13 +213,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             }
         })
     })
-    const cancleFilter = useMemoizedFn((value) => {
-        const newArr = filterNonUnique([...shieldData.data, value])
-        const newObj = {...shieldData, data: newArr}
-        setShieldData(newObj)
-        // 持久化存储
-        setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(newObj))
-    })
     /**
      * @description 切换劫持类型
      */
@@ -313,7 +280,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     />
                 )
             case "log":
-                return <MITMLogHeardExtra shieldData={shieldData} cancleFilter={cancleFilter} />
+                return <MITMLogHeardExtra />
             default:
                 break
         }
@@ -358,14 +325,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             case "log":
                 return (
                     <>
-                        {/* <MITMLog
-                            shieldData={shieldData}
-                            setShieldData={(lists) => {
-                                setRemoteValue("HTTP_FLOW_TABLE_SHIELD_DATA", JSON.stringify(lists))
-                                setShieldData(lists)
-                            }}
-                        /> */}
-                        <HTTPHistory showHTTPFlowTableTitle={false}/>
+                        {/* <MITMLog/> */}
+                        <HTTPHistory pageType="MITM" />
                     </>
                 )
             // 被动日志
@@ -380,7 +341,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         }
     })
     return (
-        <div className={styles["mitm-hijacked-content"]} ref={hijackedContentRef}>
+        <div className={styles["mitm-hijacked-content"]}>
             <ReactResizeDetector
                 onResize={(w, h) => {
                     if (!w) {
