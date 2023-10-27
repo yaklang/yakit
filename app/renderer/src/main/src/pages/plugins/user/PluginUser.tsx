@@ -57,7 +57,7 @@ import {
     apiDownloadOnlinePlugin,
     apiFetchGroupStatisticsMine,
     apiFetchMineList,
-    apiUpdatePluginMine,
+    apiUpdatePluginPrivateMine,
     convertDownloadOnlinePluginBatchRequestParams,
     convertPluginsRequestParams
 } from "../utils"
@@ -429,7 +429,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         useEffect(() => {
             getInitTotal()
             getPluginRemoveCheck()
-        }, [inViewport, refresh])
+        }, [isLogin,inViewport, refresh])
         useEffect(() => {
             fetchList(true)
         }, [isLogin, refresh, filters])
@@ -580,11 +580,11 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         })
         /**更改私有状态 */
         const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            const updateItem: API.UpdatePluginsRequest = {
+            const updateItem: API.UpPluginsPrivateRequest = {
                 uuid: [data.uuid],
-                is_private: `${!data.is_private}`
+                is_private: !data.is_private
             }
-            apiUpdatePluginMine(updateItem).then(() => {
+            apiUpdatePluginPrivateMine(updateItem).then(() => {
                 const isPrivate: boolean = !data.is_private
                 let status: number = 0
                 if (userInfo.role === "ordinary") {

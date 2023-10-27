@@ -16,6 +16,22 @@
             gap: 8px;
         }
     }
+    .plugin-comment-wrapper {
+        padding: 0 12px 12px 12px;
+        height: 100%;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        :global {
+            .infinite-scroll-component {
+                overflow: hidden !important;
+            }
+        }
+    }
+    .plugin-log-wrapper {
+        padding: 0 12px 12px 12px;
+    }
 }
 
 // 详情-审核完的编辑器样式
