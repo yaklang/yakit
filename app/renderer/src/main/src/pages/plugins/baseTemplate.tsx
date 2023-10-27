@@ -277,7 +277,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                             className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}
                             title={pluginName}
                         >
-                            {pluginName}
+                            {pluginName || "-"}
                         </div>
                         <div className={styles["subtitle-wrapper"]}>
                             <Tooltip title={help || "No Description about it."} overlayClassName='plugins-tooltip'>
