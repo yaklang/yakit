@@ -13,10 +13,12 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {yakitFailed} from "@/utils/notification"
 import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
 import styles from "./HTTPRequestBuilder.module.scss"
+import { PluginTypes } from "../pluginDebugger/PluginDebuggerPage"
 
 const {YakitPanel} = YakitCollapse
 
 export interface HTTPRequestBuilderProp {
+    pluginType: PluginTypes
     value: HTTPRequestBuilderParams
     setValue: (params: HTTPRequestBuilderParams) => any
 }
@@ -72,6 +74,7 @@ export const getDefaultHTTPRequestBuilderParams = (): HTTPRequestBuilderParams =
 }
 
 export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
+    const {pluginType} = props
     const [form] = Form.useForm()
     const [params, setParams] = useState(props.value || getDefaultHTTPRequestBuilderParams())
     const [reqType, setReqType] = useState<"raw" | "template">("template")
@@ -157,6 +160,12 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
         props.setValue(params)
     }, [params])
 
+    useUpdateEffect(() => {
+        if(pluginType==="nuclei"){
+            onReset(getDefaultHTTPRequestBuilderParams())
+        }
+    },[pluginType])
+
     return (
         <Form
             form={form}
@@ -168,18 +177,23 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
             style={{height: "100%"}}
             onValuesChange={onValuesChange}
         >
-            <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' style={{marginBottom: 4}}>
+            {pluginType!=="nuclei"&&<Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' style={{marginBottom: 4}}>
                 <YakitSwitch />
-            </Form.Item>
+            </Form.Item>}
             <Form.Item label='请求类型' name='reqType' style={{marginBottom: 4}}>
                 <YakitRadioButtons
                     size='small'
                     buttonStyle='solid'
-                    options={[
+                    options={pluginType!=="nuclei"?[
                         {
                             value: "raw",
                             label: "原始请求"
                         },
+                        {
+                            value: "template",
+                            label: "请求配置"
+                        }
+                    ]:[
                         {
                             value: "template",
                             label: "请求配置"
@@ -208,6 +222,8 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                     <Form.Item label='扫描目标' name='Input' style={{marginBottom: 4}}>
                         <YakitInput.TextArea placeholder='请输入扫描目标' size='small' />
                     </Form.Item>
+                    {pluginType!=="nuclei"&&<>
+                    
                     <Form.Item label='HTTP方法' name='Method' style={{marginBottom: 4}}>
                         <YakitSelect
                             options={["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT"].map((item) => ({
@@ -420,6 +436,7 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                             ></VariableList>
                         </YakitPanel>
                     </YakitCollapse>
+                    </>}
                 </>
             )}
         </Form>

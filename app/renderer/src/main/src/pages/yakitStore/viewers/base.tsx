@@ -518,7 +518,6 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                 firstNode={
                     <HTTPFlowTable
                         noDeleteAll={true}
-                        inViewport={false}
                         params={{
                             RuntimeId: props.runtimeId,
                             SourceType: "scan"
@@ -535,6 +534,7 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                             borderRight: "1px solid var(--yakit-border-color)",
                             paddingTop: 12
                         }}
+                        onlyShowSearch={true}
                     />
                 }
                 secondNode={
