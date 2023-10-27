@@ -74,7 +74,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                 .invoke("fetch-netWork-status-by-request-interface")
                 .then((res) => {
                     if (res.code === -1) {
-                        yakitNotify("error", res.message)
+                        yakitNotify("error", "连接失败:" + res.message)
                     }
                     setOnlineResponseStatus({
                         code: res.code,
@@ -82,7 +82,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                     })
                 })
                 .catch((error) => {
-                    yakitNotify("error", error)
+                    yakitNotify("error", "连接失败:" + error)
                 })
                 .finally(() =>
                     setTimeout(() => {
