@@ -122,7 +122,7 @@ export interface YakScript {
     OnlineOfficial?: boolean
     OnlineGroup?: string
     IsCorePlugin?: boolean
-    UpdatedAt: number
+    UpdatedAt?: number
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
@@ -162,7 +162,7 @@ export interface ExecResult {
     Raw: Uint8Array
     IsMessage: boolean
     Message: Uint8Array
-    Id?: number,
+    Id?: number
     Progress: number
     RuntimeID?: string
 }
