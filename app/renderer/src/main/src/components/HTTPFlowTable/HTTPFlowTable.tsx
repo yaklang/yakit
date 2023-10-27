@@ -1383,9 +1383,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     useEffect(() => {
+        /**
+         * 清空log表格数据
+         */
+        const cleanLogTableData = () => {
+            updateData()
+        }
         pageType==="MITM"&&emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
+        pageType==="MITM"&&emiter.on("cleanMitmLogEvent", cleanLogTableData)
         return () => {
             emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
+            emiter.off("cleanMitmLogEvent", cleanLogTableData)
         }
     }, [])
 
