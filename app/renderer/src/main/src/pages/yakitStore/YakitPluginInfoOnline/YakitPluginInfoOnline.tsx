@@ -285,7 +285,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     // 是否为企业版
     const isEnterprise = isEnterpriseEdition()
     return (
-        <div className={`plugin-info`} id='plugin-info-scroll'>
+        <div className={`plugin-info`}>
             <Spin spinning={loading} style={{height: "100%"}}>
                 {/* PageHeader */}
                 <PageHeader
@@ -486,7 +486,7 @@ interface CommentStarsProps {
     operation: string
 }
 
-const PluginComment: React.FC<PluginCommentProps> = (props) => {
+export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const {plugin, isLogin} = props
     const [commentLoading, setCommentLoading] = useState<boolean>(false)
     const [commentText, setCommentText] = useState<string>("")
@@ -744,7 +744,7 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
                 endMessage={
                     (commentResponses?.pagemeta?.total || 0) > 0 && <div className='row-cneter'>暂无更多数据</div>
                 }
-                scrollableTarget='plugin-info-scroll'
+                scrollableTarget='online-plugin-info-scroll'
             >
                 <List
                     dataSource={commentResponses.data || []}
