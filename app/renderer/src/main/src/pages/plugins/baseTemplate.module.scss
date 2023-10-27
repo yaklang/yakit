@@ -587,3 +587,30 @@
     background: rgba(86, 201, 145, 0.2);
     color: #56c991;
 }
+
+// -----------------------
+
+.contributes-item-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    .img-style {
+        width: 24px;
+        height: 24px;
+        border-radius: 20px;
+        border: 1px solid #f8f8f8;
+        margin-right: 4px;
+    }
+}
+.contributes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.contributes-popover {
+    :global {
+        .ant-popover-inner-content {
+            padding: 8px;
+        }
+    }
+}
