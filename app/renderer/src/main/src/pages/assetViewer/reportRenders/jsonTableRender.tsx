@@ -61,7 +61,7 @@ export const FoldTable: React.FC<RiskTableProp> = (props) => {
     const tableData = useRef<any[]>([])
     const [header, setHeader] = useState<string[]>([])
     const [dataSource, setDataSource] = useState<any[]>([])
-    const [extendItem, setExtendItem] = useState<boolean>(false)
+    const [extendItem, setExtendItem] = useState<boolean>(true)
     useEffect(() => {
         if (Array.isArray(data)) {
             let header: string[] = []
@@ -84,7 +84,7 @@ export const FoldTable: React.FC<RiskTableProp> = (props) => {
         }
     }, [])
 
-    useUpdateEffect(() => {
+    useEffect(() => {
         if (extendItem) {
             setDataSource(tableData.current)
         } else {
