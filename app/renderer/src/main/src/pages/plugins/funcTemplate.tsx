@@ -2,6 +2,7 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {pluginTypeToName} from "./baseTemplate"
 import {
     AuthorImgProps,
+    FilterPopoverBtnProps,
     FuncBtnProps,
     FuncFilterPopoverProps,
     FuncSearchProps,
@@ -31,6 +32,7 @@ import {
     OutlineClouddownloadIcon,
     OutlineDatabasebackupIcon,
     OutlineDotshorizontalIcon,
+    OutlineFilterIcon,
     OutlineOpenIcon,
     OutlineSearchIcon,
     OutlineThumbupIcon,
@@ -54,7 +56,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {Dropdown, Tooltip} from "antd"
+import {Dropdown, Form, Tooltip} from "antd"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {formatDate} from "@/utils/timeUtil"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -64,9 +66,19 @@ import YakitLogo from "@/assets/yakitLogo.png"
 import {SolidThumbUpIcon} from "@/assets/newIcon"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
 import {yakitNotify} from "@/utils/notification"
-import {DownloadOnlinePluginsRequest, PluginStarsRequest, apiDownloadOnlinePlugin, apiPluginStars} from "./utils"
+import {
+    DownloadOnlinePluginsRequest,
+    PluginStarsRequest,
+    apiDownloadOnlinePlugin,
+    apiFetchGroupStatisticsCheck,
+    apiFetchGroupStatisticsMine,
+    apiFetchGroupStatisticsOnline,
+    apiPluginStars
+} from "./utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
+import {API} from "@/services/swagger/resposeType"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -444,6 +456,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
     const onExpend = useMemoizedFn(() => {
         setVisible(true)
     })
+
     const onDelTag = useMemoizedFn((value: TagShowOpt) => {
         if (filters.hasOwnProperty(value.tagType)) {
             const list: TagShowOpt[] = filters[value.tagType]
@@ -451,7 +464,6 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
             setFilters({...filters})
         }
     })
-
     const onDelAllTag = useMemoizedFn(() => {
         let newFilters: PluginFilterParams = {}
         Object.keys(filters).forEach((key) => {
@@ -462,12 +474,14 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
 
     const showTagList = useMemo(() => {
         let list: TagShowOpt[] = []
-        Object.entries(filters).forEach(([key, value]) => {
-            const itemList = (value || []).map((ele) => ({tagType: key, label: ele.label, value: ele.value}))
-            if (itemList.length > 0) {
-                list = [...list, ...itemList]
-            }
-        })
+        try {
+            Object.entries(filters).forEach(([key, value]) => {
+                const itemList = (value || []).map((ele) => ({tagType: key, label: ele.label, value: ele.value}))
+                if (itemList.length > 0) {
+                    list = [...list, ...itemList]
+                }
+            })
+        } catch (error) {}
         return list
     }, [filters])
     const tagLength = useMemo(() => {
@@ -839,8 +853,6 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
         setShowIndex
     } = props
 
-    // useWhyDidYouUpdate("ListList", {...props})
-
     // 计算网格列数
     const bodyRef = useSize(document.querySelector("body"))
     const gridCol = useMemo(() => {
@@ -929,99 +941,7 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
         }
     }, [loading, hasMore, containerRef.current?.clientHeight])
 
-    // const bodyRef = useSize(document.querySelector("body"))
-    // const gridContainerRef = useRef<HTMLDivElement>(null)
-    // const gridCol = useMemo(() => {
-    //     const width = bodyRef?.width || 900
-    //     if (width >= 1156 && width < 1480) return 3
-    //     if (width >= 1480 && width < 1736) return 4
-    //     if (width >= 1736) return 5
-    //     return 2
-    // }, [bodyRef])
-    // // 列表最小高度
-    // const wrapperHeight = useMemo(() => {
-    //     const count = data.length || 0
-    //     const rows = Math.ceil(count / gridCol)
-    //     return rows * optHeight + rows * 16
-    // }, [data, gridCol])
-
-    // useEffect(() => {
-    //     // 不执行非网格布局逻辑
-    //     if (isList) return
-
-    //     if (loading) return
-    //     if (!hasMore) return
-    //     if (wrapperHeight === 0) return
-
-    //     if (gridContainerRef && gridContainerRef.current) {
-    //         const clientHeight = gridContainerRef.current?.clientHeight || 0
-    //         if (wrapperHeight <= clientHeight + optHeight) {
-    //             updateList()
-    //         }
-    //     }
-    // }, [wrapperHeight, loading, gridContainerRef.current?.clientHeight])
-
-    // const onScrollCapture = useThrottleFn(
-    //     () => {
-    //         // 不执行非网格布局逻辑
-    //         if (isList) return
-
-    //         if (loading) return
-    //         if (!hasMore) return
-
-    //         // 网格布局
-    //         if (gridContainerRef && gridContainerRef.current) {
-    //             const {scrollTop, clientHeight, scrollHeight} = gridContainerRef.current || {
-    //                 scrollTop: 0,
-    //                 clientHeight: 0,
-    //                 scrollHeight: 0
-    //             }
-    //             const scrollBottom = scrollHeight - scrollTop - clientHeight
-    //             if (scrollBottom <= optHeight * 2) {
-    //                 updateList()
-    //             }
-    //         }
-    //     },
-    //     {wait: 200, leading: false}
-    // )
-
     return (
-        // <div
-        //     ref={gridContainerRef}
-        //     className={classNames(styles["grid-list-wrapper"], gridClassName)}
-        //     id={id}
-        //     onScroll={() => onScrollCapture.run()}
-        // >
-        //     <div style={{minHeight: wrapperHeight}} className={styles["grid-list-body"]}>
-        //         <ul className={styles["ul-wrapper"]}>
-        //             {data.map((item, index) => {
-        //                 const rowNum = Math.floor(index / gridCol)
-        //                 const colNum = index % gridCol
-        //                 return (
-        //                     <li
-        //                         key={item[keyName]}
-        //                         style={{
-        //                             zIndex: index + 1,
-        //                             transform: `translate(${colNum * 100}%, ${rowNum * 100}%)`
-        //                         }}
-        //                         className={classNames(styles["li-style"], {
-        //                             [styles["li-first-style"]]: colNum === 0,
-        //                             [styles["li-last-style"]]: colNum === gridCol - 1
-        //                         })}
-        //                     >
-        //                         {render({index: index, data: item})}
-        //                     </li>
-        //                 )
-        //             })}
-        //         </ul>
-        //     </div>
-        //     {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
-        //     {data.length > 0 && loading && (
-        //         <div className={styles["loading-wrapper"]}>
-        //             <YakitSpin wrapperClassName={styles["loading-style"]} />
-        //         </div>
-        //     )}
-        // </div>
         <div
             ref={containerRef}
             className={classNames(styles["grid-list-wrapper"], gridClassName)}
@@ -1462,5 +1382,97 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
                 还原
             </YakitButton>
         </div>
+    )
+})
+
+/** @name 标题栏的搜索选项组件 */
+export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) => {
+    const {defaultFilter, onFilter, refresh, type = "online"} = props
+
+    const [visible, setVisible] = useState<boolean>(false)
+    const [filterList, setFilterList] = useState<API.PluginsSearch[]>([])
+
+    // 查询筛选条件统计数据列表
+    useEffect(() => {
+        if (type === "online") {
+            apiFetchGroupStatisticsOnline().then((res) => {
+                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                setFilterList(list)
+            })
+        }
+        if (type === "check") {
+            apiFetchGroupStatisticsCheck().then((res) => {
+                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                setFilterList(list)
+            })
+        }
+        if (type === "user") {
+            apiFetchGroupStatisticsMine().then((res) => {
+                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                setFilterList(list)
+            })
+        }
+
+        return () => {
+            setFilterList([])
+        }
+    }, [refresh])
+
+    const [form] = Form.useForm()
+    useEffect(() => {
+        form.setFieldsValue({...defaultFilter})
+    }, [defaultFilter])
+
+    const onFinish = useMemoizedFn((value) => {
+        if (value?.hasOwnProperty("tags")) delete value["tags"]
+        if (value?.hasOwnProperty("plugin_group")) delete value["plugin_group"]
+        onFilter(value)
+        setVisible(false)
+    })
+    const onReset = useMemoizedFn(() => {
+        form.setFieldsValue({
+            plugin_type: [],
+            status: [],
+            plugin_private: []
+        })
+    })
+
+    return (
+        <YakitPopover
+            overlayClassName={styles["filter-popover-btn"]}
+            placement='bottomLeft'
+            visible={visible}
+            onVisibleChange={(value) => setVisible(value)}
+            content={
+                <div className={styles["filter-popover-btn-wrapper"]}>
+                    <Form form={form} layout='vertical' onFinish={onFinish}>
+                        {filterList.map((item) => {
+                            return (
+                                <Form.Item key={item.groupKey} name={item.groupKey} label={item.groupName}>
+                                    <YakitSelect size='small' mode='multiple' allowClear={true}>
+                                        {item.data.map((el) => (
+                                            <YakitSelect.Option key={el.value} value={el.value}>
+                                                {el.label}
+                                            </YakitSelect.Option>
+                                        ))}
+                                    </YakitSelect>
+                                </Form.Item>
+                            )
+                        })}
+
+                        <div className={styles["form-btns"]}>
+                            <YakitButton type='primary' htmlType='submit' size='small'>
+                                搜索
+                            </YakitButton>
+                            <YakitButton size='small' onClick={onReset}>
+                                重置搜索
+                            </YakitButton>
+                        </div>
+                    </Form>
+                </div>
+            }
+        >
+            <YakitButton type='text2' icon={<OutlineFilterIcon />} isHover={visible} />
+        </YakitPopover>
     )
 })

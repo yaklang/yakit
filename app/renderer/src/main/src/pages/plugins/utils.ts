@@ -376,6 +376,7 @@ export const apiPluginStars: (query: PluginStarsRequest) => Promise<API.ActionSu
     })
 }
 
+/** grpc接口 批量下载插件 */
 export interface DownloadOnlinePluginsRequest {
     Token?: string
     IsPrivate?: boolean[]
@@ -411,7 +412,7 @@ export const convertDownloadOnlinePluginBatchRequestParams = (
     return delObjectInvalidValue(data)
 }
 
-/**下载插件 */
+/** 下载插件 */
 export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
@@ -794,3 +795,6 @@ export const apiDeleteLocalPluginsByWhere: (query: DeleteLocalPluginsByWhereRequ
         }
     })
 }
+
+// 远端插件数据 转换成 前端可编辑的详情数据结构
+export const convertRemoteToLocalInfo = () => {}
