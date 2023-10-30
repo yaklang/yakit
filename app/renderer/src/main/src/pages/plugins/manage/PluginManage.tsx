@@ -45,7 +45,7 @@ import {
     DownloadOnlinePluginsRequest,
     PluginsQueryProps,
     apiDeletePluginCheck,
-    apiDownloadOnlinePlugin,
+    apiDownloadPluginCheck,
     apiFetchCheckList,
     apiFetchGroupStatisticsCheck,
     convertDownloadOnlinePluginBatchRequestParams,
@@ -261,7 +261,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             }
             if (downloadLoading) return
             setDownloadLoading(true)
-            apiDownloadOnlinePlugin(downloadRequest)
+            apiDownloadPluginCheck(downloadRequest)
                 .then(() => {
                     fetchList(true)
                 })
@@ -278,7 +278,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             UUID: [value.uuid]
         }
 
-        apiDownloadOnlinePlugin(downloadRequest).then(() => {})
+        apiDownloadPluginCheck(downloadRequest).then(() => {})
     })
 
     /** 批量删除插件 */
