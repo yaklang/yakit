@@ -1,5 +1,4 @@
-
-
+import {API} from "@/services/swagger/resposeType"
 /** ---------- 插件详细信息 start ---------- */
 /** 插件类型信息 */
 export interface PluginTypeParamProps {
@@ -15,13 +14,11 @@ export interface PluginBaseParamProps {
     /** 插件描述 */
     help?: string
     /** 漏洞类型 */
-    bug?: string
-    /** 漏洞描述 */
-    bugHelp?: string
-    /** 修复建议 */
-    bugFix?: string
+    riskType?: string
+    /** 漏洞类型详情 */
+    riskDetail?: API.PluginsRiskDetail
     /** 漏洞补充说明 */
-    commnt?: string
+    risk_annotation?: string
     /** 插件tags */
     tags?: string[]
 }
@@ -40,21 +37,21 @@ export interface PluginSettingParamProps {
 /** ---------- 插件参数详细信息 start ---------- */
 export interface PluginParamDataProps {
     /** 参数名 */
-    value: string
+    Field: string
     /** 参数展示名 */
-    label?: string
+    FieldVerbose?: string
     /** 是否必填 */
-    required?: boolean
+    Required?: boolean
     /** 参数类型 */
-    type?: string
+    TypeVerbose?: string
     /** 默认值 */
-    defaultValue?: string
+    DefaultValue?: string
     /** 类型附带额外参数 */
     ExtraSetting?: PluginParamDataSelectProps
     /** 帮助信息 */
-    help?: string
+    Help?: string
     /** 参数组(非必填时选项) */
-    group?: string
+    Group?: string
 }
 export interface PluginParamDataSelectProps {
     double?: boolean
@@ -67,10 +64,12 @@ export interface PluginDataProps {
     Type: string
     Kind: string
     Help?: string
-    Bug?: string
-    BugHelp?: string
-    BugFix?: string
-    BugCommnt?: string
+    /** 漏洞类型 */
+    riskType?: string
+    /** 漏洞类型详情 */
+    riskDetail?: API.PluginsRiskDetail
+    /** 漏洞补充说明 */
+    risk_annotation?: string
     Tags?: string
     Params?: any[]
     EnablePluginSelector?: boolean

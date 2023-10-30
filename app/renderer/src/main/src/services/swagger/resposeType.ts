@@ -178,6 +178,14 @@ export declare namespace API {
     confirm_pwd?: string;
     head_img?: string;
   }
+  export interface UpPluginsUserRequest {
+    uuid: string[];
+    user_id: number;
+  }
+  export interface UpPluginsPrivateRequest {
+    uuid: string[];
+    is_private: boolean;
+  }
   export interface UpPluginRecycleRequest {
     ids?: number[];
     keywords?: string;
@@ -187,11 +195,6 @@ export declare namespace API {
     appid: string[];
     operation: string;
     role?: string;
-  }
-  export interface UpdatePluginsRequest {
-    uuid: string[];
-    user_id?: number;
-    is_private?: string;
   }
   export interface UpdatePluginRequest {
     uuid: string;
@@ -449,7 +452,7 @@ export declare namespace API {
     data: PluginsSearchData[];
   }
   export interface PluginsRiskDetail {
-    cweId: number;
+    cweId: string;
     /**
      * 漏洞类型
      */
@@ -482,10 +485,6 @@ export declare namespace API {
     download_total?: number;
     contributors?: string;
     is_private?: boolean;
-    /**
-     * 复制插件id
-     */
-    base_plugin_id?: number;
     group?: string;
     riskType?: string;
     riskDetail?: PluginsRiskDetail[];
@@ -495,11 +494,6 @@ export declare namespace API {
     annotation?: string;
     isCorePlugin?: boolean;
     isDnsLog?: boolean;
-    uuid?: string;
-    /**
-     * 修改描述
-     */
-    logDescription?: string;
   }
   export interface PluginsRecycleRequest extends PluginsWhere, PluginsRecycle {}
   export interface PluginsRecycle {
@@ -514,6 +508,17 @@ export declare namespace API {
   }
   export interface PluginsListResponse extends Paging {
     data: PluginsDetail[];
+  }
+  export interface PluginsEditRequest extends PluginsRequest, PluginsEdit {}
+  export interface PluginsEdit {
+    /**
+     * 为空时默认走新建 不为空时默认走修改
+     */
+    uuid?: string;
+    /**
+     * 修改必传描述(我这没写成必传是因为新增和修改是一个按钮)
+     */
+    logDescription?: string;
   }
   export interface PluginsDetail extends GormBaseModel {
     type: string;
@@ -577,6 +582,50 @@ export declare namespace API {
      * 是否为内置插件
      */
     isCorePlugin?: boolean;
+  }
+  export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
+  export interface PluginsAuditDetailResponse
+    extends PluginsDetail,
+      PluginsAuditDetail {}
+  export interface PluginsAuditDetailRequest {
+    uuid: string;
+    /**
+     * 请求页面 默认(check) 审核详情页 log 日志详情页
+     */
+    list_type?: string;
+    /**
+     * 日志页跳转到详情页必传
+     */
+    plugins_log_id?: number;
+  }
+  export interface PluginsAuditDetail {
+    user_name?: string;
+    plugin_user_id?: number;
+    apply_user_id?: number;
+    plugin_id?: number;
+    /**
+     * 合并状态 0 待处理  1合并  2拒绝
+     */
+    merge_status?: number;
+    up_plugins?: PluginsAuditDetailUpPlugins[];
+    merge_before_plugins?: PluginsAuditDetailMergeBeforePlugins[];
+  }
+  export interface PluginsAuditDetailMergeBeforePlugins {}
+  export interface PluginsAuditDetailUpPlugins {}
+  export interface PluginsAudit {
+    pageType?: string;
+    /**
+     * 审核 'true' 通过 'false' 不通过
+     */
+    status: string;
+    /**
+     * 为空时默认走新建 不为空时默认走修改
+     */
+    uuid: string;
+    /**
+     * 修改必传描述(我这没写成必传是因为新增和修改是一个按钮)
+     */
+    logDescription?: string;
   }
   export interface PluginIncreResponse {
     day_incre_num: number;
@@ -876,6 +925,13 @@ export declare namespace API {
     dump: boolean;
     keywords?: string;
     is_recycle?: boolean;
+  }
+  export interface CopyPluginsRequest extends PluginsRequest, CopyPlugins {}
+  export interface CopyPlugins {
+    /**
+     * 复制插件id
+     */
+    base_plugin_id: number;
   }
   export interface CompanyLicenseConfigResponse extends Paging {
     data: CompanyLicenseConfigList[];
