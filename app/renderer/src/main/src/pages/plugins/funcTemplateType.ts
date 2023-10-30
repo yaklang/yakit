@@ -303,3 +303,15 @@ export interface OnlineRecycleExtraOperateProps {
     onReductionClick: (data: YakitPluginOnlineDetail) => void
     onRemoveOrReductionBefore: (data: YakitPluginOnlineDetail, type: "remove" | "reduction") => void
 }
+
+/** 详情页-筛选条件的 */
+export interface FilterPopoverBtnProps {
+    /** 初始选中的筛选条件 */
+    defaultFilter: PluginFilterParams
+    /** 搜索回调 */
+    onFilter: (value: PluginFilterParams) => any
+    /** 触发筛选列表的刷新 */
+    refresh?: boolean
+    /** 筛选组件的类型-商店|审核|我的 */
+    type?: "check" | "online" | "user"
+}
