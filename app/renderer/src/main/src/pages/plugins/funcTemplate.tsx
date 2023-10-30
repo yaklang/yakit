@@ -69,7 +69,7 @@ import {yakitNotify} from "@/utils/notification"
 import {
     DownloadOnlinePluginsRequest,
     PluginStarsRequest,
-    apiDownloadOnlinePlugin,
+    apiDownloadPluginOnline,
     apiFetchGroupStatisticsCheck,
     apiFetchGroupStatisticsMine,
     apiFetchGroupStatisticsOnline,
@@ -1282,7 +1282,7 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
             UUID: [data.uuid]
         }
         setDownloadLoading(true)
-        apiDownloadOnlinePlugin(download)
+        apiDownloadPluginOnline(download)
             .then(() => {
                 dispatch({
                     type: "download",

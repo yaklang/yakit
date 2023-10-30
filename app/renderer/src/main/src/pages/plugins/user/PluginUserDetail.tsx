@@ -14,16 +14,17 @@ import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import {Tabs, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {FuncBtn, FuncFilterPopover, OnlineExtraOperate} from "../funcTemplate"
+import {FuncBtn} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
-import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {MePluginType, OnlineUserExtraOperate, mePluginTypeList} from "./PluginUser"
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
 import {PluginUserDetailProps} from "./PluginUserType"
 import {PrivatePluginIcon} from "@/assets/newIcon"
+import {useStore} from "@/store"
+import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
@@ -34,8 +35,17 @@ const {ipcRenderer} = window.require("electron")
 const {TabPane} = Tabs
 
 export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
-    const {info, defaultAllCheck, defaultSelectList, response, onBack, loadMoreData, defaultSearchValue, dispatch} =
-        props
+    const {
+        info,
+        defaultAllCheck,
+        defaultSelectList,
+        response,
+        onBack,
+        loadMoreData,
+        defaultSearchValue,
+        dispatch,
+        onRemovePluginDetailSingleBefore
+    } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
     const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
@@ -43,6 +53,8 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     const [recalculation, setRecalculation] = useState<boolean>(false) // 更新item后刷新虚拟列表
 
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
+
+    const userInfo = useStore((s) => s.userInfo)
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -68,12 +80,6 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
 
     const onUserDetailSelect = useMemoizedFn((key) => {
         switch (key) {
-            case "share":
-                yakitNotify("success", "分享~~~")
-                break
-            case "download":
-                yakitNotify("success", "下载~~~")
-                break
             case "editState":
                 onEditState()
                 break
@@ -86,49 +92,25 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     })
     const onEditState = useMemoizedFn(() => {
         if (!plugin) return
-        const editPlugin = {...plugin, is_private: !plugin.is_private, status: plugin.is_private ? 0 : plugin.status}
+        const isPrivate: boolean = !plugin.is_private
+        let status: number = 0
+        if (userInfo.role === "ordinary") {
+            // 为待审核
+            status = 0
+        } else {
+            // 为审核通过
+            if (!isPrivate) status = 1
+        }
+        const editPlugin = {...plugin, is_private: isPrivate, status}
 
         setPlugin({
             ...editPlugin
-        })
-        dispatch({
-            type: "update",
-            payload: {
-                item: {
-                    ...editPlugin
-                }
-            }
         })
         setRecalculation(!recalculation)
     })
     const onRemove = useMemoizedFn(() => {
         if (!plugin) return
-        const removePlugin = {...plugin}
-        if (response.data.length === 1) {
-            // 如果删除是最后一个，就回到列表中得空页面
-            onPluginBack()
-        } else {
-            const index = response.data.findIndex((ele) => ele.uuid === removePlugin.uuid)
-
-            if (index === -1) return
-            if (index === Number(response.pagemeta.total) - 1) {
-                // 选中得item为最后一个，删除后选中倒数第二个
-                setPlugin({
-                    ...response.data[index - 1]
-                })
-            } else {
-                //选择下一个
-                setPlugin({
-                    ...response.data[index + 1]
-                })
-            }
-        }
-        dispatch({
-            type: "remove",
-            payload: {
-                itemList: [removePlugin]
-            }
-        })
+        onRemovePluginDetailSingleBefore(plugin)
     })
     const onLoadMoreData = useMemoizedFn(async () => {
         if (loading) return
@@ -238,7 +220,12 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                                     tags={plugin.tags}
                                     extraNode={
                                         <div className={styles["plugin-info-extra-header"]}>
-                                            <OnlineUserExtraOperate plugin={plugin} onSelect={onUserDetailSelect} />
+                                            <OnlineUserExtraOperate
+                                                dispatch={dispatch}
+                                                userInfoRole={userInfo.role || ""}
+                                                plugin={plugin}
+                                                onSelect={onUserDetailSelect}
+                                            />
                                             <FuncBtn
                                                 maxWidth={1100}
                                                 icon={<OutlineCursorclickIcon />}
@@ -257,8 +244,10 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                                 </div>
                             </div>
                         </TabPane>
-                        <TabPane tab='日志' key='log' disabled={true}>
-                            <div>日志</div>
+                        <TabPane tab='日志' key='log'>
+                            <div className={styles["plugin-log-wrapper"]}>
+                                <YakitPluginOnlineJournal pluginId={plugin.id} />
+                            </div>
                         </TabPane>
                     </Tabs>
                 </div>
