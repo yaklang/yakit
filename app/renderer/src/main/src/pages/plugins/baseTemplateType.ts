@@ -36,9 +36,15 @@ export interface PluginsContainerProps {
 
 export interface PluginDetailsProps<T> {
     title: string | ReactNode
+    /**搜索内容 */
+    search: PluginSearchParams
+    /** 设置搜索内容 */
+    setSearch: (s: PluginSearchParams) => void
+    /** 搜索内容功能回调(自带防抖功能) */
+    onSearch: (value: PluginSearchParams) => any
     /** 搜索栏额外操作元素 */
     filterNode?: ReactNode
-    /** 搜索栏额外过滤条件 */
+    /** 搜索栏额外过滤组件 */
     filterExtra?: ReactNode
     /** 全选框状态 */
     checked: boolean
@@ -53,10 +59,6 @@ export interface PluginDetailsProps<T> {
     /** 返回事件 */
     onBack: () => any
     children: ReactNode
-    /**搜索框的条件 */
-    search: PluginSearchParams
-    /** */
-    setSearch: (s: PluginSearchParams) => void
 }
 
 export interface PluginDetailHeaderProps {
@@ -79,9 +81,21 @@ export interface PluginDetailHeaderProps {
     /** 更新时间 */
     updated_at: number
     /**协作者信息 */
-    prImgs?:string[]
+    prImgs?: string[]
 }
 
+/** 漏洞类型列表-选项 */
+export interface RiskListOptProps {
+    RiskType: string
+    CWEId: string
+}
+/** 漏洞类型-详情 */
+export interface RiskOptInfoProps {
+    Id: number
+    CWEName: string
+    Description: string
+    CWESolution: string
+}
 // 插件基础信息组件
 export interface PluginModifyInfoProps {
     ref?: any
