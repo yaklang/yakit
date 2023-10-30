@@ -469,6 +469,24 @@ export const apiDownloadPluginMine: (query?: DownloadOnlinePluginsRequest) => Pr
     })
 }
 
+/**插件管理 下载插件 */
+export const apiDownloadPluginCheck: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...(query || {}),
+                ListType: "check"
+            }
+            apiDownloadPluginBase(newQuery)
+                .then((res) => resolve(res))
+                .catch((err) => {
+                    yakitNotify("error", "插件管理插件失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {}
+    })
+}
+
 /**线上删除插件接口基础版  删除（放到回收站） */
 const apiDeletePlugin: (query?: API.PluginsWhereDeleteRequest) => Promise<API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {
