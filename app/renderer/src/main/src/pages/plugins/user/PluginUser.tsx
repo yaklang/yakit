@@ -44,17 +44,13 @@ import {PrivatePluginIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {API} from "@/services/swagger/resposeType"
 import {TypeSelectOpt} from "../funcTemplateType"
-
-import classNames from "classnames"
-import "../plugins.scss"
-import styles from "./PluginUser.module.scss"
 import {useStore} from "@/store"
 import {
     DownloadOnlinePluginsRequest,
     PluginGV,
     PluginsQueryProps,
     apiDeletePluginMine,
-    apiDownloadOnlinePlugin,
+    apiDownloadPluginMine,
     apiFetchGroupStatisticsMine,
     apiFetchMineList,
     apiUpdatePluginPrivateMine,
@@ -64,8 +60,12 @@ import {
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {PluginRecycleList} from "./PluginRecycleList"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+
+import classNames from "classnames"
+import "../plugins.scss"
+import styles from "./PluginUser.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -126,7 +126,8 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         selectList: [],
         loadMoreData: () => {},
         onRemovePluginBatchBefore: () => {},
-        onDownloadBatch: () => {}
+        onDownloadBatch: () => {},
+        onRemovePluginDetailSingleBefore: () => {}
     })
 
     const pluginRecycleListRef = useRef<PluginRecycleListRefProps>({
@@ -228,6 +229,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     loadMoreData={pluginUserListRef.current.loadMoreData}
                     defaultSearchValue={search}
                     dispatch={dispatch}
+                    onRemovePluginDetailSingleBefore={pluginUserListRef.current.onRemovePluginDetailSingleBefore}
                 />
             )}
             <PluginsLayout
@@ -400,6 +402,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
 
         const removePluginRef = useRef<YakitPluginOnlineDetail>()
+        const removePluginDetailRef = useRef<YakitPluginOnlineDetail>()
         const latestLoadingRef = useLatest(loading)
         const userInfo = useStore((s) => s.userInfo)
 
@@ -416,7 +419,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 selectList,
                 loadMoreData: onUpdateList,
                 onRemovePluginBatchBefore,
-                onDownloadBatch
+                onDownloadBatch,
+                onRemovePluginDetailSingleBefore
             }),
             [allCheck, selectList]
         )
@@ -429,7 +433,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         useEffect(() => {
             getInitTotal()
             getPluginRemoveCheck()
-        }, [isLogin,inViewport, refresh])
+        }, [isLogin, inViewport, refresh])
         useEffect(() => {
             fetchList(true)
         }, [isLogin, refresh, filters])
@@ -516,7 +520,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         const optExtraNode = useMemoizedFn((data: YakitPluginOnlineDetail) => {
             return (
                 <div className={styles["plugin-user-extra-node"]}>
-                    <OnlineUserExtraOperate plugin={data} onSelect={(key) => onUserSelect(key, data)} />
+                    <OnlineUserExtraOperate
+                        plugin={data}
+                        dispatch={dispatch}
+                        userInfoRole={userInfo.role || ""}
+                        onSelect={onUserSelect}
+                    />
                 </div>
             )
         })
@@ -530,35 +539,14 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         })
         const onUserSelect = useMemoizedFn((key: string, data: YakitPluginOnlineDetail) => {
             switch (key) {
-                case "share":
-                    onShare(data.uuid)
-                    break
-                case "download":
-                    onDownloadClick(data)
-                    break
-                case "editState":
-                    onUpdatePrivate(data)
-                    break
                 case "remove":
-                    removePluginRef.current = data
                     onRemovePluginSingleBefore(data)
                     break
                 default:
                     break
             }
         })
-        const onShare = useMemoizedFn((uuid: string) => {
-            ipcRenderer.invoke("copy-clipboard", uuid).then(() => {
-                yakitNotify("success", "分享ID复制成功")
-            })
-        })
-        /**下载 */
-        const onDownloadClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            let downloadParams: DownloadOnlinePluginsRequest = {
-                UUID: [data.uuid]
-            }
-            apiDownloadOnlinePlugin(downloadParams)
-        })
+
         /**批量下载 */
         const onDownloadBatch = useMemoizedFn(() => {
             let downloadParams: DownloadOnlinePluginsRequest = {}
@@ -572,42 +560,53 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 }
             }
             setDownloadLoading(true)
-            apiDownloadOnlinePlugin(downloadParams).finally(() =>
+            apiDownloadPluginMine(downloadParams).finally(() =>
                 setTimeout(() => {
                     setDownloadLoading(false)
                 }, 200)
             )
         })
-        /**更改私有状态 */
-        const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            const updateItem: API.UpPluginsPrivateRequest = {
-                uuid: [data.uuid],
-                is_private: !data.is_private
+        /**详情中调用删除之前操作 */
+        const onRemovePluginDetailSingleBefore = useMemoizedFn((data) => {
+            removePluginDetailRef.current = data
+            if (pluginRemoveCheck) {
+                onRemovePluginDetailSingle(data)
+            } else {
+                setRemoveCheckVisible(true)
             }
-            apiUpdatePluginPrivateMine(updateItem).then(() => {
-                const isPrivate: boolean = !data.is_private
-                let status: number = 0
-                if (userInfo.role === "ordinary") {
-                    // 为待审核
-                    status = 0
+        })
+        /**详情中调用删除操作 */
+        const onRemovePluginDetailSingle = useMemoizedFn((data) => {
+            onRemovePluginSingleBase(data).then(() => {
+                if (response.data.length === 1) {
+                    // 如果删除是最后一个，就回到列表中得空页面
+                    setPlugin(undefined)
                 } else {
-                    // 为审核通过
-                    if (!isPrivate) status = 1
+                    const index = response.data.findIndex((ele) => ele.uuid === data.uuid)
+                    if (index === -1) return
+                    if (index === Number(response.pagemeta.total) - 1) {
+                        // 选中得item为最后一个，删除后选中倒数第二个
+                        setPlugin({
+                            ...response.data[index - 1]
+                        })
+                    } else {
+                        //选择下一个
+                        setPlugin({
+                            ...response.data[index + 1]
+                        })
+                    }
                 }
                 dispatch({
-                    type: "update",
+                    type: "remove",
                     payload: {
-                        item: {
-                            ...data,
-                            is_private: isPrivate,
-                            status: status
-                        }
+                        itemList: [data]
                     }
                 })
             })
         })
         /**单个删除之前操作 */
         const onRemovePluginSingleBefore = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+            removePluginRef.current = data
             if (pluginRemoveCheck) {
                 onRemovePluginSingle(data)
             } else {
@@ -622,28 +621,40 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 setRemoveCheckVisible(true)
             }
         })
-        /**单个删除 */
-        const onRemovePluginSingle = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            let deleteParams: API.PluginsWhereDeleteRequest = {
-                uuid: [data.uuid]
-            }
-            apiDeletePluginMine(deleteParams).then(() => {
-                const index = selectList.findIndex((ele) => ele === data.uuid)
-                if (index !== -1) {
-                    optCheck(data, false)
-                }
+        /** 列表页面 单个删除 */
+        const onRemovePluginSingle = useMemoizedFn(async (data: YakitPluginOnlineDetail) => {
+            onRemovePluginSingleBase(data).then(() => {
                 dispatch({
                     type: "remove",
                     payload: {
                         itemList: [data]
                     }
                 })
-                setRemoteValue(PluginGV.UserPluginRemoveCheck, `${pluginRemoveCheck}`)
-                removePluginRef.current = undefined
-                setRemoveCheckVisible(false)
-                getInitTotal()
-                getPluginGroupList()
-                onRefreshRecycleList()
+            })
+        })
+        /**单个删除基础版 */
+        const onRemovePluginSingleBase = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+            let deleteParams: API.PluginsWhereDeleteRequest = {
+                uuid: [data.uuid]
+            }
+            return new Promise<void>((resolve, reject) => {
+                apiDeletePluginMine(deleteParams)
+                    .then(() => {
+                        const index = selectList.findIndex((ele) => ele === data.uuid)
+                        if (index !== -1) {
+                            optCheck(data, false)
+                        }
+                        setRemoteValue(PluginGV.UserPluginRemoveCheck, `${pluginRemoveCheck}`)
+                        removePluginRef.current = undefined
+                        removePluginDetailRef.current = undefined
+                        setRemoveCheckVisible(false)
+                        getInitTotal()
+                        getPluginGroupList()
+                        onRefreshRecycleList()
+                        // 再做单独处理
+                        resolve()
+                    })
+                    .catch(reject)
             })
         })
         /**批量删除 */
@@ -693,11 +704,15 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         /**新建插件 */
         const onAddPlugin = useMemoizedFn(() => {})
         const onPluginRemoveCheckOk = useMemoizedFn(() => {
+            if (removePluginDetailRef.current) {
+                onRemovePluginDetailSingle(removePluginDetailRef.current)
+                return
+            }
             if (removePluginRef.current) {
                 onRemovePluginSingle(removePluginRef.current)
-            } else {
-                onRemovePluginBatch()
+                return
             }
+            onRemovePluginBatch()
         })
         return (
             <>
@@ -809,9 +824,64 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
 )
 
 export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = React.memo((props) => {
-    const {plugin, onSelect} = props
+    const {plugin, onSelect, dispatch, userInfoRole} = props
+    const onShare = useMemoizedFn((uuid: string) => {
+        ipcRenderer.invoke("copy-clipboard", uuid).then(() => {
+            yakitNotify("success", "分享ID复制成功")
+        })
+    })
+    /**下载 */
+    const onDownloadClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        let downloadParams: DownloadOnlinePluginsRequest = {
+            UUID: [data.uuid]
+        }
+        apiDownloadPluginMine(downloadParams)
+    })
+    /**更改私有状态 */
+    const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        const updateItem: API.UpPluginsPrivateRequest = {
+            uuid: [data.uuid],
+            is_private: !data.is_private
+        }
+        apiUpdatePluginPrivateMine(updateItem).then(() => {
+            const isPrivate: boolean = !data.is_private
+            let status: number = 0
+            if (userInfoRole === "ordinary") {
+                // 为待审核
+                status = 0
+            } else {
+                // 为审核通过
+                if (!isPrivate) status = 1
+            }
+            dispatch({
+                type: "update",
+                payload: {
+                    item: {
+                        ...data,
+                        is_private: isPrivate,
+                        status: status
+                    }
+                }
+            })
+            // 我的插件详情修改私密公开状态，需要使用回调
+            onSelect("editState", plugin)
+        })
+    })
     const onClick = useMemoizedFn(({key}) => {
-        onSelect(key)
+        switch (key) {
+            case "share":
+                onShare(plugin.uuid)
+                break
+            case "download":
+                onDownloadClick(plugin)
+                break
+            case "editState":
+                onUpdatePrivate(plugin)
+                break
+            default:
+                onSelect(key, plugin)
+                break
+        }
     })
     return (
         <FuncFilterPopover

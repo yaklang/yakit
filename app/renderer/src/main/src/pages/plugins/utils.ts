@@ -414,8 +414,8 @@ export const convertDownloadOnlinePluginBatchRequestParams = (
     return delObjectInvalidValue(data)
 }
 
-/** 下载插件 */
-export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+/**下载插件 */
+export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("DownloadOnlinePluginBatch", query)
@@ -430,6 +430,42 @@ export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => 
                 yakitNotify("error", "下载失败:" + e)
                 reject()
             })
+    })
+}
+
+/**插件商店 下载插件 */
+export const apiDownloadPluginOnline: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...(query || {}),
+                ListType: ""
+            }
+            apiDownloadPluginBase(newQuery)
+                .then((res) => resolve(res))
+                .catch((err) => {
+                    yakitNotify("error", "插件商店下载插件失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {}
+    })
+}
+
+/**我的插件 下载插件 */
+export const apiDownloadPluginMine: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...(query || {}),
+                ListType: "mine"
+            }
+            apiDownloadPluginBase(newQuery)
+                .then((res) => resolve(res))
+                .catch((err) => {
+                    yakitNotify("error", "下载我的插件失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {}
     })
 }
 
