@@ -1,4 +1,4 @@
-$active-color:#036ffe;
+$active-color: #036ffe;
 
 .plugin-info {
     height: 100%;
@@ -54,7 +54,7 @@ $active-color:#036ffe;
             display: -webkit-box;
             -webkit-line-clamp: 1;
             -webkit-box-orient: vertical;
-            word-break: break-all
+            word-break: break-all;
         }
 
         .ant-tabs {
@@ -152,7 +152,7 @@ $active-color:#036ffe;
     padding: 0 16px;
 
     .child-comment-list {
-        background-color: #F9FAFB;
+        background-color: #f9fafb;
         padding: 24px;
         margin: 0 64px;
         margin-top: 16px;
@@ -215,7 +215,7 @@ $active-color:#036ffe;
             }
         }
 
-        .upload-img-opt+.upload-img-opt {
+        .upload-img-opt + .upload-img-opt {
             margin-left: 10px;
         }
     }
@@ -239,7 +239,7 @@ $active-color:#036ffe;
             border-color: initial;
 
             &:hover {
-                border-color: initial
+                border-color: initial;
             }
         }
     }
@@ -351,13 +351,13 @@ $active-color:#036ffe;
                     .icon-style {
                         font-size: 21px;
                         cursor: pointer;
-                        color: #686C78;
+                        color: #686c78;
                     }
 
                     .icon-style-comment {
                         font-size: 16px;
                         cursor: pointer;
-                        color: #686C78;
+                        color: #686c78;
                     }
 
                     .icon-style-start {
@@ -388,8 +388,6 @@ $active-color:#036ffe;
             }
         }
     }
-
-
 }
 
 .mask-img-display {
@@ -427,4 +425,9 @@ $active-color:#036ffe;
 .row-cneter {
     display: flex;
     justify-content: center;
+}
+
+.no-more-text {
+    font-size: 12px;
+    color: var(--yakit-helper-text-color);
 }
