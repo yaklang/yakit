@@ -3,7 +3,6 @@ import {
     PluginsContainer,
     PluginsLayout,
     aduitStatusToName,
-    defaultFilter,
     defaultPagemeta,
     defaultSearch,
     statusTag
@@ -27,21 +26,33 @@ import {
     OutlinePluscircleIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useLatest, useLockFn, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
-import {apiFetchList, ssfilters} from "../test"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {Form} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {PluginManageDetail} from "./PluginManageDetail"
+import {BackInfoProps, PluginManageDetail} from "./PluginManageDetail"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {yakitNotify} from "@/utils/notification"
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
+import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
+import {
+    DownloadOnlinePluginsRequest,
+    PluginsQueryProps,
+    apiDeletePluginCheck,
+    apiDownloadOnlinePlugin,
+    apiFetchCheckList,
+    apiFetchGroupStatisticsCheck,
+    convertDownloadOnlinePluginBatchRequestParams,
+    convertPluginsRequestParams
+} from "../utils"
+import {isCommunityEdition} from "@/utils/envfile"
+import {NetWorkApi} from "@/services/fetch"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
@@ -49,6 +60,7 @@ import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
+// 首页上方的审核状态搜索条件组件数据
 const StatusType: TypeSelectOpt[] = [
     {key: "0", ...aduitStatusToName["0"]},
     {key: "1", ...aduitStatusToName["1"]},
@@ -60,49 +72,60 @@ interface PluginManageProps {}
 export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 获取插件列表数据-相关逻辑
     /** 是否为加载更多 */
-    const [loading, setLoading] = useState<boolean>(false)
+    const [loading, setLoading] = useGetState<boolean>(false)
+    const latestLoadingRef = useLatest(loading)
     /** 是否为首屏加载 */
     const isLoadingRef = useRef<boolean>(true)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
-    const [filters, setFilters, getFilters] = useGetState<PluginFilterParams>({
-        status: [],
+    const [filters, setFilters] = useState<PluginFilterParams>({
         plugin_type: [],
+        status: [],
         tags: [],
         plugin_group: []
     })
+    /** 首页顶部的审核状态组件选中情况 */
+    const pluginStatusSelect: TypeSelectOpt[] = useMemo(() => {
+        return (
+            filters.status?.map((ele) => ({
+                key: ele.value,
+                name: ele.label
+            })) || []
+        )
+    }, [filters.status])
     const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
     const [hasMore, setHasMore] = useState<boolean>(true)
 
-    useEffect(() => {
-        console.log(response.data.length)
-    }, [response])
-
+    // 获取插件列表数据
     const fetchList = useMemoizedFn((reset?: boolean) => {
-        if (loading) return
+        if (latestLoadingRef.current) return
+        if (reset) isLoadingRef.current = true
 
         setLoading(true)
-
         const params: PluginListPageMeta = !!reset
             ? {...defaultPagemeta}
             : {
                   page: response.pagemeta.page + 1,
                   limit: response.pagemeta.limit || 20
               }
+        // api接口请求参数
+        const query: PluginsQueryProps = {...convertPluginsRequestParams({...filters}, searchs, params)}
 
-        apiFetchList(params)
-            .then((res: API.YakitPluginListResponse) => {
+        apiFetchCheckList(query)
+            .then((res) => {
+                console.log('data',res.data)
                 if (!res.data) res.data = []
-
                 dispatch({
                     type: "add",
                     payload: {
                         response: {...res}
                     }
                 })
-                // const isMore = res.data.length < res.pagemeta.limit || data.length === response.pagemeta.total
-                // setHasMore(!isMore)
+
+                const dataLength = response.data.concat(res.data)
+                const isMore = res.data.length < res.pagemeta.limit || dataLength.length >= response.pagemeta.total
+                setHasMore(!isMore)
 
                 isLoadingRef.current = false
             })
@@ -113,9 +136,27 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             })
     })
 
+    const [pluginFilters, setPluginFilters] = useState<API.PluginsSearch[]>([])
+    // 获取所有过滤条件统计数据
+    const fetchPluginFilters = useMemoizedFn(() => {
+        apiFetchGroupStatisticsCheck().then((res) => {
+            setPluginFilters(res.data)
+        })
+    })
+
+    /**
+     * @name 数据初始化
+     * @param noRefresh 初始化时不刷新列表数据
+     */
+    const onInit = useMemoizedFn((noRefresh?: boolean) => {
+        setShowPluginIndex(0)
+        fetchPluginFilters()
+        if (!noRefresh) fetchList(true)
+    })
+
     // 页面初始化的首次列表请求
     useEffect(() => {
-        fetchList(true)
+        onInit()
     }, [])
     // 滚动更多加载
     const onUpdateList = useMemoizedFn((reset?: boolean) => {
@@ -125,22 +166,38 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 关键词|作者搜索
     // 触发列表的搜索(未完成)
     const onKeywordAndUser = useDebounceFn(
-        (value: PluginSearchParams) => {
-            console.log("onKeywordAndUser", value)
-        },
-        {wait: 300}
+        useMemoizedFn((value: PluginSearchParams) => {
+            fetchList(true)
+        }),
+        {wait: 500}
     )
     // 过滤条件搜索
-    const onFilter = useDebounceFn(
-        (value: Record<string, string[] | string>) => {
-            setFilters({...value})
+    useDebounceEffect(
+        () => {
+            fetchList(true)
         },
-        {wait: 300}
+        [filters],
+        {wait: 500}
     )
+    const onFilter = useMemoizedFn((value: Record<string, API.PluginsSearchData[]>) => {
+        setFilters({...value})
+    })
+    const onSetActive = useMemoizedFn((status: TypeSelectOpt[]) => {
+        const newStatus: API.PluginsSearchData[] = status.map((ele) => ({
+            value: ele.key,
+            label: ele.name,
+            count: 0
+        }))
+        setFilters({...filters, status: newStatus})
+    })
 
     // ----- 选中插件 -----
     const [allCheck, setAllcheck] = useState<boolean>(false)
-    const [selectList, setSelectList, getSelectList] = useGetState<string[]>([])
+    const [selectList, setSelectList, getSelectList] = useGetState<YakitPluginOnlineDetail[]>([])
+    // 选中插件的uuid集合
+    const selectUUIDs = useMemo(() => {
+        return getSelectList().map((item) => item.uuid)
+    }, [selectList])
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return response.pagemeta.total
@@ -170,17 +227,59 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
     /** 批量下载插件 */
     const [showBatchDownload, setShowBatchDownload] = useState<boolean>(false)
-    const onBatchDownload = useMemoizedFn(() => {
-        if (allCheck || selectNum === 0) {
+    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
+    // 批量下载(首页批量下载和详情批量下载共用一个方法)
+    const onBatchDownload = useMemoizedFn((newParams?: BackInfoProps) => {
+        // 选中插件数量
+        let selectTotal: number = selectNum
+        // 选中插件UUID
+        let selectUuids: string[] = [...selectUUIDs]
+        // 搜索内容
+        let downloadSearch: PluginSearchParams = {...searchs}
+        // 搜索筛选条件
+        let downloadFilter: PluginFilterParams = {...filters}
+
+        if (newParams) {
+            selectTotal = newParams.allCheck ? response.pagemeta.total : newParams.selectList.length
+            selectUuids = newParams.selectList.map((item) => item.uuid)
+            downloadSearch = {...newParams.search}
+            downloadFilter = {...newParams.filter}
+        }
+
+        if (selectTotal === 0) {
             // 全部下载
             setShowBatchDownload(true)
         } else {
             // 批量下载
-            console.log("selectlist", selectList)
+            let downloadRequest: DownloadOnlinePluginsRequest = {}
+            if (allCheck) {
+                downloadRequest = {...convertDownloadOnlinePluginBatchRequestParams(downloadFilter, downloadSearch)}
+            } else {
+                downloadRequest = {
+                    UUID: selectUuids
+                }
+            }
+            if (downloadLoading) return
+            setDownloadLoading(true)
+            apiDownloadOnlinePlugin(downloadRequest)
+                .then(() => {
+                    fetchList(true)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setDownloadLoading(false)
+                    }, 200)
+                })
         }
     })
     /** 单个插件下载 */
-    const onDownload = useMemoizedFn((value?: API.YakitPluginDetail) => {})
+    const onDownload = useLockFn(async (value: YakitPluginOnlineDetail) => {
+        let downloadRequest: DownloadOnlinePluginsRequest = {
+            UUID: [value.uuid]
+        }
+
+        apiDownloadOnlinePlugin(downloadRequest).then(() => {})
+    })
 
     /** 批量删除插件 */
     // 原因窗口(删除|不通过)
@@ -189,46 +288,91 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         type: "nopass"
     })
     // 单项插件删除
-    const [activeDelPlugin, setActiveDelPlugin] = useState<API.YakitPluginDetail | undefined>()
+    const activeDelPlugin = useRef<YakitPluginOnlineDetail>()
     const onShowDelPlugin = useMemoizedFn(() => {
         setShowReason({visible: true, type: "del"})
     })
     const onCancelReason = useMemoizedFn(() => {
-        setActiveDelPlugin(undefined)
+        activeDelPlugin.current = undefined
+        activeDetailData.current = undefined
         setShowReason({visible: false, type: "nopass"})
     })
-    const onReasonCallback = useMemoizedFn((reason: string) => {
-        console.log("reason", reason)
-        if (showReason.type === "del") {
-            let arr: YakitPluginOnlineDetail[] = []
-            if (!!activeDelPlugin) {
-                arr = [activeDelPlugin]
-            } else {
-                if (allCheck || selectNum === 0) arr = [...response.data]
-                else
-                    arr = [
-                        ...(selectList.map((item) => {
-                            return {uuid: item}
-                        }) as any)
-                    ]
-                setHasMore(false)
-            }
-
-            isLoadingRef.current = true
-            setLoading(true)
-            dispatch({
-                type: "remove",
-                payload: {
-                    itemList: [...arr]
-                }
-            })
-            onCancelReason()
-            setTimeout(() => {
-                isLoadingRef.current = false
+    // 删除插件集合接口
+    const apiDelPlugins = useMemoizedFn((params?: API.PluginsWhereDeleteRequest, thenCallback?: () => any) => {
+        setLoading(true)
+        apiDeletePluginCheck(params)
+            .then(() => {
+                if (allCheck) setAllcheck(false)
+                setSelectList([])
                 setLoading(false)
-            }, 2000)
+                if (thenCallback) thenCallback()
+            })
+            .then(() => {
+                setLoading(false)
+            })
+    })
+    // 删除插件(首页批量|清空|单个|详情内删除共用一个方法)
+    const onReasonCallback = useMemoizedFn((reason: string) => {
+        const type = showReason.type
+        onCancelReason()
+
+        // 是否全选
+        let delAllCheck: boolean = allCheck
+        // 选中插件数量
+        let selectTotal: number = selectNum
+        // 选中插件UUID
+        let selectUuids: string[] = [...selectUUIDs]
+        // 搜索内容
+        let delSearch: PluginSearchParams = {...searchs}
+        // 搜索筛选条件
+        let delFilter: PluginFilterParams = {...filters}
+
+        // 如果是从详情页过来的回调事件
+        if (activeDetailData.current) {
+            delAllCheck = activeDetailData.current.allCheck
+            selectTotal = activeDetailData.current.allCheck
+                ? response.pagemeta.total
+                : activeDetailData.current.selectList.length
+            selectUuids = activeDetailData.current.selectList.map((item) => item.uuid)
+            delSearch = {...activeDetailData.current.search}
+            delFilter = {...activeDetailData.current.filter}
         }
-        if (showReason.type === "nopass") {
+
+        // 删除插件逻辑
+        if (type === "del") {
+            // 清空操作(无视搜索条件)
+            if (selectTotal === 0 && !activeDelPlugin.current) {
+                apiDelPlugins(undefined, onInit)
+            }
+            // 单个删除
+            else if (!!activeDelPlugin.current) {
+                let delRequest: API.PluginsWhereDeleteRequest = {uuid: [activeDelPlugin.current.uuid]}
+                apiDelPlugins(delRequest, () => {
+                    if (activeDelPlugin.current) {
+                        dispatch({
+                            type: "remove",
+                            payload: {
+                                itemList: [activeDelPlugin.current]
+                            }
+                        })
+                        const index = selectUUIDs.findIndex((item) => item === activeDelPlugin.current?.uuid)
+                        if (index > -1) {
+                            optCheck(activeDelPlugin.current, false)
+                        }
+                        onInit(true)
+                    }
+                })
+            }
+            // 批量删除
+            else if (!activeDelPlugin.current) {
+                let delRequest: API.PluginsWhereDeleteRequest = {}
+                if (delAllCheck) {
+                    delRequest = {...convertPluginsRequestParams(delFilter, delSearch)}
+                } else {
+                    delRequest = {uuid: selectUuids}
+                }
+                apiDelPlugins(delRequest, onInit)
+            }
         }
     })
 
@@ -241,27 +385,27 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         showPluginIndex.current = index
     })
 
-    const [plugin, setPlugin] = useState<API.YakitPluginDetail | undefined>()
+    const [plugin, setPlugin] = useState<YakitPluginOnlineDetail | undefined>()
 
     // 单项组件-相关操作和展示组件逻辑
     /** 单项勾选|取消勾选 */
-    const optCheck = useMemoizedFn((data: API.YakitPluginDetail, value: boolean) => {
+    const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
         // 全选情况时的取消勾选
         if (allCheck) {
-            setSelectList(response.data.map((item) => item.uuid).filter((item) => item !== data.uuid))
+            setSelectList(response.data.filter((item) => item.uuid !== data.uuid))
             setAllcheck(false)
             return
         }
         // 单项勾选回调
-        if (value) setSelectList([...getSelectList(), data.uuid])
-        else setSelectList(getSelectList().filter((item) => item !== data.uuid))
+        if (value) setSelectList([...getSelectList(), data])
+        else setSelectList(getSelectList().filter((item) => item.uuid !== data.uuid))
     })
     /** 单项副标题组件 */
-    const optSubTitle = useMemoizedFn((data: API.YakitPluginDetail) => {
+    const optSubTitle = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         return statusTag[`${data.status}`]
     })
     /** 单项额外操作组件 */
-    const optExtraNode = useMemoizedFn((data: API.YakitPluginDetail) => {
+    const optExtraNode = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         return (
             <FuncFilterPopover
                 icon={<OutlineDotshorizontalIcon />}
@@ -274,7 +418,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     onClick: ({key}) => {
                         switch (key) {
                             case "del":
-                                setActiveDelPlugin(data)
+                                activeDelPlugin.current = data
                                 setShowReason({visible: true, type: "del"})
                                 return
                             case "download":
@@ -293,41 +437,50 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         )
     })
     /** 单项点击回调 */
-    const optClick = useMemoizedFn((data: API.YakitPluginDetail) => {
+    const optClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         setPlugin({...data})
     })
-    const pluginStatusSelect: TypeSelectOpt[] = useMemo(() => {
-        return (
-            filters.status?.map((ele) => ({
-                key: ele.value,
-                name: ele.label
-            })) || []
-        )
-    }, [filters.status])
-    const onSetActive = useMemoizedFn((status: TypeSelectOpt[]) => {
-        const newStatus: API.PluginsSearchData[] = status.map((ele) => ({
-            value: ele.key,
-            label: ele.name,
-            count: 0
-        }))
-        setFilters({...filters, status: newStatus})
+
+    // 详情页-相关回调逻辑
+    /** 返回事件 */
+    const onBack = useMemoizedFn((data: BackInfoProps) => {
+        setPlugin(undefined)
     })
+    /** 搜索事件 */
+    const onDetailSearch = useMemoizedFn((detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {
+        setSearchs({...detailSearch})
+        // 延时是防止同时赋值后的搜索拿不到最新的搜索条件数据
+        setTimeout(() => {
+            setFilters({...detailFilter})
+        }, 100)
+    })
+    /** 删除插件事件 */
+    const activeDetailData = useRef<BackInfoProps>()
+    const onDetailDel = useMemoizedFn((detail: YakitPluginOnlineDetail | undefined, data: BackInfoProps) => {
+        activeDelPlugin.current = detail
+        activeDetailData.current = {...data}
+        onShowDelPlugin()
+    })
+
     return (
-        <>
+        <OnlineJudgment isJudgingLogin={true}>
             {!!plugin && (
                 <PluginManageDetail
+                    response={response}
+                    dispatch={dispatch}
                     info={plugin}
+                    defaultAllCheck={allCheck}
+                    defaultSelectList={selectList}
+                    defaultSearch={searchs}
+                    defaultFilter={filters}
+                    downloadLoading={downloadLoading}
+                    onBatchDownload={onBatchDownload}
+                    onPluginDel={onDetailDel}
                     currentIndex={showPluginIndex.current}
                     setCurrentIndex={setShowPluginIndex}
-                    allCheck={allCheck}
-                    onCheck={onCheck}
-                    selectList={selectList}
-                    optCheck={optCheck}
-                    data={response}
-                    onBack={() => {
-                        setPlugin(undefined)
-                    }}
+                    onBack={onBack}
                     loadMoreData={onUpdateList}
+                    onDetailSearch={onDetailSearch}
                 />
             )}
 
@@ -345,19 +498,21 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
-                            <FuncBtn
-                                maxWidth={1150}
-                                icon={<OutlinePluscircleIcon />}
-                                disabled={selectNum === 0}
-                                type='outline2'
-                                size='large'
-                                name={"添加至分组"}
-                                onClick={onAddGroup}
-                            />
+                            {!isCommunityEdition() && (
+                                <FuncBtn
+                                    maxWidth={1150}
+                                    icon={<OutlinePluscircleIcon />}
+                                    disabled={selectList.length === 0}
+                                    type='outline2'
+                                    size='large'
+                                    name={"添加至分组"}
+                                    onClick={onAddGroup}
+                                />
+                            )}
                             <FuncBtn
                                 maxWidth={1150}
                                 icon={<OutlinePencilaltIcon />}
-                                disabled={selectNum === 0}
+                                disabled={selectList.length === 0}
                                 type='outline2'
                                 size='large'
                                 name={"修改作者"}
@@ -368,8 +523,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 icon={<OutlineClouddownloadIcon />}
                                 type='outline2'
                                 size='large'
+                                loading={downloadLoading}
                                 name={selectNum > 0 ? "下载" : "一键下载"}
-                                onClick={onBatchDownload}
+                                onClick={() => onBatchDownload()}
                             />
                             <FuncBtn
                                 maxWidth={1150}
@@ -388,8 +544,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     visible={showFilter}
                     setVisible={setShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
-                    onSelect={onFilter.run}
-                    groupList={ssfilters}
+                    onSelect={onFilter}
+                    groupList={pluginFilters}
                 >
                     <PluginsList
                         checked={allCheck}
@@ -403,25 +559,24 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         visible={showFilter}
                         setVisible={setShowFilter}
                     >
-                        <ListShowContainer<API.YakitPluginDetail>
+                        <ListShowContainer<YakitPluginOnlineDetail>
                             id='pluginManage'
                             isList={isList}
                             data={response.data}
-                            gridNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                            gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
                                 const {data} = info
-                                const check = allCheck || selectList.includes(data.uuid)
+                                const check = allCheck || selectUUIDs.includes(data.uuid)
                                 return (
                                     <GridLayoutOpt
                                         data={data}
                                         checked={check}
                                         onCheck={optCheck}
-                                        title={data.script_name}
+                                        title={info.index + data.script_name}
                                         type={data.type}
                                         tags={data.tags}
                                         help={data.help || ""}
                                         img={data.head_img || ""}
                                         user={data.authors || ""}
-                                        // prImgs={data.prs}
                                         time={data.updated_at}
                                         isCorePlugin={false}
                                         official={false}
@@ -432,9 +587,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 )
                             }}
                             gridHeight={210}
-                            listNode={(info: {index: number; data: API.YakitPluginDetail}) => {
+                            listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
                                 const {data} = info
-                                const check = allCheck || selectList.includes(data.uuid)
+                                const check = allCheck || selectUUIDs.includes(data.uuid)
                                 return (
                                     <ListLayoutOpt
                                         data={data}
@@ -462,30 +617,31 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         />
                     </PluginsList>
                 </PluginsContainer>
-                <ModifyAuthorModal
-                    visible={showModifyAuthor}
-                    setVisible={setShowModifyAuthor}
-                    plugins={selectList}
-                    total={response.pagemeta.total}
-                    onOK={onModifyAuthor}
-                />
-                <ReasonModal
-                    visible={showReason.visible}
-                    setVisible={onCancelReason}
-                    type={showReason.type}
-                    total={!!activeDelPlugin ? 1 : selectNum || response.pagemeta.total}
-                    onOK={onReasonCallback}
-                />
-                {showBatchDownload && (
-                    <YakitGetOnlinePlugin
-                        visible={showBatchDownload}
-                        setVisible={(v) => {
-                            setShowBatchDownload(v)
-                        }}
-                    />
-                )}
             </PluginsLayout>
-        </>
+
+            <ModifyAuthorModal
+                visible={showModifyAuthor}
+                setVisible={setShowModifyAuthor}
+                plugins={selectUUIDs}
+                onOK={onModifyAuthor}
+            />
+            <ReasonModal
+                visible={showReason.visible}
+                setVisible={onCancelReason}
+                type={showReason.type}
+                total={!!activeDelPlugin.current ? 1 : selectNum || response.pagemeta.total}
+                onOK={onReasonCallback}
+            />
+            {showBatchDownload && (
+                <YakitGetOnlinePlugin
+                    listType='check'
+                    visible={showBatchDownload}
+                    setVisible={(v) => {
+                        setShowBatchDownload(v)
+                    }}
+                />
+            )}
+        </OnlineJudgment>
     )
 }
 
@@ -493,60 +649,38 @@ interface ModifyAuthorModalProps {
     visible: boolean
     setVisible: (show: boolean) => any
     plugins: string[]
-    total: number
     onOK: () => any
 }
 /** @name 批量修改插件作者 */
 const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
-    const {visible, setVisible, plugins, total, onOK} = props
+    const {visible, setVisible, plugins, onOK} = props
 
     const [loading, setLoading] = useState<boolean>(false)
-    const [list, setList] = useState<{img: string; name: string; id: string}[]>([
-        {
-            img: "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJicUwxTHkcj4qQAacH5rCOpWjQDrAnJn1bbeErrPtJS8eYbM5X7CtccCtiaKvdhicnkFhazBwVVuxFQ/132",
-            name: "桔子1号",
-            id: "1"
-        },
-        {
-            img: "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJicUwxTHkcj4qQAacH5rCOpWjQDrAnJn1bbeErrPtJS8eYbM5X7CtccCtiaKvdhicnkFhazBwVVuxFQ/132",
-            name: "桔子2号",
-            id: "2"
-        },
-        {
-            img: "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJicUwxTHkcj4qQAacH5rCOpWjQDrAnJn1bbeErrPtJS8eYbM5X7CtccCtiaKvdhicnkFhazBwVVuxFQ/132",
-            name: "桔子3号",
-            id: "3"
-        },
-        {
-            img: "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJicUwxTHkcj4qQAacH5rCOpWjQDrAnJn1bbeErrPtJS8eYbM5X7CtccCtiaKvdhicnkFhazBwVVuxFQ/132",
-            name: "桔子4号",
-            id: "4"
-        },
-        {
-            img: "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJicUwxTHkcj4qQAacH5rCOpWjQDrAnJn1bbeErrPtJS8eYbM5X7CtccCtiaKvdhicnkFhazBwVVuxFQ/132",
-            name: "桔子5号",
-            id: "5"
-        },
-        {
-            img: "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJicUwxTHkcj4qQAacH5rCOpWjQDrAnJn1bbeErrPtJS8eYbM5X7CtccCtiaKvdhicnkFhazBwVVuxFQ/132",
-            name: "桔子6号",
-            id: "6"
-        },
-        {
-            img: "https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJicUwxTHkcj4qQAacH5rCOpWjQDrAnJn1bbeErrPtJS8eYbM5X7CtccCtiaKvdhicnkFhazBwVVuxFQ/132",
-            name: "桔子7号",
-            id: "7"
-        }
-    ])
-    const [value, setValue] = useState<string>("")
+    const [list, setList] = useState<API.UserList[]>([])
+    const [value, setValue] = useState<number>()
     const {run} = useDebounceFn(
         (value?: string) => {
+            if (!value) {
+                setList([])
+                return
+            }
+            if (loading) return
+
             setLoading(true)
-            setList([])
-            console.log("search", value)
-            setTimeout(() => {
-                setLoading(false)
-            }, 1000)
+            NetWorkApi<{keywords: string}, API.UserOrdinaryResponse>({
+                method: "get",
+                url: "user/ordinary",
+                params: {keywords: value}
+            })
+                .then((res) => {
+                    setList(res?.data || [])
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取普通用户失败：" + err)
+                })
+                .finally(() => {
+                    setTimeout(() => setLoading(false), 200)
+                })
         },
         {
             wait: 500
@@ -560,12 +694,23 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
             setStatus("error")
             return
         }
-        console.log(value)
+
         setSubmitLoading(true)
-        setTimeout(() => {
-            onOK()
-            setSubmitLoading(false)
-        }, 1000)
+        console.log("/up/plugins/user", JSON.stringify({uuid: plugins, user_id: +value}))
+        NetWorkApi<API.UpPluginsUserRequest, API.ActionSucceeded>({
+            method: "post",
+            url: "up/plugins/user",
+            data: {uuid: plugins, user_id: +value}
+        })
+            .then((res) => {
+                onOK()
+            })
+            .catch((err) => {
+                yakitNotify("error", "批量修改失败，原因:" + err)
+            })
+            .finally(() => {
+                setTimeout(() => setSubmitLoading(false), 200)
+            })
     })
     const cancel = useMemoizedFn(() => {
         if (submitLoading) return
@@ -574,7 +719,8 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
 
     useEffect(() => {
         if (!visible) {
-            setValue("")
+            setList([])
+            setValue(undefined)
             setStatus("")
             setSubmitLoading(false)
         }
@@ -600,8 +746,8 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
                     label={<>作者：</>}
                     help={
                         <>
-                            共选择了{" "}
-                            <span className={styles["modify-author-hint-span"]}>{plugins.length || total}</span> 个插件
+                            共选择了 <span className={styles["modify-author-hint-span"]}>{plugins.length || 0}</span>{" "}
+                            个插件
                         </>
                     }
                     validateStatus={status}
@@ -622,7 +768,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
                         {list.map((item) => (
                             <YakitSelect.Option key={item.name} value={item.id} record={item}>
                                 <div className={styles["modify-author-item-wrapper"]}>
-                                    <AuthorImg size='small' src={item.img || ""} />
+                                    <AuthorImg size='small' src={item.head_img || ""} />
                                     {item.name}
                                 </div>
                             </YakitSelect.Option>

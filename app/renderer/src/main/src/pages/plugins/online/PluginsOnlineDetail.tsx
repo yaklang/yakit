@@ -168,6 +168,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             onBack={onPluginBack}
             search={search}
             setSearch={setSearch}
+            onSearch={() => {}}
         >
             <div className={styles["details-content-wrapper"]}>
                 <Tabs tabPosition='right' className='plugins-tabs'>

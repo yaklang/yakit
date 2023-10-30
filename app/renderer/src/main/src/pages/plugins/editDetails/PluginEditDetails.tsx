@@ -36,7 +36,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {SmokingEvaluateResponse} from "@/pages/pluginDebugger/SmokingEvaluate"
 import {PluginTestErrorIcon} from "../icon"
-import { PluginGV } from "../utils"
+import {PluginGV} from "../utils"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
@@ -108,10 +108,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             // codec脚本类型 没有 漏洞种类类型
             infoData = {
                 ...infoData,
-                bug: undefined,
-                bugHelp: undefined,
-                bugFix: undefined,
-                commnt: undefined
+                riskType: undefined
             }
         }
         // 切换脚本类型时, 删除DNSLog和HTTP数据包变形代表的tag字段
@@ -125,12 +122,12 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         if (value === "port-scan") {
             const baseArr: PluginParamDataProps[] = [
                 {
-                    value: "target",
-                    label: "扫描的目标",
-                    type: "string",
-                    required: true
+                    Field: "target",
+                    FieldVerbose: "扫描的目标",
+                    TypeVerbose: "string",
+                    Required: true
                 },
-                {value: "ports", label: "端口", type: "string", required: false, defaultValue: "80"}
+                {Field: "ports", FieldVerbose: "端口", TypeVerbose: "string", Required: false, DefaultValue: "80"}
             ]
             settingData = {
                 ...settingData,
@@ -224,10 +221,9 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         } else {
             data.ScriptName = info?.name
             data.Help = info?.help || undefined
-            data.Bug = info?.bug || undefined
-            data.BugHelp = info?.bugHelp || undefined
-            data.BugFix = info?.bugFix || undefined
-            data.BugCommnt = info?.commnt || undefined
+            data.riskType = info?.riskType || undefined
+            data.riskDetail = info?.riskDetail || undefined
+            data.risk_annotation = info?.risk_annotation || undefined
             data.Tags = (info?.tags || []).join(",") || undefined
         }
 

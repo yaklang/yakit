@@ -226,6 +226,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                 onBack={onPluginBack}
                 search={search}
                 setSearch={setSearch}
+                onSearch={() => {}}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs tabPosition='right' className='plugins-tabs'>
