@@ -1,6 +1,7 @@
 import React, {ReactNode, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     PluginAddParamModalProps,
+    PluginContributesListItemProps,
     PluginDetailHeaderProps,
     PluginDetailsListItemProps,
     PluginDetailsProps,
@@ -244,9 +245,27 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
     /** 贡献者数据 */
     const contributes = useMemo(() => {
         // 这是第二版需要的数据
-        if (prImgs.length <= 5) return {arr: prImgs, length: 0}
-        else {
-            return {arr: prImgs.slice(0, 5), length: prImgs.length - 5}
+        // if (prImgs.length <= 5) return {arr: prImgs, length: 0}
+        // else {
+        //     return {arr: prImgs.slice(0, 5), length: prImgs.length - 5}
+        // }
+        const arr = [
+            {
+                img: "https://yakit-online.oss-cn-hongkong.aliyuncs.com/img/20237141633451689323625.png",
+                name: "白日爱做梦"
+            },
+            {
+                img: "https://avatars.githubusercontent.com/u/52566643?v=4",
+                name: "admin"
+            },
+            {
+                img: "https://avatars.githubusercontent.com/u/12526493?s=96&v=4",
+                name: "哈哈哈哈哈"
+            }
+        ]
+        return {
+            arr: arr,
+            length: arr.length
         }
     }, [prImgs])
     return (
@@ -258,7 +277,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                             className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}
                             title={pluginName}
                         >
-                            {pluginName}
+                            {pluginName || "-"}
                         </div>
                         <div className={styles["subtitle-wrapper"]}>
                             <Tooltip title={help || "No Description about it."} overlayClassName='plugins-tooltip'>
@@ -292,23 +311,39 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                             <AuthorIcon />
                         </div>
 
-                        <div style={{marginRight: 8}} className={styles["divider-style"]}></div>
                         {contributes.length > 0 && (
-                            <YakitPopover
-                                overlayClassName={styles["terminal-popover"]}
-                                placement='bottom'
-                                content={<>123</>}
-                                onVisibleChange={(show) => setPrShow(show)}
-                            >
-                                <YakitButton type='text2' isActive={prShow}>
-                                    {`${contributes.length}位协作者`}
-                                    {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
-                                </YakitButton>
-                            </YakitPopover>
+                            <>
+                                <div style={{marginRight: 8}} className={styles["divider-style"]}></div>
+                                <YakitPopover
+                                    overlayClassName={styles["contributes-popover"]}
+                                    placement='bottom'
+                                    content={
+                                        <div className={styles["contributes-list"]}>
+                                            {contributes.arr.map((item) => (
+                                                <React.Fragment key={item.img + item.name}>
+                                                    <PluginContributesListItem
+                                                        contributesHeadImg={item.img}
+                                                        contributesName={item.name}
+                                                    />
+                                                </React.Fragment>
+                                            ))}
+                                        </div>
+                                    }
+                                    onVisibleChange={setPrShow}
+                                >
+                                    <YakitButton type='text2' isActive={prShow}>
+                                        {`${contributes.length}位协作者`}
+                                        {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
+                                    </YakitButton>
+                                </YakitPopover>
+                            </>
                         )}
                     </div>
 
-                    <div style={{marginLeft: 8}} className={styles["divider-style"]}></div>
+                    <div
+                        style={{marginLeft: contributes.length > 0 ? 8 : 16}}
+                        className={styles["divider-style"]}
+                    ></div>
                     <div className={styles["id-wrapper"]}>
                         <div
                             className={classNames(
@@ -1385,6 +1420,16 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
                     </YakitPopover>
                 </div>
             </div>
+        </div>
+    )
+})
+/**@name 插件详情中协作者展示item */
+export const PluginContributesListItem: React.FC<PluginContributesListItemProps> = React.memo((props) => {
+    const {contributesHeadImg, contributesName} = props
+    return (
+        <div className={styles["contributes-item-wrapper"]}>
+            <AuthorImg size='small' src={contributesHeadImg || ""} />
+            {contributesName}
         </div>
     )
 })

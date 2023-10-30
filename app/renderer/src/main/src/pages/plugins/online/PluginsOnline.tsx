@@ -57,7 +57,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {
     DownloadOnlinePluginsRequest,
     PluginsQueryProps,
-    apiDownloadOnlinePlugin,
+    apiDownloadPluginOnline,
     apiFetchGroupStatisticsOnline,
     apiFetchOnlineList,
     convertDownloadOnlinePluginBatchRequestParams,
@@ -198,7 +198,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const userInfo = useStore((s) => s.userInfo)
     useEffect(() => {
         getInitTotal()
-    }, [inViewport])
+    }, [userInfo.isLogin, inViewport])
     // 请求数据
     useUpdateEffect(() => {
         fetchList(true)
@@ -302,7 +302,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 }
             }
             setDownloadLoading(true)
-            apiDownloadOnlinePlugin(downloadParams).finally(() =>
+            apiDownloadPluginOnline(downloadParams).finally(() =>
                 setTimeout(() => {
                     setDownloadLoading(false)
                 }, 200)

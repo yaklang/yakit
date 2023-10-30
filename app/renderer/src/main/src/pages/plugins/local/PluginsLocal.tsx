@@ -99,7 +99,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     useEffect(() => {
         getInitTotal()
         getPluginRemoveCheck()
-    }, [inViewport])
+    }, [userInfo.isLogin,inViewport])
     useEffect(() => {
         getPluginGroupListLocal()
     }, [userInfo.isLogin, inViewport])

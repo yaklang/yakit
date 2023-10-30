@@ -69,7 +69,7 @@ import {yakitNotify} from "@/utils/notification"
 import {
     DownloadOnlinePluginsRequest,
     PluginStarsRequest,
-    apiDownloadOnlinePlugin,
+    apiDownloadPluginOnline,
     apiFetchGroupStatisticsCheck,
     apiFetchGroupStatisticsMine,
     apiFetchGroupStatisticsOnline,
@@ -1282,7 +1282,7 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
             UUID: [data.uuid]
         }
         setDownloadLoading(true)
-        apiDownloadOnlinePlugin(download)
+        apiDownloadPluginOnline(download)
             .then(() => {
                 dispatch({
                     type: "download",
@@ -1293,7 +1293,6 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
                     }
                 })
                 if (downloadProps.onDownloadClick) downloadProps.onDownloadClick(data)
-                yakitNotify("success", "下载成功")
             })
             .finally(() =>
                 setTimeout(() => {

@@ -159,6 +159,7 @@ export const apiFetchMineList: (query: PluginsQueryProps) => Promise<YakitPlugin
         try {
             const newQuery = {
                 ...query,
+                order_by: query.order_by || "updated_at",
                 listType: "mine"
             }
             apiFetchList(newQuery)
@@ -182,6 +183,7 @@ export const apiFetchRecycleList: (query: PluginsQueryProps) => Promise<YakitPlu
         try {
             const newQuery = {
                 ...query,
+                order_by: query.order_by || "updated_at",
                 listType: "recycle"
             }
             apiFetchList(newQuery)
@@ -412,8 +414,8 @@ export const convertDownloadOnlinePluginBatchRequestParams = (
     return delObjectInvalidValue(data)
 }
 
-/** 下载插件 */
-export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+/**下载插件 */
+export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("DownloadOnlinePluginBatch", query)
@@ -428,6 +430,60 @@ export const apiDownloadOnlinePlugin: (query?: DownloadOnlinePluginsRequest) => 
                 yakitNotify("error", "下载失败:" + e)
                 reject()
             })
+    })
+}
+
+/**插件商店 下载插件 */
+export const apiDownloadPluginOnline: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...(query || {}),
+                ListType: ""
+            }
+            apiDownloadPluginBase(newQuery)
+                .then((res) => resolve(res))
+                .catch((err) => {
+                    yakitNotify("error", "插件商店下载插件失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {}
+    })
+}
+
+/**我的插件 下载插件 */
+export const apiDownloadPluginMine: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...(query || {}),
+                ListType: "mine"
+            }
+            apiDownloadPluginBase(newQuery)
+                .then((res) => resolve(res))
+                .catch((err) => {
+                    yakitNotify("error", "下载我的插件失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {}
+    })
+}
+
+/**插件管理 下载插件 */
+export const apiDownloadPluginCheck: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery = {
+                ...(query || {}),
+                ListType: "check"
+            }
+            apiDownloadPluginBase(newQuery)
+                .then((res) => resolve(res))
+                .catch((err) => {
+                    yakitNotify("error", "插件管理插件失败:" + err)
+                    reject(err)
+                })
+        } catch (error) {}
     })
 }
 
@@ -500,37 +556,17 @@ export const apiDeletePluginCheck: (query?: API.PluginsWhereDeleteRequest) => Pr
     })
 }
 
-/**更新插件接口基础班 /update/plugin */
-const apiUpdatePlugin: (query: API.UpdatePluginsRequest) => Promise<API.ActionSucceeded> = (query) => {
+/**我的插件 修改私密公开 */
+export const apiUpdatePluginPrivateMine: (query: API.UpPluginsPrivateRequest) => Promise<API.ActionSucceeded> = (
+    query
+) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<API.UpdatePluginsRequest, API.ActionSucceeded>({
+            NetWorkApi<API.UpPluginsPrivateRequest, API.ActionSucceeded>({
                 method: "post",
-                url: "update/plugins",
+                url: "up/plugins/private",
                 data: {...query}
             })
-                .then((res: API.ActionSucceeded) => {
-                    resolve(res)
-                })
-                .catch((err) => {
-                    reject(err)
-                })
-        } catch (error) {
-            reject(error)
-        }
-    })
-}
-
-/**我的插件 修改私密公开 */
-export const apiUpdatePluginMine: (query: API.UpdatePluginsRequest) => Promise<API.ActionSucceeded> = (query) => {
-    return new Promise((resolve, reject) => {
-        try {
-            const newQuery = {
-                ...query,
-                user_id: undefined,
-                is_official: undefined
-            }
-            apiUpdatePlugin(newQuery)
                 .then((res: API.ActionSucceeded) => {
                     resolve(res)
                 })
