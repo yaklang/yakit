@@ -89,7 +89,8 @@ import {
     OutlineExportIcon,
     OutlinePayloadIcon,
     OutlineXIcon,
-    OutlineCodeIcon
+    OutlineCodeIcon,
+    OutlinePlugsIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
@@ -706,6 +707,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const dnsServersRef = useRef<string[]>([])
     const etcHostsRef = useRef<KVPair[]>([])
     const retryRef = useRef<boolean>(false)
+    const matchRef = useRef<boolean>(false)
     useEffect(() => {
         getCacheData()
     }, [])
@@ -831,7 +833,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
             }
-        } else {
+        }
+        else if(matchRef.current){
+            matchRef.current = false
+            const matchTaskID = successFuzzer.length > 0 ? successFuzzer[0].TaskId : undefined
+            const params = {...httpParams, ReMatch: true,HistoryWebFuzzerId:matchTaskID}
+            console.log("successFuzzer",matchTaskID,params);
+            ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
+        } 
+        else {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
         }
     })
@@ -951,7 +961,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             }
             if (data.Ok) {
                 if (r.MatchedByMatcher) {
-                    yakitNotify("success", `匹配成功: ${r.Url}`)
+                    // yakitNotify("success", `匹配成功: ${r.Url}`)
+                    yakitNotifyFun.run(r.Url)
                 }
                 successBuffer.push(r)
             } else {
@@ -1000,6 +1011,17 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.removeAllListeners("fetch-extracted-to-table")
         }
     }, [])
+
+    const yakitNotifyFun = useDebounceFn(
+        (Url) => {
+            yakitNotify("success", `匹配成功: ${Url}`)
+        },
+        {
+          wait: 1000,
+          leading:true,
+          trailing:false
+        },
+      );
 
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
         if (inViewport) setAll(extractedMap)
@@ -1409,6 +1431,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     onValidateHTTPFuzzer()
                     getNewCurrentPage()
                 }}
+                isShowMatch = {!loading}
+                matchSubmit={()=>{
+                    matchRef.current = true
+                    setRedirectedResponse(undefined)
+                    sendFuzzerSettingInfo()
+                    onValidateHTTPFuzzer()
+                    getNewCurrentPage()
+                }}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -1804,6 +1834,8 @@ interface SecondNodeExtraProps {
     setShowResponseInfoSecondEditor: (b: boolean) => void
     showSuccess?: boolean
     retrySubmit?: () => void
+    isShowMatch?: boolean
+    matchSubmit?: () => void
 }
 
 /**
@@ -1827,7 +1859,9 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         showResponseInfoSecondEditor,
         setShowResponseInfoSecondEditor,
         showSuccess = true,
-        retrySubmit
+        retrySubmit,
+        isShowMatch = false,
+        matchSubmit
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -2062,6 +2096,32 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 </YakitPopover>
 
                 <Divider type='vertical' style={{margin: 0, top: 1}} />
+                
+                {isShowMatch && <>
+                {+(secondNodeSize?.width || 0) >= 610 ? (
+                    <YakitButton
+                        type='outline2'
+                        size={size}
+                        onClick={() => {
+                            matchSubmit && matchSubmit()
+                        }}
+                    >
+                        仅匹配
+                    </YakitButton>
+                ) : (
+                    <Tooltip title='仅匹配'>
+                        <YakitButton
+                            type='outline2'
+                            size={size}
+                            icon={<OutlinePlugsIcon />}
+                            onClick={() => {
+                                matchSubmit && matchSubmit()
+                            }}
+                        />
+                    </Tooltip>
+                )}
+                </>}
+
                 {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitButton
                         type='outline2'

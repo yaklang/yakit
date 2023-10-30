@@ -44,14 +44,13 @@ export const RefreshIcon = (props: Partial<IconProps>) => {
 }
 
 const Filter = () => (
-    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
-        <path
-            d='M2.66675 3C2.66675 2.44772 3.11446 2 3.66675 2H12.3334C12.8857 2 13.3334 2.44772 13.3334 3V4.25245C13.3334 4.51767 13.2281 4.77202 13.0405 4.95956L9.62631 8.37377C9.43877 8.56131 9.33341 8.81566 9.33341 9.08088V12L6.66675 14V9.08088C6.66675 8.81566 6.56139 8.56131 6.37385 8.37377L2.95964 4.95956C2.7721 4.77202 2.66675 4.51767 2.66675 4.25245V3Z'
-            stroke='currentColor'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-        />
-    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M4 4C4 3.44772 4.44772 3 5 3H19C19.5523 3 20 3.44772 20 4V6.58579C20 6.851 19.8946 7.10536 19.7071 7.29289L14.2929 12.7071C14.1054 12.8946 14 13.149 14 13.4142V18L10 21V13.4142C10 13.149 9.89464 12.8946 9.70711 12.7071L4.29289 7.29289C4.10536 7.10536 4 6.851 4 6.58579V4Z" 
+    stroke="currentColor" 
+    strokeWidth="1.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"/>
+  </svg>
 )
 
 /**
@@ -62,14 +61,15 @@ export const FilterIcon = (props: Partial<IconProps>) => {
 }
 
 const Search = () => (
-    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
-        <path
-            d='M14 14L10 10M11.3333 6.66667C11.3333 9.244 9.244 11.3333 6.66667 11.3333C4.08934 11.3333 2 9.244 2 6.66667C2 4.08934 4.08934 2 6.66667 2C9.244 2 11.3333 4.08934 11.3333 6.66667Z'
-            stroke='currentColor'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-        />
-    </svg>
+
+
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+  <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" 
+  stroke="currentColor" 
+  strokeWidth="1.5" 
+  strokeLinecap="round" 
+  strokeLinejoin="round"/>
+</svg>
 )
 
 /**
