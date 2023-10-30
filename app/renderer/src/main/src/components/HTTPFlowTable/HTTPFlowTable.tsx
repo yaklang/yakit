@@ -745,6 +745,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const maxIdRef = useRef<number>(0)
     // 最后一条数据ID
     const minIdRef = useRef<number>(0)
+    // 接口是否正在请求
+    const isGrpcRef = useRef<boolean>(false)
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     // const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
     const [currentIndex, setCurrentIndex] = useState<number>(0)
@@ -984,6 +986,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query,type:"top"|"bottom"|"offset"|"update")=>{
+        if(isGrpcRef.current) return
+        isGrpcRef.current = true
         // 查询数据
         ipcRenderer
         .invoke("QueryHTTPFlows", query)
@@ -991,8 +995,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const resData = rsp?.Data || []
             const newData: HTTPFlow[] = getClassNameData(resData)
             if (type === "top") {
-                // console.log("top",resData);
-                
                 if (resData.length <= 0) {
                     // 没有数据
                     return
@@ -1025,7 +1027,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 setOffsetData(newOffsetData)
             }
             else{
-                console.log("update",rsp);
                 // if (rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
                 setSelectedRowKeys([])
                 setSelectedRows([])
@@ -1042,14 +1043,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
         .finally(() => setTimeout(() => {
             setLoading(false)
+            isGrpcRef.current = false
         }, 200))
     })
 
     // 偏移量更新顶部数据
     const updateTopData = useMemoizedFn(()=>{
+        // 有储存的偏移量 则直接使用
         if(getOffsetData().length){
             setData([...getOffsetData(),...data])
             setOffsetData([])
+            return
+        }
+        // 如无偏移 则直接请求数据
+        if(maxIdRef.current === 0){
+            updateData()
             return
         }
         const paginationProps = {
@@ -1074,11 +1082,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (checkBodyLength && !query.AfterBodyLength) {
             query.AfterBodyLength = 1
         }
+        
         getDataByGrpc(query,"top")
     })
 
     // 偏移量更新底部数据
     const updateBottomData = useMemoizedFn(()=>{
+        // 如无偏移 则直接请求数据
+        if(minIdRef.current === 0){
+            updateData()
+            return
+        }
         const paginationProps = {
             Page: 1,
             Limit: pagination.Limit,
@@ -1111,7 +1125,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             maxIdRef.current = 0
             minIdRef.current = 0
             const limitCount: number = Math.ceil(boxHeightRef.current/28)
-            console.log("根据页面大小动态计算需要获取的最新数据条数",limitCount);
             const paginationProps = {
                 Page: 1,
                 Limit: limitCount,
@@ -1132,7 +1145,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-            console.log("query",query);
             
             getDataByGrpc(query,"update")
         }
@@ -1278,28 +1290,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if(typeof scrollTop ==="number"&&typeof clientHeight ==="number"&&typeof scrollHeight ==="number"){
             scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
         }
-        // console.log("scrollBottom",scrollTop,clientHeight,scrollHeight,scrollBottom);
         // 滚动条接近触顶
         if (scrollTop < 10) {
-            console.log("滚动条接近触顶");
             // update(1, undefined, true)
             updateTopData()
-            setOffsetData([])
+            setOffsetData([]) 
         }
         // 滚动条接近触底
         else if (typeof scrollBottom === "number" && scrollBottom < 10){
-            console.log("滚动条接近触底");
             updateBottomData()
             setOffsetData([])
         }
         // 滚动条在中间 增量
         else{
             if(data.length>0){
-                console.log("滚动条在中间-增量",maxIdRef.current);
                 updateOffsetData()
             }
             else{
-                console.log("无数据加载");
                 updateData()
             }
 
@@ -2627,8 +2634,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             placeholder='请输入关键词搜索'
                                             value={params.Keyword}
                                             onChange={(e) => {
-                                                console.log("789");
-                                                
                                                 setParams({...params, Keyword: e.target.value})
                                             }}
                                             onSearch={() => {

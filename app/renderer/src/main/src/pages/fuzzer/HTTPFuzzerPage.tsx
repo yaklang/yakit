@@ -90,7 +90,9 @@ import {
     OutlinePayloadIcon,
     OutlineXIcon,
     OutlineCodeIcon,
-    OutlinePlugsIcon
+    OutlinePlugsIcon,
+    OutlineSearchIcon,
+    OutlineFilterIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
@@ -2021,7 +2023,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             }
                         }}
                     >
-                        <YakitButton icon={<SearchIcon />} size={size} type='outline2' isHover={!!query?.keyWord} />
+                        <YakitButton icon={<OutlineSearchIcon />} size={size} type='outline2' isHover={!!query?.keyWord} />
                     </YakitPopover>
                 )}
                 <YakitPopover
@@ -2082,7 +2084,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     }}
                 >
                     <YakitButton
-                        icon={<FilterIcon />}
+                        icon={<OutlineFilterIcon />}
                         size={size}
                         type='outline2'
                         isHover={
