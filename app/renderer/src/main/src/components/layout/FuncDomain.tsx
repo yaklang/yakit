@@ -1562,7 +1562,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             if (yaklangVersion !== data) setYaklangLastVersion(data)
         })
         ipcRenderer.invoke("get-current-yak").then((data: string) => {
-            setYaklangLocalVersion(data)
+            !isRemoteMode&&setYaklangLocalVersion(data)
         })
         /** 获取社区版yaklang更新内容 */
         NetWorkApi<FetchUpdateContentProp, any>({
