@@ -57,7 +57,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {
     DownloadOnlinePluginsRequest,
     PluginsQueryProps,
-    apiDownloadOnlinePlugin,
+    apiDownloadPluginOnline,
     apiFetchGroupStatisticsOnline,
     apiFetchOnlineList,
     convertDownloadOnlinePluginBatchRequestParams,
@@ -302,7 +302,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 }
             }
             setDownloadLoading(true)
-            apiDownloadOnlinePlugin(downloadParams).finally(() =>
+            apiDownloadPluginOnline(downloadParams).finally(() =>
                 setTimeout(() => {
                     setDownloadLoading(false)
                 }, 200)
