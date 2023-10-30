@@ -40,14 +40,17 @@ export interface PluginRecycleListProps {
 
 export interface OnlineUserExtraOperateProps {
     plugin: YakitPluginOnlineDetail
-    onSelect: (m: string) => void
+    onSelect: (m: string, plugin: YakitPluginOnlineDetail) => void
+    dispatch: React.Dispatch<OnlinePluginAppAction>
+    userInfoRole: string
 }
 export interface PluginUserListRefProps {
     allCheck: boolean
     selectList: string[]
     loadMoreData: () => void
     onRemovePluginBatchBefore: () => void
-    onDownloadBatch:()=>void
+    onDownloadBatch: () => void
+    onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
 }
 export interface PluginRecycleListRefProps {
     allCheck: boolean
@@ -64,6 +67,7 @@ export interface PluginUserDetailProps {
     loadMoreData: () => void
     defaultSearchValue: PluginSearchParams
     dispatch: React.Dispatch<OnlinePluginAppAction>
+    onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
 }
 export interface PluginUserDetailBackProps {
     search: PluginSearchParams
