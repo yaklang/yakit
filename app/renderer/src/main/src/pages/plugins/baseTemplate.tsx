@@ -12,7 +12,9 @@ import {
     PluginParamListProps,
     PluginSearchParams,
     PluginsContainerProps,
-    PluginsLayoutProps
+    PluginsLayoutProps,
+    RiskListOptProps,
+    RiskOptInfoProps
 } from "./baseTemplateType"
 import {
     SolidBadgecheckIcon,
@@ -76,10 +78,13 @@ import {TypeSelectOpt} from "./funcTemplateType"
 import {YakEditor} from "@/utils/editors"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {PluginGV} from "./utils"
+import {yakitNotify} from "@/utils/notification"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
 import classNames from "classnames"
+
+const {ipcRenderer} = window.require("electron")
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
@@ -132,6 +137,9 @@ export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) =>
 export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((props) => {
     const {
         title,
+        search,
+        setSearch,
+        onSearch: onsearch,
         filterNode,
         filterExtra,
         checked,
@@ -140,15 +148,19 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         selected,
         listProps,
         onBack,
-        children,
-        search,
-        setSearch
+        children
     } = props
+
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
 
     // 关键词|用户搜索
-    const onSearch = useDebounceFn((type: string, value: string) => {}, {wait: 300})
+    const onSearch = useDebounceFn(
+        (value: PluginSearchParams) => {
+            onsearch(value)
+        },
+        {wait: 300}
+    )
 
     /** 全选框是否为半选状态 */
     const checkIndeterminate = useMemo(() => {
@@ -156,6 +168,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         if (!checked && selected > 0) return true
         return false
     }, [checked, selected])
+
     return (
         <div className={styles["plugin-details-wrapper"]}>
             <div className={classNames(styles["filter-wrapper"], {[styles["filter-hidden-wrapper"]]: hidden})}>
@@ -323,19 +336,19 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
     React.forwardRef((props, ref) => {
         const {isEdit = false, kind, data, tagsCallback} = props
 
-        const [bugInfo, setBugInfo, getBugInfo] = useGetState<{bugHelp: string; bugFix: string}>({
-            bugHelp: "",
-            bugFix: ""
-        })
+        const [bugInfo, setBugInfo, getBugInfo] = useGetState<API.PluginsRiskDetail>()
         const isHasBugInfo = useMemo(() => {
-            return !bugInfo.bugHelp && !bugInfo.bugFix
+            return !bugInfo?.description && !bugInfo?.solution
         }, [bugInfo])
 
         const [form] = Form.useForm()
-        const userBug = Form.useWatch("bug", form)
+        const userRisk = Form.useWatch("riskType", form)
 
         useEffect(() => {
-            form.setFieldsValue(!!data ? {...data} : undefined)
+            if (data) {
+                form.setFieldsValue({...data})
+                setBugInfo(data.riskDetail ? {...data.riskDetail} : undefined)
+            }
         }, [data])
 
         // 获取当前表单的内容
@@ -344,10 +357,9 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
             const data: PluginBaseParamProps = {
                 name: (obj?.name || "").trim(),
                 help: (obj?.help || "").trim() || undefined,
-                bug: obj?.bug || undefined,
-                bugHelp: getBugInfo().bugHelp || undefined,
-                bugFix: getBugInfo().bugFix || undefined,
-                commnt: (obj?.commnt || "").trim() || undefined,
+                riskType: obj?.riskType || undefined,
+                riskDetail: getBugInfo(),
+                risk_annotation: (obj?.risk_annotation || "").trim() || undefined,
                 tags: obj?.tags || undefined
             }
             return data
@@ -361,10 +373,9 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                         const data: PluginBaseParamProps = {
                             name: (obj?.name || "").trim(),
                             help: (obj?.help || "").trim() || undefined,
-                            bug: obj?.bug || undefined,
-                            bugHelp: getBugInfo().bugHelp || undefined,
-                            bugFix: getBugInfo().bugFix || undefined,
-                            commnt: (obj?.commnt || "").trim() || undefined,
+                            riskType: obj?.riskType || undefined,
+                            riskDetail: getBugInfo(),
+                            risk_annotation: (obj?.risk_annotation || "").trim() || undefined,
                             tags: obj?.tags || undefined
                         }
                         resolve({...data})
@@ -384,41 +395,84 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
         )
 
         // 漏洞信息-相关逻辑
-        const initBugList = useRef<
-            {
-                value: string
-                label: string
-            }[]
-        >([
-            {value: "111", label: "教程"},
-            {value: "222", label: "你是"},
-            {value: "333", label: "厉害"}
-        ])
-        const [bugList, setBugList] = useState<
-            {
-                value: string
-                label: string
-            }[]
-        >([
-            {value: "111", label: "教程"},
-            {value: "222", label: "你是"},
-            {value: "333", label: "厉害"}
-        ])
+        const initBugList = useRef<RiskListOptProps[]>([])
+        const [bugList, setBugList] = useState<RiskListOptProps[]>([])
         const [bugLoading, setBugLoading] = useState<boolean>(false)
+        const activeCWE = useRef<string>("")
+
+        // 获取默认漏洞类型列表
+        const fetchInitRiskList = useMemoizedFn(() => {
+            setBugLoading(true)
+            ipcRenderer
+                .invoke("PluginsGetRiskList", {})
+                .then((res: {Data: RiskListOptProps[]}) => {
+                    initBugList.current = (res?.Data || []).map((item) => {
+                        const obj = item
+                        obj.CWEId = !!obj.CWEId ? obj.CWEId : "0"
+                        return obj
+                    })
+                    setBugList([...initBugList.current])
+                })
+                .catch((e) => {
+                    yakitNotify("error", "下载失败:" + e)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setBugLoading(false)
+                    }, 200)
+                })
+        })
+        useEffect(() => {
+            fetchInitRiskList()
+        }, [])
+        // 漏洞类型搜索功能
         const onBugSearch = useDebounceFn(
             (value: string) => {
                 if (value) {
                     setBugLoading(true)
-                    setBugList([])
+                    const bugFilter = initBugList.current.filter(
+                        (item) => item.RiskType.toLowerCase().indexOf(value) > -1
+                    )
+                    if (bugFilter.length > 0) {
+                        setBugList([...bugFilter])
+                    } else {
+                        setBugList([{RiskType: value, CWEId: "0"}])
+                    }
                     setTimeout(() => {
                         setBugLoading(false)
-                    }, 2000)
+                    }, 200)
                 } else {
                     setBugList([...initBugList.current])
                 }
             },
-            {wait: 200}
+            {wait: 300}
         ).run
+        // 选择漏洞类型的回调
+        const onBugChange = useMemoizedFn((value: string, opt) => {
+            if (value) {
+                // 将自定义输入的选项进行填充选项列表
+                const bugFilter = initBugList.current.filter((item) => item.RiskType.toLowerCase().indexOf(value) > -1)
+                if (bugFilter.length === 0) setBugList([{RiskType: value, CWEId: "0"}].concat([...initBugList.current]))
+
+                ipcRenderer
+                    .invoke("PluginsGetRiskInfo", {CWEId: opt.valueId})
+                    .then((res: RiskOptInfoProps) => {
+                        setBugInfo({
+                            cweId: opt?.valueId || "0",
+                            riskType: value,
+                            description: res?.Description || "",
+                            solution: res?.CWESolution || ""
+                        })
+                    })
+                    .catch(() => {
+                        setBugInfo(undefined)
+                    })
+            } else {
+                activeCWE.current = ""
+                setBugInfo(undefined)
+                setBugList([...initBugList.current])
+            }
+        })
 
         const onTagChange = useMemoizedFn((value: string[]) => {
             if (tagsCallback)
@@ -497,20 +551,26 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                             </>
                         }
                     >
-                        <Form.Item noStyle name='bug' rules={[{required: true, message: "漏洞类型必填"}]}>
+                        <Form.Item noStyle name='riskType' rules={[{required: true, message: "漏洞类型必填"}]}>
                             <YakitSelect
                                 wrapperClassName={styles["modify-select"]}
                                 size='large'
                                 placeholder='请选择或输入 CWE 编号...'
                                 showSearch={true}
                                 filterOption={false}
+                                allowClear={true}
                                 notFoundContent={bugLoading ? <YakitSpin spinning={true} /> : "暂无数据"}
                                 onSearch={onBugSearch}
+                                onChange={onBugChange}
                             >
                                 {bugList.map((item) => {
                                     return (
-                                        <YakitSelect.Option key={item.value} value={item.value}>
-                                            {item.label}
+                                        <YakitSelect.Option
+                                            key={item.RiskType}
+                                            value={item.RiskType}
+                                            valueId={item.CWEId || ""}
+                                        >
+                                            {item.RiskType}
                                         </YakitSelect.Option>
                                     )
                                 })}
@@ -522,13 +582,15 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                         </div>
                     </Form.Item>
                 )}
-                {kind === "bug" && userBug && (
+                {kind === "bug" && userRisk && (
                     <div className={styles["modify-bug-type"]}>
                         <div className={styles["bug-icon"]}>
                             <OutlineSparklesIcon />
                         </div>
                         <div className={styles["bug-info"]}>
-                            <div className={styles["info-title"]}>{userBug}</div>
+                            <div className={styles["info-title"]}>{`${
+                                bugInfo?.cweId ? "CWE-" + bugInfo.cweId + " " : ""
+                            }${userRisk}`}</div>
                             {isHasBugInfo ? (
                                 <div className={styles["info-content"]}>
                                     <div className={styles["content-style"]}>
@@ -539,11 +601,15 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                                 <>
                                     <div className={styles["info-content"]}>
                                         <div className={styles["header-style"]}>漏洞描述</div>
-                                        <div className={styles["content-style"]}>{bugInfo.bugHelp}</div>
+                                        <div className={styles["content-style"]}>
+                                            {bugInfo?.description || "暂无描述"}
+                                        </div>
                                     </div>
                                     <div className={styles["info-content"]}>
                                         <div className={styles["header-style"]}>修复建议</div>
-                                        <div className={styles["content-style"]}>{bugInfo.bugFix}</div>
+                                        <div className={styles["content-style"]}>
+                                            {bugInfo?.solution || "暂无修复建议"}
+                                        </div>
                                     </div>
                                 </>
                             )}
@@ -551,7 +617,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                     </div>
                 )}
                 {kind === "bug" && (
-                    <Form.Item label='补充说明 :' name='commnt'>
+                    <Form.Item label='补充说明 :' name='risk_annotation'>
                         <YakitInput.TextArea
                             autoSize={{minRows: 2, maxRows: 2}}
                             onKeyDown={(e) => {
@@ -642,7 +708,7 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                 setData({...getData(), params: getData().params.concat([data])})
             } else {
                 const arr = getData().params.map((item) => {
-                    if (item.value === paramModal.info?.value) {
+                    if (item.Field === paramModal.info?.Field) {
                         return data
                     }
                     return item
@@ -899,17 +965,17 @@ export const PluginAddParamModal: React.FC<PluginAddParamModalProps> = memo((pro
 
     const onFinish = useMemoizedFn((values: PluginParamDataProps) => {
         const obj: PluginParamDataProps = {
-            value: (values.value || "").trim(),
-            label: (values.label ? values.label : values.value).trim(),
-            required: !!values.required,
-            type: values.type,
-            defaultValue: (values.defaultValue || "").trim(),
+            Field: (values.Field || "").trim(),
+            FieldVerbose: (values.FieldVerbose ? values.FieldVerbose : values.Field).trim(),
+            Required: !!values.Required,
+            TypeVerbose: values.TypeVerbose,
+            DefaultValue: (values.DefaultValue || "").trim(),
             ExtraSetting: values.ExtraSetting || undefined,
-            help: (values.help || "").trim(),
-            group: (values.group || "").trim()
+            Help: (values.Help || "").trim(),
+            Group: (values.Group || "").trim()
         }
         // 类型为下拉框时，对选项数据进行处理
-        if (obj.type === "select" && obj.ExtraSetting) {
+        if (obj.TypeVerbose === "select" && obj.ExtraSetting) {
             const data = obj.ExtraSetting as PluginParamDataSelectProps
             data.data = data.data.map((item) => {
                 const label = (item?.label || "").trim()
@@ -945,7 +1011,7 @@ export const PluginAddParamModal: React.FC<PluginAddParamModalProps> = memo((pro
                 >
                     <Form.Item
                         label='参数名(英文)'
-                        name='value'
+                        name='Field'
                         required={true}
                         rules={[
                             {
@@ -960,7 +1026,7 @@ export const PluginAddParamModal: React.FC<PluginAddParamModalProps> = memo((pro
                     </Form.Item>
                     <Form.Item
                         label='参数显示名称(可中文)'
-                        name='label'
+                        name='FieldVerbose'
                         rules={[
                             {
                                 validator: async (_, value) => {
@@ -972,10 +1038,10 @@ export const PluginAddParamModal: React.FC<PluginAddParamModalProps> = memo((pro
                     >
                         <YakitInput placeholder='输入想要显示的参数名' maxLength={30} />
                     </Form.Item>
-                    <Form.Item label='必要参数' name='required' valuePropName='checked'>
+                    <Form.Item label='必要参数' name='Required' valuePropName='checked'>
                         <YakitSwitch onChange={(value: boolean) => onRequiredChange(value)} />
                     </Form.Item>
-                    <Form.Item label='参数类型' name='type' rules={[{required: true, message: "参数类型必填"}]}>
+                    <Form.Item label='参数类型' name='TypeVerbose' rules={[{required: true, message: "参数类型必填"}]}>
                         <YakitSelect placeholder='请选择参数的类型' onChange={(value: string) => onTypeChange(value)}>
                             {PluginParamTypeList.map((item) => {
                                 return (
@@ -989,7 +1055,7 @@ export const PluginAddParamModal: React.FC<PluginAddParamModalProps> = memo((pro
                     {userType !== "upload-path" && (
                         <Form.Item
                             label='默认值'
-                            name='defaultValue'
+                            name='DefaultValue'
                             rules={[
                                 {
                                     validator: async (_, value) => {
@@ -1012,7 +1078,7 @@ export const PluginAddParamModal: React.FC<PluginAddParamModalProps> = memo((pro
                         </Form.Item>
                     )}
                     {showTypeItem}
-                    <Form.Item label='参数帮助信息' name='help'>
+                    <Form.Item label='参数帮助信息' name='Help'>
                         <YakitInput.TextArea
                             placeholder='填写该参数的帮助信息，帮助用户更容易理解该内容'
                             autoSize={{minRows: 2, maxRows: 2}}
@@ -1028,7 +1094,7 @@ export const PluginAddParamModal: React.FC<PluginAddParamModalProps> = memo((pro
                     {!userRequired && (
                         <Form.Item
                             label='参数组'
-                            name='group'
+                            name='Group'
                             rules={[
                                 {
                                     validator: async (_, value) => {
@@ -1074,7 +1140,7 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
 
     const onCheck = useMemoizedFn((index: number, checked: boolean) => {
         const arr = [...list]
-        arr[index].required = checked
+        arr[index].Required = checked
         setList([...arr])
     })
     const onDel = useMemoizedFn((index: number) => {
@@ -1123,7 +1189,7 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
                             <div {...provided.droppableProps} ref={provided.innerRef}>
                                 {list.map((item, index) => {
                                     return (
-                                        <Draggable key={item.value} draggableId={item.value} index={index}>
+                                        <Draggable key={item.Field} draggableId={item.Field} index={index}>
                                             {(provided, snapshot) => {
                                                 return (
                                                     <div
@@ -1147,10 +1213,12 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
                                                             <div className={styles["type-style"]}>
                                                                 <YakitTag
                                                                     color={
-                                                                        TypeColors[typeToColor[item.type || ""]] as any
+                                                                        TypeColors[
+                                                                            typeToColor[item.TypeVerbose || ""]
+                                                                        ] as any
                                                                     }
                                                                 >
-                                                                    {item.type}
+                                                                    {item.TypeVerbose}
                                                                 </YakitTag>
                                                             </div>
                                                             <div
@@ -1159,9 +1227,9 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
                                                                     styles["text-style"],
                                                                     "yakit-content-single-ellipsis"
                                                                 )}
-                                                                title={`${item.label} / ${item.value}`}
+                                                                title={`${item.FieldVerbose} / ${item.Field}`}
                                                             >
-                                                                {`${item.label} / ${item.value}`}
+                                                                {`${item.FieldVerbose} / ${item.Field}`}
                                                             </div>
                                                             <div
                                                                 className={classNames(
@@ -1169,13 +1237,13 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
                                                                     styles["text-style"],
                                                                     "yakit-content-single-ellipsis"
                                                                 )}
-                                                                title={item.defaultValue || "-"}
+                                                                title={item.DefaultValue || "-"}
                                                             >
-                                                                {item.defaultValue || "-"}
+                                                                {item.DefaultValue || "-"}
                                                             </div>
                                                             <div className={classNames(styles["required-style"])}>
                                                                 <YakitSwitch
-                                                                    checked={item.required}
+                                                                    checked={item.Required}
                                                                     onChange={(val: boolean) => onCheck(index, val)}
                                                                 />
                                                             </div>

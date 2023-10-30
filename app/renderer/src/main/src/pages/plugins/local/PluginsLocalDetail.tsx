@@ -206,6 +206,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 onBack={onPluginBack}
                 search={search}
                 setSearch={setSearch}
+                onSearch={() => {}}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs defaultActiveKey='code' tabPosition='right' className='plugins-tabs'>
