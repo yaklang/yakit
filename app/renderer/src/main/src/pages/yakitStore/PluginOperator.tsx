@@ -683,10 +683,10 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
             })
     })
     return (
-        <div>
+        <div className='add-to-menu-action-form-body'>
             <Form
-                size={"small"}
                 form={form}
+                layout='vertical'
                 onFinish={(values) => {
                     if (!script) {
                         failed("No Yak Modeule Selected")
@@ -748,24 +748,34 @@ export const AddToMenuActionForm: React.FC<AddToMenuActionFormProp> = (props) =>
                             failed(`${e}`)
                         })
                 }}
-                className='old-theme-html'
             >
                 <Form.Item
                     label={"菜单选项名(展示名称)"}
                     name='Verbose'
                     rules={[{required: true, message: "该项为必填"}]}
                 >
-                    <YakitInput size='small' />
+                    <YakitInput />
                 </Form.Item>
                 <Form.Item label={"菜单分组"} name='Group' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitAutoComplete size='small' options={option} dropdownClassName='old-theme-html' />
+                    <YakitAutoComplete options={option} />
                 </Form.Item>
-
-                <Form.Item colon={false} label={" "}>
-                    <YakitButton type='primary' htmlType='submit'>
-                        添加
-                    </YakitButton>
-                </Form.Item>
+                <div className='add-to-menu-action-form-footer'>
+                    <Form.Item colon={false} noStyle>
+                        <YakitButton
+                            type='outline1'
+                            onClick={() => {
+                                setVisible(false)
+                            }}
+                        >
+                            取消
+                        </YakitButton>
+                    </Form.Item>
+                    <Form.Item colon={false} noStyle>
+                        <YakitButton type='primary' htmlType='submit'>
+                            添加
+                        </YakitButton>
+                    </Form.Item>
+                </div>
             </Form>
         </div>
     )
