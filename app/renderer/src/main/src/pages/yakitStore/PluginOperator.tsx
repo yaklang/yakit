@@ -178,121 +178,19 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
     const executor = useMemoizedFn(() => {
         return (
             script && (
-                <>
-                    {(isEdit && (
-                        <div className='edit-plugin-body'>
-                            <div className='edit-plugin-title'>
-                                <div className='title content-ellipsis'>修改插件:{script.ScriptName}</div>
-                                <div>
-                                    <CloseOutlined
-                                        onClick={() => {
-                                            setMonitorEdit && setMonitorEdit(false)
-                                            setIsEdit(false)
-                                            if (props.setScript) props.setScript(script)
-                                            if (props.setTrigger) props.setTrigger()
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                            <div className='edit-plugin-form'>
-                                <YakScriptCreatorForm
-                                    modified={script}
-                                    noClose={true}
-                                    showButton={isShowPrivateDom}
-                                    setScript={setScript}
-                                    onCreated={(i) => {
-                                        if (props.setScript) props.setScript(i)
-                                        if (props.setTrigger) props.setTrigger()
-                                    }}
-                                    fromLayout={{
-                                        labelCol: {span: 4},
-                                        wrapperCol: {span: 18}
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    )) || (
-                        <PluginExecutor
-                            subTitle={
-                                <Space>
-                                    {script.Help && (
-                                        <Tooltip title={script.Help}>
-                                            <Button type={"link"} icon={<QuestionOutlined />} />
-                                        </Tooltip>
-                                    )}
-                                    <Space size={8}>
-                                        {/*{script?.ScriptName && (*/}
-                                        {/*    <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>*/}
-                                        {/*)}*/}
-                                        <Tooltip title={`插件id:${script.UUID || "-"}`}>
-                                            <p className='script-author'>作者:{script?.Author}</p>
-                                        </Tooltip>
-                                        {script?.Tags && script?.Tags !== "null"
-                                            ? (script?.Tags || "")
-                                                  .split(",")
-                                                  .filter((i) => !!i)
-                                                  .map((i) => {
-                                                      return (
-                                                          <Tag
-                                                              style={{marginLeft: 2, marginRight: 0}}
-                                                              key={`${i}`}
-                                                              color={"geekblue"}
-                                                          >
-                                                              {i}
-                                                          </Tag>
-                                                      )
-                                                  })
-                                            : "No Tags"}
-                                    </Space>
-                                </Space>
-                            }
-                            extraNode={
-                                !props.fromMenu && (
-                                    <Space>
-                                        <Tooltip placement='top' title={"插件管理"}>
-                                            <Button
-                                                type={"link"}
-                                                icon={<SettingOutlined />}
-                                                onClick={() => setSettingShow(!settingShow)}
-                                            />
-                                        </Tooltip>
-                                        <Tooltip placement='top' title={"编辑插件"}>
-                                            <Button
-                                                type={"link"}
-                                                icon={<EditOutlined />}
-                                                style={{color: "#a7a7a7"}}
-                                                onClick={(e) => {
-                                                    setMonitorEdit && setMonitorEdit(true)
-                                                    setIsEdit(true)
-                                                }}
-                                            />
-                                        </Tooltip>
-                                    </Space>
-                                )
-                            }
-                            script={script}
-                            size={props.size}
-                            extraYakExecutorParams={extraParams}
-                            settingShow={settingShow}
-                            settingNode={
-                                <PluginManagement
-                                    style={{marginBottom: 10}}
-                                    script={script}
-                                    groups={groups}
-                                    update={() => {
-                                        if (props.setScript) props.setScript(undefined)
-                                    }}
-                                    updateGroups={updateGroups}
-                                    setScript={props.setScript}
-                                    deletePluginLocal={(value) => {
-                                        if (props.deletePluginLocal) props.deletePluginLocal(value)
-                                    }}
-                                    patternMenu={patternMenu}
-                                />
-                            }
-                        />
-                    )}
-                </>
+                <LocalPluginExecutor
+                    script={script}
+                    isEdit={isEdit}
+                    setIsEdit={setIsEdit}
+                    isShowPrivateDom={isShowPrivateDom}
+                    settingShow={settingShow}
+                    setSettingShow={setSettingShow}
+                    extraParams={extraParams}
+                    setExtraParams={setExtraParams}
+                    groups={groups}
+                    updateGroups={updateGroups}
+                    patternMenu={patternMenu}
+                />
             )
         )
     })
@@ -1082,6 +980,162 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                     </Button>
                 </Form.Item>
             </Form>
+        </>
+    )
+})
+interface LocalPluginExecutorProps {
+    script: YakScript
+    isEdit: boolean
+    setIsEdit: (v: boolean) => void
+    setMonitorEdit?: (v: boolean) => void
+    setScript?: (item?: any) => void
+    setTrigger?: () => void
+    isShowPrivateDom: boolean
+    fromMenu?: boolean
+    settingShow: boolean
+    setSettingShow: (v: boolean) => void
+    size?: "big" | "small"
+    extraParams?: YakExecutorParam[]
+    setExtraParams: (y: YakExecutorParam[]) => void
+    groups: string[]
+    updateGroups: () => void
+    deletePluginLocal?: (i: YakScript) => void
+    patternMenu: "expert" | "new"
+}
+export const LocalPluginExecutor: React.FC<LocalPluginExecutorProps> = React.memo((props) => {
+    const {
+        script,
+        isEdit,
+        setIsEdit,
+        setMonitorEdit,
+        setScript,
+        setTrigger,
+        isShowPrivateDom,
+        fromMenu,
+        setSettingShow,
+        settingShow,
+        size,
+        extraParams,
+        groups,
+        updateGroups,
+        deletePluginLocal,
+        patternMenu
+    } = props
+    return (
+        <>
+            {(isEdit && (
+                <div className='edit-plugin-body'>
+                    <div className='edit-plugin-title'>
+                        <div className='title content-ellipsis'>修改插件:{script.ScriptName}</div>
+                        <div>
+                            <CloseOutlined
+                                onClick={() => {
+                                    setMonitorEdit && setMonitorEdit(false)
+                                    setIsEdit(false)
+                                    if (setScript) setScript(script)
+                                    if (setTrigger) setTrigger()
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <div className='edit-plugin-form'>
+                        <YakScriptCreatorForm
+                            modified={script}
+                            noClose={true}
+                            showButton={isShowPrivateDom}
+                            setScript={setScript}
+                            onCreated={(i) => {
+                                if (props.setScript) props.setScript(i)
+                                if (props.setTrigger) props.setTrigger()
+                            }}
+                            fromLayout={{
+                                labelCol: {span: 4},
+                                wrapperCol: {span: 18}
+                            }}
+                        />
+                    </div>
+                </div>
+            )) || (
+                <PluginExecutor
+                    subTitle={
+                        <Space>
+                            {script.Help && (
+                                <Tooltip title={script.Help}>
+                                    <Button type={"link"} icon={<QuestionOutlined />} />
+                                </Tooltip>
+                            )}
+                            <Space size={8}>
+                                {/*{script?.ScriptName && (*/}
+                                {/*    <Tag>{formatTimestamp(script?.CreatedAt)}</Tag>*/}
+                                {/*)}*/}
+                                <Tooltip title={`插件id:${script.UUID || "-"}`}>
+                                    <p className='script-author'>作者:{script?.Author}</p>
+                                </Tooltip>
+                                {script?.Tags && script?.Tags !== "null"
+                                    ? (script?.Tags || "")
+                                          .split(",")
+                                          .filter((i) => !!i)
+                                          .map((i) => {
+                                              return (
+                                                  <Tag
+                                                      style={{marginLeft: 2, marginRight: 0}}
+                                                      key={`${i}`}
+                                                      color={"geekblue"}
+                                                  >
+                                                      {i}
+                                                  </Tag>
+                                              )
+                                          })
+                                    : "No Tags"}
+                            </Space>
+                        </Space>
+                    }
+                    // extraNode={
+                    //     !fromMenu && (
+                    //         <Space>
+                    //             <Tooltip placement='top' title={"插件管理"}>
+                    //                 <Button
+                    //                     type={"link"}
+                    //                     icon={<SettingOutlined />}
+                    //                     onClick={() => setSettingShow(!settingShow)}
+                    //                 />
+                    //             </Tooltip>
+                    //             <Tooltip placement='top' title={"编辑插件"}>
+                    //                 <Button
+                    //                     type={"link"}
+                    //                     icon={<EditOutlined />}
+                    //                     style={{color: "#a7a7a7"}}
+                    //                     onClick={(e) => {
+                    //                         setMonitorEdit && setMonitorEdit(true)
+                    //                         setIsEdit(true)
+                    //                     }}
+                    //                 />
+                    //             </Tooltip>
+                    //         </Space>
+                    //     )
+                    // }
+                    script={script}
+                    size={size}
+                    extraYakExecutorParams={extraParams}
+                    // settingShow={settingShow}
+                    // settingNode={
+                    //     <PluginManagement
+                    //         style={{marginBottom: 10}}
+                    //         script={script}
+                    //         groups={groups}
+                    //         update={() => {
+                    //             if (props.setScript) props.setScript(undefined)
+                    //         }}
+                    //         updateGroups={updateGroups}
+                    //         setScript={props.setScript}
+                    //         deletePluginLocal={(value) => {
+                    //             if (deletePluginLocal) deletePluginLocal(value)
+                    //         }}
+                    //         patternMenu={patternMenu}
+                    //     />
+                    // }
+                />
+            )}
         </>
     )
 })
