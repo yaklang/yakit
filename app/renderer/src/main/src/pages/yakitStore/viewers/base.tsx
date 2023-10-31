@@ -85,6 +85,9 @@ export interface PluginResultUIProp {
     runtimeId?: string
     fromPlugin?: string
     defaultActive?: string
+
+    // 外部控制console高度
+    consoleHeight?: string
 }
 
 export interface TooltipTitleProps {
@@ -179,7 +182,7 @@ const renderCard = (infoList, type) => {
 }
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
-    const {loading, results, featureType = [], feature = [], progress, script, statusCards, cardStyleType} = props
+    const {loading, results, featureType = [], feature = [], progress, script, statusCards, cardStyleType,consoleHeight} = props
     const [active, setActive] = useState(() => {
         if (props.defaultActive) {
             return props.defaultActive
@@ -405,7 +408,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     </YakitTabs.YakitTabPane>
                 )}
                 <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>
-                    <div style={{width: "100%", height: "100%"}}>
+                    <div style={{width: "100%", height: consoleHeight?consoleHeight:"100%"}}>
                         <EngineConsole isMini={true} />
                     </div>
                 </YakitTabs.YakitTabPane>
