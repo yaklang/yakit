@@ -67,6 +67,7 @@ import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon} from "../layout/icons"
 import {ExportSelect} from "../DataExport/DataExport"
 import emiter from "@/utils/eventBus/eventBus"
+import { MITMConsts } from "@/pages/mitm/MITMConsts"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1082,7 +1083,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (checkBodyLength && !query.AfterBodyLength) {
             query.AfterBodyLength = 1
         }
-        
+        if (pageType === "MITM"&&query.AfterUpdatedAt === undefined&&query.BeforeUpdatedAt===undefined) {
+            updateMITMPageQuery(query,"top")
+            return
+        }
         getDataByGrpc(query,"top")
     })
 
@@ -1115,6 +1119,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (checkBodyLength && !query.AfterBodyLength) {
             query.AfterBodyLength = 1
         }
+        if (pageType === "MITM"&&query.AfterUpdatedAt === undefined&&query.BeforeUpdatedAt===undefined) {
+            updateMITMPageQuery(query,"bottom")
+            return
+        }
         getDataByGrpc(query,"bottom")
     })
 
@@ -1145,7 +1153,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-            
+            if (pageType === "MITM"&&query.AfterUpdatedAt === undefined&&query.BeforeUpdatedAt===undefined) {
+                updateMITMPageQuery(query,"update")
+                return
+            }
             getDataByGrpc(query,"update")
         }
     })
@@ -1172,7 +1183,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 AfterId: maxIdRef.current,
                 Pagination: {...paginationProps}
             }
+            if (pageType === "MITM"&&query.AfterUpdatedAt === undefined&&query.BeforeUpdatedAt===undefined) {
+                updateMITMPageQuery(query,"offset")
+                return
+            }
             getDataByGrpc(query,"offset")
+    })
+
+    const updateMITMPageQuery = useMemoizedFn((query,type:"top"|"bottom"|"offset"|"update")=>{
+        getRemoteValue(MITMConsts.MITMStartTimeStamp).then((time:string) => {
+            if (!data) return
+            query.AfterUpdatedAt = parseInt(time)
+            getDataByGrpc(query,type)
+        })
     })
 
     const update = useMemoizedFn(

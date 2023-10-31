@@ -199,6 +199,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setRemoteValue(MITMConsts.MITMDefaultEnableHTTP2, `${params.enableHttp2 ? "1" : ""}`)
         setRemoteValue(MITMConsts.MITMDefaultEnableGMTLS, `${params.enableGMTLS ? "1" : ""}`)
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
+        // 记录时间戳
+        const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
+        setRemoteValue(MITMConsts.MITMStartTimeStamp,nowTime)
     })
     const [width, setWidth] = useState<number>(0)
 
