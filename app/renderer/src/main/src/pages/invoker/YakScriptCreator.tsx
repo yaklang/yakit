@@ -74,7 +74,7 @@ export const getPluginTypeVerbose = (t: "yak" | "mitm" | "port-scan" | "nuclei" 
 
 const {ipcRenderer} = window.require("electron")
 
-const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) => {
+export const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) => {
     const yakScriptParams: YakScript = cloneDeep(data)
     const exec = (extraParams?: YakExecutorParam[]) => {
         if (yakScriptParams.Params.length <= 0) {
