@@ -796,7 +796,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     useUpdateEffect(() => {
         updateData()
-        // update(1)
     }, [refresh])
 
     // 初次进入页面 获取默认高级筛选项
@@ -871,7 +870,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams(newParams)
             setTimeout(() => {
                 updateData()
-                // update(1)
             }, 10)
         },
         [filterMode, hostName, urlPath, fileSuffix, searchContentType],
@@ -941,7 +939,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     })
                 } catch (e) {
                     updateData()
-                    // update(1)
                     yakitNotify("error", `加载屏蔽参数失败: ${e}`)
                 }
             })
@@ -979,7 +976,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             sortRef.current = sort
             setTimeout(() => {
                 updateData()
-                // update(1, limit)
             }, 10)
         },
         {wait: 500}
@@ -1198,75 +1194,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     })
 
-    const update = useMemoizedFn(
-        (page?: number, limit?: number, noLoading?: boolean) => {
-            const paginationProps = {
-                Page: page || 1,
-                Limit: limit || pagination.Limit,
-                Order: sortRef.current.order,
-                OrderBy: sortRef.current.orderBy || "id"
-            }
-            // if (!noLoading) setLoading(true)
-
-            const l = data.length
-            const query = {
-                ...params,
-                Tags: params.Tags,
-                Pagination: {...paginationProps},
-                OffsetId:
-                    paginationProps.Page == 1
-                        ? undefined
-                        : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
-                AfterBodyLength: params.AfterBodyLength
-                    ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                    : undefined,
-                BeforeBodyLength: params.BeforeBodyLength
-                    ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                    : undefined
-            }
-
-            if (checkBodyLength && !query.AfterBodyLength) {
-                query.AfterBodyLength = 1
-            }
-            
-            ipcRenderer
-                .invoke("QueryHTTPFlows", query)
-                .then((rsp: YakQueryHTTPFlowResponse) => {
-                    // if (rsp?.Data.length === 0) return
-                    if (paginationProps.Page == 1) {
-                        setTotal(rsp.Total)
-                    }
-                    if (noLoading && rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
-                    const newData: HTTPFlow[] = getClassNameData(rsp?.Data || [])
-                    if (paginationProps.Page == 1) {
-                        setSelectedRowKeys([])
-                        setSelectedRows([])
-                        setIsRefresh(!isRefresh)
-                    }
-                    const d = paginationProps.Page == 1 ? newData : data.concat(newData)
-                    setPagination(rsp.Pagination)
-                    setData(d)
-                })
-                .catch((e: any) => {
-                    yakitNotify("error", `query HTTP Flow failed: ${e}`)
-                })
-                .finally(() => setTimeout(() => setLoading(false), 100))
-        }
-    )
-
     // 第一次启动的时候等待缓存条件加载
     // OnlyWebsocket 变的时候加载一下
     useEffect(() => {
         if (!isOneceLoading.current) {
             updateData()
-            // update(1)
         }
     }, [params.OnlyWebsocket])
 
     useEffect(() => {
         if (!isOneceLoading.current) {
             updateData()
-            // update()
         }
     }, [params.ExcludeId, params.ExcludeInUrl])
 
@@ -1315,7 +1253,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         // 滚动条接近触顶
         if (scrollTop < 10) {
-            // update(1, undefined, true)
             updateTopData()
             setOffsetData([]) 
         }
@@ -1437,7 +1374,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
         setTimeout(() => {
             updateData()
-            // update(1)
         }, 100)
     })
 
@@ -1480,7 +1416,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setCheckBodyLength(check)
             setTimeout(() => {
                 updateData()
-                // update(1)
             }, 100)
         },
         {wait: 200}
@@ -1653,7 +1588,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 })
                                 setTimeout(() => {
                                     updateData()
-                                    // update(1)
                                 }, 100)
                             }}
                             extra={
@@ -1908,7 +1842,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .then(() => {
                 yakitNotify("info", "删除成功")
                 updateData()
-                // update()
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     })
@@ -1919,7 +1852,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .invoke("DeleteHTTPFlows", {DeleteAll: true})
             .then(() => {
                 updateData()
-                // update(1)
             })
             .catch((e: any) => {
                 yakitNotify("error", `历史记录删除失败: ${e}`)
@@ -1955,7 +1887,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
                 setParams({...newParams})
                 updateData()
-                // update(1)
             })
             .catch((e: any) => {
                 yakitNotify("error", `历史记录删除失败: ${e}`)
@@ -2462,7 +2393,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setCheckBodyLength(false)
         setTimeout(() => {
             updateData()
-            // update(1)
         }, 100)
     })
     /**
@@ -2505,7 +2435,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             style={{maxWidth: 200}}
             onSearch={() =>{
                 updateData()
-                // update(1)
             }}
             // 这个事件很关键哈，不要用 onChange
             onBlur={(e) => {
@@ -2573,7 +2502,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 }
                                                 setTimeout(() => {
                                                     updateData()
-                                                    // update(1)
                                                 }, 10)
                                             }}
                                         >
@@ -2634,7 +2562,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 setParams({...params, IsWebsocket: val})
                                                 setTimeout(() => {
                                                     updateData()
-                                                    // update(1)
                                                 }, 50)
                                             }}
                                         >
@@ -2663,7 +2590,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 setTimeout(()=>{
                                                    updateData() 
                                                 },50)
-                                                // update(1)
                                             }}
                                             // 这个事件很关键哈，不要用 onChange
                                             onBlur={(e) => {
@@ -2870,7 +2796,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 onClick: ({key}) => {
                                                     switch (key) {
                                                         case "noResetRefresh":
-                                                            // update(1)
                                                             updateData()
                                                             break
                                                         case "resetRefresh":
@@ -2928,7 +2853,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         limit: pagination.Limit,
                         total,
                         onChange: (page,limit)=>{
-                            // update(page,limit)
                         }
                     }}
                     onChange={onTableChange}
