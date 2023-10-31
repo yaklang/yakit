@@ -423,11 +423,9 @@ export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Pr
                 ipcRenderer.invoke("change-main-menu")
                 // 插件商店、我的插件、插件管理页面 下载插件后需要更新 本地插件列表
                 emiter.emit("onRefLocalPluginList", "")
-                yakitNotify("success", "下载成功")
                 resolve(res)
             })
             .catch((e) => {
-                yakitNotify("error", "下载失败:" + e)
                 reject()
             })
     })
@@ -442,7 +440,10 @@ export const apiDownloadPluginOnline: (query?: DownloadOnlinePluginsRequest) => 
                 ListType: ""
             }
             apiDownloadPluginBase(newQuery)
-                .then((res) => resolve(res))
+                .then((res) => {
+                    yakitNotify("success", "下载成功")
+                    resolve(res)
+                })
                 .catch((err) => {
                     yakitNotify("error", "插件商店下载插件失败:" + err)
                     reject(err)
@@ -460,7 +461,10 @@ export const apiDownloadPluginMine: (query?: DownloadOnlinePluginsRequest) => Pr
                 ListType: "mine"
             }
             apiDownloadPluginBase(newQuery)
-                .then((res) => resolve(res))
+                .then((res) => {
+                    yakitNotify("success", "下载成功")
+                    resolve(res)
+                })
                 .catch((err) => {
                     yakitNotify("error", "下载我的插件失败:" + err)
                     reject(err)

@@ -34,7 +34,9 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {
+    DownloadArgumentProps,
     NavigationBars,
+    OnlineBackInfoProps,
     OtherSearchProps,
     PluginOnlineDetailBackProps,
     PluginsOnlineHeardProps,
@@ -69,6 +71,7 @@ import {TypeSelectOpt} from "../funcTemplateType"
 
 import classNames from "classnames"
 import "../plugins.scss"
+import {BackInfoProps} from "../manage/PluginManageDetail"
 
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
     const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
@@ -203,10 +206,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useUpdateEffect(() => {
         fetchList(true)
     }, [userInfo.isLogin, refresh, filters, otherSearch])
-    useUpdateEffect(() => {
-        if (visibleOnline) return
-        fetchList(true)
-    }, [visibleOnline])
 
     useEffect(() => {
         getPluginGroupList()
@@ -256,6 +255,10 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         response: {...res}
                     }
                 })
+                if (+res.pagemeta.page === 1) {
+                    setAllCheck(false)
+                    setSelectList([])
+                }
             } catch (error) {}
 
             setTimeout(() => {
@@ -284,21 +287,33 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         }))
         setFilters({...filters, plugin_type: newType})
     })
+    const onDownloadBefore = useMemoizedFn(() => {
+        const downloadParams: DownloadArgumentProps = {
+            allCheckArgument: allCheck,
+            filtersArgument: filters,
+            searchArgument: search,
+            selectListArgument: selectList,
+            selectNumArgument: selectNum
+        }
+        onDownload(downloadParams)
+    })
     /**下载 */
-    const onDownload = useMemoizedFn(() => {
-        if (selectNum === 0) {
+    const onDownload = useMemoizedFn((downloadArgument: DownloadArgumentProps) => {
+        const {filtersArgument, searchArgument, selectListArgument, selectNumArgument, allCheckArgument} =
+            downloadArgument
+        if (selectNumArgument === 0) {
             // 全部下载
             setVisibleOnline(true)
         } else {
             // 批量下载
             let downloadParams: DownloadOnlinePluginsRequest = {}
-            if (allCheck) {
+            if (allCheckArgument) {
                 downloadParams = {
-                    ...convertDownloadOnlinePluginBatchRequestParams(filters, search)
+                    ...convertDownloadOnlinePluginBatchRequestParams(filtersArgument, searchArgument)
                 }
             } else {
                 downloadParams = {
-                    UUID: selectList
+                    UUID: selectListArgument
                 }
             }
             setDownloadLoading(true)
@@ -387,6 +402,16 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             })) || []
         )
     }, [filters.plugin_type])
+    const onBatchDownload = useMemoizedFn((newParams: OnlineBackInfoProps) => {
+        const batchDownloadParams: DownloadArgumentProps = {
+            allCheckArgument: newParams.allCheck,
+            filtersArgument: newParams.filter,
+            searchArgument: newParams.search,
+            selectListArgument: newParams.selectList,
+            selectNumArgument: newParams.selectNum
+        }
+        onDownload(batchDownloadParams)
+    })
     return (
         <>
             {!!plugin && (
@@ -401,6 +426,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         loadMoreData={onUpdateList}
                         defaultSearchValue={search}
                         dispatch={dispatch}
+                        onBatchDownload={onBatchDownload}
+                        defaultFilter={filters}
+                        downloadLoading={downloadLoading}
                     />
                 </div>
             )}
@@ -424,7 +452,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 type='outline2'
                                 size='large'
                                 name={selectNum > 0 ? "下载" : "一键下载"}
-                                onClick={onDownload}
+                                onClick={onDownloadBefore}
                                 loading={downloadLoading}
                             />
                             <FuncBtn
