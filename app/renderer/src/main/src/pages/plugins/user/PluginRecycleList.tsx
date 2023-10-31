@@ -62,7 +62,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
         useEffect(() => {
             getInitTotal()
             getPluginRemoveCheck()
-        }, [isLogin,inViewport, refresh])
+        }, [isLogin, inViewport, refresh])
         // 页面初始化的首次列表请求
         useEffect(() => {
             fetchList(true)
@@ -114,6 +114,10 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                             response: {...res}
                         }
                     })
+                    if (+res.pagemeta.page === 1) {
+                        setAllCheck(false)
+                        setSelectList([])
+                    }
                 } catch (error) {}
                 setTimeout(() => {
                     setLoading(false)
@@ -153,7 +157,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
         const selectNum = useMemo(() => {
             if (allCheck) return response.pagemeta.total
             else return selectList.length
-        }, [allCheck, selectList,response.pagemeta.total])
+        }, [allCheck, selectList, response.pagemeta.total])
         const onSetVisible = useMemoizedFn(() => {})
         /** 单项额外操作组件 */
         const optExtraNode = useMemoizedFn((data: YakitPluginOnlineDetail) => {
