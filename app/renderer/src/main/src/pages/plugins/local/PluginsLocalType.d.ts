@@ -30,10 +30,17 @@ export interface PluginsLocalDetailProps {
     loadMoreData: () => void
     defaultSearchValue: PluginSearchParams
     dispatch: React.Dispatch<LocalPluginAppAction>
+    onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
+    onDetailExport:(info: YakitPluginOnlineDetail)=>void
 }
 
 export interface PluginLocalBackProps {
     search: PluginSearchParams
     selectList: YakScript[]
     allCheck: boolean
+}
+
+export interface RemoveMenuModalContentProps{
+    pluginName:string
+    onCancel:()=>void
 }
