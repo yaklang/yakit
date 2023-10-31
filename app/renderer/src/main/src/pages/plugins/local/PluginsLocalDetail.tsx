@@ -21,19 +21,19 @@ import {FuncFilterPopover} from "../funcTemplate"
 import {PluginGroup, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {PluginSearchParams} from "../baseTemplateType"
-import {PluginExecutorProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
+import {PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
 import {yakitNotify} from "@/utils/notification"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {executeYakScriptByParams} from "@/pages/invoker/YakScriptCreator"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {AddToMenuActionForm, LocalPluginExecutor, PluginOperator} from "@/pages/yakitStore/PluginOperator"
+import {AddToMenuActionForm, LocalPluginExecutor} from "@/pages/yakitStore/PluginOperator"
 import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV} from "@/yakitGV"
 import {getRemoteValue} from "@/utils/kv"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {ipcRenderer} = window.require("electron")
 
