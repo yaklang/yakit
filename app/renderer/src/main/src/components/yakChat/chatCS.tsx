@@ -184,11 +184,11 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const resTimeRef = useRef<any>(null)
 
     /** 流输出模式 */
-    // const controller = useRef<AbortController | null>(null)
+    const controller = useRef<AbortController | null>(null)
     /** 是否人为中断连接(流输出模式) */
-    // const isBreak = useRef<boolean>(false)
+    const isBreak = useRef<boolean>(false)
     /** 一次性输出模式 */
-    const controller = useRef<AbortController[]>([])
+    // const controller = useRef<AbortController[]>([])
 
     const contentRef = useRef<HTMLDivElement>(null)
     const scroll = useScroll(contentRef)
@@ -299,13 +299,13 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     /** 解析后端流内的内容数据 */
     const analysisFlowData: (flow: string) => ChatCSAnswerProps | undefined = useMemoizedFn((flow) => {
         if (!flow) return undefined
-        const lastIndex = flow.lastIndexOf("data: ")
+        const lastIndex = flow.lastIndexOf("data:")
         if (lastIndex === -1) return undefined
 
         let chunk = flow
         chunk = chunk.substring(lastIndex)
-        if (chunk && chunk.startsWith("data: ")) chunk = chunk.slice(6)
-
+        if (chunk && chunk.startsWith("data:")) chunk = chunk.slice(5)
+        
         let answer: ChatCSAnswerProps | undefined = undefined
         try {
             answer = JSON.parse(chunk)
@@ -321,7 +321,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             setHistroy([...group])
             setStorage([...group])
             /** 流式输出逻辑 */
-            // scrollToBottom()
+            scrollToBottom()
         }
     )
     /** 生成 Promise 实例 */
@@ -341,41 +341,42 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 content: "",
                 id: ""
             }
-
+            console.log("params",params);
+            
             return await new Promise((resolve, reject) => {
                 chatCS({
                     ...params,
-                    token: userInfo.token
+                    token: userInfo.token,
                     /** 流式输出逻辑 */
-                    // onDownloadProgress: ({event}) => {
-                    //     if (!event.target) return
-                    //     const {responseText} = event.target
-                    //     let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
-
-                    //     // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
-                    //     if (answer) {
-                    //         if (cs.content === answer.text) return
-                    //         if (!cs.id) cs.id = answer.id
-                    //         cs.content = answer.text
-                    //         setContentList(cs, contents, group)
-                    //     }
-                    // }
+                    onDownloadProgress: ({event}) => {
+                        if (!event.target) return
+                        const {responseText} = event.target
+                        let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
+                        
+                        // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
+                        if (answer&&answer.result.length!==0) {
+                            if (cs.content === answer.result) return
+                            if (!cs.id) cs.id = answer.id
+                            cs.content += answer.result
+                            setContentList(cs, contents, group)
+                        }
+                    }
                 })
                     .then((res: any) => {
                         /** 一次性输出逻辑 */
-                        const answer: ChatCSAnswerProps | undefined = res?.data
+                        // const answer: ChatCSAnswerProps | undefined = res?.data
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
-                        if (answer) {
-                            if (!answer.text) cs.content = "暂无可用解答"
-                            else cs.content = answer.text
-                            cs.id = answer.id
-                            setContentList(cs, contents, group)
-                        }
-                        /** 流式输出逻辑 */
-                        // if (!cs.content) {
-                        //     cs.content = "暂无可用解答"
+                        // if (answer) {
+                        //     if (!answer.text) cs.content = "暂无可用解答"
+                        //     else cs.content = answer.text
+                        //     cs.id = answer.id
                         //     setContentList(cs, contents, group)
                         // }
+                        /** 流式输出逻辑 */
+                        if (!cs.content) {
+                            cs.content = "暂无可用解答"
+                            setContentList(cs, contents, group)
+                        }
                         resolve(`${params.intell_type}|success`)
                     })
                     .catch((e) => {
@@ -388,7 +389,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             })
         }
     )
-    const onSubmit = useMemoizedFn((info: ChatInfoProps) => {
+    const onSubmit = useMemoizedFn(async(info: ChatInfoProps) => {
         const group = [...history]
         const filterIndex = group.findIndex((item) => item.token === active)
         // 定位当前对话数据历史对象
@@ -422,9 +423,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }, 1000)
         // 初始化请求状态变量
         /** 流式输出逻辑 */
-        // isBreak.current = false
-        // controller.current = null
-        controller.current = []
+        isBreak.current = false
+        controller.current = null
+        /** 一次性输出逻辑 */
+        // controller.current = []
 
         // 获取对话历史记录
         const chatHistory = fetchHistory(lists.history)
@@ -453,112 +455,113 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         /** 查询 cs_info或vuln_info */
         if (params.baseType) {
             /** 流式输出逻辑 */
-            // if (!isBreak.current) {
-            //     const abort = new AbortController()
-            //     controller.current.push(abort)
-            //     await generatePromise(
-            //         {prompt: params.content, intell_type: params.baseType, signal: abort.signal},
-            //         contents,
-            //         group
-            //     )
-            // }
-            // scrollToBottom()
+            if (!isBreak.current) {
+                chatHistory.reverse()
+                const abort = new AbortController()
+                controller.current = abort
+                await generatePromise(
+                    {prompt: params.content, intell_type: params.baseType,history: chatHistory, signal: abort.signal},
+                    contents,
+                    group
+                )
+            }
+            scrollToBottom()
             /** 一次性输出逻辑 */
-            chatHistory.reverse()
-            const abort = new AbortController()
-            controller.current.push(abort)
-            const promise = generatePromise(
-                {prompt: params.content, intell_type: params.baseType, history: chatHistory, signal: abort.signal},
-                contents,
-                group
-            )
-            promises.push(promise)
+            // chatHistory.reverse()
+            // const abort = new AbortController()
+            // controller.current.push(abort)
+            // const promise = generatePromise(
+            //     {prompt: params.content, intell_type: params.baseType, history: chatHistory, signal: abort.signal},
+            //     contents,
+            //     group
+            // )
+            // promises.push(promise)
         }
         /** 查询 exp_info */
         if (params.expInfo) {
             /** 流式输出逻辑 */
-            // if (!isBreak.current) {
-            //     const abort = new AbortController()
-            //     controller.current = abort
-            //     await generatePromise(
-            //         {prompt: params.content, intell_type: "exp_info", signal: abort.signal},
-            //         contents,
-            //         group
-            //     )
-            // }
-            // scrollToBottom()
+            if (!isBreak.current) {
+                const abort = new AbortController()
+                controller.current = abort
+                await generatePromise(
+                    {prompt: params.content, intell_type: "exp_info", history: [], signal: abort.signal},
+                    contents,
+                    group
+                )
+            }
+            scrollToBottom()
             /** 一次性输出逻辑 */
-            const abort = new AbortController()
-            controller.current.push(abort)
-            const promise = generatePromise(
-                {prompt: params.content, intell_type: "exp_info", history: [], signal: abort.signal},
-                contents,
-                group
-            )
-            promises.push(promise)
+            // const abort = new AbortController()
+            // controller.current.push(abort)
+            // const promise = generatePromise(
+            //     {prompt: params.content, intell_type: "exp_info", history: [], signal: abort.signal},
+            //     contents,
+            //     group
+            // )
+            // promises.push(promise)
         }
         /** 查询 back_catch */
         if (params.backCatch) {
             /** 流式输出逻辑 */
-            // if (!isBreak.current) {
-            //     const abort = new AbortController()
-            //     controller.current = abort
-            //     await generatePromise(
-            //         {prompt: params.content, intell_type: "back_catch", signal: abort.signal},
-            //         contents,
-            //         group
-            //     )
-            // }
-            // scrollToBottom()
+            if (!isBreak.current) {
+                const abort = new AbortController()
+                controller.current = abort
+                await generatePromise(
+                    {prompt: params.content, intell_type: "back_catch", history: [], signal: abort.signal},
+                    contents,
+                    group
+                )
+            }
+            scrollToBottom()
             /** 一次性输出逻辑 */
-            const abort = new AbortController()
-            controller.current.push(abort)
-            const promise = generatePromise(
-                {prompt: params.content, intell_type: "back_catch", history: [], signal: abort.signal},
-                contents,
-                group
-            )
-            promises.push(promise)
+            // const abort = new AbortController()
+            // controller.current.push(abort)
+            // const promise = generatePromise(
+            //     {prompt: params.content, intell_type: "back_catch", history: [], signal: abort.signal},
+            //     contents,
+            //     group
+            // )
+            // promises.push(promise)
         }
 
         /** 一次性输出逻辑 */
-        Promise.allSettled(promises)
-            .then((res) => {
-                // 清除请求计时器
-                if (resTimeRef.current) {
-                    clearInterval(resTimeRef.current)
-                    resTimeRef.current = null
-                }
-                // 记录请求结束的时间,保存数据并更新对话时间
-                answers.time = getResTime()
-                lists.time = formatDate(+new Date())
-                setHistroy([...group])
-                setStorage([...group])
-                // 重置请求状态变量
-                setResTime("")
-                setLoadingToken("")
-                setLoading(false)
-                scrollToCurrent()
-            })
-            .catch(() => {})
+        // Promise.allSettled(promises)
+        //     .then((res) => {
+        //         // 清除请求计时器
+        //         if (resTimeRef.current) {
+        //             clearInterval(resTimeRef.current)
+        //             resTimeRef.current = null
+        //         }
+        //         // 记录请求结束的时间,保存数据并更新对话时间
+        //         answers.time = getResTime()
+        //         lists.time = formatDate(+new Date())
+        //         setHistroy([...group])
+        //         setStorage([...group])
+        //         // 重置请求状态变量
+        //         setResTime("")
+        //         setLoadingToken("")
+        //         setLoading(false)
+        //         scrollToCurrent()
+        //     })
+        //     .catch(() => {})
 
         /** 流式输出逻辑 */
-        // setTimeout(() => {
-        //     if (resTimeRef.current) {
-        //         clearInterval(resTimeRef.current)
-        //         resTimeRef.current = null
-        //     }
-        //     answers.time = getResTime()
-        //     lists.time = formatDate(+new Date())
-        //     setHistroy([...group])
-        //     setStorage([...group])
+        setTimeout(() => {
+            if (resTimeRef.current) {
+                clearInterval(resTimeRef.current)
+                resTimeRef.current = null
+            }
+            answers.time = getResTime()
+            lists.time = formatDate(+new Date())
+            setHistroy([...group])
+            setStorage([...group])
 
-        //     setResTime("")
-        //     setLoadingToken("")
-        //     setLoading(false)
+            setResTime("")
+            setLoadingToken("")
+            setLoading(false)
 
-        //     scrollToBottom()
-        // }, 100)
+            scrollToBottom()
+        }, 100)
     })
 
     /** 停止回答(断开请求连接) */
@@ -568,8 +571,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             resTimeRef.current = null
         }
         /** 流式输出逻辑 */
-        // isBreak.current = true
-        for (let item of controller.current) item.abort()
+        isBreak.current = true
+        // for (let item of controller.current) item.abort()
     })
     /** 点赞|踩 */
     const generateLikePromise = useMemoizedFn((params: {uid: string; grade: "good" | "bad"}) => {
