@@ -477,6 +477,10 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                             response: {...res}
                         }
                     })
+                    if (+res.pagemeta.page === 1) {
+                        setAllCheck(false)
+                        setSelectList([])
+                    }
                 } catch (error) {}
                 setTimeout(() => {
                     setLoading(false)

@@ -162,6 +162,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                         response: res
                     }
                 })
+                if (+res.Total === 1) {
+                    setAllCheck(false)
+                    setSelectList([])
+                }
             } catch (error) {}
             setTimeout(() => {
                 isLoadingRef.current = false
