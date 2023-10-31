@@ -8,13 +8,14 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {FuncBtn, OnlineExtraOperate} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
-import {PluginsOnlineDetailProps, YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "./PluginsOnlineType"
-import {PluginSearchParams} from "../baseTemplateType"
+import {OnlineBackInfoProps, PluginsOnlineDetailProps, YakitPluginOnlineDetail} from "./PluginsOnlineType"
+import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
 import {OnlinePluginAppAction, thousandthConversion} from "../pluginReducer"
 import {useStore} from "@/store"
 import {PluginComment} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
+import {LoadingOutlined} from "@ant-design/icons"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -36,11 +37,15 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         loadMoreData,
         loading,
         defaultSearchValue,
-        dispatch
+        defaultFilter,
+        dispatch,
+        onBatchDownload,
+        downloadLoading
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
     const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
 
     const userInfo = useStore((s) => s.userInfo)
 
@@ -117,6 +122,10 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         setPlugin({...data})
     })
+    const onDownload = useMemoizedFn(() => {
+        const params: OnlineBackInfoProps = {allCheck, selectList, search, filter: filters, selectNum}
+        onBatchDownload(params)
+    })
     if (!plugin) return null
     return (
         <PluginDetails<YakitPluginOnlineDetail>
@@ -125,9 +134,13 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                 <div className={"details-filter-extra-wrapper"}>
                     <YakitButton type='text2' icon={<OutlineFilterIcon />} />
                     <div style={{height: 12}} className='divider-style'></div>
-                    <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
-                        <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} />
-                    </Tooltip>
+                    {downloadLoading ? (
+                        <YakitButton type='text2' icon={<LoadingOutlined />} />
+                    ) : (
+                        <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
+                            <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} onClick={onDownload} />
+                        </Tooltip>
+                    )}
                     <div style={{height: 12}} className='divider-style'></div>
                     <YakitButton type='text'>新建插件</YakitButton>
                 </div>
