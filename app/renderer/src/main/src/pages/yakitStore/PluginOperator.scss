@@ -69,3 +69,13 @@
 .modal-remove-menu {
     padding: 24px;
 }
+
+.add-to-menu-action-form-body{
+    padding: 12px;
+    .add-to-menu-action-form-footer{
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+    }
+}
