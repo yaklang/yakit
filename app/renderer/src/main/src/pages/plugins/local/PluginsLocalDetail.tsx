@@ -21,18 +21,19 @@ import {FuncFilterPopover} from "../funcTemplate"
 import {PluginGroup, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {PluginSearchParams} from "../baseTemplateType"
-import {PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
+import {PluginExecutorProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
 import {yakitNotify} from "@/utils/notification"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {executeYakScriptByParams} from "@/pages/invoker/YakScriptCreator"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {AddToMenuActionForm} from "@/pages/yakitStore/PluginOperator"
+import {AddToMenuActionForm, LocalPluginExecutor, PluginOperator} from "@/pages/yakitStore/PluginOperator"
 import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV} from "@/yakitGV"
 import {getRemoteValue} from "@/utils/kv"
 
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,7 +55,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         onRemovePluginDetailSingleBefore,
         onDetailExport
     } = props
-
+    const [executorShow, setExecutorShow] = useState<boolean>(true)
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [selectList, setSelectList] = useState<YakScript[]>(defaultSelectList)
@@ -98,6 +99,12 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const onPluginClick = useMemoizedFn((data: YakScript) => {
         setPlugin({...data})
+        if (data.ScriptName !== plugin?.ScriptName) {
+            setExecutorShow(false)
+            setTimeout(() => {
+                setExecutorShow(true)
+            }, 200)
+        }
     })
     /** 单项勾选|取消勾选 */
     const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
@@ -259,11 +266,29 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 onSearch={() => {}}
             >
                 <div className={styles["details-content-wrapper"]}>
-                    <Tabs defaultActiveKey='code' tabPosition='right' className='plugins-tabs'>
+                    <Tabs defaultActiveKey='execute' tabPosition='right' className='plugins-tabs'>
                         <TabPane tab='执行' key='execute'>
-                            <div className={styles["plugin-info-wrapper"]}>执行</div>
+                            <div className={styles["plugin-execute-wrapper"]}>
+                                {executorShow ? (
+                                    <LocalPluginExecutor
+                                        script={plugin}
+                                        isEdit={false}
+                                        setIsEdit={() => {}}
+                                        isShowPrivateDom={false}
+                                        settingShow={false}
+                                        setSettingShow={() => {}}
+                                        extraParams={[]}
+                                        setExtraParams={() => {}}
+                                        groups={[]}
+                                        updateGroups={() => {}}
+                                        patternMenu='expert'
+                                    />
+                                ) : (
+                                    <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />
+                                )}
+                            </div>
                         </TabPane>
-                        <TabPane tab='源 码' key='code'>
+                        <TabPane tab='源码' key='code'>
                             <div className={styles["plugin-info-wrapper"]}>
                                 <PluginDetailHeader
                                     pluginName={plugin.ScriptName}

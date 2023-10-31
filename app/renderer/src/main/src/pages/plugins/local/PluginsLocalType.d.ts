@@ -44,3 +44,7 @@ export interface RemoveMenuModalContentProps{
     pluginName:string
     onCancel:()=>void
 }
+
+export interface PluginExecutorProps{
+    script:YakScript
+}

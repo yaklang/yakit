@@ -24,6 +24,16 @@
         padding: 0 12px 12px 12px;
         height: 100%;
     }
+    .plugin-execute-wrapper {
+        padding: 0 12px 12px 12px;
+        height: 100%;
+        .plugin-execute-spin {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            padding-top: 10%;
+        }
+    }
 }
 
 // 详情-审核完的编辑器样式
