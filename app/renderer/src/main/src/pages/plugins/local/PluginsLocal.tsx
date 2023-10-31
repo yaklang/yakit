@@ -81,6 +81,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const pluginsLocalRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(pluginsLocalRef)
     const removePluginRef = useRef<YakScript>()
+    const removePluginDetailRef = useRef<YakScript>()
     const latestLoadingRef = useLatest(loading)
 
     // 选中插件的数量
@@ -99,7 +100,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     useEffect(() => {
         getInitTotal()
         getPluginRemoveCheck()
-    }, [userInfo.isLogin,inViewport])
+    }, [userInfo.isLogin, inViewport])
     useEffect(() => {
         getPluginGroupListLocal()
     }, [userInfo.isLogin, inViewport])
@@ -312,27 +313,38 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             onRemovePluginBatch()
         }
     })
-    /**单个删除 */
+    /**列表单个删除 */
     const onRemovePluginSingle = useMemoizedFn((data: YakScript) => {
-        let deleteParams: DeleteYakScriptRequestProps = {
-            Ids: [data.Id]
-        }
-        apiDeleteYakScript(deleteParams).then(() => {
-            const index = selectList.findIndex((ele) => ele.ScriptName === data.ScriptName)
-            if (index !== -1) {
-                optCheck(data, false)
-            }
+        onRemovePluginSingleBase(data).then(() => {
             dispatch({
                 type: "remove",
                 payload: {
                     itemList: [data]
                 }
             })
-            removePluginRef.current = undefined
-            setRemoveCheckVisible(false)
-            getInitTotal()
-            getPluginGroupListLocal()
-            setRemoteValue(PluginGV.LocalPluginRemoveCheck, `${pluginRemoveCheck}`)
+        })
+    })
+    /**单个删除基础 */
+    const onRemovePluginSingleBase = useMemoizedFn((data: YakScript) => {
+        let deleteParams: DeleteYakScriptRequestProps = {
+            Ids: [data.Id]
+        }
+        return new Promise<void>((resolve, reject) => {
+            apiDeleteYakScript(deleteParams)
+                .then(() => {
+                    const index = selectList.findIndex((ele) => ele.ScriptName === data.ScriptName)
+                    if (index !== -1) {
+                        optCheck(data, false)
+                    }
+                    removePluginRef.current = undefined
+                    removePluginDetailRef.current = undefined
+                    setRemoveCheckVisible(false)
+                    getInitTotal()
+                    getPluginGroupListLocal()
+                    setRemoteValue(PluginGV.LocalPluginRemoveCheck, `${pluginRemoveCheck}`)
+                    resolve()
+                })
+                .catch(reject)
         })
     })
     /**导出插件 */
@@ -351,6 +363,43 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const checkList = useMemo(() => {
         return selectList.map((ele) => ele.ScriptName)
     }, [selectList])
+    const onRemovePluginDetailSingleBefore = useMemoizedFn((data: YakScript) => {
+        removePluginDetailRef.current = data
+        if (pluginRemoveCheck) {
+            onRemovePluginDetailSingle(data)
+        } else {
+            setRemoveCheckVisible(true)
+        }
+    })
+    /**详情中调用删除操作 */
+    const onRemovePluginDetailSingle = useMemoizedFn((data) => {
+        onRemovePluginSingleBase(data).then(() => {
+            if (response.Data.length === 1) {
+                // 如果删除是最后一个，就回到列表中得空页面
+                setPlugin(undefined)
+            } else {
+                const index = response.Data.findIndex((ele) => ele.ScriptName === data.ScriptName)
+                if (index === -1) return
+                if (index === Number(response.Total) - 1) {
+                    // 选中得item为最后一个，删除后选中倒数第二个
+                    setPlugin({
+                        ...response.Data[index - 1]
+                    })
+                } else {
+                    //选择下一个
+                    setPlugin({
+                        ...response.Data[index + 1]
+                    })
+                }
+            }
+            dispatch({
+                type: "remove",
+                payload: {
+                    itemList: [data]
+                }
+            })
+        })
+    })
     return (
         <>
             {!!plugin && (
@@ -358,14 +407,14 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     info={plugin}
                     defaultAllCheck={allCheck}
                     loading={loading}
-                    // onCheck={onCheck}
                     defaultSelectList={selectList}
-                    // optCheck={optCheck}
                     response={response}
                     onBack={onBack}
                     loadMoreData={onUpdateList}
                     defaultSearchValue={search}
                     dispatch={dispatch}
+                    onRemovePluginDetailSingleBefore={onRemovePluginDetailSingleBefore}
+                    onDetailExport={onExport}
                 />
             )}
             <PluginsLayout
