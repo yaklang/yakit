@@ -225,10 +225,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             setInitTotal(+res.pagemeta.total)
         })
     })
-
-    const fetchList = useLockFn(
+    const filtersDetailRef = useRef<PluginFilterParams>()
+    const searchDetailRef = useRef<PluginSearchParams>()
+    const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
-            if (latestLoadingRef.current) return
+            // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -239,8 +240,10 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                       page: response.pagemeta.page + 1,
                       limit: response.pagemeta.limit || 20
                   }
+            const queryFilters = filtersDetailRef.current ? filtersDetailRef.current : filters
+            const querySearch = searchDetailRef.current ? searchDetailRef.current : search
             const query: PluginsQueryProps = {
-                ...convertPluginsRequestParams(filters, search, params),
+                ...convertPluginsRequestParams(queryFilters, querySearch, params),
                 time_search: otherSearch.timeType.key === "allTimes" ? "" : otherSearch.timeType.key,
                 order_by: otherSearch.heatType.key
             }
@@ -260,13 +263,13 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                     setSelectList([])
                 }
             } catch (error) {}
-
             setTimeout(() => {
-                setLoading(false)
                 isLoadingRef.current = false
-            }, 300)
-        })
-    )
+                setLoading(false)
+            }, 200)
+        }),
+        {wait: 200, leading: true}
+    ).run
 
     /**获取分组统计列表 */
     const getPluginGroupList = useMemoizedFn(() => {
@@ -276,7 +279,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     })
 
     // 滚动更多加载
-    const onUpdateList = useMemoizedFn((reset?: boolean) => {
+    const onUpdateList = useMemoizedFn(() => {
         fetchList()
     })
     const onSetActive = useMemoizedFn((type: TypeSelectOpt[]) => {
@@ -378,6 +381,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const onNewAddPlugin = useMemoizedFn(() => {})
 
     const onBack = useMemoizedFn((backValues: PluginOnlineDetailBackProps) => {
+        searchDetailRef.current = undefined
+        filtersDetailRef.current = undefined
         setPlugin(undefined)
         setSearch(backValues.search)
         setAllCheck(backValues.allCheck)
@@ -412,6 +417,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         }
         onDownload(batchDownloadParams)
     })
+    /** 详情搜索事件 */
+    const onDetailSearch = useMemoizedFn((detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {
+        searchDetailRef.current = detailSearch
+        filtersDetailRef.current = detailFilter
+        fetchList(true)
+    })
     return (
         <>
             {!!plugin && (
@@ -421,6 +432,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         defaultSelectList={selectList}
                         defaultAllCheck={allCheck}
                         loading={loading}
+                        spinLoading={loading && isLoadingRef.current}
                         response={response}
                         onBack={onBack}
                         loadMoreData={onUpdateList}
@@ -429,6 +441,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         onBatchDownload={onBatchDownload}
                         defaultFilter={filters}
                         downloadLoading={downloadLoading}
+                        onDetailSearch={onDetailSearch}
                     />
                 </div>
             )}
