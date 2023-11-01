@@ -3244,9 +3244,8 @@ message SaveYakScriptToOnlineRequest {
 message SaveYakScriptToOnlineResponse {
   // 进度
   double Progress = 1;
-  string Log = 2;
-  string Message = 3;
-  string MessageType = 4;
+  string Message = 2;
+  string MessageType = 3;
 }
 
 message ToOnlineResult {
