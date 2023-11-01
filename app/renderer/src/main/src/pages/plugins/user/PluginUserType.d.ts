@@ -65,7 +65,7 @@ export interface PluginUserDetailProps {
     info: YakitPluginOnlineDetail
     defaultAllCheck: boolean
     defaultSelectList: string[]
-    response: API.YakitPluginListResponse
+    response: YakitPluginListOnlineResponse
     onBack: (q: PluginUserDetailBackProps) => void
     loadMoreData: () => void
     /** 初始搜索内容 */
