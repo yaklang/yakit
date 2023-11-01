@@ -389,17 +389,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setAllCheck(backValues.allCheck)
         setSelectList(backValues.selectList)
     })
-    /**
-     * @description 此方法防抖不要加leading：true,会影响search拿到最新得值，用useLatest也拿不到最新得；如若需要leading：true，则需要使用setTimeout包fetchList
-     */
-    const onSearch = useDebounceFn(
-        useMemoizedFn(() => {
-            fetchList(true)
-        }),
-        {
-            wait: 200
-        }
-    ).run
+    const onSearch = useMemoizedFn(() => {
+        fetchList(true)
+    })
     const pluginTypeSelect: TypeSelectOpt[] = useMemo(() => {
         return (
             filters.plugin_type?.map((ele) => ({
