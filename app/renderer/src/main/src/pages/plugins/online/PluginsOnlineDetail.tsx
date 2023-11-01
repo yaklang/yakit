@@ -69,6 +69,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     const onPluginBack = useMemoizedFn(() => {
         onBack({
             search,
+            filter: filters,
             allCheck,
             selectList
         })
