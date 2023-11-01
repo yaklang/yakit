@@ -14,12 +14,12 @@ import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import {Tabs, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {FuncBtn} from "../funcTemplate"
+import {FilterPopoverBtn, FuncBtn} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
 import {MePluginType, OnlineUserExtraOperate, mePluginTypeList} from "./PluginUser"
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
-import {PluginSearchParams} from "../baseTemplateType"
+import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
 import {PluginUserDetailProps} from "./PluginUserType"
 import {PrivatePluginIcon} from "@/assets/newIcon"
@@ -39,18 +39,22 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         info,
         defaultAllCheck,
         defaultSelectList,
+        defaultFilter,
         response,
         onBack,
         loadMoreData,
         defaultSearchValue,
         dispatch,
-        onRemovePluginDetailSingleBefore
+        onRemovePluginDetailSingleBefore,
+        onDetailSearch,
+        spinLoading
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
     const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
     const [loading, setLoading] = useState<boolean>(false)
     const [recalculation, setRecalculation] = useState<boolean>(false) // 更新item后刷新虚拟列表
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
 
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
 
@@ -72,6 +76,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     const onPluginBack = useMemoizedFn(() => {
         onBack({
             search,
+            filter: filters,
             selectList,
             allCheck
         })
@@ -148,6 +153,18 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         setPlugin({...data})
     })
+    const onFilter = useMemoizedFn((value: PluginFilterParams) => {
+        setFilters(value)
+        onDetailSearch(search, value)
+        setAllCheck(false)
+        setSelectList([])
+    })
+    /**搜索需要清空勾选 */
+    const onSearch = useMemoizedFn(() => {
+        onDetailSearch(search, filters)
+        setAllCheck(false)
+        setSelectList([])
+    })
     if (!plugin) return null
     return (
         <>
@@ -155,7 +172,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                 title='我的云端插件'
                 filterExtra={
                     <div className={"details-filter-extra-wrapper"}>
-                        <YakitButton type='text2' icon={<OutlineFilterIcon />} />
+                        <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='user' />
                         <div style={{height: 12}} className='divider-style'></div>
                         <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
                             <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} />
@@ -208,7 +225,8 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                 onBack={onPluginBack}
                 search={search}
                 setSearch={setSearch}
-                onSearch={() => {}}
+                onSearch={onSearch}
+                spinLoading={spinLoading}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs tabPosition='right' className='plugins-tabs'>
