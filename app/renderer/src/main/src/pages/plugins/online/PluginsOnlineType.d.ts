@@ -1,6 +1,6 @@
 import {API} from "@/services/swagger/resposeType"
 import {Ref} from "react"
-import {PluginSearchParams} from "../baseTemplateType"
+import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 
 export interface PluginsOnlineProps {}
@@ -59,10 +59,14 @@ export interface PluginsOnlineDetailProps {
     /** 初始过滤条件 */
     defaultFilter: PluginFilterParams
     dispatch: React.Dispatch<OnlinePluginAppAction>
-    /**详情的下 */
+    /**详情的下载 */
     onBatchDownload: (newParams: OnlineBackInfoProps) => void
     /**下载loading */
     downloadLoading: boolean
+    /** 搜索功能回调 */
+    onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => any
+    /** 查询第一页的loading */
+    spinLoading:boolean
 }
 
 export interface OnlineBackInfoProps {
