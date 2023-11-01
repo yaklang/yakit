@@ -5,16 +5,17 @@ import {useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import {Tabs, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {FuncBtn, OnlineExtraOperate} from "../funcTemplate"
+import {FilterPopoverBtn, FuncBtn, OnlineExtraOperate} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
-import {PluginsOnlineDetailProps, YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "./PluginsOnlineType"
-import {PluginSearchParams} from "../baseTemplateType"
+import {OnlineBackInfoProps, PluginsOnlineDetailProps, YakitPluginOnlineDetail} from "./PluginsOnlineType"
+import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
 import {OnlinePluginAppAction, thousandthConversion} from "../pluginReducer"
 import {useStore} from "@/store"
 import {PluginComment} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
+import {LoadingOutlined} from "@ant-design/icons"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -36,11 +37,17 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         loadMoreData,
         loading,
         defaultSearchValue,
-        dispatch
+        defaultFilter,
+        dispatch,
+        onBatchDownload,
+        downloadLoading,
+        onDetailSearch,
+        spinLoading
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
     const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
 
     const userInfo = useStore((s) => s.userInfo)
 
@@ -62,6 +69,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     const onPluginBack = useMemoizedFn(() => {
         onBack({
             search,
+            filter: filters,
             allCheck,
             selectList
         })
@@ -117,17 +125,37 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         setPlugin({...data})
     })
+    const onDownload = useMemoizedFn(() => {
+        const params: OnlineBackInfoProps = {allCheck, selectList, search, filter: filters, selectNum}
+        onBatchDownload(params)
+    })
+    const onFilter = useMemoizedFn((value: PluginFilterParams) => {
+        setFilters(value)
+        onDetailSearch(search, value)
+        setAllCheck(false)
+        setSelectList([])
+    })
+    /**搜索需要清空勾选 */
+    const onSearch = useMemoizedFn(() => {
+        onDetailSearch(search, filters)
+        setAllCheck(false)
+        setSelectList([])
+    })
     if (!plugin) return null
     return (
         <PluginDetails<YakitPluginOnlineDetail>
             title='插件商店'
             filterExtra={
                 <div className={"details-filter-extra-wrapper"}>
-                    <YakitButton type='text2' icon={<OutlineFilterIcon />} />
+                    <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='online' />
                     <div style={{height: 12}} className='divider-style'></div>
-                    <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
-                        <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} />
-                    </Tooltip>
+                    {downloadLoading ? (
+                        <YakitButton type='text2' icon={<LoadingOutlined />} />
+                    ) : (
+                        <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
+                            <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} onClick={onDownload} />
+                        </Tooltip>
+                    )}
                     <div style={{height: 12}} className='divider-style'></div>
                     <YakitButton type='text'>新建插件</YakitButton>
                 </div>
@@ -170,7 +198,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             onBack={onPluginBack}
             search={search}
             setSearch={setSearch}
-            onSearch={() => {}}
+            onSearch={onSearch}
+            spinLoading={spinLoading}
         >
             <div className={styles["details-content-wrapper"]}>
                 <Tabs tabPosition='right' className='plugins-tabs'>

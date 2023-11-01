@@ -59,6 +59,8 @@ export interface PluginDetailsProps<T> {
     /** 返回事件 */
     onBack: () => any
     children: ReactNode
+    /** 查询第一页的loading */
+    spinLoading?: boolean
 }
 
 export interface PluginDetailHeaderProps {

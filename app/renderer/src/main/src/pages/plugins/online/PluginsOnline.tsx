@@ -34,7 +34,9 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {
+    DownloadArgumentProps,
     NavigationBars,
+    OnlineBackInfoProps,
     OtherSearchProps,
     PluginOnlineDetailBackProps,
     PluginsOnlineHeardProps,
@@ -69,6 +71,7 @@ import {TypeSelectOpt} from "../funcTemplateType"
 
 import classNames from "classnames"
 import "../plugins.scss"
+import {BackInfoProps} from "../manage/PluginManageDetail"
 
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
     const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
@@ -203,10 +206,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useUpdateEffect(() => {
         fetchList(true)
     }, [userInfo.isLogin, refresh, filters, otherSearch])
-    useUpdateEffect(() => {
-        if (visibleOnline) return
-        fetchList(true)
-    }, [visibleOnline])
 
     useEffect(() => {
         getPluginGroupList()
@@ -226,10 +225,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             setInitTotal(+res.pagemeta.total)
         })
     })
-
-    const fetchList = useLockFn(
+    const filtersDetailRef = useRef<PluginFilterParams>()
+    const searchDetailRef = useRef<PluginSearchParams>()
+    const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
-            if (latestLoadingRef.current) return
+            // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -240,8 +240,10 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                       page: response.pagemeta.page + 1,
                       limit: response.pagemeta.limit || 20
                   }
+            const queryFilters = filtersDetailRef.current ? filtersDetailRef.current : filters
+            const querySearch = searchDetailRef.current ? searchDetailRef.current : search
             const query: PluginsQueryProps = {
-                ...convertPluginsRequestParams(filters, search, params),
+                ...convertPluginsRequestParams(queryFilters, querySearch, params),
                 time_search: otherSearch.timeType.key === "allTimes" ? "" : otherSearch.timeType.key,
                 order_by: otherSearch.heatType.key
             }
@@ -256,14 +258,18 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         response: {...res}
                     }
                 })
+                if (+res.pagemeta.page === 1) {
+                    setAllCheck(false)
+                    setSelectList([])
+                }
             } catch (error) {}
-
             setTimeout(() => {
-                setLoading(false)
                 isLoadingRef.current = false
-            }, 300)
-        })
-    )
+                setLoading(false)
+            }, 200)
+        }),
+        {wait: 200, leading: true}
+    ).run
 
     /**获取分组统计列表 */
     const getPluginGroupList = useMemoizedFn(() => {
@@ -273,7 +279,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     })
 
     // 滚动更多加载
-    const onUpdateList = useMemoizedFn((reset?: boolean) => {
+    const onUpdateList = useMemoizedFn(() => {
         fetchList()
     })
     const onSetActive = useMemoizedFn((type: TypeSelectOpt[]) => {
@@ -284,21 +290,33 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         }))
         setFilters({...filters, plugin_type: newType})
     })
+    const onDownloadBefore = useMemoizedFn(() => {
+        const downloadParams: DownloadArgumentProps = {
+            allCheckArgument: allCheck,
+            filtersArgument: filters,
+            searchArgument: search,
+            selectListArgument: selectList,
+            selectNumArgument: selectNum
+        }
+        onDownload(downloadParams)
+    })
     /**下载 */
-    const onDownload = useMemoizedFn(() => {
-        if (selectNum === 0) {
+    const onDownload = useMemoizedFn((downloadArgument: DownloadArgumentProps) => {
+        const {filtersArgument, searchArgument, selectListArgument, selectNumArgument, allCheckArgument} =
+            downloadArgument
+        if (selectNumArgument === 0) {
             // 全部下载
             setVisibleOnline(true)
         } else {
             // 批量下载
             let downloadParams: DownloadOnlinePluginsRequest = {}
-            if (allCheck) {
+            if (allCheckArgument) {
                 downloadParams = {
-                    ...convertDownloadOnlinePluginBatchRequestParams(filters, search)
+                    ...convertDownloadOnlinePluginBatchRequestParams(filtersArgument, searchArgument)
                 }
             } else {
                 downloadParams = {
-                    UUID: selectList
+                    UUID: selectListArgument
                 }
             }
             setDownloadLoading(true)
@@ -363,8 +381,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const onNewAddPlugin = useMemoizedFn(() => {})
 
     const onBack = useMemoizedFn((backValues: PluginOnlineDetailBackProps) => {
+        searchDetailRef.current = undefined
+        filtersDetailRef.current = undefined
         setPlugin(undefined)
         setSearch(backValues.search)
+        setFilters(backValues.filter)
         setAllCheck(backValues.allCheck)
         setSelectList(backValues.selectList)
     })
@@ -387,6 +408,22 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             })) || []
         )
     }, [filters.plugin_type])
+    const onBatchDownload = useMemoizedFn((newParams: OnlineBackInfoProps) => {
+        const batchDownloadParams: DownloadArgumentProps = {
+            allCheckArgument: newParams.allCheck,
+            filtersArgument: newParams.filter,
+            searchArgument: newParams.search,
+            selectListArgument: newParams.selectList,
+            selectNumArgument: newParams.selectNum
+        }
+        onDownload(batchDownloadParams)
+    })
+    /** 详情搜索事件 */
+    const onDetailSearch = useMemoizedFn((detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {
+        searchDetailRef.current = detailSearch
+        filtersDetailRef.current = detailFilter
+        fetchList(true)
+    })
     return (
         <>
             {!!plugin && (
@@ -396,11 +433,16 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         defaultSelectList={selectList}
                         defaultAllCheck={allCheck}
                         loading={loading}
+                        spinLoading={loading && isLoadingRef.current}
                         response={response}
                         onBack={onBack}
                         loadMoreData={onUpdateList}
                         defaultSearchValue={search}
                         dispatch={dispatch}
+                        onBatchDownload={onBatchDownload}
+                        defaultFilter={filters}
+                        downloadLoading={downloadLoading}
+                        onDetailSearch={onDetailSearch}
                     />
                 </div>
             )}
@@ -424,7 +466,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 type='outline2'
                                 size='large'
                                 name={selectNum > 0 ? "下载" : "一键下载"}
-                                onClick={onDownload}
+                                onClick={onDownloadBefore}
                                 loading={downloadLoading}
                             />
                             <FuncBtn
@@ -779,6 +821,7 @@ const YakitCombinationSearchCircle: React.FC<YakitCombinationSearchCircleProps> 
                 placeholder='请输入关键词搜索插件'
                 value={keyword}
                 onChange={onChangeInput}
+                onPressEnter={onSearch}
             />
             <div className={classNames(styles["yakit-combination-search-circle-icon"])} onClick={onClickSearch}>
                 <OutlineSearchIcon />

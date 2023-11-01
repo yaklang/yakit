@@ -1390,6 +1390,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
 
     const [visible, setVisible] = useState<boolean>(false)
     const [filterList, setFilterList] = useState<API.PluginsSearch[]>([])
+    const [isActive, setIsActive] = useState<boolean>(false)
 
     // 查询筛选条件统计数据列表
     useEffect(() => {
@@ -1420,6 +1421,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     const [form] = Form.useForm()
     useEffect(() => {
         form.setFieldsValue({...defaultFilter})
+        onSetIsActive(defaultFilter)
     }, [defaultFilter])
 
     const onFinish = useMemoizedFn((value) => {
@@ -1427,15 +1429,33 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
         if (value?.hasOwnProperty("plugin_group")) delete value["plugin_group"]
         onFilter(value)
         setVisible(false)
+        onSetIsActive(value)
     })
     const onReset = useMemoizedFn(() => {
-        form.setFieldsValue({
+        const value = {
             plugin_type: [],
             status: [],
             plugin_private: []
+        }
+        form.setFieldsValue({
+            ...value
         })
+        onFilter(value)
+        setIsActive(false)
     })
-
+    /** 显示激活状态判断 */
+    const onSetIsActive = useMemoizedFn((value: PluginFilterParams) => {
+        const valueArr = Object.keys(value) || []
+        if (valueArr.length > 0) {
+            let isActive = false
+            Object.keys(value)?.forEach((key) => {
+                if (value[key] && value[key].length > 0) {
+                    isActive = true
+                }
+            })
+            setIsActive(isActive)
+        }
+    })
     return (
         <YakitPopover
             overlayClassName={styles["filter-popover-btn"]}
@@ -1448,7 +1468,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
                         {filterList.map((item) => {
                             return (
                                 <Form.Item key={item.groupKey} name={item.groupKey} label={item.groupName}>
-                                    <YakitSelect size='small' mode='multiple' allowClear={true}>
+                                    <YakitSelect labelInValue size='small' mode='multiple' allowClear={true}>
                                         {item.data.map((el) => (
                                             <YakitSelect.Option key={el.value} value={el.value}>
                                                 {el.label}
@@ -1471,7 +1491,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
                 </div>
             }
         >
-            <YakitButton type='text2' icon={<OutlineFilterIcon />} isHover={visible} />
+            <YakitButton type='text2' icon={<OutlineFilterIcon />} isHover={visible} isActive={isActive} />
         </YakitPopover>
     )
 })

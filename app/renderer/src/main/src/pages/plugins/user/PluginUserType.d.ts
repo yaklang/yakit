@@ -21,6 +21,7 @@ export interface PluginUserListProps {
     setSearchValue: (s: PluginSearchParams) => void
     setFilters: (s: PluginFilterParams) => void
     setIsSelectUserNum: (b: boolean) => void
+    plugin?: YakitPluginOnlineDetail
     setPlugin: (p?: YakitPluginOnlineDetail) => void
     onRefreshRecycleList: () => void
     setDownloadLoading: (b: boolean) => void
@@ -51,6 +52,10 @@ export interface PluginUserListRefProps {
     onRemovePluginBatchBefore: () => void
     onDownloadBatch: () => void
     onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
+    /** 搜索功能回调 */
+    onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
+    /** 查询第一页的loading */
+    spinLoading: boolean
 }
 export interface PluginRecycleListRefProps {
     allCheck: boolean
@@ -65,12 +70,21 @@ export interface PluginUserDetailProps {
     response: API.YakitPluginListResponse
     onBack: (q: PluginUserDetailBackProps) => void
     loadMoreData: () => void
+    /** 初始搜索内容 */
     defaultSearchValue: PluginSearchParams
+    /** 初始过滤条件 */
+    defaultFilter: PluginFilterParams
     dispatch: React.Dispatch<OnlinePluginAppAction>
+    /**详情中单个删除 */
     onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
+    /** 搜索功能回调 */
+    onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
+    /** 查询第一页的loading */
+    spinLoading: boolean
 }
 export interface PluginUserDetailBackProps {
     search: PluginSearchParams
+    filter: PluginFilterParams
     selectList: string[]
     allCheck: boolean
 }
