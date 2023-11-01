@@ -64,7 +64,7 @@ export interface PluginsOnlineDetailProps {
     /**下载loading */
     downloadLoading: boolean
     /** 搜索功能回调 */
-    onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => any
+    onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
     /** 查询第一页的loading */
     spinLoading: boolean
 }
