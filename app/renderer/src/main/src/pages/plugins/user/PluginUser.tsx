@@ -184,19 +184,13 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         setAllCheckUser(backValues.allCheck)
         setSelectListUser(backValues.selectList)
     })
-    /**
-     * @description 此方法防抖不要加leading：true,会影响search拿到最新得值，用useLatest也拿不到最新得；如若需要leading：true，则需要使用setTimeout包fetchList
-     */
-    const onSearch = useDebounceFn(
-        useMemoizedFn(() => {
-            if (userPluginType === "myOnlinePlugin") {
-                setRefreshUser(!refreshUser)
-            } else {
-                setRefreshRecycle(!refreshRecycle)
-            }
-        }),
-        {wait: 200}
-    ).run
+    const onSearch = useMemoizedFn(() => {
+        if (userPluginType === "myOnlinePlugin") {
+            setRefreshUser(!refreshUser)
+        } else {
+            setRefreshRecycle(!refreshRecycle)
+        }
+    })
     const pluginPrivateSelect: TypeSelectOpt[] = useMemo(() => {
         return (
             filters.plugin_private?.map((ele) => ({

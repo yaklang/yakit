@@ -71,6 +71,7 @@ import {
     PluginStarsRequest,
     apiDownloadPluginOnline,
     apiFetchGroupStatisticsCheck,
+    apiFetchGroupStatisticsLocal,
     apiFetchGroupStatisticsMine,
     apiFetchGroupStatisticsOnline,
     apiPluginStars
@@ -1412,7 +1413,12 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
                 setFilterList(list)
             })
         }
-
+        if (type === "local") {
+            apiFetchGroupStatisticsLocal().then((res) => {
+                const list = (res?.data || []).filter((item) => !["tags", "plugin_group"].includes(item.groupKey))
+                setFilterList(list)
+            })
+        }
         return () => {
             setFilterList([])
         }
