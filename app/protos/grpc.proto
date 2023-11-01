@@ -164,6 +164,8 @@ service Yak {
   rpc QueryYakScriptByIsCore(QueryYakScriptByIsCoreRequest) returns (QueryYakScriptByIsCoreResponse);
   rpc QueryYakScriptRiskDetailByCWE(QueryYakScriptRiskDetailByCWERequest) returns (QueryYakScriptRiskDetailByCWEResponse);
   rpc YakScriptRiskTypeList(Empty) returns (YakScriptRiskTypeListResponse);
+  rpc SaveNewYakScript(SaveNewYakScriptRequest) returns (YakScript);
+  rpc SaveYakScriptToOnline(SaveYakScriptToOnlineRequest) returns (stream SaveYakScriptToOnlineResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -737,8 +739,12 @@ message QueryTrafficPacketRequest {
 message QueryTrafficTCPReassembledRequest {
   Paging Pagination = 1;
 
-  bool FromNow = 2;
+  bool FromNow = 2; // ignore it
   string SessionId = 3;
+
+  int64 FromId = 4;
+  int64 UntilId = 5;
+  int64 TimestampNow = 6;
 }
 
 message TrafficSession {
@@ -805,7 +811,11 @@ message QueryTrafficPacketResponse {
 }
 
 message TrafficTCPReassembled {
-
+  int64 Id = 1;
+  string SessionUuid = 2;
+  bytes Raw = 3;
+  int64 Seq = 4;
+  int64 Timestamp = 5;
 }
 
 message QueryTrafficTCPReassembledResponse {
@@ -818,7 +828,11 @@ message QueryTrafficSessionRequest {
   Paging Pagination = 1;
 
   // active traffic
-  bool FromNow = 2;
+  bool FromNow = 2; // ignore it, bad field
+
+  int64 FromId = 3;
+  int64 UntilId = 4;
+  int64 TimestampNow = 5;
 }
 
 message PcapXRequest {
@@ -3299,6 +3313,49 @@ message YakScript {
   string OnlineGroup = 29;
   bool IsCorePlugin = 30;
   int64 UpdatedAt = 31;
+  string RiskType = 32;
+  QueryYakScriptRiskDetailByCWEResponse RiskDetail = 33;
+  string RiskAnnotation = 34;
+}
+
+message SaveNewYakScriptRequest {
+  string Content = 1;
+  string Type = 2;
+  repeated YakScriptParam Params = 3;
+  string ScriptName = 4;
+  string Help = 5;
+  string Level = 6;
+  string Tags = 7;
+  bool IsHistory = 8;
+  bool IsIgnore = 9;
+  bool IsGeneralModule = 10;
+  string GeneralModuleVerbose = 11;
+  string GeneralModuleKey = 12;
+  string FromGit = 13;
+  bool EnablePluginSelector = 14;
+  string PluginSelectorTypes = 15;
+  bool IsCorePlugin = 16;
+  string RiskType = 17;
+  QueryYakScriptRiskDetailByCWEResponse RiskDetail = 18;
+  string RiskAnnotation = 19;
+}
+
+message SaveYakScriptToOnlineRequest {
+  repeated string ScriptNames = 1;
+  string Token = 2;
+  bool IsPrivate = 3;
+}
+
+message SaveYakScriptToOnlineResponse {
+  // 进度
+  double Progress = 1;
+  string Log = 2;
+  string Message = 3;
+  string MessageType = 4;
+}
+
+message ToOnlineResult {
+  string ScriptName = 1;
 }
 
 message GetYakScriptTagsAndTypeResponse {
