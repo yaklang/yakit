@@ -5,7 +5,7 @@ import {useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import {Tabs, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {FuncBtn, OnlineExtraOperate} from "../funcTemplate"
+import {FilterPopoverBtn, FuncBtn, OnlineExtraOperate} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
 import {OnlineBackInfoProps, PluginsOnlineDetailProps, YakitPluginOnlineDetail} from "./PluginsOnlineType"
@@ -40,7 +40,9 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         defaultFilter,
         dispatch,
         onBatchDownload,
-        downloadLoading
+        downloadLoading,
+        onDetailSearch,
+        spinLoading
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
@@ -126,13 +128,25 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         const params: OnlineBackInfoProps = {allCheck, selectList, search, filter: filters, selectNum}
         onBatchDownload(params)
     })
+    const onFilter = useMemoizedFn((value: PluginFilterParams) => {
+        setFilters(value)
+        onDetailSearch(search, value)
+        setAllCheck(false)
+        setSelectList([])
+    })
+    /**搜索需要清空勾选 */
+    const onSearch = useMemoizedFn(() => {
+        onDetailSearch(search, filters)
+        setAllCheck(false)
+        setSelectList([])
+    })
     if (!plugin) return null
     return (
         <PluginDetails<YakitPluginOnlineDetail>
             title='插件商店'
             filterExtra={
                 <div className={"details-filter-extra-wrapper"}>
-                    <YakitButton type='text2' icon={<OutlineFilterIcon />} />
+                    <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='online' />
                     <div style={{height: 12}} className='divider-style'></div>
                     {downloadLoading ? (
                         <YakitButton type='text2' icon={<LoadingOutlined />} />
@@ -183,7 +197,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             onBack={onPluginBack}
             search={search}
             setSearch={setSearch}
-            onSearch={() => {}}
+            onSearch={onSearch}
+            spinLoading={spinLoading}
         >
             <div className={styles["details-content-wrapper"]}>
                 <Tabs tabPosition='right' className='plugins-tabs'>

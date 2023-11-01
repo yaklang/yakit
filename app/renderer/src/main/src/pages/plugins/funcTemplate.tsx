@@ -1390,6 +1390,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
 
     const [visible, setVisible] = useState<boolean>(false)
     const [filterList, setFilterList] = useState<API.PluginsSearch[]>([])
+    const [isActive, setIsActive] = useState<boolean>(false)
 
     // 查询筛选条件统计数据列表
     useEffect(() => {
@@ -1427,6 +1428,14 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
         if (value?.hasOwnProperty("plugin_group")) delete value["plugin_group"]
         onFilter(value)
         setVisible(false)
+        // 显示激活状态判断
+        let isActive = false
+        Object.keys(value)?.forEach((key) => {
+            if (value[key] && value[key].length > 0) {
+                isActive = true
+            }
+        })
+        setIsActive(isActive)
     })
     const onReset = useMemoizedFn(() => {
         form.setFieldsValue({
@@ -1434,6 +1443,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
             status: [],
             plugin_private: []
         })
+        setIsActive(false)
     })
 
     return (
@@ -1448,7 +1458,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
                         {filterList.map((item) => {
                             return (
                                 <Form.Item key={item.groupKey} name={item.groupKey} label={item.groupName}>
-                                    <YakitSelect size='small' mode='multiple' allowClear={true}>
+                                    <YakitSelect labelInValue size='small' mode='multiple' allowClear={true}>
                                         {item.data.map((el) => (
                                             <YakitSelect.Option key={el.value} value={el.value}>
                                                 {el.label}
@@ -1471,7 +1481,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
                 </div>
             }
         >
-            <YakitButton type='text2' icon={<OutlineFilterIcon />} isHover={visible} />
+            <YakitButton type='text2' icon={<OutlineFilterIcon />} isHover={visible} isActive={isActive} />
         </YakitPopover>
     )
 })

@@ -149,7 +149,8 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         selected,
         listProps,
         onBack,
-        children
+        children,
+        spinLoading
     } = props
 
     // 隐藏插件列表
@@ -160,7 +161,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         (value: PluginSearchParams) => {
             onsearch(value)
         },
-        {wait: 300}
+        {wait: 300,leading:true}
     )
 
     /** 全选框是否为半选状态 */
@@ -200,9 +201,9 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                         {filterExtra || null}
                     </div>
                 </div>
-                <div className={styles["filter-list"]}>
+                <YakitSpin spinning={spinLoading} className={styles["filter-list"]}>
                     <RollingLoadList {...listProps} />
-                </div>
+                </YakitSpin>
             </div>
             <div className={styles["details-wrapper"]}>
                 <div className={styles["details-header"]}>
