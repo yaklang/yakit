@@ -1421,6 +1421,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     const [form] = Form.useForm()
     useEffect(() => {
         form.setFieldsValue({...defaultFilter})
+        onSetIsActive(defaultFilter)
     }, [defaultFilter])
 
     const onFinish = useMemoizedFn((value) => {
@@ -1428,24 +1429,33 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
         if (value?.hasOwnProperty("plugin_group")) delete value["plugin_group"]
         onFilter(value)
         setVisible(false)
-        // 显示激活状态判断
-        let isActive = false
-        Object.keys(value)?.forEach((key) => {
-            if (value[key] && value[key].length > 0) {
-                isActive = true
-            }
-        })
-        setIsActive(isActive)
+        onSetIsActive(value)
     })
     const onReset = useMemoizedFn(() => {
-        form.setFieldsValue({
+        const value = {
             plugin_type: [],
             status: [],
             plugin_private: []
+        }
+        form.setFieldsValue({
+            ...value
         })
+        onFilter(value)
         setIsActive(false)
     })
-
+    /** 显示激活状态判断 */
+    const onSetIsActive = useMemoizedFn((value: PluginFilterParams) => {
+        const valueArr = Object.keys(value) || []
+        if (valueArr.length > 0) {
+            let isActive = false
+            Object.keys(value)?.forEach((key) => {
+                if (value[key] && value[key].length > 0) {
+                    isActive = true
+                }
+            })
+            setIsActive(isActive)
+        }
+    })
     return (
         <YakitPopover
             overlayClassName={styles["filter-popover-btn"]}
