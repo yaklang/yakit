@@ -313,5 +313,5 @@ export interface FilterPopoverBtnProps {
     /** 触发筛选列表的刷新 */
     refresh?: boolean
     /** 筛选组件的类型-商店|审核|我的 */
-    type?: "check" | "online" | "user"
+    type?: "check" | "online" | "user" | "local"
 }
