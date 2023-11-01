@@ -162,6 +162,8 @@ service Yak {
   rpc QueryYakScriptByIsCore(QueryYakScriptByIsCoreRequest) returns (QueryYakScriptByIsCoreResponse);
   rpc QueryYakScriptRiskDetailByCWE(QueryYakScriptRiskDetailByCWERequest) returns (QueryYakScriptRiskDetailByCWEResponse);
   rpc YakScriptRiskTypeList(Empty) returns (YakScriptRiskTypeListResponse);
+  rpc SaveNewYakScript(SaveNewYakScriptRequest) returns (YakScript);
+  rpc SaveYakScriptToOnline(SaveYakScriptToOnlineRequest) returns (stream SaveYakScriptToOnlineResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -595,8 +597,12 @@ message QueryTrafficPacketRequest {
 message QueryTrafficTCPReassembledRequest {
   Paging Pagination = 1;
 
-  bool FromNow = 2;
+  bool FromNow = 2; // ignore it
   string SessionId = 3;
+
+  int64 FromId = 4;
+  int64 UntilId = 5;
+  int64 TimestampNow = 6;
 }
 
 message TrafficSession {
@@ -663,7 +669,11 @@ message QueryTrafficPacketResponse {
 }
 
 message TrafficTCPReassembled {
-
+  int64 Id = 1;
+  string SessionUuid = 2;
+  bytes Raw = 3;
+  int64 Seq = 4;
+  int64 Timestamp = 5;
 }
 
 message QueryTrafficTCPReassembledResponse {
@@ -676,7 +686,11 @@ message QueryTrafficSessionRequest {
   Paging Pagination = 1;
 
   // active traffic
-  bool FromNow = 2;
+  bool FromNow = 2; // ignore it, bad field
+
+  int64 FromId = 3;
+  int64 UntilId = 4;
+  int64 TimestampNow = 5;
 }
 
 message PcapXRequest {
@@ -3084,6 +3098,49 @@ message YakScript {
   string OnlineGroup = 29;
   bool IsCorePlugin = 30;
   int64 UpdatedAt = 31;
+  string RiskType = 32;
+  QueryYakScriptRiskDetailByCWEResponse RiskDetail = 33;
+  string RiskAnnotation = 34;
+}
+
+message SaveNewYakScriptRequest {
+  string Content = 1;
+  string Type = 2;
+  repeated YakScriptParam Params = 3;
+  string ScriptName = 4;
+  string Help = 5;
+  string Level = 6;
+  string Tags = 7;
+  bool IsHistory = 8;
+  bool IsIgnore = 9;
+  bool IsGeneralModule = 10;
+  string GeneralModuleVerbose = 11;
+  string GeneralModuleKey = 12;
+  string FromGit = 13;
+  bool EnablePluginSelector = 14;
+  string PluginSelectorTypes = 15;
+  bool IsCorePlugin = 16;
+  string RiskType = 17;
+  QueryYakScriptRiskDetailByCWEResponse RiskDetail = 18;
+  string RiskAnnotation = 19;
+}
+
+message SaveYakScriptToOnlineRequest {
+  repeated string ScriptNames = 1;
+  string Token = 2;
+  bool IsPrivate = 3;
+}
+
+message SaveYakScriptToOnlineResponse {
+  // 进度
+  double Progress = 1;
+  string Log = 2;
+  string Message = 3;
+  string MessageType = 4;
+}
+
+message ToOnlineResult {
+  string ScriptName = 1;
 }
 
 message GetYakScriptTagsAndTypeResponse {
@@ -3382,6 +3439,13 @@ message FuzzerRequest {
 
   // retry task id
   int64 RetryTaskID = 47;
+
+  // re matcher
+  bool ReMatch = 48;
+
+  // default 5M?
+  // packet is too large (> MaxBodySize)
+  int64 MaxBodySize = 49;
 }
 
 message KVPair {
@@ -3483,6 +3547,12 @@ message FuzzerResponse {
   bool MatchedByMatcher = 46;
   string HitColor = 47;
   repeated RedirectHTTPFlow RedirectFlows = 48;
+
+  // too large file operators
+  bool IsTooLargeResponse = 49;
+  string TooLargeResponseHeaderFile = 50;
+  string TooLargeResponseBodyFile = 51;
+  bool DisableRenderStyles = 52;
 }
 
 message RedirectHTTPFlow {
@@ -3650,6 +3720,11 @@ message HTTPFlow {
   repeated string Domains = 40;
   repeated string RootDomains = 41;
   repeated string JsonObjects = 42;
+
+  bool IsTooLargeResponse = 43;
+  string TooLargeResponseHeaderFile = 44;
+  string TooLargeResponseBodyFile = 45;
+  bool DisableRenderStyles = 46;
 }
 
 message FuzzableParam {
@@ -3819,6 +3894,9 @@ message MITMRequest {
   string proxyPassword = 50;
   repeated string dnsServers = 52;
   repeated KVPair hosts = 53;
+
+  // max content-length
+  int64 maxContentLength = 55;
 }
 
 message Certificate {
