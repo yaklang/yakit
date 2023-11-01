@@ -127,7 +127,9 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         loadMoreData: () => {},
         onRemovePluginBatchBefore: () => {},
         onDownloadBatch: () => {},
-        onRemovePluginDetailSingleBefore: () => {}
+        onRemovePluginDetailSingleBefore: () => {},
+        onDetailSearch: () => {},
+        spinLoading: false
     })
 
     const pluginRecycleListRef = useRef<PluginRecycleListRefProps>({
@@ -179,6 +181,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     const onBack = useMemoizedFn((backValues: PluginUserDetailBackProps) => {
         setPlugin(undefined)
         setSearch(backValues.search)
+        setFilters(backValues.filter)
         setAllCheckUser(backValues.allCheck)
         setSelectListUser(backValues.selectList)
     })
@@ -228,8 +231,11 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     onBack={onBack}
                     loadMoreData={pluginUserListRef.current.loadMoreData}
                     defaultSearchValue={search}
+                    defaultFilter={filters}
                     dispatch={dispatch}
                     onRemovePluginDetailSingleBefore={pluginUserListRef.current.onRemovePluginDetailSingleBefore}
+                    onDetailSearch={pluginUserListRef.current.onDetailSearch}
+                    spinLoading={pluginUserListRef.current.spinLoading}
                 />
             )}
             <PluginsLayout
@@ -313,6 +319,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         isLogin={userInfo.isLogin}
                         refresh={refreshUser}
                         setIsSelectUserNum={setIsSelectUserNum}
+                        plugin={plugin}
                         setPlugin={setPlugin}
                         searchValue={search}
                         setSearchValue={setSearch}
@@ -363,6 +370,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             isLogin,
             inViewport,
             setIsSelectUserNum,
+            plugin,
             setPlugin,
             dispatch,
             response,
@@ -403,6 +411,10 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
 
         const removePluginRef = useRef<YakitPluginOnlineDetail>()
         const removePluginDetailRef = useRef<YakitPluginOnlineDetail>()
+
+        const filtersDetailRef = useRef<PluginFilterParams>() // 详情中的filter条件
+        const searchDetailRef = useRef<PluginSearchParams>() // 详情中的search条件
+
         const latestLoadingRef = useLatest(loading)
         const userInfo = useStore((s) => s.userInfo)
 
@@ -411,7 +423,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             if (allCheck) return response.pagemeta.total
             else return selectList.length
         }, [allCheck, selectList, response.pagemeta.total])
-
+        const spinLoading = loading && isLoadingRef.current //不用useMemo
         useImperativeHandle(
             ref,
             () => ({
@@ -420,10 +432,19 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 loadMoreData: onUpdateList,
                 onRemovePluginBatchBefore,
                 onDownloadBatch,
-                onRemovePluginDetailSingleBefore
+                onRemovePluginDetailSingleBefore,
+                onDetailSearch,
+                spinLoading
             }),
-            [allCheck, selectList]
+            [allCheck, selectList, spinLoading]
         )
+        useEffect(() => {
+            /** 返回到列表页中需要清除详情页中的search和filter条件 */
+            if (!plugin) {
+                searchDetailRef.current = undefined
+                filtersDetailRef.current = undefined
+            }
+        }, [plugin])
         useEffect(() => {
             setSelectList(defaultSelectList)
         }, [defaultSelectList])
@@ -451,9 +472,10 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 setInitTotal(+res.pagemeta.total)
             })
         })
-        const fetchList = useLockFn(
+
+        const fetchList = useDebounceFn(
             useMemoizedFn(async (reset?: boolean) => {
-                if (latestLoadingRef.current) return
+                // if (latestLoadingRef.current) return //先注释，有影响
                 if (reset) {
                     isLoadingRef.current = true
                 }
@@ -465,7 +487,9 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                           page: response.pagemeta.page + 1,
                           limit: response.pagemeta.limit || 20
                       }
-                const query: PluginsQueryProps = convertPluginsRequestParams(filters, search, params)
+                const queryFilters = filtersDetailRef.current ? filtersDetailRef.current : filters
+                const querySearch = searchDetailRef.current ? searchDetailRef.current : search
+                const query: PluginsQueryProps = convertPluginsRequestParams(queryFilters, querySearch, params)
                 try {
                     const res = await apiFetchMineList(query)
                     const length = res.data.length + response.data.length
@@ -483,11 +507,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                     }
                 } catch (error) {}
                 setTimeout(() => {
-                    setLoading(false)
                     isLoadingRef.current = false
-                }, 300)
-            })
-        )
+                    setLoading(false)
+                }, 200)
+            }),
+            {wait: 200, leading: true}
+        ).run
         /**获取插件删除的提醒记录状态 */
         const getPluginRemoveCheck = useMemoizedFn(() => {
             getRemoteValue(PluginGV.UserPluginRemoveCheck).then((data) => {
@@ -717,6 +742,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 return
             }
             onRemovePluginBatch()
+        })
+        /** 详情搜索事件 */
+        const onDetailSearch = useMemoizedFn((detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {
+            searchDetailRef.current = detailSearch
+            filtersDetailRef.current = detailFilter
+            fetchList(true)
         })
         return (
             <>
