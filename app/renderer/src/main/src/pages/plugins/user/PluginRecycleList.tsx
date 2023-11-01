@@ -15,7 +15,7 @@ import {
     PluginGV
 } from "../utils"
 import {PluginRecycleListProps} from "./PluginUserType"
-import {useMemoizedFn, useLockFn, useControllableValue, useLatest} from "ahooks"
+import {useMemoizedFn, useLockFn, useControllableValue, useLatest, useDebounceFn} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -87,7 +87,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
             })
         })
 
-        const fetchList = useLockFn(
+        const fetchList = useDebounceFn(
             useMemoizedFn(async (reset?: boolean) => {
                 if (latestLoadingRef.current) return
                 if (reset) {
@@ -123,8 +123,9 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                     setLoading(false)
                     isLoadingRef.current = false
                 }, 300)
-            })
-        )
+            }),
+            {wait: 200, leading: true}
+        ).run
         /** 单项勾选|取消勾选 */
         const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
             // 全选情况时的取消勾选

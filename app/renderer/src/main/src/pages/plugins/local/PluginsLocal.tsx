@@ -1,5 +1,10 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
-import {LocalExtraOperateProps, PluginLocalBackProps, PluginsLocalProps} from "./PluginsLocalType"
+import {
+    LocalExtraOperateProps,
+    PluginLocalBackProps,
+    PluginLocalDetailBackProps,
+    PluginsLocalProps
+} from "./PluginsLocalType"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {useLockFn, useMemoizedFn, useInViewport, useDebounceFn, useLatest} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
@@ -132,10 +137,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             setPluginGroupList(res.data)
         })
     })
-
-    const fetchList = useLockFn(
+    const filtersDetailRef = useRef<PluginFilterParams>() // 详情中的filter条件
+    const searchDetailRef = useRef<PluginSearchParams>() // 详情中的search条件
+    const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
-            if (latestLoadingRef.current) return
+            // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -144,12 +150,13 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             const params: PluginListPageMeta = !!reset
                 ? {page: 1, limit: 20}
                 : {
-                      page: response.Pagination.Page + 1,
-                      limit: response.Pagination.Limit || 20
+                      page: +response.Pagination.Page + 1,
+                      limit: +response.Pagination.Limit || 20
                   }
-
+            const queryFilters = filtersDetailRef.current ? filtersDetailRef.current : filters
+            const querySearch = searchDetailRef.current ? searchDetailRef.current : search
             const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams(filters, search, params)
+                ...convertLocalPluginsRequestParams(queryFilters, querySearch, params)
             }
             try {
                 const res = await apiQueryYakScript(query)
@@ -162,7 +169,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                         response: res
                     }
                 })
-                if (+res.Total === 1) {
+                if (+res.Pagination.Page === 1) {
                     setAllCheck(false)
                     setSelectList([])
                 }
@@ -170,12 +177,13 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             setTimeout(() => {
                 isLoadingRef.current = false
                 setLoading(false)
-            }, 300)
-        })
-    )
+            }, 200)
+        }),
+        {wait: 200, leading: true}
+    ).run
 
     // 滚动更多加载
-    const onUpdateList = useMemoizedFn((reset?: boolean) => {
+    const onUpdateList = useMemoizedFn(() => {
         fetchList()
     })
     const onSetActive = useMemoizedFn((type: TypeSelectOpt[]) => {
@@ -244,22 +252,17 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     /**新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {})
     const onBack = useMemoizedFn((backValues: PluginLocalBackProps) => {
+        searchDetailRef.current = undefined
+        filtersDetailRef.current = undefined
         setPlugin(undefined)
         setSearch(backValues.search)
+        setFilters(backValues.filter)
         setAllCheck(backValues.allCheck)
         setSelectList(backValues.selectList)
     })
-    /**
-     * @description 此方法防抖不要加leading：true,会影响search拿到最新得值，用useLatest也拿不到最新得；如若需要leading：true，则需要使用setTimeout包fetchList
-     */
-    const onSearch = useDebounceFn(
-        useMemoizedFn(() => {
-            fetchList(true)
-        }),
-        {
-            wait: 200
-        }
-    ).run
+    const onSearch = useMemoizedFn(() => {
+        fetchList(true)
+    })
     const pluginTypeSelect: TypeSelectOpt[] = useMemo(() => {
         return (
             filters.plugin_type?.map((ele) => ({
@@ -404,6 +407,21 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             })
         })
     })
+    /** 详情搜索事件 */
+    const onDetailSearch = useMemoizedFn((detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {
+        searchDetailRef.current = detailSearch
+        filtersDetailRef.current = detailFilter
+        fetchList(true)
+    })
+    const onDetailsBatchRemove = useMemoizedFn((newParams: PluginLocalDetailBackProps) => {
+        setAllCheck(newParams.allCheck)
+        setFilters(newParams.filter)
+        setSearch(newParams.search)
+        setSelectList(newParams.selectList)
+        setTimeout(() => {
+            onRemovePluginBatchBefore()
+        }, 200)
+    })
     return (
         <>
             {!!plugin && (
@@ -416,9 +434,13 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     onBack={onBack}
                     loadMoreData={onUpdateList}
                     defaultSearchValue={search}
+                    defaultFilter={filters}
                     dispatch={dispatch}
                     onRemovePluginDetailSingleBefore={onRemovePluginDetailSingleBefore}
                     onDetailExport={onExport}
+                    onDetailSearch={onDetailSearch}
+                    spinLoading={loading && isLoadingRef.current}
+                    onDetailsBatchRemove={onDetailsBatchRemove}
                 />
             )}
             <PluginsLayout
@@ -444,8 +466,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                     data: [
                                         {key: "export", label: "导出"},
                                         {key: "upload", label: "上传"},
-                                        {key: "remove", label: "删除"},
-                                        {key: "addToGroup", label: "添加至分组", disabled: allCheck}
+                                        {key: "remove", label: "删除"}
+                                        // {key: "addToGroup", label: "添加至分组", disabled: allCheck} //第二版放出来
                                     ],
                                     onClick: ({key}) => {
                                         switch (key) {
