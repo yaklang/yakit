@@ -54,8 +54,6 @@ export interface PluginUserListRefProps {
     onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
     /** 搜索功能回调 */
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
-    /** 查询第一页的loading */
-    spinLoading: boolean
 }
 export interface PluginRecycleListRefProps {
     allCheck: boolean
@@ -79,8 +77,6 @@ export interface PluginUserDetailProps {
     onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
     /** 搜索功能回调 */
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
-    /** 查询第一页的loading */
-    spinLoading: boolean
 }
 export interface PluginUserDetailBackProps {
     search: PluginSearchParams
