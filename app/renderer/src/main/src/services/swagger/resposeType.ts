@@ -27,7 +27,6 @@ export declare namespace API {
     required?: boolean;
     group?: string;
     extra_setting?: string;
-    buildIn_param?: boolean;
   }
   export interface YakitPluginListResponse extends Paging {
     data: YakitPluginDetail[];
@@ -225,7 +224,6 @@ export declare namespace API {
     tags?: string[];
     script_name: string;
     published_at?: number;
-    default_open: boolean;
     enable_plugin_selector?: boolean;
     plugin_selector_types?: string;
     is_general_module?: boolean;
@@ -398,6 +396,9 @@ export declare namespace API {
     extends PluginsWhere,
       PluginsWhereDelete {}
   export interface PluginsWhereDelete {
+    /**
+     * 删除原因
+     */
     description?: string;
     /**
      * 勾选删除
@@ -477,23 +478,34 @@ export declare namespace API {
     help?: string;
     tags?: string[];
     script_name: string;
-    published_at?: number;
-    default_open: boolean;
     enable_plugin_selector?: boolean;
     plugin_selector_types?: string;
     is_general_module?: boolean;
     download_total?: number;
-    contributors?: string;
     is_private?: boolean;
     group?: string;
     riskType?: string;
-    riskDetail?: PluginsRiskDetail[];
+    riskDetail?: PluginsRequestRiskDetail;
     /**
      * 补充说明
      */
     annotation?: string;
     isCorePlugin?: boolean;
-    isDnsLog?: boolean;
+  }
+  export interface PluginsRequestRiskDetail {
+    cweId: string;
+    /**
+     * 漏洞类型
+     */
+    riskType: string;
+    /**
+     * 漏洞描述
+     */
+    description: string;
+    /**
+     * 修复建议
+     */
+    solution: string;
   }
   export interface PluginsRecycleRequest extends PluginsWhere, PluginsRecycle {}
   export interface PluginsRecycle {
@@ -523,7 +535,6 @@ export declare namespace API {
   export interface PluginsDetail extends GormBaseModel {
     type: string;
     script_name: string;
-    default_open: boolean;
     tags: string;
     content: string;
     params?: YakitPluginParam[];
@@ -560,10 +571,6 @@ export declare namespace API {
     uuid: string;
     is_private: boolean;
     /**
-     * 提交修改插件合并的的人
-     */
-    submitter?: string;
-    /**
      * 复制源插件
      */
     base_plugin_id?: number;
@@ -573,7 +580,7 @@ export declare namespace API {
     base_script_name?: string;
     group?: string;
     riskType?: string;
-    riskDetail?: PluginsRiskDetail[];
+    riskDetail?: PluginsDetailRiskDetail;
     /**
      * 补充说明
      */
@@ -582,6 +589,25 @@ export declare namespace API {
      * 是否为内置插件
      */
     isCorePlugin?: boolean;
+    /**
+     * 协作者
+     */
+    collaborator?: CollaboratorInfo[];
+  }
+  export interface PluginsDetailRiskDetail {
+    cweId: string;
+    /**
+     * 漏洞类型
+     */
+    riskType: string;
+    /**
+     * 漏洞描述
+     */
+    description: string;
+    /**
+     * 修复建议
+     */
+    solution: string;
   }
   export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
   export interface PluginsAuditDetailResponse
@@ -619,13 +645,21 @@ export declare namespace API {
      */
     status: string;
     /**
-     * 为空时默认走新建 不为空时默认走修改
+     * 必传
      */
     uuid: string;
     /**
-     * 修改必传描述(我这没写成必传是因为新增和修改是一个按钮)
+     * 不通过时必传
      */
     logDescription?: string;
+    /**
+     * 默认不传为管理审核页面， 'log' 为日志审核页面
+     */
+    listType?: string;
+    /**
+     * 日志页的审核 必传此id
+     */
+    upPluginLogId?: number;
   }
   export interface PluginIncreResponse {
     day_incre_num: number;
@@ -966,6 +1000,10 @@ export declare namespace API {
     by_head_img: string;
     reply_num: number;
     is_stars?: boolean;
+  }
+  export interface CollaboratorInfo {
+    user_id: number;
+    head_img: string;
   }
   export interface ApplyPluginResponse {
     type?: string;
