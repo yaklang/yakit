@@ -385,6 +385,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         filtersDetailRef.current = undefined
         setPlugin(undefined)
         setSearch(backValues.search)
+        setFilters(backValues.filter)
         setAllCheck(backValues.allCheck)
         setSelectList(backValues.selectList)
     })
@@ -820,6 +821,7 @@ const YakitCombinationSearchCircle: React.FC<YakitCombinationSearchCircleProps> 
                 placeholder='请输入关键词搜索插件'
                 value={keyword}
                 onChange={onChangeInput}
+                onPressEnter={onSearch}
             />
             <div className={classNames(styles["yakit-combination-search-circle-icon"])} onClick={onClickSearch}>
                 <OutlineSearchIcon />
