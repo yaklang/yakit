@@ -66,7 +66,7 @@ export interface PluginsOnlineDetailProps {
     /** 搜索功能回调 */
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => any
     /** 查询第一页的loading */
-    spinLoading:boolean
+    spinLoading: boolean
 }
 
 export interface OnlineBackInfoProps {
@@ -83,6 +83,7 @@ export interface OnlineBackInfoProps {
 }
 export interface PluginOnlineDetailBackProps {
     search: PluginSearchParams
+    filter: PluginFilterParams
     selectList: string[]
     allCheck: boolean
 }
