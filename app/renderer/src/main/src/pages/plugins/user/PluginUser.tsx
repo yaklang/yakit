@@ -128,8 +128,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         onRemovePluginBatchBefore: () => {},
         onDownloadBatch: () => {},
         onRemovePluginDetailSingleBefore: () => {},
-        onDetailSearch: () => {},
-        spinLoading: false
+        onDetailSearch: () => {}
     })
 
     const pluginRecycleListRef = useRef<PluginRecycleListRefProps>({
@@ -235,7 +234,6 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     dispatch={dispatch}
                     onRemovePluginDetailSingleBefore={pluginUserListRef.current.onRemovePluginDetailSingleBefore}
                     onDetailSearch={pluginUserListRef.current.onDetailSearch}
-                    spinLoading={pluginUserListRef.current.spinLoading}
                 />
             )}
             <PluginsLayout
@@ -423,7 +421,6 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             if (allCheck) return response.pagemeta.total
             else return selectList.length
         }, [allCheck, selectList, response.pagemeta.total])
-        const spinLoading = loading && isLoadingRef.current //不用useMemo
         useImperativeHandle(
             ref,
             () => ({
@@ -433,10 +430,9 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 onRemovePluginBatchBefore,
                 onDownloadBatch,
                 onRemovePluginDetailSingleBefore,
-                onDetailSearch,
-                spinLoading
+                onDetailSearch
             }),
-            [allCheck, selectList, spinLoading]
+            [allCheck, selectList]
         )
         useEffect(() => {
             /** 返回到列表页中需要清除详情页中的search和filter条件 */
@@ -744,11 +740,15 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             onRemovePluginBatch()
         })
         /** 详情搜索事件 */
-        const onDetailSearch = useMemoizedFn((detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {
-            searchDetailRef.current = detailSearch
-            filtersDetailRef.current = detailFilter
-            fetchList(true)
-        })
+        const onDetailSearch = useMemoizedFn(
+            async (detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {
+                searchDetailRef.current = detailSearch
+                filtersDetailRef.current = detailFilter
+                try {
+                    await fetchList(true)
+                } catch (error) {}
+            }
+        )
         return (
             <>
                 <PluginsContainer

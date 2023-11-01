@@ -46,13 +46,13 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         defaultSearchValue,
         dispatch,
         onRemovePluginDetailSingleBefore,
-        onDetailSearch,
-        spinLoading
+        onDetailSearch
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
     const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
     const [loading, setLoading] = useState<boolean>(false)
+    const [spinLoading, setSpinLoading] = useState<boolean>(false)
     const [recalculation, setRecalculation] = useState<boolean>(false) // 更新item后刷新虚拟列表
     const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
 
@@ -160,10 +160,14 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         setSelectList([])
     })
     /**搜索需要清空勾选 */
-    const onSearch = useMemoizedFn(() => {
-        onDetailSearch(search, filters)
+    const onSearch = useMemoizedFn(async () => {
+        setSpinLoading(true)
+        try {
+            await onDetailSearch(search, filters)
+        } catch (error) {}
         setAllCheck(false)
         setSelectList([])
+        setSpinLoading(false)
     })
     if (!plugin) return null
     return (
