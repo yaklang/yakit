@@ -4,7 +4,6 @@ import {
     OutlineClouduploadIcon,
     OutlineDotshorizontalIcon,
     OutlineExportIcon,
-    OutlineFilterIcon,
     OutlineLogoutIcon,
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
@@ -17,11 +16,15 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakScript} from "@/pages/invoker/schema"
 import {useStore} from "@/store"
-import {FuncFilterPopover} from "../funcTemplate"
-import {PluginGroup, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {FilterPopoverBtn, FuncFilterPopover} from "../funcTemplate"
+import {YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {cloneDeep} from "bizcharts/lib/utils"
-import {PluginSearchParams} from "../baseTemplateType"
-import {PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
+import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
+import {
+    PluginLocalDetailBackProps,
+    PluginsLocalDetailProps,
+    RemoveMenuModalContentProps
+} from "./PluginsLocalType"
 import {yakitNotify} from "@/utils/notification"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {executeYakScriptByParams} from "@/pages/invoker/YakScriptCreator"
@@ -31,6 +34,7 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV} from "@/yakitGV"
 import {getRemoteValue} from "@/utils/kv"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {LoadingOutlined} from "@ant-design/icons"
 
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
@@ -51,15 +55,24 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         loadMoreData,
         loading,
         defaultSearchValue,
+        defaultFilter,
         dispatch,
         onRemovePluginDetailSingleBefore,
-        onDetailExport
+        onDetailExport,
+        onDetailSearch,
+        spinLoading,
+        onDetailsBatchRemove
     } = props
     const [executorShow, setExecutorShow] = useState<boolean>(true)
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [selectList, setSelectList] = useState<YakScript[]>(defaultSelectList)
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
+
+    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
+
+    const [removeLoading, setRemoveLoading] = useState<boolean>(false)
+
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return response.Total
@@ -77,6 +90,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     const onPluginBack = useMemoizedFn(() => {
         onBack({
             search,
+            filter: filters,
             selectList,
             allCheck
         })
@@ -197,30 +211,56 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 })
         })
     })
+    const onFilter = useMemoizedFn((value: PluginFilterParams) => {
+        setFilters(value)
+        onDetailSearch(search, value)
+        setAllCheck(false)
+        setSelectList([])
+    })
+    /**搜索需要清空勾选 */
+    const onSearch = useMemoizedFn(() => {
+        onDetailSearch(search, filters)
+        setAllCheck(false)
+        setSelectList([])
+    })
+    /**详情批量删除 */
+    const onBatchRemove = useMemoizedFn(() => {
+        const params: PluginLocalDetailBackProps = {allCheck, selectList, search, filter: filters, selectNum}
+        onDetailsBatchRemove(params)
+        setAllCheck(false)
+        setSelectList([])
+    })
     if (!plugin) return null
     return (
         <>
             <PluginDetails<YakScript>
                 title='本地插件'
                 filterNode={
-                    <PluginGroup
+                    <>
+                        {/* 第二版放出来 */}
+                        {/* <PluginGroup
                         checkList={checkList}
                         selectGroup={selectGroup}
                         setSelectGroup={setSelectGroup}
                         isSelectAll={allCheck}
-                    />
+                    /> */}
+                    </>
                 }
                 filterExtra={
                     <div className={"details-filter-extra-wrapper"}>
-                        <YakitButton type='text2' icon={<OutlineFilterIcon />} />
+                        <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='local' />
                         <div style={{height: 12}} className='divider-style'></div>
                         <Tooltip title='上传插件' overlayClassName='plugins-tooltip'>
                             <YakitButton type='text2' icon={<OutlineExportIcon />} />
                         </Tooltip>
                         <div style={{height: 12}} className='divider-style'></div>
+                        {removeLoading ? (
+                            <YakitButton type='text2' icon={<LoadingOutlined />} />
+                        ) : (
                         <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
-                            <YakitButton type='text2' icon={<OutlineTrashIcon />} />
+                                <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onBatchRemove} />
                         </Tooltip>
+                        )}
                         <div style={{height: 12}} className='divider-style'></div>
                         <YakitButton type='text'>新建插件</YakitButton>
                     </div>
@@ -263,7 +303,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 onBack={onPluginBack}
                 search={search}
                 setSearch={setSearch}
-                onSearch={() => {}}
+                onSearch={onSearch}
+                spinLoading={spinLoading}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs defaultActiveKey='execute' tabPosition='right' className='plugins-tabs'>
