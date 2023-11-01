@@ -225,8 +225,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             setInitTotal(+res.pagemeta.total)
         })
     })
-    const filtersDetailRef = useRef<PluginFilterParams>()
-    const searchDetailRef = useRef<PluginSearchParams>()
+    const filtersDetailRef = useRef<PluginFilterParams>() // 详情中的filter条件
+    const searchDetailRef = useRef<PluginSearchParams>() // 详情中的search条件
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
