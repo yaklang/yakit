@@ -1,5 +1,5 @@
 import React, {ReactNode, memo, useEffect, useMemo, useRef, useState} from "react"
-import {Anchor, Radio, Tooltip} from "antd"
+import {Anchor, Radio} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineAdjustmentsIcon,
@@ -16,27 +16,29 @@ import {
     OutlineStorageIcon,
     OutlineViewgridIcon
 } from "@/assets/icon/outline"
-import {SolidExclamationIcon} from "@/assets/icon/solid"
 import {
     PluginBaseParamProps,
     PluginDataProps,
     PluginParamDataProps,
     PluginSettingParamProps,
-    PluginTypeParamProps
+    PluginTypeParamProps,
+    YakParamProps,
+    localYakInfo
 } from "../pluginsType"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {PluginModifyInfo, PluginModifySetting, pluginTypeToName} from "../baseTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {CodeGV} from "@/yakitGV"
 import {PluginInfoRefProps, PluginSettingRefProps} from "../baseTemplateType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {yakitNotify} from "@/utils/notification"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {SmokingEvaluateResponse} from "@/pages/pluginDebugger/SmokingEvaluate"
-import {PluginTestErrorIcon} from "../icon"
 import {PluginGV} from "../utils"
+import {CodeScoreModal, FuncBtn} from "../funcTemplate"
+import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
+import {convertLocalToLocalInfo, convertLocalToRemoteInfo, uploadOnlinePlugin} from "./utils"
+import {API} from "@/services/swagger/resposeType"
+import {PortScanPluginParams} from "./builtInData"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
@@ -62,11 +64,16 @@ const DefaultKindList: {icon: ReactNode; name: string; key: string}[] = [
 ]
 
 interface PluginEditDetailsProps {
-    info?: any
+    info?: YakScript
 }
 
 export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     const {info} = props
+
+    useEffect(() => {
+        if (info) {
+        }
+    }, [info])
 
     // 是否为编辑状态
     const isModify = useMemo(() => !!info, [info])
@@ -74,6 +81,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     // 页面分块步骤式展示-相关逻辑
     const [path, setPath] = useState<"type" | "info" | "setting">("type")
     const bodyRef = useRef<HTMLDivElement>(null)
+    // 各信息块切换事件
     const onViewChange = useMemoizedFn((value: string) => {
         switch (value) {
             case "#plugin-details-info":
@@ -91,47 +99,46 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
     // 插件类型信息-相关逻辑
     const [typeParams, setTypeParams, getTypeParams] = useGetState<PluginTypeParamProps>({
-        type: "yak",
-        kind: "bug"
+        Type: "yak",
+        Kind: "bug"
     })
     const onType = useMemoizedFn((value: string) => {
         let typeData: PluginTypeParamProps = {...getTypeParams()}
-        if (typeData.type === value) return
-        typeData = {...typeData, type: value}
+        if (typeData.Type === value) return
+        typeData = {...typeData, Type: value}
 
         // 不同类型对应的基础信息和配置信息的重置
         let infoData: PluginBaseParamProps = {...(fetchInfoData() || getInfoParams())}
         let settingData: PluginSettingParamProps = {...(fetchSettingData() || getSettingParams())}
 
         if (value === "codec") {
-            typeData = {type: value, kind: "other"}
+            typeData = {Type: value, Kind: "other"}
             // codec脚本类型 没有 漏洞种类类型
             infoData = {
                 ...infoData,
-                riskType: undefined
+                RiskType: undefined,
+                RiskDetail: undefined,
+                RiskAnnotation: undefined
             }
         }
         // 切换脚本类型时, 删除DNSLog和HTTP数据包变形代表的tag字段
         infoData = {
             ...infoData,
-            tags: infoData.tags?.filter((item) => {
+            Tags: infoData.Tags?.filter((item) => {
                 return item !== PluginGV.PluginYakDNSLogSwitch && item !== PluginGV.PluginCodecHttpSwitch
             })
         }
-
+        // 插件类型为port-scan时，填充两个内置参数配置(内置参数信息在变量 PortScanPluginParams)
         if (value === "port-scan") {
-            const baseArr: PluginParamDataProps[] = [
-                {
-                    Field: "target",
-                    FieldVerbose: "扫描的目标",
-                    TypeVerbose: "string",
-                    Required: true
-                },
-                {Field: "ports", FieldVerbose: "端口", TypeVerbose: "string", Required: false, DefaultValue: "80"}
-            ]
+            const targetLen = (settingData.Params || []).filter((item) => item.Field === "target").length
+            const portLen = (settingData.Params || []).filter((item) => item.Field === "ports").length
+            const baseArr: PluginParamDataProps[] = []
+            if (targetLen === 0) baseArr.push(PortScanPluginParams["target"])
+            if (portLen === 0) baseArr.push(PortScanPluginParams["ports"])
+
             settingData = {
                 ...settingData,
-                params: baseArr.concat(settingData.params || [])
+                Params: baseArr.concat(settingData.Params || [])
             }
         } else {
             settingData = {...settingData}
@@ -144,32 +151,40 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         setSettingParams({...settingData})
     })
     const onKind = useMemoizedFn((value: string) => {
-        if (typeParams.kind === value) return
-        setTypeParams({...typeParams, kind: value})
+        if (typeParams.Kind === value) return
+        setTypeParams({...typeParams, Kind: value})
     })
     // 插件基础信息-相关逻辑
     const infoRef = useRef<PluginInfoRefProps>(null)
     const [infoParams, setInfoParams, getInfoParams] = useGetState<PluginBaseParamProps>({
-        name: ""
+        ScriptName: ""
     })
-    // 获取基础信息组件内容
+    // 获取基础信息组件内的数据(不考虑验证)
     const fetchInfoData = useMemoizedFn(() => {
         if (infoRef.current) {
             return infoRef.current.onGetValue()
         }
         return undefined
     })
-    // DNSLog和HTTP数据包变形开关实质改变插件的tag
+    // 删除某些tag 触发  DNSLog和HTTP数据包变形开关的改变
     const onTagsCallback = useMemoizedFn(() => {
         setInfoParams({...(fetchInfoData() || getInfoParams())})
     })
+    // DNSLog和HTTP数据包变形开关的改变 影响 tag的增删
+    const onSwitchToTags = useMemoizedFn((value: string[]) => {
+        setInfoParams({
+            ...(fetchInfoData() || getInfoParams()),
+            Tags: value
+        })
+    })
+
     // 插件配置信息-相关逻辑
     const settingRef = useRef<PluginSettingRefProps>(null)
     const [settingParams, setSettingParams, getSettingParams] = useGetState<PluginSettingParamProps>({
-        params: [],
-        content: ""
+        Params: [],
+        Content: ""
     })
-    // 获取配置信息组件内容
+    // 获取配置信息组件内的数据(不考虑验证)
     const fetchSettingData = useMemoizedFn(() => {
         if (settingRef.current) {
             return settingRef.current.onGetValue()
@@ -194,6 +209,8 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     })
 
     const [loading, setLoading] = useState<boolean>(false)
+
+    // 获取插件所有配置参数
     const convertPluginInfo = useMemoizedFn(async () => {
         setLoading(true)
 
@@ -201,14 +218,14 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             ScriptName: "",
             Type: "",
             Kind: "",
-            content: ""
+            Content: ""
         }
-        if (!getTypeParams().kind || !getTypeParams().type) {
+        if (!getTypeParams().Kind || !getTypeParams().Type) {
             errorHint("请选择脚本类型和插件类型")
             return
         }
-        data.Type = getTypeParams().type
-        data.Kind = getTypeParams().kind
+        data.Type = getTypeParams().Type
+        data.Kind = getTypeParams().Kind
 
         if (!infoRef.current) {
             errorHint("未获取到基础信息，请重试")
@@ -219,12 +236,12 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             document.querySelector("#plugin-details-info")?.scrollIntoView(true)
             return
         } else {
-            data.ScriptName = info?.name
-            data.Help = info?.help || undefined
-            data.riskType = info?.riskType || undefined
-            data.riskDetail = info?.riskDetail || undefined
-            data.risk_annotation = info?.risk_annotation || undefined
-            data.Tags = (info?.tags || []).join(",") || undefined
+            data.ScriptName = info?.ScriptName
+            data.Help = data.Kind === "bug" ? undefined : info?.Help
+            data.RiskType = data.Kind === "bug" ? info?.RiskType : undefined
+            data.RiskDetail = data.Kind === "bug" ? info?.RiskDetail : undefined
+            data.RiskAnnotation = data.Kind === "bug" ? info?.RiskAnnotation : undefined
+            data.Tags = (info?.Tags || []).join(",") || undefined
         }
 
         if (!settingRef.current) {
@@ -236,36 +253,107 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             document.querySelector("#plugin-details-settingRef")?.scrollIntoView(true)
             return
         } else {
-            data.Params = setting?.params || []
+            data.Params = (setting?.Params || []).map((item) => {
+                const obj: YakParamProps = {
+                    ...item,
+                    ExtraSetting: item.ExtraSetting ? JSON.stringify(item.ExtraSetting) : ""
+                }
+                return obj
+            })
             data.EnablePluginSelector = setting?.EnablePluginSelector
             data.PluginSelectorTypes = setting?.PluginSelectorTypes || ""
         }
 
-        data.content = code
+        data.Content = code
 
         return data
     })
+    // 判断本地是否有重名插件
+    const checkDuplicatePluginName = useMemoizedFn((name: string, callback: (value: boolean) => any) => {
+        if (!name) {
+            yakitNotify("error", "插件名错误，请重试!")
+            callback(false)
+        }
 
+        const newParams: QueryYakScriptRequest = {
+            IncludedScriptNames: [name],
+            Pagination: {
+                Limit: 1,
+                Page: 1,
+                Order: "desc",
+                OrderBy: "updated_at"
+            }
+        }
+        ipcRenderer
+            .invoke("QueryYakScript", newParams)
+            .then((item: QueryYakScriptsResponse) => {
+                if (+item.Total > 0) {
+                    yakitNotify("error", "保存插件失败，插件名重复")
+                    callback(false)
+                } else callback(true)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "查询插件名重复失败: " + `${e}`)
+                callback(false)
+            })
+    })
+    // 插件本地保存
+    const saveLocal = useMemoizedFn((modify: PluginDataProps) => {
+        const request: localYakInfo = convertLocalToLocalInfo(isModify, {info: info, modify: modify})
+        setLoading(true)
+        ipcRenderer
+            .invoke("SaveLocalPlugin", request)
+            .then((data) => {
+                yakitNotify("success", "创建 / 保存 插件成功")
+
+                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", `保存 Yak 模块失败: ${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            })
+    })
+
+    /** 页面右上角的按钮组操作 start */
+    // 调试
     const onDebug = useMemoizedFn(() => {})
+    // 同步至云端
     const onSyncCloud = useMemoizedFn(async () => {
         const obj: PluginDataProps | undefined = await convertPluginInfo()
         if (!obj) return
-
+        modifyInfo.current = convertLocalToRemoteInfo(isModify, {info: info, modify: obj})
+        console.log(123, modifyInfo.current)
         setCloudHint({isCopy: false, visible: true})
     })
+    // 复制至云端
     const onCopyCloud = useMemoizedFn(async () => {
         const obj: PluginDataProps | undefined = await convertPluginInfo()
         if (!obj) return
-
+        modifyInfo.current = convertLocalToRemoteInfo(isModify, {info: info, modify: obj})
+        console.log(123, modifyInfo.current)
         setCloudHint({isCopy: true, visible: true})
     })
+    // 提交
     const onSubmit = useMemoizedFn(() => {})
+    // 保存
     const onSave = useMemoizedFn(async () => {
         const obj: PluginDataProps | undefined = await convertPluginInfo()
         if (!obj) return
+        console.log("obj", obj)
+
+        if (!isModify)
+            checkDuplicatePluginName(obj?.ScriptName || "", (value) => {
+                if (value) saveLocal(obj)
+            })
+        else saveLocal(obj)
     })
 
     // 同步&复制云端
+    const modifyInfo = useRef<API.PluginsEditRequest>()
     const [cloudHint, setCloudHint] = useState<{isCopy: boolean; visible: boolean}>({isCopy: false, visible: false})
     const onCloudHintCallback = useMemoizedFn((isCallback: boolean, param?: {type?: string; name?: string}) => {
         // 手动关闭弹窗
@@ -277,11 +365,18 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         // 点击弹窗的提交按钮
         if (cloudHint.isCopy) {
             // 复制的插件直接为私密，不走基础检测流程
+            if (modifyInfo.current) {
+                uploadOnlinePlugin(modifyInfo.current, (value) => {
+                    console.log("upload", value)
+                })
+            }
         } else {
             // 公开的新插件需要走基础检测流程
             if (param && param?.type === "public") {
-                setCloudHint({isCopy: false, visible: false})
                 setPluginTest(true)
+                setTimeout(() => {
+                    setCloudHint({isCopy: false, visible: false})
+                }, 100)
             }
             // 私密的插件直接保存，不用走基础检测流程
         }
@@ -302,14 +397,14 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                     <div className={styles["title-style"]}>{isModify ? "修改插件" : "新建插件"}</div>
                     {isModify && (
                         <div className={styles["title-extra-wrapper"]}>
-                            <YakitTag color={pluginTypeToName[typeParams.type].color as any}>
-                                {pluginTypeToName[typeParams.type].name}
+                            <YakitTag color={pluginTypeToName[typeParams.Type].color as any}>
+                                {pluginTypeToName[typeParams.Type].name}
                             </YakitTag>
                             <div
                                 className={classNames(styles["script-name"], "yakit-content-single-ellipsis")}
-                                title={infoParams.name}
+                                title={infoParams.ScriptName}
                             >
-                                {infoParams.name}
+                                {infoParams.ScriptName}
                             </div>
                         </div>
                     )}
@@ -360,106 +455,53 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                 </div>
                 <div className={styles["header-extra"]}>
                     <div className={styles["extra-btn"]}>
-                        <YakitButton
-                            className={isModify ? styles["edit-btn-content"] : styles["new-btn-content"]}
-                            size='large'
+                        <FuncBtn
+                            maxWidth={isModify ? 1100 : 950}
+                            icon={<OutlineCodeIcon />}
                             type='outline2'
-                            onClick={onDebug}
-                        >
-                            <OutlineCodeIcon />
-                            调试
-                        </YakitButton>
-                        <Tooltip title='调试' overlayClassName='plugins-tooltip'>
-                            <YakitButton
-                                className={isModify ? styles["edit-btn-icon"] : styles["new-btn-icon"]}
-                                size='large'
-                                type='outline2'
-                                icon={<OutlineCodeIcon />}
-                                onClick={onDebug}
-                            />
-                        </Tooltip>
-
-                        {!isModify && (
-                            <>
-                                <YakitButton
-                                    className={styles["new-btn-content"]}
-                                    size='large'
-                                    type='outline1'
-                                    onClick={onSyncCloud}
-                                >
-                                    <OutlineClouduploadIcon />
-                                    同步至云端
-                                </YakitButton>
-                                <Tooltip title='同步至云端' overlayClassName='plugins-tooltip'>
-                                    <YakitButton
-                                        className={styles["new-btn-icon"]}
-                                        size='large'
-                                        type='outline1'
-                                        icon={<OutlineClouduploadIcon />}
-                                        onClick={onSyncCloud}
-                                    />
-                                </Tooltip>
-                            </>
-                        )}
-
-                        {isModify && (
-                            <>
-                                <YakitButton
-                                    className={styles["edit-btn-content"]}
-                                    size='large'
-                                    type='outline2'
-                                    onClick={onCopyCloud}
-                                >
-                                    <OutlineDocumentduplicateIcon />
-                                    复制至云端
-                                </YakitButton>
-                                <Tooltip title='复制至云端' overlayClassName='plugins-tooltip'>
-                                    <YakitButton
-                                        className={styles["edit-btn-icon"]}
-                                        size='large'
-                                        type='outline2'
-                                        icon={<OutlineDocumentduplicateIcon />}
-                                        onClick={onCopyCloud}
-                                    />
-                                </Tooltip>
-
-                                <YakitButton
-                                    className={styles["edit-btn-content"]}
-                                    size='large'
-                                    type='outline1'
-                                    onClick={onSubmit}
-                                >
-                                    <OutlinePaperairplaneIcon />
-                                    提交
-                                </YakitButton>
-                                <Tooltip title='提交' overlayClassName='plugins-tooltip'>
-                                    <YakitButton
-                                        className={styles["edit-btn-icon"]}
-                                        size='large'
-                                        type='outline1'
-                                        icon={<OutlinePaperairplaneIcon />}
-                                        onClick={onSubmit}
-                                    />
-                                </Tooltip>
-                            </>
-                        )}
-
-                        <YakitButton
-                            className={isModify ? styles["edit-btn-content"] : styles["new-btn-content"]}
                             size='large'
-                            onClick={onSave}
-                        >
-                            <OutlineStorageIcon />
-                            保存
-                        </YakitButton>
-                        <Tooltip title='保存' overlayClassName='plugins-tooltip'>
-                            <YakitButton
-                                className={isModify ? styles["edit-btn-icon"] : styles["new-btn-icon"]}
+                            name={"调试"}
+                            onClick={onDebug}
+                        />
+
+                        {isModify ? (
+                            <>
+                                <FuncBtn
+                                    maxWidth={1100}
+                                    icon={<OutlineDocumentduplicateIcon />}
+                                    type='outline2'
+                                    size='large'
+                                    name={"复制至云端"}
+                                    onClick={onCopyCloud}
+                                />
+
+                                <FuncBtn
+                                    maxWidth={1100}
+                                    icon={<OutlinePaperairplaneIcon />}
+                                    type='outline1'
+                                    size='large'
+                                    name={"复制至云端"}
+                                    onClick={onSubmit}
+                                />
+                            </>
+                        ) : (
+                            <FuncBtn
+                                maxWidth={950}
+                                icon={<OutlineClouduploadIcon />}
+                                type='outline1'
                                 size='large'
-                                icon={<OutlineStorageIcon />}
-                                onClick={onSave}
+                                name={"同步至云端"}
+                                onClick={onSyncCloud}
                             />
-                        </Tooltip>
+                        )}
+
+                        <FuncBtn
+                            maxWidth={isModify ? 1100 : 950}
+                            icon={<OutlineStorageIcon />}
+                            size='large'
+                            name={"保存"}
+                            onClick={onSave}
+                        />
                     </div>
                 </div>
             </div>
@@ -479,7 +521,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                                 <TypeTag
                                                     {...item}
                                                     disabled={isModify || item.key === "lua"}
-                                                    checked={typeParams.type === item.key}
+                                                    checked={typeParams.Type === item.key}
                                                     setCheck={() => onType(item.key)}
                                                 />
                                             )
@@ -491,7 +533,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                                 <TypeTag
                                                     {...item}
                                                     disabled={isModify || item.key === "lua"}
-                                                    checked={typeParams.type === item.key}
+                                                    checked={typeParams.Type === item.key}
                                                     setCheck={() => onType(item.key)}
                                                 />
                                             )
@@ -499,7 +541,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                     </div>
                                 </div>
                             </div>
-                            {typeParams.type !== "codec" && (
+                            {typeParams.Type !== "codec" && (
                                 <div className={styles["body-container"]}>
                                     <div className={styles["type-title"]}>插件类型</div>
                                     <div className={styles["type-kind"]}>
@@ -508,7 +550,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                                 <KindTag
                                                     {...item}
                                                     disabled={isModify}
-                                                    checked={typeParams.kind === item.key}
+                                                    checked={typeParams.Kind === item.key}
                                                     setCheck={() => onKind(item.key)}
                                                 />
                                             )
@@ -525,7 +567,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                             <PluginModifyInfo
                                 ref={infoRef}
                                 isEdit={isModify}
-                                kind={typeParams.kind}
+                                kind={typeParams.Kind}
                                 data={infoParams}
                                 tagsCallback={onTagsCallback}
                             />
@@ -536,10 +578,10 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                         <div className={styles["header-wrapper"]}>插件配置</div>
                         <div className={styles["setting-body"]}>
                             <PluginModifySetting
-                                type={typeParams.type}
-                                tags={infoParams.tags || []}
-                                setTags={(value) => setInfoParams({...getInfoParams(), tags: value})}
                                 ref={settingRef}
+                                type={typeParams.Type}
+                                tags={infoParams.Tags || []}
+                                setTags={onSwitchToTags}
                                 data={settingParams}
                             />
                             <div className={styles["setting-editor-wrapper"]}>
@@ -567,11 +609,12 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             </div>
 
             <PluginSyncAndCopyModal {...cloudHint} setVisible={onCloudHintCallback} />
-            <PluginBaseInspect
-                type={getTypeParams().type}
-                code={code}
+            <UploadPluginModal
+                plugin={modifyInfo.current}
                 visible={pluginTest}
-                setVisible={onTestCallback}
+                onCancel={() => {
+                    setPluginTest(false)
+                }}
             />
         </div>
     )
@@ -619,7 +662,6 @@ const TypeTag: React.FC<TypeTagProps> = memo((props) => {
         </div>
     )
 })
-
 interface KindTagProps {
     checked: boolean
     setCheck: () => any
@@ -771,118 +813,35 @@ const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((prop
     )
 })
 
-interface PluginBaseInspectProps {
-    type: string
-    code: string
+interface UploadPluginModalProps {
+    plugin?: API.PluginsEditRequest
     visible: boolean
-    setVisible: (value: boolean) => any
+    /** 关闭弹窗(true:合格|false:不合格) */
+    onCancel: (value: boolean) => any
 }
-/** @name 插件基础检测 */
-const PluginBaseInspect: React.FC<PluginBaseInspectProps> = memo((props) => {
-    const {type, code, visible, setVisible} = props
+/** @name 插件源码评分-合格后自动上传 */
+const UploadPluginModal: React.FC<UploadPluginModalProps> = memo((props) => {
+    const {plugin, visible, onCancel} = props
 
-    const [loading, setLoading] = useState<boolean>(true)
-    const [response, setResponse] = useState<SmokingEvaluateResponse>()
+    console.log("plugin", plugin)
 
-    useEffect(() => {
-        if (visible) {
-            onTest()
-        } else {
-            setLoading(true)
-            setResponse(undefined)
+    const onCallback = useMemoizedFn((value: boolean) => {
+        onCancel(value)
+        if (value) {
+            if (plugin) {
+                uploadOnlinePlugin(plugin, (value) => {
+                    console.log("upload", value)
+                })
+            }
         }
-    }, [visible])
-
-    const onTest = useMemoizedFn(() => {
-        setLoading(true)
-        ipcRenderer
-            .invoke("SmokingEvaluatePlugin", {PluginType: type, Code: code})
-            .then((rsp: SmokingEvaluateResponse) => {
-                if (!visible) return
-                setResponse(rsp)
-            })
-            .catch((e) => {
-                yakitNotify("error", `插件基础测试失败: ${e}`)
-            })
-            .finally(() => {
-                setLoading(false)
-            })
     })
 
     return (
-        <YakitModal
-            title='插件基础检测'
-            type='white'
-            width={506}
-            centered={true}
-            maskClosable={false}
-            closable={true}
+        <CodeScoreModal
+            type={plugin?.type || ""}
+            code={plugin?.content || ""}
             visible={visible}
-            okButtonProps={{style: {display: "none"}}}
-            footer={loading ? undefined : null}
-            onCancel={() => setVisible(false)}
-        >
-            <div className={styles["plugin-base-inspect-body"]}>
-                <div className={styles["header-wrapper"]}>
-                    <div className={styles["title-style"]}>检测项包含：</div>
-                    <div className={styles["header-body"]}>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>1</div>
-                            基础编译测试，判断语法是否符合规范，是否存在不正确语法；
-                        </div>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>2</div>
-                            把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
-                        </div>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>3</div>
-                            检查插件执行过程是否会发生崩溃。
-                        </div>
-                    </div>
-                </div>
-                {loading && (
-                    <div className={styles["loading-wrapper"]}>
-                        <div className={styles["loading-body"]}>
-                            <div className={styles["loading-icon"]}>
-                                <YakitSpin spinning={true} />
-                            </div>
-                            <div className={styles["loading-title"]}>
-                                <div className={styles["title-style"]}>检测中，请耐心等待...</div>
-                                <div className={styles["subtitle-style"]}>
-                                    一般来说，检测将会在 <span className={styles["active-style"]}>10-20s</span> 内结束
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {!loading && (
-                    <div className={styles["loading-wrapper"]}>
-                        <div className={styles["error-list"]}>
-                            {response && (
-                                <div className={styles["list-body"]}>
-                                    {(response?.Results || []).map((item) => {
-                                        return (
-                                            <div className={styles["list-opt"]}>
-                                                <div className={styles["opt-header"]}>
-                                                    <PluginTestErrorIcon />
-                                                    {item.Item}
-                                                </div>
-                                                <div className={styles["opt-content"]}>{item.Suggestion}</div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            )}
-                            {response && (response?.Results || []).length > 0 && (
-                                <div className={styles["opt-danger"]}>
-                                    <SolidExclamationIcon />
-                                    <div className={styles["content-style"]}>（上传失败，请修复后再上传）</div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-        </YakitModal>
+            onCancel={onCallback}
+        />
     )
 })

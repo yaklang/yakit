@@ -2,6 +2,7 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {pluginTypeToName} from "./baseTemplate"
 import {
     AuthorImgProps,
+    CodeScoreModalProps,
     FilterPopoverBtnProps,
     FuncBtnProps,
     FuncFilterPopoverProps,
@@ -41,7 +42,7 @@ import {
     OutlineViewlistIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {SolidCheckIcon} from "@/assets/icon/solid"
+import {SolidCheckIcon, SolidExclamationIcon} from "@/assets/icon/solid"
 import {
     SolidOfficialpluginIcon,
     SolidYakitPluginIcon,
@@ -60,7 +61,7 @@ import {Dropdown, Form, Tooltip} from "antd"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {formatDate} from "@/utils/timeUtil"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {PluginsGridCheckIcon} from "./icon"
+import {PluginTestErrorIcon, PluginsGridCheckIcon} from "./icon"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
 import {SolidThumbUpIcon} from "@/assets/newIcon"
@@ -80,10 +81,14 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {API} from "@/services/swagger/resposeType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {SmokingEvaluateResponse} from "../pluginDebugger/SmokingEvaluate"
 
 import classNames from "classnames"
 import "./plugins.scss"
 import styles from "./funcTemplate.module.scss"
+
+const {ipcRenderer} = window.require("electron")
 
 /** @name 标题栏的搜索选项组件 */
 export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
@@ -806,7 +811,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
             return <AuthorImg icon={pluginTypeToName[type].icon} />
         }
         return <AuthorImg src={img || ""} builtInIcon={official ? "official" : undefined} />
-    }, [isCorePlugin])
+    }, [isCorePlugin, img, official, type])
 
     return (
         <div className={styles["list-layout-opt-wrapper"]} onClick={onclick}>
@@ -1043,7 +1048,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
             return <AuthorImg icon={pluginTypeToName[type].icon} />
         }
         return <AuthorImg src={img || ""} builtInIcon={official ? "official" : undefined} />
-    }, [isCorePlugin])
+    }, [isCorePlugin, img, official, type])
     return (
         <div className={styles["grid-layout-opt-wrapper"]} onClick={onclick}>
             <div
@@ -1136,7 +1141,12 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
 /** @name 用户头像(头像右下角带小icon) */
 export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
     const {size = "middle", src, builtInIcon, icon} = props
-    const [srcUrl, setSrcUrl] = useState<string>(src || YakitLogo)
+    const [isError, setIsError] = useState<boolean>(false)
+    const srcUrl = useMemo(() => {
+        if (isError) return YakitLogo
+        if (src) return src
+        else return YakitLogo
+    }, [src, isError])
 
     const imgClass = useMemo(() => {
         if (size === "large") return styles["author-large-img-style"]
@@ -1179,7 +1189,9 @@ export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
     }, [builtInIcon, icon])
     const onErrorImg = useMemoizedFn((e) => {
         if (e.type === "error") {
-            setSrcUrl(YakitLogo)
+            setIsError(true)
+        } else {
+            setIsError(false)
         }
     })
     return (
@@ -1499,5 +1511,144 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
         >
             <YakitButton type='text2' icon={<OutlineFilterIcon />} isHover={visible} isActive={isActive} />
         </YakitPopover>
+    )
+})
+
+/** @name 插件源码评分弹窗 */
+export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
+    const {type, code, visible, onCancel} = props
+
+    const [loading, setLoading] = useState<boolean>(true)
+    const [response, setResponse] = useState<SmokingEvaluateResponse>()
+
+    useEffect(() => {
+        if (visible) {
+            onTest()
+        } else {
+            setLoading(true)
+            setResponse(undefined)
+        }
+    }, [visible])
+
+    // 开始评分
+    const onTest = useMemoizedFn(() => {
+        setLoading(true)
+        console.log('type',{PluginType: type, Code: code})
+        ipcRenderer
+            .invoke("SmokingEvaluatePlugin", {PluginType: type, Code: code})
+            .then((rsp: SmokingEvaluateResponse) => {
+                if (!visible) return
+                setResponse(rsp)
+                if (+rsp?.Score >= 60) {
+                    setTimeout(() => {
+                        onSuccess()
+                    }, 1000)
+                }
+            })
+            .catch((e) => {
+                yakitNotify("error", `插件基础测试失败: ${e}`)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    })
+
+    // 不合格|取消
+    const onFailed = useMemoizedFn(() => {
+        onCancel(false)
+    })
+    // 合格
+    const onSuccess = useMemoizedFn(() => {
+        onCancel(true)
+    })
+
+    return (
+        <YakitModal
+            title='插件基础检测'
+            type='white'
+            width={506}
+            centered={true}
+            maskClosable={false}
+            closable={true}
+            visible={visible}
+            footer={null}
+            onCancel={onFailed}
+        >
+            <div className={styles["code-score-modal"]}>
+                <div className={styles["header-wrapper"]}>
+                    <div className={styles["title-style"]}>检测项包含：</div>
+                    <div className={styles["header-body"]}>
+                        <div className={styles["opt-content"]}>
+                            <div className={styles["content-order"]}>1</div>
+                            基础编译测试，判断语法是否符合规范，是否存在不正确语法；
+                        </div>
+                        <div className={styles["opt-content"]}>
+                            <div className={styles["content-order"]}>2</div>
+                            把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
+                        </div>
+                        <div className={styles["opt-content"]}>
+                            <div className={styles["content-order"]}>3</div>
+                            检查插件执行过程是否会发生崩溃。
+                        </div>
+                    </div>
+                </div>
+                {loading && (
+                    <div className={styles["loading-wrapper"]}>
+                        <div className={styles["loading-body"]}>
+                            <div className={styles["loading-icon"]}>
+                                <YakitSpin spinning={true} />
+                            </div>
+                            <div className={styles["loading-title"]}>
+                                <div className={styles["title-style"]}>检测中，请耐心等待...</div>
+                                <div className={styles["subtitle-style"]}>
+                                    一般来说，检测将会在 <span className={styles["active-style"]}>10-20s</span> 内结束
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {!loading && (
+                    <div className={styles["loading-wrapper"]}>
+                        <div className={styles["error-list"]}>
+                            {response && (
+                                <div className={styles["list-body"]}>
+                                    {(response?.Results || []).map((item) => {
+                                        return (
+                                            <div className={styles["list-opt"]}>
+                                                <div className={styles["opt-header"]}>
+                                                    <PluginTestErrorIcon />
+                                                    {item.Item}
+                                                </div>
+                                                <div className={styles["opt-content"]}>{item.Suggestion}</div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                            {response && (+response?.Score || 0) < 60 && (
+                                <div className={styles["opt-results"]}>
+                                    <SolidExclamationIcon />
+                                    <div className={styles["content-style"]}>（上传失败，请修复后再上传）</div>
+                                </div>
+                            )}
+                            {response && (+response?.Score || 0) >= 60 && (
+                                <div className={styles["opt-results"]}>
+                                    <div className={styles["success-score"]}>
+                                        {+response?.Score}
+                                        <span className={styles["suffix-style"]}>分</span>
+                                    </div>
+                                    <div className={styles["content-style"]}>（表现良好，开始上传插件中...）</div>
+                                </div>
+                            )}
+                            {!response && (
+                                <div className={styles["opt-results"]}>
+                                    <div className={styles["content-style"]}>检查错误，请关闭后再次尝试!</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </YakitModal>
     )
 })
