@@ -3344,6 +3344,7 @@ message SaveYakScriptToOnlineRequest {
   repeated string ScriptNames = 1;
   string Token = 2;
   bool IsPrivate = 3;
+  bool All = 4;
 }
 
 message SaveYakScriptToOnlineResponse {
