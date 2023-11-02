@@ -4,7 +4,7 @@ import { Form, Menu, Select} from "antd";
 import { Uint8ArrayToString} from "@/utils/str";
 import codecStyle from "./style.module.css";
 import {YakCodeEditor} from "@/utils/editors";
-import {YakScript, YakScriptParam} from "@/pages/invoker/schema";
+import {YakScript} from "@/pages/invoker/schema";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {failed} from "@/utils/notification";
 import menuStyle from "@/pages/customizeMenu/CustomizeMenu.module.scss";
@@ -16,6 +16,7 @@ import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import { useMemoizedFn} from "ahooks"
 import {queryYakScriptList} from "@/pages/yakitStore/network";
 import {CodecPluginTemplate} from "@/pages/invoker/data/CodecPluginTemplate";
+import { YakParamProps } from "../plugins/pluginsType";
 
 
 export interface NewCodecPageProp {
@@ -26,7 +27,7 @@ interface CodecType {
     key?: string
     verbose: string
     subTypes?: CodecType[]
-    params?: YakScriptParam[]
+    params?: YakParamProps[]
     help?: React.ReactNode
     isYakScript?: boolean
 }
@@ -35,7 +36,7 @@ interface CodecType {
 interface NewCodecType {
     verbose: string
     subTypes?: NewCodeSubType[]
-    params?: YakScriptParam[]
+    params?: YakParamProps[]
     help?: React.ReactNode
 }
 
@@ -43,7 +44,7 @@ interface NewCodecType {
 interface NewCodeSubType {
     key: string
     verbose: string
-    params?: YakScriptParam[]
+    params?: YakParamProps[]
     help?: React.ReactNode
 }
 
