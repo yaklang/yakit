@@ -69,3 +69,14 @@ export const chatGrade = (params: {uid: string; grade: "good" | "bad"}) => {
         data: {...params}
     })
 }
+
+export const getPromptList = (params) => {
+    return service({
+        url: "prompt-list",
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        params: {...params}
+    })
+}

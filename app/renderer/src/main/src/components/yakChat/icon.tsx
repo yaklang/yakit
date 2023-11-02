@@ -88,3 +88,647 @@ const ChatAlt = () => (
 export const ChatAltIcon = (props: Partial<IconProps>) => {
     return <Icon component={ChatAlt} {...props} />
 }
+
+const YakChatBook = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='32' height='26' viewBox='0 0 32 26' fill='none'>
+        <g filter='url(#filter0_d_19614_146033)'>
+            <path
+                d='M4.5 7.44152C4.5 6.79587 4.91315 6.22266 5.52566 6.01849L6.99584 5.52843C8.94587 4.87842 11.0541 4.87842 13.0042 5.52843L15.2094 6.26352C15.7226 6.43458 16.2774 6.43458 16.7906 6.26352L18.9958 5.52843C20.9459 4.87842 23.0541 4.87842 25.0042 5.52843L26.4743 6.01849C27.0869 6.22266 27.5 6.79587 27.5 7.44152V17.2251C27.5 18.249 26.497 18.9719 25.5257 18.6482L25.3204 18.5798C23.1651 17.8613 20.8349 17.8613 18.6796 18.5798L17.1068 19.104C16.3884 19.3435 15.6116 19.3435 14.8932 19.104L13.3204 18.5798C11.1651 17.8613 8.83491 17.8613 6.67961 18.5798L6.47434 18.6482C5.50305 18.9719 4.5 18.249 4.5 17.2251V7.44152Z'
+                fill='url(#paint0_linear_19614_146033)'
+                stroke='url(#paint1_linear_19614_146033)'
+            />
+            <g filter='url(#filter1_b_19614_146033)'>
+                <path
+                    d='M6 4.08385C6 3.70285 6.2165 3.35496 6.55832 3.18668L6.83333 3.05128C9.46055 1.75788 12.5394 1.75788 15.1667 3.05128C15.6921 3.30996 16.3079 3.30996 16.8333 3.05128C19.4606 1.75788 22.5394 1.75788 25.1667 3.05128L25.4417 3.18668C25.7835 3.35496 26 3.70285 26 4.08385V15.6286C26 16.2607 25.3367 16.6735 24.7696 16.3943C22.3927 15.2241 19.6073 15.2241 17.2304 16.3943L16.8333 16.5897C16.3079 16.8484 15.6921 16.8484 15.1667 16.5897L14.7696 16.3943C12.3927 15.2241 9.60726 15.2241 7.23042 16.3943C6.66327 16.6735 6 16.2607 6 15.6286V4.08385Z'
+                    fill='#FFBF9D'
+                    fillOpacity='0.6'
+                />
+            </g>
+            <g filter='url(#filter2_b_19614_146033)'>
+                <path
+                    d='M6 4.08385V15.6286C6 16.2607 6.66327 16.6735 7.23042 16.3943C9.60726 15.2241 12.3927 15.2241 14.7696 16.3943C15.3367 16.6735 16 16.2607 16 15.6286V4.08385C16 3.70285 15.7807 3.35358 15.4389 3.1853C12.6539 1.81425 9.34606 1.81425 6.5611 3.1853C6.21928 3.35358 6 3.70285 6 4.08385Z'
+                    fill='white'
+                    fillOpacity='0.6'
+                />
+            </g>
+            <g filter='url(#filter3_b_19614_146033)'>
+                <path
+                    d='M24.9458 3.49987L25.1667 3.05128L24.9458 3.49987L25.2208 3.63526C25.3918 3.7194 25.5 3.89335 25.5 4.08385V15.6286C25.5 15.8904 25.2253 16.0613 24.9904 15.9457C22.4743 14.707 19.5257 14.707 17.0096 15.9457L16.6125 16.1412C16.2263 16.3313 15.7737 16.3313 15.3875 16.1412L14.9904 15.9457C12.4743 14.707 9.52567 14.707 7.00957 15.9457C6.77469 16.0613 6.5 15.8904 6.5 15.6286V4.08385C6.5 3.89335 6.60825 3.7194 6.77916 3.63526L7.05417 3.49987C9.54215 2.27502 12.4579 2.27502 14.9458 3.49987C15.6105 3.8271 16.3895 3.8271 17.0542 3.49987C19.5421 2.27502 22.4579 2.27502 24.9458 3.49987Z'
+                    stroke='url(#paint2_linear_19614_146033)'
+                />
+            </g>
+            <path d='M17.5 6.5C19 6 21.5 6 23 6.5' stroke='url(#paint3_linear_19614_146033)' strokeLinecap='round' />
+            <path
+                d='M23 8.375C22.25 8.125 21.25 8 20.25 8'
+                stroke='url(#paint4_linear_19614_146033)'
+                strokeLinecap='round'
+            />
+            <path
+                d='M23 10.3743C22.5672 10.2301 22.0512 10.1274 21.5 10.0664'
+                stroke='url(#paint5_linear_19614_146033)'
+                strokeLinecap='round'
+            />
+        </g>
+        <defs>
+            <filter
+                id='filter0_d_19614_146033'
+                x='0'
+                y='0.0812988'
+                width='32'
+                height='25.7024'
+                filterUnits='userSpaceOnUse'
+                colorInterpolationFilters='sRGB'
+            >
+                <feFlood floodOpacity='0' result='BackgroundImageFix' />
+                <feColorMatrix
+                    in='SourceAlpha'
+                    type='matrix'
+                    values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0'
+                    result='hardAlpha'
+                />
+                <feOffset dy='2' />
+                <feGaussianBlur stdDeviation='2' />
+                <feComposite in2='hardAlpha' operator='out' />
+                <feColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 0.513726 0 0 0 0 0.27451 0 0 0 0.3 0' />
+                <feBlend mode='normal' in2='BackgroundImageFix' result='effect1_dropShadow_19614_146033' />
+                <feBlend mode='normal' in='SourceGraphic' in2='effect1_dropShadow_19614_146033' result='shape' />
+            </filter>
+            <filter
+                id='filter1_b_19614_146033'
+                x='0'
+                y='-3.9187'
+                width='32'
+                height='26.7024'
+                filterUnits='userSpaceOnUse'
+                colorInterpolationFilters='sRGB'
+            >
+                <feFlood floodOpacity='0' result='BackgroundImageFix' />
+                <feGaussianBlur in='BackgroundImageFix' stdDeviation='3' />
+                <feComposite in2='SourceAlpha' operator='in' result='effect1_backgroundBlur_19614_146033' />
+                <feBlend mode='normal' in='SourceGraphic' in2='effect1_backgroundBlur_19614_146033' result='shape' />
+            </filter>
+            <filter
+                id='filter2_b_19614_146033'
+                x='0'
+                y='-3.84302'
+                width='22'
+                height='26.3262'
+                filterUnits='userSpaceOnUse'
+                colorInterpolationFilters='sRGB'
+            >
+                <feFlood floodOpacity='0' result='BackgroundImageFix' />
+                <feGaussianBlur in='BackgroundImageFix' stdDeviation='3' />
+                <feComposite in2='SourceAlpha' operator='in' result='effect1_backgroundBlur_19614_146033' />
+                <feBlend mode='normal' in='SourceGraphic' in2='effect1_backgroundBlur_19614_146033' result='shape' />
+            </filter>
+            <filter
+                id='filter3_b_19614_146033'
+                x='0'
+                y='-3.9187'
+                width='32'
+                height='26.7024'
+                filterUnits='userSpaceOnUse'
+                colorInterpolationFilters='sRGB'
+            >
+                <feFlood floodOpacity='0' result='BackgroundImageFix' />
+                <feGaussianBlur in='BackgroundImageFix' stdDeviation='3' />
+                <feComposite in2='SourceAlpha' operator='in' result='effect1_backgroundBlur_19614_146033' />
+                <feBlend mode='normal' in='SourceGraphic' in2='effect1_backgroundBlur_19614_146033' result='shape' />
+            </filter>
+            <linearGradient
+                id='paint0_linear_19614_146033'
+                x1='16'
+                y1='6'
+                x2='16'
+                y2='20'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#FF3A00' />
+                <stop offset='1' stopColor='#FF9052' />
+            </linearGradient>
+            <linearGradient
+                id='paint1_linear_19614_146033'
+                x1='16'
+                y1='4'
+                x2='16'
+                y2='20'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#FF5318' stopOpacity='0' />
+                <stop offset='1' stopColor='#F0400A' />
+            </linearGradient>
+            <linearGradient
+                id='paint2_linear_19614_146033'
+                x1='6'
+                y1='2'
+                x2='26'
+                y2='17'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='white' stopOpacity='0.4' />
+                <stop offset='0.854778' stopColor='white' />
+            </linearGradient>
+            <linearGradient
+                id='paint3_linear_19614_146033'
+                x1='23'
+                y1='6.5'
+                x2='17'
+                y2='6.5'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='white' />
+                <stop offset='1' stopColor='#FFDFD1' />
+            </linearGradient>
+            <linearGradient
+                id='paint4_linear_19614_146033'
+                x1='23'
+                y1='8.375'
+                x2='17'
+                y2='8.375'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='white' />
+                <stop offset='1' stopColor='#FFDFD1' />
+            </linearGradient>
+            <linearGradient
+                id='paint5_linear_19614_146033'
+                x1='23'
+                y1='10.375'
+                x2='17'
+                y2='10.375'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='white' />
+                <stop offset='1' stopColor='#FFDFD1' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+
+/** @description yak 书书 */
+export const YakChatBookIcon = (props: Partial<IconProps>) => {
+    return <Icon component={YakChatBook} {...props} />
+}
+
+const OutlineOpen = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'>
+        <path
+            d='M15.8333 2.5H4.16667C3.24619 2.5 2.5 3.24619 2.5 4.16667V15.8333C2.5 16.7538 3.24619 17.5 4.16667 17.5H15.8333C16.7538 17.5 17.5 16.7538 17.5 15.8333V4.16667C17.5 3.24619 16.7538 2.5 15.8333 2.5Z'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M7.5 2.5V17.5' stroke='currentColor' strokeLinecap='round' strokeLinejoin='round' />
+        <path
+            d='M11.6666 7.5L14.1666 10L11.6666 12.5'
+            stroke='currentColor'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/open
+ */
+export const OutlineOpenIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineOpen} {...props} />
+}
+
+const OutlineViewGrid = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M2.66663 4.00008C2.66663 3.2637 3.26358 2.66675 3.99996 2.66675H5.33329C6.06967 2.66675 6.66663 3.2637 6.66663 4.00008V5.33341C6.66663 6.06979 6.06967 6.66675 5.33329 6.66675H3.99996C3.26358 6.66675 2.66663 6.06979 2.66663 5.33341V4.00008Z'
+            fill='#CCD2DE'
+        />
+        <path
+            d='M9.33329 4.00008C9.33329 3.2637 9.93025 2.66675 10.6666 2.66675H12C12.7363 2.66675 13.3333 3.2637 13.3333 4.00008V5.33341C13.3333 6.06979 12.7363 6.66675 12 6.66675H10.6666C9.93025 6.66675 9.33329 6.06979 9.33329 5.33341V4.00008Z'
+            fill='#CCD2DE'
+        />
+        <path
+            d='M2.66663 10.6667C2.66663 9.93037 3.26358 9.33341 3.99996 9.33341H5.33329C6.06967 9.33341 6.66663 9.93037 6.66663 10.6667V12.0001C6.66663 12.7365 6.06967 13.3334 5.33329 13.3334H3.99996C3.26358 13.3334 2.66663 12.7365 2.66663 12.0001V10.6667Z'
+            fill='#CCD2DE'
+        />
+        <path
+            d='M9.33329 10.6667C9.33329 9.93037 9.93025 9.33341 10.6666 9.33341H12C12.7363 9.33341 13.3333 9.93037 13.3333 10.6667V12.0001C13.3333 12.7365 12.7363 13.3334 12 13.3334H10.6666C9.93025 13.3334 9.33329 12.7365 9.33329 12.0001V10.6667Z'
+            fill='#CCD2DE'
+        />
+        <path
+            d='M2.66663 4.00008C2.66663 3.2637 3.26358 2.66675 3.99996 2.66675H5.33329C6.06967 2.66675 6.66663 3.2637 6.66663 4.00008V5.33341C6.66663 6.06979 6.06967 6.66675 5.33329 6.66675H3.99996C3.26358 6.66675 2.66663 6.06979 2.66663 5.33341V4.00008Z'
+            stroke='#85899E'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+        <path
+            d='M9.33329 4.00008C9.33329 3.2637 9.93025 2.66675 10.6666 2.66675H12C12.7363 2.66675 13.3333 3.2637 13.3333 4.00008V5.33341C13.3333 6.06979 12.7363 6.66675 12 6.66675H10.6666C9.93025 6.66675 9.33329 6.06979 9.33329 5.33341V4.00008Z'
+            stroke='#85899E'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+        <path
+            d='M2.66663 10.6667C2.66663 9.93037 3.26358 9.33341 3.99996 9.33341H5.33329C6.06967 9.33341 6.66663 9.93037 6.66663 10.6667V12.0001C6.66663 12.7365 6.06967 13.3334 5.33329 13.3334H3.99996C3.26358 13.3334 2.66663 12.7365 2.66663 12.0001V10.6667Z'
+            stroke='#85899E'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+        <path
+            d='M9.33329 10.6667C9.33329 9.93037 9.93025 9.33341 10.6666 9.33341H12C12.7363 9.33341 13.3333 9.93037 13.3333 10.6667V12.0001C13.3333 12.7365 12.7363 13.3334 12 13.3334H10.6666C9.93025 13.3334 9.33329 12.7365 9.33329 12.0001V10.6667Z'
+            stroke='#85899E'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/view-grid
+ */
+export const OutlineViewGridIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineViewGrid} {...props} />
+}
+
+const OutlineViewGridActive = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M2.66669 4.00008C2.66669 3.2637 3.26364 2.66675 4.00002 2.66675H5.33335C6.06973 2.66675 6.66669 3.2637 6.66669 4.00008V5.33341C6.66669 6.06979 6.06973 6.66675 5.33335 6.66675H4.00002C3.26364 6.66675 2.66669 6.06979 2.66669 5.33341V4.00008Z'
+            fill='#F28B44'
+        />
+        <path
+            d='M9.33335 4.00008C9.33335 3.2637 9.93031 2.66675 10.6667 2.66675H12C12.7364 2.66675 13.3334 3.2637 13.3334 4.00008V5.33341C13.3334 6.06979 12.7364 6.66675 12 6.66675H10.6667C9.93031 6.66675 9.33335 6.06979 9.33335 5.33341V4.00008Z'
+            fill='#F28B44'
+        />
+        <path
+            d='M2.66669 10.6667C2.66669 9.93037 3.26364 9.33341 4.00002 9.33341H5.33335C6.06973 9.33341 6.66669 9.93037 6.66669 10.6667V12.0001C6.66669 12.7365 6.06973 13.3334 5.33335 13.3334H4.00002C3.26364 13.3334 2.66669 12.7365 2.66669 12.0001V10.6667Z'
+            fill='#F28B44'
+        />
+        <path
+            d='M9.33335 10.6667C9.33335 9.93037 9.93031 9.33341 10.6667 9.33341H12C12.7364 9.33341 13.3334 9.93037 13.3334 10.6667V12.0001C13.3334 12.7365 12.7364 13.3334 12 13.3334H10.6667C9.93031 13.3334 9.33335 12.7365 9.33335 12.0001V10.6667Z'
+            fill='#F28B44'
+        />
+        <path
+            d='M2.66669 4.00008C2.66669 3.2637 3.26364 2.66675 4.00002 2.66675H5.33335C6.06973 2.66675 6.66669 3.2637 6.66669 4.00008V5.33341C6.66669 6.06979 6.06973 6.66675 5.33335 6.66675H4.00002C3.26364 6.66675 2.66669 6.06979 2.66669 5.33341V4.00008Z'
+            stroke='#31343F'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+        <path
+            d='M9.33335 4.00008C9.33335 3.2637 9.93031 2.66675 10.6667 2.66675H12C12.7364 2.66675 13.3334 3.2637 13.3334 4.00008V5.33341C13.3334 6.06979 12.7364 6.66675 12 6.66675H10.6667C9.93031 6.66675 9.33335 6.06979 9.33335 5.33341V4.00008Z'
+            stroke='#31343F'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+        <path
+            d='M2.66669 10.6667C2.66669 9.93037 3.26364 9.33341 4.00002 9.33341H5.33335C6.06973 9.33341 6.66669 9.93037 6.66669 10.6667V12.0001C6.66669 12.7365 6.06973 13.3334 5.33335 13.3334H4.00002C3.26364 13.3334 2.66669 12.7365 2.66669 12.0001V10.6667Z'
+            stroke='#31343F'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+        <path
+            d='M9.33335 10.6667C9.33335 9.93037 9.93031 9.33341 10.6667 9.33341H12C12.7364 9.33341 13.3334 9.93037 13.3334 10.6667V12.0001C13.3334 12.7365 12.7364 13.3334 12 13.3334H10.6667C9.93031 13.3334 9.33335 12.7365 9.33335 12.0001V10.6667Z'
+            stroke='#31343F'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  UI Kit/Icon/Outline/view-grid
+ */
+export const OutlineViewGridActiveIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineViewGridActive} {...props} />
+}
+
+const UIKitOutlineBugActive = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_20342_12763'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='16'
+            height='16'
+        >
+            <rect width='16' height='16' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_20342_12763)'>
+            <path
+                d='M3.83337 7.87879C3.83337 6.01274 5.34611 4.5 7.21216 4.5H8.78792C10.654 4.5 12.1667 6.01273 12.1667 7.87879V10C12.1667 12.3012 10.3012 14.1667 8.00004 14.1667C5.69885 14.1667 3.83337 12.3012 3.83337 10V7.87879Z'
+                fill='#F7544A'
+                stroke='#F7544A'
+            />
+            <path d='M8 14.0001V4.66675' stroke='#31343F' stroke-linecap='round' />
+            <path d='M10 4C10 2.89543 9.10457 2 8 2C6.89543 2 6 2.89543 6 4' stroke='#F7544A' stroke-linecap='round' />
+            <path
+                d='M3.83337 7.87879C3.83337 6.01274 5.34611 4.5 7.21216 4.5H8.78792C10.654 4.5 12.1667 6.01273 12.1667 7.87879V10C12.1667 12.3012 10.3012 14.1667 8.00004 14.1667C5.69885 14.1667 3.83337 12.3012 3.83337 10V7.87879Z'
+                stroke='#31343F'
+            />
+            <path
+                d='M1.33337 8.66667H3.33337M12.6667 8.66667H14.6667M14 4C14 5.03499 13.2138 5.88635 12.2061 5.98951M2.00001 14C2.00001 12.8954 2.89544 12 4.00001 12M2.00001 4C2.00001 5.0188 2.76178 5.85968 3.74681 5.98413M14 14C14 12.8954 13.1046 12 12 12'
+                stroke='#31343F'
+                stroke-linecap='round'
+            />
+        </g>
+    </svg>
+)
+
+/**
+ * @description  UI Kit/Icon/Outline/bug
+ */
+export const UIKitOutlineBugActiveIcon = (props: Partial<IconProps>) => {
+    return <Icon component={UIKitOutlineBugActive} {...props} />
+}
+
+const UIKitOutlineBug = () => (
+    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <mask
+            id='mask0_20342_22804'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='16'
+            height='16'
+        >
+            <rect width='16' height='16' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_20342_22804)'>
+            <path
+                d='M3.83337 7.87879C3.83337 6.01274 5.34611 4.5 7.21216 4.5H8.78792C10.654 4.5 12.1667 6.01273 12.1667 7.87879V10C12.1667 12.3012 10.3012 14.1667 8.00004 14.1667C5.69885 14.1667 3.83337 12.3012 3.83337 10V7.87879Z'
+                fill='#CCD2DE'
+                stroke='#85899E'
+            />
+            <path d='M7.99997 14.0001V4.66675' stroke='#85899E' stroke-linecap='round' />
+            <path
+                d='M10 4C10 2.89543 9.1046 2 8.00003 2C6.89546 2 6.00003 2.89543 6.00003 4'
+                stroke='#85899E'
+                stroke-linecap='round'
+            />
+            <path
+                d='M3.83337 7.87879C3.83337 6.01274 5.34611 4.5 7.21216 4.5H8.78792C10.654 4.5 12.1667 6.01273 12.1667 7.87879V10C12.1667 12.3012 10.3012 14.1667 8.00004 14.1667C5.69885 14.1667 3.83337 12.3012 3.83337 10V7.87879Z'
+                stroke='#85899E'
+            />
+            <path
+                d='M1.33334 8.66667H3.33334M12.6667 8.66667H14.6667M14 4C14 5.03499 13.2138 5.88635 12.2061 5.98951M1.99998 14C1.99998 12.8954 2.89541 12 3.99998 12M1.99998 4C1.99998 5.0188 2.76175 5.85968 3.74678 5.98413M14 14C14 12.8954 13.1045 12 12 12'
+                stroke='#85899E'
+                stroke-linecap='round'
+            />
+        </g>
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/bug
+ */
+export const UIKitOutlineBugIcon = (props: Partial<IconProps>) => {
+    return <Icon component={UIKitOutlineBug} {...props} />
+}
+
+const OutlineYakRunnerActive = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <mask
+            id='mask0_20342_21651'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='16'
+            height='16'
+        >
+            <rect width='16' height='16' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_20342_21651)'>
+            <path
+                d='M1.33334 4.00008C1.33334 3.2637 1.99663 2.66675 2.81483 2.66675H13.1852C14.0034 2.66675 14.6667 3.2637 14.6667 4.00008V12.0001C14.6667 12.7365 14.0034 13.3334 13.1852 13.3334H2.81482C1.99663 13.3334 1.33334 12.7365 1.33334 12.0001V4.00008Z'
+                fill='#F7544A'
+                stroke='#31343F'
+                stroke-linecap='round'
+                stroke-linejoin='round'
+            />
+            <path
+                d='M5.33334 6L7.33334 8L5.33334 10M8.66668 10H10.6667'
+                stroke='#31343F'
+                stroke-linecap='round'
+                stroke-linejoin='round'
+            />
+        </g>
+    </svg>
+)
+
+/**
+ * @description  UI Kit/Icon/Outline/Yak Runner
+ */
+export const OutlineYakRunnerActiveIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineYakRunnerActive} {...props} />
+}
+
+const OutlineYakRunner = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <mask
+            id='mask0_20342_13351'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='16'
+            height='16'
+        >
+            <rect width='16' height='16' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_20342_13351)'>
+            <path
+                d='M1.33337 4.00008C1.33337 3.2637 1.99666 2.66675 2.81486 2.66675H13.1852C14.0034 2.66675 14.6667 3.2637 14.6667 4.00008V12.0001C14.6667 12.7365 14.0034 13.3334 13.1852 13.3334H2.81486C1.99666 13.3334 1.33337 12.7365 1.33337 12.0001V4.00008Z'
+                fill='#CCD2DE'
+                stroke='#85899E'
+                stroke-linecap='round'
+                stroke-linejoin='round'
+            />
+            <path
+                d='M5.33337 6L7.33337 8L5.33337 10M8.66671 10H10.6667'
+                stroke='#85899E'
+                stroke-linecap='round'
+                stroke-linejoin='round'
+            />
+        </g>
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/Yak Runner
+ */
+export const OutlineYakRunnerIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineYakRunner} {...props} />
+}
+
+const OutlineWebFuzzer = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <mask
+            id='mask0_20342_20549'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='16'
+            height='16'
+        >
+            <rect width='16' height='16' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_20342_20549)'>
+            <path
+                d='M14 8C14 11.3137 11.3137 14 7.99996 14C7.5417 14 7.09544 13.9486 6.66663 13.8513'
+                stroke='#85899E'
+                stroke-linecap='round'
+            />
+            <path
+                d='M2 8C2 4.68629 4.68629 2 8 2C8.45826 2 8.90452 2.05137 9.33333 2.14868'
+                stroke='#85899E'
+                stroke-linecap='round'
+            />
+            <ellipse cx='10.6667' cy='2.66659' rx='1.33333' ry='1.33333' stroke='#85899E' stroke-linecap='round' />
+            <ellipse cx='5.33333' cy='13.3333' rx='1.33333' ry='1.33333' stroke='#85899E' stroke-linecap='round' />
+            <path
+                d='M8.33337 7.33333V5L5.33337 8.66667H7.66671L7.66671 11L10.6667 7.33333L8.33337 7.33333Z'
+                fill='#CCD2DE'
+                stroke='#CCD2DE'
+                stroke-linecap='round'
+                stroke-linejoin='round'
+            />
+            <path d='M3.33329 7.33325L1.99996 8.66659L0.666626 7.33325' stroke='#85899E' stroke-linecap='round' />
+            <path d='M12.6667 8.66675L14 7.33341L15.3334 8.66675' stroke='#85899E' stroke-linecap='round' />
+        </g>
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/Web Fuzzer
+ */
+export const OutlineWebFuzzerIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineWebFuzzer} {...props} />
+}
+
+const OutlineWebFuzzerActive = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <mask
+            id='mask0_20342_21666'
+            style={{maskType: "alpha"}}
+            maskUnits='userSpaceOnUse'
+            x='0'
+            y='0'
+            width='16'
+            height='16'
+        >
+            <rect width='16' height='16' fill='#D9D9D9' />
+        </mask>
+        <g mask='url(#mask0_20342_21666)'>
+            <path
+                d='M14 8C14 11.3137 11.3137 14 8.00001 14C7.54175 14 7.09549 13.9486 6.66667 13.8513'
+                stroke='#31343F'
+                stroke-linecap='round'
+            />
+            <path
+                d='M2 8C2 4.68629 4.68629 2 8 2C8.45826 2 8.90452 2.05137 9.33333 2.14868'
+                stroke='#31343F'
+                stroke-linecap='round'
+            />
+            <ellipse cx='10.6667' cy='2.66659' rx='1.33333' ry='1.33333' stroke='#31343F' stroke-linecap='round' />
+            <ellipse cx='5.33333' cy='13.3333' rx='1.33333' ry='1.33333' stroke='#31343F' stroke-linecap='round' />
+            <path
+                d='M8.33333 7.33333V5L5.33333 8.66667H7.66666L7.66666 11L10.6667 7.33333L8.33333 7.33333Z'
+                fill='#4A94F8'
+                stroke='#4A94F8'
+                stroke-linecap='round'
+                stroke-linejoin='round'
+            />
+            <path d='M3.33334 7.33325L2.00001 8.66659L0.666672 7.33325' stroke='#31343F' stroke-linecap='round' />
+            <path d='M12.6667 8.66675L14 7.33341L15.3333 8.66675' stroke='#31343F' stroke-linecap='round' />
+        </g>
+    </svg>
+)
+
+/**
+ * @description  UI Kit/Icon/Outline/Web Fuzzer
+ */
+export const OutlineWebFuzzerActiveIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineWebFuzzerActive} {...props} />
+}
+
+const OutlineChartPie = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M13.8791 8.5001C13.6253 11.5246 11.09 13.9001 7.99998 13.9001C4.7415 13.9001 2.09998 11.2586 2.09998 8.0001C2.09998 4.91003 4.47551 2.37479 7.49998 2.12099V8.0001V8.5001H7.99998H13.8791Z'
+            fill='#CCD2DE'
+            stroke='#85899E'
+        />
+        <path d='M10.1 5.90023V2.48467C11.669 3.08247 12.9177 4.3312 13.5155 5.90023H10.1Z' stroke='#85899E' />
+    </svg>
+)
+
+/**
+ * @description  Icon/Solid/chart-pie
+ */
+export const OutlineChartPieIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineChartPie} {...props} />
+}
+
+const OutlineChartPieActive = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M13.8791 8.5001C13.6253 11.5246 11.09 13.9001 7.99998 13.9001C4.7415 13.9001 2.09998 11.2586 2.09998 8.0001C2.09998 4.91003 4.47551 2.37479 7.49998 2.12099V8.0001V8.5001H7.99998H13.8791Z'
+            fill='#4A94F8'
+            stroke='#31343F'
+        />
+        <path d='M10.1 5.90023V2.48467C11.669 3.08247 12.9177 4.3312 13.5155 5.90023H10.1Z' stroke='#31343F' />
+    </svg>
+)
+
+/**
+ * @description  UI Kit/Icon/Solid/chart-pie
+ */
+export const OutlineChartPieActiveIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineChartPieActive} {...props} />
+}
+
+const OutlineSparkles = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M10.1905 6.57143L8.66667 2L7.14286 6.57143L3.33333 8L7.14286 9.42857L8.66667 14L10.1905 9.42857L14 8L10.1905 6.57143Z'
+            fill='#CCD2DE'
+        />
+        <path
+            d='M3.33333 2V4.66667M2 3.33333H4.66667M4 11.3333V14M2.66667 12.6667H5.33333M8.66667 2L10.1905 6.57143L14 8L10.1905 9.42857L8.66667 14L7.14286 9.42857L3.33333 8L7.14286 6.57143L8.66667 2Z'
+            stroke='#85899E'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/sparkles
+ */
+export const OutlineSparklesIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineSparkles} {...props} />
+}
+
+const OutlineSparklesActive = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
+        <path
+            d='M10.1905 6.57143L8.66667 2L7.14286 6.57143L3.33333 8L7.14286 9.42857L8.66667 14L10.1905 9.42857L14 8L10.1905 6.57143Z'
+            fill='#F28B44'
+        />
+        <path
+            d='M3.33333 2V4.66667M2 3.33333H4.66667M4 11.3333V14M2.66667 12.6667H5.33333M8.66667 2L10.1905 6.57143L14 8L10.1905 9.42857L8.66667 14L7.14286 9.42857L3.33333 8L7.14286 6.57143L8.66667 2Z'
+            stroke='#31343F'
+            stroke-linecap='round'
+            stroke-linejoin='round'
+        />
+    </svg>
+)
+
+/**
+ * @description  Icon/Outline/sparkles
+ */
+export const OutlineSparklesActiveIcon = (props: Partial<IconProps>) => {
+    return <Icon component={OutlineSparklesActive} {...props} />
+}

@@ -1,7 +1,26 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useGetState, useMemoizedFn, useScroll, useSize} from "ahooks"
+import {useGetState, useMemoizedFn, useScroll, useSize, useUpdateEffect} from "ahooks"
 import {Resizable} from "re-resizable"
-import {ChatAltIcon, PaperPlaneRightIcon, YakChatLogIcon, YakitChatCSIcon} from "./icon"
+import {
+    ChatAltIcon,
+    PaperPlaneRightIcon,
+    YakChatBookIcon,
+    YakChatLogIcon,
+    YakitChatCSIcon,
+    OutlineOpenIcon,
+    OutlineViewGridIcon,
+    OutlineWebFuzzerIcon,
+    OutlineYakRunnerIcon,
+    UIKitOutlineBugIcon,
+    OutlineChartPieIcon,
+    OutlineSparklesIcon,
+    UIKitOutlineBugActiveIcon,
+    OutlineViewGridActiveIcon,
+    OutlineYakRunnerActiveIcon,
+    OutlineWebFuzzerActiveIcon,
+    OutlineChartPieActiveIcon,
+    OutlineSparklesActiveIcon
+} from "./icon"
 import {
     ArrowDownIcon,
     ArrowNarrowRightIcon,
@@ -39,7 +58,7 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {ArrowRightSvgIcon} from "../layout/icons"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {chatCS, chatGrade} from "@/services/yakChat"
+import {chatCS, chatGrade, getPromptList} from "@/services/yakChat"
 import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
 import {ChatMarkdown} from "./ChatMarkdown"
 import {useStore} from "@/store"
@@ -115,6 +134,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     const [history, setHistroy] = useState<CacheChatCSProps[]>([])
     const [active, setActive] = useState<string>("")
+    const [isShowPrompt, setShowPrompt] = useState<boolean>(false)
     /** 当前对话内容列表 */
     const currentChat = useMemo(() => {
         const filterIndex = history.findIndex((item) => item.token === active)
@@ -305,7 +325,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         let chunk = flow
         chunk = chunk.substring(lastIndex)
         if (chunk && chunk.startsWith("data:")) chunk = chunk.slice(5)
-        
+
         let answer: ChatCSAnswerProps | undefined = undefined
         try {
             answer = JSON.parse(chunk)
@@ -341,8 +361,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 content: "",
                 id: ""
             }
-            console.log("params",params);
-            
+            console.log("params", params)
+
             return await new Promise((resolve, reject) => {
                 chatCS({
                     ...params,
@@ -352,9 +372,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         if (!event.target) return
                         const {responseText} = event.target
                         let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
-                        
+
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
-                        if (answer&&answer.result.length!==0) {
+                        if (answer && answer.result.length !== 0) {
                             if (cs.content === answer.result) return
                             if (!cs.id) cs.id = answer.id
                             cs.content += answer.result
@@ -389,7 +409,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             })
         }
     )
-    const onSubmit = useMemoizedFn(async(info: ChatInfoProps) => {
+    const onSubmit = useMemoizedFn(async (info: ChatInfoProps) => {
         const group = [...history]
         const filterIndex = group.findIndex((item) => item.token === active)
         // 定位当前对话数据历史对象
@@ -460,7 +480,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 const abort = new AbortController()
                 controller.current = abort
                 await generatePromise(
-                    {prompt: params.content, intell_type: params.baseType,history: chatHistory, signal: abort.signal},
+                    {prompt: params.content, intell_type: params.baseType, history: chatHistory, signal: abort.signal},
                     contents,
                     group
                 )
@@ -722,6 +742,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         onSubmit(data)
     })
 
+    useUpdateEffect(() => {
+        if (isShowPrompt) {
+            setWidth("95vw")
+        }
+    }, [isShowPrompt])
+
     return (
         <Resizable
             style={{position: "absolute"}}
@@ -760,11 +786,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     </div>
                     <div className={styles["header-extra"]}>
                         {history.length !== 0 && (
-                            <YakitButton
-                                disabled={loading}
-                                icon={<PlusIcon />}
-                                onClick={onAddChat}
-                            >
+                            <YakitButton disabled={loading} icon={<PlusIcon />} onClick={onAddChat}>
                                 {(+width || 351) < 350 ? undefined : "新会话"}
                             </YakitButton>
                         )}
@@ -803,8 +825,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             <div
                                 className={classNames(styles["small-btn"], styles["btn-style"], styles["expand-icon"])}
                                 onClick={() => {
-                                    if (width === "95vw") setWidth(481)
-                                    else setWidth("95vw")
+                                    if (width === "95vw") {
+                                        setShowPrompt(false)
+                                        setWidth(481)
+                                    } else setWidth("95vw")
                                 }}
                             >
                                 {width === "95vw" ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -819,253 +843,274 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     </div>
                 </div>
 
-                <div className={styles["layout-body"]}>
-                    <div className={styles["body-wrapper"]}>
-                        {history.length === 0 || currentChat.length === 0 ? (
-                            <>
-                                {/* 欢迎页 */}
-                                <div className={styles["welcome-header"]}>
-                                    <div className={styles["header-title"]}>
-                                        <div className={classNames(styles["title-style"], "content-ellipsis")}>
-                                            {`你好,${showName}`}
-                                        </div>
-                                        👋
-                                    </div>
-                                    <div className={styles["header-subTitle"]}>有什么我能帮助你的吗？</div>
-                                </div>
-                                <div className={styles["welcome-preset-list"]}>
-                                    <div className={styles["list-wrapper"]}>
-                                        {presetList.map((item) => {
-                                            return (
-                                                <div
-                                                    className={styles["opt-wrapper"]}
-                                                    key={item.content}
-                                                    onClick={() => onSubmitPreset(item)}
-                                                >
-                                                    {item.content}
-                                                    <ArrowNarrowRightIcon />
+                <div className={styles["layout-main"]}>
+                    <div className={styles["layout-body-footer"]}>
+                        <div className={styles["layout-body"]}>
+                            <div className={styles["body-wrapper"]}>
+                                {history.length === 0 || currentChat.length === 0 ? (
+                                    <>
+                                        {/* 欢迎页 */}
+                                        <div className={styles["welcome-header"]}>
+                                            <div className={styles["header-title"]}>
+                                                <div className={classNames(styles["title-style"], "content-ellipsis")}>
+                                                    {`你好,${showName}`}
                                                 </div>
-                                            )
+                                                👋
+                                            </div>
+                                            <div className={styles["header-subTitle"]}>有什么我能帮助你的吗？</div>
+                                        </div>
+                                        <div className={styles["welcome-preset-list"]}>
+                                            <div className={styles["list-wrapper"]}>
+                                                {presetList.map((item) => {
+                                                    return (
+                                                        <div
+                                                            className={styles["opt-wrapper"]}
+                                                            key={item.content}
+                                                            onClick={() => onSubmitPreset(item)}
+                                                        >
+                                                            {item.content}
+                                                            <ArrowNarrowRightIcon />
+                                                        </div>
+                                                    )
+                                                })}
+                                                <div className={styles["info-hint-wrapper"]}>
+                                                    <OutlineInformationcircleIcon />
+                                                    ChatCS模型参数：6.5b，训练Token: 1.5T
+                                                    显卡资源：A40*4，使用文心增强知识推理能力
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div ref={contentRef} className={styles["body-content"]}>
+                                        {currentChat.map((item) => {
+                                            const {token, isMe, time, info} = item
+
+                                            if (isMe) {
+                                                return (
+                                                    <ChatUserContent
+                                                        key={token}
+                                                        time={time}
+                                                        info={info as ChatMeInfoProps}
+                                                        onDel={() => onDelContent(item)}
+                                                    />
+                                                )
+                                            } else {
+                                                return (
+                                                    <ChatCSContent
+                                                        key={token}
+                                                        token={token}
+                                                        loadingToken={loadingToken}
+                                                        loading={loading}
+                                                        resTime={resTime}
+                                                        time={time}
+                                                        info={info as ChatCSMultipleInfoProps}
+                                                        onStop={onStop}
+                                                        onLike={(isLike) => onLikes(item, isLike)}
+                                                        onDel={() => onDelContent(item)}
+                                                    />
+                                                )
+                                            }
                                         })}
-                                        <div className={styles["info-hint-wrapper"]}>
-                                            <OutlineInformationcircleIcon />
-                                            ChatCS模型参数：6.5b，训练Token: 1.5T
-                                            显卡资源：A40*4，使用文心增强知识推理能力
+                                    </div>
+                                )}
+                            </div>
+
+                            {currentChat.length !== 0 && isBottom && (
+                                <div className={styles["body-to-bottom"]} onClick={scrollToBottom}>
+                                    <ArrowDownIcon />
+                                </div>
+                            )}
+                        </div>
+
+                        {!loading && (
+                            <div className={styles["layout-footer"]}>
+                                <div className={styles["footer-prompt"]}>
+                                    <div
+                                        className={styles["footer-book"]}
+                                        onClick={() => {
+                                            setShowPrompt(!isShowPrompt)
+                                        }}
+                                    >
+                                        <YakChatBookIcon />
+                                        <span className={styles["content"]}>Prompt</span>
+                                    </div>
+                                </div>
+                                <div className={styles["footer-wrapper"]}>
+                                    <Input.TextArea
+                                        className={styles["text-area-wrapper"]}
+                                        bordered={false}
+                                        placeholder='问我任何问题...(shift + enter 换行)'
+                                        value={question}
+                                        autoSize={true}
+                                        onChange={(e) => setQuestion(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            const keyCode = e.keyCode ? e.keyCode : e.key
+                                            const shiftKey = e.shiftKey
+                                            if (keyCode === 13 && shiftKey) {
+                                                e.stopPropagation()
+                                                e.preventDefault()
+                                                setQuestion(`${question}\n`)
+                                            }
+                                            if (keyCode === 13 && !shiftKey) {
+                                                e.stopPropagation()
+                                                e.preventDefault()
+                                                onBtnSubmit()
+                                            }
+                                        }}
+                                    />
+                                    <div className={styles["input-footer"]}>
+                                        {(+width || 451) < 450 ? (
+                                            <YakitPopover
+                                                overlayClassName={styles["yakit-popover-type"]}
+                                                overlayStyle={{paddingBottom: 4}}
+                                                placement='topRight'
+                                                trigger={"click"}
+                                                content={
+                                                    <div className={styles["footer-popover-wrapper"]}>
+                                                        <div className={styles["footer-type-wrapper"]}>
+                                                            <div className={styles["type-title"]}>
+                                                                回答类型
+                                                                <Tooltip
+                                                                    overlayClassName={styles["tooltip-wrapper"]}
+                                                                    title={"ChatCS 将根据选择的类型回答你的问题"}
+                                                                >
+                                                                    <QuestionMarkCircleIcon />
+                                                                </Tooltip>
+                                                                :
+                                                            </div>
+                                                            <div className={styles["multiple-btn"]}>
+                                                                <div
+                                                                    className={classNames(
+                                                                        styles["btn-style"],
+                                                                        styles["left-btn"],
+                                                                        {
+                                                                            [styles["active-btn-style"]]:
+                                                                                baseType === "cs_info"
+                                                                        }
+                                                                    )}
+                                                                    onClick={() => {
+                                                                        if (baseType === "cs_info") setBaseType("")
+                                                                        else setBaseType("cs_info")
+                                                                    }}
+                                                                >
+                                                                    安全知识
+                                                                </div>
+                                                                <div
+                                                                    className={classNames(
+                                                                        styles["btn-style"],
+                                                                        styles["right-btn"],
+                                                                        {
+                                                                            [styles["active-btn-style"]]:
+                                                                                baseType === "vuln_info"
+                                                                        }
+                                                                    )}
+                                                                    onClick={() => {
+                                                                        if (baseType === "vuln_info") setBaseType("")
+                                                                        else setBaseType("vuln_info")
+                                                                    }}
+                                                                >
+                                                                    威胁情报
+                                                                </div>
+                                                            </div>
+                                                            <div
+                                                                className={classNames(styles["single-btn"], {
+                                                                    [styles["single-active-btn"]]: expInfo
+                                                                })}
+                                                                onClick={() => setExpInfo(!expInfo)}
+                                                            >
+                                                                漏洞利用
+                                                            </div>
+                                                            <div
+                                                                className={classNames(styles["single-btn"], {
+                                                                    [styles["single-active-btn"]]: backCatch
+                                                                })}
+                                                                onClick={() => setBackCatch(!backCatch)}
+                                                            >
+                                                                背景知识
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            >
+                                                <div className={styles["footer-type-mini"]}>
+                                                    <CogIcon />
+                                                </div>
+                                            </YakitPopover>
+                                        ) : (
+                                            <div className={styles["footer-type-wrapper"]}>
+                                                <div className={styles["type-title"]}>
+                                                    回答类型
+                                                    <Tooltip
+                                                        overlayStyle={{paddingBottom: 5}}
+                                                        title={"ChatCS 将根据选择的类型回答你的问题"}
+                                                    >
+                                                        <QuestionMarkCircleIcon />
+                                                    </Tooltip>
+                                                    :
+                                                </div>
+                                                <div className={styles["multiple-btn"]}>
+                                                    <div
+                                                        className={classNames(styles["btn-style"], styles["left-btn"], {
+                                                            [styles["active-btn-style"]]: baseType === "cs_info"
+                                                        })}
+                                                        onClick={() => {
+                                                            if (baseType === "cs_info") setBaseType("")
+                                                            else setBaseType("cs_info")
+                                                        }}
+                                                    >
+                                                        安全知识
+                                                    </div>
+                                                    <div
+                                                        className={classNames(
+                                                            styles["btn-style"],
+                                                            styles["right-btn"],
+                                                            {
+                                                                [styles["active-btn-style"]]: baseType === "vuln_info"
+                                                            }
+                                                        )}
+                                                        onClick={() => {
+                                                            if (baseType === "vuln_info") setBaseType("")
+                                                            else setBaseType("vuln_info")
+                                                        }}
+                                                    >
+                                                        威胁情报
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    className={classNames(styles["single-btn"], {
+                                                        [styles["single-active-btn"]]: expInfo
+                                                    })}
+                                                    onClick={() => setExpInfo(!expInfo)}
+                                                >
+                                                    漏洞利用
+                                                </div>
+                                                <div
+                                                    className={classNames(styles["single-btn"], {
+                                                        [styles["single-active-btn"]]: backCatch
+                                                    })}
+                                                    onClick={() => setBackCatch(!backCatch)}
+                                                >
+                                                    背景知识
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className={styles["footer-divider"]}></div>
+                                        <div
+                                            className={classNames(styles["footer-submit"], {
+                                                [styles["footer-active-submit"]]: !!question
+                                            })}
+                                            onClick={onBtnSubmit}
+                                        >
+                                            <PaperPlaneRightIcon />
                                         </div>
                                     </div>
                                 </div>
-                            </>
-                        ) : (
-                            <div ref={contentRef} className={styles["body-content"]}>
-                                {currentChat.map((item) => {
-                                    const {token, isMe, time, info} = item
-
-                                    if (isMe) {
-                                        return (
-                                            <ChatUserContent
-                                                key={token}
-                                                time={time}
-                                                info={info as ChatMeInfoProps}
-                                                onDel={() => onDelContent(item)}
-                                            />
-                                        )
-                                    } else {
-                                        return (
-                                            <ChatCSContent
-                                                key={token}
-                                                token={token}
-                                                loadingToken={loadingToken}
-                                                loading={loading}
-                                                resTime={resTime}
-                                                time={time}
-                                                info={info as ChatCSMultipleInfoProps}
-                                                onStop={onStop}
-                                                onLike={(isLike) => onLikes(item, isLike)}
-                                                onDel={() => onDelContent(item)}
-                                            />
-                                        )
-                                    }
-                                })}
                             </div>
                         )}
                     </div>
-
-                    {currentChat.length !== 0 && isBottom && (
-                        <div className={styles["body-to-bottom"]} onClick={scrollToBottom}>
-                            <ArrowDownIcon />
-                        </div>
-                    )}
+                    {isShowPrompt && <PromptWidget setShowPrompt={setShowPrompt} />}
                 </div>
-
-                {!loading && (
-                    <div className={styles["layout-footer"]}>
-                        <div className={styles["footer-wrapper"]}>
-                            <Input.TextArea
-                                className={styles["text-area-wrapper"]}
-                                bordered={false}
-                                placeholder='问我任何问题...(shift + enter 换行)'
-                                value={question}
-                                autoSize={true}
-                                onChange={(e) => setQuestion(e.target.value)}
-                                onKeyDown={(e) => {
-                                    const keyCode = e.keyCode ? e.keyCode : e.key
-                                    const shiftKey = e.shiftKey
-                                    if (keyCode === 13 && shiftKey) {
-                                        e.stopPropagation()
-                                        e.preventDefault()
-                                        setQuestion(`${question}\n`)
-                                    }
-                                    if (keyCode === 13 && !shiftKey) {
-                                        e.stopPropagation()
-                                        e.preventDefault()
-                                        onBtnSubmit()
-                                    }
-                                }}
-                            />
-                            <div className={styles["input-footer"]}>
-                                {(+width || 451) < 450 ? (
-                                    <YakitPopover
-                                        overlayClassName={styles["yakit-popover-type"]}
-                                        overlayStyle={{paddingBottom: 4}}
-                                        placement='topRight'
-                                        trigger={"click"}
-                                        content={
-                                            <div className={styles["footer-popover-wrapper"]}>
-                                                <div className={styles["footer-type-wrapper"]}>
-                                                    <div className={styles["type-title"]}>
-                                                        回答类型
-                                                        <Tooltip
-                                                            overlayClassName={styles["tooltip-wrapper"]}
-                                                            title={"ChatCS 将根据选择的类型回答你的问题"}
-                                                        >
-                                                            <QuestionMarkCircleIcon />
-                                                        </Tooltip>
-                                                        :
-                                                    </div>
-                                                    <div className={styles["multiple-btn"]}>
-                                                        <div
-                                                            className={classNames(
-                                                                styles["btn-style"],
-                                                                styles["left-btn"],
-                                                                {
-                                                                    [styles["active-btn-style"]]: baseType === "cs_info"
-                                                                }
-                                                            )}
-                                                            onClick={() => {
-                                                                if (baseType === "cs_info") setBaseType("")
-                                                                else setBaseType("cs_info")
-                                                            }}
-                                                        >
-                                                            安全知识
-                                                        </div>
-                                                        <div
-                                                            className={classNames(
-                                                                styles["btn-style"],
-                                                                styles["right-btn"],
-                                                                {
-                                                                    [styles["active-btn-style"]]:
-                                                                        baseType === "vuln_info"
-                                                                }
-                                                            )}
-                                                            onClick={() => {
-                                                                if (baseType === "vuln_info") setBaseType("")
-                                                                else setBaseType("vuln_info")
-                                                            }}
-                                                        >
-                                                            威胁情报
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        className={classNames(styles["single-btn"], {
-                                                            [styles["single-active-btn"]]: expInfo
-                                                        })}
-                                                        onClick={() => setExpInfo(!expInfo)}
-                                                    >
-                                                        漏洞利用
-                                                    </div>
-                                                    <div
-                                                        className={classNames(styles["single-btn"], {
-                                                            [styles["single-active-btn"]]: backCatch
-                                                        })}
-                                                        onClick={() => setBackCatch(!backCatch)}
-                                                    >
-                                                        背景知识
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                    >
-                                        <div className={styles["footer-type-mini"]}>
-                                            <CogIcon />
-                                        </div>
-                                    </YakitPopover>
-                                ) : (
-                                    <div className={styles["footer-type-wrapper"]}>
-                                        <div className={styles["type-title"]}>
-                                            回答类型
-                                            <Tooltip
-                                                overlayStyle={{paddingBottom: 5}}
-                                                title={"ChatCS 将根据选择的类型回答你的问题"}
-                                            >
-                                                <QuestionMarkCircleIcon />
-                                            </Tooltip>
-                                            :
-                                        </div>
-                                        <div className={styles["multiple-btn"]}>
-                                            <div
-                                                className={classNames(styles["btn-style"], styles["left-btn"], {
-                                                    [styles["active-btn-style"]]: baseType === "cs_info"
-                                                })}
-                                                onClick={() => {
-                                                    if (baseType === "cs_info") setBaseType("")
-                                                    else setBaseType("cs_info")
-                                                }}
-                                            >
-                                                安全知识
-                                            </div>
-                                            <div
-                                                className={classNames(styles["btn-style"], styles["right-btn"], {
-                                                    [styles["active-btn-style"]]: baseType === "vuln_info"
-                                                })}
-                                                onClick={() => {
-                                                    if (baseType === "vuln_info") setBaseType("")
-                                                    else setBaseType("vuln_info")
-                                                }}
-                                            >
-                                                威胁情报
-                                            </div>
-                                        </div>
-                                        <div
-                                            className={classNames(styles["single-btn"], {
-                                                [styles["single-active-btn"]]: expInfo
-                                            })}
-                                            onClick={() => setExpInfo(!expInfo)}
-                                        >
-                                            漏洞利用
-                                        </div>
-                                        <div
-                                            className={classNames(styles["single-btn"], {
-                                                [styles["single-active-btn"]]: backCatch
-                                            })}
-                                            onClick={() => setBackCatch(!backCatch)}
-                                        >
-                                            背景知识
-                                        </div>
-                                    </div>
-                                )}
-                                <div className={styles["footer-divider"]}></div>
-                                <div
-                                    className={classNames(styles["footer-submit"], {
-                                        [styles["footer-active-submit"]]: !!question
-                                    })}
-                                    onClick={onBtnSubmit}
-                                >
-                                    <PaperPlaneRightIcon />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 <HistoryDrawer
                     getContainer={divRef.current}
@@ -1184,7 +1229,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                 </div>
                 <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
                     {showLoading ? (
-                        <YakitButton type="primary" colors="danger" icon={<StopIcon />} onClick={onStop}>
+                        <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
                             停止
                         </YakitButton>
                     ) : (
@@ -1366,6 +1411,242 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                 </div>
             </div>
         </Drawer>
+    )
+})
+
+interface PromptWidgetProps {
+    setShowPrompt: (v: boolean) => void
+}
+
+interface PromptListProps {
+    title: string
+    api: string
+    eg: string[]
+    prompt_type: string
+    template: string
+}
+
+interface PromptLabelProps {
+    Team_all: number
+    RedTeam_vuln: number
+    BlueTeam_com: number
+    RedTeam_code: number
+    BlueTeam_code: number
+    Team_other: number
+}
+
+type PromptLabelItem = "Team_all" | "RedTeam_vuln" | "BlueTeam_com" | "RedTeam_code" | "BlueTeam_code" | "Team_other"
+
+const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
+    const {setShowPrompt} = props
+    const [promptList, setPromptList] = useState<PromptListProps[]>([])
+    const [promptLabel, setPromptLabel] = useState<PromptLabelProps>()
+    const [selectLabel, setSelectLabel] = useState<PromptLabelItem>("Team_all")
+    // 渲染的label
+    const PromptLabelArr: PromptLabelItem[] = [
+        "Team_all",
+        "RedTeam_vuln",
+        "BlueTeam_com",
+        "RedTeam_code",
+        "BlueTeam_code",
+        "Team_other"
+    ]
+    useEffect(() => {
+        getPromptListPromise()
+    }, [])
+
+    const getPromptListPromise = useMemoizedFn((params = {}) => {
+        getPromptList({...params})
+            .then((result) => {
+                const {data} = result
+                if (data.status) {
+                    let list: PromptListProps[] = []
+                    const obj = data.data || {}
+                    const label: PromptLabelProps = {
+                        Team_all: 0,
+                        RedTeam_vuln: 0,
+                        BlueTeam_com: 0,
+                        RedTeam_code: 0,
+                        BlueTeam_code: 0,
+                        Team_other: 0
+                    }
+                    Object.keys(obj).forEach((key) => {
+                        const item = obj[key]
+                        let PromptListItem: PromptListProps = {
+                            title: key,
+                            api: item.api,
+                            eg: item.eg,
+                            prompt_type: item.prompt_type,
+                            template: item.template
+                        }
+                        list.push(PromptListItem)
+                        label.Team_all += 1
+                        switch (item.prompt_type) {
+                            case "RedTeam_vuln":
+                                label.RedTeam_vuln += 1
+                                break
+                            case "BlueTeam_com":
+                                label.BlueTeam_com += 1
+                                break
+                            case "RedTeam_code":
+                                label.RedTeam_code += 1
+                                break
+                            case "BlueTeam_code":
+                                label.BlueTeam_code += 1
+                                break
+                            default:
+                                label.Team_other += 1
+                                break
+                        }
+                    })
+                    console.log("list", label, list)
+                    setPromptLabel(label)
+                    setPromptList(list)
+                }
+            })
+            .catch((e) => {
+                yakitNotify("error", `error|${e}`)
+            })
+    })
+
+    const getLabelText = useMemoizedFn((v: PromptLabelItem) => {
+        switch (v) {
+            case "Team_all":
+                return "全部"
+            case "RedTeam_vuln":
+                return "漏洞情报"
+            case "BlueTeam_com":
+                return "应急响应"
+            case "RedTeam_code":
+                return "代码生成"
+            case "BlueTeam_code":
+                return "数据研判"
+            default:
+                return "其他"
+        }
+    })
+
+    const getLabelIcon = useMemoizedFn((v: PromptLabelItem, isActive: boolean) => {
+        switch (v) {
+            case "Team_all":
+                return isActive ? <OutlineViewGridActiveIcon /> : <OutlineViewGridIcon />
+            case "RedTeam_vuln":
+                return isActive ? <UIKitOutlineBugActiveIcon /> : <UIKitOutlineBugIcon />
+            case "BlueTeam_com":
+                return isActive ? <OutlineYakRunnerActiveIcon /> : <OutlineYakRunnerIcon />
+            case "RedTeam_code":
+                return isActive ? <OutlineWebFuzzerActiveIcon /> : <OutlineWebFuzzerIcon />
+            case "BlueTeam_code":
+                return isActive ? <OutlineChartPieActiveIcon /> : <OutlineChartPieIcon />
+            default:
+                return isActive ? <OutlineSparklesActiveIcon /> : <OutlineSparklesIcon />
+        }
+    })
+
+    // 将字符串根据下标进行替换
+    const replaceStr = useMemoizedFn((str, index, newWords) => {
+        let arr = str.split("")
+        arr[index] = newWords
+        return arr.join("")
+    })
+
+    // 将字符串中引号中的内容进行高亮显示
+    const toLightHight = useMemoizedFn((v: string, end?: boolean) => {
+        let sub = v.indexOf("`")
+        if (sub !== -1) {
+            let str = replaceStr(
+                v,
+                sub,
+                end
+                    ? "</span>"
+                    : "<span style='padding:2px 6px;border-radius: 4px;background: rgba(136, 99, 247, 0.10);margin:0 4px;font-size: 12px;color: #8863F7;'>"
+            )
+            return toLightHight(str, !end)
+        }
+        // console.log("vvv", v)
+
+        return v
+    })
+    return (
+        <div className={styles["layout-prompt"]}>
+            <div className={styles["prompt-title"]}>
+                <div className={styles["title"]}>
+                    <YakChatBookIcon />
+                    <span className={styles["sub-title"]}>Prompt</span>
+                </div>
+                <div className={styles["extra"]}>
+                    <Tooltip placement='left' title='向右收起'>
+                        <OutlineOpenIcon
+                            className={styles["fold-icon"]}
+                            onClick={() => {
+                                setShowPrompt(false)
+                            }}
+                        />
+                    </Tooltip>
+                </div>
+            </div>
+            <div className={styles["prompt-search"]}>
+                <YakitInput.Search
+                    placeholder='请输入关键词搜索'
+                    size='large'
+                    value={""}
+                    onChange={(e) => {}}
+                    onSearch={() => {}}
+                />
+            </div>
+            <div className={styles["prompt-label"]}>
+                {PromptLabelArr.map((item) => (
+                    <div
+                        className={classNames(styles["prompt-label-item"], {
+                            [styles["prompt-label-item-no-active"]]: item !== selectLabel,
+                            [styles["prompt-label-item-active"]]: item === selectLabel
+                        })}
+                        onClick={() => {
+                            setSelectLabel(item)
+                        }}
+                    >
+                        <div className={styles["icon"]}>{getLabelIcon(item, item === selectLabel)}</div>
+                        <div className={styles["text"]}>{getLabelText(item)}</div>
+                        <div className={styles["count"]}>
+                            <span>{promptLabel && promptLabel[item]}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <div className={styles['prompt-list']}>
+                {promptList.map((item) => (
+                <div className={styles["prompt-item"]}>
+                    <div className={styles["title"]}>
+                        <div className={styles["icon"]}>
+                            <UIKitOutlineBugActiveIcon />
+                        </div>
+                        <div className={styles["text"]}>{item.title}</div>
+                    </div>
+                    {/* <div
+                        className={styles["sub-title"]}
+                        dangerouslySetInnerHTML={{__html: toLightHight(item.template)}}
+                    /> */}
+                    <div className={styles['sub-title']}>
+                        只需输入 将自动为你生成 Prompt
+                    </div>
+                    <div className={styles["detail"]}>
+                        <div className={styles['example']}>示例</div>
+                        {/* <div
+                            className={styles["detail-content"]}
+                            dangerouslySetInnerHTML={{
+                                __html: toLightHight(Array.isArray(item.eg) && item.eg.length > 0 ? item.eg[0] : "")
+                            }}
+                        /> */}
+                        {/* markdown显示 */}
+                        <div className={styles["detail-content"]}>
+                            <ChatMarkdown content={item.eg[0]} />
+                        </div>
+                    </div>
+                </div>
+            ))}
+            </div>
+            
+        </div>
     )
 })
 
