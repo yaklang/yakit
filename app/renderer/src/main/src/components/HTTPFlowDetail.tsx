@@ -18,7 +18,7 @@ import {
 } from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
-import {NewHTTPPacketEditor} from "../utils/editors"
+import {IMonacoEditor, NewHTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
@@ -856,7 +856,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 原始数据
     const [beforeResValue, setBeforeResValue] = useState<Uint8Array>(new Uint8Array())
     const [beforeRspValue, setBeforeRspValue] = useState<Uint8Array>(new Uint8Array())
-
+    // 编辑器实例
+    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+    const [resEditor, setResEditor] = useState<IMonacoEditor>()
     useUpdateEffect(()=>{
       setOriginResValue(flowRequest || new Uint8Array())
     },[flowRequestLoad])
@@ -871,6 +873,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         setRspType("current")
         setOriginResValue(flow?.Request || new Uint8Array())
         setOriginRspValue(flow?.Response || new Uint8Array())
+        // 编辑器滚轮回到顶部
+        reqEditor?.setScrollTop(0)
+        resEditor?.setScrollTop(0)
         const existedTags = Tags ? Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
         if (existedTags.includes("[手动修改]")) {
             setShowBeforeData(true)
@@ -983,6 +988,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             leftTitle: "请求",
                             rightTitle: "原始请求"
                         }}
+                        onEditor={(Editor)=>{
+                            setReqEditor(Editor)
+                        }}
                     />
                 )
             }}
@@ -1058,6 +1066,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             leftCode: rspType === "response" ? flow?.Response || new Uint8Array() : undefined,
                             leftTitle: "响应",
                             rightTitle: "原始响应"
+                        }}
+                        onEditor={(Editor)=>{
+                            setResEditor(Editor)
                         }}
                     />
                 )
