@@ -1388,6 +1388,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         </>
     )
 
+    const matchSubmitFun = useMemoizedFn(()=>{
+        matchRef.current = true
+        setRedirectedResponse(undefined)
+        sendFuzzerSettingInfo()
+        onValidateHTTPFuzzer()
+        getNewCurrentPage() 
+    })
+
     const secondNodeExtra = () => (
         <>
             <SecondNodeExtra
@@ -1423,14 +1431,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 isShowMatch = {!loading}
                 matchSubmit={()=>{
                     if(advancedConfigValue.matchers.length>0){
-                        matchRef.current = true
-                        setRedirectedResponse(undefined)
-                        sendFuzzerSettingInfo()
-                        onValidateHTTPFuzzer()
-                        getNewCurrentPage() 
+                        matchSubmitFun()
                     }
                     else{
-                        emiter.emit("onOpenMatchingAndExtractionCard")
+                        emiter.emit("onOpenMatchingAndExtractionCard",props.id)
                     }
                 }}
             />
@@ -1490,6 +1494,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }
                     onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
                     inViewportCurrent={inViewport === true}
+                    id={props.id}
+                    matchSubmitFun={matchSubmitFun}
                 />
             </React.Suspense>
             <div className={styles["http-fuzzer-page"]}>

@@ -7,5 +7,5 @@ export type WebFuzzerEventProps = {
     onFuzzerSequenceImportUpdateMenu: string
     onGetExportFuzzer: "all"|"payload"
     onGetExportFuzzerCallBack: string
-    onOpenMatchingAndExtractionCard?: string
+    onOpenMatchingAndExtractionCard: string
 }
