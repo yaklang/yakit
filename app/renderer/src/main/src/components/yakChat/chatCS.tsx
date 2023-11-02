@@ -925,17 +925,19 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
                         {!loading && (
                             <div className={styles["layout-footer"]}>
-                                <div className={styles["footer-prompt"]}>
-                                    <div
-                                        className={styles["footer-book"]}
-                                        onClick={() => {
-                                            setShowPrompt(!isShowPrompt)
-                                        }}
-                                    >
-                                        <YakChatBookIcon />
-                                        <span className={styles["content"]}>Prompt</span>
+                                {!isShowPrompt && (
+                                    <div className={styles["footer-prompt"]}>
+                                        <div
+                                            className={styles["footer-book"]}
+                                            onClick={() => {
+                                                setShowPrompt(true)
+                                            }}
+                                        >
+                                            <YakChatBookIcon />
+                                            <span className={styles["content"]}>Prompt</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                                 <div className={styles["footer-wrapper"]}>
                                     <Input.TextArea
                                         className={styles["text-area-wrapper"]}
@@ -1424,6 +1426,7 @@ interface PromptListProps {
     eg: string[]
     prompt_type: string
     template: string
+    templateArr: string[]
 }
 
 interface PromptLabelProps {
@@ -1455,6 +1458,24 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
         getPromptListPromise()
     }, [])
 
+    // 将字符串中的特定字符中的内容提取出来
+    const templateToArr = useMemoizedFn((str: string) => {
+        // 使用正则表达式匹配 |` 与 `| 之间的字符
+        const regex = /\|`([^`]+)`\|/g
+        const matches: string[] = []
+        let match
+        while ((match = regex.exec(str)) !== null) {
+            matches.push(match[1])
+        }
+        return matches
+    })
+
+    // 将Markdown渲染的数据染色
+    const highlightStr = useMemoizedFn((str: string)=>{
+        const newStr:string = str.replaceAll("|`","<span style='color: #8863F7;'>").replaceAll("`|","</span>")
+        return newStr
+    })
+
     const getPromptListPromise = useMemoizedFn((params = {}) => {
         getPromptList({...params})
             .then((result) => {
@@ -1477,7 +1498,8 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                             api: item.api,
                             eg: item.eg,
                             prompt_type: item.prompt_type,
-                            template: item.template
+                            template: item.template,
+                            templateArr: templateToArr(item.template)
                         }
                         list.push(PromptListItem)
                         label.Team_all += 1
@@ -1543,30 +1565,6 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
         }
     })
 
-    // 将字符串根据下标进行替换
-    const replaceStr = useMemoizedFn((str, index, newWords) => {
-        let arr = str.split("")
-        arr[index] = newWords
-        return arr.join("")
-    })
-
-    // 将字符串中引号中的内容进行高亮显示
-    const toLightHight = useMemoizedFn((v: string, end?: boolean) => {
-        let sub = v.indexOf("`")
-        if (sub !== -1) {
-            let str = replaceStr(
-                v,
-                sub,
-                end
-                    ? "</span>"
-                    : "<span style='padding:2px 6px;border-radius: 4px;background: rgba(136, 99, 247, 0.10);margin:0 4px;font-size: 12px;color: #8863F7;'>"
-            )
-            return toLightHight(str, !end)
-        }
-        // console.log("vvv", v)
-
-        return v
-    })
     return (
         <div className={styles["layout-prompt"]}>
             <div className={styles["prompt-title"]}>
@@ -1613,39 +1611,32 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                     </div>
                 ))}
             </div>
-            <div className={styles['prompt-list']}>
+            <div className={styles["prompt-list"]}>
                 {promptList.map((item) => (
-                <div className={styles["prompt-item"]}>
-                    <div className={styles["title"]}>
-                        <div className={styles["icon"]}>
-                            <UIKitOutlineBugActiveIcon />
+                    <div className={styles["prompt-item"]}>
+                        <div className={styles["title"]}>
+                            <div className={styles["icon"]}>
+                                <UIKitOutlineBugActiveIcon />
+                            </div>
+                            <div className={styles["text"]}>{item.title}</div>
                         </div>
-                        <div className={styles["text"]}>{item.title}</div>
-                    </div>
-                    {/* <div
-                        className={styles["sub-title"]}
-                        dangerouslySetInnerHTML={{__html: toLightHight(item.template)}}
-                    /> */}
-                    <div className={styles['sub-title']}>
-                        只需输入 将自动为你生成 Prompt
-                    </div>
-                    <div className={styles["detail"]}>
-                        <div className={styles['example']}>示例</div>
-                        {/* <div
-                            className={styles["detail-content"]}
-                            dangerouslySetInnerHTML={{
-                                __html: toLightHight(Array.isArray(item.eg) && item.eg.length > 0 ? item.eg[0] : "")
-                            }}
-                        /> */}
-                        {/* markdown显示 */}
-                        <div className={styles["detail-content"]}>
-                            <ChatMarkdown content={item.eg[0]} />
+                        <div className={styles["sub-title"]}>
+                            只需输入
+                            {item.templateArr.map((itemIn) => (
+                                <span className={styles["span-label"]}>{itemIn}</span>
+                            ))}
+                            将自动为你生成 Prompt
+                        </div>
+                        <div className={styles["detail"]}>
+                            <div className={styles["example"]}>示例</div>
+                            {/* markdown显示 */}
+                            <div className={styles["detail-content"]}>
+                                <ChatMarkdown content={highlightStr(item.eg[0])} />
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                ))}
             </div>
-            
         </div>
     )
 })

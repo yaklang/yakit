@@ -266,11 +266,13 @@
                         color: #b4bbca;
                         font-weight: 400;
                         line-height: 22px;
-                        p {
+                        .span-label{
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            background-color: rgba(136, 99, 247, 0.10);
+                            margin: 0px 4px;
                             font-size: 12px;
-                            font-weight: 400;
-                            line-height: 16px;
-                            color: #B4BBCA;
+                            color: #8863F7;
                         }
                     }
                     .detail {
