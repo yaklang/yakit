@@ -250,7 +250,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                     </TabPane>
                     <TabPane tab='评论' key='comment'>
                         <div className={styles["plugin-comment-wrapper"]} id='online-plugin-info-scroll'>
-                            <PluginComment isLogin={userInfo.isLogin} plugin={plugin} />
+                            <PluginComment isLogin={userInfo.isLogin} plugin={{...plugin, default_open: false}} />
                         </div>
                     </TabPane>
                     <TabPane tab='日志' key='log'>

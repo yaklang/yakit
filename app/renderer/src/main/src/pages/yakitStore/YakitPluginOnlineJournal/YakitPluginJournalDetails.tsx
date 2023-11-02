@@ -108,8 +108,7 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                     // Value:p.value||'',
                     Required: p.required || false,
                     Group: p.group || '',
-                    ExtraSetting: p.extra_setting || '',
-                    BuildInParam: p.buildIn_param || false,
+                    ExtraSetting: p.extra_setting || ''
                 })) || [],
                 CreatedAt: 0,
                 ScriptName: modifiedItem.script_name || '',
