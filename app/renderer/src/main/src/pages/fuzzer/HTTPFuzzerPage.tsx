@@ -102,6 +102,7 @@ import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import { openABSFileLocated } from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1979,8 +1980,28 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             onClick: ({key}) => {
                                 switch (key) {
                                     case "tooLargeResponseHeaderFile":
+                                        ipcRenderer
+                                            .invoke("is-file-exists", rsp.TooLargeResponseHeaderFile)
+                                            .then((flag: boolean) => {
+                                                if (flag) {
+                                                    openABSFileLocated(rsp.TooLargeResponseHeaderFile)
+                                                } else {
+                                                    failed("目标文件已不存在!")
+                                                }
+                                            })
+                                            .catch(() => {})
                                         break
                                     case "tooLargeResponseBodyFile":
+                                        ipcRenderer
+                                            .invoke("is-file-exists", rsp.TooLargeResponseBodyFile)
+                                            .then((flag: boolean) => {
+                                                if (flag) {
+                                                    openABSFileLocated(rsp.TooLargeResponseHeaderFile)
+                                                } else {
+                                                    failed("目标文件已不存在!")
+                                                }
+                                            })
+                                            .catch(() => {})
                                         break
                                     default:
                                         break

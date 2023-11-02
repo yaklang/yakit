@@ -44,6 +44,7 @@ import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "./yakitUI/YakitTag/YakitCheckableTag"
 import {YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import { openABSFileLocated } from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1070,8 +1071,28 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                                 onClick: ({key}) => {
                                                     switch (key) {
                                                         case "tooLargeResponseHeaderFile":
+                                                            ipcRenderer
+                                                                .invoke("is-file-exists", flow.TooLargeResponseHeaderFile)
+                                                                .then((flag: boolean) => {
+                                                                    if (flag) {
+                                                                        openABSFileLocated(flow.TooLargeResponseHeaderFile)
+                                                                    } else {
+                                                                        failed("目标文件已不存在!")
+                                                                    }
+                                                                })
+                                                                .catch(() => {})
                                                             break
                                                         case "tooLargeResponseBodyFile":
+                                                            ipcRenderer
+                                                                .invoke("is-file-exists", flow.TooLargeResponseBodyFile)
+                                                                .then((flag: boolean) => {
+                                                                    if (flag) {
+                                                                        openABSFileLocated(flow.TooLargeResponseHeaderFile)
+                                                                    } else {
+                                                                        failed("目标文件已不存在!")
+                                                                    }
+                                                                })
+                                                                .catch(() => {})
                                                             break
                                                         default:
                                                             break

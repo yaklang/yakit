@@ -11,7 +11,7 @@ import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
 import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {yakitFailed, yakitNotify} from "@/utils/notification"
+import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
@@ -30,6 +30,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import { openABSFileLocated } from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -759,8 +760,28 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                             onClick: ({key}) => {
                                                 switch (key) {
                                                     case "tooLargeResponseHeaderFile":
+                                                        ipcRenderer
+                                                            .invoke("is-file-exists", currentSelectItem.TooLargeResponseHeaderFile)
+                                                            .then((flag: boolean) => {
+                                                                if (flag) {
+                                                                    openABSFileLocated(currentSelectItem.TooLargeResponseHeaderFile)
+                                                                } else {
+                                                                    failed("目标文件已不存在!")
+                                                                }
+                                                            })
+                                                            .catch(() => {})
                                                         break
                                                     case "tooLargeResponseBodyFile":
+                                                        ipcRenderer
+                                                            .invoke("is-file-exists", currentSelectItem.TooLargeResponseBodyFile)
+                                                            .then((flag: boolean) => {
+                                                                if (flag) {
+                                                                    openABSFileLocated(currentSelectItem.TooLargeResponseHeaderFile)
+                                                                } else {
+                                                                    failed("目标文件已不存在!")
+                                                                }
+                                                            })
+                                                            .catch(() => {})
                                                         break
                                                     default:
                                                         break
