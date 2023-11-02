@@ -10,7 +10,6 @@ import {
     EyeIcon
 } from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
@@ -18,10 +17,9 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {useInViewport, useMemoizedFn, useTrackedEffect, useWhyDidYouUpdate} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {Form, Tooltip, Collapse, Space, Divider, Descriptions} from "antd"
-import {useWatch} from "antd/lib/form/Form"
-import React, {useState, useRef, useEffect, useMemo, ReactNode, useContext} from "react"
+import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {SelectOptionProps} from "../HTTPFuzzerPage"
@@ -31,7 +29,6 @@ import {StringToUint8Array} from "@/utils/str"
 import {
     ColorSelect,
     ExtractorItem,
-    MatcherAndExtractionCard,
     MatcherAndExtractionDrawer,
     MatcherItem,
     defMatcherAndExtractionCode,
@@ -53,6 +50,7 @@ import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -248,6 +246,18 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             setVisibleDrawer(true)
         }
     })
+
+    const onOpenMatchingAndExtractionCardEvent = useMemoizedFn(()=>{
+        onAddMatchingAndExtractionCard("matchers")
+    })
+
+    useEffect(() => {
+        emiter.on("onOpenMatchingAndExtractionCard", onOpenMatchingAndExtractionCardEvent)
+        return () => {
+            emiter.off("onOpenMatchingAndExtractionCard", onOpenMatchingAndExtractionCardEvent)
+        }
+    }, [])
+    
     const onRemoveMatcher = useMemoizedFn((i) => {
         const v = form.getFieldsValue()
         onSetValue({

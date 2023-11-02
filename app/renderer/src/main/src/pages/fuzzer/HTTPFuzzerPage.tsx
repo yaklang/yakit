@@ -840,7 +840,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             matchRef.current = false
             const matchTaskID = successFuzzer.length > 0 ? successFuzzer[0].TaskId : undefined
             const params = {...httpParams, ReMatch: true,HistoryWebFuzzerId:matchTaskID}
-            console.log("successFuzzer",matchTaskID,params);
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
         } 
         else {
@@ -1423,11 +1422,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 }}
                 isShowMatch = {!loading}
                 matchSubmit={()=>{
-                    matchRef.current = true
-                    setRedirectedResponse(undefined)
-                    sendFuzzerSettingInfo()
-                    onValidateHTTPFuzzer()
-                    getNewCurrentPage()
+                    if(advancedConfigValue.matchers.length>0){
+                        matchRef.current = true
+                        setRedirectedResponse(undefined)
+                        sendFuzzerSettingInfo()
+                        onValidateHTTPFuzzer()
+                        getNewCurrentPage() 
+                    }
+                    else{
+                        emiter.emit("onOpenMatchingAndExtractionCard")
+                    }
                 }}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
