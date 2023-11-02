@@ -134,6 +134,14 @@ export interface HTTPFlow {
     Domains?: string[]
     RootDomains?: string[]
     JsonObjects?: string[]
+
+    /**
+     * 超大响应
+     */
+    IsTooLargeResponse: boolean
+    TooLargeResponseHeaderFile: string
+    TooLargeResponseBodyFile: string
+    DisableRenderStyles: boolean
 }
 
 export interface FuzzableParams {
@@ -616,7 +624,7 @@ export interface CompateData {
     language: string
 }
 
-const OFFSET_LIMIT = 15
+const OFFSET_LIMIT = 30
 const OFFSET_STEP = 100
 
 export interface ShieldData {
