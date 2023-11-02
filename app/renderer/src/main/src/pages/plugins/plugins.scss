@@ -18,7 +18,7 @@
     .ant-tabs-ink-bar {
         display: none;
     }
-    .ant-tabs-nav {
+    & > .ant-tabs-nav {
         width: 22px;
         min-width: unset;
         .ant-tabs-nav-wrap {

@@ -1,8 +1,7 @@
-import {YakScriptParam} from "../schema";
-import {YakExecutorParam} from "../YakExecutorParams";
+import { YakParamProps } from "@/pages/plugins/pluginsType"
 
 export namespace ImportMenuConfig {
-    export const Params: YakScriptParam[] = [
+    export const Params: YakParamProps[] = [
         {
             Field: "config-file", FieldVerbose: "配置文件(zip/json)",
             Required: true, TypeVerbose: "upload-path", DefaultValue: "",

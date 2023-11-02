@@ -67,7 +67,8 @@ import {
     PluginBaseParamProps,
     PluginParamDataProps,
     PluginParamDataSelectProps,
-    PluginSettingParamProps
+    PluginSettingParamProps,
+    QueryYakScriptRiskDetailByCWEResponse
 } from "./pluginsType"
 import {MITMPluginTemplate} from "../invoker/data/MITMPluginTamplate"
 import {PortScanPluginTemplate} from "../invoker/data/PortScanPluginTemplate"
@@ -80,6 +81,7 @@ import {YakEditor} from "@/utils/editors"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {PluginGV} from "./utils"
 import {yakitNotify} from "@/utils/notification"
+import {BuiltInTags} from "./editDetails/builtInData"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
@@ -161,7 +163,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         (value: PluginSearchParams) => {
             onsearch(value)
         },
-        {wait: 300,leading:true}
+        {wait: 300, leading: true}
     )
 
     /** 全选框是否为半选状态 */
@@ -372,9 +374,9 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
     React.forwardRef((props, ref) => {
         const {isEdit = false, kind, data, tagsCallback} = props
 
-        const [bugInfo, setBugInfo, getBugInfo] = useGetState<API.PluginsRiskDetail>()
+        const [bugInfo, setBugInfo, getBugInfo] = useGetState<QueryYakScriptRiskDetailByCWEResponse>()
         const isHasBugInfo = useMemo(() => {
-            return !bugInfo?.description && !bugInfo?.solution
+            return !bugInfo?.Description && !bugInfo?.CWESolution
         }, [bugInfo])
 
         const [form] = Form.useForm()
@@ -383,7 +385,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
         useEffect(() => {
             if (data) {
                 form.setFieldsValue({...data})
-                setBugInfo(data.riskDetail ? {...data.riskDetail} : undefined)
+                setBugInfo(data.RiskDetail ? {...data.RiskDetail} : undefined)
             }
         }, [data])
 
@@ -391,12 +393,12 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
         const getValues = useMemoizedFn(() => {
             const obj = form.getFieldsValue()
             const data: PluginBaseParamProps = {
-                name: (obj?.name || "").trim(),
-                help: (obj?.help || "").trim() || undefined,
-                riskType: obj?.riskType || undefined,
-                riskDetail: getBugInfo(),
-                risk_annotation: (obj?.risk_annotation || "").trim() || undefined,
-                tags: obj?.tags || undefined
+                ScriptName: (obj?.name || "").trim(),
+                Help: (obj?.help || "").trim() || undefined,
+                RiskType: obj?.riskType || undefined,
+                RiskDetail: getBugInfo(),
+                RiskAnnotation: (obj?.risk_annotation || "").trim() || undefined,
+                Tags: obj?.tags || undefined
             }
             return data
         })
@@ -407,12 +409,12 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                     .then((value) => {
                         const obj = form.getFieldsValue()
                         const data: PluginBaseParamProps = {
-                            name: (obj?.name || "").trim(),
-                            help: (obj?.help || "").trim() || undefined,
-                            riskType: obj?.riskType || undefined,
-                            riskDetail: getBugInfo(),
-                            risk_annotation: (obj?.risk_annotation || "").trim() || undefined,
-                            tags: obj?.tags || undefined
+                            ScriptName: (obj?.name || "").trim(),
+                            Help: (obj?.help || "").trim() || undefined,
+                            RiskType: obj?.riskType || undefined,
+                            RiskDetail: getBugInfo(),
+                            RiskAnnotation: (obj?.risk_annotation || "").trim() || undefined,
+                            Tags: obj?.tags || undefined
                         }
                         resolve({...data})
                     })
@@ -494,10 +496,10 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                     .invoke("PluginsGetRiskInfo", {CWEId: opt.valueId})
                     .then((res: RiskOptInfoProps) => {
                         setBugInfo({
-                            cweId: opt?.valueId || "0",
-                            riskType: value,
-                            description: res?.Description || "",
-                            solution: res?.CWESolution || ""
+                            Id: opt?.valueId || "0",
+                            CWEName: value,
+                            Description: res?.Description || "",
+                            CWESolution: res?.CWESolution || ""
                         })
                     })
                     .catch(() => {
@@ -625,7 +627,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                         </div>
                         <div className={styles["bug-info"]}>
                             <div className={styles["info-title"]}>{`${
-                                bugInfo?.cweId ? "CWE-" + bugInfo.cweId + " " : ""
+                                bugInfo?.Id ? "CWE-" + bugInfo.CWEName + " " : ""
                             }${userRisk}`}</div>
                             {isHasBugInfo ? (
                                 <div className={styles["info-content"]}>
@@ -638,13 +640,13 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                                     <div className={styles["info-content"]}>
                                         <div className={styles["header-style"]}>漏洞描述</div>
                                         <div className={styles["content-style"]}>
-                                            {bugInfo?.description || "暂无描述"}
+                                            {bugInfo?.Description || "暂无描述"}
                                         </div>
                                     </div>
                                     <div className={styles["info-content"]}>
                                         <div className={styles["header-style"]}>修复建议</div>
                                         <div className={styles["content-style"]}>
-                                            {bugInfo?.solution || "暂无修复建议"}
+                                            {bugInfo?.CWESolution || "暂无修复建议"}
                                         </div>
                                     </div>
                                 </>
@@ -682,7 +684,13 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                             size='large'
                             onChange={(value: string[]) => onTagChange(value)}
                         >
-                            <YakitSelect.Option value='教程'>教程</YakitSelect.Option>
+                            {BuiltInTags.map((item) => {
+                                return (
+                                    <YakitSelect.Option key={item} value={item}>
+                                        {item}
+                                    </YakitSelect.Option>
+                                )
+                            })}
                         </YakitSelect>
                     </Form.Item>
                     <div className={styles["modify-select-icon"]}>
@@ -700,10 +708,10 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
         const {type, tags, setTags, data: oldData} = props
 
         const [data, setData, getData] = useGetState<PluginSettingParamProps>({
-            params: [],
+            Params: [],
             EnablePluginSelector: false,
             PluginSelectorTypes: "",
-            content: ""
+            Content: ""
         })
 
         // 获取当前表单的内容
@@ -741,15 +749,15 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
         // 插件参数信息弹窗提交信息
         const onOKParamModal = useMemoizedFn((data: PluginParamDataProps) => {
             if (!paramModal.info) {
-                setData({...getData(), params: getData().params.concat([data])})
+                setData({...getData(), Params: getData().Params.concat([data])})
             } else {
-                const arr = getData().params.map((item) => {
+                const arr = getData().Params.map((item) => {
                     if (item.Field === paramModal.info?.Field) {
                         return data
                     }
                     return item
                 })
-                setData({...getData(), params: [...arr]})
+                setData({...getData(), Params: [...arr]})
             }
             onCancelParamModal()
         })
@@ -766,14 +774,14 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                             <span className={styles["title-style"]}>增加参数</span>
                             <span className={styles["sub-title-style"]}>可自定义输入项</span>
                         </div>
-                        {data.params.length > 0 && (
+                        {data.Params.length > 0 && (
                             <YakitButton type='text' onClick={() => onShowParamModal()}>
                                 <OutlinePluscircleIcon />
                                 添加参数
                             </YakitButton>
                         )}
                     </div>
-                    {data.params.length === 0 && (
+                    {data.Params.length === 0 && (
                         <div className={styles["setting-params-add"]}>
                             <YakitButton
                                 style={{borderStyle: "dashed"}}
@@ -788,9 +796,9 @@ export const PluginModifySetting: React.FC<PluginModifySettingProps> = memo(
                         </div>
                     )}
                     <PluginParamList
-                        list={data?.params || []}
-                        setList={(list) => setData({...data, params: list})}
-                        onEdit={(index) => onShowParamModal(data.params[index])}
+                        list={data?.Params || []}
+                        setList={(list) => setData({...data, Params: list})}
+                        onEdit={(index) => onShowParamModal(data.Params[index])}
                     />
                 </div>
                 {type === "yak" && (
