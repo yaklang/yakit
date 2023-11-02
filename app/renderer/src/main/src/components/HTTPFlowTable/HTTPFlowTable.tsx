@@ -616,7 +616,7 @@ export interface CompateData {
     language: string
 }
 
-const OFFSET_LIMIT = 30
+const OFFSET_LIMIT = 15
 const OFFSET_STEP = 100
 
 export interface ShieldData {
@@ -1247,17 +1247,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const scrollTop = tableRef.current?.containerRef?.scrollTop
         const clientHeight = tableRef.current?.containerRef?.clientHeight
         const scrollHeight = tableRef.current?.containerRef?.scrollHeight
-        let scrollBottom: number|undefined = undefined
+        // let scrollBottom: number|undefined = undefined
+        let scrollBottomPercent: number|undefined = undefined
         if(typeof scrollTop ==="number"&&typeof clientHeight ==="number"&&typeof scrollHeight ==="number"){
-            scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
+            // scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
+            scrollBottomPercent = Number(((scrollTop + clientHeight)/scrollHeight).toFixed(2))
         }
+        
         // 滚动条接近触顶
         if (scrollTop < 10) {
             updateTopData()
             setOffsetData([]) 
         }
         // 滚动条接近触底
-        else if (typeof scrollBottom === "number" && scrollBottom < 100){
+        else if (typeof scrollBottomPercent === "number" && scrollBottomPercent > 0.9){
             updateBottomData()
             setOffsetData([])
         }
