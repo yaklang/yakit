@@ -512,8 +512,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setFlowRequest(undefined)
         setFlowResponse(undefined)
 
-        console.log(1234, selectedFlow)
-
         // 是否获取Request
         let isGetRequest: boolean = true
         let isGetResponse: boolean = true
