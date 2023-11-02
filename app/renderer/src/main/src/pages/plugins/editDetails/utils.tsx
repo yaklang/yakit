@@ -13,7 +13,7 @@ const {ipcRenderer} = window.require("electron")
 /**
  * @name 本地插件参数数据(YakParamProps)-转换成-线上插件参数数据(API.YakitPluginParam)
  */
-const convertLocalToRemoteParams = (local: YakParamProps[]) => {
+export const convertLocalToRemoteParams = (local: YakParamProps[]) => {
     return local.map((item) => {
         const obj: API.YakitPluginParam = {
             field: item.Field,
@@ -31,7 +31,7 @@ const convertLocalToRemoteParams = (local: YakParamProps[]) => {
 /**
  * @name 线上插件参数数据(API.YakitPluginParam)-转换成-本地插件参数数据(PluginParamDataProps)
  */
-const convertRemoteToLocalParams = (online: API.YakitPluginParam[]) => {
+export const convertRemoteToLocalParams = (online: API.YakitPluginParam[]) => {
     return online.map((item) => {
         const obj: YakParamProps = {
             Field: item.field,
@@ -90,14 +90,12 @@ export const convertLocalToLocalInfo = (
     request.Type = modify.Type
     request.Help = modify.Help
     request.RiskType = modify.RiskType
-    request.RiskDetail = modify.RiskType
-        ? {
-              Id: modify.RiskDetail?.Id || "",
-              CWEName: modify.RiskDetail?.CWEName || "",
-              Description: modify.RiskDetail?.Description || "",
-              CWESolution: modify.RiskDetail?.CWESolution || ""
-          }
-        : undefined
+    request.RiskDetail = {
+        Id: modify.RiskDetail?.Id || "",
+        CWEName: modify.RiskDetail?.CWEName || "",
+        Description: modify.RiskDetail?.Description || "",
+        CWESolution: modify.RiskDetail?.CWESolution || ""
+    }
     request.RiskAnnotation = modify.RiskAnnotation
     request.Tags = modify.Tags
     request.Params = modify.Params
@@ -105,11 +103,20 @@ export const convertLocalToLocalInfo = (
     request.PluginSelectorTypes = modify.PluginSelectorTypes
     request.Content = modify.Content
 
-    return toolDelInvalidKV(request)
+    if (!request.RiskType) {
+        // 非漏洞类型时，risk相关置为undefined
+        request.RiskDetail = undefined
+        request.RiskAnnotation = undefined
+    } else {
+        // 漏洞类型时，help置为undefined
+        request.Help = undefined
+    }
+
+    return toolDelInvalidKV(request) as localYakInfo
 }
 
 /**
- * @name 本地插件数据结构(YakScript)-转换成-线上插件数据结构(API.PluginsEditRequest)
+ * @name 本地插件数据结构(YakScript)-转换成-提交修改插件数据结构(API.PluginsRequest)
  * @param idModify 是否为编辑状态
  */
 export const convertLocalToRemoteInfo = (
@@ -121,7 +128,7 @@ export const convertLocalToRemoteInfo = (
 ) => {
     const {info, modify} = data
     // @ts-ignore
-    let request: API.PluginsEditRequest = {}
+    let request: API.PluginsRequest = {}
     if (isModify && info) {
         request = {
             type: info.Type,
@@ -144,9 +151,7 @@ export const convertLocalToRemoteInfo = (
             is_general_module: info.IsGeneralModule,
             is_private: info.OnlineIsPrivate,
             group: info.OnlineGroup,
-            isCorePlugin: info.IsCorePlugin,
-
-            uuid: info.UUID
+            isCorePlugin: info.IsCorePlugin
         }
     }
 
@@ -167,7 +172,6 @@ export const convertLocalToRemoteInfo = (
     request.enable_plugin_selector = modify.EnablePluginSelector
     request.plugin_selector_types = modify.PluginSelectorTypes
     request.content = modify.Content
-    request.logDescription = modify.modifyDescription
 
     // 没有tags就赋值为undefined
     if (request.tags?.length === 0) request.tags = undefined
@@ -176,15 +180,65 @@ export const convertLocalToRemoteInfo = (
     // 分组为空字符时清空值(影响后端数据处理)
     if (!request.group) request.group = undefined
 
-    return toolDelInvalidKV(request)
+    return toolDelInvalidKV(request) as API.PluginsRequest
+}
+
+/**
+ * @name 线上插件数据结构(API.PluginsDetail)-转换成-提交修改插件数据结构(API.PluginsRequest)
+ * @param idModify 线上插件详细信息
+ * @param modify 本地插件编辑信息
+ */
+export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify: PluginDataProps) => {
+    // @ts-ignore
+    const request: API.PluginsRequest = {
+        ...info,
+        annotation: info.risk_annotation,
+        tags: undefined
+    }
+    try {
+        request.tags = JSON.parse(info.tags)
+    } catch (error) {}
+
+    // 更新可编辑配置的内容
+    request.script_name = modify.ScriptName
+    request.type = modify.Type
+    request.help = modify.Help
+    request.riskType = modify.RiskType
+    request.riskDetail = {
+        cweId: modify.RiskDetail?.Id || "",
+        riskType: modify.RiskDetail?.CWEName || "",
+        description: modify.RiskDetail?.Description || "",
+        solution: modify.RiskDetail?.CWESolution || ""
+    }
+    request.annotation = modify.RiskAnnotation
+    request.tags = modify.Tags?.split(",") || []
+    request.params = modify.Params ? convertLocalToRemoteParams(modify.Params) : undefined
+    request.enable_plugin_selector = modify.EnablePluginSelector
+    request.plugin_selector_types = modify.PluginSelectorTypes
+    request.content = modify.Content
+
+    // 没有tags就赋值为undefined
+    if (request.tags?.length === 0) request.tags = undefined
+    // 非漏洞类型的插件清空漏洞类型详情
+    if (!request.riskType) request.riskDetail = undefined
+    // 分组为空字符时清空值(影响后端数据处理)
+    if (!request.group) request.group = undefined
+
+    return toolDelInvalidKV(request) as API.PluginsRequest
 }
 /** ---------- 数据结构转换 end ---------- */
 
 /**
  * @name 插件上传到online-整体上传逻辑
+ * @param info 上传到online的信息
+ * @param isModify 是否为编辑操作
  */
-export const uploadOnlinePlugin = (info: API.PluginsEditRequest, callback?: (plugin?: YakScript) => any) => {
-    console.log("remote", JSON.stringify(info))
+export const uploadOnlinePlugin = (
+    info: API.PluginsEditRequest,
+    isModify: boolean,
+    callback?: (plugin?: YakScript) => any
+) => {
+    console.log("api", info)
     // 往线上上传插件
     NetWorkApi<API.PluginsEditRequest, API.PluginsResponse>({
         method: "post",
@@ -192,6 +246,11 @@ export const uploadOnlinePlugin = (info: API.PluginsEditRequest, callback?: (plu
         data: info
     })
         .then((res) => {
+            if (isModify) {
+                // @ts-ignore
+                if (callback) callback(true)
+                return
+            }
             // 下载插件
             ipcRenderer
                 .invoke("DownloadOnlinePluginById", {
@@ -224,5 +283,53 @@ export const uploadOnlinePlugin = (info: API.PluginsEditRequest, callback?: (plu
         .catch((err) => {
             if (callback) callback()
             yakitNotify("error", "插件上传失败:" + err)
+        })
+}
+
+/**
+ * @name 复制插件-整体逻辑
+ * @param info 复制online的信息
+ */
+export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugin?: YakScript) => any) => {
+    console.log("copy-api", info)
+    // 往线上上传插件
+    NetWorkApi<API.CopyPluginsRequest, API.PluginsResponse>({
+        method: "post",
+        url: "copy/plugins",
+        data: info
+    })
+        .then((res) => {
+            // 下载插件
+            ipcRenderer
+                .invoke("DownloadOnlinePluginById", {
+                    OnlineID: res.id,
+                    UUID: res.uuid
+                } as DownloadOnlinePluginProps)
+                .then(() => {
+                    // 刷新插件菜单
+                    setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+                    // 获取下载后本地最新的插件信息
+                    ipcRenderer
+                        .invoke("GetYakScriptByOnlineID", {
+                            OnlineID: res.id,
+                            UUID: res.uuid
+                        } as GetYakScriptByOnlineIDRequest)
+                        .then((newSrcipt: YakScript) => {
+                            if (callback) callback(newSrcipt)
+                            yakitNotify("success", "复制插件成功")
+                        })
+                        .catch((e) => {
+                            if (callback) callback()
+                            yakitNotify("error", `查询本地插件错误:${e}`)
+                        })
+                })
+                .catch((err) => {
+                    if (callback) callback()
+                    yakitNotify("error", "插件下载本地失败:" + err)
+                })
+        })
+        .catch((err) => {
+            if (callback) callback()
+            yakitNotify("error", "复制插件失败:" + err)
         })
 }
