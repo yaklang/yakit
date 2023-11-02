@@ -1257,7 +1257,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setOffsetData([]) 
         }
         // 滚动条接近触底
-        else if (typeof scrollBottom === "number" && scrollBottom < 10){
+        else if (typeof scrollBottom === "number" && scrollBottom < 100){
             updateBottomData()
             setOffsetData([])
         }

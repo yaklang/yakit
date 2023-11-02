@@ -79,7 +79,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     isVer={true}
                     freeze={!onlyShowFirstNode}
                     firstRatio={onlyShowFirstNode ? "100%" : undefined}
-                    secondMinSize={onlyShowFirstNode ? "0px" : 50}
+                    secondNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined, display: onlyShowFirstNode ? "none" : ""}}
+                    secondMinSize={50}
                     secondNode={() => (
                         <>
                             {!onlyShowFirstNode && typeof defaultFold === 'boolean' && (
