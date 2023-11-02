@@ -22,13 +22,14 @@ import {LineConversionIcon} from "../../assets/icons"
 import {AutoCard} from "../../components/AutoCard"
 import {AutoSpin} from "../../components/AutoSpin"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
-import {YakScript, YakScriptParam} from "../invoker/schema"
+import {YakScript} from "../invoker/schema"
 import {useMemoizedFn} from "ahooks"
 import {YakScriptParamsSetter} from "../invoker/YakScriptParamsSetter"
 import {queryYakScriptList} from "../yakitStore/network"
 
 import "./style.css"
 import {Uint8ArrayToString} from "../../utils/str"
+import { YakParamProps } from "../plugins/pluginsType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -36,7 +37,7 @@ export interface CodecType {
     key?: string
     verbose: string
     subTypes?: CodecType[]
-    params?: YakScriptParam[]
+    params?: YakParamProps[]
     help?: React.ReactNode
     isYakScript?: boolean
 }
@@ -58,7 +59,7 @@ const generateSM4AmpAESParams = () => {
             TypeVerbose: "string",
             Help: "十六进制编码后的 IV（初始块）"
         }
-    ] as YakScriptParam[]
+    ] as YakParamProps[]
 }
 
 const SM4AmpAESEncHelp = () => {
