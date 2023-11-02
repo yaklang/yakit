@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     PluginDetailHeader,
     PluginDetails,
@@ -24,16 +24,24 @@ import {PluginFilterParams, PluginInfoRefProps, PluginSearchParams, PluginSettin
 import {ReasonModal} from "./PluginManage"
 import {ApplicantIcon, AuthorImg, FilterPopoverBtn, FuncBtn} from "../funcTemplate"
 import {IconOutlinePencilAltIcon} from "@/assets/newIcon"
-import {PluginBaseParamProps, PluginSettingParamProps} from "../pluginsType"
+import {
+    PluginBaseParamProps,
+    PluginDataProps,
+    PluginParamDataProps,
+    PluginSettingParamProps,
+    YakParamProps
+} from "../pluginsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OnlinePluginAppAction} from "../pluginReducer"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
+import {convertRemoteToLocalParams, convertRemoteToRemoteInfo} from "../editDetails/utils"
+import {yakitNotify} from "@/utils/notification"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
-import { NetWorkApi } from "@/services/fetch"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -51,7 +59,15 @@ export interface BackInfoProps {
     filter: PluginFilterParams
 }
 
+export interface DetailRefProps {
+    /** 删除的回调(value-删除的插件数组; isFailed-是否失败) */
+    onDelCallback: (value: YakitPluginOnlineDetail[], isFailed?: boolean) => any
+}
+
 interface PluginManageDetailProps {
+    ref?: ForwardedRef<any>
+    /** 列表加载状态 */
+    listLoading: boolean
     /** 所有数据 */
     response: YakitPluginListOnlineResponse
     /** 所有数据操作方法 */
@@ -83,449 +99,624 @@ interface PluginManageDetailProps {
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => any
 }
 
-export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => {
-    const {
-        response,
-        dispatch,
-        info,
-        defaultAllCheck,
-        defaultSelectList,
-        defaultSearch,
-        defaultFilter,
-        downloadLoading,
-        onBatchDownload,
-        onPluginDel,
-        currentIndex,
-        setCurrentIndex,
-        onBack,
-        loadMoreData,
-        onDetailSearch
-    } = props
+export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
+    forwardRef((props, ref) => {
+        const {
+            listLoading,
+            response,
+            dispatch,
+            info,
+            defaultAllCheck,
+            defaultSelectList,
+            defaultSearch,
+            defaultFilter,
+            downloadLoading,
+            onBatchDownload,
+            onPluginDel,
+            currentIndex,
+            setCurrentIndex,
+            onBack,
+            loadMoreData,
+            onDetailSearch
+        } = props
 
-    const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const onSearch = useMemoizedFn((value: PluginSearchParams) => {
-        onDetailSearch(searchs, filters)
-    })
-    const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
-    const onFilter = useMemoizedFn((value: PluginFilterParams) => {
-        setFilters(value)
-        onDetailSearch(searchs, value)
-    })
-
-    const aass = useRef<API.PluginsAuditDetailResponse>()
-
-    // 获取插件详情
-    const onDetail = useMemoizedFn((info: YakitPluginOnlineDetail) => {
-        console.log("api:plugins/audit/detail", `参数:${JSON.stringify({uuid: info.uuid, list_type: "check"})}`)
-        apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
-            .then((res) => {
-                console.log("res", res)
-                aass.current = res
-            })
-            .catch((e) => {
-                console.log("error:" + e)
-            })
-    })
-
-    useEffect(() => {
-        if (info) {
-            onDetail(info)
-        } else {
-        }
-    }, [info])
-
-    const qqqq = useMemoizedFn(() => {
-        if (!aass.current) return
-        const info = {...aass.current}
-        const obj: API.CopyPluginsRequest = {
-            ...info,
-            tags: (info.tags || "").split(","),
-            base_plugin_id: 13433,
-            script_name: "我改了，这是测试审核通过的",
-            // logDescription: "我就要通过改为不通过"
-        }
-        console.log("api:plugins/audit", JSON.stringify(obj))
-        // apiAuditPluginDetaiCheck(obj)
-        //     .then((res) => {
-        //         console.log("res", res)
-        //     })
-        //     .catch((e) => {
-        //         console.log("error:" + e)
-        //     })
-        NetWorkApi<API.CopyPluginsRequest, API.PluginsResponse>({
-            method: "post",
-            url: "copy/plugins",
-            data: {...obj}
+        const [searchs, setSearchs] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
+        const onSearch = useMemoizedFn((value: PluginSearchParams) => {
+            onDetailSearch(searchs, filters)
         })
-            .then((res) => {
-                console.log('copy',res)
-            })
-            .catch((err) => {
-                console.log('err',err)
-            })
-    })
-
-    const [loading, setLoading] = useState<boolean>(false)
-    const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
-    // 插件类型(漏洞类型|其他类型)
-    const isRisk = useMemo(() => {
-        if ((info as any)?.riskType) return "bug"
-        return "other"
-    }, [info])
-
-    const [allCheck, setAllcheck] = useState<boolean>(defaultAllCheck)
-    const onAllCheck = useMemoizedFn((check: boolean) => {
-        setSelectList([])
-        setAllcheck(check)
-    })
-
-    const [selectList, setSelectList, getSelectList] = useGetState<YakitPluginOnlineDetail[]>(defaultSelectList)
-    // 选中插件的uuid集合
-    const selectUUIDs = useMemo(() => {
-        return getSelectList().map((item) => item.uuid)
-    }, [selectList])
-    // 选中插件的数量
-    const selectNum = useMemo(() => {
-        if (allCheck) return response.pagemeta.total
-        else return selectList.length
-    }, [allCheck, selectList])
-    const onOptCheck = useMemoizedFn((data: YakitPluginOnlineDetail, check: boolean) => {
-        if (allCheck) {
-            setSelectList(response.data.filter((item) => item.uuid !== data.uuid))
-            setAllcheck(false)
-        }
-        if (check) setSelectList([...getSelectList(), data])
-        else setSelectList(getSelectList().filter((item) => item.uuid !== data.uuid))
-    })
-
-    // 批量下载|一键下载
-    const onDownload = useMemoizedFn(() => {
-        onBatchDownload({allCheck, selectList, search: searchs, filter: filters})
-    })
-
-    // (批量|单个)删除|清空
-    const onBatchDel = useMemoizedFn((info?: YakitPluginOnlineDetail) => {
-        onPluginDel(info, {allCheck, selectList, search: searchs, filter: filters})
-    })
-
-    useEffect(() => {
-        console.log("info", info)
-        if (info) {
-            // onDetail(info)
-            setPlugin({...(info as any)})
-            setInfoParams({
-                ScriptName: info.script_name,
-                Help: info.help || info.script_name,
-                Tags: info.tags.split(",")
-            })
-            setSettingParams({
-                Params: [] as any,
-                EnablePluginSelector: !!info.enable_plugin_selector,
-                PluginSelectorTypes: info.plugin_selector_types || "",
-                Content: info.content
-            })
-        } else {
-            setPlugin(undefined)
-            setInfoParams({ScriptName: ""})
-            setSettingParams({Params: [], Content: ""})
-        }
-    }, [info])
-
-    // 插件基础信息-相关逻辑
-    const infoRef = useRef<PluginInfoRefProps>(null)
-    const [infoParams, setInfoParams, getInfoParams] = useGetState<PluginBaseParamProps>({
-        ScriptName: ""
-    })
-    // 获取基础信息组件内的数据(不考虑验证)
-    const fetchInfoData = useMemoizedFn(() => {
-        if (infoRef.current) {
-            return infoRef.current.onGetValue()
-        }
-        return undefined
-    })
-    // 删除某些tag 触发  DNSLog和HTTP数据包变形开关的改变
-    const onTagsCallback = useMemoizedFn(() => {
-        setInfoParams({...(fetchInfoData() || getInfoParams())})
-    })
-    // DNSLog和HTTP数据包变形开关的改变 影响 tag的增删
-    const onSwitchToTags = useMemoizedFn((value: string[]) => {
-        setInfoParams({
-            ...(fetchInfoData() || getInfoParams()),
-            Tags: value
+        const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
+        const onFilter = useMemoizedFn((value: PluginFilterParams) => {
+            setFilters(value)
+            onDetailSearch(searchs, value)
         })
-    })
 
-    // 插件配置信息-相关逻辑
-    const settingRef = useRef<PluginSettingRefProps>(null)
-    const [settingParams, setSettingParams, getSettingParams] = useGetState<PluginSettingParamProps>({
-        Params: [],
-        Content: ""
-    })
+        // 获取插件详情
+        const onDetail = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+            if (loading) return
 
-    // 原因窗口
-    const [showReason, setShowReason] = useState<{visible: boolean; type: "nopass" | "del"}>({
-        visible: false,
-        type: "nopass"
-    })
-    // 删除按钮
-    const [delLoading, setDelLoading] = useState<boolean>(false)
-    // 审核按钮
-    const [statusLoading, setStatusLoading] = useState<boolean>(false)
-    // 打开原因窗口
-    const onOpenReason = useMemoizedFn(() => {
-        setShowReason({visible: true, type: "nopass"})
-    })
-    // 关闭原因窗口
-    const onCancelReason = useMemoizedFn(() => {
-        setShowReason({visible: false, type: "del"})
-    })
-    const onReasonCallback = useMemoizedFn((reason: string) => {
-        const type = showReason.type
-        onCancelReason()
+            setLoading(true)
+            apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
+                .then((res) => {
+                    console.log("res", res)
+                    if (res) {
+                        setPlugin({...res})
+                        // 源码
+                        setContent(res.content)
+                        if (+res.status !== 0) return
+                        // 设置修改人
+                        setApply({
+                            name: res.apply_user_name || "",
+                            img: res.apply_user_head_img || "",
+                            description: res.logDescription || ""
+                        })
+                        // 设置基础信息
+                        let infoData: PluginBaseParamProps = {
+                            ScriptName: res.script_name,
+                            Help: res.help,
+                            RiskType: res.riskType,
+                            RiskDetail: {
+                                Id: res.riskDetail?.cweId || "",
+                                CWEName: res.riskDetail?.riskType || "",
+                                Description: res.riskDetail?.description || "",
+                                CWESolution: res.riskDetail?.solution || ""
+                            },
+                            RiskAnnotation: res.risk_annotation,
+                            Tags: []
+                        }
+                        try {
+                            infoData.Tags = JSON.parse(res.tags || "[]")
+                        } catch (error) {}
+                        if (!infoData.RiskType) infoData.RiskDetail = undefined
+                        setInfoParams({...infoData})
+                        // 设置配置信息
+                        let settingData: PluginSettingParamProps = {
+                            Params: convertRemoteToLocalParams(res.params || []).map((item) => {
+                                const obj: PluginParamDataProps = {
+                                    ...item,
+                                    ExtraSetting: item.ExtraSetting ? JSON.parse(item.ExtraSetting) : undefined
+                                }
+                                return obj
+                            }),
+                            EnablePluginSelector: !!res.enable_plugin_selector,
+                            PluginSelectorTypes: res.plugin_selector_types,
+                            Content: res.content || ""
+                        }
+                        setSettingParams({...settingData})
 
-        if (type === "nopass") {
-            setStatusLoading(true)
-            dispatch({
-                type: "update",
-                payload: {
-                    item: {...info, status: 2}
-                }
-            })
+                        if (res.merge_before_plugins) setOldContent(res.merge_before_plugins.content || "")
+                    }
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        })
+
+        // 因为组件 RollingLoadList 的定向滚动功能初始不执行，所以设置一个初始变量跳过初始状态
+        const [scrollTo, setScrollTo] = useState<number>(0)
+
+        useEffect(() => {
+            if (info) {
+                onDetail(info)
+                // 必须加上延时，不然本次操作会成为组件(RollingLoadList)的初始数据
+                setTimeout(() => {
+                    setScrollTo(currentIndex)
+                }, 100)
+            }
+        }, [info])
+
+        const [loading, setLoading] = useState<boolean>(false)
+
+        const [allCheck, setAllcheck] = useState<boolean>(defaultAllCheck)
+        const onAllCheck = useMemoizedFn((check: boolean) => {
+            setSelectList([])
+            setAllcheck(check)
+        })
+
+        const [selectList, setSelectList, getSelectList] = useGetState<YakitPluginOnlineDetail[]>(defaultSelectList)
+        // 选中插件的uuid集合
+        const selectUUIDs = useMemo(() => {
+            return getSelectList().map((item) => item.uuid)
+        }, [selectList])
+        // 选中插件的数量
+        const selectNum = useMemo(() => {
+            if (allCheck) return response.pagemeta.total
+            else return selectList.length
+        }, [allCheck, selectList])
+        // 复选框勾选
+        const onOptCheck = useMemoizedFn((data: YakitPluginOnlineDetail, check: boolean) => {
+            if (allCheck) {
+                setSelectList(response.data.filter((item) => item.uuid !== data.uuid))
+                setAllcheck(false)
+            }
+            if (check) setSelectList([...getSelectList(), data])
+            else setSelectList(getSelectList().filter((item) => item.uuid !== data.uuid))
+        })
+        // 点击插件查看详情
+        const onOptClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
+            setCurrentIndex(index)
+            onDetail(data)
+        })
+
+        // 批量下载|一键下载
+        const onDownload = useMemoizedFn(() => {
+            onBatchDownload({allCheck, selectList, search: searchs, filter: filters})
+        })
+
+        // 删除按钮
+        const [delLoading, setDelLoading] = useState<boolean>(false)
+        // (批量|单个)删除|清空
+        const onBatchDel = useMemoizedFn((info?: YakitPluginOnlineDetail) => {
+            onPluginDel(info, {allCheck, selectList, search: searchs, filter: filters})
             setTimeout(() => {
-                setStatusLoading(false)
+                setDelLoading(false)
+            }, 300)
+        })
+
+        // 删除事件的结果回调
+        const onDelCallback: DetailRefProps["onDelCallback"] = useMemoizedFn((value, isfailed) => {
+            if (!isfailed) {
+                if (value.length === 0) {
+                    if (allCheck) setAllcheck(false)
+                    setSelectList([])
+                } else {
+                    const index = selectUUIDs.findIndex((item) => value[0]?.uuid === item)
+                    if (index > -1) {
+                        onOptCheck(value[0], false)
+                    }
+                }
+            }
+            setTimeout(() => {
+                setDelLoading(false)
             }, 200)
-        }
-    })
-    // 审核通过
-    const onPass = useMemoizedFn(() => {
-        setStatusLoading(true)
-        dispatch({
-            type: "update",
-            payload: {
-                item: {...info, status: 1}
+        })
+
+        useImperativeHandle(
+            ref,
+            () => ({
+                onDelCallback: onDelCallback
+            }),
+            []
+        )
+
+        const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
+        // 插件类型(漏洞类型|其他类型)
+        const isRisk = useMemo(() => {
+            if ((info as any)?.riskType) return "bug"
+            return "other"
+        }, [info])
+
+        // 修改者信息
+        const [apply, setApply] = useState<{name: string; img: string; description: string}>()
+        const isApply = useMemo(() => !!(apply && apply.name), [apply])
+
+        // 插件基础信息-相关逻辑
+        const infoRef = useRef<PluginInfoRefProps>(null)
+        const [infoParams, setInfoParams, getInfoParams] = useGetState<PluginBaseParamProps>({
+            ScriptName: ""
+        })
+        // 获取基础信息组件内的数据(不考虑验证)
+        const fetchInfoData = useMemoizedFn(() => {
+            if (infoRef.current) {
+                return infoRef.current.onGetValue()
+            }
+            return undefined
+        })
+        // 删除某些tag 触发  DNSLog和HTTP数据包变形开关的改变
+        const onTagsCallback = useMemoizedFn(() => {
+            setInfoParams({...(fetchInfoData() || getInfoParams())})
+        })
+        // DNSLog和HTTP数据包变形开关的改变 影响 tag的增删
+        const onSwitchToTags = useMemoizedFn((value: string[]) => {
+            setInfoParams({
+                ...(fetchInfoData() || getInfoParams()),
+                Tags: value
+            })
+        })
+
+        // 插件配置信息-相关逻辑
+        const settingRef = useRef<PluginSettingRefProps>(null)
+        const [settingParams, setSettingParams] = useState<PluginSettingParamProps>({
+            Params: [],
+            Content: ""
+        })
+
+        // 插件源码
+        const [content, setContent] = useState<string>("")
+        // 旧插件源码
+        const [oldContent, setOldContent] = useState<string>("")
+
+        // 将各部分组件内的数据取出并转换
+        const convertPluginInfo = useMemoizedFn(async () => {
+            if (!plugin) return undefined
+            const data: PluginDataProps = {
+                ScriptName: plugin.script_name,
+                Type: plugin.type,
+                Kind: plugin.riskType ? "bug" : "other",
+                Content: plugin.content
+            }
+            // 基础信息
+            if (!infoRef.current) {
+                yakitNotify("error", "未获取到基础信息，请重试")
+                return
+            }
+            const info = await infoRef.current.onSubmit()
+            if (!info) {
+                yakitNotify("error", "请完善必填的基础信息")
+                return
+            } else {
+                data.Help = data.Kind === "bug" ? undefined : info?.Help
+                data.RiskType = data.Kind === "bug" ? info?.RiskType : undefined
+                data.RiskDetail = data.Kind === "bug" ? info?.RiskDetail : undefined
+                data.RiskAnnotation = data.Kind === "bug" ? info?.RiskAnnotation : undefined
+                data.Tags = (info?.Tags || []).join(",") || undefined
+            }
+            // 配置信息
+            if (!settingRef.current) {
+                yakitNotify("error", "未获取到配置信息，请重试")
+                return
+            }
+            const setting = await settingRef.current.onSubmit()
+            if (!setting) {
+                yakitNotify("error", "请完善必填的配置信息")
+                return
+            } else {
+                data.Params = (setting?.Params || []).map((item) => {
+                    const obj: YakParamProps = {
+                        ...item,
+                        ExtraSetting: item.ExtraSetting ? JSON.stringify(item.ExtraSetting) : ""
+                    }
+                    return obj
+                })
+                data.EnablePluginSelector = setting?.EnablePluginSelector
+                data.PluginSelectorTypes = setting?.PluginSelectorTypes
+            }
+            // 无参数情况
+            if (data.Params.length === 0) data.Params = undefined
+            data.Content = content
+
+            const obj = convertRemoteToRemoteInfo(plugin, data)
+
+            return obj
+        })
+
+        // 通过|不通过请求API
+        const onChangeStatus = useMemoizedFn(
+            async (
+                param: {
+                    isPass: boolean
+                    description?: string
+                },
+                callback?: (value: boolean) => any
+            ) => {
+                const {isPass, description = ""} = param
+
+                if (plugin) {
+                    const audit: API.PluginsAudit = {
+                        listType: "check",
+                        status: isPass ? "true" : "false",
+                        uuid: plugin.uuid,
+                        logDescription: description || undefined
+                    }
+                    const info: API.PluginsRequest | undefined = await convertPluginInfo()
+                    if (!info) return
+
+                    try {
+                        info.tags = JSON.parse(plugin.tags || "[]")
+                    } catch (error) {}
+                    console.log("{...info, ...audit}", {...info, ...audit})
+                    // if (callback) callback(false)
+                    apiAuditPluginDetaiCheck({...info, ...audit})
+                        .then(() => {
+                            if (callback) callback(true)
+                        })
+                        .catch(() => {
+                            if (callback) callback(false)
+                        })
+                } else {
+                    if (callback) callback(false)
+                }
+            }
+        )
+
+        // 原因窗口
+        const [showReason, setShowReason] = useState<{visible: boolean; type: "nopass" | "del"}>({
+            visible: false,
+            type: "nopass"
+        })
+        // 审核按钮
+        const [statusLoading, setStatusLoading] = useState<boolean>(false)
+        // 打开原因窗口
+        const onOpenReason = useMemoizedFn(() => {
+            if (statusLoading) return
+            setStatusLoading(true)
+            setShowReason({visible: true, type: "nopass"})
+        })
+        // 关闭原因窗口
+        const onCancelReason = useMemoizedFn(() => {
+            setShowReason({visible: false, type: "del"})
+        })
+        const onReasonCallback = useMemoizedFn((reason: string) => {
+            const type = showReason.type
+            onCancelReason()
+
+            if (type === "nopass") {
+                setStatusLoading(true)
+                onChangeStatus({isPass: true, description: reason}, (value) => {
+                    if (value) {
+                        if (plugin) {
+                            setPlugin({...plugin, status: 2})
+                            dispatch({
+                                type: "update",
+                                payload: {
+                                    item: {...plugin, status: 2}
+                                }
+                            })
+                        }
+                    }
+                    setTimeout(() => {
+                        setStatusLoading(false)
+                    }, 200)
+                })
             }
         })
-        setTimeout(() => {
-            setStatusLoading(false)
-        }, 200)
-    })
-    // 去使用
-    const onRun = useMemoizedFn(() => {})
-    // 返回
-    const onPluginBack = useMemoizedFn(() => {
-        onBack({allCheck, selectList, search: searchs, filter: filters})
-    })
+        // 审核通过
+        const onPass = useMemoizedFn(() => {
+            if (statusLoading) return
+            setStatusLoading(true)
+            onChangeStatus({isPass: true}, (value) => {
+                if (value) {
+                    if (plugin) {
+                        setPlugin({...plugin, status: 1})
+                        dispatch({
+                            type: "update",
+                            payload: {
+                                item: {...plugin, status: 1}
+                            }
+                        })
+                    }
+                }
+                setTimeout(() => {
+                    setStatusLoading(false)
+                }, 200)
+            })
+        })
+        // 去使用
+        const onRun = useMemoizedFn(() => {})
+        // 返回
+        const onPluginBack = useMemoizedFn(() => {
+            onBack({allCheck, selectList, search: searchs, filter: filters})
+        })
 
-    const optExtra = useMemoizedFn((data: API.YakitPluginDetail) => {
-        return statusTag[`${data.status}`]
-    })
+        const optExtra = useMemoizedFn((data: API.YakitPluginDetail) => {
+            return statusTag[`${data.status}`]
+        })
 
-    if (!plugin) return null
+        if (!plugin) return null
 
-    return (
-        <PluginDetails<YakitPluginOnlineDetail>
-            title='插件管理'
-            search={searchs}
-            setSearch={setSearchs}
-            onSearch={onSearch}
-            filterExtra={
-                <div className={"details-filter-extra-wrapper"}>
-                    <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='check' />
-                    <div style={{height: 12}} className='divider-style'></div>
-                    <Tooltip title={selectNum > 0 ? "批量下载" : "一键下载"} overlayClassName='plugins-tooltip'>
-                        <YakitButton
-                            loading={downloadLoading}
-                            type='text2'
-                            icon={<OutlineClouddownloadIcon />}
-                            onClick={onDownload}
-                        />
-                    </Tooltip>
-                    <div style={{height: 12}} className='divider-style'></div>
-                    <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
-                        <YakitButton
-                            type='text2'
-                            icon={<OutlineTrashIcon />}
-                            onClick={() => {
-                                onBatchDel()
-                            }}
-                        />
-                    </Tooltip>
-                </div>
-            }
-            checked={allCheck}
-            onCheck={onAllCheck}
-            total={response.pagemeta.total}
-            selected={selectNum}
-            listProps={{
-                rowKey: "uuid",
-                numberRoll: currentIndex,
-                data: response.data,
-                loadMoreData: loadMoreData,
-                classNameRow: "plugin-details-opt-wrapper",
-                renderRow: (info, i) => {
-                    const check = allCheck || selectUUIDs.includes(info.uuid)
-                    return (
-                        <PluginDetailsListItem<API.YakitPluginDetail>
-                            plugin={info as any}
-                            selectUUId={plugin.uuid}
-                            check={check}
-                            headImg={info.head_img}
-                            pluginUUId={info.uuid}
-                            pluginName={info.script_name}
-                            help={info.help}
-                            content={info.content}
-                            optCheck={onOptCheck}
-                            extra={optExtra}
-                            official={info.official}
-                            isCorePlugin={!!info.isCorePlugin}
-                            pluginType={info.type}
-                            onPluginClick={() => {}}
-                        />
-                    )
-                },
-                page: response.pagemeta.page,
-                hasMore: response.pagemeta.total !== response.data.length,
-                loading: loading,
-                defItemHeight: 46
-            }}
-            onBack={onPluginBack}
-        >
-            <div className={styles["details-content-wrapper"]}>
-                <Tabs tabPosition='right' className='plugins-tabs'>
-                    <TabPane tab='源 码' key='code'>
-                        <div className={styles["plugin-info-wrapper"]}>
-                            <PluginDetailHeader
-                                pluginName={plugin.script_name}
-                                help={plugin.help}
-                                titleNode={statusTag["1"]}
-                                tags={plugin.tags}
-                                extraNode={
-                                    <div className={styles["plugin-info-extra-header"]}>
-                                        {+plugin.status !== 0 && (
-                                            <>
-                                                <Tooltip
-                                                    title={+plugin.status === 1 ? "改为未通过" : "改为通过"}
-                                                    overlayClassName='plugins-tooltip'
-                                                >
+        return (
+            <PluginDetails<YakitPluginOnlineDetail>
+                title='插件管理'
+                search={searchs}
+                setSearch={setSearchs}
+                onSearch={onSearch}
+                filterExtra={
+                    <div className={"details-filter-extra-wrapper"}>
+                        <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='check' />
+                        <div style={{height: 12}} className='divider-style'></div>
+                        <Tooltip title={selectNum > 0 ? "批量下载" : "一键下载"} overlayClassName='plugins-tooltip'>
+                            <YakitButton
+                                loading={downloadLoading}
+                                type='text2'
+                                icon={<OutlineClouddownloadIcon />}
+                                onClick={onDownload}
+                            />
+                        </Tooltip>
+                        <div style={{height: 12}} className='divider-style'></div>
+                        <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
+                            <YakitButton
+                                type='text2'
+                                loading={delLoading}
+                                icon={<OutlineTrashIcon />}
+                                onClick={() => {
+                                    onBatchDel()
+                                }}
+                            />
+                        </Tooltip>
+                    </div>
+                }
+                checked={allCheck}
+                onCheck={onAllCheck}
+                total={response.pagemeta.total}
+                selected={selectNum}
+                listProps={{
+                    rowKey: "uuid",
+                    numberRoll: scrollTo,
+                    data: response.data,
+                    loadMoreData: loadMoreData,
+                    classNameRow: "plugin-details-opt-wrapper",
+                    renderRow: (info, i) => {
+                        const check = allCheck || selectUUIDs.includes(info.uuid)
+                        return (
+                            <PluginDetailsListItem<API.YakitPluginDetail>
+                                order={i}
+                                plugin={info as any}
+                                selectUUId={plugin.uuid}
+                                check={check}
+                                headImg={info.head_img}
+                                pluginUUId={info.uuid}
+                                pluginName={info.script_name}
+                                help={info.help}
+                                content={info.content}
+                                optCheck={onOptCheck}
+                                extra={optExtra}
+                                official={info.official}
+                                isCorePlugin={!!info.isCorePlugin}
+                                pluginType={info.type}
+                                onPluginClick={onOptClick}
+                            />
+                        )
+                    },
+                    page: response.pagemeta.page,
+                    hasMore: response.pagemeta.total !== response.data.length,
+                    loading: listLoading,
+                    defItemHeight: 46
+                }}
+                onBack={onPluginBack}
+            >
+                <div className={styles["details-content-wrapper"]}>
+                    <Tabs tabPosition='right' className='plugins-tabs'>
+                        <TabPane tab='源 码' key='code'>
+                            <YakitSpin spinning={loading}>
+                                <div className={styles["plugin-info-wrapper"]}>
+                                    <PluginDetailHeader
+                                        pluginName={plugin.script_name}
+                                        help={plugin.help}
+                                        titleNode={statusTag[+plugin.status]}
+                                        tags={plugin.tags}
+                                        extraNode={
+                                            <div className={styles["plugin-info-extra-header"]}>
+                                                {+plugin.status !== 0 && (
+                                                    <>
+                                                        <Tooltip
+                                                            title={+plugin.status === 1 ? "改为未通过" : "改为通过"}
+                                                            overlayClassName='plugins-tooltip'
+                                                        >
+                                                            <YakitButton
+                                                                loading={statusLoading}
+                                                                type='text2'
+                                                                icon={<IconOutlinePencilAltIcon />}
+                                                                onClick={() => {
+                                                                    if (+plugin.status === 1) onOpenReason()
+                                                                    else onPass()
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                        <div style={{height: 12}} className='divider-style'></div>
+                                                    </>
+                                                )}
+                                                <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
                                                     <YakitButton
-                                                        loading={statusLoading}
                                                         type='text2'
-                                                        icon={<IconOutlinePencilAltIcon />}
-                                                        // onClick={onOpenReason}
-                                                        onClick={qqqq}
+                                                        icon={<OutlineTrashIcon />}
+                                                        loading={delLoading}
+                                                        onClick={() => {
+                                                            if (delLoading) return
+                                                            setDelLoading(true)
+                                                            onBatchDel(plugin)
+                                                        }}
                                                     />
                                                 </Tooltip>
-                                                <div style={{height: 12}} className='divider-style'></div>
-                                            </>
-                                        )}
-                                        <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
-                                            <YakitButton
-                                                type='text2'
-                                                icon={<OutlineTrashIcon />}
-                                                loading={delLoading}
-                                                onClick={() => onBatchDel(plugin)}
-                                            />
-                                        </Tooltip>
 
-                                        {+plugin.status === 0 && (
-                                            <>
+                                                {+plugin.status === 0 && (
+                                                    <>
+                                                        <FuncBtn
+                                                            maxWidth={1100}
+                                                            type='outline1'
+                                                            colors='danger'
+                                                            icon={<SolidBanIcon />}
+                                                            loading={statusLoading}
+                                                            name={"不通过"}
+                                                            onClick={onOpenReason}
+                                                        />
+                                                        <FuncBtn
+                                                            maxWidth={1100}
+                                                            colors='success'
+                                                            icon={<SolidBadgecheckIcon />}
+                                                            loading={statusLoading}
+                                                            name={"通过"}
+                                                            onClick={onPass}
+                                                        />
+                                                    </>
+                                                )}
                                                 <FuncBtn
                                                     maxWidth={1100}
-                                                    type='outline1'
-                                                    colors='danger'
-                                                    icon={<SolidBanIcon />}
-                                                    loading={statusLoading}
-                                                    name={"不通过"}
-                                                    // onClick={onOpenReason}
-                                                    onClick={qqqq}
+                                                    icon={<OutlineCursorclickIcon />}
+                                                    name={"去使用"}
+                                                    onClick={onRun}
                                                 />
-                                                <FuncBtn
-                                                    maxWidth={1100}
-                                                    colors='success'
-                                                    icon={<SolidBadgecheckIcon />}
-                                                    loading={statusLoading}
-                                                    name={"通过"}
-                                                    onClick={onPass}
-                                                />
-                                            </>
-                                        )}
-                                        <FuncBtn
-                                            maxWidth={1100}
-                                            icon={<OutlineCursorclickIcon />}
-                                            name={"去使用"}
-                                            // onClick={onRun}
-                                            onClick={qqqq}
-                                        />
-                                    </div>
-                                }
-                                img={plugin.head_img}
-                                user={plugin.authors}
-                                pluginId={plugin.uuid}
-                                updated_at={plugin.updated_at}
-                            />
-
-                            {+plugin.status === 0 ? (
-                                <div className={styles["plugin-info-body"]}>
-                                    <div className={styles["plugin-modify-info"]}>
-                                        <div className={styles["modify-advice"]}>
-                                            <div className={styles["advice-icon"]}>
-                                                <OutlineLightbulbIcon />
                                             </div>
-                                            <div className={styles["advice-body"]}>
-                                                <div className={styles["advice-content"]}>
-                                                    <div className={styles["content-title"]}>修改内容描述</div>
-                                                    <div className={styles["content-style"]}>
-                                                        这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，这里是申请人提交的对修改内容的描述，
+                                        }
+                                        img={plugin.head_img}
+                                        user={plugin.authors}
+                                        pluginId={plugin.uuid}
+                                        updated_at={plugin.updated_at}
+                                    />
+
+                                    {+plugin.status === 0 ? (
+                                        <div className={styles["plugin-info-body"]}>
+                                            <div className={styles["plugin-modify-info"]}>
+                                                {isApply && (
+                                                    <div className={styles["modify-advice"]}>
+                                                        <div className={styles["advice-icon"]}>
+                                                            <OutlineLightbulbIcon />
+                                                        </div>
+                                                        <div className={styles["advice-body"]}>
+                                                            <div className={styles["advice-content"]}>
+                                                                <div className={styles["content-title"]}>
+                                                                    修改内容描述
+                                                                </div>
+                                                                <div className={styles["content-style"]}>
+                                                                    {apply?.description || ""}
+                                                                </div>
+                                                            </div>
+                                                            <div className={styles["advice-user"]}>
+                                                                <AuthorImg src={apply?.img || ""} />
+                                                                {apply?.name || ""}
+                                                                <ApplicantIcon />
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className={styles["advice-user"]}>
-                                                    <AuthorImg src={plugin?.head_img || ""} />
-                                                    {plugin?.authors || ""}
-                                                    <ApplicantIcon />
+                                                )}
+                                                <PluginModifyInfo
+                                                    ref={infoRef}
+                                                    isEdit={true}
+                                                    kind={isRisk}
+                                                    data={infoParams}
+                                                    tagsCallback={onTagsCallback}
+                                                />
+                                            </div>
+                                            <div className={styles["plugin-setting-info"]}>
+                                                <div className={styles["setting-header"]}>插件配置</div>
+                                                <div className={styles["setting-body"]}>
+                                                    <PluginModifySetting
+                                                        ref={settingRef}
+                                                        type='yak'
+                                                        tags={infoParams.Tags || []}
+                                                        setTags={onSwitchToTags}
+                                                        data={settingParams}
+                                                    />
+                                                    <PluginEditorDiff
+                                                        isDiff={isApply}
+                                                        newCode={content}
+                                                        oldCode={oldContent}
+                                                        setCode={setContent}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
-                                        <PluginModifyInfo
-                                            ref={infoRef}
-                                            isEdit={true}
-                                            kind={isRisk}
-                                            data={infoParams}
-                                            tagsCallback={onTagsCallback}
-                                        />
-                                    </div>
-                                    <div className={styles["plugin-setting-info"]}>
-                                        <div className={styles["setting-header"]}>插件配置</div>
-                                        <div className={styles["setting-body"]}>
-                                            <PluginModifySetting
-                                                ref={settingRef}
-                                                type='yak'
-                                                tags={infoParams.Tags || []}
-                                                setTags={onSwitchToTags}
-                                                data={settingParams}
-                                            />
-                                            <PluginEditorDiff />
+                                    ) : (
+                                        <div className={styles["details-editor-wrapper"]}>
+                                            <YakitEditor type={"yak"} value={content} readOnly={true} />
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-                            ) : (
-                                <div className={styles["details-editor-wrapper"]}>
-                                    <YakitEditor type={"yak"} value={"1231242112515"} />
-                                </div>
-                            )}
-                        </div>
-                    </TabPane>
-                    <TabPane tab='日 志(监修中)' key='log' disabled={true}>
-                        <div></div>
-                    </TabPane>
-                </Tabs>
-            </div>
+                            </YakitSpin>
+                        </TabPane>
+                        <TabPane tab='日 志(监修中)' key='log' disabled={true}>
+                            <div></div>
+                        </TabPane>
+                    </Tabs>
+                </div>
 
-            <ReasonModal
-                visible={showReason.visible}
-                setVisible={onCancelReason}
-                type={showReason.type}
-                onOK={onReasonCallback}
-            />
-        </PluginDetails>
-    )
-}
+                <ReasonModal
+                    visible={showReason.visible}
+                    setVisible={onCancelReason}
+                    type={showReason.type}
+                    onOK={onReasonCallback}
+                />
+            </PluginDetails>
+        )
+    })
+)

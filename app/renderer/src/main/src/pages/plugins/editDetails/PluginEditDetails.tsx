@@ -25,25 +25,27 @@ import {
     YakParamProps,
     localYakInfo
 } from "../pluginsType"
-import {useGetState, useMemoizedFn, useWhyDidYouUpdate} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {PluginInfoRefProps, PluginSettingRefProps} from "../baseTemplateType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {yakitNotify} from "@/utils/notification"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {PluginGV} from "../utils"
 import {CodeScoreModal, FuncBtn} from "../funcTemplate"
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
-import {convertLocalToLocalInfo, convertLocalToRemoteInfo, uploadOnlinePlugin} from "./utils"
+import {convertLocalToLocalInfo, convertLocalToRemoteInfo, copyOnlinePlugin, uploadOnlinePlugin} from "./utils"
 import {API} from "@/services/swagger/resposeType"
 import {useStore} from "@/store"
 import {PortScanPluginParams} from "./builtInData"
-import {PluginModifyInfo, PluginModifySetting, pluginTypeToName} from "../baseTemplate"
+import {PluginModifyInfo, PluginModifySetting} from "../baseTemplate"
 import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import {YakitRoute} from "@/routes/newRoute"
+import {DefaultTypeList, PluginGV, pluginTypeToName} from "../builtInData"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
@@ -53,15 +55,6 @@ const {Link} = Anchor
 
 const {ipcRenderer} = window.require("electron")
 
-/** @name 类型选择-脚本类型选项信息 */
-const DefaultTypeList: {icon: ReactNode; name: string; description: string; key: string}[] = [
-    {...pluginTypeToName["yak"], key: "yak"},
-    {...pluginTypeToName["mitm"], key: "mitm"},
-    {...pluginTypeToName["port-scan"], key: "port-scan"},
-    {...pluginTypeToName["codec"], key: "codec"},
-    {...pluginTypeToName["lua"], key: "lua"},
-    {...pluginTypeToName["nuclei"], key: "nuclei"}
-]
 /** @name 类型选择-插件类型选项信息 */
 const DefaultKindList: {icon: ReactNode; name: string; key: string}[] = [
     {icon: <OutlineBugIcon />, name: "漏洞类", key: "bug"},
@@ -70,6 +63,13 @@ const DefaultKindList: {icon: ReactNode; name: string; key: string}[] = [
 
 interface PluginEditDetailsProps {
     id?: number
+}
+
+/** 新建|编辑插件成功后的信号传递信息 */
+export interface SavePluginInfoSignalProps {
+    route: YakitRoute
+    isOnline: boolean
+    info: YakScript
 }
 
 export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
@@ -83,6 +83,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptById", {Id: id})
             .then((res: YakScript) => {
+                console.log("fetch", res)
                 setInfo(res)
                 setTypeParams({
                     Type: res.Type,
@@ -126,6 +127,11 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     }, [id])
 
     const {userInfo} = useStore()
+
+    // 当前插件是否为本人插件
+    const isUser = useMemo(() => {
+        return +(info?.UserId || 0) === userInfo.user_id
+    }, [info, userInfo])
 
     // 是否为编辑状态
     const isModify = useMemo(() => !!info, [info])
@@ -347,6 +353,8 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             .then((data: YakScript) => {
                 yakitNotify("success", "创建 / 保存 插件成功")
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+                // 出发保存成功的信号事件
+                onLocalAndOnlineSend(data)
                 // 外界触发的二次提示的回调事件
                 onDestroyInstance(true)
             })
@@ -382,21 +390,10 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             return
         }
 
+        modalTypeRef.current = "close"
         isUpload.current = true
         modifyInfo.current = convertLocalToRemoteInfo(isModify, {info: info, modify: obj})
-        if (modifyInfo.current?.type === "nuclei") {
-            // nuclei yaml 插件不执行评分流程
-            uploadOnlinePlugin({...modifyInfo.current}, (value) => {
-                if (value) {
-                    // 需要编写关闭页面逻辑
-                }
-                setTimeout(() => {
-                    setOnlineLoading(false)
-                }, 200)
-            })
-        } else {
-            setCloudHint({isCopy: false, visible: true})
-        }
+        setCloudHint({isCopy: false, visible: true})
     })
     // 复制至云端
     const onCopyCloud = useMemoizedFn(async () => {
@@ -415,6 +412,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             return
         }
 
+        modalTypeRef.current = "close"
         isUpload.current = true
         modifyInfo.current = convertLocalToRemoteInfo(isModify, {info: info, modify: obj})
         setCloudHint({isCopy: true, visible: true})
@@ -436,17 +434,18 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             }, 200)
             return
         }
+        modalTypeRef.current = "close"
         isUpload.current = false
         modifyInfo.current = convertLocalToRemoteInfo(isModify, {info: info, modify: obj})
-        modifyInfo.current = {
-            ...modifyInfo.current,
-            script_name: "线上-mitm-漏洞类型",
-            uuid: "6b4747cd-0072-4c0a-a123-2db1f505e260"
-        }
         // 私密插件只填写描述修改内容
         if (modifyInfo.current.is_private) {
             setModifyReason(true)
         } else {
+            // nuclei yaml 插件不执行评分流程
+            if (modifyInfo.current?.type === "nuclei") {
+                setModifyReason(true)
+                return
+            }
             // 公开插件先进行评分，在填写描述修改内容
             setPluginTest(true)
         }
@@ -482,7 +481,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         }
 
         if (!isModify)
-            checkDuplicatePluginName(obj?.ScriptName || "", (value) => {
+            checkDuplicatePluginName(obj.ScriptName, (value) => {
                 if (value) saveLocal(obj)
                 else {
                     // 插件名重名
@@ -493,7 +492,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     })
 
     // 同步&复制云端
-    const modifyInfo = useRef<API.PluginsEditRequest>()
+    const modifyInfo = useRef<API.PluginsRequest>()
     const [cloudHint, setCloudHint] = useState<{isCopy: boolean; visible: boolean}>({isCopy: false, visible: false})
     const onCloudHintCallback = useMemoizedFn((isCallback: boolean, param?: {type?: string; name?: string}) => {
         // 手动关闭弹窗|没有获取到进行修改的插件信息
@@ -513,30 +512,46 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
         // 点击弹窗的提交按钮
         if (cloudHint.isCopy) {
-            const request: API.PluginsEditRequest = {
+            const request: API.CopyPluginsRequest = {
                 ...modifyInfo.current,
                 script_name: param?.name || modifyInfo.current.script_name,
-                is_private: true
+                is_private: true,
+                base_plugin_id: +(info?.OnlineId || 0)
             }
-            // 复制的插件直接为私密，不走基础检测流程
-            uploadOnlinePlugin(request, (value) => {
+            copyOnlinePlugin(request, (value) => {
                 if (value) {
-                    // 需要编写关闭页面逻辑
+                    onDestroyInstance(true)
                 }
                 setTimeout(() => {
                     setOnlineLoading(false)
                 }, 200)
             })
         } else {
+            // nuclei yaml 插件不执行评分流程
+            if (modifyInfo.current?.type === "nuclei") {
+                uploadOnlinePlugin({...modifyInfo.current, is_private: !(param?.type === "public")}, false, (value) => {
+                    if (value) {
+                        if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                        onDestroyInstance(true)
+                    }
+                    setTimeout(() => {
+                        setOnlineLoading(false)
+                    }, 200)
+                })
+                return
+            }
+
             // 公开的新插件需要走基础检测流程
             if (param && param?.type === "public") {
+                modifyInfo.current = {...modifyInfo.current, is_private: false}
                 setPluginTest(true)
             }
             // 私密的插件直接保存，不用走基础检测流程
             if (param && param?.type === "private") {
-                uploadOnlinePlugin({...modifyInfo.current, is_private: true}, (value) => {
+                uploadOnlinePlugin({...modifyInfo.current, is_private: true}, false, (value) => {
                     if (value) {
-                        // 需要编写关闭页面逻辑
+                        if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                        onDestroyInstance(true)
                     }
                     setTimeout(() => {
                         setOnlineLoading(false)
@@ -565,10 +580,12 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             }
             return
         }
+
         // 评分并上传后的回调逻辑
         if (value) {
             if (info) {
-                // 需要编写关闭页面逻辑
+                if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                onDestroyInstance(true)
             }
         }
         setPluginTest(false)
@@ -580,9 +597,9 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     const [modifyReason, setModifyReason] = useState<boolean>(false)
     const onModifyReason = useMemoizedFn((isSubmit: boolean, content?: string) => {
         if (isSubmit && modifyInfo.current) {
-            uploadOnlinePlugin({...modifyInfo.current, logDescription: content}, (value) => {
+            uploadOnlinePlugin({...modifyInfo.current, uuid: info?.UUID, logDescription: content}, true, (value) => {
                 if (value) {
-                    // 需要编写关闭页面逻辑
+                    onDestroyInstance(true)
                 }
                 setTimeout(() => {
                     setModifyLoading(false)
@@ -737,6 +754,30 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         emiter.emit("closePage", JSON.stringify({route: route}))
     })
 
+    const {pages} = usePageInfo((s) => ({pages: s.pages}), shallow)
+    // 本地保存成功后的信号发送
+    const onLocalAndOnlineSend = useMemoizedFn((info: YakScript, isOnline?: boolean) => {
+        let route: YakitRoute = YakitRoute.AddYakitScript
+        if (isModify) {
+            route = YakitRoute.ModifyYakitScript
+        }
+
+        const targetCache: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
+        let parent: YakitRoute | undefined = undefined
+        if (targetCache?.pageParamsInfo && targetCache.pageParamsInfo?.pluginInfoEditor) {
+            parent = targetCache.pageParamsInfo.pluginInfoEditor.source
+        }
+
+        if (parent) {
+            const param: SavePluginInfoSignalProps = {
+                route: parent,
+                isOnline: !!isOnline,
+                info: info
+            }
+            emiter.emit("savePluginInfoSignal", JSON.stringify(param))
+        }
+    })
+
     return (
         <div className={styles["plugin-edit-details-wrapper"]}>
             <div className={styles["plugin-edit-details-header"]}>
@@ -813,15 +854,17 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
                         {isModify ? (
                             <>
-                                <FuncBtn
-                                    maxWidth={1100}
-                                    icon={<OutlineDocumentduplicateIcon />}
-                                    type='outline2'
-                                    size='large'
-                                    name={"复制至云端"}
-                                    loading={onlineLoading}
-                                    onClick={onCopyCloud}
-                                />
+                                {!isUser && (
+                                    <FuncBtn
+                                        maxWidth={1100}
+                                        icon={<OutlineDocumentduplicateIcon />}
+                                        type='outline2'
+                                        size='large'
+                                        name={"复制至云端"}
+                                        loading={onlineLoading}
+                                        onClick={onCopyCloud}
+                                    />
+                                )}
 
                                 <FuncBtn
                                     maxWidth={1100}
@@ -1058,7 +1101,7 @@ interface PluginEditorModalProps {
     code: string
 }
 /** @name 源码放大版编辑器 */
-const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) => {
+export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) => {
     const {visible, setVisible, code} = props
 
     const [content, setContent] = useState<string>("")
@@ -1182,7 +1225,7 @@ const UploadPluginModal: React.FC<UploadPluginModalProps> = memo((props) => {
         }
         if (value) {
             if (plugin) {
-                uploadOnlinePlugin(plugin, (value) => {
+                uploadOnlinePlugin(plugin, false, (value) => {
                     onCancel(!!value, value)
                 })
             } else {
