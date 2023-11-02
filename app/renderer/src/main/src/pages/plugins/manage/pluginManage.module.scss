@@ -1,3 +1,10 @@
+// 插件管理页面-wrapper
+.plugin-manage-layout {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
 // 列表单项-额外操作-下拉表
 .func-filter-dropdown-menu {
     :global {
@@ -35,11 +42,11 @@
 .reason-modal-body {
     padding: 16px 24px 24px 24px;
     .hint-wrapper {
-        color:  #b4bbca;
+        color: #b4bbca;
         font-size: 14px;
         font-weight: 400;
-        line-height: 20px; 
-        .total-num{
+        line-height: 20px;
+        .total-num {
             color: #f28b44;
         }
     }

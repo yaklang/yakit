@@ -32,4 +32,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("PluginsGetRiskInfo", async (e, params) => {
         return await asyncGetRiskInfo(params)
     })
+
+    // save local plugin
+    const asyncSaveLocalPlugin = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SaveNewYakScript(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SaveLocalPlugin", async (e, params) => {
+        return await asyncSaveLocalPlugin(params)
+    })
 }

@@ -8,7 +8,6 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {compareAsc} from "../yakitStore/viewers/base"
 import {GetYakScriptTagsAndTypeResponse, QueryYakScriptRequest, QueryYakScriptsResponse} from "../invoker/schema"
 import {pluginTypeToName} from "./baseTemplate"
-import {FILTER_CACHE_LIST_DATA} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
@@ -836,5 +835,56 @@ export const apiDeleteLocalPluginsByWhere: (query: DeleteLocalPluginsByWhereRequ
     })
 }
 
-// 远端插件数据 转换成 前端可编辑的详情数据结构
-export const convertRemoteToLocalInfo = () => {}
+/**
+ * @name 获取插件的详细信息
+ * @description 审核|日志
+ */
+export const apiFetchPluginDetailCheck: (
+    query: API.PluginsAuditDetailRequest
+) => Promise<API.PluginsAuditDetailResponse> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.PluginsAuditDetailRequest, API.PluginsAuditDetailResponse>({
+                method: "post",
+                url: "plugins/audit/detail",
+                data: {...query}
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取详情失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取详情失败：：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 审核插件详情(通过|不通过)
+ * @description 审核|日志
+ */
+export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.PluginsAuditRequest, API.ActionSucceeded>({
+                method: "post",
+                url: "plugins/audit",
+                data: {...query}
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "操作失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "操作失败：" + error)
+            reject(error)
+        }
+    })
+}
