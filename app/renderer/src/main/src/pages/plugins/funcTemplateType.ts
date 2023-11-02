@@ -315,3 +315,14 @@ export interface FilterPopoverBtnProps {
     /** 筛选组件的类型-商店|审核|我的 */
     type?: "check" | "online" | "user" | "local"
 }
+
+/** 插件源码评分弹窗 */
+export interface CodeScoreModalProps {
+    /** 插件类型 */
+    type: string
+    /** 插件源码 */
+    code: string
+    visible: boolean
+    /** 关闭弹窗(true:合格|false:不合格) */
+    onCancel: (value: boolean) => any
+}

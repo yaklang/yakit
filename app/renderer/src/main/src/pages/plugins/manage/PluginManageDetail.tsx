@@ -27,7 +27,8 @@ import {IconOutlinePencilAltIcon} from "@/assets/newIcon"
 import {PluginBaseParamProps, PluginSettingParamProps} from "../pluginsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OnlinePluginAppAction} from "../pluginReducer"
-import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
+import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
+import {apiFetchPluginDetailCheck} from "../utils"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
@@ -51,7 +52,7 @@ export interface BackInfoProps {
 
 interface PluginManageDetailProps {
     /** 所有数据 */
-    response: API.YakitPluginListResponse
+    response: YakitPluginListOnlineResponse
     /** 所有数据操作方法 */
     dispatch: React.Dispatch<OnlinePluginAppAction>
     /** 初始点击插件数据 */
@@ -153,32 +154,42 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
         onPluginDel(info, {allCheck, selectList, search: searchs, filter: filters})
     })
 
+    // 获取插件详情
+    const onDetail = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+        apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
+            .then((res) => {
+                console.log("res", res)
+            })
+            .catch(() => {})
+    })
+
     useEffect(() => {
         console.log("info", info)
         if (info) {
-            setPlugin({...info})
+            onDetail(info)
+            setPlugin({...(info as any)})
             setInfoParams({
-                name: info.script_name,
-                help: info.help || info.script_name,
-                tags: info.tags.split(",")
+                ScriptName: info.script_name,
+                Help: info.help || info.script_name,
+                Tags: info.tags.split(",")
             })
             setSettingParams({
-                params: [] as any,
+                Params: [] as any,
                 EnablePluginSelector: !!info.enable_plugin_selector,
                 PluginSelectorTypes: info.plugin_selector_types || "",
-                content: info.content
+                Content: info.content
             })
         } else {
             setPlugin(undefined)
-            setInfoParams({name: ""})
-            setSettingParams({params: [], content: ""})
+            setInfoParams({ScriptName: ""})
+            setSettingParams({Params: [], Content: ""})
         }
     }, [info])
 
     // 插件基础信息-相关逻辑
     const infoRef = useRef<PluginInfoRefProps>(null)
     const [infoParams, setInfoParams, getInfoParams] = useGetState<PluginBaseParamProps>({
-        name: ""
+        ScriptName: ""
     })
     // 获取基础信息组件内的数据(不考虑验证)
     const fetchInfoData = useMemoizedFn(() => {
@@ -195,15 +206,15 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
     const onSwitchToTags = useMemoizedFn((value: string[]) => {
         setInfoParams({
             ...(fetchInfoData() || getInfoParams()),
-            tags: value
+            Tags: value
         })
     })
 
     // 插件配置信息-相关逻辑
     const settingRef = useRef<PluginSettingRefProps>(null)
     const [settingParams, setSettingParams, getSettingParams] = useGetState<PluginSettingParamProps>({
-        params: [],
-        content: ""
+        Params: [],
+        Content: ""
     })
 
     // 原因窗口
@@ -257,8 +268,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
     const onRun = useMemoizedFn(() => {})
     // 返回
     const onPluginBack = useMemoizedFn(() => {
-        // onBack()
-        setPlugin(undefined)
+        onBack({allCheck, selectList, search: searchs, filter: filters})
     })
 
     const optExtra = useMemoizedFn((data: API.YakitPluginDetail) => {
@@ -311,7 +321,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                     const check = allCheck || selectUUIDs.includes(info.uuid)
                     return (
                         <PluginDetailsListItem<API.YakitPluginDetail>
-                            plugin={info}
+                            plugin={info as any}
                             selectUUId={plugin.uuid}
                             check={check}
                             headImg={info.head_img}
@@ -441,7 +451,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                                             <PluginModifySetting
                                                 ref={settingRef}
                                                 type='yak'
-                                                tags={infoParams.tags || []}
+                                                tags={infoParams.Tags || []}
                                                 setTags={onSwitchToTags}
                                                 data={settingParams}
                                             />
