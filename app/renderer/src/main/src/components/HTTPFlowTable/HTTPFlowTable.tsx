@@ -709,7 +709,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 export const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
-    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,showHTTPFlowTableTitle=true,pageType} = props
+    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,pageType} = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)

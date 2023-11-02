@@ -962,10 +962,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setFirstResponse(r)
             }
             if (data.Ok) {
-                if (r.MatchedByMatcher) {
-                    // yakitNotify("success", `匹配成功: ${r.Url}`)
-                    yakitNotifyFun.run(r.Url)
-                }
+                // if (r.MatchedByMatcher) {
+                //     yakitNotify("success", `匹配成功: ${r.Url}`)
+                // }
                 successBuffer.push(r)
             } else {
                 failedBuffer.push(r)
@@ -1013,17 +1012,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ipcRenderer.removeAllListeners("fetch-extracted-to-table")
         }
     }, [])
-
-    const yakitNotifyFun = useDebounceFn(
-        (Url) => {
-            yakitNotify("success", `匹配成功: ${Url}`)
-        },
-        {
-          wait: 1000,
-          leading:true,
-          trailing:false
-        },
-      );
 
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
         if (inViewport) setAll(extractedMap)
