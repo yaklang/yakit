@@ -1,4 +1,6 @@
-const {ipcMain} = require("electron")
+const { ipcMain } = require("electron")
+const handlerHelper = require("./handleStreamWithContext")
+const { USER_INFO } = require("../state")
 
 module.exports = (win, getClient) => {
     // get plugins risk list
@@ -47,5 +49,14 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("SaveLocalPlugin", async (e, params) => {
         return await asyncSaveLocalPlugin(params)
+    })
+
+    // 批量插件上传
+    const streamSaveYakScriptToOnline = new Map()
+    ipcMain.handle("cancel-SaveYakScriptToOnline", handlerHelper.cancelHandler(streamSaveYakScriptToOnline))
+    ipcMain.handle("SaveYakScriptToOnline", async (e, params, token) => {
+        params.Token = USER_INFO.token||''
+        let stream = getClient().SaveYakScriptToOnline(params)
+        handlerHelper.registerHandler(win, stream, streamSaveYakScriptToOnline, token)
     })
 }
