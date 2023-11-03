@@ -47,6 +47,7 @@ export interface TableVirtualResizeProps<T> {
     title?: string | ReactNode
     renderTitle?: ReactNode
     titleHeight?: number
+    isShowTitle?: boolean
     extra?: ReactNode
     data: T[]
     renderKey: string

@@ -16,6 +16,7 @@ export interface YakScriptRunnerProp {
     script: YakScript
     params: YakExecutorParam[]
     debugMode?: boolean
+    consoleHeight?: string
 }
 
 export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
@@ -61,6 +62,7 @@ export const YakScriptRunner: React.FC<YakScriptRunnerProp> = (props) => {
                 loading={!finished}
                 onXtermRef={(ref) => setXtermRef(ref)}
                 cardStyleType={1}
+                consoleHeight={props.consoleHeight}
             />
         </div>
     )

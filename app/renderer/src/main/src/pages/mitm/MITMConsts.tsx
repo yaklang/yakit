@@ -14,5 +14,8 @@ export enum MITMConsts {
     MITMDefaultProxyUsername = "YAKIT_MITMDefaultProxyUsername",
     MITMDefaultProxyPassword = "YAKIT_MITMDefaultProxyPassword",
     MITMDefaultDnsServers = "YAKIT_MITMDefaultDnsServers",
-    MITMDefaultEtcHosts = "YAKIT_MITMDefaultEtcHosts"
+    MITMDefaultEtcHosts = "YAKIT_MITMDefaultEtcHosts",
+
+    // 时间戳记录
+    MITMStartTimeStamp = "YAKIT_MITMStartTimeStamp"
 }

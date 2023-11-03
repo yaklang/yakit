@@ -83,7 +83,7 @@ const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) =>
                 width: 1000,
                 content: (
                     <>
-                        <YakScriptRunner debugMode={true} script={yakScriptParams} params={[...(extraParams || [])]} />
+                        <YakScriptRunner consoleHeight={"200px"} debugMode={true} script={yakScriptParams} params={[...(extraParams || [])]} />
                     </>
                 )
             })

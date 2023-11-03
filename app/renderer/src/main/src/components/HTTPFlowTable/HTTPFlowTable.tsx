@@ -66,6 +66,8 @@ import {HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts, HTTPFlowTableFr
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon} from "../layout/icons"
 import {ExportSelect} from "../DataExport/DataExport"
+import emiter from "@/utils/eventBus/eventBus"
+import { MITMConsts } from "@/pages/mitm/MITMConsts"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -418,6 +420,8 @@ export interface HTTPFlowTableProp {
     httpHistoryTableTitleStyle?: React.CSSProperties
     // 筛选控件隐藏
     onlyShowSearch?: boolean
+    // 此控件显示的页面
+    pageType?: "MITM"
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -612,34 +616,7 @@ export interface CompateData {
     language: string
 }
 
-const TableFirstLinePlaceholder: HTTPFlow = {
-    Method: "",
-    Path: "",
-    Hash: "",
-    IsHTTPS: false,
-    Url: "",
-    Request: new Uint8Array(),
-    Response: new Uint8Array(),
-    StatusCode: 0,
-    BodyLength: -1,
-    ContentType: "null",
-    SourceType: "",
-    RequestHeader: [],
-    ResponseHeader: [],
-    GetParamsTotal: 0,
-    PostParamsTotal: 0,
-    CookieParamsTotal: 0,
-    CreatedAt: 0,
-    UpdatedAt: 0,
-    GetParams: [],
-    PostParams: [],
-    CookieParams: [],
-    Tags: "",
-    Id: -1,
-    IsPlaceholder: true
-}
-
-const OFFSET_LIMIT = 30
+const OFFSET_LIMIT = 15
 const OFFSET_STEP = 100
 
 export interface ShieldData {
@@ -729,8 +706,10 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
     return Math.ceil(v)
 }
 
+export const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
+
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
-    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false} = props
+    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,pageType} = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -763,7 +742,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
     const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetState<"B" | "K" | "M">("B")
-    const [maxId, setMaxId, getMaxId] = useGetState<number>(0)
+    // 最新一条数据ID
+    const maxIdRef = useRef<number>(0)
+    // 最后一条数据ID
+    const minIdRef = useRef<number>(0)
+    // 接口是否正在请求
+    const isGrpcRef = useRef<boolean>(false)
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     // const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
     const [currentIndex, setCurrentIndex] = useState<number>(0)
@@ -792,7 +776,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const sortRef = useRef<SortProps>(defSort)
 
     const tableRef = useRef<any>(null)
-    const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
+
+    const boxHeightRef = useRef<number>()
 
     const ref = useHotkeys("ctrl+r, enter", (e) => {
         const selected = getSelected()
@@ -810,7 +795,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const size = useSize(ref)
 
     useUpdateEffect(() => {
-        update(1)
+        updateData()
     }, [refresh])
 
     // 初次进入页面 获取默认高级筛选项
@@ -884,7 +869,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
             setParams(newParams)
             setTimeout(() => {
-                update(1)
+                updateData()
             }, 10)
         },
         [filterMode, hostName, urlPath, fileSuffix, searchContentType],
@@ -915,15 +900,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [compareRight])
 
     useEffect(() => {
+        if(pageType==="MITM"){
+            emiter.emit("onGetMITMShieldDataEvent",JSON.stringify(shieldData))
+        }
         // 判断是否第一次加载页面
         if (isOneceLoading.current) {
             getShieldList()
         } else {
-            // 持久化存储
             setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
-            // setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify({
-            //     data:[],
-            // }))
             let idArr: number[] = []
             let urlArr: string[] = []
             shieldData.data.map((item) => {
@@ -940,13 +924,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         getShieldList()
     }, [inViewport])
     useEffect(() => {
-        getNewData()
+        // getNewData()
         getHTTPFlowsFieldGroup(true)
     }, [])
-    // useEffect(() => {
-    //     // 刷新
-    //     getHTTPFlowsFieldGroup(true)
-    // }, [total])
+
     const getShieldList = useMemoizedFn(() => {
         getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA)
             .then((data) => {
@@ -957,7 +938,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         data: cacheData?.data || []
                     })
                 } catch (e) {
-                    update(1)
+                    updateData()
                     yakitNotify("error", `加载屏蔽参数失败: ${e}`)
                 }
             })
@@ -994,32 +975,170 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             sortRef.current = sort
             setTimeout(() => {
-                update(1, limit)
+                updateData()
             }, 10)
         },
         {wait: 500}
     ).run
 
-    const update = useMemoizedFn(
-        (page?: number, limit?: number, order?: string, orderBy?: string, sourceType?: string, noLoading?: boolean) => {
+    // 方法请求
+    const getDataByGrpc = useMemoizedFn((query,type:"top"|"bottom"|"offset"|"update")=>{
+        if(isGrpcRef.current) return
+        isGrpcRef.current = true
+        // 查询数据
+        ipcRenderer
+        .invoke("QueryHTTPFlows", query)
+        .then((rsp: YakQueryHTTPFlowResponse) => {
+            const resData = rsp?.Data || []
+            const newData: HTTPFlow[] = getClassNameData(resData)
+            if (type === "top") {
+                if (resData.length <= 0) {
+                    // 没有数据
+                    return
+                }
+                // 有增量数据刷新total
+                const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
+                setTotal(newTotal)
+                setData([...newData,...data])
+                maxIdRef.current = newData[0].Id
+            }
+            else if(type === "bottom"){
+                if (resData.length <= 0) {
+                    // 没有数据
+                    return
+                }
+                // 滚轮触底时加载数据 total 已包含因此不更新total
+                setData([...data,...newData])
+                minIdRef.current = newData[newData.length-1].Id
+            }
+            else if(type === "offset"){
+                if (resData.length <= 0) {
+                    // 没有数据
+                    return
+                }
+                // 有增量数据刷新total
+                const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
+                setTotal(newTotal)
+                const newOffsetData = newData.concat(getOffsetData())
+                maxIdRef.current = newOffsetData[0].Id
+                setOffsetData(newOffsetData)
+            }
+            else{
+                // if (rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
+                setSelectedRowKeys([])
+                setSelectedRows([])
+                setIsRefresh(!isRefresh)
+                setPagination(rsp.Pagination)
+                setData(newData)
+                maxIdRef.current = newData.length>0?newData[0].Id:0
+                minIdRef.current = newData.length>0?newData[newData.length-1].Id:0
+                setTotal(rsp.Total)
+            }
+        })
+        .catch((e: any) => {
+            yakitNotify("error", `query HTTP Flow failed: ${e}`)
+        })
+        .finally(() => setTimeout(() => {
+            setLoading(false)
+            isGrpcRef.current = false
+        }, 200))
+    })
+
+    // 偏移量更新顶部数据
+    const updateTopData = useMemoizedFn(()=>{
+        // 有储存的偏移量 则直接使用
+        if(getOffsetData().length){
+            setData([...getOffsetData(),...data])
+            setOffsetData([])
+            return
+        }
+        // 如无偏移 则直接请求数据
+        if(maxIdRef.current === 0){
+            updateData()
+            return
+        }
+        const paginationProps = {
+            Page: 1,
+            Limit: pagination.Limit,
+            Order: sortRef.current.order,
+            OrderBy: sortRef.current.orderBy || "id"
+        }
+        
+        const query = {
+            ...params,
+            Tags: params.Tags,
+            Pagination: {...paginationProps},
+            AfterId: maxIdRef.current,
+            AfterBodyLength: params.AfterBodyLength
+                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
+                : undefined,
+            BeforeBodyLength: params.BeforeBodyLength
+                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
+                : undefined
+        }
+        if (checkBodyLength && !query.AfterBodyLength) {
+            query.AfterBodyLength = 1
+        }
+        if (pageType === "MITM"&&query.AfterUpdatedAt === undefined&&query.BeforeUpdatedAt===undefined) {
+            updateMITMPageQuery(query,"top")
+            return
+        }
+        getDataByGrpc(query,"top")
+    })
+
+    // 偏移量更新底部数据
+    const updateBottomData = useMemoizedFn(()=>{
+        // 如无偏移 则直接请求数据
+        if(minIdRef.current === 0){
+            updateData()
+            return
+        }
+        const paginationProps = {
+            Page: 1,
+            Limit: pagination.Limit,
+            Order: sortRef.current.order,
+            OrderBy: sortRef.current.orderBy || "id"
+        }
+        
+        const query = {
+            ...params,
+            Tags: params.Tags,
+            Pagination: {...paginationProps},
+            BeforeId: minIdRef.current,
+            AfterBodyLength: params.AfterBodyLength
+                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
+                : undefined,
+            BeforeBodyLength: params.BeforeBodyLength
+                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
+                : undefined
+        }
+        if (checkBodyLength && !query.AfterBodyLength) {
+            query.AfterBodyLength = 1
+        }
+        if (pageType === "MITM"&&query.AfterUpdatedAt === undefined&&query.BeforeUpdatedAt===undefined) {
+            updateMITMPageQuery(query,"bottom")
+            return
+        }
+        getDataByGrpc(query,"bottom")
+    })
+
+    // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
+    const updateData = useMemoizedFn(() => {
+        if(boxHeightRef.current){
+            setOffsetData([])
+            maxIdRef.current = 0
+            minIdRef.current = 0
+            const limitCount: number = Math.ceil(boxHeightRef.current/28)
             const paginationProps = {
-                Page: page || 1,
-                Limit: limit || pagination.Limit,
+                Page: 1,
+                Limit: limitCount,
                 Order: sortRef.current.order,
                 OrderBy: sortRef.current.orderBy || "id"
             }
-            // if (!noLoading) setLoading(true)
-
-            const l = data.length
             const query = {
-                SourceType: sourceType,
                 ...params,
                 Tags: params.Tags,
                 Pagination: {...paginationProps},
-                OffsetId:
-                    paginationProps.Page == 1
-                        ? undefined
-                        : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
                 AfterBodyLength: params.AfterBodyLength
                     ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
                     : undefined,
@@ -1027,48 +1146,65 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
                     : undefined
             }
-
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-
-            ipcRenderer
-                .invoke("QueryHTTPFlows", query)
-                .then((rsp: YakQueryHTTPFlowResponse) => {
-                    // if (rsp?.Data.length === 0) return
-                    if (paginationProps.Page == 1) {
-                        setTotal(rsp.Total)
-                    }
-                    if (noLoading && rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
-
-                    const newData: HTTPFlow[] = getClassNameData(rsp?.Data || [])
-                    if (paginationProps.Page == 1) {
-                        setSelectedRowKeys([])
-                        setSelectedRows([])
-                        setIsRefresh(!isRefresh)
-                    }
-                    const d = paginationProps.Page == 1 ? newData : data.concat(newData)
-                    setPagination(rsp.Pagination)
-                    setData(d)
-                })
-                .catch((e: any) => {
-                    yakitNotify("error", `query HTTP Flow failed: ${e}`)
-                })
-                .finally(() => setTimeout(() => setLoading(false), 100))
+            if (pageType === "MITM"&&query.AfterUpdatedAt === undefined&&query.BeforeUpdatedAt===undefined) {
+                updateMITMPageQuery(query,"update")
+                return
+            }
+            getDataByGrpc(query,"update")
         }
-    )
+    })
+
+    // 滚轮处于中间时 监听是否有数据更新
+    const updateOffsetData = useMemoizedFn(()=>{
+            const paginationProps = {
+                Page: 1,
+                Limit: OFFSET_STEP,
+                Order: "desc",
+                OrderBy: "id"
+            }
+            const query = {
+                ...params,
+                Tags: params.Tags,
+                Color: color ? [color] : undefined,
+                AfterBodyLength: params.AfterBodyLength
+                    ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
+                    : undefined,
+                BeforeBodyLength: params.BeforeBodyLength
+                    ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
+                    : undefined,
+                SourceType: props.params?.SourceType || "mitm",
+                AfterId: maxIdRef.current,
+                Pagination: {...paginationProps}
+            }
+            if (pageType === "MITM"&&query.AfterUpdatedAt === undefined&&query.BeforeUpdatedAt===undefined) {
+                updateMITMPageQuery(query,"offset")
+                return
+            }
+            getDataByGrpc(query,"offset")
+    })
+
+    const updateMITMPageQuery = useMemoizedFn((query,type:"top"|"bottom"|"offset"|"update")=>{
+        getRemoteValue(MITMConsts.MITMStartTimeStamp).then((time:string) => {
+            if (!data) return
+            query.AfterUpdatedAt = parseInt(time)
+            getDataByGrpc(query,type)
+        })
+    })
 
     // 第一次启动的时候等待缓存条件加载
     // OnlyWebsocket 变的时候加载一下
     useEffect(() => {
         if (!isOneceLoading.current) {
-            update(1)
+            updateData()
         }
     }, [params.OnlyWebsocket])
 
     useEffect(() => {
         if (!isOneceLoading.current) {
-            update()
+            updateData()
         }
     }, [params.ExcludeId, params.ExcludeInUrl])
 
@@ -1083,7 +1219,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 if (rsp.Data.length > 0) {
-                    setMaxId(rsp.Data[0].Id)
+                    maxIdRef.current = rsp.Data[0].Id
                 }
                 setTotal(rsp.Total)
             })
@@ -1099,67 +1235,91 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 RefreshRequest
             })
             .then((rsp: HTTPFlowsFieldGroupResponse) => {
-                // const statusCode = rsp.StatusCode.map((ele) => ({value: ele.Value, total: ele.Total, label: ele.Value}))
                 const tags = rsp.Tags
                 setTags(tags.map((ele) => ({label: ele.Value, value: ele.Value})))
-                // setStatusCode([...statusCode])
             })
             .catch((e: any) => {
                 yakitNotify("error", `query HTTP Flows Field Group failed: ${e}`)
             })
     })
 
-    const scrollUpdateTop = useMemoizedFn(() => {
+    const scrollUpdate = useMemoizedFn(() => {
         const scrollTop = tableRef.current?.containerRef?.scrollTop
+        const clientHeight = tableRef.current?.containerRef?.clientHeight
+        const scrollHeight = tableRef.current?.containerRef?.scrollHeight
+        // let scrollBottom: number|undefined = undefined
+        let scrollBottomPercent: number|undefined = undefined
+        if(typeof scrollTop ==="number"&&typeof clientHeight ==="number"&&typeof scrollHeight ==="number"){
+            // scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
+            scrollBottomPercent = Number(((scrollTop + clientHeight)/scrollHeight).toFixed(2))
+        }
+        
+        // 滚动条接近触顶
         if (scrollTop < 10) {
-            update(1, undefined, undefined, undefined, undefined, true)
+            updateTopData()
+            setOffsetData([]) 
+        }
+        // 滚动条接近触底
+        else if (typeof scrollBottomPercent === "number" && scrollBottomPercent > 0.9){
+            updateBottomData()
             setOffsetData([])
-            return
         }
-        const paginationProps = {
-            Page: 1,
-            Limit: OFFSET_STEP,
-            Order: "desc",
-            OrderBy: "id"
-        }
-        const query = {
-            ...params,
-            Tags: params.Tags,
-            Color: color ? [color] : undefined,
-            AfterBodyLength: params.AfterBodyLength
-                ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                : undefined,
-            BeforeBodyLength: params.BeforeBodyLength
-                ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                : undefined,
-            // SourceType: "mitm",
-            SourceType: props.params?.SourceType || "mitm",
-            AfterId: maxId, // 用于计算增量的
-            Pagination: {...paginationProps}
-        }
-        // 查询数据
-        ipcRenderer
-            .invoke("QueryHTTPFlows", query)
-            .then((rsp: YakQueryHTTPFlowResponse) => {
-                const resData = rsp?.Data || []
-                if (resData.length <= 0) {
-                    // 没有增量数据
-                    return
-                }
+        // 滚动条在中间 增量
+        else{
+            if(data.length>0){
+                updateOffsetData()
+            }
+            else{
+                updateData()
+            }
 
-                // 有增量数据刷新total
-                const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
-                // setLoading(true)
-                setTotal(newTotal)
-                const newData = getClassNameData(resData)
-                const newOffsetData = newData.concat(getOffsetData())
-                setMaxId(newOffsetData[0].Id)
-                setOffsetData(newOffsetData)
-            })
-            .catch((e: any) => {
-                yakitNotify("error", `query HTTP Flow failed: ${e}`)
-            })
-            .finally(() => setTimeout(() => setLoading(false), 200))
+                // const paginationProps = {
+                //     Page: 1,
+                //     Limit: OFFSET_STEP,
+                //     Order: "desc",
+                //     OrderBy: "id"
+                // }
+                // const query = {
+                //     ...params,
+                //     Tags: params.Tags,
+                //     Color: color ? [color] : undefined,
+                //     AfterBodyLength: params.AfterBodyLength
+                //         ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
+                //         : undefined,
+                //     BeforeBodyLength: params.BeforeBodyLength
+                //         ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
+                //         : undefined,
+                //     // SourceType: "mitm",
+                //     SourceType: props.params?.SourceType || "mitm",
+                //     AfterId: maxIdRef.current, // 用于计算增量的
+                //     Pagination: {...paginationProps}
+                // }
+                // // 查询数据
+                // ipcRenderer
+                //     .invoke("QueryHTTPFlows", query)
+                //     .then((rsp: YakQueryHTTPFlowResponse) => {
+                //         const resData = rsp?.Data || []
+                //         console.log("增量数据",resData);
+                        
+                //         if (resData.length <= 0) {
+                //             // 没有增量数据
+                //             return
+                //         }
+        
+                //         // 有增量数据刷新total
+                //         const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
+                //         setTotal(newTotal)
+                //         const newData = getClassNameData(resData)
+                //         const newOffsetData = newData.concat(getOffsetData())
+                //         setMaxId(newOffsetData[0].Id)
+                //         setOffsetData(newOffsetData)
+                //     })
+                //     .catch((e: any) => {
+                //         yakitNotify("error", `query HTTP Flow failed: ${e}`)
+                //     })
+                //     .finally(() => setTimeout(() => setLoading(false), 200))
+        }
+        
     })
 
     useEffect(() => {
@@ -1169,8 +1329,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 设置是否自动刷新
     useEffect(() => {
         if (inViewport) {
-            scrollUpdateTop()
-            let id = setInterval(scrollUpdateTop, 1000)
+            scrollUpdate()
+            let id = setInterval(scrollUpdate, 1000)
             return () => clearInterval(id)
         }
     }, [inViewport])
@@ -1181,11 +1341,31 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
     // 取消屏蔽筛选
-    const cancleFilter = (value) => {
+    const cancleFilter = useMemoizedFn((value) => {
         const newArr = filterNonUnique([...shieldData.data, value])
         const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
-    }
+    })
+
+    const cancleMitmFilter = useMemoizedFn((str: string) => {
+        const value = JSON.parse(str)
+        cancleFilter(value)
+    })
+
+    useEffect(() => {
+        /**
+         * 清空log表格数据
+         */
+        const cleanLogTableData = () => {
+            updateData()
+        }
+        pageType==="MITM"&&emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
+        pageType==="MITM"&&emiter.on("cleanMitmLogEvent", cleanLogTableData)
+        return () => {
+            emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
+            emiter.off("cleanMitmLogEvent", cleanLogTableData)
+        }
+    }, [])
 
     const onColorSure = useMemoizedFn(() => {
         if (isShowColor) {
@@ -1196,7 +1376,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Color: color
         })
         setTimeout(() => {
-            update(1)
+            updateData()
         }, 100)
     })
 
@@ -1238,7 +1418,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         (check: boolean) => {
             setCheckBodyLength(check)
             setTimeout(() => {
-                update(1)
+                updateData()
             }, 100)
         },
         {wait: 200}
@@ -1410,7 +1590,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     BeforeBodyLength: getBeforeBodyLength()
                                 })
                                 setTimeout(() => {
-                                    update(1)
+                                    updateData()
                                 }, 100)
                             }}
                             extra={
@@ -1664,7 +1844,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .then(() => {
                 yakitNotify("info", "删除成功")
-                update()
+                updateData()
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     })
@@ -1674,7 +1854,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         ipcRenderer
             .invoke("DeleteHTTPFlows", {DeleteAll: true})
             .then(() => {
-                update(1)
+                updateData()
             })
             .catch((e: any) => {
                 yakitNotify("error", `历史记录删除失败: ${e}`)
@@ -1709,7 +1889,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ExcludeInUrl: params.ExcludeInUrl
                 }
                 setParams({...newParams})
-                update(1)
+                updateData()
             })
             .catch((e: any) => {
                 yakitNotify("error", `历史记录删除失败: ${e}`)
@@ -2215,7 +2395,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setColor([])
         setCheckBodyLength(false)
         setTimeout(() => {
-            update(1)
+            updateData()
         }, 100)
     })
     /**
@@ -2256,7 +2436,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 setParams({...params, Keyword: e.target.value})
             }}
             style={{maxWidth: 200}}
-            onSearch={() => update(1)}
+            onSearch={() =>{
+                updateData()
+            }}
             // 这个事件很关键哈，不要用 onChange
             onBlur={(e) => {
                 if (props.onSearch) {
@@ -2273,6 +2455,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 onResize={(width, height) => {
                     if (!width || !height) {
                         return
+                    }
+                    if(onlyShowFirstNode){
+                        // 窗口由小变大时 重新拉取数据
+                        if(boxHeightRef.current&&boxHeightRef.current<height){
+                            boxHeightRef.current = height
+                            updateData()
+                        }else{
+                            boxHeightRef.current = height
+                        }
                     }
                 }}
                 handleWidth={true}
@@ -2313,7 +2504,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     setParams({...params, SourceType: selectTypeList.join(",")})
                                                 }
                                                 setTimeout(() => {
-                                                    update(1)
+                                                    updateData()
                                                 }, 10)
                                             }}
                                         >
@@ -2373,7 +2564,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             onSelect={(val) => {
                                                 setParams({...params, IsWebsocket: val})
                                                 setTimeout(() => {
-                                                    update(1)
+                                                    updateData()
                                                 }, 50)
                                             }}
                                         >
@@ -2398,8 +2589,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             onChange={(e) => {
                                                 setParams({...params, Keyword: e.target.value})
                                             }}
-                                            onSearch={(v) => {
-                                                update(1)
+                                            onSearch={() => {
+                                                setTimeout(()=>{
+                                                   updateData() 
+                                                },50)
                                             }}
                                             // 这个事件很关键哈，不要用 onChange
                                             onBlur={(e) => {
@@ -2606,7 +2799,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 onClick: ({key}) => {
                                                     switch (key) {
                                                         case "noResetRefresh":
-                                                            update(1)
+                                                            updateData()
                                                             break
                                                         case "resetRefresh":
                                                             onResetRefresh()
@@ -2638,6 +2831,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             </div>
                         </div>
                     }
+                    isShowTitle={pageType!=="MITM"}
                     isReset={isReset}
                     isRefresh={isRefresh}
                     renderKey='Id'
@@ -2661,7 +2855,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         page: pagination.Page,
                         limit: pagination.Limit,
                         total,
-                        onChange: update
+                        onChange: (page,limit)=>{
+                        }
                     }}
                     onChange={onTableChange}
                     onSetCurrentRow={onSetCurrentRow}

@@ -18,7 +18,7 @@ import {
 } from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
-import {NewHTTPPacketEditor} from "../utils/editors"
+import {IMonacoEditor, NewHTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
@@ -64,6 +64,8 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
 
     refresh?: boolean
     defaultFold?: boolean
+
+    pageType?: "MITM"
 }
 
 const {Text} = Typography
@@ -460,7 +462,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh, defaultFold = false} = props
+    const {id, selectedFlow, refresh, defaultFold = false,pageType} = props
     const [flow, setFlow] = useState<HTTPFlow>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
     const [flowResponse,setFlowResponse] = useState<Uint8Array>()
@@ -601,6 +603,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [infoType])
 
     const mainCol: number = useMemo(() => {
+        if(pageType==="MITM"){
+            return 24
+        }
         let col: number = 19
         if (isFold) {
             col = 24
@@ -623,6 +628,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         />
                     )}
                 </Col>
+                {pageType!=="MITM"&&<>
                 {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
                     <Col span={5}>
                         <NewHTTPPacketEditor
@@ -746,8 +752,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         </div>
                     </Col>
                 )}
+                </>}
             </Row>
-            {isFold && (
+            {isFold && pageType!=="MITM" && (
                 <div className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}>
                     <div
                         className={classNames(styles["http-history-icon-box"])}
@@ -849,7 +856,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 原始数据
     const [beforeResValue, setBeforeResValue] = useState<Uint8Array>(new Uint8Array())
     const [beforeRspValue, setBeforeRspValue] = useState<Uint8Array>(new Uint8Array())
-
+    // 编辑器实例
+    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+    const [resEditor, setResEditor] = useState<IMonacoEditor>()
     useUpdateEffect(()=>{
       setOriginResValue(flowRequest || new Uint8Array())
     },[flowRequestLoad])
@@ -864,6 +873,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         setRspType("current")
         setOriginResValue(flow?.Request || new Uint8Array())
         setOriginRspValue(flow?.Response || new Uint8Array())
+        // 编辑器滚轮回到顶部
+        reqEditor?.setScrollTop(0)
+        resEditor?.setScrollTop(0)
         const existedTags = Tags ? Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
         if (existedTags.includes("[手动修改]")) {
             setShowBeforeData(true)
@@ -976,6 +988,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             leftTitle: "请求",
                             rightTitle: "原始请求"
                         }}
+                        onEditor={(Editor)=>{
+                            setReqEditor(Editor)
+                        }}
                     />
                 )
             }}
@@ -1051,6 +1066,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             leftCode: rspType === "response" ? flow?.Response || new Uint8Array() : undefined,
                             leftTitle: "响应",
                             rightTitle: "原始响应"
+                        }}
+                        onEditor={(Editor)=>{
+                            setResEditor(Editor)
                         }}
                     />
                 )

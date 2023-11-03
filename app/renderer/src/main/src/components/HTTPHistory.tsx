@@ -17,10 +17,11 @@ export interface HTTPPacketFuzzable {
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {
     websocket?: boolean
-    title?: string
+    pageType?: "MITM"
 }
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
+    const {pageType} = props
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
     const {isRefreshHistory, setIsRefreshHistory} = useStore()
@@ -68,17 +69,18 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             }}
                             paginationPosition={"topRight"}
                             onSearch={setHighlightSearch}
-                            title={props?.title}
                             onlyShowFirstNode={onlyShowFirstNode}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
                             refresh={refresh}
+                            pageType={pageType}
                         />
                     )}
                     firstMinSize={160}
                     isVer={true}
                     freeze={!onlyShowFirstNode}
                     firstRatio={onlyShowFirstNode ? "100%" : undefined}
-                    secondMinSize={onlyShowFirstNode ? "0px" : 50}
+                    secondNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined, display: onlyShowFirstNode ? "none" : ""}}
+                    secondMinSize={50}
                     secondNode={() => (
                         <>
                             {!onlyShowFirstNode && typeof defaultFold === 'boolean' && (
@@ -93,6 +95,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         selectedFlow={selected}
                                         refresh={refresh}
                                         defaultFold={defaultFold}
+                                        pageType={pageType}
                                         // defaultHeight={detailHeight}
                                     />
                                 </div>

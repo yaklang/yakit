@@ -323,6 +323,9 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
                         callback={(host, port) => {
                             setChromeVisible(false)
                             if (!isStartMITM) {
+                                // 记录时间戳
+                                const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
+                                setRemoteValue(MITMConsts.MITMStartTimeStamp,nowTime)
                                 if (onFished) onFished(host, port)
                             }
                         }}

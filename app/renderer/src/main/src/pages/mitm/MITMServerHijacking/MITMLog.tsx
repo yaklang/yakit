@@ -653,11 +653,28 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
 })
 
 interface MITMLogHeardExtraProps {
-    shieldData: ShieldData
-    cancleFilter: (s: string | number) => void
 }
 export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((props) => {
-    const {shieldData, cancleFilter} = props
+    // 屏蔽数据
+    const [shieldData, setShieldData] = useState<ShieldData>({
+        data: []
+    })
+
+    useEffect(() => {
+        emiter.on("onGetMITMShieldDataEvent", onGetMITMShieldData)
+        return () => {
+            emiter.off("onGetMITMShieldDataEvent", onGetMITMShieldData)
+        }
+    }, [])
+
+    const onGetMITMShieldData = useMemoizedFn((str:string)=>{
+        const value = JSON.parse(str)
+        setShieldData(value)
+    })
+
+    const cancleFilter = useMemoizedFn((value)=>{
+        emiter.emit("cancleMitmFilterEvent",JSON.stringify(value))
+    })
 
     const cleanMitmLogTableData = useMemoizedFn((params: {DeleteAll: boolean; Filter?: {}}) => {
         ipcRenderer
