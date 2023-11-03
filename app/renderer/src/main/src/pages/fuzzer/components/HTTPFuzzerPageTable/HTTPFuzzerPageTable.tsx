@@ -140,10 +140,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             []
         )
 
-        useEffect(() => {
-            console.log(123, currentSelectItem)
-        }, [currentSelectItem])
-
         const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
             return success
                 ? [

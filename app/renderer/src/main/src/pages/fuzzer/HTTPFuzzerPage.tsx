@@ -102,7 +102,7 @@ import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import { openABSFileLocated } from "@/utils/openWebsite"
+import {openABSFileLocated} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -2346,14 +2346,15 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         setShowSuccess,
         size = "small"
     } = props
-    if (rsp.IsTooLargeResponse) {
-        return (
-            <YakitTag style={{marginLeft: 8}} color='danger'>
-                超大响应
-            </YakitTag>
-        )
-    }
+
     if (onlyOneResponse) {
+        if (rsp.IsTooLargeResponse) {
+            return (
+                <YakitTag style={{marginLeft: 8}} color='danger'>
+                    超大响应
+                </YakitTag>
+            )
+        }
         return (
             <>
                 {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
