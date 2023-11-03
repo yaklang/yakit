@@ -105,7 +105,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DownloadOnlinePlugins", async (e, params, token) => {
         params.Token = USER_INFO.token
         let stream = getClient().DownloadOnlinePluginAll(params)
-        handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
+        handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginsAll, token)
     })
 
     const asyncDownloadOnlinePluginByPluginName = (params) => {
