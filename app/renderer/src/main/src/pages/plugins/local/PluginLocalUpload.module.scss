@@ -1,0 +1,72 @@
+%display-align-justify-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+%display-align-center {
+    display: flex;
+    align-items: center;
+}
+
+%display-justify-center {
+    display: flex;
+    justify-content: center;
+}
+
+.plugin-local-upload {
+    padding: 24px;
+    padding-top: 0;
+    @extend %display-align-justify-center;
+    flex-direction: column;
+    gap: 12px;
+}
+.plugin-local-upload-steps-content {
+    @extend %display-align-justify-center;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+}
+.plugin-local-upload-steps-action {
+    @extend %display-align-justify-center;
+    gap: 8px;
+}
+.plugin-isPrivate-select {
+    padding: 8px 24px 24px;
+    @extend %display-justify-center;
+    flex-direction: column;
+    gap: 16px;
+}
+.plugin-progress {
+    padding-bottom: 24px;
+    @extend %display-justify-center;
+    flex-direction: column;
+    flex: 1;
+    width: 100%;
+
+    :global {
+        .ant-progress-text {
+            display: block;
+            margin-left: 0;
+            margin-top: 2px;
+        }
+        .ant-progress-show-info .ant-progress-outer {
+            margin-right: 0;
+            padding-right: 0;
+        }
+    }
+    .plugin-message-list {
+        min-height: 30px;
+        max-height: 400px;
+        overflow-y: auto;
+        margin-top: 16px;
+        .plugin-message {
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--yakit-body-text-color);
+        }
+        .plugin-message-error {
+            color: var(--yakit-danger-5);
+        }
+    }
+}
