@@ -776,7 +776,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                             .invoke("is-file-exists", currentSelectItem.TooLargeResponseBodyFile)
                                                             .then((flag: boolean) => {
                                                                 if (flag) {
-                                                                    openABSFileLocated(currentSelectItem.TooLargeResponseHeaderFile)
+                                                                    openABSFileLocated(currentSelectItem.TooLargeResponseBodyFile)
                                                                 } else {
                                                                     failed("目标文件已不存在!")
                                                                 }

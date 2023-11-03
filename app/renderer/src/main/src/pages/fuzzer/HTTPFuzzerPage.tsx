@@ -1996,7 +1996,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                             .invoke("is-file-exists", rsp.TooLargeResponseBodyFile)
                                             .then((flag: boolean) => {
                                                 if (flag) {
-                                                    openABSFileLocated(rsp.TooLargeResponseHeaderFile)
+                                                    openABSFileLocated(rsp.TooLargeResponseBodyFile)
                                                 } else {
                                                     failed("目标文件已不存在!")
                                                 }

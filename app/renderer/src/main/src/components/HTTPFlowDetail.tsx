@@ -1085,7 +1085,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                                                 .invoke("is-file-exists", flow.TooLargeResponseBodyFile)
                                                                 .then((flag: boolean) => {
                                                                     if (flag) {
-                                                                        openABSFileLocated(flow.TooLargeResponseHeaderFile)
+                                                                        openABSFileLocated(flow.TooLargeResponseBodyFile)
                                                                     } else {
                                                                         failed("目标文件已不存在!")
                                                                     }
