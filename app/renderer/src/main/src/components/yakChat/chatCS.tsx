@@ -64,11 +64,13 @@ import {ChatMarkdown} from "./ChatMarkdown"
 import {useStore} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
-import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
+import {OutlineInformationcircleIcon, OutlinePaperairplaneIcon, OutlineXIcon} from "@/assets/icon/outline"
 
 import moment from "moment"
 import classNames from "classnames"
 import styles from "./chatCS.module.scss"
+import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
+import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
 
 const TypeToContent: Record<string, string> = {
     cs_info: "安全知识",
@@ -361,7 +363,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 content: "",
                 id: ""
             }
-            console.log("params", params)
 
             return await new Promise((resolve, reject) => {
                 chatCS({
@@ -768,6 +769,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 topLeft: false
             }}
             onResize={(event, direction, elementRef, delta) => {
+                if(elementRef.clientWidth<731){
+                    setShowPrompt(false)
+                }
                 setWidth(elementRef.clientWidth)
             }}
         >
@@ -1111,7 +1115,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             </div>
                         )}
                     </div>
-                    {isShowPrompt && <PromptWidget setShowPrompt={setShowPrompt} />}
+                    {isShowPrompt && <PromptWidget setShowPrompt={setShowPrompt} onSubmitPreset={onSubmitPreset}/>}
                 </div>
 
                 <HistoryDrawer
@@ -1418,13 +1422,14 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
 
 interface PromptWidgetProps {
     setShowPrompt: (v: boolean) => void
+    onSubmitPreset: (info: PresetKeywordProps) => void
 }
 
 interface PromptListProps {
     title: string
     api: string
     eg: string[]
-    prompt_type: string
+    prompt_type: PromptLabelItem
     template: string
     templateArr: string[]
 }
@@ -1441,10 +1446,15 @@ interface PromptLabelProps {
 type PromptLabelItem = "Team_all" | "RedTeam_vuln" | "BlueTeam_com" | "RedTeam_code" | "BlueTeam_code" | "Team_other"
 
 const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
-    const {setShowPrompt} = props
+    const {setShowPrompt,onSubmitPreset} = props
     const [promptList, setPromptList] = useState<PromptListProps[]>([])
+    const [showPromptList, setShowPromptList] = useState<PromptListProps[]>([])
     const [promptLabel, setPromptLabel] = useState<PromptLabelProps>()
     const [selectLabel, setSelectLabel] = useState<PromptLabelItem>("Team_all")
+    const [searchValue, setSearchValue] = useState<string>("")
+    const [visible, setVisible] = useState<boolean>(false)
+    const [selectItem, setSelectItem] = useState<PromptListProps>()
+    const promptListRef = useRef<HTMLDivElement>(null)
     // 渲染的label
     const PromptLabelArr: PromptLabelItem[] = [
         "Team_all",
@@ -1468,12 +1478,6 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
             matches.push(match[1])
         }
         return matches
-    })
-
-    // 将Markdown渲染的数据染色
-    const highlightStr = useMemoizedFn((str: string)=>{
-        const newStr:string = str.replaceAll("|`","<span style='color: #8863F7;'>").replaceAll("`|","</span>")
-        return newStr
     })
 
     const getPromptListPromise = useMemoizedFn((params = {}) => {
@@ -1521,9 +1525,20 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                                 break
                         }
                     })
-                    console.log("list", label, list)
+                    // 注入静态数据
+                    label.Team_other += presetList.length
+                    label.Team_all += presetList.length
+                    const otherList: PromptListProps[] = presetList.map((item) => ({
+                        title: item.content,
+                        api: item.type,
+                        prompt_type: "Team_other",
+                        eg: [],
+                        template: "",
+                        templateArr: []
+                    }))
+                    console.log("list", label, [...list, ...otherList])
                     setPromptLabel(label)
-                    setPromptList(list)
+                    setPromptList([...list, ...otherList])
                 }
             })
             .catch((e) => {
@@ -1565,6 +1580,55 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
         }
     })
 
+    const isOther = useMemoizedFn((v: string) => {
+        return !["RedTeam_vuln", "BlueTeam_com", "RedTeam_code", "BlueTeam_code"].includes(v)
+    })
+
+    const onPromptListByGroup = useMemoizedFn(() => {
+        // 切换置顶
+        if (promptListRef.current) {
+            promptListRef.current.scrollTop = 0
+        }
+        if (selectLabel === "Team_all") {
+            setShowPromptList(promptList)
+        } else if (selectLabel === "Team_other") {
+            setShowPromptList(promptList.filter((item) => isOther(item.prompt_type)))
+        } else {
+            setShowPromptList(promptList.filter((item) => item.prompt_type === selectLabel))
+        }
+    })
+
+    useUpdateEffect(() => {
+        onPromptListByGroup()
+    }, [promptList, selectLabel])
+
+    const searchSubmit = useMemoizedFn(() => {
+        if (searchValue.length > 0) {
+            const searchPromptList = showPromptList.filter((obj) => {
+                let concatenatedString = ""
+                for (const key in obj) {
+                    if (Object.hasOwnProperty.call(obj, key)) {
+                        concatenatedString += obj[key].toString()
+                    }
+                }
+                return concatenatedString.indexOf(searchValue) !== -1
+            })
+            setShowPromptList(searchPromptList)
+        } else {
+            onPromptListByGroup()
+        }
+    })
+
+    const onClose = useMemoizedFn(() => {
+        setVisible(false)
+        setSelectItem(undefined)
+    })
+
+    const onClickPromptItem = useMemoizedFn((item: PromptListProps) => {
+        setVisible(true)
+        setSelectItem(item)
+    })
+
     return (
         <div className={styles["layout-prompt"]}>
             <div className={styles["prompt-title"]}>
@@ -1587,9 +1651,11 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                 <YakitInput.Search
                     placeholder='请输入关键词搜索'
                     size='large'
-                    value={""}
-                    onChange={(e) => {}}
-                    onSearch={() => {}}
+                    value={searchValue}
+                    onChange={(e) => {
+                        setSearchValue(e.target.value)
+                    }}
+                    onSearch={searchSubmit}
                 />
             </div>
             <div className={styles["prompt-label"]}>
@@ -1611,31 +1677,118 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                     </div>
                 ))}
             </div>
-            <div className={styles["prompt-list"]}>
-                {promptList.map((item) => (
-                    <div className={styles["prompt-item"]}>
+            <div className={styles["prompt-list"]} ref={promptListRef}>
+                {showPromptList.map((item) => (
+                    <div
+                        className={styles["prompt-item"]}
+                        onClick={() => {
+                            if (isOther(item.prompt_type)) {
+                                onSubmitPreset({content:item.title,type:item.api})
+                            } else {
+                                onClickPromptItem(item)
+                            }
+                        }}
+                    >
                         <div className={styles["title"]}>
-                            <div className={styles["icon"]}>
-                                <UIKitOutlineBugActiveIcon />
-                            </div>
+                            <div className={styles["icon"]}>{getLabelIcon(item.prompt_type, true)}</div>
                             <div className={styles["text"]}>{item.title}</div>
                         </div>
-                        <div className={styles["sub-title"]}>
-                            只需输入
-                            {item.templateArr.map((itemIn) => (
-                                <span className={styles["span-label"]}>{itemIn}</span>
-                            ))}
-                            将自动为你生成 Prompt
-                        </div>
-                        <div className={styles["detail"]}>
-                            <div className={styles["example"]}>示例</div>
-                            {/* markdown显示 */}
-                            <div className={styles["detail-content"]}>
-                                <ChatMarkdown content={highlightStr(item.eg[0])} />
-                            </div>
-                        </div>
+                        {!isOther(item.prompt_type) && (
+                            <>
+                                <div className={styles["sub-title"]}>
+                                    只需输入
+                                    {item.templateArr.map((itemIn) => (
+                                        <span className={styles["span-label"]}>{itemIn}</span>
+                                    ))}
+                                    将自动为你生成 Prompt
+                                </div>
+                                <ExampleCard content={item.eg[0]} />
+                            </>
+                        )}
                     </div>
                 ))}
+            </div>
+            <YakitDrawer
+                // className={styles['drawer-wrapper']}
+                className={classNames([styles["chat-cs-prompt-drawer"], styles["drawer-wrapper"]])}
+                visible={visible}
+                placement='bottom'
+                height={452}
+                onClose={() => onClose()}
+                maskClosable={true}
+                getContainer={false}
+                closable={false}
+            >
+                {selectItem && <ChatCsPromptForm selectItem={selectItem} onClose={() => onClose()} />}
+            </YakitDrawer>
+        </div>
+    )
+})
+interface ChatCsPromptFormProps {
+    selectItem: PromptListProps
+    onClose: () => void
+}
+const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
+    const {selectItem, onClose} = props
+    return (
+        <div className={styles["chat-cs-prompt-form"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title-box"]}>
+                    <div className={styles["title"]}>{selectItem.title}</div>
+                    <div className={classNames(styles["close-icon"])} onClick={onClose}>
+                        <RemoveIcon />
+                    </div>
+                </div>
+            </div>
+            <div className={styles["form-box"]}>
+                <div className={styles["form-item"]}>
+                    <div className={styles["title"]}>CVE 编号：</div>
+                    <div className={styles["input-text-area"]}>
+                        <Input.TextArea
+                            autoSize={true}
+                            bordered={false}
+                            className={styles["text-area-wrapper"]}
+                            placeholder='请输入 CVE 编号，多个 CVE 编号用“英文逗号”或“换行”分隔...'
+                        />
+                    </div>
+                </div>
+                <div className={styles["form-item"]}>
+                    <div className={styles["title"]}>情报需求：</div>
+                    <div className={styles["input-text-area"]}>
+                        <Input.TextArea
+                            autoSize={true}
+                            bordered={false}
+                            className={styles["text-area-wrapper"]}
+                            placeholder='请输入情报需求...'
+                        />
+                    </div>
+                </div>
+                <ExampleCard content={selectItem.eg[0]} background='#F8F8F8' />
+            </div>
+            <YakitButton icon={<SolidPaperairplaneIcon />} className={styles["submit"]} type='primary' size='large'>
+                发送
+            </YakitButton>
+        </div>
+    )
+})
+interface ExampleCardProps {
+    content: string
+    background?: string
+}
+
+const ExampleCard: React.FC<ExampleCardProps> = memo((props) => {
+    const {content, background} = props
+    // 将Markdown渲染的数据染色
+    const highlightStr = useMemoizedFn((str: string) => {
+        const newStr: string = str.replaceAll("|`", "<span style='color: #8863F7;'>").replaceAll("`|", "</span>")
+        return newStr
+    })
+    return (
+        <div className={styles["example-card"]} style={background ? {background} : {}}>
+            <div className={styles["example"]}>示例</div>
+            {/* markdown显示 */}
+            <div className={styles["detail-content"]}>
+                <ChatMarkdown content={highlightStr(content)} />
             </div>
         </div>
     )
