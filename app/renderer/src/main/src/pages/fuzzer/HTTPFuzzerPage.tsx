@@ -101,7 +101,8 @@ import {CopyableField} from "@/utils/inputUtil"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import { YakitDropdownMenu } from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {openABSFileLocated} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -190,6 +191,14 @@ export interface FuzzerResponse {
     HitColor: string
     /**@name 仅作用于前端表格背景色样式 */
     cellClassName?: string
+
+    /**
+     * 超大响应
+     */
+    IsTooLargeResponse: boolean
+    TooLargeResponseHeaderFile: string
+    TooLargeResponseBodyFile: string
+    DisableRenderStyles: boolean
 }
 
 export const defaultPostTemplate = `POST / HTTP/1.1
@@ -431,7 +440,12 @@ export const emptyFuzzer: FuzzerResponse = {
     TotalDurationMs: 0,
     ExtractedResults: [],
     MatchedByMatcher: false,
-    HitColor: ""
+    HitColor: "",
+
+    IsTooLargeResponse: false,
+    TooLargeResponseHeaderFile: "",
+    TooLargeResponseBodyFile: "",
+    DisableRenderStyles: false
 }
 
 export interface SelectOptionProps {
@@ -1456,7 +1470,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setCurrentPage(Number(data.Total) + 1)
             })
     })
-    
+
     // 跳转插件调试页面
     const handleSkipPluginDebuggerPage = async (tempType: "path" | "raw") => {
         const requests = getFuzzerRequestParams()
@@ -1893,18 +1907,16 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         }
     }, [])
 
-    const onGetExportFuzzerCallBackEvent = useMemoizedFn((v)=>{
+    const onGetExportFuzzerCallBackEvent = useMemoizedFn((v) => {
         try {
-            const obj:{listTable:FuzzerResponse[],type:"all"|"payload"} = JSON.parse(v)
-            const {listTable,type} = obj
-            if(type==="all"){
+            const obj: {listTable: FuzzerResponse[]; type: "all" | "payload"} = JSON.parse(v)
+            const {listTable, type} = obj
+            if (type === "all") {
                 exportHTTPFuzzerResponse(listTable)
-            }else{
+            } else {
                 exportPayloadResponse(listTable)
             }
-        } catch (error) {
-            
-        }
+        } catch (error) {}
     })
 
     // const onViewExecResults = useMemoizedFn(() => {
@@ -1936,24 +1948,75 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         )
         return (
             <div className={styles["fuzzer-secondNode-extra"]}>
-                {+(secondNodeSize?.width || 0) >= 610 && searchNode}
-                {+(secondNodeSize?.width || 0) < 610 && (
-                    <YakitPopover content={searchNode}>
-                        <YakitButton icon={<SearchIcon />} size={size} type='outline2' />
-                    </YakitPopover>
-                )}
-                <Divider type='vertical' style={{margin: 0, top: 1}} />
-                <ChromeSvgIcon
-                    className={styles["extra-chrome-btn"]}
-                    onClick={() => {
-                        showResponseViaResponseRaw(rsp.ResponseRaw || "")
-                    }}
-                />
-                {((rsp.Payloads && rsp.Payloads.length > 0) ||
-                    rsp.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0) && (
-                    <YakitButton type='outline2' size={size} onClick={() => setShowExtra(true)}>
-                        查看提取结果
-                    </YakitButton>
+                {!rsp.IsTooLargeResponse ? (
+                    <>
+                        {+(secondNodeSize?.width || 0) >= 610 && searchNode}
+                        {+(secondNodeSize?.width || 0) < 610 && (
+                            <YakitPopover content={searchNode}>
+                                <YakitButton icon={<SearchIcon />} size={size} type='outline2' />
+                            </YakitPopover>
+                        )}
+                        <Divider type='vertical' style={{margin: 0, top: 1}} />
+                        <ChromeSvgIcon
+                            className={styles["extra-chrome-btn"]}
+                            onClick={() => {
+                                showResponseViaResponseRaw(rsp.ResponseRaw || "")
+                            }}
+                        />
+                        {((rsp.Payloads && rsp.Payloads.length > 0) ||
+                            rsp.ExtractedResults.filter((i) => i.Key !== "" || i.Value !== "").length > 0) && (
+                            <YakitButton type='outline2' size={size} onClick={() => setShowExtra(true)}>
+                                查看提取结果
+                            </YakitButton>
+                        )}
+                    </>
+                ) : (
+                    <YakitDropdownMenu
+                        menu={{
+                            data: [
+                                {key: "tooLargeResponseHeaderFile", label: "查看Header"},
+                                {key: "tooLargeResponseBodyFile", label: "查看Body"}
+                            ],
+                            onClick: ({key}) => {
+                                switch (key) {
+                                    case "tooLargeResponseHeaderFile":
+                                        ipcRenderer
+                                            .invoke("is-file-exists", rsp.TooLargeResponseHeaderFile)
+                                            .then((flag: boolean) => {
+                                                if (flag) {
+                                                    openABSFileLocated(rsp.TooLargeResponseHeaderFile)
+                                                } else {
+                                                    failed("目标文件已不存在!")
+                                                }
+                                            })
+                                            .catch(() => {})
+                                        break
+                                    case "tooLargeResponseBodyFile":
+                                        ipcRenderer
+                                            .invoke("is-file-exists", rsp.TooLargeResponseBodyFile)
+                                            .then((flag: boolean) => {
+                                                if (flag) {
+                                                    openABSFileLocated(rsp.TooLargeResponseBodyFile)
+                                                } else {
+                                                    failed("目标文件已不存在!")
+                                                }
+                                            })
+                                            .catch(() => {})
+                                        break
+                                    default:
+                                        break
+                                }
+                            }
+                        }}
+                        dropdown={{
+                            trigger: ["click"],
+                            placement: "bottom"
+                        }}
+                    >
+                        <YakitButton type='primary' size='small'>
+                            完整响应
+                        </YakitButton>
+                    </YakitDropdownMenu>
                 )}
                 <YakitButton
                     type='primary'
@@ -2171,7 +2234,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer","all")
+                                            emiter.emit("onGetExportFuzzer", "all")
                                         }}
                                     >
                                         导出所有请求
@@ -2180,7 +2243,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer","payload")
+                                            emiter.emit("onGetExportFuzzer", "payload")
                                         }}
                                     >
                                         仅导出 Payload
@@ -2204,7 +2267,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer","all")
+                                            emiter.emit("onGetExportFuzzer", "all")
                                         }}
                                     >
                                         导出所有请求
@@ -2213,7 +2276,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer","payload")
+                                            emiter.emit("onGetExportFuzzer", "payload")
                                         }}
                                     >
                                         仅导出 Payload
@@ -2283,7 +2346,15 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         setShowSuccess,
         size = "small"
     } = props
+
     if (onlyOneResponse) {
+        if (rsp.IsTooLargeResponse) {
+            return (
+                <YakitTag style={{marginLeft: 8}} color='danger'>
+                    超大响应
+                </YakitTag>
+            )
+        }
         return (
             <>
                 {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
@@ -2510,6 +2581,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                     firstNodeStyle={{padding: !show ? 0 : undefined, background: "#f0f2f5"}}
                     firstNode={
                         <NewHTTPPacketEditor
+                            language={fuzzerResponse?.DisableRenderStyles ? "text" : undefined}
+                            isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
