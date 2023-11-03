@@ -5,7 +5,7 @@ import {
     PluginLocalDetailBackProps,
     PluginsLocalProps
 } from "./PluginsLocalType"
-import {SolidPluscircleIcon} from "@/assets/icon/solid"
+import {SolidChevrondownIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
 import {useLockFn, useMemoizedFn, useInViewport, useDebounceFn, useLatest} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {defaultSearch, PluginsLayout, PluginsContainer, pluginTypeList} from "../baseTemplate"
@@ -20,7 +20,6 @@ import {
     GridLayoutOpt,
     ListLayoutOpt
 } from "../funcTemplate"
-import {SolidChevronDownIcon} from "@/assets/newIcon"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
 import {OutlineClouduploadIcon, OutlineExportIcon, OutlinePlusIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
@@ -55,6 +54,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {OutputPluginForm} from "@/pages/yakitStore/PluginOperator"
 import emiter from "@/utils/eventBus/eventBus"
+import {PluginLocalUpload} from "./PluginLocalUpload"
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -422,6 +422,16 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             onRemovePluginBatchBefore()
         }, 200)
     })
+    const onBatchUpload = useMemoizedFn(() => {
+        if (selectList.length === 0) return
+        const pluginNames = selectList.map((ele) => ele.ScriptName) || []
+        const m = showYakitModal({
+            type: "white",
+            title: "批量上传插件",
+            content: <PluginLocalUpload pluginNames={pluginNames} onClose={() => m.destroy()} />,
+            footer: null
+        })
+    })
     return (
         <>
             {!!plugin && (
@@ -454,7 +464,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                         <div className='btn-group-wrapper'>
                             <FuncFilterPopover
                                 maxWidth={1200}
-                                icon={<SolidChevronDownIcon />}
+                                icon={<SolidChevrondownIcon />}
                                 name='批量操作'
                                 disabled={selectNum === 0}
                                 button={{
@@ -465,7 +475,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                     type: "primary",
                                     data: [
                                         {key: "export", label: "导出"},
-                                        {key: "upload", label: "上传"},
+                                        {key: "upload", label: "上传",disabled: allCheck},
                                         {key: "remove", label: "删除"}
                                         // {key: "addToGroup", label: "添加至分组", disabled: allCheck} //第二版放出来
                                     ],
@@ -476,6 +486,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                                 onExport(Ids)
                                                 break
                                             case "upload":
+                                                onBatchUpload()
                                                 break
                                             case "remove":
                                                 onRemovePluginBatchBefore()
