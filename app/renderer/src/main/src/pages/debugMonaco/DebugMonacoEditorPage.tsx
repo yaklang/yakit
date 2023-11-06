@@ -28,7 +28,7 @@ a=1&b=2 Content-Length: a
 {{null(1)}}
 `)
     const [languageType, setLangType] = useState(MONACO_SPEC_WEBFUZZER_REQUEST);
-    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree" | string>("risk-table");
+    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree" | string>("chaos-maker-rule");
 
     useEffect(() => {
         if (!languageType) {
@@ -44,7 +44,6 @@ a=1&b=2 Content-Length: a
                 {value: "chaos-maker-rule", label: "流量生成器规则"},
                 {value: "risk-table", label: "漏洞查询规则"},
                 {value: "pcapx", label: "抓包工具"},
-                {value: "traffic-session", label: "流量会话"},
                 {value: "http-monaco-editor", label: "HTTP 数据包编辑器"},
                 {value: "fs-tree", label: "文件系统树"},
             ]} formItemStyle={{margin: 0}} value={mode} setValue={setMode}/>}
@@ -59,8 +58,6 @@ a=1&b=2 Content-Length: a
                             return <RiskTableDemo/>
                         case "pcapx":
                             return <PcapXDemo/>
-                        case "traffic-session":
-                            return <TrafficDemo/>
                         case "http-monaco-editor":
                             return <YakitEditor value={value} type={"http"}/>
                         case "fs-tree":
