@@ -9,13 +9,15 @@ const {TabPane} = Tabs
  * 暂时用在插件商店 其他页面误用
  */
 
-interface YakitTabsProps extends TabsProps {}
+interface YakitTabsProps extends TabsProps {
+    boxStyle?: React.CSSProperties
+}
 
 const YakitTabs: React.FC<YakitTabsProps> = (props) => {
-    const {tabPosition = "top", className = "", type = "line", tabBarGutter, ...restProps} = props
+    const {tabPosition = "top", className = "", type = "line", tabBarGutter, boxStyle , ...restProps} = props
 
     return (
-        <div className={styles.yakitTabs}>
+        <div className={styles.yakitTabs} style={boxStyle}>
             <Tabs
                 {...restProps}
                 className={classNames(className, {
