@@ -13,7 +13,7 @@ import {setUpYaklangMonaco} from "../utils/monacoSpec/yakEditor"
 import {randomString} from "../utils/randomUtil"
 import MDEditor from "@uiw/react-md-editor"
 import {QueryYakScriptsResponse} from "./invoker/schema"
-import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useGetState, useMemoizedFn, usePrevious, useUpdateEffect} from "ahooks"
 import ReactDOM from "react-dom"
 import debounce from "lodash/debounce"
 import {AutoSpin} from "../components/AutoSpin"
@@ -540,39 +540,83 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         ipcRenderer.invoke("open-route-page", info)
     }
 
-    const waterMarkStr= ():string  => {
+    const waterMarkStr = (): string => {
         // 社区版无水印
         if (isCommunityEdition()) {
             return ""
-        }
-        else if(userInfo.isLogin){
-            return userInfo.companyName||""
-        }
-        else if(isEnpriTrace()){
+        } else if (userInfo.isLogin) {
+            return userInfo.companyName || ""
+        } else if (isEnpriTrace()) {
             return "EnpriTrace-试用版"
-        }
-        else if(isEnpriTraceAgent()){
+        } else if (isEnpriTraceAgent()) {
             return "EnpriTraceAgent-试用版"
         }
         return ""
     }
 
-    const [defaultExpand,setDefaultExpand] = useState<boolean>()
-    useEffect(()=>{
-        getRemoteValue(CodeGV.MenuExpand).then((result:string) => {
+    const [defaultExpand, setDefaultExpand] = useState<boolean>()
+    useEffect(() => {
+        getRemoteValue(CodeGV.MenuExpand).then((result: string) => {
             if (!result) setDefaultExpand(true)
             try {
-                const expandResult:boolean = JSON.parse(result)
+                const expandResult: boolean = JSON.parse(result)
                 setDefaultExpand(expandResult)
-            } catch (e) {setDefaultExpand(true)}
+            } catch (e) {
+                setDefaultExpand(true)
+            }
         })
-    },[])
+    }, [])
+
+    // 拖动chartCS
+    const chartCSDragAreaRef = useRef<any>(null)
+    const chartCSDragItemRef = useRef<any>(null)
+    const [chartCSDragAreaHeight, setChartCSDragAreaHeight] = useState<number>(0)
+    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+        entries.forEach((entry) => {
+            const h = entry.target.getBoundingClientRect().height
+            setChartCSDragAreaHeight(h)
+        })
+    })
+    useUpdateEffect(() => {
+        const top = parseInt(getComputedStyle(chartCSDragItemRef.current).getPropertyValue("top"))
+        const flag = top >= chartCSDragAreaHeight - 43 - 10
+        const currentTop = flag ? chartCSDragAreaHeight - 43 - 10 : top
+        chartCSDragItemRef.current.style.top = currentTop + "px"
+    }, [chartCSDragAreaHeight, chartCSDragItemRef])
+
+    useEffect(() => {
+        if (chartCSDragAreaRef && chartCSDragItemRef) {
+            const chartCSDragItemDom = chartCSDragItemRef.current
+            const dragAreaDom = chartCSDragAreaRef.current
+
+            resizeObserver.observe(dragAreaDom)
+            dragAreaDom.addEventListener("dragover", function (e: {preventDefault: () => void}) {
+                e.preventDefault()
+            })
+            dragAreaDom.addEventListener(
+                "drop",
+                function (e: {
+                    preventDefault: () => void
+                    target: {getBoundingClientRect: () => any}
+                    clientY: number
+                }) {
+                    e.preventDefault()
+                    const rect = dragAreaDom.getBoundingClientRect()
+                    const y = e.clientY - rect.top
+                    const currentTop = y >= rect.height - 43 - 10 ? rect.height - 43 - 10 : y
+                    chartCSDragItemDom.style.top = currentTop <= 0 ? 0 : currentTop + "px"
+                }
+            )
+        }
+    }, [chartCSDragItemRef, chartCSDragAreaRef])
+
     return (
         <>
-            <WaterMark content={waterMarkStr()} style={{overflow:"hidden",height:"100%"}}>
+            <WaterMark content={waterMarkStr()} style={{overflow: "hidden", height: "100%"}}>
                 <Layout
                     className='yakit-main-layout main-content-tabs yakit-layout-tabs'
                     style={controlShow ? {display: "none"} : {}}
+                    ref={chartCSDragAreaRef}
                 >
                     <AutoSpin spinning={loading}>
                         {isShowCustomizeMenu && (
@@ -591,20 +635,18 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         >
                             {isCommunityEdition() ? (
                                 <>
-                                {
-                                    typeof defaultExpand === 'boolean'&&
-                                    <PublicMenu
-                                        defaultExpand={defaultExpand}
-                                        onMenuSelect={openMenu}
-                                        setRouteToLabel={(val) => {
-                                            val.forEach((value, key) => {
-                                                routeKeyToLabel.current.set(key, value)
-                                            })
-                                        }}
-                                    />
-                                }
-                               </>
-                                
+                                    {typeof defaultExpand === "boolean" && (
+                                        <PublicMenu
+                                            defaultExpand={defaultExpand}
+                                            onMenuSelect={openMenu}
+                                            setRouteToLabel={(val) => {
+                                                val.forEach((value, key) => {
+                                                    routeKeyToLabel.current.set(key, value)
+                                                })
+                                            }}
+                                        />
+                                    )}
+                                </>
                             ) : (
                                 <HeardMenu
                                     onRouteMenuSelect={openMenu}
@@ -767,7 +809,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 </Content>
                             </Layout>
                         </Content> */}
-                        
                         </div>
                     </AutoSpin>
 
@@ -786,7 +827,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     </Modal>
                     {isCommunityEdition() && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
                     {isCommunityEdition() && !chatShow && (
-                        <div className='chat-icon-wrapper' onClick={onChatCS}>
+                        <div className='chat-icon-wrapper' onClick={onChatCS} draggable={true} ref={chartCSDragItemRef}>
                             <img src={yakitCattle} />
                         </div>
                     )}
