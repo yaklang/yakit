@@ -274,6 +274,28 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         onSubmit(data)
     })
 
+    /** Prompt提问 */
+    const onPromptSubmit = useMemoizedFn((content: string) => {
+        if (loading) return
+        if (!content || content.trim() === "") return
+
+        if (!baseType && !expInfo && !backCatch) {
+            return yakitNotify("error", "请最少选择一个回答类型")
+        }
+        const data: ChatInfoProps = {
+            token: randomString(10),
+            isMe: true,
+            time: formatDate(+new Date()),
+            info: {
+                content,
+                baseType,
+                expInfo,
+                backCatch
+            }
+        }
+        onSubmit(data)
+    })
+
     /** 获取历史会话记录 */
     const fetchHistory = useMemoizedFn((list: ChatInfoProps[]) => {
         const chatHistory: {role: string; content: string}[] = []
@@ -740,6 +762,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 backCatch: false
             }
         }
+
         onSubmit(data)
     })
 
@@ -769,7 +792,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 topLeft: false
             }}
             onResize={(event, direction, elementRef, delta) => {
-                if(elementRef.clientWidth<731){
+                if (elementRef.clientWidth < 731) {
                     setShowPrompt(false)
                 }
                 setWidth(elementRef.clientWidth)
@@ -1115,7 +1138,13 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             </div>
                         )}
                     </div>
-                    {isShowPrompt && <PromptWidget setShowPrompt={setShowPrompt} onSubmitPreset={onSubmitPreset}/>}
+                    {isShowPrompt && (
+                        <PromptWidget
+                            setShowPrompt={setShowPrompt}
+                            onSubmitPreset={onSubmitPreset}
+                            onPromptSubmit={onPromptSubmit}
+                        />
+                    )}
                 </div>
 
                 <HistoryDrawer
@@ -1423,6 +1452,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
 interface PromptWidgetProps {
     setShowPrompt: (v: boolean) => void
     onSubmitPreset: (info: PresetKeywordProps) => void
+    onPromptSubmit?: (v: string) => void
 }
 
 interface PromptListProps {
@@ -1446,7 +1476,7 @@ interface PromptLabelProps {
 type PromptLabelItem = "Team_all" | "RedTeam_vuln" | "BlueTeam_com" | "RedTeam_code" | "BlueTeam_code" | "Team_other"
 
 const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
-    const {setShowPrompt,onSubmitPreset} = props
+    const {setShowPrompt, onSubmitPreset, onPromptSubmit} = props
     const [promptList, setPromptList] = useState<PromptListProps[]>([])
     const [showPromptList, setShowPromptList] = useState<PromptListProps[]>([])
     const [promptLabel, setPromptLabel] = useState<PromptLabelProps>()
@@ -1536,7 +1566,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                         template: "",
                         templateArr: []
                     }))
-                    console.log("list", label, [...list, ...otherList])
+                    // console.log("list", label, [...list, ...otherList])
                     setPromptLabel(label)
                     setPromptList([...list, ...otherList])
                 }
@@ -1683,7 +1713,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                         className={styles["prompt-item"]}
                         onClick={() => {
                             if (isOther(item.prompt_type)) {
-                                onSubmitPreset({content:item.title,type:item.api})
+                                onSubmitPreset({content: item.title, type: item.api})
                             } else {
                                 onClickPromptItem(item)
                             }
@@ -1719,7 +1749,13 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                 getContainer={false}
                 closable={false}
             >
-                {selectItem && <ChatCsPromptForm selectItem={selectItem} onClose={() => onClose()} />}
+                {selectItem && (
+                    <ChatCsPromptForm
+                        onPromptSubmit={onPromptSubmit}
+                        selectItem={selectItem}
+                        onClose={() => onClose()}
+                    />
+                )}
             </YakitDrawer>
         </div>
     )
@@ -1727,9 +1763,35 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
 interface ChatCsPromptFormProps {
     selectItem: PromptListProps
     onClose: () => void
+    onPromptSubmit?: (v: string) => void
 }
+
+interface InputObjProps<T> {
+    [key: string]: T
+}
+
 const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
-    const {selectItem, onClose} = props
+    const {selectItem, onClose, onPromptSubmit} = props
+    const [inputObj, setInputObj] = useState<InputObjProps<string>>({})
+
+    const onSubmit = useMemoizedFn(() => {
+        if (Object.keys(inputObj).length !== selectItem.templateArr.length) {
+            let arr = selectItem.templateArr.filter((item) => !Object.keys(inputObj).includes(item))
+            yakitNotify("error", `请输入${arr.join()}`)
+            return
+        }
+        
+        let content: string = JSON.parse(JSON.stringify(selectItem.template)) 
+        const replacedStr = content.replace(/\|`([^`]+)`\|/g, (match, key) => {
+            return inputObj[key] || match
+        })
+
+        onPromptSubmit&&onPromptSubmit(replacedStr)
+        setTimeout(()=>{
+            onClose()
+        },500)
+    })
+
     return (
         <div className={styles["chat-cs-prompt-form"]}>
             <div className={styles["header"]}>
@@ -1741,18 +1803,35 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
                 </div>
             </div>
             <div className={styles["form-box"]}>
-                <div className={styles["form-item"]}>
-                    <div className={styles["title"]}>CVE 编号：</div>
-                    <div className={styles["input-text-area"]}>
-                        <Input.TextArea
-                            autoSize={true}
-                            bordered={false}
-                            className={styles["text-area-wrapper"]}
-                            placeholder='请输入 CVE 编号，多个 CVE 编号用“英文逗号”或“换行”分隔...'
-                        />
-                    </div>
-                </div>
-                <div className={styles["form-item"]}>
+                {selectItem.templateArr.map((item) => {
+                    return (
+                        <div className={styles["form-item"]}>
+                            <div className={styles["title"]}>{item}：</div>
+                            <div className={styles["input-text-area"]}>
+                                <Input.TextArea
+                                    autoSize={true}
+                                    bordered={false}
+                                    className={styles["text-area-wrapper"]}
+                                    placeholder={`请输入${item}`}
+                                    onChange={(e) => {
+                                        if (e.target.value.length === 0 && inputObj.hasOwnProperty(item)) {
+                                            const newInputObj = JSON.parse(JSON.stringify(inputObj))
+                                            delete newInputObj[item]
+                                            setInputObj(newInputObj)
+                                        } else {
+                                            setInputObj({
+                                                ...inputObj,
+                                                [item]: e.target.value
+                                            })
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )
+                })}
+
+                {/* <div className={styles["form-item"]}>
                     <div className={styles["title"]}>情报需求：</div>
                     <div className={styles["input-text-area"]}>
                         <Input.TextArea
@@ -1762,10 +1841,10 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
                             placeholder='请输入情报需求...'
                         />
                     </div>
-                </div>
+                </div> */}
                 <ExampleCard content={selectItem.eg[0]} background='#F8F8F8' />
             </div>
-            <YakitButton icon={<SolidPaperairplaneIcon />} className={styles["submit"]} type='primary' size='large'>
+            <YakitButton icon={<SolidPaperairplaneIcon />} onClick={onSubmit} className={styles["submit"]} size='large'>
                 发送
             </YakitButton>
         </div>
