@@ -1,11 +1,12 @@
-import React, {useState} from "react";
-import {Risk} from "@/pages/risks/schema";
+import React, {useEffect, useState} from "react";
+import HexEditor from "react-hex-editor";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {DemoVirtualTable} from "@/demoComponents/virtualTable/VirtualTable";
 import {info} from "@/utils/notification";
 import {Paging} from "@/utils/yakQueryHTTPFlow";
 import {YakEditor} from "@/utils/editors";
 import {ChaosMakerRule} from "@/models/ChaosMaker";
+import {StringToUint8Array} from "@/utils/str";
 
 export interface ChaosMakerRulesDemoProp {
 
@@ -15,6 +16,28 @@ const {ipcRenderer} = window.require("electron");
 
 export const ChaosMakerRulesDemo: React.FC<ChaosMakerRulesDemoProp> = (props) => {
     const [selected, setSelected] = useState<ChaosMakerRule>();
+
+    const ref = React.useRef<any>(null);
+    const data = React.useMemo(() => StringToUint8Array(JSON.stringify(selected || "").repeat(10)), [selected]);
+    // If `data` is large, you probably want it to be mutable rather than cloning it over and over.
+    // `nonce` can be used to update the editor when `data` is reference that does not change.
+    const [nonce, setNonce] = useState(0);
+    // The callback facilitates updates to the source data.
+    const handleSetValue = React.useCallback((offset, value) => {
+        data[offset] = value;
+        setNonce(v => (v + 1));
+    }, [data]);
+
+    useEffect(()=>{
+        if (!ref) {
+            return
+        }
+        if (!ref.current) {
+            return
+        }
+        ref.current.setSelectionRange(0, 99)
+        console.info(ref)
+    }, [ref])
 
     return <YakitResizeBox
         isVer={true}
@@ -69,9 +92,15 @@ export const ChaosMakerRulesDemo: React.FC<ChaosMakerRulesDemoProp> = (props) =>
             />
         </div>}
         secondNode={<div style={{height: "100%", overflowY: "hidden"}}>
-            <YakEditor type={"html"}
-                       value={JSON.stringify(selected, null, 4)}
-                       readOnly={true}
+            <HexEditor
+                ref={ref}
+                columns={16} data={data}
+                nonce={nonce} setValue={handleSetValue}
+                overscanCount={0x03}
+                showAscii={true}
+                showColumnLabels={true}
+                showRowLabels={true}
+                highlightColumn={true}
             />
         </div>}
     />
