@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef} from "react"
-import {Divider, RadioChangeEvent, Space, Tooltip} from "antd"
-import {useMemoizedFn, useUpdateEffect, usePrevious} from "ahooks"
+import {Divider, Space} from "antd"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {AutoCard} from "@/components/AutoCard"
@@ -16,7 +16,6 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/routes/newRoute"
 import {PluginDebuggerExec} from "@/pages/pluginDebugger/PluginDebuggerExec"
 import {MITMPluginTemplate, NucleiPluginTemplate, PortScanPluginTemplate} from "@/pages/pluginDebugger/defaultData"
-import YakitTabs from "@/components/yakitUI/YakitTabs/YakitTabs"
 import {
     getDefaultHTTPRequestBuilderParams,
     HTTPRequestBuilder,
@@ -45,8 +44,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import imageLoadErrorDefault from "@/assets/imageLoadErrorDefault.png"
 import styles from "./PluginDebuggerPage.module.scss"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-const {YakitTabPane} = YakitTabs
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 export interface PluginDebuggerPageProp {
     // 是否生成yaml模板
@@ -131,9 +129,18 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
     const handleChangePluginType = useMemoizedFn((v: PluginTypes) => {
         if (!currentPluginName) {
             if (!!code) {
-                setPluginType(v)
-                setRefreshEditor(Math.random())
-                setDefultTemplate(v)
+                const m = showYakitModal({
+                    title: "切换类型将导致当前代码丢失",
+                    onOk: () => {
+                        setPluginType(v)
+                        setRefreshEditor(Math.random())
+                        setDefultTemplate(v)
+                        setTabActiveKey("code")
+                        m.destroy()
+                    },
+                    content: <div style={{margin: 24}}>确认插件类型切换？</div>,
+                    onCancel: () => {}
+                })
             } else {
                 setDefultTemplate()
             }
@@ -295,38 +302,33 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
     }) => {
         const [script, setScript] = useState<YakScript>()
         const [pluginBaseInspectVisible, setPluginBaseInspectVisible] = useState<boolean>(false)
-
-        const handleSetIconClick = useMemoizedFn((e: {clientX: number; clientY: number}) => {
-            let data = [{key: "loadLocalPlugin", label: "加载本地插件"}]
+        const [dropdownData, setDropdownData] = useState<{key: string; label: string}[]>([
+            {key: "loadLocalPlugin", label: "加载本地插件"}
+        ])
+        useEffect(() => {
             if (!currentPluginName && !generateYamlTemplate) {
-                data.unshift(
+                setDropdownData([
                     {key: "port-scan", label: "端口扫描"},
                     {key: "mitm", label: "MITM"},
-                    {key: "nuclei", label: "Yaml-PoC"}
-                )
+                    {key: "nuclei", label: "Yaml-PoC"},
+                    {key: "loadLocalPlugin", label: "加载本地插件"}
+                ])
             }
-            showByRightContext(
-                {
-                    width: 150,
-                    data,
-                    onClick: ({key}) => {
-                        switch (key) {
-                            case "port-scan":
-                            case "mitm":
-                            case "nuclei":
-                                handleChangePluginType(key)
-                                break
-                            case "loadLocalPlugin":
-                                handleSelectDebugPlugin()
-                                break
-                            default:
-                                break
-                        }
-                    }
-                },
-                e.clientX,
-                e.clientY
-            )
+        }, [currentPluginName, generateYamlTemplate])
+
+        const handleSetIconClick = useMemoizedFn((key) => {
+            switch (key) {
+                case "port-scan":
+                case "mitm":
+                case "nuclei":
+                    handleChangePluginType(key)
+                    break
+                case "loadLocalPlugin":
+                    handleSelectDebugPlugin()
+                    break
+                default:
+                    break
+            }
         })
 
         // 选择要调试的插件
@@ -360,6 +362,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                                                         setCurrentPluginName(i.ScriptName)
                                                         setRefreshEditor(Math.random())
                                                         setScript(i)
+                                                        setTabActiveKey("code")
                                                         m.destroy()
                                                         return
                                                     default:
@@ -440,12 +443,20 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
         return (
             <div className={styles["secondNodeHeader"]}>
                 <Space>
-                    <YakitButton
-                        type='outline2'
-                        icon={<SolidCogIcon />}
-                        onClick={handleSetIconClick}
-                        onContextMenuCapture={handleSetIconClick}
-                    />
+                    <YakitDropdownMenu
+                        menu={{
+                            data: dropdownData,
+                            onClick: ({key}) => {
+                                handleSetIconClick(key)
+                            }
+                        }}
+                        dropdown={{
+                            trigger: ["click"],
+                            placement: "bottomLeft"
+                        }}
+                    >
+                        <YakitButton type='outline2' icon={<SolidCogIcon />} />
+                    </YakitDropdownMenu>
                     <span>插件代码配置</span>
                     <YakitRadioButtons
                         buttonStyle='solid'
