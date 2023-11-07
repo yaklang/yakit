@@ -2027,6 +2027,8 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     })
 
     const notice = useMemo(() => {
+        console.log("risks.Data---",risks.Data);
+        
         return (
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-risk-body"]}>
@@ -2050,7 +2052,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                                             {item.Verbose}
                                         </div>
                                         <Badge dot={!item.IsRead} offset={[3, 0]}>
-                                            <YakitEllipsis text={item.Title} width={type === "info" ? 280 : 310}/>
+                                            <YakitEllipsis text={item.TitleVerbose||item.Title} width={type === "info" ? 280 : 310}/>
                                         </Badge>
                                     </div>
                                 )
