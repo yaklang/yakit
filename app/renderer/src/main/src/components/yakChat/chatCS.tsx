@@ -342,21 +342,45 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     })
     /** 解析后端流内的内容数据 */
     const analysisFlowData: (flow: string) => ChatCSAnswerProps | undefined = useMemoizedFn((flow) => {
-        if (!flow) return undefined
-        const lastIndex = flow.lastIndexOf("data:")
-        if (lastIndex === -1) return undefined
-
-        let chunk = flow
-        chunk = chunk.substring(lastIndex)
-        if (chunk && chunk.startsWith("data:")) chunk = chunk.slice(5)
-
-        let answer: ChatCSAnswerProps | undefined = undefined
         try {
-            answer = JSON.parse(chunk)
+            const regex = /data:({.*?})/g
+            const objects: ChatCSAnswerProps[] = []
+            let answer: ChatCSAnswerProps | undefined = undefined
+            let match
+            while ((match = regex.exec(flow)) !== null) {
+                // @ts-ignore
+                objects.push(JSON.parse(match[1]))
+            }
+            let resultAll: string = ""
+            objects.map((item, index) => {
+                const {id = "", role = "", result = ""} = item
+                resultAll += result
+                if (objects.length === index + 1) {
+                    answer = {id,role,result:resultAll}
+                }
+            })
+            return answer
         } catch (error) {}
 
-        if (!answer) return analysisFlowData(flow.substring(0, lastIndex))
-        return answer
+        return undefined
+        // if (!flow) return undefined
+        // const lastIndex = flow.lastIndexOf("data:")
+        // if (lastIndex === -1) return undefined
+        // console.log("flow---",flow);
+
+        // let chunk = flow
+        // chunk = chunk.substring(lastIndex)
+        // if (chunk && chunk.startsWith("data:")) chunk = chunk.slice(5)
+
+        // let answer: ChatCSAnswerProps | undefined = undefined
+        // try {
+        //     answer = JSON.parse(chunk)
+        // } catch (error) {}
+
+        // if (!answer) return analysisFlowData(flow.substring(0, lastIndex))
+        // console.log("answer---",answer);
+
+        // return answer
     })
     const setContentList = useMemoizedFn(
         (info: ChatCSSingleInfoProps, contents: ChatCSMultipleInfoProps, group: CacheChatCSProps[]) => {
@@ -400,7 +424,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         if (answer && answer.result.length !== 0) {
                             if (cs.content === answer.result) return
                             if (!cs.id) cs.id = answer.id
-                            cs.content += answer.result
+                            cs.content = answer.result
                             setContentList(cs, contents, group)
                         }
                     }
@@ -1780,16 +1804,16 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
             yakitNotify("error", `请输入${arr.join()}`)
             return
         }
-        
-        let content: string = JSON.parse(JSON.stringify(selectItem.template)) 
+
+        let content: string = JSON.parse(JSON.stringify(selectItem.template))
         const replacedStr = content.replace(/\|`([^`]+)`\|/g, (match, key) => {
             return inputObj[key] || match
         })
 
-        onPromptSubmit&&onPromptSubmit(replacedStr)
-        setTimeout(()=>{
+        onPromptSubmit && onPromptSubmit(replacedStr)
+        setTimeout(() => {
             onClose()
-        },500)
+        }, 500)
     })
 
     return (
