@@ -2027,8 +2027,6 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     })
 
     const notice = useMemo(() => {
-        console.log("risks.Data---",risks.Data);
-        
         return (
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-risk-body"]}>
