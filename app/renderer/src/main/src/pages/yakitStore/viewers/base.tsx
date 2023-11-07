@@ -282,7 +282,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                             paddingBottom: 4,
                                             paddingLeft: 12,
                                             paddingRight: 12,
-                                            height: 120,
+                                            height: 100,
                                             display: "flex",
                                             flexDirection: "column",
                                             justifyContent: "space-between"
