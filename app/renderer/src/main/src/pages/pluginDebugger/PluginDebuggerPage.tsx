@@ -127,23 +127,21 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
     }
 
     const handleChangePluginType = useMemoizedFn((v: PluginTypes) => {
-        if (!currentPluginName) {
-            if (!!code) {
-                const m = showYakitModal({
-                    title: "切换类型将导致当前代码丢失",
-                    onOk: () => {
-                        setPluginType(v)
-                        setRefreshEditor(Math.random())
-                        setDefultTemplate(v)
-                        setTabActiveKey("code")
-                        m.destroy()
-                    },
-                    content: <div style={{margin: 24}}>确认插件类型切换？</div>,
-                    onCancel: () => {}
-                })
-            } else {
-                setDefultTemplate()
-            }
+        if (!!code) {
+            const m = showYakitModal({
+                title: "切换类型将导致当前代码丢失",
+                onOk: () => {
+                    setPluginType(v)
+                    setRefreshEditor(Math.random())
+                    setDefultTemplate(v)
+                    setTabActiveKey("code")
+                    m.destroy()
+                },
+                content: <div style={{margin: 24}}>确认插件类型切换？</div>,
+                onCancel: () => {}
+            })
+        } else {
+            setDefultTemplate()
         }
     })
 
@@ -322,6 +320,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                 case "mitm":
                 case "nuclei":
                     handleChangePluginType(key)
+                    setCurrentPluginName("")
                     break
                 case "loadLocalPlugin":
                     handleSelectDebugPlugin()
@@ -330,6 +329,35 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                     break
             }
         })
+
+        // 本地插件选中
+        const onLocalPluginItemClick = (i: YakScript, m: {destroy: () => void}) => {
+            switch (i.Type) {
+                case "mitm":
+                case "nuclei":
+                // @ts-ignore
+                case "port-scan":
+                    const m1 = showYakitModal({
+                        title: "切换本地插件将导致当前代码丢失",
+                        onOk: () => {
+                            setPluginType(i.Type as any)
+                            setCode(i.Content)
+                            setOriginCode(i.Content)
+                            setCurrentPluginName(i.ScriptName)
+                            setRefreshEditor(Math.random())
+                            setScript(i)
+                            setTabActiveKey("code")
+                            m.destroy()
+                            m1.destroy()
+                        },
+                        content: <div style={{margin: 24}}>确认本地插件切换？</div>,
+                        onCancel: () => {}
+                    })
+                    return
+                default:
+                    yakitFailed("暂不支持的插件类型")
+            }
+        }
 
         // 选择要调试的插件
         const handleSelectDebugPlugin = useMemoizedFn(() => {
@@ -351,23 +379,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                                             className={styles["plugin-local-info-left"]}
                                             onClick={() => {
                                                 itemClickFun(i) // 必须调用
-                                                switch (i.Type) {
-                                                    case "mitm":
-                                                    case "nuclei":
-                                                    // @ts-ignore
-                                                    case "port-scan":
-                                                        setPluginType(i.Type as any)
-                                                        setCode(i.Content)
-                                                        setOriginCode(i.Content)
-                                                        setCurrentPluginName(i.ScriptName)
-                                                        setRefreshEditor(Math.random())
-                                                        setScript(i)
-                                                        setTabActiveKey("code")
-                                                        m.destroy()
-                                                        return
-                                                    default:
-                                                        yakitFailed("暂不支持的插件类型")
-                                                }
+                                                onLocalPluginItemClick(i, m)
                                             }}
                                         >
                                             <img
