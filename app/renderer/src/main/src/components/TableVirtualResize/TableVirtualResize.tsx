@@ -896,6 +896,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     if (!w || !h) {
                         return
                     }
+                    onScrollContainer()
                     setWidth(w)
                     setHeight(h)
                 }}

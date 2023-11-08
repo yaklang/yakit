@@ -932,7 +932,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         getShieldList()
     }, [inViewport])
     useEffect(() => {
-        // getNewData()
         getHTTPFlowsFieldGroup(true)
     }, [])
 
@@ -1216,26 +1215,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [params.ExcludeId, params.ExcludeInUrl])
 
-    // 获取最新的数据
-    const getNewData = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("QueryHTTPFlows", {
-                // SourceType: "mitm",
-                SourceType: props.params?.SourceType || "mitm",
-                ...params,
-                Pagination: {Page: 1, Limit: 1, Order: "desc", OrderBy: "id"}
-            })
-            .then((rsp: YakQueryHTTPFlowResponse) => {
-                if (rsp.Data.length > 0) {
-                    maxIdRef.current = rsp.Data[0].Id
-                }
-                setTotal(rsp.Total)
-            })
-            .catch((e: any) => {
-                yakitNotify("error", `query HTTP Flow failed: ${e}`)
-            })
-    })
-
     // 获取tags等分组
     const getHTTPFlowsFieldGroup = useMemoizedFn((RefreshRequest: boolean) => {
         ipcRenderer
@@ -1280,52 +1259,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             else{
                 updateData()
             }
-
-                // const paginationProps = {
-                //     Page: 1,
-                //     Limit: OFFSET_STEP,
-                //     Order: "desc",
-                //     OrderBy: "id"
-                // }
-                // const query = {
-                //     ...params,
-                //     Tags: params.Tags,
-                //     Color: color ? [color] : undefined,
-                //     AfterBodyLength: params.AfterBodyLength
-                //         ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                //         : undefined,
-                //     BeforeBodyLength: params.BeforeBodyLength
-                //         ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                //         : undefined,
-                //     // SourceType: "mitm",
-                //     SourceType: props.params?.SourceType || "mitm",
-                //     AfterId: maxIdRef.current, // 用于计算增量的
-                //     Pagination: {...paginationProps}
-                // }
-                // // 查询数据
-                // ipcRenderer
-                //     .invoke("QueryHTTPFlows", query)
-                //     .then((rsp: YakQueryHTTPFlowResponse) => {
-                //         const resData = rsp?.Data || []
-                //         console.log("增量数据",resData);
-                        
-                //         if (resData.length <= 0) {
-                //             // 没有增量数据
-                //             return
-                //         }
-        
-                //         // 有增量数据刷新total
-                //         const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
-                //         setTotal(newTotal)
-                //         const newData = getClassNameData(resData)
-                //         const newOffsetData = newData.concat(getOffsetData())
-                //         setMaxId(newOffsetData[0].Id)
-                //         setOffsetData(newOffsetData)
-                //     })
-                //     .catch((e: any) => {
-                //         yakitNotify("error", `query HTTP Flow failed: ${e}`)
-                //     })
-                //     .finally(() => setTimeout(() => setLoading(false), 200))
         }
         
     })
