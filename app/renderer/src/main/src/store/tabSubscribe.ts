@@ -1,17 +1,19 @@
-/**
- * @description 处理一级菜单二次关闭提示
- */
-
 import {YakitModalConfirmProps} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {create} from "zustand"
 export interface YakitSecondaryConfirmProps extends Omit<YakitModalConfirmProps, "onOk"> {
     onOk: (m) => void
 }
-interface SubscribeCloseProps {
-    events: Map<string, YakitSecondaryConfirmProps>
 
-    getSubscribeClose: (key: string) => YakitSecondaryConfirmProps | undefined
-    setSubscribeClose: (key: string, p: YakitSecondaryConfirmProps) => void
+/**
+ * @name 存放一级菜单各种操作时===二次确认提示的配置信息
+ * @description Map结构存放的是各种情况的二次确认提示的配置信息(比如close，reset等等)
+ */
+
+interface SubscribeCloseProps {
+    events: Map<string, Record<string, YakitSecondaryConfirmProps>>
+
+    getSubscribeClose: (key: string) => Record<string, YakitSecondaryConfirmProps> | undefined
+    setSubscribeClose: (key: string, p: Record<string, YakitSecondaryConfirmProps>) => void
     removeSubscribeClose: (key: string) => void
 
     clearSubscribeClose: () => void

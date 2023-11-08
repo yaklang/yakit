@@ -28,11 +28,12 @@ import {PluginBaseParamProps, PluginSettingParamProps} from "../pluginsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OnlinePluginAppAction} from "../pluginReducer"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
-import {apiFetchPluginDetailCheck} from "../utils"
+import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
+import { NetWorkApi } from "@/services/fetch"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -111,6 +112,59 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
         onDetailSearch(searchs, value)
     })
 
+    const aass = useRef<API.PluginsAuditDetailResponse>()
+
+    // 获取插件详情
+    const onDetail = useMemoizedFn((info: YakitPluginOnlineDetail) => {
+        console.log("api:plugins/audit/detail", `参数:${JSON.stringify({uuid: info.uuid, list_type: "check"})}`)
+        apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
+            .then((res) => {
+                console.log("res", res)
+                aass.current = res
+            })
+            .catch((e) => {
+                console.log("error:" + e)
+            })
+    })
+
+    useEffect(() => {
+        if (info) {
+            onDetail(info)
+        } else {
+        }
+    }, [info])
+
+    const qqqq = useMemoizedFn(() => {
+        if (!aass.current) return
+        const info = {...aass.current}
+        const obj: API.CopyPluginsRequest = {
+            ...info,
+            tags: (info.tags || "").split(","),
+            base_plugin_id: 13433,
+            script_name: "我改了，这是测试审核通过的",
+            // logDescription: "我就要通过改为不通过"
+        }
+        console.log("api:plugins/audit", JSON.stringify(obj))
+        // apiAuditPluginDetaiCheck(obj)
+        //     .then((res) => {
+        //         console.log("res", res)
+        //     })
+        //     .catch((e) => {
+        //         console.log("error:" + e)
+        //     })
+        NetWorkApi<API.CopyPluginsRequest, API.PluginsResponse>({
+            method: "post",
+            url: "copy/plugins",
+            data: {...obj}
+        })
+            .then((res) => {
+                console.log('copy',res)
+            })
+            .catch((err) => {
+                console.log('err',err)
+            })
+    })
+
     const [loading, setLoading] = useState<boolean>(false)
     const [plugin, setPlugin] = useState<API.YakitPluginDetail>()
     // 插件类型(漏洞类型|其他类型)
@@ -154,19 +208,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
         onPluginDel(info, {allCheck, selectList, search: searchs, filter: filters})
     })
 
-    // 获取插件详情
-    const onDetail = useMemoizedFn((info: YakitPluginOnlineDetail) => {
-        apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
-            .then((res) => {
-                console.log("res", res)
-            })
-            .catch(() => {})
-    })
-
     useEffect(() => {
         console.log("info", info)
         if (info) {
-            onDetail(info)
+            // onDetail(info)
             setPlugin({...(info as any)})
             setInfoParams({
                 ScriptName: info.script_name,
@@ -366,7 +411,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                                                         loading={statusLoading}
                                                         type='text2'
                                                         icon={<IconOutlinePencilAltIcon />}
-                                                        onClick={onOpenReason}
+                                                        // onClick={onOpenReason}
+                                                        onClick={qqqq}
                                                     />
                                                 </Tooltip>
                                                 <div style={{height: 12}} className='divider-style'></div>
@@ -390,7 +436,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                                                     icon={<SolidBanIcon />}
                                                     loading={statusLoading}
                                                     name={"不通过"}
-                                                    onClick={onOpenReason}
+                                                    // onClick={onOpenReason}
+                                                    onClick={qqqq}
                                                 />
                                                 <FuncBtn
                                                     maxWidth={1100}
@@ -406,7 +453,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = (props) => 
                                             maxWidth={1100}
                                             icon={<OutlineCursorclickIcon />}
                                             name={"去使用"}
-                                            onClick={onRun}
+                                            // onClick={onRun}
+                                            onClick={qqqq}
                                         />
                                     </div>
                                 }

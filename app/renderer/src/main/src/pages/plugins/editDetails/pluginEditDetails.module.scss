@@ -19,13 +19,17 @@
         display: flex;
         align-items: center;
         gap: 16px;
+        max-width: calc(50% - 141px);
         .title-style {
             color: #31343f;
             font-size: 16px;
             font-weight: 600;
             line-height: 24px;
+            white-space: nowrap;
         }
         .title-extra-wrapper {
+            flex: 1;
+            overflow: hidden;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -396,4 +400,9 @@
             line-height: 24px;
         }
     }
+}
+
+// ---------- ModifyPluginReason ----------
+.modify-plugin-reason-wrapper {
+    padding: 16px 24px 24px 24px;
 }

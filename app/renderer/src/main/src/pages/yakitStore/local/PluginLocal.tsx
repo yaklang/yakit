@@ -69,10 +69,12 @@ import {showModal} from "@/utils/showModal"
 import {formatDate} from "@/utils/timeUtil"
 import {PluginOperator, OutputPluginForm} from "../PluginOperator"
 import {DownloadOnlinePluginProps} from "../YakitPluginInfoOnline/YakitPluginInfoOnline"
+import {PluginGV} from "@/pages/plugins/utils"
+import emiter from "@/utils/eventBus/eventBus"
+import { YakitRoute } from "@/routes/newRoute"
 
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import "../YakitStorePage.scss"
-import {PluginGV} from "@/pages/plugins/utils"
 
 const {Search} = Input
 const {Option} = Select
@@ -816,10 +818,7 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
         onSelectAllLocal(false)
     })
     const onAdd = useMemoizedFn(() => {
-        ipcRenderer.invoke("send-to-tab", {
-            type: "add-yakit-script",
-            data: {}
-        })
+        emiter.emit("openPage", JSON.stringify({route: YakitRoute.AddYakitScript}))
     })
     const onImport = useMemoizedFn(() => {
         let m = showModal({
