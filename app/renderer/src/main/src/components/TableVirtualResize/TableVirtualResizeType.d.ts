@@ -62,7 +62,8 @@ export interface TableVirtualResizeProps<T> {
     scrollToBottom?: number // 默认300
     isReset?: boolean //重置表格条件 滚动至0
     isShowTotal?: boolean
-    currentIndex?: number //当前row的index
+    currentIndex?: number //滚动到当前row的index
+    setCurrentIndex?: (v?:number) => void
     isRefresh?: boolean //刷新表格 滚动至0
     disableSorting?: boolean //禁用排序
     query?: object

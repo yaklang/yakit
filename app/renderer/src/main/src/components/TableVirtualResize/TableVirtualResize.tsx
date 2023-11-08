@@ -114,6 +114,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         isShowTitle = true,
         getTableRef,
         currentIndex,
+        setCurrentIndex,
         isRefresh,
         disableSorting,
         query,
@@ -207,8 +208,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         {wait: 200}
     )
     useEffect(() => {
-        if (!currentIndex) return
+        if (currentIndex === undefined) return
         scrollTo(currentIndex)
+        setCurrentIndex&&setCurrentIndex(undefined)
     }, [currentIndex])
 
     const [inViewport] = useInViewport(containerRef)

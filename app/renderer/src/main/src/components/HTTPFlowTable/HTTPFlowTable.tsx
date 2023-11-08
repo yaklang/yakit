@@ -426,6 +426,7 @@ export interface HTTPFlowTableProp {
     setOnlyShowFirstNode?: (i: boolean) => void
     refresh?: boolean
     httpHistoryTableTitleStyle?: React.CSSProperties
+    historyId?: string
     // 筛选控件隐藏
     onlyShowSearch?: boolean
     // 此控件显示的页面
@@ -717,7 +718,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 export const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
-    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,pageType} = props
+    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,pageType,historyId} = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -758,7 +759,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const isGrpcRef = useRef<boolean>(false)
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     // const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
-    const [currentIndex, setCurrentIndex] = useState<number>(0)
+    const [currentIndex, setCurrentIndex] = useState<number>()
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
@@ -805,6 +806,30 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     useUpdateEffect(() => {
         updateData()
     }, [refresh])
+
+    const onScrollToByClickEvent = useMemoizedFn((v) => {
+        try {
+            const obj: {historyId:string,id:string} = JSON.parse(v)
+            if(historyId===obj.historyId){
+                let currentIndex:number|undefined = undefined
+                data.some((item,index)=>{
+                    if(item.Id+"" === obj.id){
+                        currentIndex=index
+                    }
+                    return item.Id+"" === obj.id
+                })
+                if(currentIndex !== undefined){
+                    setCurrentIndex(currentIndex)
+                }
+            }
+        } catch (error) {}
+    })
+    useEffect(() => {
+        emiter.on("onScrollToByClick", onScrollToByClickEvent)
+        return () => {
+            emiter.off("onScrollToByClick", onScrollToByClickEvent)
+        }
+    }, [])
 
     // 初次进入页面 获取默认高级筛选项
     useEffect(() => {
@@ -2416,6 +2441,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 <TableVirtualResize<HTTPFlow>
                     ref={tableRef}
                     currentIndex={currentIndex}
+                    setCurrentIndex={setCurrentIndex}
                     query={params}
                     titleHeight={38}
                     renderTitle={
