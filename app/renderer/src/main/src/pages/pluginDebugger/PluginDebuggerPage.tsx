@@ -192,13 +192,11 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                     icon={!pluginExecuting ? <SolidPlayIcon /> : <SolidStopIcon />}
                                     colors={!pluginExecuting ? "primary" : "danger"}
                                     onClick={handleExecOrStopOperation}
-                                    disabled={(() => {
-                                        if (builder.IsRawHTTPRequest) {
-                                            return !Uint8ArrayToString(builder.RawHTTPRequest)
-                                        } else {
-                                            return !builder.Input
-                                        }
-                                    })()}
+                                    disabled={
+                                        builder.IsRawHTTPRequest
+                                            ? !Uint8ArrayToString(builder.RawHTTPRequest)
+                                            : !builder.Input
+                                    }
                                 >
                                     {!pluginExecuting ? "执行" : "停止执行"}
                                 </YakitButton>
