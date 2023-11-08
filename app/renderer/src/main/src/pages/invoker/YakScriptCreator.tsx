@@ -212,7 +212,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             removeSubscribeClose(YakitRoute.AddYakitScript)
             return
         }
-        setSubscribeClose(YakitRoute.AddYakitScript, {
+        setSubscribeClose(YakitRoute.AddYakitScript, {"close":{
             title: "插件未保存",
             content: "是否要保存该插件?",
             confirmLoading: saveLoading,
@@ -223,7 +223,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             onCancel: () => {
                 onCloseTab()
             }
-        })
+        }})
         return () => {
             removeSubscribeClose(YakitRoute.AddYakitScript)
         }

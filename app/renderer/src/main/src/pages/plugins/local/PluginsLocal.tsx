@@ -55,6 +55,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {OutputPluginForm} from "@/pages/yakitStore/PluginOperator"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginLocalUpload} from "./PluginLocalUpload"
+import {YakitRoute} from "@/routes/newRoute"
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -250,7 +251,12 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         setPlugin({...data})
     })
     /**新建插件 */
-    const onNewAddPlugin = useMemoizedFn(() => {})
+    const onNewAddPlugin = useMemoizedFn(() => {
+        emiter.emit(
+            "openPage",
+            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Local}})
+        )
+    })
     const onBack = useMemoizedFn((backValues: PluginLocalBackProps) => {
         searchDetailRef.current = undefined
         filtersDetailRef.current = undefined
