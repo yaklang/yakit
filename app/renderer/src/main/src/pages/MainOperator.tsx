@@ -579,14 +579,16 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     })
     // 从底部缩短软件高度时 拖拽元素始终保持在边界处可见
     useUpdateEffect(() => {
-        const top = parseInt(getComputedStyle(chartCSDragItemRef.current).getPropertyValue("top"))
-        const flag = top >= chartCSDragAreaHeight - 43 - 10 // 判读拖拽元素是否离最底部还有10px的距离
-        const currentTop = flag ? chartCSDragAreaHeight - 43 - 10 : top
-        chartCSDragItemRef.current.style.top = currentTop + "px"
+        if (chartCSDragItemRef.current) {
+            const top = parseInt(getComputedStyle(chartCSDragItemRef.current).getPropertyValue("top"))
+            const flag = top >= chartCSDragAreaHeight - 43 - 10 // 判读拖拽元素是否离最底部还有10px的距离
+            const currentTop = flag ? chartCSDragAreaHeight - 43 - 10 : top
+            chartCSDragItemRef.current.style.top = currentTop + "px"
+        }
     }, [chartCSDragAreaHeight, chartCSDragItemRef])
 
     useEffect(() => {
-        if (chartCSDragAreaRef && chartCSDragItemRef) {
+        if (chartCSDragAreaRef.current && chartCSDragItemRef.current) {
             const chartCSDragItemDom = chartCSDragItemRef.current
             const dragAreaDom = chartCSDragAreaRef.current
 
