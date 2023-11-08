@@ -361,8 +361,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             })
             return answer
         } catch (error) {}
-
-        return undefined
         // if (!flow) return undefined
         // const lastIndex = flow.lastIndexOf("data:")
         // if (lastIndex === -1) return undefined
