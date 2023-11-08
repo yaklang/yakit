@@ -86,6 +86,8 @@ import {YakFilterRemoteObj} from "../mitm/MITMServerHijacking/MITMPluginLocalLis
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import { PluginGV } from "../plugins/utils"
+import { YakitRoute } from "@/routes/newRoute"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {Search} = Input
 const {Option} = Select
@@ -1159,10 +1161,7 @@ export const YakModule: React.FC<YakModuleProp> = (props) => {
         onSelectAllLocal(false)
     })
     const onAdd = useMemoizedFn(() => {
-        ipcRenderer.invoke("send-to-tab", {
-            type: "add-yakit-script",
-            data: {}
-        })
+        emiter.emit("openPage", JSON.stringify({route: YakitRoute.AddYakitScript}))
     })
     const onImport = useMemoizedFn(() => {
         let m = showModal({

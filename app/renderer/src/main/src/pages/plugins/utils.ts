@@ -1,5 +1,4 @@
 import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "./baseTemplateType"
-import cloneDeep from "lodash/cloneDeep"
 import {YakitPluginListOnlineResponse} from "./online/PluginsOnlineType"
 import {NetWorkApi, requestConfig} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -9,6 +8,7 @@ import {compareAsc} from "../yakitStore/viewers/base"
 import {GetYakScriptTagsAndTypeResponse, QueryYakScriptRequest, QueryYakScriptsResponse} from "../invoker/schema"
 import {pluginTypeToName} from "./baseTemplate"
 import emiter from "@/utils/eventBus/eventBus"
+import { toolDelInvalidKV } from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -41,16 +41,6 @@ export enum PluginGV {
     Fetch_Local_Plugin_Group = "FILTER_CACHE_LIST_COMMON_DATA"
 }
 
-// 删除对象里值为 undefined 的键值对
-const delObjectInvalidValue = (obj: Record<string, any>) => {
-    const data = cloneDeep(obj)
-    const keys = Object.keys(data)
-    for (let key of keys) {
-        if (data[key] === undefined) delete data[key]
-    }
-    return data
-}
-
 /**
  * @name http接口公共参数转换(前端数据转接口参数)
  * @description 适用api接口请求参数是否继承 API.PluginsWhere
@@ -76,7 +66,7 @@ export const convertPluginsRequestParams = (
         is_private: filter.plugin_private?.map((ele) => ele.value === "true") || [],
         group: filter.plugin_group?.map((ele) => ele.value) || []
     }
-    return delObjectInvalidValue(data)
+    return toolDelInvalidKV(data)
 }
 
 /**插件商店这边需要token */
@@ -410,7 +400,7 @@ export const convertDownloadOnlinePluginBatchRequestParams = (
         IsPrivate: filter.plugin_private?.map((ele) => ele.value === "true") || [],
         Group: filter.plugin_group?.map((ele) => ele.value) || []
     }
-    return delObjectInvalidValue(data)
+    return toolDelInvalidKV(data)
 }
 
 /**下载插件 */
@@ -656,7 +646,7 @@ export const convertLocalPluginsRequestParams = (
         Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
         Tag: filter.tags?.map((ele) => ele.value) || []
     }
-    return delObjectInvalidValue(data)
+    return toolDelInvalidKV(data)
 }
 /**本地，获取插件 QueryYakScript 接口基础版 */
 export const apiQueryYakScriptBase: (query?: QueryYakScriptRequest) => Promise<QueryYakScriptsResponse> = (query) => {
@@ -810,7 +800,7 @@ export const convertDeleteLocalPluginsByWhereRequestParams = (
         Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
         Tags: (filter.tags?.map((ele) => ele.value) || []).join(",")
     }
-    return delObjectInvalidValue(data)
+    return toolDelInvalidKV(data)
 }
 /**本地，带条件的全部删除 */
 export const apiDeleteLocalPluginsByWhere: (query: DeleteLocalPluginsByWhereRequestProps) => Promise<null> = (

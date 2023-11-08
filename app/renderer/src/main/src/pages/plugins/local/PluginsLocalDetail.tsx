@@ -20,11 +20,7 @@ import {FilterPopoverBtn, FuncFilterPopover} from "../funcTemplate"
 import {YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
-import {
-    PluginLocalDetailBackProps,
-    PluginsLocalDetailProps,
-    RemoveMenuModalContentProps
-} from "./PluginsLocalType"
+import {PluginLocalDetailBackProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
 import {yakitNotify} from "@/utils/notification"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {executeYakScriptByParams} from "@/pages/invoker/YakScriptCreator"
@@ -35,6 +31,8 @@ import {CodeGV} from "@/yakitGV"
 import {getRemoteValue} from "@/utils/kv"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {LoadingOutlined} from "@ant-design/icons"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRoute"
 
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
@@ -105,8 +103,24 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         if (!plugin) return
         onDetailExport([plugin.Id])
     })
+    /** 新建插件 */
+    const onNewAddPlugin = useMemoizedFn(() => {
+        emiter.emit(
+            "openPage",
+            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Local}})
+        )
+    })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
+        if (plugin?.Id && +plugin.Id) {
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.ModifyYakitScript,
+                    params: {source: YakitRoute.Plugin_Local, id: +plugin.Id}
+                })
+            )
+        }
     })
     const onUpload = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -257,12 +271,14 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         {removeLoading ? (
                             <YakitButton type='text2' icon={<LoadingOutlined />} />
                         ) : (
-                        <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
+                            <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
                                 <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onBatchRemove} />
-                        </Tooltip>
+                            </Tooltip>
                         )}
                         <div style={{height: 12}} className='divider-style'></div>
-                        <YakitButton type='text'>新建插件</YakitButton>
+                        <YakitButton type='text' onClick={onNewAddPlugin}>
+                            新建插件
+                        </YakitButton>
                     </div>
                 }
                 checked={allCheck}
