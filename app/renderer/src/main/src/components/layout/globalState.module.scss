@@ -182,6 +182,20 @@
             height: 57px;
             border-top: 1px solid var(--yakit-border-color);
         }
+
+        .run-node-list {
+            border-bottom: 1px solid var(--yakit-border-color);
+            .run-node-item {
+                padding-left: 43px;
+                padding-right: 8px;
+                margin-bottom: 8px;
+                .run-node-ipOrdomain {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+        }
     }
 
     .body-setting {
