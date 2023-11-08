@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useMemo, useContext, useImperativeHandle, Children} from "react"
+import React, {useState, useEffect, useRef, useMemo, useImperativeHandle} from "react"
 import {Layout, Form, Tooltip} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {
@@ -22,17 +22,7 @@ import {
 import styles from "./MainOperatorContent.module.scss"
 import {YakitRouteToPageInfo, YakitRoute, SingletonPageRoute, NoPaddingRoute, ComponentParams} from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
-import {
-    useCreation,
-    useGetState,
-    useInViewport,
-    useLongPress,
-    useMemoizedFn,
-    useMount,
-    useThrottleFn,
-    useUpdateEffect,
-    useWhyDidYouUpdate
-} from "ahooks"
+import {useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import classNames from "classnames"
 import _ from "lodash"
@@ -43,7 +33,7 @@ import {YakitSecondaryConfirmProps, useSubscribeClose} from "@/store/tabSubscrib
 import {YakitModalConfirm, showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultUserInfo} from "@/pages/MainOperator"
 import {useStore} from "@/store"
-import {getLocalValue, getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue} from "@/utils/kv"
+import {getLocalValue, getRemoteProjectValue, getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {BugInfoProps, BugList, CustomBugList} from "@/pages/invoker/batch/YakBatchExecutors"
 import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "@/pages/invoker/batch/UnfinishedBatchTaskList"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
@@ -53,7 +43,6 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
-import debounce from "lodash/debounce"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import ReactResizeDetector from "react-resize-detector"
 import {compareAsc} from "@/pages/yakitStore/viewers/base"
@@ -64,7 +53,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon} from "@/assets/icon/outline"
 
-import HTTPFuzzerPage, {
+import {
     WEB_FUZZ_DNS_Hosts_Config,
     WEB_FUZZ_DNS_Server_Config,
     WEB_FUZZ_PROXY,
@@ -301,6 +290,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [loading, setLoading] = useState(false)
     const [tabMenuHeight, setTabMenuHeight] = useState<number>(0)
 
+    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData, updatePagesDataCacheById} =
+        usePageInfo(
+            (s) => ({
+                setPagesData: s.setPagesData,
+                setSelectGroupId: s.setSelectGroupId,
+                addPagesDataCache: s.addPagesDataCache,
+                pages: s.pages,
+                clearAllData: s.clearAllData,
+                updatePagesDataCacheById: s.updatePagesDataCacheById
+            }),
+            shallow
+        )
+    useEffect(() => {
+        console.log("pages", pages)
+    }, [pages])
+
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])
     const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
@@ -319,6 +324,173 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             closeDuplexConn()
         }
     }, [])
+
+    /** ---------- 新逻辑 start ---------- */
+
+    /** @name 渲染端通信-从顶部菜单里打开一个指定页面 */
+    useEffect(() => {
+        emiter.on("menuOpenPage", menuOpenPage)
+        return () => {
+            emiter.off("menuOpenPage", menuOpenPage)
+        }
+    }, [])
+    const menuOpenPage = useMemoizedFn((res: string) => {
+        // @ts-ignore
+        let data: RouteToPageProps = {}
+        try {
+            data = JSON.parse(res || "{}")
+        } catch (error) {}
+
+        if (!data.route) {
+            yakitNotify("error", "menu open page failed!")
+            return
+        }
+        extraOpenMenuPage(data)
+    })
+
+    // (创建|更新)-(新建|编辑)-插件编辑器页面的缓存信息
+    /**
+     * @param source 触发打开页面的父路由
+     * @param isUpdate 是否更新缓存数据(不更新则为创建缓存)
+     * @param isModify 新建插件还是编辑插件页面
+     */
+    const cuPluginEditorStorage = useMemoizedFn((source: YakitRoute, isUpdate?: boolean, isModify?: boolean) => {
+        const route: YakitRoute = isModify ? YakitRoute.ModifyYakitScript : YakitRoute.AddYakitScript
+
+        if (isUpdate) {
+            const info: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
+            if (!info) {
+                cuPluginEditorStorage(source, false, isModify)
+                return
+            } else {
+                updatePagesDataCacheById(
+                    route,
+                    _.cloneDeep({
+                        ...info,
+                        pageParamsInfo: {
+                            pluginInfoEditor: {source: source}
+                        }
+                    })
+                )
+            }
+        } else {
+            const pageNodeInfo: PageProps = {
+                pageList: [
+                    {
+                        id: randomString(8),
+                        routeKey: route,
+                        pageGroupId: "0",
+                        pageId: "0",
+                        pageName: YakitRouteToPageInfo[route]?.label || "",
+                        pageParamsInfo: {
+                            pluginInfoEditor: {source: source}
+                        },
+                        sortFieId: 0
+                    }
+                ],
+                routeKey: route,
+                singleNode: true
+            }
+            setPagesData(route, pageNodeInfo)
+        }
+    })
+
+    /** @name 渲染端通信-打开一个指定页面 */
+    useEffect(() => {
+        emiter.on("openPage", onOpenPage)
+        return () => {
+            emiter.off("openPage", onOpenPage)
+        }
+    }, [])
+    const onOpenPage = useMemoizedFn((res: string) => {
+        // @ts-ignore
+        let data: {route: YakitRoute; params: any} = {}
+        try {
+            data = JSON.parse(res || "{}")
+        } catch (error) {}
+
+        const {route, params} = data
+        switch (route) {
+            case YakitRoute.AddYakitScript:
+                addYakScript(params)
+                break
+            case YakitRoute.ModifyYakitScript:
+                modifyYakScript(params)
+                break
+
+            default:
+                break
+        }
+    })
+    /**
+     * @name 新建插件
+     * @param source 触发打开页面的父页面路由
+     */
+    const addYakScript = useMemoizedFn((data: {source: YakitRoute}) => {
+        const {source} = data || {}
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.AddYakitScript).length
+        if (isExist) {
+            const modalProps = getSubscribeClose(YakitRoute.AddYakitScript)
+            if (modalProps) onModalSecondaryConfirm(modalProps["reset"])
+            cuPluginEditorStorage(source, true, false)
+        } else {
+            cuPluginEditorStorage(source, false, false)
+        }
+
+        openMenuPage({route: YakitRoute.AddYakitScript})
+    })
+    /**
+     * @name 编辑插件
+     * @param source 触发打开页面的父页面路由
+     */
+    const modifyYakScript = useMemoizedFn((data: {source: YakitRoute; id: number}) => {
+        const {source, id} = data || {}
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.ModifyYakitScript).length
+        if (isExist) {
+            emiter.emit("sendEditPluginId", `${id}`)
+            const modalProps = getSubscribeClose(YakitRoute.ModifyYakitScript)
+            if (modalProps) onModalSecondaryConfirm(modalProps["reset"])
+            cuPluginEditorStorage(source, true, true)
+        } else {
+            cuPluginEditorStorage(source, false, true)
+        }
+        openMenuPage({route: YakitRoute.ModifyYakitScript}, {pageParams: {editPluginId: id}})
+    })
+
+    /** @name 渲染端通信-关闭一个指定页面 */
+    useEffect(() => {
+        emiter.on("closePage", onClosePage)
+        return () => {
+            emiter.off("closePage", onClosePage)
+        }
+    }, [])
+    const onClosePage = useMemoizedFn((res: string) => {
+        // @ts-ignore
+        let data: {route: YakitRoute} = {}
+        try {
+            data = JSON.parse(res || "{}")
+        } catch (error) {}
+
+        const {route} = data
+        switch (route) {
+            case YakitRoute.AddYakitScript:
+            case YakitRoute.ModifyYakitScript:
+                // 判断页面是由谁触发打开的
+                const targetCache: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
+                let next: YakitRoute | undefined = undefined
+                if (targetCache?.pageParamsInfo && targetCache.pageParamsInfo?.pluginInfoEditor) {
+                    next = targetCache.pageParamsInfo.pluginInfoEditor?.source
+                }
+
+                removeMenuPage({route: route, menuName: ""}, next ? {route: next, menuName: ""} : undefined)
+                break
+
+            default:
+                break
+        }
+    })
+
+    /** ---------- 新逻辑 end ---------- */
 
     // 打开tab页面
     useEffect(() => {
@@ -534,19 +706,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             )
         }
     )
-    /** ---------- 新建插件 ---------- */
-    const addYakScript = useMemoizedFn((res: any) => {
-        const { moduleType = "yak", content = "" } = res || {}
-        openMenuPage(
-            {route: YakitRoute.AddYakitScript},
-            {
-                pageParams: {
-                    moduleType,
-                    content
-                }
-            }
-        )
-    })
+
     /** ---------- 插件修改历史详情 ---------- */
     const addYakPluginJournalDetails = useMemoizedFn((res: any) => {
         const time = new Date().getTime().toString()
@@ -581,7 +741,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /** 插件调试 */
     const addPluginDebugger = useMemoizedFn((res: any) => {
-        const { generateYamlTemplate = false, YamlContent = "" } = res || {}
+        const {generateYamlTemplate = false, YamlContent = ""} = res || {}
         openMenuPage(
             {route: YakitRoute.Beta_DebugPlugin},
             {
@@ -816,9 +976,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const onBeforeRemovePage = useMemoizedFn((data: OnlyPageCache) => {
         switch (data.route) {
             case YakitRoute.AddYakitScript:
+            case YakitRoute.ModifyYakitScript:
             case YakitRoute.HTTPFuzzer:
                 const modalProps = getSubscribeClose(data.route)
-                onModalSecondaryConfirm(modalProps)
+                if (modalProps) onModalSecondaryConfirm(modalProps["close"])
                 break
 
             default:
@@ -826,8 +987,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
         }
     })
-    /** @name 移除一级页面 */
-    const removeMenuPage = useMemoizedFn((data: OnlyPageCache) => {
+    /**
+     * @name 移除一级页面
+     * @param assignRoute 删除页面后指定某个页面展示(如果指定页面未打开则执行正常流程)
+     */
+    const removeMenuPage = useMemoizedFn((data: OnlyPageCache, assignPage?: OnlyPageCache) => {
+        // 获取需要关闭页面的索引
         const index = pageCache.findIndex((item) => {
             if (data.route === YakitRoute.Plugin_OP) {
                 return item.route === data.route && item.menuName === data.menuName
@@ -837,15 +1002,31 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
         if (index === -1) return
 
-        let newIndex = 0
-        if (index > 0 && getPageCache()[index - 1]) newIndex = index - 1
-        if (index === 0 && getPageCache()[index + 1]) newIndex = index + 1
-        const {route, pluginId = 0, pluginName = ""} = getPageCache()[newIndex]
+        let activeIndex: number = -1
+
+        // 如果有指定关闭后展示的页面，执行该逻辑
+        if (assignPage) {
+            activeIndex = pageCache.findIndex((item) => {
+                if (assignPage.route === YakitRoute.Plugin_OP) {
+                    return item.route === assignPage.route && item.menuName === assignPage.menuName
+                } else {
+                    return item.route === assignPage.route
+                }
+            })
+        }
+        if (activeIndex === -1) {
+            if (index > 0 && getPageCache()[index - 1]) activeIndex = index - 1
+            if (index === 0 && getPageCache()[index + 1]) activeIndex = index + 1
+        }
+
+        // 获取关闭页面后展示页面的信息
+        const {route, pluginId = 0, pluginName = ""} = getPageCache()[activeIndex]
         const key = routeConvertKey(route, pluginName)
         if (currentTabKey === routeConvertKey(data.route, data.pluginName)) {
             setCurrentTabKey(key)
         }
         if (index === 0 && getPageCache().length === 1) setCurrentTabKey("" as any)
+
         setPageCache(
             getPageCache().filter((i) => {
                 if (data.route === YakitRoute.Plugin_OP) {
@@ -921,16 +1102,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     /** ---------- 简易企业版 end ---------- */
 
     /** ---------- web-fuzzer 缓存逻辑 start ---------- */
-    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData} = usePageInfo(
-        (s) => ({
-            setPagesData: s.setPagesData,
-            setSelectGroupId: s.setSelectGroupId,
-            addPagesDataCache: s.addPagesDataCache,
-            pages: s.pages,
-            clearAllData: s.clearAllData
-        }),
-        shallow
-    )
     const {setFuzzerSequenceCacheData, clearFuzzerSequence, addFuzzerSequenceCacheData} = useFuzzerSequence(
         (s) => ({
             setFuzzerSequenceCacheData: s.setFuzzerSequenceCacheData,
