@@ -622,22 +622,78 @@ export declare namespace API {
     /**
      * 日志页跳转到详情页必传
      */
-    plugins_log_id?: number;
+    up_log_id?: number;
   }
   export interface PluginsAuditDetail {
-    user_name?: string;
-    plugin_user_id?: number;
-    apply_user_id?: number;
-    plugin_id?: number;
     /**
-     * 合并状态 0 待处理  1合并  2拒绝
+     * 修改人
+     */
+    apply_user_name?: string;
+    /**
+     * 修改人
+     */
+    apply_user_id?: number;
+    /**
+     * 描述
+     */
+    logDescription?: string;
+    apply_user_head_img?: string;
+    /**
+     * 处理状态 0 待处理  1合并  2拒绝
      */
     merge_status?: number;
-    up_plugins?: PluginsAuditDetailUpPlugins[];
-    merge_before_plugins?: PluginsAuditDetailMergeBeforePlugins[];
+    /**
+     * 日志id
+     */
+    up_log_id?: number;
+    merge_before_plugins?: PluginsAuditDetailMergeBeforePlugins;
   }
-  export interface PluginsAuditDetailMergeBeforePlugins {}
-  export interface PluginsAuditDetailUpPlugins {}
+  export interface PluginsAuditDetailMergeBeforePlugins {
+    type?: string;
+    script_name?: string;
+    tags?: string;
+    content?: string;
+    params?: YakitPluginParam[];
+    /**
+     * 审核状态
+     */
+    status?: number;
+    official?: boolean;
+    help?: string;
+    enable_plugin_selector?: boolean;
+    plugin_selector_types?: string;
+    is_general_module?: boolean;
+    uuid?: string;
+    is_private?: boolean;
+    stars?: number;
+    download_total?: number;
+    group?: string;
+    riskType?: string;
+    riskDetail?: PluginsAuditDetailMergeBeforePluginsRiskDetail;
+    /**
+     * 补充说明
+     */
+    risk_annotation?: string;
+    /**
+     * 是否为内置插件
+     */
+    isCorePlugin?: boolean;
+  }
+  export interface PluginsAuditDetailMergeBeforePluginsRiskDetail {
+    cweId: string;
+    /**
+     * 漏洞类型
+     */
+    riskType: string;
+    /**
+     * 漏洞描述
+     */
+    description: string;
+    /**
+     * 修复建议
+     */
+    solution: string;
+  }
   export interface PluginsAudit {
     pageType?: string;
     /**
@@ -657,7 +713,7 @@ export declare namespace API {
      */
     listType?: string;
     /**
-     * 日志页的审核 必传此id
+     * 有对比的审核页 必传此id
      */
     upPluginLogId?: number;
   }
