@@ -293,8 +293,8 @@
 }
 
 .chat-icon-wrapper {
-    position: fixed;
-    bottom: 24px;
+    position: absolute;
+    top: calc(100% - 53px);
     right: 0px;
     width: 105px;
     height: 43px;
@@ -303,7 +303,7 @@
     transition: all 0.4s ease 0s;
     transform-origin: 100% 0;
     transform: translateX(75px);
-    z-index: 99;
+    z-index: 9999;
 
     img {
         width: 100%;
