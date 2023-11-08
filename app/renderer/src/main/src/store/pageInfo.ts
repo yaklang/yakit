@@ -1,6 +1,5 @@
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {YakitRoute} from "@/routes/newRoute"
-import {create} from "zustand"
 import {subscribeWithSelector, persist, StorageValue} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HTTPFuzzerPage"
@@ -38,12 +37,13 @@ export interface PageNodeItemProps {
 /** 页面保存的数据,目前只加了webFuzzer */
 interface PageParamsInfoProps {
     webFuzzerPageInfo?: WebFuzzerPageInfoProps
+    pluginInfoEditor?: {source: YakitRoute}
 }
 
 export interface WebFuzzerPageInfoProps {
     pageId: string
     advancedConfigValue: AdvancedConfigValueProps
-    request: string 
+    request: string
 }
 
 interface PageInfoStoreProps {
