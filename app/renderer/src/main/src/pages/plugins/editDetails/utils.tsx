@@ -5,7 +5,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {DownloadOnlinePluginProps} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {GetYakScriptByOnlineIDRequest} from "@/pages/yakitStore/YakitStorePage"
 import {yakitNotify} from "@/utils/notification"
-import {YakitRoute} from "@/routes/newRoute"
+import {toolDelInvalidKV} from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -63,7 +63,6 @@ export const convertLocalToLocalInfo = (
     let request: localYakInfo = {}
     if (isModify && info) {
         request = {
-            Id: info.Id,
             ScriptName: info.ScriptName,
             Content: info.Content,
             Type: info.Type,
@@ -91,12 +90,14 @@ export const convertLocalToLocalInfo = (
     request.Type = modify.Type
     request.Help = modify.Help
     request.RiskType = modify.RiskType
-    request.RiskDetail = {
-        Id: modify.RiskDetail?.Id || "",
-        CWEName: modify.RiskDetail?.CWEName || "",
-        Description: modify.RiskDetail?.Description || "",
-        CWESolution: modify.RiskDetail?.CWESolution || ""
-    }
+    request.RiskDetail = modify.RiskType
+        ? {
+              Id: modify.RiskDetail?.Id || "",
+              CWEName: modify.RiskDetail?.CWEName || "",
+              Description: modify.RiskDetail?.Description || "",
+              CWESolution: modify.RiskDetail?.CWESolution || ""
+          }
+        : undefined
     request.RiskAnnotation = modify.RiskAnnotation
     request.Tags = modify.Tags
     request.Params = modify.Params
@@ -104,7 +105,7 @@ export const convertLocalToLocalInfo = (
     request.PluginSelectorTypes = modify.PluginSelectorTypes
     request.Content = modify.Content
 
-    return request
+    return toolDelInvalidKV(request)
 }
 
 /**
@@ -127,17 +128,15 @@ export const convertLocalToRemoteInfo = (
             script_name: info.ScriptName,
             help: info.Help,
             riskType: info.RiskType,
-            riskDetail: info.RiskDetail
-                ? {
-                      cweId: info.RiskDetail.Id,
-                      riskType: info.RiskDetail.CWEName,
-                      description: info.RiskDetail.Description,
-                      solution: info.RiskDetail.CWESolution
-                  }
-                : undefined,
+            riskDetail: {
+                cweId: info.RiskDetail?.Id || "",
+                riskType: info.RiskDetail?.CWEName || "",
+                description: info.RiskDetail?.Description || "",
+                solution: info.RiskDetail?.CWESolution || ""
+            },
             annotation: info.RiskAnnotation,
-            tags: info.Tags.split(",") || [],
-            params: convertLocalToRemoteParams(info.Params),
+            tags: (info.Tags || "").split(",") || [],
+            params: convertLocalToRemoteParams(info.Params || []),
             enable_plugin_selector: info.EnablePluginSelector,
             plugin_selector_types: info.PluginSelectorTypes,
             content: info.Content,
@@ -170,7 +169,14 @@ export const convertLocalToRemoteInfo = (
     request.content = modify.Content
     request.logDescription = modify.modifyDescription
 
-    return request
+    // 没有tags就赋值为undefined
+    if (request.tags?.length === 0) request.tags = undefined
+    // 非漏洞类型的插件清空漏洞类型详情
+    if (!request.riskType) request.riskDetail = undefined
+    // 分组为空字符时清空值(影响后端数据处理)
+    if (!request.group) request.group = undefined
+
+    return toolDelInvalidKV(request)
 }
 /** ---------- 数据结构转换 end ---------- */
 
@@ -178,20 +184,24 @@ export const convertLocalToRemoteInfo = (
  * @name 插件上传到online-整体上传逻辑
  */
 export const uploadOnlinePlugin = (info: API.PluginsEditRequest, callback?: (plugin?: YakScript) => any) => {
-    console.log(1111111, JSON.stringify(info))
+    console.log("remote", JSON.stringify(info))
+    // 往线上上传插件
     NetWorkApi<API.PluginsEditRequest, API.PluginsResponse>({
         method: "post",
         url: "plugins",
         data: info
     })
         .then((res) => {
+            // 下载插件
             ipcRenderer
                 .invoke("DownloadOnlinePluginById", {
                     OnlineID: res.id,
                     UUID: res.uuid
                 } as DownloadOnlinePluginProps)
                 .then(() => {
+                    // 刷新插件菜单
                     setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+                    // 获取下载后本地最新的插件信息
                     ipcRenderer
                         .invoke("GetYakScriptByOnlineID", {
                             OnlineID: res.id,
@@ -199,27 +209,20 @@ export const uploadOnlinePlugin = (info: API.PluginsEditRequest, callback?: (plu
                         } as GetYakScriptByOnlineIDRequest)
                         .then((newSrcipt: YakScript) => {
                             if (callback) callback(newSrcipt)
-                            yakitNotify("success", "同步成功")
-                            ipcRenderer
-                                .invoke("send-close-tab", {
-                                    router: YakitRoute.AddYakitScript
-                                })
-                                .finally(() => ipcRenderer.invoke("send-local-script-list"))
+                            yakitNotify("success", "上传云端成功")
                         })
                         .catch((e) => {
-                            console.log(333)
                             if (callback) callback()
                             yakitNotify("error", `查询本地插件错误:${e}`)
                         })
                 })
                 .catch((err) => {
-                    console.log(222)
                     if (callback) callback()
                     yakitNotify("error", "插件下载本地失败:" + err)
                 })
         })
         .catch((err) => {
-            console.log(111)
+            if (callback) callback()
             yakitNotify("error", "插件上传失败:" + err)
         })
 }

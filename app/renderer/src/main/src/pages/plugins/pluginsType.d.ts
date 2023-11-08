@@ -95,8 +95,6 @@ export interface YakParamProps {
 }
 /** 本地插件信息 */
 export interface localYakInfo {
-    Id?: number
-
     ScriptName: string
     Content: string
     Type: string
