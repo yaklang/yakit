@@ -274,7 +274,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     <Row gutter={8}>
                         {newStatusCards.map((card, cardIndex) => {
                             return (
-                                <Col key={card.tag} span={8} style={{marginBottom: 8}}>
+                                <Col key={card.tag} span={4} style={{marginBottom: 8}}>
                                     <Card
                                         hoverable={true}
                                         bodyStyle={{
@@ -282,7 +282,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                             paddingBottom: 4,
                                             paddingLeft: 12,
                                             paddingRight: 12,
-                                            height: 120,
+                                            height: 100,
                                             display: "flex",
                                             flexDirection: "column",
                                             justifyContent: "space-between"
@@ -841,7 +841,7 @@ export const SimpleCardBox: React.FC<SimpleCardBoxProps> = (props) => {
                     <Row gutter={8}>
                         {statusCards.map((card, cardIndex) => {
                             return (
-                                <Col key={card.tag} span={6} style={{marginBottom: 8}}>
+                                <Col key={card.tag} span={4} style={{marginBottom: 8}}>
                                     <Card
                                         hoverable={true}
                                         bodyStyle={{

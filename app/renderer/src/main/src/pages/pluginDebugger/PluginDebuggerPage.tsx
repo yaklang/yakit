@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef} from "react"
-import {Divider, RadioChangeEvent, Space, Tooltip} from "antd"
-import {useMemoizedFn, useUpdateEffect, usePrevious} from "ahooks"
+import {Divider, Space} from "antd"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {AutoCard} from "@/components/AutoCard"
@@ -16,7 +16,6 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/routes/newRoute"
 import {PluginDebuggerExec} from "@/pages/pluginDebugger/PluginDebuggerExec"
 import {MITMPluginTemplate, NucleiPluginTemplate, PortScanPluginTemplate} from "@/pages/pluginDebugger/defaultData"
-import YakitTabs from "@/components/yakitUI/YakitTabs/YakitTabs"
 import {
     getDefaultHTTPRequestBuilderParams,
     HTTPRequestBuilder,
@@ -45,7 +44,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import imageLoadErrorDefault from "@/assets/imageLoadErrorDefault.png"
 import styles from "./PluginDebuggerPage.module.scss"
-const {YakitTabPane} = YakitTabs
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 export interface PluginDebuggerPageProp {
     // 是否生成yaml模板
@@ -113,8 +112,8 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
         }
     }
 
-    const setDefultTemplate = (v?:PluginTypes) => {
-        switch (v||pluginType) {
+    const setDefultTemplate = (v?: PluginTypes) => {
+        switch (v || pluginType) {
             case "mitm":
                 setCode(MITMPluginTemplate)
                 break
@@ -128,23 +127,21 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
     }
 
     const handleChangePluginType = useMemoizedFn((v: PluginTypes) => {
-        if(!currentPluginName){
-            if (!!code) {
-                const m = showYakitModal({
-                    title: "切换类型将导致当前代码丢失",
-                    onOk: () => {
-                        setPluginType(v)
-                        setRefreshEditor(Math.random())
-                        setDefultTemplate(v)
-                        m.destroy()
-                    },
-                    content: <div style={{margin: 24}}>确认插件类型切换？</div>,
-                    onCancel: () => {}
-                })
-            }
-            else {
-                setDefultTemplate()
-            }
+        if (!!code) {
+            const m = showYakitModal({
+                title: "切换类型将导致当前代码丢失",
+                onOk: () => {
+                    setPluginType(v)
+                    setRefreshEditor(Math.random())
+                    setDefultTemplate(v)
+                    setTabActiveKey("code")
+                    m.destroy()
+                },
+                content: <div style={{margin: 24}}>确认插件类型切换？</div>,
+                onCancel: () => {}
+            })
+        } else {
+            setDefultTemplate()
         }
     })
 
@@ -159,8 +156,8 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
         <div className={styles.pluginDebuggerPage}>
             <YakitResizeBox
                 isVer={false}
-                firstMinSize={300}
-                firstRatio={"300px"}
+                firstMinSize={325}
+                firstRatio={"325px"}
                 secondMinSize={700}
                 lineDirection='left'
                 firstNodeStyle={{padding: 0}}
@@ -195,6 +192,11 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                     icon={!pluginExecuting ? <SolidPlayIcon /> : <SolidStopIcon />}
                                     colors={!pluginExecuting ? "primary" : "danger"}
                                     onClick={handleExecOrStopOperation}
+                                    disabled={
+                                        builder.IsRawHTTPRequest
+                                            ? !Uint8ArrayToString(builder.RawHTTPRequest)
+                                            : !builder.Input
+                                    }
                                 >
                                     {!pluginExecuting ? "执行" : "停止执行"}
                                 </YakitButton>
@@ -205,56 +207,34 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                     </AutoCard>
                 }
                 secondNode={
-                    <YakitTabs
-                        type='card'
-                        tabPosition='right'
-                        activeKey={tabActiveKey}
-                        onChange={setTabActiveKey}
-                        className={styles.rightYakitTabs}
-                    >
-                        <YakitTabPane tab='源码' key='code' className={styles.tabPane}>
-                            <div style={{height: "100%", paddingBottom: 12}}>
-                                <SecondNodeHeader
-                                    generateYamlTemplate={generateYamlTemplate}
-                                    currentPluginName={currentPluginName}
-                                    setCurrentPluginName={setCurrentPluginName}
-                                    pluginType={pluginType}
-                                    setPluginType={setPluginType}
-                                    code={code}
-                                    originCode={originCode}
-                                    setCode={setCode}
-                                    setOriginCode={setOriginCode}
-                                    setRefreshEditor={setRefreshEditor}
-                                    handleChangePluginType={handleChangePluginType}
-                                ></SecondNodeHeader>
-                                <div style={{height: "calc(100% - 34px)"}}>
-                                    <NewHTTPPacketEditor
-                                        key={refreshEditor}
-                                        language={pluginType === "nuclei" ? "yaml" : "yak"}
-                                        noHeader={true}
-                                        originValue={StringToUint8Array(code)}
-                                        onChange={(val) => setCode(Uint8ArrayToString(val))}
-                                    />
-                                </div>
-                            </div>
-                        </YakitTabPane>
-                        <YakitTabPane tab='执行结果' key='execResult'>
-                            <div style={{height: "100%", paddingBottom: 12}}>
-                                <SecondNodeHeader
-                                    generateYamlTemplate={generateYamlTemplate}
-                                    currentPluginName={currentPluginName}
-                                    setCurrentPluginName={setCurrentPluginName}
-                                    pluginType={pluginType}
-                                    setPluginType={setPluginType}
-                                    code={code}
-                                    setCode={setCode}
-                                    originCode={originCode}
-                                    setOriginCode={setOriginCode}
-                                    setRefreshEditor={setRefreshEditor}
-                                    handleChangePluginType={handleChangePluginType}
-                                ></SecondNodeHeader>
-                                {showPluginExec ? (
-                                    <div style={{ height: "calc(100% - 34px)" }}>
+                    <div style={{height: "100%", padding: 12, paddingLeft: 4}}>
+                        <SecondNodeHeader
+                            generateYamlTemplate={generateYamlTemplate}
+                            tabActiveKey={tabActiveKey}
+                            setTabActiveKey={setTabActiveKey}
+                            currentPluginName={currentPluginName}
+                            setCurrentPluginName={setCurrentPluginName}
+                            pluginType={pluginType}
+                            setPluginType={setPluginType}
+                            code={code}
+                            originCode={originCode}
+                            setCode={setCode}
+                            setOriginCode={setOriginCode}
+                            setRefreshEditor={setRefreshEditor}
+                            handleChangePluginType={handleChangePluginType}
+                        ></SecondNodeHeader>
+                        <div style={{height: "calc(100% - 34px)"}}>
+                            {tabActiveKey === "code" ? (
+                                <NewHTTPPacketEditor
+                                    key={refreshEditor}
+                                    language={pluginType === "nuclei" ? "yaml" : "yak"}
+                                    noHeader={true}
+                                    originValue={StringToUint8Array(code)}
+                                    onChange={(val) => setCode(Uint8ArrayToString(val))}
+                                />
+                            ) : (
+                                <>
+                                    {showPluginExec ? (
                                         <PluginDebuggerExec
                                             pluginType={pluginType}
                                             pluginName={currentPluginName}
@@ -269,15 +249,15 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                                 setPluginExecuting(result)
                                             }}
                                         />
-                                    </div>
-                                ) : (
-                                    <div className={styles.emptyPosition}>
-                                        <YakitEmpty description={"点击【执行插件】以开始"} />
-                                    </div>
-                                )}
-                            </div>
-                        </YakitTabPane>
-                    </YakitTabs>
+                                    ) : (
+                                        <div className={styles.emptyPosition}>
+                                            <YakitEmpty description={"点击【执行插件】以开始"} />
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
                 }
             />
         </div>
@@ -286,6 +266,8 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
 
 interface SecondNodeHeaderProps {
     generateYamlTemplate: boolean
+    tabActiveKey: string
+    setTabActiveKey: (i: string) => void
     currentPluginName: string
     setCurrentPluginName: (i: string) => void
     pluginType: PluginTypes
@@ -301,6 +283,8 @@ interface SecondNodeHeaderProps {
 const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
     ({
         pluginType,
+        tabActiveKey,
+        setTabActiveKey,
         currentPluginName,
         generateYamlTemplate,
         setPluginType,
@@ -314,6 +298,64 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
     }) => {
         const [script, setScript] = useState<YakScript>()
         const [pluginBaseInspectVisible, setPluginBaseInspectVisible] = useState<boolean>(false)
+        const [dropdownData, setDropdownData] = useState<{key: string; label: string}[]>([
+            {key: "loadLocalPlugin", label: "加载本地插件"}
+        ])
+        useEffect(() => {
+            if (!currentPluginName && !generateYamlTemplate) {
+                setDropdownData([
+                    {key: "port-scan", label: "端口扫描"},
+                    {key: "mitm", label: "MITM"},
+                    {key: "nuclei", label: "Yaml-PoC"},
+                    {key: "loadLocalPlugin", label: "加载本地插件"}
+                ])
+            }
+        }, [currentPluginName, generateYamlTemplate])
+
+        const handleSetIconClick = useMemoizedFn((key) => {
+            switch (key) {
+                case "port-scan":
+                case "mitm":
+                case "nuclei":
+                    handleChangePluginType(key)
+                    setCurrentPluginName("")
+                    break
+                case "loadLocalPlugin":
+                    handleSelectDebugPlugin()
+                    break
+                default:
+                    break
+            }
+        })
+
+        // 本地插件选中
+        const onLocalPluginItemClick = (i: YakScript, m: {destroy: () => void}) => {
+            switch (i.Type) {
+                case "mitm":
+                case "nuclei":
+                // @ts-ignore
+                case "port-scan":
+                    const m1 = showYakitModal({
+                        title: "切换本地插件将导致当前代码丢失",
+                        onOk: () => {
+                            setPluginType(i.Type as any)
+                            setCode(i.Content)
+                            setOriginCode(i.Content)
+                            setCurrentPluginName(i.ScriptName)
+                            setRefreshEditor(Math.random())
+                            setScript(i)
+                            setTabActiveKey("code")
+                            m.destroy()
+                            m1.destroy()
+                        },
+                        content: <div style={{margin: 24}}>确认本地插件切换？</div>,
+                        onCancel: () => {}
+                    })
+                    return
+                default:
+                    yakitFailed("暂不支持的插件类型")
+            }
+        }
 
         // 选择要调试的插件
         const handleSelectDebugPlugin = useMemoizedFn(() => {
@@ -335,22 +377,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                                             className={styles["plugin-local-info-left"]}
                                             onClick={() => {
                                                 itemClickFun(i) // 必须调用
-                                                switch (i.Type) {
-                                                    case "mitm":
-                                                    case "nuclei":
-                                                    // @ts-ignore
-                                                    case "port-scan":
-                                                        setPluginType(i.Type as any)
-                                                        setCode(i.Content)
-                                                        setOriginCode(i.Content)
-                                                        setCurrentPluginName(i.ScriptName)
-                                                        setRefreshEditor(Math.random())
-                                                        setScript(i)
-                                                        m.destroy()
-                                                        return
-                                                    default:
-                                                        yakitFailed("暂不支持的插件类型")
-                                                }
+                                                onLocalPluginItemClick(i, m)
                                             }}
                                         >
                                             <img
@@ -426,18 +453,30 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
         return (
             <div className={styles["secondNodeHeader"]}>
                 <Space>
-                    <Tooltip title='选择本地插件进行调试'>
-                        <YakitButton type='outline2' icon={<SolidCogIcon />} onClick={handleSelectDebugPlugin} />
-                    </Tooltip>
+                    <YakitDropdownMenu
+                        menu={{
+                            data: dropdownData,
+                            onClick: ({key}) => {
+                                handleSetIconClick(key)
+                            }
+                        }}
+                        dropdown={{
+                            trigger: ["click"],
+                            placement: "bottomLeft"
+                        }}
+                    >
+                        <YakitButton type='outline2' icon={<SolidCogIcon />} />
+                    </YakitDropdownMenu>
                     <span>插件代码配置</span>
-                    {!currentPluginName && !generateYamlTemplate && (
-                        <YakitRadioButtons
-                            buttonStyle='solid'
-                            value={pluginType}
-                            options={pluginTypeData.map((item) => ({value: item.value, label: item.text}))}
-                            onChange={(e)=>handleChangePluginType(e.target.value)}
-                        />
-                    )}
+                    <YakitRadioButtons
+                        buttonStyle='solid'
+                        value={tabActiveKey}
+                        options={[
+                            {value: "code", label: "源码"},
+                            {value: "execResult", label: "执行结果"}
+                        ]}
+                        onChange={(e) => setTabActiveKey(e.target.value)}
+                    />
                     {code && (
                         <>
                             <YakitTag
@@ -454,13 +493,15 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                 </Space>
                 <Space>
                     <>
-                        {pluginType!=="nuclei"&&<YakitButton
-                            type='outline2'
-                            icon={<OutlineSparklesIcon />}
-                            onClick={() => setPluginBaseInspectVisible(true)}
-                        >
-                            自动评分
-                        </YakitButton>}
+                        {pluginType !== "nuclei" && (
+                            <YakitButton
+                                type='outline2'
+                                icon={<OutlineSparklesIcon />}
+                                onClick={() => setPluginBaseInspectVisible(true)}
+                            >
+                                自动评分
+                            </YakitButton>
+                        )}
                         <PluginBaseInspect
                             type={pluginType}
                             code={code}
