@@ -29,6 +29,7 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import {requestYakURLList} from "@/pages/yakURLTree/netif";
 import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {yakitFailed} from "@/utils/notification";
+import {goBack} from "@/pages/webShell/FileManager";
 
 interface WebShellURLTreeAndTableProp {
     Id: string
@@ -155,7 +156,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     })
 
     // const [currentPath, setCurrentPath] = useState<string>("behinder:///C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
-    const [currentPath, setCurrentPath] = useState<string>(props.shellType + ":///C:/Tools/Vuln/apache-tomcat-8.5.87/webapps/S2-032?mode=list&id=" + props.Id)
+    const [currentPath, setCurrentPath] = useState<string>(props.shellType + ":///C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/?mode=list&id=" + props.Id)
 
     const fileMenuData = [
         {
@@ -362,7 +363,8 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                     <Button size={"small"}
                                             type={"link"}
                                             onClick={() => {
-                                                // goBack(selected.data!.Url, setLoading, setGoBackTree)
+                                                console.log("goBackTree ", selected.data!.Url)
+                                                goBack(selected.data!.Url, setLoading, setGoBackTree)
                                             }}
                                             icon={<ChevronLeftIcon/>}
                                     />
