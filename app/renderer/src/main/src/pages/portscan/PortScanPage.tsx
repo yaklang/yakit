@@ -648,6 +648,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                     <Checkbox value={"topdb"}>常见数据库与 MQ</Checkbox>
                                     <Checkbox value={"topudp"}>常见 UDP 端口</Checkbox>
                                     <Checkbox value={"defect"}>常见弱口令端口</Checkbox>
+                                    <Checkbox value={"all"}>全端口</Checkbox>
                                 </Checkbox.Group>
                             </Form.Item>
 
