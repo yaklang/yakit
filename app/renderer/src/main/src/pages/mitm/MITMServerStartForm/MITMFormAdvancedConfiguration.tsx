@@ -20,6 +20,7 @@ import {useWatch} from "antd/lib/form/Form"
 import { YakitSelect } from "@/components/yakitUI/YakitSelect/YakitSelect"
 import { YakitTag } from "@/components/yakitUI/YakitTag/YakitTag"
 import { inputHTTPFuzzerHostConfigItem } from "@/pages/fuzzer/HTTPFuzzerHosts"
+import { YakitRoute } from "@/routes/newRoute"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -244,7 +245,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 onSave(params)
             })
         })
-        const onClose = useMemoizedFn(() => {
+        const onClose = useMemoizedFn((jumpPage?:boolean) => {
             const formValue = form.getFieldsValue()
             const oldValue:any = {
                 certs: certsDef,
@@ -286,15 +287,18 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     ),
                     onOk: () => {
                         onSaveSetting()
+                        jumpPage&&ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
                     },
                     onCancel: () => {
                         setVisible(false)
+                        jumpPage&&ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
                     },
                     cancelButtonProps: {size: "small", className: "modal-cancel-button"},
                     okButtonProps: {size: "small", className: "modal-ok-button"}
                 })
             } else {
                 setVisible(false)
+                jumpPage&&ipcRenderer.invoke("open-route-page", {route: YakitRoute.Beta_ConfigNetwork})
             }
         })
         return (
@@ -416,12 +420,15 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             <YakitButton
                                 type='text'
                                 icon={<PlusCircleIcon />}
-                                onClick={() => setCertificateFormVisible(true)}
+                                onClick={() => {
+                                    onClose(true)
+                                    // setCertificateFormVisible(true)
+                                }}
                                 style={{paddingLeft: 0}}
                             >
                                 添加
                             </YakitButton>
-                            <div className={styles["drawer-TLS-btns"]}>
+                            {/* <div className={styles["drawer-TLS-btns"]}>
                                 <YakitButton
                                     type='text'
                                     colors={certs.length > 0 ? "danger" : undefined}
@@ -451,7 +458,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                 >
                                     导出配置
                                 </YakitButton>
-                            </div>
+                            </div> */}
                         </div>
                         <div className={styles["drawer-TLS-help"]}>
                             用于 mTLS（Mutual TLS）开启客户端验证的 HTTPS 网站抓包
