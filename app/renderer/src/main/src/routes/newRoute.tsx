@@ -113,6 +113,7 @@ import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
+import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps
@@ -126,6 +127,7 @@ import {PluginUser} from "@/pages/plugins/user/PluginUser"
 import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
+import { NewPayload } from "@/pages/payloadManager/newPayload"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -454,7 +456,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <NewHome />
+            // return <NewHome />
+            return <NewPayload />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
