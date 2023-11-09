@@ -41,7 +41,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const filtersRef = useRef<any>()
     // filter 过滤器
     const [_mitmFilter, setMITMFilter] = useState<MITMFilterSchema>()
-    const [filterName, setFilterName, getFilterName] = useGetState<string>("")
+    const [_, setFilterName, getFilterName] = useGetState<string>("")
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const onResetFilters = useMemoizedFn(() => {
         ipcRenderer.invoke("mitm-reset-filter").then(() => {
@@ -225,9 +225,9 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     <YakitButton type='text' onClick={() => onClearFilters()}>
                         清除
                     </YakitButton>
-                    <YakitButton type='text' onClick={() => onResetFilters()}>
+                    {isStartMITM &&<YakitButton type='text' onClick={() => onResetFilters()}>
                         重置过滤器
-                    </YakitButton>
+                    </YakitButton>}
                 </div>
             }
             className={styles["mitm-filters-modal"]}
@@ -313,20 +313,20 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
             <div className={styles["header"]}>
                 <div className={styles["title"]}>历史存储</div>
                 {mitmSaveData.length !== 0 && (
-                    <YakitPopconfirm
-                        title={"确定要清空已保存数据？"}
-                        onConfirm={() => {
+                    <YakitButton
+                        type='text'
+                        colors='danger'
+                        onClick={() => {
                             setMitmSaveData([])
                         }}
                     >
-                        <YakitButton type='text' colors='danger'>
-                            清空
-                        </YakitButton>
-                    </YakitPopconfirm>
+                        清空
+                    </YakitButton>
                 )}
             </div>
+
             {mitmSaveData.length > 0 ? (
-                <>
+                <div className={styles["list"]}>
                     {mitmSaveData.map((item, index) => (
                         <div
                             key={item.filterName}
@@ -349,7 +349,7 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
                             </div>
                         </div>
                     ))}
-                </>
+                </div>
             ) : (
                 <div className={classNames(styles["no-data"])}>暂无数据</div>
             )}
