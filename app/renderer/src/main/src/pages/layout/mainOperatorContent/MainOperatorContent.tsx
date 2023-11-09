@@ -626,7 +626,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             openMenuPage(
                 {route: YakitRoute.Beta_WebShellOpt},
                 {
-                    params: {
+                    pageParams: {
                         webshellInfo: res,
                     },
                     hideAdd: true
