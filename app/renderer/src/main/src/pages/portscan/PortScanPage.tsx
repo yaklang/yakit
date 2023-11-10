@@ -633,6 +633,9 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                                                 return PresetPorts[i] || ""
                                             })
                                             .join(",")
+                                        if(value.includes("all")){
+                                            res = PresetPorts['all'] || ""
+                                        }
                                         if (!!res) {
                                             setParams({...params, Ports: res})
                                         }
