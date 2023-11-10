@@ -597,8 +597,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
         })
 
-        const onGetExportFuzzerEvent = useMemoizedFn((type: "all" | "payload") => {
-            emiter.emit("onGetExportFuzzerCallBack", JSON.stringify({listTable, type}))
+        const onGetExportFuzzerEvent = useMemoizedFn((v: string) => {
+            try {
+                const {pageId,type} = JSON.parse(v)
+                emiter.emit("onGetExportFuzzerCallBack", JSON.stringify({listTable, type ,pageId})) 
+            } catch (error) {}
+            
+            
         })
 
         // 获取最新table值 用于筛选

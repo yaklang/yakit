@@ -425,7 +425,6 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                         leftCode={originCode}
                         rightTitle='更新源码'
                         rightCode={code}
-                        readOnly={true}
                         onClose={() => m.destroy()}
                     />
                 ),

@@ -8,6 +8,7 @@ import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
 import { getRemoteValue } from "@/utils/kv"
+import {v4 as uuidv4} from "uuid"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -30,6 +31,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
     const [highlightSearch, setHighlightSearch] = useState("")
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
+    // History Id 用于区分每个history控件
+    const [historyId, setHistoryId] = useState<string>(uuidv4())
     useUpdateEffect(() => {
         if (isRefreshHistory) {
             setRefresh(!refresh)
@@ -73,6 +76,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
                             refresh={refresh}
                             pageType={pageType}
+                            historyId={historyId}
                         />
                     )}
                     firstMinSize={160}
@@ -96,6 +100,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         refresh={refresh}
                                         defaultFold={defaultFold}
                                         pageType={pageType}
+                                        historyId={historyId}
                                         // defaultHeight={detailHeight}
                                     />
                                 </div>

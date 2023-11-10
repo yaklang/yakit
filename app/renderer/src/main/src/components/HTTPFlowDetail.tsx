@@ -45,6 +45,7 @@ import {YakitCheckableTag} from "./yakitUI/YakitTag/YakitCheckableTag"
 import {YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import { openABSFileLocated } from "@/utils/openWebsite"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -58,7 +59,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     defaultHeight?: number
     Tags?: string
 
-    //查看前/后一个请求内容
+    // 查看前/后一个请求内容
     isFront?: boolean
     isBehind?: boolean
     fetchRequest?: (kind: number) => any
@@ -69,6 +70,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     defaultFold?: boolean
 
     pageType?: "MITM"
+    historyId?: string
 }
 
 const {Text} = Typography
@@ -801,7 +803,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         flowRequest,
         flowResponse,
         flowRequestLoad,
-        flowResponseLoad
+        flowResponseLoad,
+        historyId
     } = props
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
@@ -929,6 +932,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             .catch((err) => {})
             .finally(() => {})
     })
+    const onScrollTo = useMemoizedFn(()=>{
+        if(historyId){
+            emiter.emit("onScrollToByClick",JSON.stringify({historyId,id}))
+        }
+    })
 
     return (
         <YakitResizeBox
@@ -943,7 +951,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     <NewHTTPPacketEditor
                         title={
                             isShowBeforeData &&
-                            beforeResValue.length > 0 && (
+                            beforeResValue.length > 0 ? (
                                 <div className={classNames(styles["type-options-checkable-tag"])}>
                                     <YakitCheckableTag
                                         checked={resType === "current"}
@@ -965,8 +973,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                     >
                                         原始请求
                                     </YakitCheckableTag>
+                                    <YakitTag color={"info"} style={{marginLeft: 6,cursor:"pointer"}} onClick={onScrollTo}>id：{id}</YakitTag>
                                 </div>
-                            )
+                            ):<><span style={{fontSize: 12}}>Request</span><YakitTag color={"info"} style={{marginLeft: 6,cursor:"pointer"}} onClick={onScrollTo}>id：{id}</YakitTag></>
                         }
                         originValue={originResValue}
                         readOnly={true}

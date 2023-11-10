@@ -194,14 +194,15 @@
     .mitm-filters-subTitle {
         display: flex;
         justify-content: flex-end;
+        align-items: center;
     }
     .mitm-filters-form {
         padding: 24px;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        :global{
-            .ant-select.ant-select-in-form-item{
+        :global {
+            .ant-select.ant-select-in-form-item {
                 height: auto;
             }
         }
@@ -217,5 +218,78 @@
     }
     .certificate-download-modal-body {
         height: 466px;
+    }
+}
+
+.mitm-save-filter {
+    padding: 20px;
+    .btn-box {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        gap: 10px;
+        margin-top: 29px;
+    }
+}
+
+.mitm-filter-history-store {
+    width: 300px;
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--yakit-border-color);
+        padding-bottom: 8px;
+        .title {
+            font-weight: 500;
+        }
+    }
+    .list-item-border {
+        border-bottom: 1px solid var(--yakit-border-color);
+    }
+    .list{
+        max-height: 280px;
+        overflow: auto;
+       .list-item {
+        padding: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        &:hover {
+            background-color: rgb(248, 248, 248);
+            border-radius: 4px;
+        }
+        .name {
+            font-size: 13px;
+            flex: 1;
+            padding-right: 6px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .opt {
+            cursor: pointer;
+            svg {
+                height: 16px;
+                width: 16px;
+                color: #b4bbca;
+            }
+            &:hover {
+                svg {
+                    color: #f6544a;
+                }
+            }
+        }
+    } 
+    }
+    
+    .no-data {
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        text-align: center;
+        color: #85899e;
+        margin-top: 8px;
     }
 }

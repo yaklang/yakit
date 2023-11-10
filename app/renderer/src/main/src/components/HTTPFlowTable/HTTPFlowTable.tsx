@@ -426,6 +426,7 @@ export interface HTTPFlowTableProp {
     setOnlyShowFirstNode?: (i: boolean) => void
     refresh?: boolean
     httpHistoryTableTitleStyle?: React.CSSProperties
+    historyId?: string
     // 筛选控件隐藏
     onlyShowSearch?: boolean
     // 此控件显示的页面
@@ -717,7 +718,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 export const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
-    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,pageType} = props
+    const {onlyShowFirstNode, setOnlyShowFirstNode, inViewport = true, refresh,onlyShowSearch = false,pageType,historyId} = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -758,7 +759,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const isGrpcRef = useRef<boolean>(false)
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     // const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
-    const [currentIndex, setCurrentIndex] = useState<number>(0)
+    const [currentIndex, setCurrentIndex] = useState<number>()
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
@@ -805,6 +806,30 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     useUpdateEffect(() => {
         updateData()
     }, [refresh])
+
+    const onScrollToByClickEvent = useMemoizedFn((v) => {
+        try {
+            const obj: {historyId:string,id:string} = JSON.parse(v)
+            if(historyId===obj.historyId){
+                let currentIndex:number|undefined = undefined
+                data.some((item,index)=>{
+                    if(item.Id+"" === obj.id){
+                        currentIndex=index
+                    }
+                    return item.Id+"" === obj.id
+                })
+                if(currentIndex !== undefined){
+                    setCurrentIndex(currentIndex)
+                }
+            }
+        } catch (error) {}
+    })
+    useEffect(() => {
+        emiter.on("onScrollToByClick", onScrollToByClickEvent)
+        return () => {
+            emiter.off("onScrollToByClick", onScrollToByClickEvent)
+        }
+    }, [])
 
     // 初次进入页面 获取默认高级筛选项
     useEffect(() => {
@@ -932,7 +957,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         getShieldList()
     }, [inViewport])
     useEffect(() => {
-        // getNewData()
         getHTTPFlowsFieldGroup(true)
     }, [])
 
@@ -1216,26 +1240,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [params.ExcludeId, params.ExcludeInUrl])
 
-    // 获取最新的数据
-    const getNewData = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("QueryHTTPFlows", {
-                // SourceType: "mitm",
-                SourceType: props.params?.SourceType || "mitm",
-                ...params,
-                Pagination: {Page: 1, Limit: 1, Order: "desc", OrderBy: "id"}
-            })
-            .then((rsp: YakQueryHTTPFlowResponse) => {
-                if (rsp.Data.length > 0) {
-                    maxIdRef.current = rsp.Data[0].Id
-                }
-                setTotal(rsp.Total)
-            })
-            .catch((e: any) => {
-                yakitNotify("error", `query HTTP Flow failed: ${e}`)
-            })
-    })
-
     // 获取tags等分组
     const getHTTPFlowsFieldGroup = useMemoizedFn((RefreshRequest: boolean) => {
         ipcRenderer
@@ -1280,52 +1284,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             else{
                 updateData()
             }
-
-                // const paginationProps = {
-                //     Page: 1,
-                //     Limit: OFFSET_STEP,
-                //     Order: "desc",
-                //     OrderBy: "id"
-                // }
-                // const query = {
-                //     ...params,
-                //     Tags: params.Tags,
-                //     Color: color ? [color] : undefined,
-                //     AfterBodyLength: params.AfterBodyLength
-                //         ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
-                //         : undefined,
-                //     BeforeBodyLength: params.BeforeBodyLength
-                //         ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
-                //         : undefined,
-                //     // SourceType: "mitm",
-                //     SourceType: props.params?.SourceType || "mitm",
-                //     AfterId: maxIdRef.current, // 用于计算增量的
-                //     Pagination: {...paginationProps}
-                // }
-                // // 查询数据
-                // ipcRenderer
-                //     .invoke("QueryHTTPFlows", query)
-                //     .then((rsp: YakQueryHTTPFlowResponse) => {
-                //         const resData = rsp?.Data || []
-                //         console.log("增量数据",resData);
-                        
-                //         if (resData.length <= 0) {
-                //             // 没有增量数据
-                //             return
-                //         }
-        
-                //         // 有增量数据刷新total
-                //         const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
-                //         setTotal(newTotal)
-                //         const newData = getClassNameData(resData)
-                //         const newOffsetData = newData.concat(getOffsetData())
-                //         setMaxId(newOffsetData[0].Id)
-                //         setOffsetData(newOffsetData)
-                //     })
-                //     .catch((e: any) => {
-                //         yakitNotify("error", `query HTTP Flow failed: ${e}`)
-                //     })
-                //     .finally(() => setTimeout(() => setLoading(false), 200))
         }
         
     })
@@ -2483,6 +2441,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 <TableVirtualResize<HTTPFlow>
                     ref={tableRef}
                     currentIndex={currentIndex}
+                    setCurrentIndex={setCurrentIndex}
                     query={params}
                     titleHeight={38}
                     renderTitle={

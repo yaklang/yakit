@@ -33,7 +33,8 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
         ref,
         () => ({
             getFormValue: () => params,
-            clearFormValue: () => setParams({})
+            clearFormValue: () => setParams({}),
+            setFormValue: (v) => setParams(v)
         }),
         [params]
     )
