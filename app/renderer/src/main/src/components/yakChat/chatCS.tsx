@@ -855,7 +855,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                             <ClockIcon />
                                         </div>
                                     </Tooltip>
-                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"提示词"}>
+                                    {/* <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"提示词"}>
                                         <div
                                             className={classNames(styles["big-btn"], styles["btn-style"], {
                                                 [styles["disable-style"]]: loading
@@ -867,7 +867,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                         >
                                             <ClipboardListIcon />
                                         </div>
-                                    </Tooltip>
+                                    </Tooltip> */}
                                     <div className={styles["divider-style"]}></div>
                                 </>
                             )}
@@ -910,7 +910,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                         </div>
                                         <div className={styles["welcome-preset-list"]}>
                                             <div className={styles["list-wrapper"]}>
-                                                {presetList.map((item) => {
+                                                {/* {presetList.map((item) => {
                                                     return (
                                                         <div
                                                             className={styles["opt-wrapper"]}
@@ -921,7 +921,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                             <ArrowNarrowRightIcon />
                                                         </div>
                                                     )
-                                                })}
+                                                })} */}
                                                 <div className={styles["info-hint-wrapper"]}>
                                                     <OutlineInformationcircleIcon />
                                                     ChatCS模型参数：6.5b，训练Token: 1.5T
@@ -1072,14 +1072,14 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                             >
                                                                 漏洞利用
                                                             </div>
-                                                            <div
+                                                            {/* <div
                                                                 className={classNames(styles["single-btn"], {
                                                                     [styles["single-active-btn"]]: backCatch
                                                                 })}
                                                                 onClick={() => setBackCatch(!backCatch)}
                                                             >
                                                                 背景知识
-                                                            </div>
+                                                            </div> */}
                                                         </div>
                                                     </div>
                                                 }
@@ -1136,14 +1136,14 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                 >
                                                     漏洞利用
                                                 </div>
-                                                <div
+                                                {/* <div
                                                     className={classNames(styles["single-btn"], {
                                                         [styles["single-active-btn"]]: backCatch
                                                     })}
                                                     onClick={() => setBackCatch(!backCatch)}
                                                 >
                                                     背景知识
-                                                </div>
+                                                </div> */}
                                             </div>
                                         )}
                                         <div className={styles["footer-divider"]}></div>
@@ -1514,7 +1514,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
         "BlueTeam_com",
         "RedTeam_code",
         "BlueTeam_code",
-        "Team_other"
+        // "Team_other"
     ]
     useEffect(() => {
         getPromptListPromise()
@@ -1578,19 +1578,19 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                         }
                     })
                     // 注入静态数据
-                    label.Team_other += presetList.length
-                    label.Team_all += presetList.length
-                    const otherList: PromptListProps[] = presetList.map((item) => ({
-                        title: item.content,
-                        api: item.type,
-                        prompt_type: "Team_other",
-                        eg: [],
-                        template: "",
-                        templateArr: []
-                    }))
+                    // label.Team_other += presetList.length
+                    // label.Team_all += presetList.length
+                    // const otherList: PromptListProps[] = presetList.map((item) => ({
+                    //     title: item.content,
+                    //     api: item.type,
+                    //     prompt_type: "Team_other",
+                    //     eg: [],
+                    //     template: "",
+                    //     templateArr: []
+                    // }))
                     // console.log("list", label, [...list, ...otherList])
                     setPromptLabel(label)
-                    setPromptList([...list, ...otherList])
+                    setPromptList([...list])
                 }
             })
             .catch((e) => {

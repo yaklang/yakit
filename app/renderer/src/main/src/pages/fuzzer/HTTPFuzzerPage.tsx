@@ -1451,6 +1451,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         emiter.emit("onOpenMatchingAndExtractionCard",props.id)
                     }
                 }}
+                pageId={props.id}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -1850,6 +1851,7 @@ interface SecondNodeExtraProps {
     retrySubmit?: () => void
     isShowMatch?: boolean
     matchSubmit?: () => void
+    pageId?: string
 }
 
 /**
@@ -1875,7 +1877,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         showSuccess = true,
         retrySubmit,
         isShowMatch = false,
-        matchSubmit
+        matchSubmit,
+        pageId
     } = props
 
     const [keyWord, setKeyWord] = useState<string>()
@@ -1909,13 +1912,18 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
 
     const onGetExportFuzzerCallBackEvent = useMemoizedFn((v) => {
         try {
-            const obj: {listTable: FuzzerResponse[]; type: "all" | "payload"} = JSON.parse(v)
-            const {listTable, type} = obj
-            if (type === "all") {
-                exportHTTPFuzzerResponse(listTable)
-            } else {
-                exportPayloadResponse(listTable)
+            const obj: {listTable: FuzzerResponse[]; type: "all" | "payload",pageId:string} = JSON.parse(v)
+            console.log("obj",obj.pageId,pageId);
+            
+            if(obj.pageId === pageId){
+                const {listTable, type} = obj
+                if (type === "all") {
+                    exportHTTPFuzzerResponse(listTable)
+                } else {
+                    exportPayloadResponse(listTable)
+                }
             }
+            
         } catch (error) {}
     })
 
@@ -2234,7 +2242,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer", "all")
+                                            emiter.emit("onGetExportFuzzer", JSON.stringify({
+                                                pageId,
+                                                type:"all"
+                                            }))
                                         }}
                                     >
                                         导出所有请求
@@ -2243,7 +2254,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer", "payload")
+                                            emiter.emit("onGetExportFuzzer", JSON.stringify({
+                                                pageId,
+                                                type:"payload"
+                                            }))
                                         }}
                                     >
                                         仅导出 Payload
@@ -2267,7 +2281,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer", "all")
+                                            emiter.emit("onGetExportFuzzer", JSON.stringify({
+                                                pageId,
+                                                type:"all"
+                                            }))
                                         }}
                                     >
                                         导出所有请求
@@ -2276,7 +2293,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer", "payload")
+                                            emiter.emit("onGetExportFuzzer", JSON.stringify({
+                                                pageId,
+                                                type:"payload"
+                                            }))
                                         }}
                                     >
                                         仅导出 Payload
