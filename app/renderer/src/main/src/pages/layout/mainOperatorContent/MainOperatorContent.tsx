@@ -20,7 +20,14 @@ import {
     DragDropContextResultProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
-import {YakitRouteToPageInfo, YakitRoute, SingletonPageRoute, NoPaddingRoute, ComponentParams} from "@/routes/newRoute"
+import {
+    YakitRouteToPageInfo,
+    YakitRoute,
+    SingletonPageRoute,
+    NoPaddingRoute,
+    ComponentParams,
+    defaultFixedTabs
+} from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import {useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
@@ -282,8 +289,7 @@ const getSubPageTotal = (subPage) => {
     })
     return total
 }
-/**一级tab固定展示额tab */
-const defaultFixedTabs = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
+
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
     const {routeKeyToLabel} = props
 
@@ -302,9 +308,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }),
             shallow
         )
-    useEffect(() => {
-        console.log("pages", pages)
-    }, [pages])
 
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])

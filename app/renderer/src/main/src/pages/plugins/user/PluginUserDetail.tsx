@@ -25,6 +25,8 @@ import {PluginUserDetailProps} from "./PluginUserType"
 import {PrivatePluginIcon} from "@/assets/newIcon"
 import {useStore} from "@/store"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
+import emiter from "@/utils/eventBus/eventBus"
+import { YakitRoute } from "@/routes/newRoute"
 
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
@@ -159,6 +161,13 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         setAllCheck(false)
         setSelectList([])
     })
+    /** 新建插件 */
+    const onNewAddPlugin = useMemoizedFn(() => {
+        emiter.emit(
+            "openPage",
+            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Owner}})
+        )
+    })
     /**搜索需要清空勾选 */
     const onSearch = useMemoizedFn(async () => {
         setSpinLoading(true)
@@ -186,7 +195,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                             <YakitButton type='text2' icon={<OutlineTrashIcon />} />
                         </Tooltip>
                         <div style={{height: 12}} className='divider-style'></div>
-                        <YakitButton type='text'>新建插件</YakitButton>
+                        <YakitButton type='text' onClick={onNewAddPlugin}>新建插件</YakitButton>
                     </div>
                 }
                 checked={allCheck}
