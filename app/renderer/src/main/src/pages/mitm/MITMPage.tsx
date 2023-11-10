@@ -41,7 +41,7 @@ import classNames from "classnames"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import { ExclamationCircleOutlined } from "@ant-design/icons"
-import {PluginGV} from "../plugins/utils"
+import {PluginGV} from "../plugins/builtInData"
 
 const {Text} = Typography
 const {Item} = Form

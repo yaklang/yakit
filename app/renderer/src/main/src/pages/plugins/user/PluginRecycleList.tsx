@@ -11,8 +11,7 @@ import {
     convertPluginsRequestParams,
     apiRemoveRecyclePlugin,
     apiReductionRecyclePlugin,
-    PluginsRecycleRequest,
-    PluginGV
+    PluginsRecycleRequest
 } from "../utils"
 import {PluginRecycleListProps} from "./PluginUserType"
 import {useMemoizedFn, useLockFn, useControllableValue, useLatest, useDebounceFn} from "ahooks"
@@ -20,6 +19,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {PluginGV} from "../builtInData"
 
 import "../plugins.scss"
 import styles from "./PluginRecycleList.module.scss"
