@@ -16,6 +16,8 @@ import {useStore} from "@/store"
 import {PluginComment} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {LoadingOutlined} from "@ant-design/icons"
+import emiter from "@/utils/eventBus/eventBus"
+import { YakitRoute } from "@/routes/newRoute"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -135,6 +137,13 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         setAllCheck(false)
         setSelectList([])
     })
+    /** 新建插件 */
+    const onNewAddPlugin = useMemoizedFn(() => {
+        emiter.emit(
+            "openPage",
+            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Store}})
+        )
+    })
     /**搜索需要清空勾选 */
     const onSearch = useMemoizedFn(() => {
         onDetailSearch(search, filters)
@@ -157,7 +166,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                         </Tooltip>
                     )}
                     <div style={{height: 12}} className='divider-style'></div>
-                    <YakitButton type='text'>新建插件</YakitButton>
+                    <YakitButton type='text' onClick={onNewAddPlugin}>新建插件</YakitButton>
                 </div>
             }
             checked={allCheck}

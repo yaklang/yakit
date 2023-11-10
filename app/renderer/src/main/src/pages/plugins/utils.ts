@@ -6,40 +6,11 @@ import {yakitNotify} from "@/utils/notification"
 import {isCommunityEdition} from "@/utils/envfile"
 import {compareAsc} from "../yakitStore/viewers/base"
 import {GetYakScriptTagsAndTypeResponse, QueryYakScriptRequest, QueryYakScriptsResponse} from "../invoker/schema"
-import {pluginTypeToName} from "./baseTemplate"
 import emiter from "@/utils/eventBus/eventBus"
-import { toolDelInvalidKV } from "@/utils/tool"
+import {toolDelInvalidKV} from "@/utils/tool"
+import {pluginTypeToName} from "./builtInData"
 
 const {ipcRenderer} = window.require("electron")
-
-/** 插件相关得缓存字段-键值变量 */
-export enum PluginGV {
-    /**
-     * @name 插件删除是否需要不再提醒的选中状态
-     * @description 适用页面:我的插件、审核
-     */
-    UserPluginRemoveCheck = "user_plugin_remove_check",
-    /**
-     * @name 插件删除是否需要不再提醒的选中状态
-     * @description 适用页面:回收站
-     */
-    RecyclePluginRemoveCheck = "recycle_plugin_remove_check",
-    /**
-     * @name 插件删除是否需要不再提醒的选中状态
-     * @description 适用页面:本地插件
-     */
-    LocalPluginRemoveCheck = "local_plugin_remove_check",
-
-    /** @name 插件信息-yak类型额外参数(用于自定义DNSLOG)对应tag值 */
-    PluginYakDNSLogSwitch = "custom-dnslog-platform",
-    /** @name 插件信息-codec类型额外参数(用于自定义HTTP数据包变形)对应tag值 */
-    PluginCodecHttpSwitch = "allow-custom-http-packet-mutate",
-    /**
-     * @name 本地插件组缓存字段 filter_cache_list_common_data
-     * @description 第一版本地插件组还是在本地，第二版后端给接口
-     */
-    Fetch_Local_Plugin_Group = "FILTER_CACHE_LIST_COMMON_DATA"
-}
 
 /**
  * @name http接口公共参数转换(前端数据转接口参数)
@@ -874,6 +845,31 @@ export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promi
                 })
         } catch (error) {
             yakitNotify("error", "操作失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 复制插件
+ */
+export const apiCopyPlugin: (query: API.CopyPluginsRequest) => Promise<API.PluginsResponse> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.CopyPluginsRequest, API.PluginsResponse>({
+                method: "post",
+                url: "copy/plugins",
+                data: {...query}
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "复制插件失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "复制插件失败：" + error)
             reject(error)
         }
     })
