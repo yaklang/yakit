@@ -1913,8 +1913,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     const onGetExportFuzzerCallBackEvent = useMemoizedFn((v) => {
         try {
             const obj: {listTable: FuzzerResponse[]; type: "all" | "payload",pageId:string} = JSON.parse(v)
-            console.log("obj",obj.pageId,pageId);
-            
+
             if(obj.pageId === pageId){
                 const {listTable, type} = obj
                 if (type === "all") {
