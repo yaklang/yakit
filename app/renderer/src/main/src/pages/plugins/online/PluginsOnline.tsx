@@ -27,7 +27,8 @@ import {
     useLockFn,
     useUpdateEffect,
     useInViewport,
-    useLatest
+    useLatest,
+    useDebounceEffect
 } from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -47,7 +48,7 @@ import {
 } from "./PluginsOnlineType"
 import cloneDeep from "lodash/cloneDeep"
 import {API} from "@/services/swagger/resposeType"
-import {PluginsContainer, PluginsLayout, defaultSearch, pluginTypeList} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout, defaultSearch} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {PluginsOnlineDetail} from "./PluginsOnlineDetail"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
@@ -68,10 +69,14 @@ import {
 import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TypeSelectOpt} from "../funcTemplateType"
+import {DefaultTypeList, PluginGV} from "../builtInData"
+import {BackInfoProps} from "../manage/PluginManageDetail"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import emiter from "@/utils/eventBus/eventBus"
+import { YakitRoute } from "@/routes/newRoute"
 
 import classNames from "classnames"
 import "../plugins.scss"
-import {BackInfoProps} from "../manage/PluginManageDetail"
 
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
     const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
@@ -193,6 +198,21 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
+    // 获取筛选栏展示状态
+    useEffect(() => {
+        getRemoteValue(PluginGV.StoreFilterCloseStatus).then((value: string) => {
+            if (value === "true") setShowFilter(true)
+            if (value === "false") setShowFilter(false)
+        })
+    }, [])
+    // 缓存筛选栏展示状态
+    useDebounceEffect(
+        () => {
+            setRemoteValue(PluginGV.StoreFilterCloseStatus, `${!!showFilter}`)
+        },
+        [showFilter],
+        {wait: 500}
+    )
 
     /** 是否为初次加载 */
     const isLoadingRef = useRef<boolean>(true)
@@ -378,7 +398,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setPlugin({...data})
     })
     /**新建插件 */
-    const onNewAddPlugin = useMemoizedFn(() => {})
+    const onNewAddPlugin = useMemoizedFn(() => {
+        emiter.emit(
+            "openPage",
+            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Store}})
+        )
+    })
 
     const onBack = useMemoizedFn((backValues: PluginOnlineDetailBackProps) => {
         searchDetailRef.current = undefined
@@ -441,7 +466,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             <PluginsLayout
                 title={isShowRoll ? <></> : "插件商店"}
                 hidden={!!plugin}
-                subTitle={<TypeSelect active={pluginTypeSelect} list={pluginTypeList} setActive={onSetActive} />}
+                subTitle={<TypeSelect active={pluginTypeSelect} list={DefaultTypeList} setActive={onSetActive} />}
                 extraHeader={
                     <div className='extra-header-wrapper'>
                         {!isShowRoll && (

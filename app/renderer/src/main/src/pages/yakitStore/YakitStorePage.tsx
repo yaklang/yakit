@@ -85,7 +85,7 @@ import {OutputPluginForm} from "./PluginOperator"
 import {YakFilterRemoteObj} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import { PluginGV } from "../plugins/utils"
+import { PluginGV } from "../plugins/builtInData"
 import { YakitRoute } from "@/routes/newRoute"
 import emiter from "@/utils/eventBus/eventBus"
 

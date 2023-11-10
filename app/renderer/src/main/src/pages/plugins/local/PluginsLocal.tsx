@@ -6,9 +6,9 @@ import {
     PluginsLocalProps
 } from "./PluginsLocalType"
 import {SolidChevrondownIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
-import {useMemoizedFn, useInViewport, useDebounceFn, useLatest} from "ahooks"
+import {useMemoizedFn, useInViewport, useDebounceFn, useLatest, useDebounceEffect} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
-import {defaultSearch, PluginsLayout, PluginsContainer, pluginTypeList} from "../baseTemplate"
+import {defaultSearch, PluginsLayout, PluginsContainer} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {
     TypeSelect,
@@ -37,7 +37,6 @@ import styles from "./PluginsLocal.module.scss"
 import {
     DeleteLocalPluginsByWhereRequestProps,
     DeleteYakScriptRequestProps,
-    PluginGV,
     apiDeleteLocalPluginsByWhere,
     apiDeleteYakScript,
     apiFetchGroupStatisticsLocal,
@@ -56,6 +55,7 @@ import {OutputPluginForm} from "@/pages/yakitStore/PluginOperator"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginLocalUpload} from "./PluginLocalUpload"
 import {YakitRoute} from "@/routes/newRoute"
+import {DefaultTypeList, PluginGV} from "../builtInData"
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -72,6 +72,21 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [hasMore, setHasMore] = useState<boolean>(true)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
+    // 获取筛选栏展示状态
+    useEffect(() => {
+        getRemoteValue(PluginGV.LocalFilterCloseStatus).then((value: string) => {
+            if (value === "true") setShowFilter(true)
+            if (value === "false") setShowFilter(false)
+        })
+    }, [])
+    // 缓存筛选栏展示状态
+    useDebounceEffect(
+        () => {
+            setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
+        },
+        [showFilter],
+        {wait: 500}
+    )
 
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<YakScript[]>([])
@@ -462,7 +477,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             <PluginsLayout
                 title='本地插件'
                 hidden={!!plugin}
-                subTitle={<TypeSelect active={pluginTypeSelect} list={pluginTypeList} setActive={onSetActive} />}
+                subTitle={<TypeSelect active={pluginTypeSelect} list={DefaultTypeList} setActive={onSetActive} />}
                 extraHeader={
                     <div className='extra-header-wrapper' ref={pluginsLocalRef}>
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
@@ -481,7 +496,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                     type: "primary",
                                     data: [
                                         {key: "export", label: "导出"},
-                                        {key: "upload", label: "上传",disabled: allCheck},
+                                        {key: "upload", label: "上传", disabled: allCheck},
                                         {key: "remove", label: "删除"}
                                         // {key: "addToGroup", label: "添加至分组", disabled: allCheck} //第二版放出来
                                     ],
