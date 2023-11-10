@@ -53,10 +53,11 @@ import {showModal} from "@/utils/showModal"
 import {formatDate} from "@/utils/timeUtil"
 import {PluginOperator} from "../PluginOperator"
 import {DownloadOnlinePluginProps} from "../YakitPluginInfoOnline/YakitPluginInfoOnline"
+import {PluginGV} from "@/pages/plugins/builtInData"
 
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import "../YakitStorePage.scss"
-import { PluginGV } from "@/pages/plugins/utils"
+
 
 const {Search} = Input
 const {Option} = Select
