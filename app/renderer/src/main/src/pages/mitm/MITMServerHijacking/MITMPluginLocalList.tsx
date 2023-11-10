@@ -38,8 +38,9 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
 import {getReleaseEditionName} from "@/utils/envfile"
-import {DownloadOnlinePluginsRequest, PluginGV} from "@/pages/plugins/utils"
+import {DownloadOnlinePluginsRequest} from "@/pages/plugins/utils"
 import emiter from "@/utils/eventBus/eventBus"
+import {PluginGV} from "@/pages/plugins/builtInData"
 
 const {ipcRenderer} = window.require("electron")
 

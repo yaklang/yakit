@@ -19,7 +19,7 @@ import {
     OutlineShareIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useMemoizedFn, useDebounceFn, useLockFn, useControllableValue, useInViewport, useLatest} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useControllableValue, useInViewport, useLatest, useDebounceEffect} from "ahooks"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import cloneDeep from "lodash/cloneDeep"
@@ -47,7 +47,6 @@ import {TypeSelectOpt} from "../funcTemplateType"
 import {useStore} from "@/store"
 import {
     DownloadOnlinePluginsRequest,
-    PluginGV,
     PluginsQueryProps,
     apiDeletePluginMine,
     apiDownloadPluginMine,
@@ -62,6 +61,9 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginRecycleList} from "./PluginRecycleList"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {PluginGV} from "../builtInData"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -160,7 +162,12 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         {wait: 200, leading: true}
     ).run
     /**新建插件 */
-    const onNewAddPlugin = useMemoizedFn(() => {})
+    const onNewAddPlugin = useMemoizedFn(() => {
+        emiter.emit(
+            "openPage",
+            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Owner}})
+        )
+    })
     /**下载 */
     const onDownload = useMemoizedFn(() => {
         if (isSelectUserNum) {
@@ -398,6 +405,21 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         const [hasMore, setHasMore] = useState<boolean>(true)
 
         const [showFilter, setShowFilter] = useState<boolean>(true)
+        // 获取筛选栏展示状态
+        useEffect(() => {
+            getRemoteValue(PluginGV.OwnerFilterCloseStatus).then((value: string) => {
+                if (value === "true") setShowFilter(true)
+                if (value === "false") setShowFilter(false)
+            })
+        }, [])
+        // 缓存筛选栏展示状态
+        useDebounceEffect(
+            () => {
+                setRemoteValue(PluginGV.OwnerFilterCloseStatus, `${!!showFilter}`)
+            },
+            [showFilter],
+            {wait: 500}
+        )
         const [pluginRemoveCheck, setPluginRemoveCheck] = useState<boolean>(false)
         const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
 
@@ -721,7 +743,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             setIsSelectUserNum(value)
         })
         /**新建插件 */
-        const onAddPlugin = useMemoizedFn(() => {})
+        const onAddPlugin = useMemoizedFn(() => {
+            emiter.emit(
+                "openPage",
+                JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Owner}})
+            )
+        })
         const onPluginRemoveCheckOk = useMemoizedFn(() => {
             if (removePluginDetailRef.current) {
                 onRemovePluginDetailSingle(removePluginDetailRef.current)
