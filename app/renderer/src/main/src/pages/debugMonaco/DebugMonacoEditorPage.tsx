@@ -10,10 +10,13 @@ import {PcapXDemo} from "@/components/playground/PcapXDemo";
 import {DemoItemSelectOne} from "@/demoComponents/itemSelect/ItemSelect";
 import {RiskTableDemo} from "@/components/playground/RiskTableDemo";
 import {ChaosMakerRulesDemo} from "@/components/playground/ChaosMakerRulesDemo";
+import {getRemoteValue, setRemoteValue} from "@/utils/kv";
 
 export interface DebugMonacoEditorPageProp {
 
 }
+
+const TAG = "DEBUG_PLAYGROUND_DEFAULT_MODE";
 
 export const DebugMonacoEditorPage: React.FC<DebugMonacoEditorPageProp> = (props) => {
     const [value, setValue] = useState(`GET / HTTP/1.1
@@ -28,7 +31,19 @@ a=1&b=2 Content-Length: a
 {{null(1)}}
 `)
     const [languageType, setLangType] = useState(MONACO_SPEC_WEBFUZZER_REQUEST);
-    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree" | string>("chaos-maker-rule");
+    const [mode, setMode] = useState<"http-monaco-editor" | "fs-tree" | string>();
+
+    useEffect(() => {
+        if (!mode) {
+            getRemoteValue(TAG).then(value => {
+                setMode(value)
+            })
+            return
+        }
+        if (mode) {
+            setRemoteValue(TAG, mode)
+        }
+    }, [mode])
 
     useEffect(() => {
         if (!languageType) {
