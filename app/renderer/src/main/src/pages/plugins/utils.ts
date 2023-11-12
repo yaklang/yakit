@@ -849,28 +849,3 @@ export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promi
         }
     })
 }
-
-/**
- * @name 复制插件
- */
-export const apiCopyPlugin: (query: API.CopyPluginsRequest) => Promise<API.PluginsResponse> = (query) => {
-    return new Promise((resolve, reject) => {
-        try {
-            NetWorkApi<API.CopyPluginsRequest, API.PluginsResponse>({
-                method: "post",
-                url: "copy/plugins",
-                data: {...query}
-            })
-                .then((res) => {
-                    resolve(res)
-                })
-                .catch((err) => {
-                    yakitNotify("error", "复制插件失败：" + err)
-                    reject(err)
-                })
-        } catch (error) {
-            yakitNotify("error", "复制插件失败：" + error)
-            reject(error)
-        }
-    })
-}
