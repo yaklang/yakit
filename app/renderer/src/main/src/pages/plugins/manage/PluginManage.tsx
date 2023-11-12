@@ -1,12 +1,5 @@
 import React, {memo, useEffect, useMemo, useReducer, useRef, useState} from "react"
-import {
-    PluginsContainer,
-    PluginsLayout,
-    aduitStatusToName,
-    defaultPagemeta,
-    defaultSearch,
-    statusTag
-} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout, defaultPagemeta, defaultSearch, statusTag} from "../baseTemplate"
 import {
     AuthorImg,
     FuncBtn,
@@ -34,7 +27,7 @@ import {Form} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {BackInfoProps, PluginManageDetail} from "./PluginManageDetail"
+import {BackInfoProps, DetailRefProps, PluginManageDetail} from "./PluginManageDetail"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
@@ -55,19 +48,14 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {DefaultStatusList, PluginGV} from "../builtInData"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
-
-// 首页上方的审核状态搜索条件组件数据
-const StatusType: TypeSelectOpt[] = [
-    {key: "0", ...aduitStatusToName["0"]},
-    {key: "1", ...aduitStatusToName["1"]},
-    {key: "2", ...aduitStatusToName["2"]}
-]
 
 interface PluginManageProps {}
 
@@ -94,6 +82,22 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const isLoadingRef = useRef<boolean>(true)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
+    // 获取筛选栏展示状态
+    useEffect(() => {
+        getRemoteValue(PluginGV.AuditFilterCloseStatus).then((value: string) => {
+            if (value === "true") setShowFilter(true)
+            if (value === "false") setShowFilter(false)
+        })
+    }, [])
+    // 缓存筛选栏展示状态
+    useDebounceEffect(
+        () => {
+            setRemoteValue(PluginGV.AuditFilterCloseStatus, `${!!showFilter}`)
+        },
+        [showFilter],
+        {wait: 500}
+    )
+
     const [filters, setFilters] = useState<PluginFilterParams>({
         plugin_type: [],
         status: [],
@@ -116,7 +120,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 获取插件列表数据
     const fetchList = useMemoizedFn((reset?: boolean) => {
         if (latestLoadingRef.current) return
-        if (reset) isLoadingRef.current = true
+        if (reset) {
+            isLoadingRef.current = true
+            setShowPluginIndex(0)
+        }
 
         setLoading(true)
         const params: PluginListPageMeta = !!reset
@@ -140,7 +147,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 })
 
                 const dataLength = response.data.concat(res.data)
-                const isMore = res.data.length < res.pagemeta.limit || dataLength.length >= response.pagemeta.total
+                const isMore = res.data.length < res.pagemeta.limit || dataLength.length >= res.pagemeta.total
                 setHasMore(!isMore)
 
                 isLoadingRef.current = false
@@ -165,7 +172,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
      * @param noRefresh 初始化时不刷新列表数据
      */
     const onInit = useMemoizedFn((noRefresh?: boolean) => {
-        setShowPluginIndex(0)
         fetchPluginFilters()
         if (!noRefresh) fetchList(true)
     })
@@ -314,24 +320,30 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         setShowReason({visible: false, type: "nopass"})
     })
     // 删除插件集合接口
-    const apiDelPlugins = useMemoizedFn((params?: API.PluginsWhereDeleteRequest, thenCallback?: () => any) => {
-        setLoading(true)
-        console.log("plugins method:delete", params)
-        apiDeletePluginCheck(params)
-            .then(() => {
-                if (allCheck) setAllcheck(false)
-                setSelectList([])
-                setLoading(false)
-                if (thenCallback) thenCallback()
-            })
-            .catch((e) => {
-                setLoading(false)
-            })
-    })
+    const apiDelPlugins = useMemoizedFn(
+        (params?: API.PluginsWhereDeleteRequest, thenCallback?: () => any, catchCallback?: () => any) => {
+            setLoading(true)
+            console.log("plugins method:delete", params)
+            apiDeletePluginCheck(params)
+                .then(() => {
+                    if (thenCallback) thenCallback()
+                })
+                .catch((e) => {
+                    if (detailRef && detailRef.current) {
+                        detailRef.current.onDelCallback([], false)
+                    }
+                    if (catchCallback) catchCallback()
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        }
+    )
     // 删除插件(首页批量|清空|单个|详情内删除共用一个方法)
     const onReasonCallback = useMemoizedFn((reason: string) => {
         const type = showReason.type
-        onCancelReason()
 
         // 是否全选
         let delAllCheck: boolean = allCheck
@@ -355,28 +367,49 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             delFilter = {...activeDetailData.current.filter}
         }
 
+        // 获取单个删除插件的信息
+        const onlyPlugin: YakitPluginOnlineDetail | undefined = activeDelPlugin.current
+        onCancelReason()
+
         // 删除插件逻辑
         if (type === "del") {
             // 清空操作(无视搜索条件)
-            if (selectTotal === 0 && !activeDelPlugin.current) {
-                apiDelPlugins({description: reason}, onInit)
+            if (selectTotal === 0 && !onlyPlugin) {
+                apiDelPlugins({description: reason}, () => {
+                    if (allCheck) setAllcheck(false)
+                    setSelectList([])
+                    onInit()
+
+                    // 如果是详情的清空，则返回首页
+                    setTimeout(() => {
+                        if (plugin) setPlugin(undefined)
+                    }, 200)
+                })
             }
             // 单个删除
-            else if (!!activeDelPlugin.current) {
-                let delRequest: API.PluginsWhereDeleteRequest = {uuid: [activeDelPlugin.current.uuid]}
+            else if (!!onlyPlugin) {
+                let delRequest: API.PluginsWhereDeleteRequest = {uuid: [onlyPlugin.uuid]}
                 apiDelPlugins({...delRequest, description: reason}, () => {
-                    if (activeDelPlugin.current) {
+                    if (onlyPlugin) {
+                        const next: YakitPluginOnlineDetail = response.data[showPluginIndex.current + 1]
+
                         dispatch({
                             type: "remove",
                             payload: {
-                                itemList: [activeDelPlugin.current]
+                                itemList: [onlyPlugin]
                             }
                         })
-                        const index = selectUUIDs.findIndex((item) => item === activeDelPlugin.current?.uuid)
+                        const index = selectUUIDs.findIndex((item) => item === onlyPlugin?.uuid)
                         if (index > -1) {
-                            optCheck(activeDelPlugin.current, false)
+                            optCheck(onlyPlugin, false)
                         }
                         onInit(true)
+
+                        setPlugin({...next})
+                        // 将删除结果回传到详情页
+                        if (detailRef && detailRef.current) {
+                            detailRef.current.onDelCallback([onlyPlugin], true)
+                        }
                     }
                 })
             }
@@ -388,7 +421,15 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 } else {
                     delRequest = {uuid: selectUuids, description: reason}
                 }
-                apiDelPlugins(delRequest, onInit)
+                apiDelPlugins(delRequest, () => {
+                    if (allCheck) setAllcheck(false)
+                    setSelectList([])
+                    onInit()
+
+                    if (detailRef && detailRef.current) {
+                        detailRef.current.onDelCallback([], true)
+                    }
+                })
             }
         }
     })
@@ -454,11 +495,13 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         )
     })
     /** 单项点击回调 */
-    const optClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+    const optClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
         setPlugin({...data})
+        setShowPluginIndex(index)
     })
 
     // 详情页-相关回调逻辑
+    const detailRef = useRef<DetailRefProps>(null)
     /** 返回事件 */
     const onBack = useMemoizedFn((data: BackInfoProps) => {
         setPlugin(undefined)
@@ -484,6 +527,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             <OnlineJudgment isJudgingLogin={true}>
                 {!!plugin && (
                     <PluginManageDetail
+                        ref={detailRef}
+                        listLoading={loading}
                         response={response}
                         dispatch={dispatch}
                         info={plugin}
@@ -505,7 +550,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 <PluginsLayout
                     title='插件管理'
                     hidden={!!plugin}
-                    subTitle={<TypeSelect active={pluginStatusSelect} list={StatusType} setActive={onSetActive} />}
+                    subTitle={
+                        <TypeSelect active={pluginStatusSelect} list={DefaultStatusList} setActive={onSetActive} />
+                    }
                     extraHeader={
                         <div className='extra-header-wrapper'>
                             <FuncSearch
@@ -583,10 +630,11 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     isList={isList}
                                     data={response.data}
                                     gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                        const {data} = info
+                                        const {index, data} = info
                                         const check = allCheck || selectUUIDs.includes(data.uuid)
                                         return (
                                             <GridLayoutOpt
+                                                order={index}
                                                 data={data}
                                                 checked={check}
                                                 onCheck={optCheck}
@@ -607,10 +655,11 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     }}
                                     gridHeight={210}
                                     listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                        const {data} = info
+                                        const {index, data} = info
                                         const check = allCheck || selectUUIDs.includes(data.uuid)
                                         return (
                                             <ListLayoutOpt
+                                                order={index}
                                                 data={data}
                                                 checked={check}
                                                 onCheck={optCheck}

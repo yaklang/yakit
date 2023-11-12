@@ -148,6 +148,8 @@ export interface ListListProps<T> {
     setShowIndex?: (i: number) => any
 }
 export interface ListLayoutOptProps {
+    /** 插件在列表中的索引 */
+    order: number
     /** 插件详细信息 */
     data: any
     /** 是否选中 */
@@ -172,7 +174,7 @@ export interface ListLayoutOptProps {
     subTitle?: (data: any) => ReactNode
     extraNode?: (data: any) => ReactNode
     /** 点击该展示项的回调 */
-    onClick?: (data: any) => any
+    onClick?: (data: any, index: number) => any
 }
 
 export interface GridListProps<T> {
@@ -202,6 +204,8 @@ export interface GridListProps<T> {
     setShowIndex?: (i: number) => any
 }
 export interface GridLayoutOptProps {
+    /** 插件在列表中的索引 */
+    order: number
     /** 插件详细信息 */
     data: any
     /** 是否选中 */
@@ -232,7 +236,7 @@ export interface GridLayoutOptProps {
     subTitle?: (data: any) => ReactNode
     extraFooter?: (data: any) => ReactNode
     /** 点击该展示项的回调 */
-    onClick?: (data: any) => any
+    onClick?: (data: any, index: number) => any
 }
 
 export interface TagsListShowProps {
