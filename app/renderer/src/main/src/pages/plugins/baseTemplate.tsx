@@ -17,14 +17,7 @@ import {
     RiskListOptProps,
     RiskOptInfoProps
 } from "./baseTemplateType"
-import {
-    SolidBadgecheckIcon,
-    SolidBanIcon,
-    SolidChevrondownIcon,
-    SolidChevronupIcon,
-    SolidDragsortIcon,
-    SolidFlagIcon
-} from "@/assets/icon/solid"
+import {SolidChevrondownIcon, SolidChevronupIcon, SolidDragsortIcon} from "@/assets/icon/solid"
 import {FilterPanel} from "@/components/businessUI/FilterPanel/FilterPanel"
 import {AuthorIcon, AuthorImg, FuncSearch, TagsListShow} from "./funcTemplate"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -44,14 +37,6 @@ import {
     OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {
-    SolidCollectionPluginIcon,
-    SolidDocumentSearchPluginIcon,
-    SolidPluginProtScanIcon,
-    SolidPluginYakMitmIcon,
-    SolidSparklesPluginIcon,
-    SolidYakitPluginIcon
-} from "@/assets/icon/colors"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {Form, Space, Tooltip} from "antd"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -70,18 +55,16 @@ import {
     PluginSettingParamProps,
     QueryYakScriptRiskDetailByCWEResponse
 } from "./pluginsType"
-import {MITMPluginTemplate} from "../invoker/data/MITMPluginTamplate"
-import {PortScanPluginTemplate} from "../invoker/data/PortScanPluginTemplate"
-import {CodecPluginTemplate} from "../invoker/data/CodecPluginTemplate"
-import {CodeGV} from "@/yakitGV"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {API} from "@/services/swagger/resposeType"
-import {TypeSelectOpt} from "./funcTemplateType"
 import {YakEditor} from "@/utils/editors"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
-import {PluginGV} from "./utils"
 import {yakitNotify} from "@/utils/notification"
 import {BuiltInTags} from "./editDetails/builtInData"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {PluginEditorModal} from "./editDetails/PluginEditDetails"
+import {PluginGV, aduitStatusToName, pluginTypeToName} from "./builtInData"
+import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
@@ -203,7 +186,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                         {filterExtra || null}
                     </div>
                 </div>
-                <YakitSpin spinning={spinLoading} className={styles["filter-list"]}>
+                <YakitSpin spinning={!!spinLoading} className={styles["filter-list"]}>
                     <RollingLoadList {...listProps} />
                 </YakitSpin>
             </div>
@@ -1344,22 +1327,56 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
 
 /** @name 插件源码 */
 export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) => {
-    const {} = props
+    const {isDiff, newCode, oldCode = "", setCode} = props
+
+    const [codeModal, setCodeModal] = useState<boolean>(false)
+    const onModifyCode = useMemoizedFn((content: string) => {
+        if (newCode !== content) setCode(content)
+        setCodeModal(false)
+    })
 
     return (
         <div className={styles["plugin-edtior-diff-wrapper"]}>
-            <div className={styles["edit-diff-title"]}>代码对比</div>
-            <div className={styles["edit-diff-header"]}>
-                <div className={styles["header-body"]}>
-                    <span className={styles["body-title"]}>插件源码</span>
-                    <span className={styles["body-sub-title"]}>2022-06-05 10:28</span>
-                </div>
-                <div className={classNames(styles["header-body"], styles["header-right-body"])}>
-                    <span className={styles["body-sub-title"]}>2022-06-05 10:28</span>
-                    <span className={styles["body-title"]}>申请人提交源码</span>
-                </div>
+            <div className={styles["edit-diff-title"]}>
+                {isDiff ? "代码对比" : "源码"}
+                <YakitButton
+                    size='small'
+                    type='text2'
+                    icon={<OutlineArrowsexpandIcon />}
+                    onClick={() => setCodeModal(true)}
+                />
             </div>
-            <div></div>
+            {isDiff ? (
+                <>
+                    <div className={styles["edit-diff-header"]}>
+                        <div className={styles["header-body"]}>
+                            <span className={styles["body-title"]}>插件源码</span>
+                            <span className={styles["body-sub-title"]}>2022-06-05 10:28</span>
+                        </div>
+                        <div className={classNames(styles["header-body"], styles["header-right-body"])}>
+                            <span className={styles["body-sub-title"]}>2022-06-05 10:28</span>
+                            <span className={styles["body-title"]}>申请人提交源码</span>
+                        </div>
+                    </div>
+                    {oldCode && newCode && (
+                        <div className={styles["edit-diff-wrapper"]}>
+                            <YakitDiffEditor
+                                leftDefaultCode={oldCode}
+                                leftReadOnly={true}
+                                rightDefaultCode={newCode}
+                                setRightCode={setCode}
+                                language='yak'
+                            />
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div className={styles["edit-new-wrapper"]}>
+                    <YakitEditor type='yak' value={newCode} setValue={setCode} />
+                </div>
+            )}
+
+            <PluginEditorModal visible={codeModal} setVisible={onModifyCode} code={newCode} />
         </div>
     )
 })
@@ -1367,6 +1384,7 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
 /**@name 插件详情中列表的item */
 export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) => any = React.memo((props) => {
     const {
+        order,
         plugin,
         check,
         headImg,
@@ -1392,7 +1410,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
         return <AuthorImg src={headImg} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin])
     const onClick = useMemoizedFn((e) => {
-        onPluginClick(plugin)
+        onPluginClick(plugin, order)
     })
     // 副标题组件
     const extraNode = useMemoizedFn(() => {
@@ -1460,13 +1478,6 @@ export const PluginContributesListItem: React.FC<PluginContributesListItemProps>
 })
 
 /** ---------- 以下为对应关系字段和插件页面共用图标 ---------- */
-
-/** 审核状态对应展示名称 */
-export const aduitStatusToName: Record<string, {name: string; icon: ReactNode}> = {
-    "0": {name: "待审核", icon: <SolidFlagIcon className='aduit-status-flag-color' />},
-    "1": {name: "已通过", icon: <SolidBadgecheckIcon className='aduit-status-badge-check-color' />},
-    "2": {name: "未通过", icon: <SolidBanIcon className='aduit-status-ban-color' />}
-}
 /** 审核状态标签 */
 export const statusTag: {[key: string]: ReactNode} = {
     "0": (
@@ -1494,54 +1505,7 @@ export const pluginStatusToName: Record<string, string> = {
     "1": "公开",
     "2": "私密"
 }
-/** 插件类型对应展示名称 */
-export const pluginTypeToName: Record<
-    string,
-    {name: string; description: string; icon: ReactNode; color: string; content: string}
-> = {
-    yak: {
-        name: "Yak 原生插件",
-        description: "内置了众多网络安全常用库，可快速编写安全小工具，该原生模块只支持手动调用",
-        icon: <SolidYakitPluginIcon />,
-        color: "warning",
-        content: "yakit.AutoInitYakit()\n\n# Input your code!\n\n"
-    },
-    mitm: {
-        name: "Yak-MITM 模块",
-        description: "专用于 MITM 模块中的模块，编写 MITM 插件，可以轻松对经过的流量进行修改",
-        icon: <SolidPluginYakMitmIcon />,
-        color: "blue",
-        content: MITMPluginTemplate
-    },
-    "port-scan": {
-        name: "Yak-端口扫描",
-        description: "该插件会对目标进行端口扫描，再对扫描的指纹结果做进一步的处理，常用场景先指纹识别，再 Poc 检测",
-        icon: <SolidPluginProtScanIcon />,
-        color: "success",
-        content: PortScanPluginTemplate
-    },
-    codec: {
-        name: "Yak-Codec",
-        description: "Yakit 中的编解码模块，可以自定义实现所需要的编解码、加解密",
-        icon: <SolidSparklesPluginIcon />,
-        color: "purple",
-        content: CodecPluginTemplate
-    },
-    lua: {
-        name: "Lua 模块",
-        description: "监修中，无法使用",
-        icon: <SolidDocumentSearchPluginIcon />,
-        color: "bluePurple",
-        content: ""
-    },
-    nuclei: {
-        name: "Nuclei YamI 模块",
-        description: "使用 YakVM 构建了一个沙箱，可以兼容执行 Nuclei DSL ，无感使用 Nuclei 自带的 Yaml 模板",
-        icon: <SolidCollectionPluginIcon />,
-        color: "cyan",
-        content: "# Add your nuclei formatted PoC!"
-    }
-}
+
 /** 搜索过滤条件对应展示名称 */
 export const filterToName: Record<string, string> = {
     type: "插件状态",
@@ -1571,12 +1535,3 @@ export const defaultResponse: API.YakitPluginListResponse = {
         total_page: 1
     }
 }
-
-export const pluginTypeList: TypeSelectOpt[] = [
-    {key: "yak", ...pluginTypeToName["yak"]},
-    {key: "mitm", ...pluginTypeToName["mitm"]},
-    {key: "port-scan", ...pluginTypeToName["port-scan"]},
-    {key: "codec", ...pluginTypeToName["codec"]},
-    {key: "lua", ...pluginTypeToName["lua"]},
-    {key: "nuclei", ...pluginTypeToName["nuclei"]}
-]

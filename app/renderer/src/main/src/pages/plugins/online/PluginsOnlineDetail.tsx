@@ -17,7 +17,7 @@ import {PluginComment} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPlugi
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRoute"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -166,7 +166,9 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                         </Tooltip>
                     )}
                     <div style={{height: 12}} className='divider-style'></div>
-                    <YakitButton type='text' onClick={onNewAddPlugin}>新建插件</YakitButton>
+                    <YakitButton type='text' onClick={onNewAddPlugin}>
+                        新建插件
+                    </YakitButton>
                 </div>
             }
             checked={allCheck}
@@ -182,6 +184,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                     const check = allCheck || selectList.includes(info.uuid)
                     return (
                         <PluginDetailsListItem<YakitPluginOnlineDetail>
+                            order={i}
                             plugin={info}
                             selectUUId={plugin.uuid}
                             check={check}
