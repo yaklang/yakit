@@ -1,5 +1,4 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {pluginTypeToName} from "./baseTemplate"
 import {
     AuthorImgProps,
     CodeScoreModalProps,
@@ -83,6 +82,7 @@ import {API} from "@/services/swagger/resposeType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SmokingEvaluateResponse} from "../pluginDebugger/SmokingEvaluate"
+import {pluginTypeToName} from "./builtInData"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -720,11 +720,15 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
         if (!oldInView.current && inView) {
             scrollTo(showIndex || 0)
         }
+        // 数据重置刷新
+        if (oldInView.current && inView && showIndex === 0) {
+            scrollTo(0)
+        }
         oldInView.current = !!inView
-    }, [inView])
+    }, [inView, showIndex])
 
     const onScrollCapture = useThrottleFn(
-        () => {
+        useMemoizedFn(() => {
             // 不执行非列表布局逻辑
             if (!isList) return
 
@@ -740,7 +744,7 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
                     updateList()
                 }
             }
-        },
+        }),
         {wait: 200, leading: false}
     )
 
@@ -787,8 +791,22 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
 })
 /** @name 插件列表形式单个项组件 */
 export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
-    const {data, checked, onCheck, img, title, help, time, type, isCorePlugin, official, subTitle, extraNode, onClick} =
-        props
+    const {
+        order,
+        data,
+        checked,
+        onCheck,
+        img,
+        title,
+        help,
+        time,
+        type,
+        isCorePlugin,
+        official,
+        subTitle,
+        extraNode,
+        onClick
+    } = props
 
     // 副标题组件
     const subtitle = useMemoizedFn(() => {
@@ -802,7 +820,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
     })
     // 组件点击回调
     const onclick = useMemoizedFn(() => {
-        if (onClick) return onClick(data)
+        if (onClick) return onClick(data, order)
         return null
     })
 
@@ -905,12 +923,16 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
         if (!oldInView.current && inView) {
             scrollTo(Math.floor((showIndex || 0) / gridCol))
         }
+        // 数据重置刷新
+        if (oldInView.current && inView && showIndex === 0) {
+            scrollTo(0)
+        }
         oldInView.current = !!inView
-    }, [inView, gridCol])
+    }, [inView, gridCol, showIndex])
 
     // 滚动加载
     const onScrollCapture = useThrottleFn(
-        () => {
+        useMemoizedFn(() => {
             // 不执行非网格布局逻辑
             if (isList) return
 
@@ -926,7 +948,7 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
                     updateList()
                 }
             }
-        },
+        }),
         {wait: 200, leading: false}
     )
 
@@ -986,6 +1008,7 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
 /** @name 插件网格形式单个项组件 */
 export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
     const {
+        order,
         data,
         checked,
         onCheck,
@@ -1018,7 +1041,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
     })
     // 组件点击回调
     const onclick = useMemoizedFn(() => {
-        if (onClick) return onClick(data)
+        if (onClick) return onClick(data, order)
         return null
     })
 
@@ -1115,7 +1138,9 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                                 </div>
                                 <div className={styles["contribute-body"]}>
                                     {contributes.arr.map((item, index) => {
-                                        return <AuthorImg key={`${index}|${item}`} src={item || ""} />
+                                        return (
+                                            <img key={`${item}-${index}`} src={item} className={styles["img-style"]} />
+                                        )
                                     })}
                                     {contributes.length > 0 && (
                                         <div className={styles["more-style"]}>{`+${contributes.length}`}</div>
@@ -1533,7 +1558,6 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
     // 开始评分
     const onTest = useMemoizedFn(() => {
         setLoading(true)
-        console.log('type',{PluginType: type, Code: code})
         ipcRenderer
             .invoke("SmokingEvaluatePlugin", {PluginType: type, Code: code})
             .then((rsp: SmokingEvaluateResponse) => {

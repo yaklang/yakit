@@ -485,11 +485,18 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             })
         })
 
+        // 当前展示的插件序列
+        const showPluginIndex = useRef<number>(0)
+        const setShowPluginIndex = useMemoizedFn((index: number) => {
+            showPluginIndex.current = index
+        })
+
         const fetchList = useDebounceFn(
             useMemoizedFn(async (reset?: boolean) => {
                 // if (latestLoadingRef.current) return //先注释，有影响
                 if (reset) {
                     isLoadingRef.current = true
+                    setShowPluginIndex(0)
                 }
                 setLoading(true)
 
@@ -575,8 +582,9 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             return <>{data.is_private ? <PrivatePluginIcon /> : statusTag[`${data.status}`]}</>
         })
         /** 单项点击回调 */
-        const optClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        const optClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
             setPlugin(data)
+            setShowPluginIndex(index)
         })
         const onUserSelect = useMemoizedFn((key: string, data: YakitPluginOnlineDetail) => {
             switch (key) {
@@ -797,10 +805,11 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                                 isList={isList}
                                 data={response.data}
                                 gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                    const {data} = info
+                                    const {index, data} = info
                                     const check = allCheck || selectList.includes(data.uuid)
                                     return (
                                         <GridLayoutOpt
+                                            order={index}
                                             data={data}
                                             checked={check}
                                             onCheck={optCheck}
@@ -822,10 +831,11 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                                 }}
                                 gridHeight={210}
                                 listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                    const {data} = info
+                                    const {index, data} = info
                                     const check = allCheck || selectList.includes(data.uuid)
                                     return (
                                         <ListLayoutOpt
+                                            order={index}
                                             data={data}
                                             checked={check}
                                             onCheck={optCheck}
@@ -846,6 +856,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                                 loading={loading}
                                 hasMore={hasMore}
                                 updateList={onUpdateList}
+                                showIndex={showPluginIndex.current}
+                                setShowIndex={setShowPluginIndex}
                             />
                         ) : (
                             <div className={styles["plugin-user-empty"]}>

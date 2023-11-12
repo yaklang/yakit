@@ -120,6 +120,7 @@ import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/Re
 import { FuzzerParamItem, AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import { HTTPResponseExtractor } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import { ConfigNetworkPage } from "@/components/configNetwork/ConfigNetworkPage"
+import { PluginEditDetails } from "@/pages/plugins/editDetails/PluginEditDetails"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -182,6 +183,8 @@ export enum YakitRoute {
     PacketScanPage = "packet-scan-page",
     // 新建插件页面
     AddYakitScript = "add-yakit-script",
+    // 编辑插件页面
+    ModifyYakitScript = "modify-yakit-script",
     // 插件日志-单条详情页面
     YakitPluginJournalDetails = "yakit-plugin-journal-details",
     // 我的插件回收站页面
@@ -271,6 +274,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "batch-executor-recover": {label: "继续任务：批量执行插件"},
     "packet-scan-page": {label: "数据包扫描"},
     "add-yakit-script": {label: "新建插件"},
+    "modify-yakit-script": {label: "编辑插件"},
     "yakit-plugin-journal-details": {label: "插件修改详情"},
     "online-plugin-recycle-bin": {label: "线上插件回收站"},
     simpleDetect: {label: "安全检测"},
@@ -312,6 +316,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.TrustListPage,
     YakitRoute.PlugInAdminPage,
     YakitRoute.AddYakitScript,
+    YakitRoute.ModifyYakitScript,
     YakitRoute.OnlinePluginRecycleBin,
     YakitRoute.DB_ChaosMaker,
     YakitRoute.ScreenRecorderPage,
@@ -342,6 +347,8 @@ export const NoPaddingRoute: YakitRoute[] = [
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
+/** 一级tab固定展示tab  */
+export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
 
 export interface ComponentParams {
     // Route.HTTPFuzzer 参数
@@ -402,6 +409,8 @@ export interface ComponentParams {
     // 新建插件
     moduleType?: string
     content?: string
+    // 编辑插件
+    editPluginId?: number
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -536,7 +545,10 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 />
             )
         case YakitRoute.AddYakitScript:
-            return <AddYakitScript moduleType={params.moduleType} content={params.content} />
+            // return <AddYakitScript moduleType={params.moduleType} content={params.content} />
+            return <PluginEditDetails />
+        case YakitRoute.ModifyYakitScript:
+            return <PluginEditDetails id={params?.editPluginId} />
         case YakitRoute.YakitPluginJournalDetails:
             return <YakitPluginJournalDetails YakitPluginJournalDetailsId={params?.YakScriptJournalDetailsId || 0} />
         case YakitRoute.OnlinePluginRecycleBin:
@@ -556,7 +568,12 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DB_ChaosMaker:
             return <ChaosMakerPage />
         case YakitRoute.Beta_DebugPlugin:
-            return <PluginDebuggerPage generateYamlTemplate={params.generateYamlTemplate} YamlContent={params.YamlContent}/>
+            return (
+                <PluginDebuggerPage
+                    generateYamlTemplate={!!params?.generateYamlTemplate}
+                    YamlContent={params?.YamlContent || ""}
+                />
+            )
         case YakitRoute.Beta_DebugMonacoEditor:
             return <DebugMonacoEditorPage />
         case YakitRoute.Beta_VulinboxManager:
@@ -564,7 +581,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Beta_DiagnoseNetwork:
             return <DiagnoseNetworkPage />
         case YakitRoute.Beta_ConfigNetwork:
-            return <ConfigNetworkPage />    
+            return <ConfigNetworkPage />
         case YakitRoute.Beta_Codec:
             return <NewCodecPage />
         default:
