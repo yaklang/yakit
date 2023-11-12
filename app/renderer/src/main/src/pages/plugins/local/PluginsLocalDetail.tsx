@@ -294,6 +294,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         const check = allCheck || checkList.includes(info.ScriptName)
                         return (
                             <PluginDetailsListItem<YakScript>
+                                order={i}
                                 plugin={info}
                                 selectUUId={plugin.UUID}
                                 check={check}

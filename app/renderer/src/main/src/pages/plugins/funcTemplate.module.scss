@@ -719,19 +719,21 @@
                         .img-style {
                             width: 28px;
                             height: 28px;
+                            overflow: hidden;
                             border-radius: 28px;
                             border: 1px solid #f8f8f8;
                         }
                         .more-style {
                             width: 28px;
                             height: 28px;
+                            overflow: hidden;
                             display: flex;
                             justify-content: center;
                             align-items: center;
                             border-radius: 28px;
+                            border: 1px solid #f8f8f8;
                             background-color: #f0f1f3;
                             color: #b4bbca;
-                            text-align: center;
                             font-size: 12px;
                         }
                         .img-style + .img-style {

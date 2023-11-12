@@ -146,7 +146,12 @@ export interface PluginParamListProps {
     onEdit: (index: number) => any
 }
 
-export interface PluginEditorDiffProps {}
+export interface PluginEditorDiffProps {
+    isDiff: boolean
+    newCode: string
+    oldCode?: string
+    setCode: (value: string) => any
+}
 
 /** ---------- 插件列表相关 start ---------- */
 /** 插件通用过滤条件 */
@@ -184,6 +189,8 @@ export interface PluginListPageMeta {
 
 /**插件详情中列表的item */
 export interface PluginDetailsListItemProps<T> {
+    /** 插件在列表里的索引 */
+    order: number
     plugin: T
     selectUUId: string
     check: boolean
@@ -198,7 +205,7 @@ export interface PluginDetailsListItemProps<T> {
     isCorePlugin: boolean
     optCheck: (data: T, value: boolean) => any
     extra?: (data: T) => ReactNode
-    onPluginClick: (plugin: T) => void
+    onPluginClick: (plugin: T, index: number) => void
 }
 
 export interface PluginContributesListItemProps {
