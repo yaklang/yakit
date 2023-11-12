@@ -160,6 +160,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
             if (reset) {
                 isLoadingRef.current = true
+                setShowPluginIndex(0)
             }
             setLoading(true)
 
@@ -216,6 +217,12 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         setAllCheck(value)
     })
 
+    // 当前展示的插件序列
+    const showPluginIndex = useRef<number>(0)
+    const setShowPluginIndex = useMemoizedFn((index: number) => {
+        showPluginIndex.current = index
+    })
+
     /** 单项勾选|取消勾选 */
     const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
         // 全选情况时的取消勾选
@@ -246,7 +253,15 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**编辑 */
     const onEditPlugin = useMemoizedFn((data: YakScript) => {
-        yakitNotify("success", "编辑~~~")
+        if (data?.Id && +data.Id) {
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.ModifyYakitScript,
+                    params: {source: YakitRoute.Plugin_Local, id: +data.Id}
+                })
+            )
+        }
     })
     /**导出 */
     const onExportPlugin = useMemoizedFn((data: YakScript) => {
@@ -262,8 +277,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }
     })
     /** 单项点击回调 */
-    const optClick = useMemoizedFn((data: YakScript) => {
+    const optClick = useMemoizedFn((data: YakScript, index: number) => {
         setPlugin({...data})
+        setShowPluginIndex(index)
     })
     /**新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {
@@ -559,10 +575,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                 isList={isList}
                                 data={response.Data || []}
                                 gridNode={(info: {index: number; data: YakScript}) => {
-                                    const {data} = info
+                                    const {index, data} = info
                                     const check = allCheck || checkList.includes(data.ScriptName)
                                     return (
                                         <GridLayoutOpt
+                                            order={index}
                                             data={data}
                                             checked={check}
                                             onCheck={optCheck}
@@ -583,10 +600,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                 }}
                                 gridHeight={210}
                                 listNode={(info: {index: number; data: YakScript}) => {
-                                    const {data} = info
+                                    const {index, data} = info
                                     const check = allCheck || checkList.includes(data.ScriptName)
                                     return (
                                         <ListLayoutOpt
+                                            order={index}
                                             data={data}
                                             checked={check}
                                             onCheck={optCheck}
@@ -607,6 +625,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                 hasMore={hasMore}
                                 updateList={onUpdateList}
                                 isShowSearchResultEmpty={+response.Total === 0}
+                                showIndex={showPluginIndex.current}
+                                setShowIndex={setShowPluginIndex}
                             />
                         ) : (
                             <div className={styles["plugin-local-empty"]}>

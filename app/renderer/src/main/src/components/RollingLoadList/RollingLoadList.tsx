@@ -132,8 +132,10 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             isFirstNumberRoll.current = false
         } else {
             if (!numberRoll) return
-            // 初次不执行
-            scrollTo(numberRoll)
+            // 初次不执行; 必须加上延时,不然元素可能还没有加载
+            setTimeout(() => {
+                scrollTo(numberRoll)
+            }, 100);
         }
     })
 

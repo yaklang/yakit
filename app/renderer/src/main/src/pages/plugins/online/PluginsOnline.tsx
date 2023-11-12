@@ -71,9 +71,9 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TypeSelectOpt} from "../funcTemplateType"
 import {DefaultTypeList, PluginGV} from "../builtInData"
 import {BackInfoProps} from "../manage/PluginManageDetail"
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRoute"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -252,6 +252,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
             if (reset) {
                 isLoadingRef.current = true
+                setShowPluginIndex(0)
             }
             setLoading(true)
             const params: PluginListPageMeta = !!reset
@@ -348,6 +349,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         }
     })
 
+    // 当前展示的插件序列
+    const showPluginIndex = useRef<number>(0)
+    const setShowPluginIndex = useMemoizedFn((index: number) => {
+        showPluginIndex.current = index
+    })
+
     /** 单项勾选|取消勾选 */
     const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
         try {
@@ -394,8 +401,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         )
     })
     /** 单项点击回调 */
-    const optClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+    const optClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
         setPlugin({...data})
+        setShowPluginIndex(index)
     })
     /**新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {
@@ -643,10 +651,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                     [styles["list-overflow-hidden"]]: isShowRoll
                                 })}
                                 gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                    const {data} = info
+                                    const {index, data} = info
                                     const check = allCheck || selectList.includes(data.uuid)
                                     return (
                                         <GridLayoutOpt
+                                            order={index}
                                             data={data}
                                             checked={check}
                                             onCheck={optCheck}
@@ -667,10 +676,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 }}
                                 gridHeight={210}
                                 listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                    const {data} = info
+                                    const {index, data} = info
                                     const check = allCheck || selectList.includes(data.uuid)
                                     return (
                                         <ListLayoutOpt
+                                            order={index}
                                             data={data}
                                             checked={check}
                                             onCheck={optCheck}
@@ -690,6 +700,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 loading={loading}
                                 hasMore={hasMore}
                                 updateList={onUpdateList}
+                                showIndex={showPluginIndex.current}
+                                setShowIndex={setShowPluginIndex}
                             />
                         ) : (
                             <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
