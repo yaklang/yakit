@@ -20,6 +20,7 @@ interface PluginLocalUploadProps {
 interface SaveYakScriptToOnlineRequest {
     ScriptNames: string[]
     IsPrivate: boolean
+    All?: boolean
 }
 
 interface SaveYakScriptToOnlineResponse {
@@ -66,7 +67,7 @@ export const PluginLocalUpload: React.FC<PluginLocalUploadProps> = React.memo((p
                 title: "上传中",
                 content: (
                     <PluginUpload
-                        show={current === 2}
+                        show={current === 2 && successPluginNames.length > 0}
                         pluginNames={successPluginNames}
                         onSave={onClose}
                         onCancel={onClose}
@@ -142,12 +143,21 @@ interface MessageListProps {
     Message: string
     MessageType: string
 }
+interface SmokingEvaluatePluginBatchRequest {
+    ScriptNames: string[]
+}
+interface SmokingEvaluatePluginBatchResponse {
+    Progress: number
+    Message: string
+    MessageType: string
+}
 const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
     const {show, pluginNames, onNext, onCancel} = props
     const taskTokenRef = useRef(randomString(40))
     const [percent, setPercent] = useState<number>(0)
     const [messageList, setMessageList] = useState<MessageListProps[]>([])
     const [isHaveError, setIsHaveError] = useState<boolean>(false)
+    const [isShowRetry, setIsShowRetry] = useState<boolean>(false)
     const [successPluginNames, setSuccessPluginNames] = useState<string[]>([])
 
     useEffect(() => {
@@ -158,10 +168,11 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
         ipcRenderer.on(`${taskToken}-data`, onProgressData)
         ipcRenderer.on(`${taskToken}-end`, () => {})
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-            yakitNotify("error", "检测失败:" + e)
+            setIsShowRetry(true)
+            yakitNotify("error", "自动评分异常，请重试")
         })
         return () => {
-            ipcRenderer.invoke("cancel-SaveYakScriptToOnline", taskToken)
+            ipcRenderer.invoke("cancel-SmokingEvaluatePluginBatch", taskToken)
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
             ipcRenderer.removeAllListeners(`${taskToken}-end`)
@@ -170,38 +181,50 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
     useEffect(() => {
         if (show) {
             startAutoTest()
+            onReset()
         }
-        setPercent(0)
     }, [show])
-    const onProgressData = useMemoizedFn((_, data: SaveYakScriptToOnlineResponse) => {
-        const p = Math.floor(data.Progress * 100)
-        setPercent(p)
-        setMessageList([
-            ...messageList,
-            {
-                Message: data.Message,
-                MessageType: data.MessageType
-            }
-        ])
-        if (data.Progress === 1) {
-            if (data.MessageType === "finalError") {
-                setIsHaveError(true)
+    /**重置数据 */
+    const onReset = useMemoizedFn(() => {
+        setPercent(0)
+        setMessageList([])
+        setIsHaveError(false)
+        setIsShowRetry(false)
+    })
+    const onProgressData = useMemoizedFn((_, data: SmokingEvaluatePluginBatchResponse) => {
+        try {
+            if (data.Progress === 2) {
+                const pluginNameList: string[] = JSON.parse(data.Message || "[]") || []
+                setSuccessPluginNames(pluginNameList)
+                if (pluginNameList.length === pluginNames.length) {
+                    yakitNotify("success", "检测完毕,全部成功,自动进入下一步上传")
+                    setTimeout(() => {
+                        onNext(pluginNameList)
+                    }, 200)
+                } else if (pluginNameList.length === 0) {
+                    yakitNotify("error", "检测完毕,全部失败,不能进行上传操作")
+                } else {
+                    setIsHaveError(true)
+                }
             } else {
-                yakitNotify("success", "检测完毕,全部成功,自动进入下一步上传")
-                setTimeout(() => {
-                    setSuccessPluginNames(pluginNames)
-                    onNext(successPluginNames)
-                }, 200)
+                const p = Math.floor(data.Progress * 100)
+                setPercent(p)
+                setMessageList([
+                    {
+                        Message: data.Message,
+                        MessageType: data.MessageType
+                    },
+                    ...messageList
+                ])
             }
-        }
+        } catch (error) {}
     })
     const startAutoTest = useMemoizedFn(() => {
-        const params: SaveYakScriptToOnlineRequest = {
-            ScriptNames: pluginNames,
-            IsPrivate: false
+        const params: SmokingEvaluatePluginBatchRequest = {
+            ScriptNames: pluginNames
         }
         ipcRenderer
-            .invoke("SaveYakScriptToOnline", params, taskTokenRef.current)
+            .invoke("SmokingEvaluatePluginBatch", params, taskTokenRef.current)
             .then(() => {})
             .catch((e) => {
                 failed(`开始检测失败:${e}`)
@@ -211,7 +234,12 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
         onNext(successPluginNames)
     })
     const onClickCancel = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-SmokingEvaluatePluginBatch", taskTokenRef.current)
         onCancel()
+    })
+    const onClickRetry = useMemoizedFn(() => {
+        onReset()
+        startAutoTest()
     })
     return (
         <>
@@ -220,7 +248,7 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
                     strokeColor='#F28B44'
                     trailColor='#F0F2F5'
                     percent={percent}
-                    format={(percent) => `已下载 ${percent}%`}
+                    format={(percent) => `已检测 ${percent}%`}
                 />
                 {messageList.length > 0 && (
                     <div className={styles["plugin-message-list"]}>
@@ -242,12 +270,15 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
                 <YakitButton type='outline2' onClick={onClickCancel}>
                     取消
                 </YakitButton>
+                {isShowRetry && <YakitButton onClick={onClickRetry}>重试</YakitButton>}
                 {isHaveError && <YakitButton onClick={onClickNext}>下一步</YakitButton>}
             </div>
         </>
     )
 })
 interface PluginUploadProps {
+    /**是否一键上传所有本地插件 */
+    isUploadAll?: boolean
     /**插件选择的私密/公开状态 */
     isPrivate: boolean
     /**是否显示 */
@@ -260,14 +291,16 @@ interface PluginUploadProps {
      * 下一步
      */
     onSave: () => void
+    /**底部按钮className */
+    footerClassName?: string
 }
-const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
-    const {isPrivate, show, pluginNames, onSave, onCancel} = props
+export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
+    const {isUploadAll, isPrivate, show, pluginNames, onSave, onCancel, footerClassName} = props
     const taskTokenRef = useRef(randomString(40))
     const [percent, setPercent] = useState<number>(0)
     const [messageList, setMessageList] = useState<MessageListProps[]>([])
     const [isHaveError, setIsHaveError] = useState<boolean>(false)
-    const [successPluginNames, setSuccessPluginNames] = useState<string[]>([])
+    const [isShowRetry, setIsShowRetry] = useState<boolean>(false)
 
     useEffect(() => {
         const taskToken = taskTokenRef.current
@@ -277,7 +310,8 @@ const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
         ipcRenderer.on(`${taskToken}-data`, onProgressData)
         ipcRenderer.on(`${taskToken}-end`, () => {})
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-            yakitNotify("error", "检测失败:" + e)
+            setIsShowRetry(true)
+            yakitNotify("error", "批量上传异常，请重试")
         })
         return () => {
             ipcRenderer.invoke("cancel-SaveYakScriptToOnline", taskToken)
@@ -289,26 +323,32 @@ const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
     useEffect(() => {
         if (show) {
             startUpload()
+            onReset()
         }
-        setPercent(0)
     }, [show])
+    /**重置数据 */
+    const onReset = useMemoizedFn(() => {
+        setPercent(0)
+        setMessageList([])
+        setIsHaveError(false)
+        setIsShowRetry(false)
+    })
     const onProgressData = useMemoizedFn((_, data: SaveYakScriptToOnlineResponse) => {
         const p = Math.floor(data.Progress * 100)
         setPercent(p)
         setMessageList([
-            ...messageList,
             {
                 Message: data.Message,
                 MessageType: data.MessageType
-            }
+            },
+            ...messageList
         ])
         if (data.Progress === 1) {
             if (data.MessageType === "finalError") {
                 setIsHaveError(true)
             } else {
-                yakitNotify("success", "检测完毕,全部成功,自动进入下一步上传")
+                yakitNotify("success", "上传完毕,全部成功")
                 setTimeout(() => {
-                    setSuccessPluginNames(pluginNames)
                     onSave()
                 }, 200)
             }
@@ -317,7 +357,8 @@ const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
     const startUpload = useMemoizedFn(() => {
         const params: SaveYakScriptToOnlineRequest = {
             ScriptNames: pluginNames,
-            IsPrivate: isPrivate
+            IsPrivate: isPrivate,
+            All: isUploadAll
         }
         ipcRenderer
             .invoke("SaveYakScriptToOnline", params, taskTokenRef.current)
@@ -330,7 +371,12 @@ const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
         onSave()
     })
     const onClickCancel = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-SaveYakScriptToOnline", taskTokenRef.current)
         onCancel()
+    })
+    const onClickRetry = useMemoizedFn(() => {
+        onReset()
+        startUpload()
     })
     return (
         <>
@@ -339,7 +385,7 @@ const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
                     strokeColor='#F28B44'
                     trailColor='#F0F2F5'
                     percent={percent}
-                    format={(percent) => `已下载 ${percent}%`}
+                    format={(percent) => `已上传 ${percent}%`}
                 />
                 {messageList.length > 0 && (
                     <div className={styles["plugin-message-list"]}>
@@ -357,10 +403,11 @@ const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
                     </div>
                 )}
             </div>
-            <div className={styles["plugin-local-upload-steps-action"]}>
+            <div className={classNames(styles["plugin-local-upload-steps-action"], footerClassName)}>
                 <YakitButton type='outline2' onClick={onClickCancel}>
                     取消
                 </YakitButton>
+                {isShowRetry && <YakitButton onClick={onClickRetry}>重试</YakitButton>}
                 {isHaveError && <YakitButton onClick={onClickNext}>完成</YakitButton>}
             </div>
         </>
