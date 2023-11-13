@@ -493,19 +493,19 @@ export declare namespace API {
     isCorePlugin?: boolean;
   }
   export interface PluginsRequestRiskDetail {
-    cweId: string;
+    cweId?: string;
     /**
      * 漏洞类型
      */
-    riskType: string;
+    riskType?: string;
     /**
      * 漏洞描述
      */
-    description: string;
+    description?: string;
     /**
      * 修复建议
      */
-    solution: string;
+    solution?: string;
   }
   export interface PluginsRecycleRequest extends PluginsWhere, PluginsRecycle {}
   export interface PluginsRecycle {
@@ -1060,6 +1060,7 @@ export declare namespace API {
   export interface CollaboratorInfo {
     user_id: number;
     head_img: string;
+    user_name: string;
   }
   export interface ApplyPluginResponse {
     type?: string;

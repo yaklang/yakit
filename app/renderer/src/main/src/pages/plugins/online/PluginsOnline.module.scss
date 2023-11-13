@@ -274,3 +274,17 @@
         }
     }
 }
+
+.plugin-online-empty {
+    margin-top: 48px;
+    .plugin-online-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 16px;
+    }
+}
+
+.upload-all-btns {
+    justify-content: flex-end;
+}

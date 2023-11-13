@@ -16,6 +16,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
     OutlineCalendarIcon,
     OutlineClouddownloadIcon,
+    OutlineClouduploadIcon,
     OutlineSearchIcon,
     OutlineSwitchverticalIcon,
     OutlineXIcon
@@ -43,6 +44,7 @@ import {
     PluginsOnlineHeardProps,
     PluginsOnlineListProps,
     PluginsOnlineProps,
+    PluginsUploadAllProps,
     YakitCombinationSearchCircleProps,
     YakitPluginOnlineDetail
 } from "./PluginsOnlineType"
@@ -51,7 +53,7 @@ import {API} from "@/services/swagger/resposeType"
 import {PluginsContainer, PluginsLayout, defaultSearch} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {PluginsOnlineDetail} from "./PluginsOnlineDetail"
-import {SolidPluscircleIcon} from "@/assets/icon/solid"
+import {SolidClouduploadIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
@@ -74,6 +76,10 @@ import {BackInfoProps} from "../manage/PluginManageDetail"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {isCommunityEdition} from "@/utils/envfile"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {PluginUpload} from "../local/PluginLocalUpload"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -196,6 +202,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
+    const [visibleUploadAll, setVisibleUploadAll] = useState<boolean>(false)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
     // 获取筛选栏展示状态
@@ -449,6 +456,17 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         filtersDetailRef.current = detailFilter
         fetchList(true)
     })
+    const onUploadAll = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            yakitNotify("error", "请先登录")
+            return
+        }
+        if (userInfo.role !== "admin") {
+            yakitNotify("error", "暂无权限")
+            return
+        }
+        setVisibleUploadAll(true)
+    })
     return (
         <>
             {!!plugin && (
@@ -665,7 +683,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             help={data.help || ""}
                                             img={data.head_img || ""}
                                             user={data.authors || ""}
-                                            // prImgs={[]}
+                                            // prImgs={(data.collaborator||[])}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
                                             official={!!data.isCorePlugin}
@@ -704,20 +722,57 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 setShowIndex={setShowPluginIndex}
                             />
                         ) : (
-                            <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
+                            <div className={styles["plugin-online-empty"]}>
+                                <YakitEmpty
+                                    title='暂无数据'
+                                    description={isCommunityEdition() ? "" : "可将本地所有插件一键上传"}
+                                />
+                                {userInfo.role === "admin" && (
+                                    <div className={styles["plugin-online-buttons"]}>
+                                        <YakitButton
+                                            type='outline1'
+                                            icon={<OutlineClouduploadIcon />}
+                                            onClick={onUploadAll}
+                                        >
+                                            一键上传
+                                        </YakitButton>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </PluginsList>
                 </PluginsContainer>
             </PluginsLayout>
-            {visibleOnline && (
-                <YakitGetOnlinePlugin
-                    visible={visibleOnline}
-                    setVisible={(v) => {
-                        setVisibleOnline(v)
-                    }}
-                />
-            )}
+            {visibleOnline && <YakitGetOnlinePlugin visible={visibleOnline} setVisible={setVisibleOnline} />}
+            {visibleUploadAll && <PluginsUploadAll visible={visibleUploadAll} setVisible={setVisibleUploadAll} />}
         </>
+    )
+})
+
+const PluginsUploadAll: React.FC<PluginsUploadAllProps> = React.memo((props) => {
+    const {visible, setVisible} = props
+    const onCancel = useMemoizedFn(() => {
+        setVisible(false)
+    })
+    return (
+        <YakitHint
+            visible={visible}
+            title='一键上传'
+            heardIcon={<SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            footer={null}
+            isDrag={true}
+            mask={false}
+        >
+            <PluginUpload
+                isUploadAll={true}
+                isPrivate={false}
+                onSave={onCancel}
+                onCancel={onCancel}
+                pluginNames={[]}
+                show={visible}
+                footerClassName={styles["upload-all-btns"]}
+            />
+        </YakitHint>
     )
 })
 

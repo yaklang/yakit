@@ -107,3 +107,8 @@ export interface DownloadArgumentProps {
     /**选中的个数 */
     selectNumArgument: number
 }
+
+export interface PluginsUploadAllProps {
+    visible: boolean
+    setVisible: (b:boolean)=>void
+}

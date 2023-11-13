@@ -239,7 +239,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const optExtraNode = useMemoizedFn((data: YakScript) => {
         return (
             <LocalExtraOperate
-                isOwn={userInfo.user_id === data.UserId}
+                isOwn={userInfo.user_id === data.UserId || `${data.UserId}` === "0"}
                 onRemovePlugin={() => onRemovePluginBefore(data)}
                 onExportPlugin={() => onExportPlugin(data)}
                 onEditPlugin={() => onEditPlugin(data)}
@@ -459,15 +459,21 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             onRemovePluginBatchBefore()
         }, 200)
     })
-    const onBatchUpload = useMemoizedFn(() => {
-        if (selectList.length === 0) return
-        const pluginNames = selectList.map((ele) => ele.ScriptName) || []
+    const onBatchUpload = useMemoizedFn((selectScriptNameList: string[]) => {
+        if (!userInfo.isLogin) {
+            yakitNotify("error", "请登录后上传")
+            return
+        }
+        if (selectScriptNameList.length === 0) return
         const m = showYakitModal({
             type: "white",
             title: "批量上传插件",
-            content: <PluginLocalUpload pluginNames={pluginNames} onClose={() => m.destroy()} />,
+            content: <PluginLocalUpload pluginNames={selectScriptNameList} onClose={() => m.destroy()} />,
             footer: null
         })
+    })
+    const onDetailsBatchUpload = useMemoizedFn((names) => {
+        onBatchUpload(names)
     })
     return (
         <>
@@ -488,6 +494,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     onDetailSearch={onDetailSearch}
                     spinLoading={loading && isLoadingRef.current}
                     onDetailsBatchRemove={onDetailsBatchRemove}
+                    onDetailsBatchUpload={onDetailsBatchUpload}
                 />
             )}
             <PluginsLayout
@@ -523,7 +530,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                                 onExport(Ids)
                                                 break
                                             case "upload":
-                                                onBatchUpload()
+                                                const pluginNames = selectList.map((ele) => ele.ScriptName) || []
+                                                onBatchUpload(pluginNames)
                                                 break
                                             case "remove":
                                                 onRemovePluginBatchBefore()
