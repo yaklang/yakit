@@ -59,7 +59,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         onDetailExport,
         onDetailSearch,
         spinLoading,
-        onDetailsBatchRemove
+        onDetailsBatchRemove,
+        onDetailsBatchUpload
     } = props
     const [executorShow, setExecutorShow] = useState<boolean>(true)
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
@@ -244,6 +245,15 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         setAllCheck(false)
         setSelectList([])
     })
+    /**详情批量上传 */
+    const onBatchUpload = useMemoizedFn(() => {
+        if (selectList.length === 0) {
+            yakitNotify("error", "请先勾选数据")
+            return
+        }
+        const names = selectList.map((ele) => ele.ScriptName)
+        onDetailsBatchUpload(names)
+    })
     if (!plugin) return null
     return (
         <>
@@ -265,7 +275,12 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='local' />
                         <div style={{height: 12}} className='divider-style'></div>
                         <Tooltip title='上传插件' overlayClassName='plugins-tooltip'>
-                            <YakitButton type='text2' icon={<OutlineExportIcon />} />
+                            <YakitButton
+                                type='text2'
+                                disabled={allCheck || selectList.length === 0}
+                                icon={<OutlineExportIcon />}
+                                onClick={onBatchUpload}
+                            />
                         </Tooltip>
                         <div style={{height: 12}} className='divider-style'></div>
                         {removeLoading ? (
@@ -286,7 +301,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 total={response.Total}
                 selected={selectNum}
                 listProps={{
-                    rowKey: "uuid",
+                    rowKey: "ScriptName",
                     data: response.Data,
                     loadMoreData: loadMoreData,
                     classNameRow: "plugin-details-opt-wrapper",
@@ -296,17 +311,16 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                             <PluginDetailsListItem<YakScript>
                                 order={i}
                                 plugin={info}
-                                selectUUId={plugin.UUID}
+                                selectUUId={plugin.ScriptName} //本地用的ScriptName代替uuid
                                 check={check}
                                 headImg={info.HeadImg || ""}
-                                pluginUUId={info.UUID}
+                                pluginUUId={info.ScriptName} //本地用的ScriptName代替uuid
                                 pluginName={info.ScriptName}
                                 help={info.Help}
                                 content={info.Content}
                                 optCheck={optCheck}
                                 official={!!info.OnlineOfficial}
-                                // isCorePlugin={info.is_core_plugin}
-                                isCorePlugin={false}
+                                isCorePlugin={!!info.IsCorePlugin}
                                 pluginType={info.Type}
                                 onPluginClick={onPluginClick}
                             />
