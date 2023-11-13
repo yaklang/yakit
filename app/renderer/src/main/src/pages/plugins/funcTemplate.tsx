@@ -84,6 +84,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SmokingEvaluateResponse} from "../pluginDebugger/SmokingEvaluate"
 import {pluginTypeToName} from "./builtInData"
+import UnLogin from "@/assets/unLogin.png"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -829,7 +830,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
         if (isCorePlugin) {
             return <AuthorImg icon={pluginTypeToName[type].icon} />
         }
-        return <AuthorImg src={img || ""} builtInIcon={official ? "official" : undefined} />
+        return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])
 
     return (
@@ -1057,10 +1058,6 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
         } catch (error) {}
         return arr
     }, [tags])
-    /** 是否有作者 */
-    const noUser = useMemo(() => {
-        return !img && !user
-    }, [img, user])
     /** 贡献者数据 */
     const contributes = useMemo(() => {
         if (prImgs.length <= 5) return {arr: prImgs, length: 0}
@@ -1072,7 +1069,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
         if (isCorePlugin) {
             return <AuthorImg icon={pluginTypeToName[type].icon} />
         }
-        return <AuthorImg src={img || ""} builtInIcon={official ? "official" : undefined} />
+        return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])
     return (
         <div className={styles["grid-layout-opt-wrapper"]} onClick={onclick}>
@@ -1120,36 +1117,27 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                             </div>
                         </div>
 
-                        <div
-                            className={classNames(
-                                {[styles["help-wrapper"]]: !noUser, [styles["help-noshow-user-wrapper"]]: noUser},
-                                "yakit-content-multiLine-ellipsis"
-                            )}
-                        >
+                        <div className={classNames(styles["help-wrapper"], "yakit-content-multiLine-ellipsis")}>
                             {help || "No Description about it."}
                         </div>
 
-                        {!noUser && (
-                            <div className={styles["user-wrapper"]}>
-                                <div className={styles["user-body"]}>
-                                    {authorImgNode}
-                                    <div className={classNames(styles["user-style"], "yakit-content-single-ellipsis")}>
-                                        {user || ""}
-                                    </div>
-                                    <AuthorIcon />
+                        <div className={styles["user-wrapper"]}>
+                            <div className={styles["user-body"]}>
+                                {authorImgNode}
+                                <div className={classNames(styles["user-style"], "yakit-content-single-ellipsis")}>
+                                    {user || "anonymous"}
                                 </div>
-                                <div className={styles["contribute-body"]}>
-                                    {contributes.arr.map((item, index) => {
-                                        return (
-                                            <img key={`${item}-${index}`} src={item} className={styles["img-style"]} />
-                                        )
-                                    })}
-                                    {contributes.length > 0 && (
-                                        <div className={styles["more-style"]}>{`+${contributes.length}`}</div>
-                                    )}
-                                </div>
+                                <AuthorIcon />
                             </div>
-                        )}
+                            <div className={styles["contribute-body"]}>
+                                {contributes.arr.map((item, index) => {
+                                    return <img key={`${item}-${index}`} src={item} className={styles["img-style"]} />
+                                })}
+                                {contributes.length > 0 && (
+                                    <div className={styles["more-style"]}>{`+${contributes.length}`}</div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
