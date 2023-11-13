@@ -65,6 +65,7 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {PluginDiffEditorModal, PluginEditorModal} from "./editDetails/PluginEditDetails"
 import {PluginGV, aduitStatusToName, pluginTypeToName} from "./builtInData"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
+import UnLogin from "@/assets/unLogin.png"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
@@ -1426,8 +1427,8 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
         if (isCorePlugin) {
             return <AuthorImg icon={pluginTypeToName[pluginType].icon} />
         }
-        return <AuthorImg src={headImg} builtInIcon={official ? "official" : undefined} />
-    }, [isCorePlugin])
+        return <AuthorImg src={headImg || UnLogin} builtInIcon={official ? "official" : undefined} />
+    }, [isCorePlugin,headImg,pluginType,official])
     const onClick = useMemoizedFn((e) => {
         onPluginClick(plugin, order)
     })
