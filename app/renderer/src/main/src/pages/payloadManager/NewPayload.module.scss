@@ -55,6 +55,7 @@
         flex: 1;
         .drag-list {
             padding: 0px 12px;
+            height: 100%;
         }
     }
 }
@@ -63,6 +64,75 @@
 }
 .file-outside {
     padding: 10px 8px;
+}
+.file-active {
+    border-radius: 4px;
+    background: #f28b44;
+    color: #ffffff;
+    .extra {
+        .file-count {
+            display: none;
+        }
+        .extra-icon {
+            display: block;
+        }
+    }
+}
+.file-no-active {
+    .file-header {
+        .drag-icon {
+            color: #ccd2de;
+        }
+        .file-icon-database {
+            color: #4a94f8;
+        }
+        .file-icon-document{
+            color: #56C991;
+        }
+        .file-name {
+            color: #31343f;
+        }
+    }
+    .extra {
+        .file-count {
+            color: #b4bbca;
+        }
+        .extra-icon {
+            background-color: rgba(242, 139, 68, 0.06);
+            color: var(--yakit-primary-6);
+            border-radius: 4px;
+        }
+    }
+    .extra-hover {
+        .extra-icon {
+            display: none;
+        }
+    }
+
+    &:hover {
+        background-color: var(--yakit-background-color);
+        border-radius: 4px;
+        .extra-hover {
+            .file-count {
+                display: none;
+            }
+            .extra-icon {
+                display: block;
+            }
+        }
+    }
+}
+.file-menu {
+    background-color: var(--yakit-background-color);
+    border-radius: 4px;
+    .extra-dot {
+        .file-count {
+            display: none;
+        }
+        .extra-icon {
+            display: block;
+        }
+    }
 }
 .file {
     height: 40px;
@@ -75,7 +145,6 @@
         gap: 4px;
         align-items: center;
         .drag-icon {
-            color: #ccd2de;
             svg {
                 height: 12px;
                 width: 12px;
@@ -83,14 +152,12 @@
         }
         .file-icon {
             display: flex;
-            color: #4A94F8;
             svg {
                 width: 16px;
                 height: 16px;
             }
         }
         .file-name {
-            color: #31343F;
             font-size: 12px;
             font-style: normal;
             font-weight: 400;
@@ -99,36 +166,32 @@
     }
     .extra {
         .file-count {
-            color: var(--yakit-tag-color-grey);
             font-size: 12px;
             font-style: normal;
             font-weight: 400;
             line-height: 16px;
         }
         .extra-icon {
-            display: none;
+            cursor: pointer;
             height: 24px;
             width: 24px;
             padding: 4px;
-            background-color: rgba(242, 139, 68, 0.06);
-            color: var(--yakit-primary-6);
-            border-radius: 4px;
             svg {
                 width: 16px;
                 height: 16px;
             }
         }
     }
-    &:hover {
-        background-color: var(--yakit-background-color);
-        border-radius: 4px;
-        .extra {
-            .file-count {
-                display: none;
-            }
-            .extra-icon {
-                display: block;
-            }
+}
+.folder-menu {
+    background-color: var(--yakit-background-color);
+    border-radius: 4px;
+    .extra-dot {
+        .file-count {
+            display: none;
+        }
+        .extra-icon {
+            display: block;
         }
     }
 }
@@ -144,7 +207,7 @@
         gap: 4px;
         align-items: center;
         .is-fold-icon {
-            color: #85899E;
+            color: #85899e;
             svg {
                 height: 12px;
                 width: 12px;
@@ -152,14 +215,14 @@
         }
         .folder-icon {
             display: flex;
-            color: #FFB660;
+            color: #ffb660;
             svg {
                 width: 16px;
                 height: 16px;
             }
         }
         .folder-name {
-            color: #31343F;
+            color: #31343f;
             font-size: 12px;
             font-style: normal;
             font-weight: 400;
@@ -175,7 +238,7 @@
             line-height: 16px;
         }
         .extra-icon {
-            display: none;
+            cursor: pointer;
             height: 24px;
             width: 24px;
             padding: 4px;
@@ -188,10 +251,15 @@
             }
         }
     }
+    .extra-hover {
+        .extra-icon {
+            display: none;
+        }
+    }
     &:hover {
         background-color: var(--yakit-background-color);
         border-radius: 4px;
-        .extra {
+        .extra-hover {
             .file-count {
                 display: none;
             }
