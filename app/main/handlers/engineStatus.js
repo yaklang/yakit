@@ -341,27 +341,6 @@ module.exports = (win, callback, getClient, newClient) => {
     /** 调用命令生成运行节点 */
     ipcMain.handle("call-command-generate-node", (e, params) => {
         return new Promise((resolve, reject) => {
-            // 若命令行运行了节点 node环境再起相同节点需要单独判断
-            const cmd = `mq --server ${params.ipOrdomain} --server-port ${params.port} --id ${params.nodename}`
-            psList().then((data) => {
-                const yakArr = data.filter((i) => (i.name || "").includes("yak"))
-                yakArr.forEach(async i => {
-                    if (isWindows) {
-                        childProcess.exec(`wmic process where ProcessId=${i.pid} get CommandLine`, (error, stdout, stderr) => {
-                            if (stdout.indexOf(cmd) > -1) {
-                                reject("存在相同节点运行")
-                            }
-                        })
-                    } else {
-                        childProcess.exec(`ps -p ${i.pid} -o cmd`, (error, stdout, stderr) => {
-                            if (stdout.indexOf(cmd) > -1) {
-                                reject("存在相同节点运行")
-                            }
-                        })
-                    }
-                })
-            })
-            
             // 运行节点
             const subprocess = childProcess.spawn(getLocalYaklangEngine(), ['mq', '--server', params.ipOrdomain, '--server-port', params.port, '--id', params.nodename])
             subprocess.stdout.on('data', (data) => {

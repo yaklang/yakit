@@ -379,24 +379,13 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const [noPrompt, setNoPrompt] = useState<boolean>(false) // 决定确认弹窗是否需要显示
     const [delRunNodeItem, setDelRunNodeItem] = useState<{key: string; pid: string} | undefined>()
 
-    const numberToChinese = (num: number) => {
-        let arr = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
-        let level = ["", "十", "百", "千", "万", "十", "百", "千", "亿"]
-        let str = ("" + num).split("").reverse().join("")
-        let res = ""
-        for (let i = 0; i < str.length; i++) {
-            res = arr[str[i]] + (str[i] === "0" ? "" : level[i]) + res
-        }
-        return res.replace(/零+/g, "零").replace(/零+$/g, "")
-    }
-
     useEffect(() => {
         // 第一次运行节点显示提示框
         if (firstRunNodeFlag) {
             setShow(true)
             setTimeout(() => {
                 setShow(false)
-            }, 5000)
+            }, 3000)
         }
     }, [firstRunNodeFlag])
 
@@ -631,8 +620,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             <div></div>
                         </div>
                     )}
-                    {/* 企业版 - 运行节点 */}
-                    {isEnpriTrace() && !!Array.from(runNodeList).length && (
+                    {/* 运行节点 */}
+                    {!!Array.from(runNodeList).length && (
                         <>
                             <div className={styles["body-info"]}>
                                 <div className={styles["info-left"]}>
@@ -661,11 +650,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 {Array.from(runNodeList).map(([key, value], index) => (
                                     <div className={styles["run-node-item"]} key={key}>
                                         <Row>
-                                            <Col span={4}>节点{numberToChinese(index + 1)}</Col>
-                                            <Col span={16} className={styles["run-node-ipOrdomain"]}>
+                                            <Col span={6} className={styles["ellipsis"]}>{JSON.parse(key).nodename}</Col>
+                                            <Col span={15} className={styles["ellipsis"]}>
                                                 {JSON.parse(key).ipOrdomain}:{JSON.parse(key).port}
                                             </Col>
-                                            <Col span={4} style={{textAlign: "right"}}>
+                                            <Col span={3} style={{textAlign: "right"}}>
                                                 <YakitButton
                                                     type='text'
                                                     colors='danger'
@@ -719,7 +708,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 overlayClassName={classNames(styles["global-state-popover"], ShowColorClass[state])}
                 placement={system === "Darwin" ? "bottomRight" : "bottomLeft"}
                 content={content}
-                visible={true}
+                visible={show}
                 onVisibleChange={(visible) => setShow(visible)}
             >
                 <div className={classNames(styles["global-state-wrapper"], ShowColorClass[state])}>

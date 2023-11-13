@@ -777,7 +777,7 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
     const onOKFun = useMemoizedFn(async () => {
         try {
             if (!params.ipOrdomain || !params.port || !params.nodename) {
-                throw Error("请输入ip/域名和端口号")
+                throw Error("请输入ip/域名、端口号、节点名")
             }
             if (hasRunNodeInList(JSON.stringify(params))) {
                 throw Error("相同节点正在运行")
@@ -833,7 +833,7 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
                         style={{marginBottom: 4}}
                         rules={[{required: true, message: "请输入平台IP/域名"}]}
                     >
-                        <YakitInput placeholder='请输入平台IP/域名' maxLength={50} showCount />
+                        <YakitInput placeholder='请输入平台IP/域名' maxLength={100} showCount />
                     </Form.Item>
                     <Form.Item
                         label='平台端口'
@@ -901,113 +901,6 @@ const GetUIOpSettingMenu = () => {
         ]
     }
 
-    // 企业版
-    if (isEnpriTrace()) {
-        return [
-            {
-                key: "pcapfix",
-                label: "网卡权限修复"
-            },
-            {
-                key: "project",
-                label: "项目管理",
-                children: [
-                    {label: "切换项目", key: "changeProject"},
-                    {label: "加密导出", key: "encryptionProject"},
-                    {label: "明文导出", key: "plaintextProject"}
-                ]
-            },
-            {
-                key: "explab",
-                label: "试验性功能",
-                children: [
-                    {
-                        key: "bas-chaosmaker",
-                        label: "BAS实验室"
-                    },
-                    {
-                        key: "debug-plugin",
-                        label: "插件调试功能"
-                    },
-                    {
-                        key: "debug-monaco-editor",
-                        label: "(DEV)调试Playground"
-                    },
-                    {
-                        key: "vulinbox-manager",
-                        label: "(靶场)Vulinbox"
-                    },
-                    {
-                        key: "new-codec",
-                        label: "新版Codec"
-                    },
-                    {
-                        key: "run-node",
-                        label: "运行节点"
-                    },
-                ]
-            },
-            {type: "divider"},
-            {
-                key: "system-manager",
-                label: "进程与缓存管理",
-                children: [{key: "invalidCache", label: "删除缓存数据"}]
-            },
-            {
-                key: "plugin",
-                label: "配置插件源",
-                children: [
-                    {label: "插件商店", key: "store"},
-                    {label: "外部", key: "external"}
-                ]
-            },
-            {
-                key: "cve-database",
-                label: "CVE 数据库",
-                children: [
-                    {label: "全量更新", key: "cve-database-all-update"},
-                    {label: "差量更新", key: "cve-database-differential-update"}
-                ]
-            },
-            {
-                key: "link",
-                label: "切换连接模式",
-                children: [
-                    {label: "本地", key: "local"},
-                    {label: "远程", key: "remote"}
-                ]
-            },
-            {type: "divider"},
-            // {
-            //     key: "otherMode",
-            //     label: "其他操作",
-            //     children: [
-            //         {label: "管理员模式", key: "adminMode"},
-            //         {label: "旧版本迁移", key: "migrateLegacy"}
-            //     ]
-            // },
-            {
-                key: "systemSet",
-                label: "系统设置",
-                children: [
-                    {key: "reverse", label: "全局反连"},
-                    {key: "agent", label: "系统代理"},
-                    // {key: "engineAgent", label: "引擎扫描代理"},
-                    // {key: "engineVar", label: "引擎环境变量"},
-                    {key: "config-network", label: "全局网络配置"}
-                ]
-            },
-            {
-                key: "diagnose-network",
-                label: "网络诊断"
-            },
-            {
-                key: "refreshMenu",
-                label: "刷新菜单"
-            }
-        ]
-    }
-
     // 默认社区版
     return [
         {
@@ -1046,7 +939,11 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "new-codec",
                     label: "新版Codec"
-                }
+                },
+                {
+                    key: "run-node",
+                    label: "运行节点"
+                },
             ]
         },
         {type: "divider"},
@@ -1268,7 +1165,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             onClick={({key}) => menuSelect(key)}
         />
     )
-    console.log("6666")
 
     return (
         <>
