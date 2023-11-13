@@ -13,6 +13,7 @@ import {OutlineClouddownloadIcon, OutlineFolderaddIcon, OutlinePlusIcon} from "@
 import {OutlineAddPayloadIcon} from "./icon"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {SolidChevrondownIcon, SolidChevronrightIcon, SolidDatabaseIcon, SolidDocumenttextIcon, SolidDotsverticalIcon, SolidDragsortIcon, SolidFolderopenIcon} from "@/assets/icon/solid"
 const {ipcRenderer} = window.require("electron")
 
 export interface NewPayloadTableProps {}
@@ -21,67 +22,56 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
 }
 export interface DragDataProps {}
 export interface NewPayloadListProps {}
-const defaultChapter = [
-    {
-        name: "文件夹",
-        id: "1",
-        node_list: [
-            {
-                name: "护网专用工具",
-                id: "node_id"
-            }
-        ]
-    },
-    {
-        name: "文件夹1",
-        id: "2"
-    }
-]
+
 export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
-    const [nodeList, setNodeList] = useState(defaultChapter)
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable-payload")
-    // 是否在拖拽中
-    const isDragging = useRef<boolean>(false)
 
-    const reorder = (list: any[], startIndex: number, endIndex: number): any[] => {
-        const result = Array.from(list)
-        const [removed] = result.splice(startIndex, 1)
-        result.splice(endIndex, 0, removed)
+    // 示例数据，可以根据实际需求进行修改
+    const initialData = [
+        {
+            type: "folders",
+            name: "文件夹1",
+            node: [
+                {
+                    type: "file",
+                    name: "文件1-1"
+                },
+                {
+                    type: "file",
+                    name: "文件1-2"
+                }
+            ]
+        },
+        {
+            type: "file",
+            name: "文件2-2"
+        },
+        {
+            type: "folders",
+            name: "文件夹3",
+            node: [
+                {
+                    type: "file",
+                    name: "文件3-1"
+                },
+                {
+                    type: "file",
+                    name: "文件3-2"
+                }
+            ]
+        }
+    ]
 
-        return result
-    }
+    const [data, setData] = useState(initialData)
 
-    // 拖放完成后的回调函数
+    // 拖放结束时的回调函数
     const onDragEnd = (result) => {
-        const {source, destination, draggableId, type} = result
-        console.log("source", source, "destination", destination, "draggableId", draggableId, "type", type)
+        const {destination, source, draggableId, type} = result
+
         if (!destination) {
             return
         }
-        if (source.droppableId === destination.droppableId && source.index === destination.index) {
-            return
-        }
-        if (result.type === "COLUMN") {
-            const ordered = reorder(
-                // this.state.ordered,
-                nodeList,
-                source.index,
-                destination.index
-            )
-            setNodeList([...ordered])
-            return
-        }
-        if (result.type === "CHAPT") {
-            const sourceArr = nodeList.filter((n) => n.name == source.droppableId)[0].node_list
-            const desArr = nodeList.filter((n) => n.name === destination.droppableId)[0].node_list
-            console.log(sourceArr, desArr)
-            if (sourceArr && desArr) {
-                let moveItem = sourceArr.splice(source.index, 1)[0]
-                desArr.splice(destination.index, 0, moveItem)
-                console.log(sourceArr, desArr)
-            }
-            return
-        }
+        console.log("destination, source, draggableId, type", destination, source, draggableId, type)
     }
 
     /**
@@ -149,19 +139,32 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             </div>
             <div className={styles["content"]}>
                 <div className={styles["drag-list"]}>
-                    <DragDropContext
-                        onDragEnd={onDragEnd}
-                        onDragUpdate={onDragUpdate}
-                        onBeforeDragStart={() => {
-                            isDragging.current = true
-                        }}
-                    >
-                        <Droppable droppableId='droppable-payload'>
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <Droppable droppableId='droppable' type='ITEM'>
                             {(provided) => (
-                                <div {...provided.droppableProps} ref={provided.innerRef}>
-                                    {nodeList.map((node, index) => {
-                                        return <Column key={node?.name} index={index} title={node?.name} node={node} />
-                                    })}
+                                <div ref={provided.innerRef} {...provided.droppableProps}>
+                                    {data.map((item, index) => (
+                                        <Draggable key={index} draggableId={`draggable-${index}`} index={index}>
+                                            {(provided) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                >
+                                                    {/* 渲染你的文件夹或文件组件 */}
+                                                    {/* 使用 item.type 来区分文件夹和文件 */}
+                                                    {item.type === "folders" ? (
+                                                        // 渲染文件夹组件
+                                                        <FolderComponent folder={item} />
+                                                    ) : (
+                                                        // 渲染文件组件
+                                                        <FileComponent file={item} fileOutside={true} />
+                                                    )}
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
                                 </div>
                             )}
                         </Droppable>
@@ -171,77 +174,88 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         </div>
     )
 }
-interface ColumnProps {
-    title: string
-    index: number
-    node: any
+interface FolderComponentProps {
+    folder: any
 }
-export const Column: React.FC<ColumnProps> = (props) => {
-    const {title, index, node} = props
+export const FolderComponent: React.FC<FolderComponentProps> = ({folder}) => {
     return (
-        <Draggable draggableId={title} index={index} key={title}>
-            {(provided, snapshot) => (
-                <div ref={provided.innerRef} {...provided.draggableProps}>
-                    <div
-                        // isDragging={snapshot.isDragging}
-                        {...provided.dragHandleProps}
-                        style={{
-                            marginBottom: "8px",
-                            marginTop: "8px",
-                            fontSize: "16px"
-                        }}
-                    >
-                        {index + 1} {title}
-                        {/* {index !== 0 && (
-                <CloseOutlined
-                  color="#ccc"
-                  size={10}
-                  onClick={() => deleChapterBtnClick(index, node)}
-                />
-              )} */}
+        <>
+            <div className={styles["folder"]}>
+                <div className={styles["folder-header"]}>
+                    <div className={styles["is-fold-icon"]}>
+                        {/* <SolidChevronrightIcon/> */}
+                        <SolidChevrondownIcon/>
                     </div>
-                    <ChapterList preIndex={index + 1} listId={title} listType='CHAPT' list={node.node_list} />
+                    <div className={styles["folder-icon"]}>
+                        <SolidFolderopenIcon/>
+                    </div>
+                    <div className={styles["folder-name"]}>{folder.name}</div>
                 </div>
-            )}
-        </Draggable>
+                <div className={styles["extra"]}>
+                    <div className={styles["file-count"]}>10</div>
+                    <div className={styles["extra-icon"]}>
+                        <SolidDotsverticalIcon />
+                    </div>
+                </div>
+            </div>
+
+            <Droppable droppableId={`droppable-${folder.name}`} type='ITEM'>
+                {(provided) => (
+                    <div ref={provided.innerRef} {...provided.droppableProps}>
+                        {folder.node.map((file, index) => (
+                            <Draggable key={index} draggableId={`draggable-${folder.name}-${index}`} index={index}>
+                                {(provided) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                    >
+                                        {/* 渲染文件组件 */}
+                                        <FileComponent file={file} fileInside={true} />
+                                    </div>
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                    </div>
+                )}
+            </Droppable>
+        </>
     )
 }
-interface ChapterListProps {
-    listId: string
-    preIndex: number
-    listType: string
-    list: any
+
+interface FileComponentProps {
+    file: any
+    fileOutside?: boolean
+    fileInside?: boolean
 }
-export const ChapterList: React.FC<ChapterListProps> = (props) => {
-    const {list, listId, listType, preIndex} = props
+
+export const FileComponent: React.FC<FileComponentProps> = (props) => {
+    const {file, fileOutside, fileInside} = props
     return (
-        <Droppable droppableId={listId} type={listType}>
-            {(dropProvided, dropSnapshot) => (
-                <div ref={dropProvided.innerRef} {...dropProvided.droppableProps}>
-                    {list?.map((li, index) => (
-                        <Draggable key={li.id} draggableId={li.id} index={index}>
-                            {(dragProvided, dragSnapshot) => (
-                                <>
-                                    <div
-                                        ref={dragProvided.innerRef}
-                                        {...dragProvided.draggableProps}
-                                        key={li.id}
-                                        // isDragging={dragSnapshot.isDragging}
-                                    >
-                                        <div {...dragProvided.dragHandleProps} style={{marginBottom: 13}}>
-                                            <span>
-                                                {preIndex}.{index + 1} {li.name}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-                        </Draggable>
-                    ))}
-                    {dropProvided.placeholder}
+        <div
+            className={classNames(styles["file"], {
+                [styles["file-outside"]]: fileOutside,
+                [styles["file-inside"]]: fileInside
+            })}
+        >
+            <div className={styles["file-header"]}>
+                <div className={styles["drag-icon"]}>
+                    <SolidDragsortIcon />
                 </div>
-            )}
-        </Droppable>
+                <div className={styles["file-icon"]}>
+                    <SolidDatabaseIcon />
+                    {/* <SolidDocumenttextIcon/> */}
+                </div>
+                <div className={styles["file-name"]}>{file.name}</div>
+            </div>
+            <div className={styles["extra"]}>
+                <div className={styles["file-count"]}>10</div>
+                <div className={styles["extra-icon"]}>
+                    <SolidDotsverticalIcon />
+                </div>
+            </div>
+        </div>
     )
 }
 
