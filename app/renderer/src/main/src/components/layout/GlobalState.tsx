@@ -719,7 +719,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 overlayClassName={classNames(styles["global-state-popover"], ShowColorClass[state])}
                 placement={system === "Darwin" ? "bottomRight" : "bottomLeft"}
                 content={content}
-                visible={show}
+                visible={true}
                 onVisibleChange={(visible) => setShow(visible)}
             >
                 <div className={classNames(styles["global-state-wrapper"], ShowColorClass[state])}>

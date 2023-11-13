@@ -184,7 +184,6 @@
         }
 
         .run-node-list {
-            border-bottom: 1px solid var(--yakit-border-color);
             .run-node-item {
                 padding-left: 43px;
                 padding-right: 8px;
@@ -195,6 +194,10 @@
                     text-overflow: ellipsis;
                 }
             }
+        }
+
+        .run-node-list + .body-info {
+            border-top: 1px solid var(--yakit-border-color);
         }
     }
 
