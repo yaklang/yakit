@@ -6,6 +6,8 @@ import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 export interface PluginsLocalProps {}
 
 export interface LocalExtraOperateProps {
+    /**是否为内置插件 */
+    isCorePlugin: boolean
     /**是否是自己的插件 */
     isOwn: boolean
     /**删除插件 */
