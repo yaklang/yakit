@@ -504,7 +504,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
 
         if (!plugin) return null
-
+        
         return (
             <PluginDetails<YakitPluginOnlineDetail>
                 title='插件管理'
