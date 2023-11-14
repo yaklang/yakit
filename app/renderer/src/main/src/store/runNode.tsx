@@ -23,7 +23,7 @@ export const useRunNodeStore = create<StoreProps>((set, get) => ({
         const newVal = get().runNodeList
         newVal.set(key, pid)
         set({
-            runNodeList: newVal
+            runNodeList: new Map(newVal)
         })
     },
     hasRunNodeInList: (key) => get().runNodeList.has(key),
@@ -31,14 +31,14 @@ export const useRunNodeStore = create<StoreProps>((set, get) => ({
         const newVal = get().runNodeList
         newVal.delete(key)
         set({
-            runNodeList: newVal
+            runNodeList: new Map(newVal)
         })
     },
     clearRunNodeList: () => {
         const newVal = get().runNodeList
         newVal.clear()
         set({
-            runNodeList: newVal
+            runNodeList: new Map(newVal)
         })
     }
 }))
