@@ -121,6 +121,7 @@ import { FuzzerParamItem, AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQu
 import { HTTPResponseExtractor } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import { ConfigNetworkPage } from "@/components/configNetwork/ConfigNetworkPage"
 import { PluginEditDetails } from "@/pages/plugins/editDetails/PluginEditDetails"
+import {PluginManage} from "@/pages/plugins/manage/PluginManage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -206,7 +207,9 @@ export enum YakitRoute {
     // 配置全局
     Beta_ConfigNetwork = "beta-config-network",
     //新版codec
-    Beta_Codec = "beta-codec"
+    Beta_Codec = "beta-codec",
+    // 插件管理
+    Plugin_Audit = "plugin-audit"
 }
 /**
  * @description 页面路由对应的页面信息
@@ -284,8 +287,9 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-debug-monaco-editor": {label: "插件编辑器"},
     "beta-vulinbox-manager": {label: "Vulinbox 管理器"},
     "beta-diagnose-network": {label: "网络异常诊断"},
-    "beta-config-network": { label: "全局网络配置" },
-    "beta-codec": {label: "新版codec"}
+    "beta-config-network": {label: "全局网络配置"},
+    "beta-codec": {label: "新版codec"},
+    "plugin-audit": {label: "插件管理"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -324,7 +328,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_VulinboxManager,
     YakitRoute.Beta_DiagnoseNetwork,
     YakitRoute.Beta_ConfigNetwork,
-    YakitRoute.Beta_Codec
+    YakitRoute.Beta_Codec,
+    YakitRoute.Plugin_Audit
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -584,6 +589,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <ConfigNetworkPage />
         case YakitRoute.Beta_Codec:
             return <NewCodecPage />
+        case YakitRoute.Plugin_Audit:
+            return <PluginManage />
         default:
             return <div />
     }
