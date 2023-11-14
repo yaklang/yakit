@@ -3291,6 +3291,13 @@ message YakScript {
   string RiskType = 32;
   QueryYakScriptRiskDetailByCWEResponse RiskDetail = 33;
   string RiskAnnotation = 34;
+  // 协作者
+  repeated Collaborator CollaboratorInfo = 35;
+}
+
+message Collaborator {
+  string HeadImg = 1;
+  string UserName = 2;
 }
 
 message SaveNewYakScriptRequest {
