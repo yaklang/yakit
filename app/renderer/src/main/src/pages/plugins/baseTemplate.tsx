@@ -1,5 +1,6 @@
 import React, {ReactNode, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
+    CollaboratorInfoProps,
     PluginAddParamModalProps,
     PluginContributesListItemProps,
     PluginDetailHeaderProps,
@@ -230,29 +231,11 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
 
     const [prShow, setPrShow] = useState<boolean>(false)
     /** 贡献者数据 */
-    const contributes = useMemo(() => {
+    const contributes: {arr: CollaboratorInfoProps[]; length: number} = useMemo(() => {
         // 这是第二版需要的数据
-        // if (prImgs.length <= 5) return {arr: prImgs, length: 0}
-        // else {
-        //     return {arr: prImgs.slice(0, 5), length: prImgs.length - 5}
-        // }
-        const arr = [
-            {
-                img: "https://yakit-online.oss-cn-hongkong.aliyuncs.com/img/20237141633451689323625.png",
-                name: "白日爱做梦"
-            },
-            {
-                img: "https://avatars.githubusercontent.com/u/52566643?v=4",
-                name: "admin"
-            },
-            {
-                img: "https://avatars.githubusercontent.com/u/12526493?s=96&v=4",
-                name: "哈哈哈哈哈"
-            }
-        ]
-        return {
-            arr: arr,
-            length: arr.length
+        if (prImgs.length <= 5) return {arr: prImgs, length: 0}
+        else {
+            return {arr: prImgs.slice(0, 5), length: prImgs.length - 5}
         }
     }, [prImgs])
     return (
@@ -307,10 +290,10 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                                     content={
                                         <div className={styles["contributes-list"]}>
                                             {contributes.arr.map((item) => (
-                                                <React.Fragment key={item.img + item.name}>
+                                                <React.Fragment key={item.headImg + item.userName}>
                                                     <PluginContributesListItem
-                                                        contributesHeadImg={item.img}
-                                                        contributesName={item.name}
+                                                        contributesHeadImg={item.headImg}
+                                                        contributesName={item.userName}
                                                     />
                                                 </React.Fragment>
                                             ))}
@@ -1428,7 +1411,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
             return <AuthorImg icon={pluginTypeToName[pluginType].icon} />
         }
         return <AuthorImg src={headImg || UnLogin} builtInIcon={official ? "official" : undefined} />
-    }, [isCorePlugin,headImg,pluginType,official])
+    }, [isCorePlugin, headImg, pluginType, official])
     const onClick = useMemoizedFn((e) => {
         onPluginClick(plugin, order)
     })
