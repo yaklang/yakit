@@ -1,5 +1,6 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer, forwardRef, useImperativeHandle} from "react"
 import {
+    CodeScoreModal,
     FuncBtn,
     FuncFilterPopover,
     FuncSearch,
@@ -63,6 +64,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {DefaultPublicStatusList, PluginGV} from "../builtInData"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -804,7 +806,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                                             help={data.help || ""}
                                             img={data.head_img || ""}
                                             user={data.authors || ""}
-                                            prImgs={(data.collaborator||[]).map(ele=>ele.head_img)}
+                                            prImgs={(data.collaborator || []).map((ele) => ele.head_img)}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
                                             official={!!data.isCorePlugin}
@@ -890,6 +892,47 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
         }
         apiDownloadPluginMine(downloadParams)
     })
+    /**更改私有状态之前 */
+    const onUpdatePrivateBefore = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        if (data.is_private) {
+            // 当前插件为私密；私密更改为公开需要自动检测评分
+            onPluginTest(data)
+        } else {
+            // 当前插件为公开，公开改为私密不需要自动评分
+            onUpdatePrivate(data)
+        }
+    })
+    /**私密改公开，需要走自动评分，评分通过后才可以修改状态 */
+    const onPluginTest = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+        // nuclei yaml 插件不执行评分流程
+        if (data.type === "nuclei") {
+            onUpdatePrivate(data)
+            return
+        }
+        const m = showYakitModal({
+            title: null,
+            footer: null,
+            closable: false,
+            centered: true,
+            width: 506,
+            mask: false,
+            content: (
+                <CodeScoreModal
+                    type={data.type || ""}
+                    code={data.content || ""}
+                    visible={true}
+                    onCancel={async (isPass: boolean) => {
+                        if (isPass) {
+                            await onUpdatePrivate(data)
+                            m.destroy()
+                        } else {
+                            m.destroy()
+                        }
+                    }}
+                />
+            )
+        })
+    })
     /**更改私有状态 */
     const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         const updateItem: API.UpPluginsPrivateRequest = {
@@ -916,8 +959,6 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
                     }
                 }
             })
-            // 我的插件详情修改私密公开状态，需要使用回调
-            onSelect("editState", plugin)
         })
     })
     const onClick = useMemoizedFn(({key}) => {
@@ -929,7 +970,7 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
                 onDownloadClick(plugin)
                 break
             case "editState":
-                onUpdatePrivate(plugin)
+                onUpdatePrivateBefore(plugin)
                 break
             default:
                 onSelect(key, plugin)
