@@ -37,6 +37,7 @@ import {
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import Dragger from "antd/lib/upload/Dragger"
+import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOperatorContentType"
 const {ipcRenderer} = window.require("electron")
 
 interface CreateDictionariesProps {
@@ -121,7 +122,9 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                         <div className={styles["link-icon"]}>
                             <OutlinePaperclipIcon />
                         </div>
-                        <div className={styles["text"]}>/sersdsfsd/v1l14n/yakit-projects/sersdsfsd/v1l14n/yakit-projects/projects/project-111.yakitp</div>
+                        <div className={styles["text"]}>
+                            /sersdsfsd/v1l14n/yakit-projects/sersdsfsd/v1l14n/yakit-projects/projects/project-111.yakitp
+                        </div>
                         <div className={styles["close-icon"]}>
                             <SolidXcircleIcon />
                         </div>
@@ -151,45 +154,69 @@ const initialData = [
     {
         type: "folders",
         name: "文件夹1",
-        id: 1,
+        id: 11111,
         isFold: true,
         node: [
             {
                 type: "file",
                 name: "文件1-1",
-                id: 2
+                id: 111111
             },
             {
                 type: "file",
                 name: "文件1-2",
-                id: 3
+                id: 111112
             }
         ]
     },
     {
         type: "file",
         name: "文件2-2",
-        id: 4
+        id: 222222
     },
     {
         type: "folders",
         name: "文件夹3",
         isFold: true,
-        id: 5,
+        id: 333333,
         node: [
             {
                 type: "file",
                 name: "文件3-1",
-                id: 6
+                id: 3333331
             },
             {
                 type: "file",
                 name: "文件3-2",
-                id: 7
+                id: 3333332
             }
         ]
     }
 ]
+
+const getItemStyle = (isDragging, draggableStyle) => {
+    let transform: string = draggableStyle["transform"] || ""
+    if (isDragging) {
+        const index = transform.indexOf(",")
+        if (index !== -1) transform = "translate(0px" + transform.substring(index, transform.length)
+    }
+    return {
+        ...draggableStyle,
+        transform
+    }
+}
+
+const cloneItemStyle = (draggableStyle) => {
+    let transform: string = draggableStyle["transform"] || ""
+    if (transform) {
+        const index = transform.indexOf(",")
+        if (index !== -1) transform = "translate(0px" + transform.substring(index, transform.length)
+    }
+    return {
+        ...draggableStyle,
+        transform
+    }
+}
 
 interface DataItem {
     type: string
@@ -200,27 +227,137 @@ interface DataItem {
     node?: DataItem[]
 }
 
+const droppable = "droppable"
+const droppableGroup = "droppableGroup"
+
 export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     const [destinationDrag, setDestinationDrag] = useState<string>("droppable-payload")
 
     const [data, setData] = useState<DataItem[]>(initialData)
     const [selectItem, setSelectItem] = useState<number>()
+
+    const [dropType, setDropType] = useState<string>(droppable)
+    const [subDropType, setSubDropType] = useState<string>(droppableGroup)
+
+    // 根据数组下标进行位置互换
+    const moveArrayElement = useMemoizedFn((arr, fromIndex, toIndex) => {
+        // 检查下标是否有效
+        if (fromIndex < 0 || fromIndex >= arr.length || toIndex < 0 || toIndex >= arr.length) {
+            console.error("Invalid indices")
+            return arr // 返回原始数组
+        }
+
+        // 从数组中移除元素并插入到目标位置
+        const [element] = arr.splice(fromIndex, 1)
+        arr.splice(toIndex, 0, element)
+
+        return arr // 返回移动后的数组
+    })
+
+    
+    // 根据Id获取此项
+    const findItemById = useMemoizedFn((items: DataItem[], targetId: string) => {
+        for (const item of items) {
+            if (item.id.toString() === targetId) {
+                return item
+            } else if (item.type === "folders" && item.node) {
+                const foundInNode = findItemById(item.node, targetId)
+                if (foundInNode) {
+                    return foundInNode
+                }
+            }
+        }
+        return null
+    })
+
+    // 根据Id获取当前文件夹
+    const findFoldersById = useMemoizedFn((items: DataItem[], targetId: string) => {
+        for (const item of items) {
+            if (item.id.toString() === targetId) {
+                return item
+            } else if (item.type === "folders" && item.node) {
+                const foundInNode = findItemById(item.node, targetId)
+                if (foundInNode) {
+                    return item
+                }
+            }
+        }
+        return null
+    })
+
     // 拖放结束时的回调函数
-    const onDragEnd = (result) => {
-        console.log("result", result)
+    const onDragEnd = useMemoizedFn((result) => {
+        // console.log("result", result)
         const {source, destination, draggableId, type} = result
 
         if (!destination) {
             return
         }
-        console.log("source,destination ", source, destination)
-        // 同层内顺序调换
-        if (source.droppableId === destination.droppableId) {
-            const updatedData = JSON.parse(JSON.stringify(data))
-
-            setData(updatedData)
+        // console.log("source,destination ", source, destination)
+        // 同层内拖拽(最外层)
+        if (source.droppableId === "droppable-payload" && destination.droppableId === "droppable-payload") {
+            const newArray: DataItem[] = moveArrayElement(data, source.index, destination.index)
+            setData(newArray)
         }
-    }
+        // 同层内拖拽(内层)
+        else if (source.droppableId === destination.droppableId) {
+            const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
+            const foldersArr = findFoldersById(copyData, source.droppableId)
+            if(foldersArr){
+                const newArray: DataItem[] =  moveArrayElement(foldersArr.node, source.index, destination.index)
+                foldersArr.node = newArray
+                const newData = copyData.map((item)=>{
+                    // console.log("item---",item);
+                    
+                    if(item.id === foldersArr.id){
+                        return foldersArr
+                    }
+                    return item
+                })
+                setData(newData)
+            }
+        }
+        // 跨层级拖拽 删除原有的 新增新添的
+        else {
+            const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
+            // 由外部拖向内部
+            if(source.droppableId === "droppable-payload"){
+                const cacheData: DataItem = copyData[source.index]
+                // 移除此项
+                copyData.splice(source.index,1)
+                const foldersArr = findFoldersById(copyData, destination.droppableId)
+                if(foldersArr){
+                    foldersArr.node?.splice(destination.index, 0, cacheData)
+                    const newData = copyData.map((item)=>{
+                        if(item.id === foldersArr.id){
+                            return foldersArr
+                        }
+                        return item
+                    })
+                    setData(newData)
+                }
+            }
+            // 由内部拖向外部
+            else{
+                const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
+                const foldersArr = findFoldersById(copyData, source.droppableId)
+                if(foldersArr?.node){
+                    const cacheData: DataItem = foldersArr.node[source.index]
+                    // 移除此项
+                    foldersArr.node.splice(source.index,1)
+                    copyData.splice(destination.index,0,cacheData)
+                    const newData = copyData.map((item)=>{
+                        if(item.id === foldersArr.id){
+                            return foldersArr
+                        }
+                        return item
+                    })
+                    setData(newData)
+                }
+                
+            }
+        }
+    })
 
     /**
      * @description: 计算移动的范围是否在目标范围类destinationDrag
@@ -235,6 +372,18 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         },
         {wait: 200}
     ).run
+
+    const onBeforeCapture = useMemoizedFn((result: DragDropContextResultProps) => {
+        // 根据Id判断其是否为文件
+        const item: DataItem = findItemById(data, result.draggableId)
+        if (item.type === "file") {
+            setDropType(droppableGroup)
+            setSubDropType(droppableGroup)
+        } else {
+            setDropType(droppable)
+            setSubDropType(droppableGroup)
+        }
+    })
     return (
         <div className={styles["new-payload-list"]}>
             <div className={styles["header"]}>
@@ -301,23 +450,31 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             </div>
             <div className={styles["content"]}>
                 <div className={styles["drag-list"]}>
-                    <DragDropContext onDragEnd={onDragEnd} onDragUpdate={onDragUpdate}>
-                        <Droppable droppableId='droppable-payload' direction='vertical'>
+                    <DragDropContext
+                        onDragEnd={onDragEnd}
+                        onDragUpdate={onDragUpdate}
+                        onBeforeCapture={onBeforeCapture}
+                    >
+                        <Droppable droppableId='droppable-payload' direction='vertical' type={dropType}>
                             {(provided) => (
                                 <div ref={provided.innerRef} {...provided.droppableProps}>
                                     {data.map((item, index) => (
                                         <Draggable
-                                            key={`draggable-${index}`}
-                                            draggableId={`draggable-${index}`}
+                                            key={item.id.toString()}
+                                            draggableId={item.id.toString()}
                                             index={index}
                                         >
-                                            {(provided) => (
+                                            {(provided, snapshot) => (
                                                 <div
                                                     ref={provided.innerRef}
                                                     {...provided.draggableProps}
                                                     {...provided.dragHandleProps}
                                                     style={{
-                                                        ...provided.draggableProps.style
+                                                        // ...provided.draggableProps.style
+                                                        ...getItemStyle(
+                                                            snapshot.isDragging,
+                                                            provided.draggableProps.style
+                                                        )
                                                     }}
                                                 >
                                                     {/* 渲染你的文件夹或文件组件 */}
@@ -330,6 +487,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                                             setSelectItem={setSelectItem}
                                                             data={data}
                                                             setData={setData}
+                                                            subDropType={subDropType}
                                                         />
                                                     ) : (
                                                         // 渲染文件组件
@@ -354,15 +512,125 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         </div>
     )
 }
+
+interface FolderComponentCloneProps {
+    folder: DataItem
+    selectItem?: number
+}
+
+// 用于生成拖拽文件夹元素
+export const FolderComponentClone: React.FC<FolderComponentCloneProps> = (props) => {
+    const {folder, selectItem} = props
+    const menuOpen = false
+    return (
+        <>
+            <div
+                className={classNames(styles["folder"], {
+                    [styles["folder-menu"]]: menuOpen
+                })}
+            >
+                <div className={styles["folder-header"]}>
+                    <div className={styles["is-fold-icon"]}>
+                        {folder.isFold ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />}
+                    </div>
+                    <div className={styles["folder-icon"]}>
+                        <SolidFolderopenIcon />
+                    </div>
+                    <div className={styles["folder-name"]}>{folder.name}</div>
+                </div>
+                <div
+                    className={classNames(styles["extra"], {
+                        [styles["extra-dot"]]: menuOpen,
+                        [styles["extra-hover"]]: !menuOpen
+                    })}
+                >
+                    <div className={styles["file-count"]}>10</div>
+                    <div
+                        className={styles["extra-icon"]}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
+                        <SolidDotsverticalIcon />
+                    </div>
+                </div>
+            </div>
+
+            {folder.isFold &&
+                Array.isArray(folder.node) &&
+                folder.node.map((file, index) => (
+                    <>
+                        {/* 渲染文件组件 */}
+                        <FileComponentClone file={file} selectItem={selectItem} fileInside={true} />
+                    </>
+                ))}
+        </>
+    )
+}
+interface FileComponentCloneProps {
+    file: DataItem
+    selectItem?: number
+    fileOutside?: boolean
+    fileInside?: boolean
+}
+
+// 用于生成拖拽文件元素
+export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => {
+    const {file, selectItem, fileOutside, fileInside} = props
+    const menuOpen = false
+    return (
+        <div
+            className={classNames(styles["file"], {
+                [styles["file-active"]]: file.id === selectItem,
+                [styles["file-no-active"]]: file.id !== selectItem,
+                [styles["file-menu"]]: menuOpen && file.id !== selectItem,
+                [styles["file-outside"]]: fileOutside,
+                [styles["file-inside"]]: fileInside
+            })}
+        >
+            <div className={styles["file-header"]}>
+                <div className={styles["drag-icon"]}>
+                    <SolidDragsortIcon />
+                </div>
+                <div className={classNames(styles["file-icon"], styles["file-icon-database"])}>
+                    <SolidDatabaseIcon />
+                </div>
+                {/* <div className={classNames(styles['file-icon'],styles['file-icon-document'])}>
+                    <SolidDocumenttextIcon/>
+                </div> */}
+
+                <div className={styles["file-name"]}>{file.name}</div>
+            </div>
+            <div
+                className={classNames(styles["extra"], {
+                    [styles["extra-dot"]]: menuOpen,
+                    [styles["extra-hover"]]: !menuOpen
+                })}
+            >
+                <div className={styles["file-count"]}>10</div>
+                <div
+                    className={styles["extra-icon"]}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                    }}
+                >
+                    <SolidDotsverticalIcon />
+                </div>
+            </div>
+        </div>
+    )
+}
+
 interface FolderComponentProps {
     folder: DataItem
     selectItem?: number
     setSelectItem: (id: number) => void
     data: DataItem[]
     setData: (v: DataItem[]) => void
+    subDropType: string
 }
 export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
-    const {folder, selectItem, setSelectItem, data, setData} = props
+    const {folder, selectItem, setSelectItem, data, setData, subDropType} = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const onIsFold = useMemoizedFn((id: number) => {
         // 文件夹只会存在第一层 不用递归遍历
@@ -480,17 +748,37 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             </div>
 
             {folder.isFold && (
-                <Droppable droppableId={`${folder.name}`} direction='vertical'>
+                <Droppable
+                    droppableId={`${folder.id}`}
+                    type={subDropType}
+                    direction='vertical'
+                    renderClone={(provided, snapshot, rubric) => {
+                        const file: DataItem[] =
+                            folder.node?.filter((item, index) => `${item.id}` === rubric.draggableId) || []
+
+                        const cloneStyle = cloneItemStyle(provided.draggableProps.style)
+                        return (
+                            <div
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                ref={provided.innerRef}
+                                style={{...cloneStyle}}
+                            >
+                                <>
+                                    {file.length > 0 && (
+                                        <FileComponentClone file={file[0]} selectItem={selectItem} fileInside={true} />
+                                    )}
+                                </>
+                            </div>
+                        )
+                    }}
+                >
                     {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps}>
                             {Array.isArray(folder.node) &&
                                 folder.node.map((file, index) => (
-                                    <Draggable
-                                        key={`draggable-${folder.name}-${index}`}
-                                        draggableId={`draggable-${folder.name}-${index}`}
-                                        index={index}
-                                    >
-                                        {(provided) => (
+                                    <Draggable key={file.id.toString()} draggableId={file.id.toString()} index={index}>
+                                        {(provided, snapshot) => (
                                             <div
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
