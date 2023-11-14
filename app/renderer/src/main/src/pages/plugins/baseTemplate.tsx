@@ -233,7 +233,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
     /** 贡献者数据 */
     const contributes: {arr: CollaboratorInfoProps[]; length: number} = useMemo(() => {
         // 这是第二版需要的数据
-        if (prImgs.length <= 5) return {arr: prImgs, length: 0}
+        if (prImgs.length <= 5) return {arr: prImgs, length: prImgs.length}
         else {
             return {arr: prImgs.slice(0, 5), length: prImgs.length - 5}
         }
@@ -1475,7 +1475,7 @@ export const PluginContributesListItem: React.FC<PluginContributesListItemProps>
     return (
         <div className={styles["contributes-item-wrapper"]}>
             <AuthorImg size='small' src={contributesHeadImg || ""} />
-            {contributesName}
+            <span className="content-ellipsis ">{contributesName}</span>
         </div>
     )
 })
