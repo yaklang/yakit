@@ -12,6 +12,7 @@ import {randomString} from "@/utils/randomUtil"
 import {DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {failed, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
+import {YakScript} from "@/pages/invoker/schema"
 
 interface PluginLocalUploadProps {
     pluginNames: string[]
@@ -411,5 +412,105 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
                 {isHaveError && <YakitButton onClick={onClickNext}>完成</YakitButton>}
             </div>
         </>
+    )
+})
+
+interface PluginLocalUploadSingleProps {
+    onClose: () => void
+    plugin: YakScript
+}
+export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = React.memo((props) => {
+    const {plugin, onClose} = props
+    const [current, setCurrent] = useState<number>(0)
+    const [isPrivate, setIsPrivate] = useState<boolean>(true)
+
+    const taskTokenRef = useRef(randomString(40))
+
+    const onPrivateSelectionPrev = useMemoizedFn((v) => {
+        setCurrent(current + 1)
+        setIsPrivate(v)
+    })
+    useEffect(() => {
+        const taskToken = taskTokenRef.current
+        if (!taskToken) {
+            return
+        }
+        ipcRenderer.on(`${taskToken}-data`, () => {})
+        ipcRenderer.on(`${taskToken}-end`, () => {
+            yakitNotify("success", "上传成功")
+            onClose()
+        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+            yakitNotify("error", "上传异常:" + e)
+        })
+        return () => {
+            ipcRenderer.invoke("cancel-SaveYakScriptToOnline", taskToken)
+            ipcRenderer.removeAllListeners(`${taskToken}-data`)
+            ipcRenderer.removeAllListeners(`${taskToken}-error`)
+            ipcRenderer.removeAllListeners(`${taskToken}-end`)
+        }
+    }, [])
+    /**检测后上传 */
+    const onAutoTestAfter = useMemoizedFn(() => {
+        const params: SaveYakScriptToOnlineRequest = {
+            ScriptNames: [plugin.ScriptName],
+            IsPrivate: isPrivate,
+            All: false
+        }
+        ipcRenderer
+            .invoke("SaveYakScriptToOnline", params, taskTokenRef.current)
+            .then(() => {})
+            .catch((e) => {
+                failed(`开始检测失败:${e}`)
+            })
+    })
+    const steps = useMemo(() => {
+        return [
+            {
+                title: "选私密/公开",
+                content: <PluginIsPrivateSelection onNext={onPrivateSelectionPrev} />
+            },
+            {
+                title: "自动检测",
+                content: (
+                    <PluginAutoTestSingle
+                        show={current === 1}
+                        plugin={plugin}
+                        onNext={onAutoTestAfter}
+                        onCancel={onClose}
+                    />
+                )
+            }
+        ]
+    }, [current, plugin, isPrivate])
+    return (
+        <div className={styles["plugin-local-upload"]}>
+            <YakitSteps current={current}>
+                {steps.map((item) => (
+                    <YakitSteps.YakitStep key={item.title} title={item.title} />
+                ))}
+            </YakitSteps>
+            <div className={styles["plugin-local-upload-steps-content"]}>{steps[current]?.content}</div>
+        </div>
+    )
+})
+
+interface PluginAutoTestSingleProps {
+    show: boolean
+    plugin: YakScript
+    /**下一步 */
+    onNext: (b: boolean) => void
+    onCancel: () => void
+}
+const PluginAutoTestSingle: React.FC<PluginAutoTestSingleProps> = React.memo((props) => {
+    const {onCancel} = props
+    const onClickCancel = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onCancel()
+    })
+    return (
+        <div>
+            <YakitButton onClick={onClickCancel}>取消</YakitButton>
+        </div>
     )
 })
