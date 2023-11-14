@@ -6,7 +6,7 @@ interface StoreProps {
     runNodeList: Map<string, string>
     setRunNodeList: (key: string, pid: string) => void
     hasRunNodeInList: (key: string) => boolean
-    delRunNode: (key: string) => boolean
+    delRunNode: (key: string) => void
     clearRunNodeList: () => void
 }
 
@@ -27,6 +27,18 @@ export const useRunNodeStore = create<StoreProps>((set, get) => ({
         })
     },
     hasRunNodeInList: (key) => get().runNodeList.has(key),
-    delRunNode: (key) => get().runNodeList.delete(key),
-    clearRunNodeList: () => get().runNodeList.clear()
+    delRunNode: (key) => {
+        const newVal = get().runNodeList
+        newVal.delete(key)
+        set({
+            runNodeList: newVal
+        })
+    },
+    clearRunNodeList: () => {
+        const newVal = get().runNodeList
+        newVal.clear()
+        set({
+            runNodeList: newVal
+        })
+    }
 }))
