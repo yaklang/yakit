@@ -386,12 +386,12 @@ export const apiDownloadPluginBase: (query?: DownloadOnlinePluginsRequest) => Pr
                 resolve(res)
             })
             .catch((e) => {
-                reject()
+                reject(e)
             })
     })
 }
 
-/**插件商店 下载插件 */
+/** 插件商店 下载插件 */
 export const apiDownloadPluginOnline: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         try {
@@ -408,11 +408,14 @@ export const apiDownloadPluginOnline: (query?: DownloadOnlinePluginsRequest) => 
                     yakitNotify("error", "插件商店下载插件失败:" + err)
                     reject(err)
                 })
-        } catch (error) {}
+        } catch (error) {
+            yakitNotify("error", "插件商店下载插件失败:" + error)
+            reject(error)
+        }
     })
 }
 
-/**我的插件 下载插件 */
+/** 我的插件 下载插件 */
 export const apiDownloadPluginMine: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         try {
@@ -429,11 +432,14 @@ export const apiDownloadPluginMine: (query?: DownloadOnlinePluginsRequest) => Pr
                     yakitNotify("error", "下载我的插件失败:" + err)
                     reject(err)
                 })
-        } catch (error) {}
+        } catch (error) {
+            yakitNotify("error", "下载我的插件失败:" + error)
+            reject(error)
+        }
     })
 }
 
-/**插件管理 下载插件 */
+/** 插件管理 下载插件 */
 export const apiDownloadPluginCheck: (query?: DownloadOnlinePluginsRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         try {
@@ -447,7 +453,10 @@ export const apiDownloadPluginCheck: (query?: DownloadOnlinePluginsRequest) => P
                     yakitNotify("error", "插件管理插件失败:" + err)
                     reject(err)
                 })
-        } catch (error) {}
+        } catch (error) {
+            yakitNotify("error", "插件管理插件失败:" + error)
+            reject(error)
+        }
     })
 }
 
