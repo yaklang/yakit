@@ -6,28 +6,20 @@ import {useMemoizedFn, useGetState} from "ahooks"
 import {Radio, Progress} from "antd"
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import "../plugins.scss"
-import styles from "./PluginLocalUpload.module.scss"
 import {randomString} from "@/utils/randomUtil"
 import {DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {failed, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
 import {YakScript} from "@/pages/invoker/schema"
+import {CodeScoreModule} from "../funcTemplate"
+import usePluginUploadHooks, {SaveYakScriptToOnlineRequest, SaveYakScriptToOnlineResponse} from "../pluginUploadHooks"
+
+import "../plugins.scss"
+import styles from "./PluginLocalUpload.module.scss"
 
 interface PluginLocalUploadProps {
     pluginNames: string[]
     onClose: () => void
-}
-interface SaveYakScriptToOnlineRequest {
-    ScriptNames: string[]
-    IsPrivate: boolean
-    All?: boolean
-}
-
-interface SaveYakScriptToOnlineResponse {
-    Progress: number
-    Message: string
-    MessageType: string
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -40,7 +32,13 @@ export const PluginLocalUpload: React.FC<PluginLocalUploadProps> = React.memo((p
     const [successPluginNames, setSuccessPluginNames] = useState<string[]>([])
 
     const onPrivateSelectionPrev = useMemoizedFn((v) => {
-        setCurrent(current + 1)
+        if (v) {
+            // true 选择的私密，私密会跳过检测，直接上传
+            setCurrent(current + 2)
+            setSuccessPluginNames(pluginNames)
+        } else {
+            setCurrent(current + 1)
+        }
         setIsPrivate(v)
     })
     const onAutoTestNext = useMemoizedFn((pluginNames) => {
@@ -304,24 +302,6 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
     const [isShowRetry, setIsShowRetry] = useState<boolean>(false)
 
     useEffect(() => {
-        const taskToken = taskTokenRef.current
-        if (!taskToken) {
-            return
-        }
-        ipcRenderer.on(`${taskToken}-data`, onProgressData)
-        ipcRenderer.on(`${taskToken}-end`, () => {})
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-            setIsShowRetry(true)
-            yakitNotify("error", "批量上传异常，请重试")
-        })
-        return () => {
-            ipcRenderer.invoke("cancel-SaveYakScriptToOnline", taskToken)
-            ipcRenderer.removeAllListeners(`${taskToken}-data`)
-            ipcRenderer.removeAllListeners(`${taskToken}-error`)
-            ipcRenderer.removeAllListeners(`${taskToken}-end`)
-        }
-    }, [])
-    useEffect(() => {
         if (show) {
             startUpload()
             onReset()
@@ -334,7 +314,7 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
         setIsHaveError(false)
         setIsShowRetry(false)
     })
-    const onProgressData = useMemoizedFn((_, data: SaveYakScriptToOnlineResponse) => {
+    const onProgressData = useMemoizedFn((data: SaveYakScriptToOnlineResponse) => {
         const p = Math.floor(data.Progress * 100)
         setPercent(p)
         setMessageList([
@@ -355,24 +335,29 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
             }
         }
     })
+    const {onStart, onCancel: onPluginUploadCancel} = usePluginUploadHooks({
+        taskToken: taskTokenRef.current,
+        onUploadData: onProgressData,
+        onUploadSuccess: () => {},
+        onUploadEnd: () => {},
+        onUploadError: () => {
+            setIsShowRetry(true)
+            yakitNotify("error", "批量上传异常，请重试")
+        }
+    })
     const startUpload = useMemoizedFn(() => {
         const params: SaveYakScriptToOnlineRequest = {
             ScriptNames: pluginNames,
             IsPrivate: isPrivate,
             All: isUploadAll
         }
-        ipcRenderer
-            .invoke("SaveYakScriptToOnline", params, taskTokenRef.current)
-            .then(() => {})
-            .catch((e) => {
-                failed(`开始检测失败:${e}`)
-            })
+        onStart(params)
     })
     const onClickNext = useMemoizedFn(() => {
         onSave()
     })
     const onClickCancel = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-SaveYakScriptToOnline", taskTokenRef.current)
+        onPluginUploadCancel()
         onCancel()
     })
     const onClickRetry = useMemoizedFn(() => {
@@ -417,100 +402,138 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
 
 interface PluginLocalUploadSingleProps {
     onClose: () => void
+    /**上传成功的回调 */
+    onUploadSuccess: () => void
     plugin: YakScript
 }
 export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = React.memo((props) => {
-    const {plugin, onClose} = props
+    const {plugin, onClose, onUploadSuccess} = props
     const [current, setCurrent] = useState<number>(0)
     const [isPrivate, setIsPrivate] = useState<boolean>(true)
 
     const taskTokenRef = useRef(randomString(40))
 
+    const {onStart} = usePluginUploadHooks({
+        taskToken: taskTokenRef.current,
+        onUploadData: () => {},
+        onUploadSuccess: () => {
+            onUploadSuccess()
+            onClose()
+        },
+        onUploadEnd: () => {},
+        onUploadError: () => {}
+    })
+
     const onPrivateSelectionPrev = useMemoizedFn((v) => {
         setCurrent(current + 1)
         setIsPrivate(v)
     })
-    useEffect(() => {
-        const taskToken = taskTokenRef.current
-        if (!taskToken) {
-            return
-        }
-        ipcRenderer.on(`${taskToken}-data`, () => {})
-        ipcRenderer.on(`${taskToken}-end`, () => {
-            yakitNotify("success", "上传成功")
-            onClose()
-        })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-            yakitNotify("error", "上传异常:" + e)
-        })
-        return () => {
-            ipcRenderer.invoke("cancel-SaveYakScriptToOnline", taskToken)
-            ipcRenderer.removeAllListeners(`${taskToken}-data`)
-            ipcRenderer.removeAllListeners(`${taskToken}-error`)
-            ipcRenderer.removeAllListeners(`${taskToken}-end`)
-        }
-    }, [])
     /**检测后上传 */
-    const onAutoTestAfter = useMemoizedFn(() => {
+    const onUpload = useMemoizedFn(() => {
         const params: SaveYakScriptToOnlineRequest = {
             ScriptNames: [plugin.ScriptName],
             IsPrivate: isPrivate,
             All: false
         }
-        ipcRenderer
-            .invoke("SaveYakScriptToOnline", params, taskTokenRef.current)
-            .then(() => {})
-            .catch((e) => {
-                failed(`开始检测失败:${e}`)
-            })
+        onStart(params)
     })
     const steps = useMemo(() => {
         return [
             {
                 title: "选私密/公开",
-                content: <PluginIsPrivateSelection onNext={onPrivateSelectionPrev} />
+                content: <PluginIsPrivateSelectionSingle onUpload={onUpload} onNext={onPrivateSelectionPrev} />
             },
             {
                 title: "自动检测",
-                content: (
-                    <PluginAutoTestSingle
-                        show={current === 1}
-                        plugin={plugin}
-                        onNext={onAutoTestAfter}
-                        onCancel={onClose}
-                    />
-                )
+                content: <PluginAutoTestSingle plugin={plugin} onNext={onUpload} />
             }
         ]
     }, [current, plugin, isPrivate])
     return (
-        <div className={styles["plugin-local-upload"]}>
-            <YakitSteps current={current}>
-                {steps.map((item) => (
-                    <YakitSteps.YakitStep key={item.title} title={item.title} />
-                ))}
-            </YakitSteps>
+        <div className={styles["plugin-local-upload-single"]}>
             <div className={styles["plugin-local-upload-steps-content"]}>{steps[current]?.content}</div>
         </div>
     )
 })
 
 interface PluginAutoTestSingleProps {
-    show: boolean
     plugin: YakScript
     /**下一步 */
-    onNext: (b: boolean) => void
-    onCancel: () => void
+    onNext: () => void
 }
 const PluginAutoTestSingle: React.FC<PluginAutoTestSingleProps> = React.memo((props) => {
-    const {onCancel} = props
-    const onClickCancel = useMemoizedFn((e) => {
-        e.stopPropagation()
-        onCancel()
+    const {plugin, onNext} = props
+    const onCodeScoreCallback = useMemoizedFn((isPass: boolean) => {
+        if (isPass) {
+            onNext()
+        }
     })
     return (
-        <div>
-            <YakitButton onClick={onClickCancel}>取消</YakitButton>
+        <>
+            <CodeScoreModule type={plugin.Type} code={plugin.Content} isStart={true} callback={onCodeScoreCallback} />
+        </>
+    )
+})
+
+interface PluginIsPrivateSelectionSingleProps {
+    /**下一步 */
+    onNext: (b: boolean) => void
+    /**上传 */
+    onUpload: (b: boolean) => void
+}
+const PluginIsPrivateSelectionSingle: React.FC<PluginIsPrivateSelectionSingleProps> = React.memo((props) => {
+    const {onNext, onUpload} = props
+    const [isPrivate, setIsPrivate] = useState<boolean>(true)
+
+    const onClickNext = useMemoizedFn(() => {
+        onNext(isPrivate)
+    })
+    const onClickUpload = useMemoizedFn(() => {
+        onUpload(isPrivate)
+    })
+    return (
+        <div className={styles["plugin-private-select-single"]}>
+            <div className={styles["header-wrapper"]}>
+                <div className={styles["title-style"]}>提示：</div>
+                <div className={styles["header-body"]}>
+                    <div className={styles["opt-content"]}>
+                        <div className={styles["content-order"]}>1</div>
+                        私密插件不用进行自动检测
+                    </div>
+                    <div className={styles["opt-content"]}>
+                        <div className={styles["content-order"]}>2</div>
+                        公开插件检测成功后会自动上传
+                    </div>
+                </div>
+            </div>
+
+            <div className={styles["plugin-isPrivate-select"]}>
+                <Radio
+                    className='plugins-radio-wrapper'
+                    checked={isPrivate}
+                    onClick={(e) => {
+                        setIsPrivate(true)
+                    }}
+                >
+                    私密(仅自己可见)
+                </Radio>
+                <Radio
+                    className='plugins-radio-wrapper'
+                    checked={!isPrivate}
+                    onClick={(e) => {
+                        setIsPrivate(false)
+                    }}
+                >
+                    公开(审核通过后，将上架到插件商店)
+                </Radio>
+            </div>
+            <div className={styles["plugin-local-upload-steps-action"]}>
+                {isPrivate ? (
+                    <YakitButton onClick={onClickUpload}>上传</YakitButton>
+                ) : (
+                    <YakitButton onClick={onClickNext}>检测并上传</YakitButton>
+                )}
+            </div>
         </div>
     )
 })

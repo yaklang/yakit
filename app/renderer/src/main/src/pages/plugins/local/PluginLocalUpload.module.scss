@@ -70,3 +70,57 @@
         }
     }
 }
+
+.header-wrapper {
+    width: 100%;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, rgba(136, 99, 247, 0.1) 0%, rgba(247, 170, 99, 0.1) 100%);
+    .title-style {
+        color: #31343f;
+        font-size: 12px;
+        line-height: 16px;
+    }
+    .header-body {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        .opt-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #85899e;
+            font-size: 12px;
+            line-height: 20px;
+            .content-order {
+                width: 16px;
+                height: 16px;
+                padding: 2px 6px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 8px;
+                background: rgba(136, 99, 247, 0.2);
+                color: #31343f;
+                font-size: 10px;
+            }
+        }
+    }
+}
+
+.plugin-local-upload-single {
+    @extend %display-align-justify-center;
+    flex-direction: column;
+}
+
+.plugin-private-select-single {
+    padding: 24px;
+    padding-top: 0;
+    @extend %display-align-justify-center;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
