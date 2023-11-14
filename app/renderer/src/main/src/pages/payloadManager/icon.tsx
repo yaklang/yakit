@@ -34,3 +34,73 @@ const OutlineAddPayload = () => (
 export const OutlineAddPayloadIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineAddPayload} {...props} />
 }
+
+const Property = () => (
+    <svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <g id='Frame 314/icon/Property 24'>
+            <path
+                id='Vector'
+                d='M20.345 8.67831L18.2317 6.56498C17.7633 6.09665 17.1275 5.83331 16.4642 5.83331H4.16667C3.24583 5.83331 2.5 6.57915 2.5 7.49998V32.5C2.5 33.4208 3.24583 34.1666 4.16667 34.1666H35.8333C36.7542 34.1666 37.5 33.4208 37.5 32.5V10.8333C37.5 9.91248 36.7542 9.16665 35.8333 9.16665H21.5233C21.0817 9.16665 20.6575 8.99081 20.345 8.67831Z'
+                fill='url(#paint0_linear_17020_244238)'
+            />
+            <path
+                id='Vector_2'
+                d='M17.9883 12.0117L20.7117 9.28835C20.7892 9.21085 20.895 9.16669 21.0058 9.16669H35.8333C36.7542 9.16669 37.5 9.91252 37.5 10.8334V32.5C37.5 33.4209 36.7542 34.1667 35.8333 34.1667H4.16667C3.24583 34.1667 2.5 33.4209 2.5 32.5V12.9167C2.5 12.6867 2.68667 12.5 2.91667 12.5H16.81C17.2517 12.5 17.6758 12.3242 17.9883 12.0117Z'
+                fill='url(#paint1_linear_17020_244238)'
+            />
+            <circle id='Ellipse 340' cx='33.3332' cy='30' r='6.66667' fill='url(#paint2_linear_17020_244238)' />
+            <g id='Plus'>
+                <path id='Vector_3' d='M30.4688 30H36.1979' stroke='white' strokeWidth='1.5' strokeLinecap='round' />
+                <path
+                    id='Vector_4'
+                    d='M33.333 27.1354V32.8645'
+                    stroke='white'
+                    strokeWidth='1.5'
+                    strokeLinecap='round'
+                />
+            </g>
+        </g>
+        <defs>
+            <linearGradient
+                id='paint0_linear_17020_244238'
+                x1='20'
+                y1='5.58998'
+                x2='20'
+                y2='12.4808'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#EBA600' />
+                <stop offset='1' stopColor='#C28200' />
+            </linearGradient>
+            <linearGradient
+                id='paint1_linear_17020_244238'
+                x1='20'
+                y1='9.04502'
+                x2='20'
+                y2='34.1525'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#FFD869' />
+                <stop offset='1' stopColor='#FEC52B' />
+            </linearGradient>
+            <linearGradient
+                id='paint2_linear_17020_244238'
+                x1='28.3332'
+                y1='35.4166'
+                x2='38.7498'
+                y2='25'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#28B46B' />
+                <stop offset='1' stopColor='#0D8A49' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+
+/**
+ * @description  Frame 314/icon/Property 24
+ */
+export const PropertyIcon = (props: Partial<IconProps>) => {
+    return <Icon component={Property} {...props} />
+}
