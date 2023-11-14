@@ -513,60 +513,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     )
 }
 
-interface FolderComponentCloneProps {
-    folder: DataItem
-    selectItem?: number
-}
-
-// 用于生成拖拽文件夹元素
-export const FolderComponentClone: React.FC<FolderComponentCloneProps> = (props) => {
-    const {folder, selectItem} = props
-    const menuOpen = false
-    return (
-        <>
-            <div
-                className={classNames(styles["folder"], {
-                    [styles["folder-menu"]]: menuOpen
-                })}
-            >
-                <div className={styles["folder-header"]}>
-                    <div className={styles["is-fold-icon"]}>
-                        {folder.isFold ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />}
-                    </div>
-                    <div className={styles["folder-icon"]}>
-                        <SolidFolderopenIcon />
-                    </div>
-                    <div className={styles["folder-name"]}>{folder.name}</div>
-                </div>
-                <div
-                    className={classNames(styles["extra"], {
-                        [styles["extra-dot"]]: menuOpen,
-                        [styles["extra-hover"]]: !menuOpen
-                    })}
-                >
-                    <div className={styles["file-count"]}>10</div>
-                    <div
-                        className={styles["extra-icon"]}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                        }}
-                    >
-                        <SolidDotsverticalIcon />
-                    </div>
-                </div>
-            </div>
-
-            {folder.isFold &&
-                Array.isArray(folder.node) &&
-                folder.node.map((file, index) => (
-                    <>
-                        {/* 渲染文件组件 */}
-                        <FileComponentClone file={file} selectItem={selectItem} fileInside={true} />
-                    </>
-                ))}
-        </>
-    )
-}
 interface FileComponentCloneProps {
     file: DataItem
     selectItem?: number
