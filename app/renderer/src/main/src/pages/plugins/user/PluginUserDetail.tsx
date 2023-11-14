@@ -272,6 +272,10 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                                     user={plugin.authors}
                                     pluginId={plugin.uuid}
                                     updated_at={plugin.updated_at}
+                                    prImgs={(plugin.collaborator || []).map((ele) => ({
+                                        headImg: ele.head_img,
+                                        userName: ele.user_name
+                                    }))}
                                 />
                                 <div className={styles["details-editor-wrapper"]}>
                                     <YakitEditor type={"yak"} value={plugin.content} />

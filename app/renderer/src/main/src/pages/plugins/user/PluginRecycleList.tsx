@@ -334,7 +334,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                                             help={data.help || ""}
                                             img={data.head_img || ""}
                                             user={data.authors || ""}
-                                            // prImgs={data.prs}
+                                            prImgs={(data.collaborator||[]).map(ele=>ele.head_img)}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
                                             official={!!data.isCorePlugin}

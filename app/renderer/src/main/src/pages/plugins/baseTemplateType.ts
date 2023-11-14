@@ -83,7 +83,12 @@ export interface PluginDetailHeaderProps {
     /** 更新时间 */
     updated_at: number
     /**协作者信息 */
-    prImgs?: string[]
+    prImgs?: CollaboratorInfoProps[]
+}
+/**协作者信息 */
+export interface CollaboratorInfoProps {
+    headImg: string
+    userName: string
 }
 
 /** 漏洞类型列表-选项 */

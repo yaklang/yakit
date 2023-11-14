@@ -105,6 +105,12 @@ export interface YakScript {
     RiskType?: string
     RiskDetail?: QueryYakScriptRiskDetailByCWEResponse
     RiskAnnotation?: string
+    CollaboratorInfo?: Collaborator[]
+}
+
+export interface Collaborator {
+    HeadImg: string
+    UserName: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
