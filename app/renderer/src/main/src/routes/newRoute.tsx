@@ -338,7 +338,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.HTTPFuzzer,
     YakitRoute.WebsiteTree,
     YakitRoute.DB_Ports,
-    YakitRoute.Beta_DebugPlugin
+    YakitRoute.Beta_DebugPlugin,
+    YakitRoute.DB_HTTPHistory,
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -488,7 +489,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.ShellReceiver:
             return <ShellReceiverPage />
         case YakitRoute.DB_HTTPHistory:
-            return <HTTPHistory />
+            return <HTTPHistory pageType='history' />
         case YakitRoute.DB_Report:
             return <ReportViewerPage />
         case YakitRoute.DB_Risk:

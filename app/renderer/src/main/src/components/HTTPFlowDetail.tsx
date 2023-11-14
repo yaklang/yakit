@@ -69,7 +69,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     refresh?: boolean
     defaultFold?: boolean
 
-    pageType?: "MITM"
+    pageType?: "MITM" | 'history'
     historyId?: string
 }
 

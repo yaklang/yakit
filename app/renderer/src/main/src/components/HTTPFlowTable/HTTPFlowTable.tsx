@@ -430,7 +430,8 @@ export interface HTTPFlowTableProp {
     // 筛选控件隐藏
     onlyShowSearch?: boolean
     // 此控件显示的页面
-    pageType?: "MITM"
+    pageType?: "MITM" | "history"
+    searchURL?: string
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -806,6 +807,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     useUpdateEffect(() => {
         updateData()
     }, [refresh])
+
+    // 切换了网站树
+    useUpdateEffect(() => {
+        setParams({
+            ...params,
+            SearchURL: props.searchURL
+        })
+        setCurrentIndex(undefined)
+        setSelected(undefined)
+        setSelectedRowKeys([])
+        setSelectedRows([])
+        setIsAllSelect(false)
+        setTimeout(() => {
+            updateData()
+        }, 50)
+    }, [props.searchURL])
 
     const onScrollToByClickEvent = useMemoizedFn((v) => {
         try {
