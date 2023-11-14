@@ -13,7 +13,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {yakitFailed} from "@/utils/notification"
 import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
 import styles from "./HTTPRequestBuilder.module.scss"
-import { PluginTypes } from "../pluginDebugger/PluginDebuggerPage"
+import {PluginTypes} from "../pluginDebugger/PluginDebuggerPage"
 
 const {YakitPanel} = YakitCollapse
 
@@ -161,10 +161,10 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
     }, [params])
 
     useUpdateEffect(() => {
-        if(pluginType==="nuclei"){
+        if (pluginType === "nuclei") {
             onReset(getDefaultHTTPRequestBuilderParams())
         }
-    },[pluginType])
+    }, [pluginType])
 
     return (
         <Form
@@ -177,28 +177,34 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
             style={{height: "100%"}}
             onValuesChange={onValuesChange}
         >
-            {pluginType!=="nuclei"&&<Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' style={{marginBottom: 4}}>
-                <YakitSwitch />
-            </Form.Item>}
+            {pluginType !== "nuclei" && (
+                <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' style={{marginBottom: 4}}>
+                    <YakitSwitch />
+                </Form.Item>
+            )}
             <Form.Item label='请求类型' name='reqType' style={{marginBottom: 4}}>
                 <YakitRadioButtons
                     size='small'
                     buttonStyle='solid'
-                    options={pluginType!=="nuclei"?[
-                        {
-                            value: "raw",
-                            label: "原始请求"
-                        },
-                        {
-                            value: "template",
-                            label: "请求配置"
-                        }
-                    ]:[
-                        {
-                            value: "template",
-                            label: "请求配置"
-                        }
-                    ]}
+                    options={
+                        pluginType !== "nuclei"
+                            ? [
+                                  {
+                                      value: "raw",
+                                      label: "原始请求"
+                                  },
+                                  {
+                                      value: "template",
+                                      label: "请求配置"
+                                  }
+                              ]
+                            : [
+                                  {
+                                      value: "template",
+                                      label: "请求配置"
+                                  }
+                              ]
+                    }
                 />
             </Form.Item>
             {reqType === "raw" ? (
@@ -219,224 +225,232 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                 </div>
             ) : (
                 <>
-                    <Form.Item label='扫描目标' name='Input' style={{marginBottom: 4}}>
+                    <Form.Item
+                        label='扫描目标'
+                        name='Input'
+                        style={{marginBottom: 4}}
+                        rules={[{required: true, message: "请输入扫描目标"}]}
+                    >
                         <YakitInput.TextArea placeholder='请输入扫描目标' size='small' />
                     </Form.Item>
-                    {pluginType!=="nuclei"&&<>
-                    
-                    <Form.Item label='HTTP方法' name='Method' style={{marginBottom: 4}}>
-                        <YakitSelect
-                            options={["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT"].map((item) => ({
-                                value: item,
-                                label: item
-                            }))}
-                            size='small'
-                        />
-                    </Form.Item>
-                    <Form.Item label='请求路径' name='Path' style={{marginBottom: 12}}>
-                        <YakitSelect
-                            allowClear
-                            options={["/", "/admin"].map((item) => ({value: item, label: item}))}
-                            size='small'
-                            mode='tags'
-                            maxTagCount='responsive'
-                            placeholder='请输入...'
-                        />
-                    </Form.Item>
-                    <Divider style={{margin: 0}} />
-                    <YakitCollapse
-                        destroyInactivePanel={false}
-                        activeKey={activeKey}
-                        onChange={(key) => setActiveKey(key as string[])}
-                        wrapperClassName={styles["arg-keys-list"]}
-                    >
-                        <YakitPanel
-                            header='GET 参数'
-                            key='GET 参数'
-                            className={styles["arg-keys-list-panel"]}
-                            extra={
-                                <>
-                                    <YakitButton
-                                        type='text'
-                                        colors='danger'
-                                        onClick={(e) => handleReset(e, "GetParams", getParamsRef)}
-                                        size='small'
-                                    >
-                                        重置
-                                    </YakitButton>
-                                    <Divider type='vertical' style={{margin: 0}} />
-                                    <YakitButton
-                                        type='text'
-                                        onClick={(e) => handleAdd(e, "GetParams", "GET 参数", getParamsRef)}
-                                        style={{paddingRight: 0}}
-                                        size='small'
-                                    >
-                                        添加
-                                        <PlusIcon />
-                                    </YakitButton>
-                                </>
-                            }
-                        >
-                            <VariableList
-                                ref={getParamsRef}
-                                field='GetParams'
-                                extra={(i: number) => {
-                                    return (
-                                        <div
-                                            className={styles["variable-list-panel-extra"]}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                        >
-                                            <TrashIcon
-                                                onClick={(e) => handleRemove(e, i, "GetParams")}
-                                                className={styles["variable-list-remove"]}
-                                            />
-                                        </div>
-                                    )
-                                }}
-                            ></VariableList>
-                        </YakitPanel>
-                        <YakitPanel
-                            header='POST 参数'
-                            key='POST 参数'
-                            extra={
-                                <>
-                                    <YakitButton
-                                        type='text'
-                                        colors='danger'
-                                        onClick={(e) => handleReset(e, "PostParams", postParamsRef)}
-                                        size='small'
-                                    >
-                                        重置
-                                    </YakitButton>
-                                    <Divider type='vertical' style={{margin: 0}} />
-                                    <YakitButton
-                                        type='text'
-                                        onClick={(e) => handleAdd(e, "PostParams", "POST 参数", postParamsRef)}
-                                        style={{paddingRight: 0}}
-                                        size='small'
-                                    >
-                                        添加
-                                        <PlusIcon />
-                                    </YakitButton>
-                                </>
-                            }
-                        >
-                            <VariableList
-                                ref={postParamsRef}
-                                field='PostParams'
-                                extra={(i: number) => {
-                                    return (
-                                        <div
-                                            className={styles["variable-list-panel-extra"]}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                        >
-                                            <TrashIcon
-                                                onClick={(e) => handleRemove(e, i, "PostParams")}
-                                                className={styles["variable-list-remove"]}
-                                            />
-                                        </div>
-                                    )
-                                }}
-                            ></VariableList>
-                        </YakitPanel>
-                        <YakitPanel
-                            header='Header'
-                            key='Header'
-                            extra={
-                                <>
-                                    <YakitButton
-                                        type='text'
-                                        colors='danger'
-                                        onClick={(e) => handleReset(e, "Headers", headersRef)}
-                                        size='small'
-                                    >
-                                        重置
-                                    </YakitButton>
-                                    <Divider type='vertical' style={{margin: 0}} />
-                                    <YakitButton
-                                        type='text'
-                                        onClick={(e) => handleAdd(e, "Headers", "Header", headersRef)}
-                                        style={{paddingRight: 0}}
-                                        size='small'
-                                    >
-                                        添加
-                                        <PlusIcon />
-                                    </YakitButton>
-                                </>
-                            }
-                        >
-                            <VariableList
-                                ref={headersRef}
-                                field='Headers'
-                                extra={(i: number) => {
-                                    return (
-                                        <div
-                                            className={styles["variable-list-panel-extra"]}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                        >
-                                            <TrashIcon
-                                                onClick={(e) => handleRemove(e, i, "Headers")}
-                                                className={styles["variable-list-remove"]}
-                                            />
-                                        </div>
-                                    )
-                                }}
-                            ></VariableList>
-                        </YakitPanel>
-                        <YakitPanel
-                            header='Cookie'
-                            key='Cookie'
-                            extra={
-                                <>
-                                    <YakitButton
-                                        type='text'
-                                        colors='danger'
-                                        onClick={(e) => handleReset(e, "Cookie", cookieRef)}
-                                        size='small'
-                                    >
-                                        重置
-                                    </YakitButton>
-                                    <Divider type='vertical' style={{margin: 0}} />
-                                    <YakitButton
-                                        type='text'
-                                        onClick={(e) => handleAdd(e, "Cookie", "Cookie", cookieRef)}
-                                        style={{paddingRight: 0}}
-                                        size='small'
-                                    >
-                                        添加
-                                        <PlusIcon />
-                                    </YakitButton>
-                                </>
-                            }
-                        >
-                            <VariableList
-                                ref={cookieRef}
-                                field='Cookie'
-                                extra={(i: number) => {
-                                    return (
-                                        <div
-                                            className={styles["variable-list-panel-extra"]}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                        >
-                                            <TrashIcon
-                                                onClick={(e) => handleRemove(e, i, "Cookie")}
-                                                className={styles["variable-list-remove"]}
-                                            />
-                                        </div>
-                                    )
-                                }}
-                            ></VariableList>
-                        </YakitPanel>
-                    </YakitCollapse>
-                    </>}
+                    {pluginType !== "nuclei" && (
+                        <>
+                            <Form.Item label='HTTP方法' name='Method' style={{marginBottom: 4}}>
+                                <YakitSelect
+                                    options={["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT"].map(
+                                        (item) => ({
+                                            value: item,
+                                            label: item
+                                        })
+                                    )}
+                                    size='small'
+                                />
+                            </Form.Item>
+                            <Form.Item label='请求路径' name='Path' style={{marginBottom: 12}}>
+                                <YakitSelect
+                                    allowClear
+                                    options={["/", "/admin"].map((item) => ({value: item, label: item}))}
+                                    size='small'
+                                    mode='tags'
+                                    maxTagCount='responsive'
+                                    placeholder='请输入...'
+                                />
+                            </Form.Item>
+                            <Divider style={{margin: 0}} />
+                            <YakitCollapse
+                                destroyInactivePanel={false}
+                                activeKey={activeKey}
+                                onChange={(key) => setActiveKey(key as string[])}
+                                wrapperClassName={styles["arg-keys-list"]}
+                            >
+                                <YakitPanel
+                                    header='GET 参数'
+                                    key='GET 参数'
+                                    className={styles["arg-keys-list-panel"]}
+                                    extra={
+                                        <>
+                                            <YakitButton
+                                                type='text'
+                                                colors='danger'
+                                                onClick={(e) => handleReset(e, "GetParams", getParamsRef)}
+                                                size='small'
+                                            >
+                                                重置
+                                            </YakitButton>
+                                            <Divider type='vertical' style={{margin: 0}} />
+                                            <YakitButton
+                                                type='text'
+                                                onClick={(e) => handleAdd(e, "GetParams", "GET 参数", getParamsRef)}
+                                                style={{paddingRight: 0}}
+                                                size='small'
+                                            >
+                                                添加
+                                                <PlusIcon />
+                                            </YakitButton>
+                                        </>
+                                    }
+                                >
+                                    <VariableList
+                                        ref={getParamsRef}
+                                        field='GetParams'
+                                        extra={(i: number) => {
+                                            return (
+                                                <div
+                                                    className={styles["variable-list-panel-extra"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}
+                                                >
+                                                    <TrashIcon
+                                                        onClick={(e) => handleRemove(e, i, "GetParams")}
+                                                        className={styles["variable-list-remove"]}
+                                                    />
+                                                </div>
+                                            )
+                                        }}
+                                    ></VariableList>
+                                </YakitPanel>
+                                <YakitPanel
+                                    header='POST 参数'
+                                    key='POST 参数'
+                                    extra={
+                                        <>
+                                            <YakitButton
+                                                type='text'
+                                                colors='danger'
+                                                onClick={(e) => handleReset(e, "PostParams", postParamsRef)}
+                                                size='small'
+                                            >
+                                                重置
+                                            </YakitButton>
+                                            <Divider type='vertical' style={{margin: 0}} />
+                                            <YakitButton
+                                                type='text'
+                                                onClick={(e) => handleAdd(e, "PostParams", "POST 参数", postParamsRef)}
+                                                style={{paddingRight: 0}}
+                                                size='small'
+                                            >
+                                                添加
+                                                <PlusIcon />
+                                            </YakitButton>
+                                        </>
+                                    }
+                                >
+                                    <VariableList
+                                        ref={postParamsRef}
+                                        field='PostParams'
+                                        extra={(i: number) => {
+                                            return (
+                                                <div
+                                                    className={styles["variable-list-panel-extra"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}
+                                                >
+                                                    <TrashIcon
+                                                        onClick={(e) => handleRemove(e, i, "PostParams")}
+                                                        className={styles["variable-list-remove"]}
+                                                    />
+                                                </div>
+                                            )
+                                        }}
+                                    ></VariableList>
+                                </YakitPanel>
+                                <YakitPanel
+                                    header='Header'
+                                    key='Header'
+                                    extra={
+                                        <>
+                                            <YakitButton
+                                                type='text'
+                                                colors='danger'
+                                                onClick={(e) => handleReset(e, "Headers", headersRef)}
+                                                size='small'
+                                            >
+                                                重置
+                                            </YakitButton>
+                                            <Divider type='vertical' style={{margin: 0}} />
+                                            <YakitButton
+                                                type='text'
+                                                onClick={(e) => handleAdd(e, "Headers", "Header", headersRef)}
+                                                style={{paddingRight: 0}}
+                                                size='small'
+                                            >
+                                                添加
+                                                <PlusIcon />
+                                            </YakitButton>
+                                        </>
+                                    }
+                                >
+                                    <VariableList
+                                        ref={headersRef}
+                                        field='Headers'
+                                        extra={(i: number) => {
+                                            return (
+                                                <div
+                                                    className={styles["variable-list-panel-extra"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}
+                                                >
+                                                    <TrashIcon
+                                                        onClick={(e) => handleRemove(e, i, "Headers")}
+                                                        className={styles["variable-list-remove"]}
+                                                    />
+                                                </div>
+                                            )
+                                        }}
+                                    ></VariableList>
+                                </YakitPanel>
+                                <YakitPanel
+                                    header='Cookie'
+                                    key='Cookie'
+                                    extra={
+                                        <>
+                                            <YakitButton
+                                                type='text'
+                                                colors='danger'
+                                                onClick={(e) => handleReset(e, "Cookie", cookieRef)}
+                                                size='small'
+                                            >
+                                                重置
+                                            </YakitButton>
+                                            <Divider type='vertical' style={{margin: 0}} />
+                                            <YakitButton
+                                                type='text'
+                                                onClick={(e) => handleAdd(e, "Cookie", "Cookie", cookieRef)}
+                                                style={{paddingRight: 0}}
+                                                size='small'
+                                            >
+                                                添加
+                                                <PlusIcon />
+                                            </YakitButton>
+                                        </>
+                                    }
+                                >
+                                    <VariableList
+                                        ref={cookieRef}
+                                        field='Cookie'
+                                        extra={(i: number) => {
+                                            return (
+                                                <div
+                                                    className={styles["variable-list-panel-extra"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}
+                                                >
+                                                    <TrashIcon
+                                                        onClick={(e) => handleRemove(e, i, "Cookie")}
+                                                        className={styles["variable-list-remove"]}
+                                                    />
+                                                </div>
+                                            )
+                                        }}
+                                    ></VariableList>
+                                </YakitPanel>
+                            </YakitCollapse>
+                        </>
+                    )}
                 </>
             )}
         </Form>

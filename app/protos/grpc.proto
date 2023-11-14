@@ -3348,6 +3348,13 @@ message FuzzerRequest {
 
   // retry task id
   int64 RetryTaskID = 47;
+
+  // re matcher
+  bool ReMatch = 48;
+
+  // default 5M?
+  // packet is too large (> MaxBodySize)
+  int64 MaxBodySize = 49;
 }
 
 message KVPair {
@@ -3449,6 +3456,12 @@ message FuzzerResponse {
   bool MatchedByMatcher = 46;
   string HitColor = 47;
   repeated RedirectHTTPFlow RedirectFlows = 48;
+
+  // too large file operators
+  bool IsTooLargeResponse = 49;
+  string TooLargeResponseHeaderFile = 50;
+  string TooLargeResponseBodyFile = 51;
+  bool DisableRenderStyles = 52;
 }
 
 message RedirectHTTPFlow {
@@ -3616,6 +3629,11 @@ message HTTPFlow {
   repeated string Domains = 40;
   repeated string RootDomains = 41;
   repeated string JsonObjects = 42;
+
+  bool IsTooLargeResponse = 43;
+  string TooLargeResponseHeaderFile = 44;
+  string TooLargeResponseBodyFile = 45;
+  bool DisableRenderStyles = 46;
 }
 
 message FuzzableParam {
@@ -3785,6 +3803,9 @@ message MITMRequest {
   string proxyPassword = 50;
   repeated string dnsServers = 52;
   repeated KVPair hosts = 53;
+
+  // max content-length
+  int64 maxContentLength = 55;
 }
 
 message Certificate {

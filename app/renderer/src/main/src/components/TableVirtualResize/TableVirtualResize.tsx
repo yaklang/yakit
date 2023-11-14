@@ -111,8 +111,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         isReset,
         titleHeight,
         renderTitle,
+        isShowTitle = true,
         getTableRef,
         currentIndex,
+        setCurrentIndex,
         isRefresh,
         disableSorting,
         query,
@@ -206,8 +208,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         {wait: 200}
     )
     useEffect(() => {
-        if (!currentIndex) return
+        if (currentIndex === undefined) return
         scrollTo(currentIndex)
+        setCurrentIndex&&setCurrentIndex(undefined)
     }, [currentIndex])
 
     const [inViewport] = useInViewport(containerRef)
@@ -895,6 +898,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     if (!w || !h) {
                         return
                     }
+                    onScrollContainer()
                     setWidth(w)
                     setHeight(h)
                 }}
@@ -903,6 +907,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
+            {isShowTitle&&<>
             {renderTitle ? (
                 renderTitle
             ) : (
@@ -935,13 +940,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     )}
                 </div>
             )}
+            </>}
             {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
                 <Spin spinning={loading !== undefined ? loading && pagination?.page == 1 : false}>
                     <div
                         className={classNames(styles["virtual-table-body"])}
                         style={{
                             maxHeight:
-                                ((renderTitle || title || extra) &&
+                                ((renderTitle || title || extra) && isShowTitle &&
                                     `calc(100% - ${titleHeight ? titleHeight : 42}px)`) ||
                                 "100%"
                         }}

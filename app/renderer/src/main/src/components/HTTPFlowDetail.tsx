@@ -18,7 +18,7 @@ import {
 } from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
-import {NewHTTPPacketEditor} from "../utils/editors"
+import {IMonacoEditor, NewHTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
@@ -42,6 +42,10 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "./yakitUI/YakitTag/YakitCheckableTag"
+import {YakitTag} from "./yakitUI/YakitTag/YakitTag"
+import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import { openABSFileLocated } from "@/utils/openWebsite"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -55,7 +59,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     defaultHeight?: number
     Tags?: string
 
-    //查看前/后一个请求内容
+    // 查看前/后一个请求内容
     isFront?: boolean
     isBehind?: boolean
     fetchRequest?: (kind: number) => any
@@ -64,6 +68,9 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
 
     refresh?: boolean
     defaultFold?: boolean
+
+    pageType?: "MITM"
+    historyId?: string
 }
 
 const {Text} = Typography
@@ -460,12 +467,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh, defaultFold = false} = props
+    const {id, selectedFlow, refresh, defaultFold = false,pageType} = props
     const [flow, setFlow] = useState<HTTPFlow>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
-    const [flowResponse,setFlowResponse] = useState<Uint8Array>()
-    const [flowRequestLoad,setFlowRequestLoad] = useState<boolean>(false)
-    const [flowResponseLoad,setFlowResponseLoad] = useState<boolean>(false)
+    const [flowResponse, setFlowResponse] = useState<Uint8Array>()
+    const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
+    const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [isSelect, setIsSelect] = useState<boolean>(false)
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
@@ -508,34 +515,34 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setFlowResponse(undefined)
 
         // 是否获取Request
-        let isGetRequest:boolean = true
-        let isGetResponse:boolean = true
+        let isGetRequest: boolean = true
+        let isGetResponse: boolean = true
 
         // 请求不为空直接使用
-        if(Uint8ArrayToString(selectedFlow?.Request as Uint8Array)&&!isSkip){
-          isGetRequest = false
-          setFlowRequest(selectedFlow?.Request)
+        if (Uint8ArrayToString(selectedFlow?.Request as Uint8Array) && !isSkip) {
+            isGetRequest = false
+            setFlowRequest(selectedFlow?.Request)
         }
-        if(Uint8ArrayToString(selectedFlow?.Response as Uint8Array)&&!isSkip){
-          isGetResponse = false
-          setFlowResponse(selectedFlow?.Response)
+        if (Uint8ArrayToString(selectedFlow?.Response as Uint8Array) && !isSkip) {
+            isGetResponse = false
+            setFlowResponse(selectedFlow?.Response)
         }
-        if(!isGetRequest && !isGetResponse && !isSkip){
+        if (!isGetRequest && !isGetResponse && !isSkip) {
             queryMITMRuleExtractedData(selectedFlow as HTTPFlow)
         }
         // 请求或响应只要有一个为0或者为isSkip就走接口拿取数据
-        if(isGetRequest || isGetResponse || isSkip){
-          isGetRequest&&setFlowRequestLoad(true)
-          isGetResponse&&setFlowResponseLoad(true)
+        if (isGetRequest || isGetResponse || isSkip) {
+            isGetRequest && setFlowRequestLoad(true)
+            isGetResponse && setFlowResponseLoad(true)
             ipcRenderer
                 .invoke("GetHTTPFlowById", {Id: id})
                 .then((i: HTTPFlow) => {
                     if (+i.Id == lastIdRef.current) {
-                        if(isGetRequest){
-                          setFlowRequest(i?.Request)
+                        if (isGetRequest) {
+                            setFlowRequest(i?.Request)
                         }
-                        if(isGetResponse){
-                          setFlowResponse(i?.Response)
+                        if (isGetResponse) {
+                            setFlowResponse(i?.Response)
                         }
                         setFlow(i)
                         queryMITMRuleExtractedData(i)
@@ -545,11 +552,11 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     failed(`Query HTTPFlow failed: ${e}`)
                 })
                 .finally(() => {
-                  setTimeout(() => {
-                    setFlowRequestLoad(false)
-                    setFlowResponseLoad(false)
-                  }, 300)
-              })
+                    setTimeout(() => {
+                        setFlowRequestLoad(false)
+                        setFlowResponseLoad(false)
+                    }, 300)
+                })
         }
     })
 
@@ -601,6 +608,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [infoType])
 
     const mainCol: number = useMemo(() => {
+        if(pageType==="MITM"){
+            return 24
+        }
         let col: number = 19
         if (isFold) {
             col = 24
@@ -623,6 +633,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         />
                     )}
                 </Col>
+                {pageType!=="MITM"&&<>
                 {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
                     <Col span={5}>
                         <NewHTTPPacketEditor
@@ -746,13 +757,11 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         </div>
                     </Col>
                 )}
+                </>}
             </Row>
-            {isFold && (
+            {isFold && pageType!=="MITM" && (
                 <div className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}>
-                    <div
-                        className={classNames(styles["http-history-icon-box"])}
-                        style={{height:32}}
-                    >
+                    <div className={classNames(styles["http-history-icon-box"])} style={{height: 32}}>
                         <Tooltip placement='top' title='向左展开'>
                             <SideBarCloseIcon
                                 className={styles["fold-icon"]}
@@ -783,7 +792,20 @@ interface HTTPFlowBareProps {
 }
 
 export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAndResponseProps> = React.memo((props) => {
-    const {flow, sendToWebFuzzer, defaultHeight, defaultHttps, search, id, Tags, flowRequest,flowResponse,flowRequestLoad,flowResponseLoad} = props
+    const {
+        flow,
+        sendToWebFuzzer,
+        defaultHeight,
+        defaultHttps,
+        search,
+        id,
+        Tags,
+        flowRequest,
+        flowResponse,
+        flowRequestLoad,
+        flowResponseLoad,
+        historyId
+    } = props
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
         if (!flow?.RawRequestBodyBase64) return {}
@@ -849,21 +871,22 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 原始数据
     const [beforeResValue, setBeforeResValue] = useState<Uint8Array>(new Uint8Array())
     const [beforeRspValue, setBeforeRspValue] = useState<Uint8Array>(new Uint8Array())
-
+    // 编辑器实例
+    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+    const [resEditor, setResEditor] = useState<IMonacoEditor>()
     useUpdateEffect(()=>{
       setOriginResValue(flowRequest || new Uint8Array())
     },[flowRequestLoad])
 
-    useUpdateEffect(()=>{
-      setOriginRspValue(flowResponse || new Uint8Array())
-    },[flowResponseLoad])
-    
     useEffect(() => {
         // 复原数据
         setResType("current")
         setRspType("current")
         setOriginResValue(flow?.Request || new Uint8Array())
         setOriginRspValue(flow?.Response || new Uint8Array())
+        // 编辑器滚轮回到顶部
+        reqEditor?.setScrollTop(0)
+        resEditor?.setScrollTop(0)
         const existedTags = Tags ? Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
         if (existedTags.includes("[手动修改]")) {
             setShowBeforeData(true)
@@ -909,6 +932,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             .catch((err) => {})
             .finally(() => {})
     })
+    const onScrollTo = useMemoizedFn(()=>{
+        if(historyId){
+            emiter.emit("onScrollToByClick",JSON.stringify({historyId,id}))
+        }
+    })
 
     return (
         <YakitResizeBox
@@ -923,7 +951,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     <NewHTTPPacketEditor
                         title={
                             isShowBeforeData &&
-                            beforeResValue.length > 0 && (
+                            beforeResValue.length > 0 ? (
                                 <div className={classNames(styles["type-options-checkable-tag"])}>
                                     <YakitCheckableTag
                                         checked={resType === "current"}
@@ -945,8 +973,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                     >
                                         原始请求
                                     </YakitCheckableTag>
+                                    <YakitTag color={"info"} style={{marginLeft: 6,cursor:"pointer"}} onClick={onScrollTo}>id：{id}</YakitTag>
                                 </div>
-                            )
+                            ):<><span style={{fontSize: 12}}>Request</span><YakitTag color={"info"} style={{marginLeft: 6,cursor:"pointer"}} onClick={onScrollTo}>id：{id}</YakitTag></>
                         }
                         originValue={originResValue}
                         readOnly={true}
@@ -976,6 +1005,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             leftTitle: "请求",
                             rightTitle: "原始请求"
                         }}
+                        onEditor={(Editor)=>{
+                            setReqEditor(Editor)
+                        }}
                     />
                 )
             }}
@@ -989,47 +1021,113 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
-                        title={
-                            isShowBeforeData &&
-                            beforeRspValue.length > 0 && (
-                                <div className={classNames(styles["type-options-checkable-tag"])}>
-                                    <YakitCheckableTag
-                                        checked={rspType === "current"}
-                                        onChange={(checked) => {
-                                            if (checked) {
-                                                setRspType("current")
-                                            }
-                                        }}
-                                    >
-                                        响应
-                                    </YakitCheckableTag>
-                                    <YakitCheckableTag
-                                        checked={rspType === "response"}
-                                        onChange={(checked) => {
-                                            if (checked) {
-                                                setRspType("response")
-                                            }
-                                        }}
-                                    >
-                                        原始响应
-                                    </YakitCheckableTag>
-                                </div>
-                            )
-                        }
+                        language={flow?.DisableRenderStyles ? "text" : undefined}
+                        isShowBeautifyRender={!flow?.IsTooLargeResponse}
+                        title={(() => {
+                            let titleEle = [<span style={{fontSize: 12}}>Response</span>]
+                            if (isShowBeforeData && beforeRspValue.length > 0) {
+                                titleEle = [
+                                    <div className={classNames(styles["type-options-checkable-tag"])}>
+                                        <YakitCheckableTag
+                                            checked={rspType === "current"}
+                                            onChange={(checked) => {
+                                                if (checked) {
+                                                    setRspType("current")
+                                                }
+                                            }}
+                                        >
+                                            响应
+                                        </YakitCheckableTag>
+                                        <YakitCheckableTag
+                                            checked={rspType === "response"}
+                                            onChange={(checked) => {
+                                                if (checked) {
+                                                    setRspType("response")
+                                                }
+                                            }}
+                                        >
+                                            原始响应
+                                        </YakitCheckableTag>
+                                    </div>
+                                ]
+                            }
+                            // 超大响应
+                            if (flow?.IsTooLargeResponse) {
+                                titleEle.push(
+                                    <YakitTag style={{marginLeft: 8}} color='danger'>
+                                        超大响应
+                                    </YakitTag>
+                                )
+                            }
+                            return titleEle
+                        })()}
                         contextMenu={{
                             ...copyResponseBase64BodyMenuItem,
                             ...copyUrlMenuItem
                         }}
                         extra={[
-                            <Button
-                                className={styles["extra-chrome-btn"]}
-                                type={"text"}
-                                size={"small"}
-                                icon={<ChromeSvgIcon />}
-                                onClick={() => {
-                                    showResponseViaResponseRaw(flow?.Response)
-                                }}
-                            />
+                            (() => {
+                                if (flow?.IsTooLargeResponse)
+                                    return (
+                                        <YakitDropdownMenu
+                                            menu={{
+                                                data: [
+                                                    {key: "tooLargeResponseHeaderFile", label: "查看Header"},
+                                                    {key: "tooLargeResponseBodyFile", label: "查看Body"}
+                                                ],
+                                                onClick: ({key}) => {
+                                                    switch (key) {
+                                                        case "tooLargeResponseHeaderFile":
+                                                            ipcRenderer
+                                                                .invoke("is-file-exists", flow.TooLargeResponseHeaderFile)
+                                                                .then((flag: boolean) => {
+                                                                    if (flag) {
+                                                                        openABSFileLocated(flow.TooLargeResponseHeaderFile)
+                                                                    } else {
+                                                                        failed("目标文件已不存在!")
+                                                                    }
+                                                                })
+                                                                .catch(() => {})
+                                                            break
+                                                        case "tooLargeResponseBodyFile":
+                                                            ipcRenderer
+                                                                .invoke("is-file-exists", flow.TooLargeResponseBodyFile)
+                                                                .then((flag: boolean) => {
+                                                                    if (flag) {
+                                                                        openABSFileLocated(flow.TooLargeResponseBodyFile)
+                                                                    } else {
+                                                                        failed("目标文件已不存在!")
+                                                                    }
+                                                                })
+                                                                .catch(() => {})
+                                                            break
+                                                        default:
+                                                            break
+                                                    }
+                                                }
+                                            }}
+                                            dropdown={{
+                                                trigger: ["click"],
+                                                placement: "bottom"
+                                            }}
+                                        >
+                                            <YakitButton type='primary' size='small'>
+                                                完整响应
+                                            </YakitButton>
+                                        </YakitDropdownMenu>
+                                    )
+                                return (
+                                    <Button
+                                        className={styles["extra-chrome-btn"]}
+                                        type={"text"}
+                                        size={"small"}
+                                        icon={<ChromeSvgIcon />}
+                                        onClick={() => {
+                                            showResponseViaResponseRaw(flow?.Response)
+                                        }}
+                                    />
+                                )
+                            })()
                         ]}
                         isResponse={true}
                         noHex={true}
@@ -1051,6 +1149,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             leftCode: rspType === "response" ? flow?.Response || new Uint8Array() : undefined,
                             leftTitle: "响应",
                             rightTitle: "原始响应"
+                        }}
+                        onEditor={(Editor)=>{
+                            setResEditor(Editor)
                         }}
                     />
                 )

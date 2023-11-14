@@ -45,5 +45,5 @@ export interface ChatCSSingleInfoProps {
 export interface ChatCSAnswerProps {
     id: string
     role: string
-    text: string
+    result: string
 }

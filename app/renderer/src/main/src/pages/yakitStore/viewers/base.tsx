@@ -1,52 +1,37 @@
 import React, {useEffect, useRef, useState, useMemo} from "react"
 import {YakScript} from "../../invoker/schema"
-import {Card, Col, Popover, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag} from "antd"
+import {Card, Col, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag} from "antd"
 import {
     HTTPFlow,
     HTTPFlowTable,
     LogLevelToCode,
-    TableFilterDropdownForm
 } from "../../../components/HTTPFlowTable/HTTPFlowTable"
 import {YakitLogFormatter} from "../../invoker/YakitLogFormatter"
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer"
 import {randomString} from "../../../utils/randomUtil"
-import {YakitLog} from "../../../components/yakitLogSchema"
-import {ConvertWebsiteForestToTreeData} from "../../../components/WebsiteTree"
 import {WebsiteTreeViewer} from "./WebsiteTree"
-import {BasicTable} from "./BasicTable"
-import {XTerm} from "xterm-for-react"
 import {formatDate} from "../../../utils/timeUtil"
 import {xtermFit} from "../../../utils/xtermUtils"
-import {CaretDownOutlined, CaretUpOutlined, SearchOutlined} from "@ant-design/icons"
-import {failed, yakitFailed, yakitNotify} from "../../../utils/notification"
+import {yakitFailed, yakitNotify} from "../../../utils/notification"
 import {AutoCard} from "../../../components/AutoCard"
 import "./base.scss"
 import {ExportExcel} from "../../../components/DataExport/DataExport"
 import {
-    useDebounce,
     useDebounceEffect,
     useDebounceFn,
     useMemoizedFn,
     useUpdateEffect,
-    useThrottleEffect,
     useGetState,
     useCreation,
-    useInViewport
 } from "ahooks"
 import {Risk} from "@/pages/risks/schema"
-import {RisksViewer} from "@/pages/risks/RisksViewer"
 import {RiskDetails} from "@/pages/risks/RiskTable"
-import {RiskStatsTag} from "@/utils/RiskStatsTag"
 import {YakitCVXterm} from "@/components/yakitUI/YakitCVXterm/YakitCVXterm"
-import {CVXterm} from "@/components/CVXterm"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import {EngineLog} from "@/components/layout/EngineLog"
 import {EngineConsole} from "@/components/baseConsole/BaseConsole"
 import {isEnpriTrace} from "@/utils/envfile"
-import {HTTPHistory} from "@/components/HTTPHistory"
-import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import YakitTabs from "@/components/yakitUI/YakitTabs/YakitTabs"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
@@ -85,6 +70,9 @@ export interface PluginResultUIProp {
     runtimeId?: string
     fromPlugin?: string
     defaultActive?: string
+
+    // 外部控制console高度
+    consoleHeight?: string
 }
 
 export interface TooltipTitleProps {
@@ -179,7 +167,7 @@ const renderCard = (infoList, type) => {
 }
 
 export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) => {
-    const {loading, results, featureType = [], feature = [], progress, script, statusCards, cardStyleType} = props
+    const {loading, results, featureType = [], feature = [], progress, script, statusCards, cardStyleType,consoleHeight} = props
     const [active, setActive] = useState(() => {
         if (props.defaultActive) {
             return props.defaultActive
@@ -248,8 +236,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         return statusCards
     }, [statusCards])
     return (
-        <div style={{width: "100%", height: "100%", overflow: "hidden auto", display: "flex", flexDirection: "column"}}>
-            {/* <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "auto"}}> */}
+        <div className={'plugin-result-ui'} style={{width: "100%", height: "100%", overflow: "hidden auto", display: "flex", flexDirection: "column"}}>
             {props.debugMode && props.onXtermRef && (
                 <>
                     <div style={{width: "100%", height: "100%"}}>
@@ -271,7 +258,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     <Row gutter={8}>
                         {newStatusCards.map((card, cardIndex) => {
                             return (
-                                <Col key={card.tag} span={8} style={{marginBottom: 8}}>
+                                <Col key={card.tag} span={4} style={{marginBottom: 8}}>
                                     <Card
                                         hoverable={true}
                                         bodyStyle={{
@@ -279,7 +266,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                                             paddingBottom: 4,
                                             paddingLeft: 12,
                                             paddingRight: 12,
-                                            height: 120,
+                                            height: 100,
                                             display: "flex",
                                             flexDirection: "column",
                                             justifyContent: "space-between"
@@ -308,7 +295,9 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             <YakitTabs
                 type='card'
                 style={{flex: 1, overflow: "hidden", minHeight: "55%"}}
+                tabBarStyle={{display:"flex",overflow:"hidden"}}
                 className={"main-content-tabs no-theme-tabs"}
+                boxStyle={{flex:1,overflow:"hidden"}}
                 activeKey={active}
                 onChange={(activeKey) => {
                     setActive(activeKey)
@@ -405,7 +394,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                     </YakitTabs.YakitTabPane>
                 )}
                 <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>
-                    <div style={{width: "100%", height: "100%"}}>
+                    <div style={{width: "100%", height: consoleHeight?consoleHeight:"100%"}}>
                         <EngineConsole isMini={true} />
                     </div>
                 </YakitTabs.YakitTabPane>
@@ -838,7 +827,7 @@ export const SimpleCardBox: React.FC<SimpleCardBoxProps> = (props) => {
                     <Row gutter={8}>
                         {statusCards.map((card, cardIndex) => {
                             return (
-                                <Col key={card.tag} span={6} style={{marginBottom: 8}}>
+                                <Col key={card.tag} span={4} style={{marginBottom: 8}}>
                                     <Card
                                         hoverable={true}
                                         bodyStyle={{

@@ -11,7 +11,7 @@ import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
 import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {yakitFailed, yakitNotify} from "@/utils/notification"
+import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
@@ -29,6 +29,8 @@ import {YakitCard} from "@/components/yakitUI/YakitCard/YakitCard"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import { openABSFileLocated } from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -536,8 +538,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         // 关键字搜索
                         if (query?.keyWord) {
                             const responseString = Uint8ArrayToString(record.ResponseRaw)
-                            const payloadsString = (record.Payloads||[]).join("")
-                            keyWordIsPush = (responseString+payloadsString).includes(query.keyWord)
+                            const payloadsString = (record.Payloads || []).join("")
+                            keyWordIsPush = (responseString + payloadsString).includes(query.keyWord)
                         }
                         // 状态码搜索
                         if (query?.StatusCode && query?.StatusCode?.length > 0) {
@@ -595,8 +597,13 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
         })
 
-        const onGetExportFuzzerEvent = useMemoizedFn((type:"all"|"payload")=>{
-            emiter.emit("onGetExportFuzzerCallBack",JSON.stringify({listTable,type}))
+        const onGetExportFuzzerEvent = useMemoizedFn((v: string) => {
+            try {
+                const {pageId,type} = JSON.parse(v)
+                emiter.emit("onGetExportFuzzerCallBack", JSON.stringify({listTable, type ,pageId})) 
+            } catch (error) {}
+            
+            
         })
 
         // 获取最新table值 用于筛选
@@ -691,6 +698,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     }
                     secondNode={
                         <NewHTTPPacketEditor
+                            language={currentSelectItem?.DisableRenderStyles ? "text" : undefined}
+                            isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
                             title={
                                 <div className={styles["second-node-title-wrapper"]}>
                                     <span className={styles["second-node-title-text"]}>快速预览</span>
@@ -713,6 +722,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                 }
                                             ]}
                                         />
+                                        {currentSelectItem?.IsTooLargeResponse && (
+                                            <YakitTag style={{marginLeft: 8}} color='danger'>
+                                                超大响应
+                                            </YakitTag>
+                                        )}
                                     </div>
                                 </div>
                             }
@@ -736,11 +750,59 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             extraEditorProps={{
                                 isShowSelectRangeMenu: true
                             }}
-                            extra={
+                            extra={[
+                                currentSelectItem?.IsTooLargeResponse && (
+                                    <YakitDropdownMenu
+                                        menu={{
+                                            data: [
+                                                {key: "tooLargeResponseHeaderFile", label: "查看Header"},
+                                                {key: "tooLargeResponseBodyFile", label: "查看Body"}
+                                            ],
+                                            onClick: ({key}) => {
+                                                switch (key) {
+                                                    case "tooLargeResponseHeaderFile":
+                                                        ipcRenderer
+                                                            .invoke("is-file-exists", currentSelectItem.TooLargeResponseHeaderFile)
+                                                            .then((flag: boolean) => {
+                                                                if (flag) {
+                                                                    openABSFileLocated(currentSelectItem.TooLargeResponseHeaderFile)
+                                                                } else {
+                                                                    failed("目标文件已不存在!")
+                                                                }
+                                                            })
+                                                            .catch(() => {})
+                                                        break
+                                                    case "tooLargeResponseBodyFile":
+                                                        ipcRenderer
+                                                            .invoke("is-file-exists", currentSelectItem.TooLargeResponseBodyFile)
+                                                            .then((flag: boolean) => {
+                                                                if (flag) {
+                                                                    openABSFileLocated(currentSelectItem.TooLargeResponseBodyFile)
+                                                                } else {
+                                                                    failed("目标文件已不存在!")
+                                                                }
+                                                            })
+                                                            .catch(() => {})
+                                                        break
+                                                    default:
+                                                        break
+                                                }
+                                            }
+                                        }}
+                                        dropdown={{
+                                            trigger: ["click"],
+                                            placement: "bottom"
+                                        }}
+                                    >
+                                        <YakitButton type='primary' size='small'>
+                                            完整响应
+                                        </YakitButton>
+                                    </YakitDropdownMenu>
+                                ),
                                 <YakitButton size='small' onClick={onExecResults}>
                                     提取数据
                                 </YakitButton>
-                            }
+                            ]}
                         />
                     }
                     {...ResizeBoxProps}

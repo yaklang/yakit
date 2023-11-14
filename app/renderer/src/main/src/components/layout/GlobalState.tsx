@@ -2,7 +2,7 @@ import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
-import {failed, info} from "@/utils/notification"
+import {failed, info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {ExclamationIcon} from "@/assets/newIcon"
 import {YakitSystem} from "@/yakitGVDefine"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -16,18 +16,21 @@ import {
     RocketIcon,
     RocketOffIcon
 } from "./globalStateIcon"
-import {showConfigSystemProxyForm,showConfigChromePathForm} from "@/utils/ConfigSystemProxy"
+import {showConfigSystemProxyForm, showConfigChromePathForm} from "@/utils/ConfigSystemProxy"
 import {showModal} from "@/utils/showModal"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import {Tooltip} from "antd"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {Tooltip, Row, Col} from "antd"
+import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 
 import classNames from "classnames"
 import styles from "./globalState.module.scss"
+import {useRunNodeStore} from "@/store/runNode"
+import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
+import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -134,11 +137,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     Pagination: {Limit: 20, Order: "desc", Page: 1, OrderBy: "updated_at"}
                 })
                 .then((item: QueryYakScriptsResponse) => {
-                    if(isEnpriTraceAgent()&&(+item.Total)<100){
+                    if (isEnpriTraceAgent() && +item.Total < 100) {
                         // 便携版由于引擎内置插件 因此判断依据为小于100个则为无插件
                         setPluginTotal(0)
-                    }
-                    else{
+                    } else {
                         setPluginTotal(+item.Total || 0)
                     }
                     resolve("plugin-total")
@@ -200,15 +202,15 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 .catch((e) => reject(`error-system-proxy ${e}`))
         })
     })
-    const [showChromeWarn,setShowChromeWarn] = useState<boolean>(false)
+    const [showChromeWarn, setShowChromeWarn] = useState<boolean>(false)
     /** 获取Chrome启动路径 */
     const updateChromePath = useMemoizedFn(() => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("GetChromePath")
                 .then((chromePath: string) => {
-                    if(chromePath) return
-                    else{
+                    if (chromePath) return
+                    else {
                         setShowChromeWarn(true)
                     }
                 })
@@ -236,7 +238,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 count = count + 1
             }
         }
-        if(showChromeWarn){
+        if (showChromeWarn) {
             status = "warning"
             count = count + 1
         }
@@ -257,7 +259,13 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         if (isRunRef.current) return
 
         isRunRef.current = true
-        Promise.allSettled([updateSystemProxy(), updateGlobalReverse(), updatePcap(), updatePluginTotal(),updateChromePath()])
+        Promise.allSettled([
+            updateSystemProxy(),
+            updateGlobalReverse(),
+            updatePcap(),
+            updatePluginTotal(),
+            updateChromePath()
+        ])
             .then((values) => {
                 isRunRef.current = false
                 setTimeout(() => updateState(), 100)
@@ -350,19 +358,82 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     })
 
     // 是否已经设置过Chrome启动路径
-    const [isAlreadyChromePath,setAlreadyChromePath] = useState<boolean>(false)
-    const setAlreadyChromePathStatus = (is:boolean) => setAlreadyChromePath(is)
-    
-    useEffect(()=>{
+    const [isAlreadyChromePath, setAlreadyChromePath] = useState<boolean>(false)
+    const setAlreadyChromePathStatus = (is: boolean) => setAlreadyChromePath(is)
+
+    useEffect(() => {
         getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
             if (!setting) return
-            const values:string = JSON.parse(setting)
-            if(values.length>0){
+            const values: string = JSON.parse(setting)
+            if (values.length > 0) {
                 setAlreadyChromePath(true)
             }
         })
-    },[])
-    
+    }, [])
+
+    /**
+     * 运行节点
+     */
+    const {firstRunNodeFlag, runNodeList, delRunNode, clearRunNodeList} = useRunNodeStore()
+    const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
+    const [noPrompt, setNoPrompt] = useState<boolean>(false) // 决定确认弹窗是否需要显示
+    const [delRunNodeItem, setDelRunNodeItem] = useState<{key: string; pid: string} | undefined>()
+
+    useEffect(() => {
+        // 第一次运行节点显示提示框
+        if (firstRunNodeFlag) {
+            setShow(true)
+            setTimeout(() => {
+                setShow(false)
+            }, 3000)
+        }
+    }, [firstRunNodeFlag])
+
+    // 点击全部关闭
+    const onCloseAllRunNode = useMemoizedFn(() => {
+        if (noPrompt) {
+            handleKillAllRunNode()
+        } else {
+            setCloseRunNodeItemVerifyVisible(true)
+        }
+    })
+    // 处理全部节点删除
+    const handleKillAllRunNode = async () => {
+        let promises: (() => Promise<any>)[] = []
+        Array.from(runNodeList).forEach(([key, pid]) => {
+            promises.push(() => ipcRenderer.invoke("kill-run-node", {pid}))
+        })
+        try {
+            await Promise.all(promises.map((promiseFunc) => promiseFunc()))
+            clearRunNodeList()
+            yakitNotify("success", "成功关闭全部运行节点")
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
+
+    // 点击单个运行节点关闭
+    const onCloseRunNodeItem = (key: string, pid: string) => {
+        setDelRunNodeItem({key, pid})
+        // 若确认弹窗勾选了下次不再给提示 则直接关闭运行节点
+        if (noPrompt) {
+            handleKillRunNodeItem(key, pid)
+        } else {
+            setCloseRunNodeItemVerifyVisible(true)
+        }
+    }
+    // 处理单个节点删除
+    const handleKillRunNodeItem = useMemoizedFn(async (key, pid) => {
+        try {
+            await ipcRenderer.invoke("kill-run-node", {pid})
+            delRunNode(key)
+            setDelRunNodeItem(undefined)
+            yakitNotify("success", "成功关闭运行节点")
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    })
+
     const content = useMemo(() => {
         return (
             <div className={styles["global-state-content-wrapper"]}>
@@ -467,12 +538,15 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 </div>
                             )}
                             {/* Chrome启动路径 */}
-                            {showChromeWarn&&<div className={styles["body-info"]}>
+                            {showChromeWarn && (
+                                <div className={styles["body-info"]}>
                                     <div className={styles["info-left"]}>
-                                        {isAlreadyChromePath?<SuccessIcon/>:<WarningIcon />}
+                                        {isAlreadyChromePath ? <SuccessIcon /> : <WarningIcon />}
                                         <div className={styles["left-body"]}>
                                             <div className={styles["title-style"]}>Chrome启动路径</div>
-                                            <div className={styles["subtitle-style"]}>如无法启动Chrome，请配置Chrome启动路径</div>
+                                            <div className={styles["subtitle-style"]}>
+                                                如无法启动Chrome，请配置Chrome启动路径
+                                            </div>
                                         </div>
                                     </div>
                                     <div className={styles["info-right"]}>
@@ -484,10 +558,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                                 showConfigChromePathForm(setAlreadyChromePathStatus)
                                             }}
                                         >
-                                            {isAlreadyChromePath?"已配置":"去配置"}
+                                            {isAlreadyChromePath ? "已配置" : "去配置"}
                                         </YakitButton>
                                     </div>
-                                </div>}
+                                </div>
+                            )}
                             {/* 系统代理 */}
                             <div className={styles["body-info"]}>
                                 <div className={styles["info-left"]}>
@@ -495,14 +570,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <div className={styles["left-body"]}>
                                         <div className={styles["system-proxy-title"]}>
                                             系统代理
-                                            <div
-                                                className={classNames(styles["system-proxy-tag"], {
-                                                    [styles["enabled-tag"]]: systemProxy.Enable,
-                                                    [styles["not-enabled-tag"]]: !systemProxy.Enable
-                                                })}
-                                            >
+                                            <YakitTag color={systemProxy.Enable ? "success" : "danger"}>
                                                 {systemProxy.Enable ? "已启用" : "未启用"}
-                                            </div>
+                                            </YakitTag>
                                         </div>
                                     </div>
                                 </div>
@@ -512,7 +582,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                             {systemProxy.CurrentProxy}
                                             <YakitButton
                                                 type='text'
-                                                colors="danger"
+                                                colors='danger'
                                                 className={styles["btn-style"]}
                                                 onClick={() => {
                                                     setShow(false)
@@ -550,6 +620,56 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             <div></div>
                         </div>
                     )}
+                    {/* 运行节点 */}
+                    {!!Array.from(runNodeList).length && (
+                        <>
+                            <div className={styles["body-info"]}>
+                                <div className={styles["info-left"]}>
+                                    <SuccessIcon />
+                                    <div className={styles["left-body"]}>
+                                        <div className={styles["title-style"]}>
+                                            启用节点
+                                            <YakitTag color='success' style={{marginLeft: 8}}>
+                                                已启用
+                                            </YakitTag>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={styles["info-right"]}>
+                                    <YakitButton
+                                        type='text'
+                                        colors='danger'
+                                        className={styles["btn-style"]}
+                                        onClick={onCloseAllRunNode}
+                                    >
+                                        全部关闭
+                                    </YakitButton>
+                                </div>
+                            </div>
+                            <div className={styles["run-node-list"]}>
+                                {Array.from(runNodeList).map(([key, value], index) => (
+                                    <div className={styles["run-node-item"]} key={key}>
+                                        <Row>
+                                            <Col span={6} className={styles["ellipsis"]}>{JSON.parse(key).nodename}</Col>
+                                            <Col span={15} className={styles["ellipsis"]}>
+                                                {JSON.parse(key).ipOrdomain}:{JSON.parse(key).port}
+                                            </Col>
+                                            <Col span={3} style={{textAlign: "right"}}>
+                                                <YakitButton
+                                                    type='text'
+                                                    colors='danger'
+                                                    className={styles["btn-style"]}
+                                                    onClick={() => onCloseRunNodeItem(key, value)}
+                                                >
+                                                    关闭
+                                                </YakitButton>
+                                            </Col>
+                                        </Row>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
                 <div className={styles["body-setting"]}>
                     状态刷新间隔时间
@@ -571,7 +691,16 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 </div>
             </div>
         )
-    }, [pcap, pluginTotal, reverseState, reverseDetails, systemProxy, timeInterval,isAlreadyChromePath])
+    }, [
+        pcap,
+        pluginTotal,
+        reverseState,
+        reverseDetails,
+        systemProxy,
+        timeInterval,
+        isAlreadyChromePath,
+        Array.from(runNodeList).length
+    ])
 
     return (
         <>
@@ -618,6 +747,27 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 visible={pluginShow}
                 setVisible={(v) => {
                     setPluginShow(v)
+                }}
+            />
+            {/* 关闭运行节点确认弹框 */}
+            <YakitHint
+                visible={closeRunNodeItemVerifyVisible}
+                title='是否确认关闭节点'
+                content='确认后节点将会关闭，运行在节点上的任务也会停止'
+                footerExtra={
+                    <YakitCheckbox value={noPrompt} onChange={(e) => setNoPrompt(e.target.checked)}>
+                        下次不再提醒
+                    </YakitCheckbox>
+                }
+                onOk={() => {
+                    delRunNodeItem
+                        ? handleKillRunNodeItem(delRunNodeItem.key, delRunNodeItem.pid)
+                        : handleKillAllRunNode()
+                    setCloseRunNodeItemVerifyVisible(false)
+                }}
+                onCancel={() => {
+                    setDelRunNodeItem(undefined)
+                    setCloseRunNodeItemVerifyVisible(false)
                 }}
             />
         </>

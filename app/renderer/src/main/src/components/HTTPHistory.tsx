@@ -8,6 +8,7 @@ import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
 import { getRemoteValue } from "@/utils/kv"
+import {v4 as uuidv4} from "uuid"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -17,10 +18,11 @@ export interface HTTPPacketFuzzable {
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {
     websocket?: boolean
-    title?: string
+    pageType?: "MITM"
 }
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
+    const {pageType} = props
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
     const {isRefreshHistory, setIsRefreshHistory} = useStore()
@@ -29,6 +31,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
     const [highlightSearch, setHighlightSearch] = useState("")
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
+    // History Id 用于区分每个history控件
+    const [historyId, setHistoryId] = useState<string>(uuidv4())
     useUpdateEffect(() => {
         if (isRefreshHistory) {
             setRefresh(!refresh)
@@ -68,17 +72,19 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             }}
                             paginationPosition={"topRight"}
                             onSearch={setHighlightSearch}
-                            title={props?.title}
                             onlyShowFirstNode={onlyShowFirstNode}
                             setOnlyShowFirstNode={setOnlyShowFirstNode}
                             refresh={refresh}
+                            pageType={pageType}
+                            historyId={historyId}
                         />
                     )}
                     firstMinSize={160}
                     isVer={true}
                     freeze={!onlyShowFirstNode}
                     firstRatio={onlyShowFirstNode ? "100%" : undefined}
-                    secondMinSize={onlyShowFirstNode ? "0px" : 50}
+                    secondNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined, display: onlyShowFirstNode ? "none" : ""}}
+                    secondMinSize={50}
                     secondNode={() => (
                         <>
                             {!onlyShowFirstNode && typeof defaultFold === 'boolean' && (
@@ -93,6 +99,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         selectedFlow={selected}
                                         refresh={refresh}
                                         defaultFold={defaultFold}
+                                        pageType={pageType}
+                                        historyId={historyId}
                                         // defaultHeight={detailHeight}
                                     />
                                 </div>

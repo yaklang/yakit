@@ -10,7 +10,6 @@ import {
     EyeIcon
 } from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
@@ -18,10 +17,9 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {useInViewport, useMemoizedFn, useTrackedEffect, useWhyDidYouUpdate} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {Form, Tooltip, Collapse, Space, Divider, Descriptions} from "antd"
-import {useWatch} from "antd/lib/form/Form"
-import React, {useState, useRef, useEffect, useMemo, ReactNode, useContext} from "react"
+import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
 import {SelectOptionProps} from "../HTTPFuzzerPage"
@@ -31,7 +29,6 @@ import {StringToUint8Array} from "@/utils/str"
 import {
     ColorSelect,
     ExtractorItem,
-    MatcherAndExtractionCard,
     MatcherAndExtractionDrawer,
     MatcherItem,
     defMatcherAndExtractionCode,
@@ -53,6 +50,7 @@ import {AutoTextarea} from "../components/AutoTextarea/AutoTextarea"
 import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -85,7 +83,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         defaultHttpResponse,
         outsideShowResponseMatcherAndExtraction,
         onShowResponseMatcherAndExtraction,
-        inViewportCurrent
+        inViewportCurrent,
+        id,
+        matchSubmitFun
     } = props
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
@@ -101,6 +101,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [form] = Form.useForm()
     const queryRef = useRef(null)
     const [inViewport = true] = useInViewport(queryRef)
+
+    // 是否通过仅匹配打开的弹窗
+    const [isOpenByMacth,setOpenByMacth] = useState<boolean>(false)
 
     const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
     const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
@@ -248,6 +251,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             setVisibleDrawer(true)
         }
     })
+
+    const onOpenMatchingAndExtractionCardEvent = useMemoizedFn((pageId:string)=>{
+        if(pageId===id){
+            onAddMatchingAndExtractionCard("matchers")
+            setOpenByMacth(true)
+        }
+    })
+
+    useEffect(() => {
+        emiter.on("onOpenMatchingAndExtractionCard", onOpenMatchingAndExtractionCardEvent)
+        return () => {
+            emiter.off("onOpenMatchingAndExtractionCard", onOpenMatchingAndExtractionCardEvent)
+        }
+    }, [])
+    
     const onRemoveMatcher = useMemoizedFn((i) => {
         const v = form.getFieldsValue()
         onSetValue({
@@ -312,6 +330,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         return width
     }
     const onClose = useMemoizedFn(() => {
+        if(isOpenByMacth){
+            setOpenByMacth(false)
+        }
         setVisibleDrawer(false)
     })
     const onSave = useMemoizedFn((matcher, extractor) => {
@@ -324,6 +345,11 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             matchers: matcher.matchersList || [],
             extractors: extractor.extractorList || []
         })
+        if(isOpenByMacth){
+            setTimeout(()=>{
+                matchSubmitFun()
+            },500)
+        }
     })
     return (
         <div

@@ -212,7 +212,6 @@ module.exports = (win, getClient) => {
 
         isFirstData = true;
         stream = getClient().MITM();
-
         // 设置服务器发回的消息的回调函数
         stream.on("data", data => {
             // 处理第一个消息

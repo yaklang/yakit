@@ -5,6 +5,7 @@ export type WebFuzzerEventProps = {
     onImportYamlPopEditorContent: string
     onImportYamlEditorChange: string
     onFuzzerSequenceImportUpdateMenu: string
-    onGetExportFuzzer: "all"|"payload"
+    onGetExportFuzzer: string
     onGetExportFuzzerCallBack: string
+    onOpenMatchingAndExtractionCard: string
 }
