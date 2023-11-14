@@ -443,6 +443,10 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     user={plugin.Author}
                                     pluginId={plugin.UUID}
                                     updated_at={plugin.UpdatedAt || 0}
+                                    prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
+                                        headImg: ele.HeadImg,
+                                        userName: ele.UserName
+                                    }))}
                                 />
                                 <div className={styles["details-editor-wrapper"]}>
                                     <YakitEditor type={"yak"} value={plugin.Content} />
