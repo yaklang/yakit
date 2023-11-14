@@ -1,11 +1,12 @@
-const {ipcMain} = require("electron")
+const { ipcMain } = require("electron")
 const childProcess = require("child_process")
 const path = require("path")
 const os = require("os")
 const _sudoPrompt = require("sudo-prompt")
-const {GLOBAL_YAK_SETTING} = require("../state")
-const {testRemoteClient} = require("../ipc")
-const {getLocalYaklangEngine, engineLog} = require("../filePath")
+const { GLOBAL_YAK_SETTING } = require("../state")
+const { testRemoteClient } = require("../ipc")
+const { getLocalYaklangEngine, engineLog } = require("../filePath")
+const psList = require("./libs/ps-yak-process")
 const net = require("net");
 const fs = require("fs")
 
@@ -19,7 +20,7 @@ fs.open(engineLog, "a", (err, fd) => {
     }
 })
 
-let dbFile =  undefined
+let dbFile = undefined
 
 /** 本地引擎随机端口启动重试次数(防止无限制的随机重试，最大重试次数: 5) */
 let engineCount = 0
@@ -59,11 +60,11 @@ function generateWindowsSudoCommand(file, args) {
 /** @name 以管理员权限执行命令 */
 function sudoExec(cmd, opt, callback) {
     if (isWindows) {
-        childProcess.exec(cmd, {maxBuffer: 1000 * 1000 * 1000}, (err, stdout, stderr) => {
+        childProcess.exec(cmd, { maxBuffer: 1000 * 1000 * 1000 }, (err, stdout, stderr) => {
             callback(err)
         })
     } else {
-        _sudoPrompt.exec(cmd, {...opt, env: {YAKIT_HOME: path.join(os.homedir(), "yakit-projects/")}}, callback)
+        _sudoPrompt.exec(cmd, { ...opt, env: { YAKIT_HOME: path.join(os.homedir(), "yakit-projects/") } }, callback)
     }
 }
 
@@ -114,7 +115,7 @@ module.exports = (win, callback, getClient, newClient) => {
     ipcMain.handle("engine-status", () => {
         try {
             const text = "hello yak grpc engine"
-            getClient().Echo({text}, (err, data) => {
+            getClient().Echo({ text }, (err, data) => {
                 if (win) {
                     if (data?.result === text) {
                         win.webContents.send("client-engine-status-ok")
@@ -165,14 +166,14 @@ module.exports = (win, callback, getClient, newClient) => {
     const asyncStartLocalYakEngineServer = (win, params) => {
         engineCount += 1
 
-        const {sudo, port} = params
+        const { sudo, port } = params
         return new Promise((resolve, reject) => {
             try {
                 // 考虑如果管理员权限启动未成功该通过什么方式自启普通权限引擎进程
                 if (sudo) {
                     if (isWindows) {
                         const subprocess = childProcess.exec(
-                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${port}${dbFile?" --profile-db "+dbFile:""}`),
+                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${port}${dbFile ? " --profile-db " + dbFile : ""}`),
                             {
                                 maxBuffer: 1000 * 1000 * 1000,
                                 stdio: "pipe",
@@ -189,7 +190,7 @@ module.exports = (win, callback, getClient, newClient) => {
                         })
                         resolve()
                     } else {
-                        const cmd = `${getLocalYaklangEngine()} grpc --port ${port}${dbFile?` --profile-db ${dbFile}`:""}`
+                        const cmd = `${getLocalYaklangEngine()} grpc --port ${port}${dbFile ? ` --profile-db ${dbFile}` : ""}`
                         sudoExec(
                             cmd,
                             {
@@ -209,14 +210,14 @@ module.exports = (win, callback, getClient, newClient) => {
                     const log = out ? out : "ignore"
 
                     const grpcPort = ["grpc", "--port", `${port}`]
-                    const extraParams = dbFile?[...grpcPort,"--profile-db", dbFile]:grpcPort
+                    const extraParams = dbFile ? [...grpcPort, "--profile-db", dbFile] : grpcPort
 
                     const subprocess = childProcess.spawn(getLocalYaklangEngine(), extraParams, {
                         // stdio: ["ignore", "ignore", "ignore"]
                         detached: false, windowsHide: true,
                         stdio: ["ignore", log, log]
                     })
-                    
+
                     // subprocess.unref()
                     process.on("exit", () => {
                         // 终止子进程
@@ -228,17 +229,17 @@ module.exports = (win, callback, getClient, newClient) => {
                     })
                     subprocess.on("close", async (e) => {
                         toLog(`本地引擎退出，退出码为：${e}`)
-                        fs.readFile(engineLog,(err,data) => {
-                            if(err){
-                                console.log("读取引擎文件失败",err);
-                            }else{
+                        fs.readFile(engineLog, (err, data) => {
+                            if (err) {
+                                console.log("读取引擎文件失败", err);
+                            } else {
                                 toStdout(data)
                                 setTimeout(() => {
-                                   try {
-                                       fs.unlinkSync(engineLog)
-                                   } catch (e) {
-                                       console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
-                                   }
+                                    try {
+                                        fs.unlinkSync(engineLog)
+                                    } catch (e) {
+                                        console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
+                                    }
                                 }, 1000);
                             }
                         })
@@ -314,7 +315,7 @@ module.exports = (win, callback, getClient, newClient) => {
             params["Password"] || "",
         )
         return (await (new Promise((resolve, reject) => {
-            newClient().Echo({text: ECHO_TEST_MSG}, (err, data) => {
+            newClient().Echo({ text: ECHO_TEST_MSG }, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -335,5 +336,48 @@ module.exports = (win, callback, getClient, newClient) => {
     /** 输出到欢迎界面的日志中 */
     ipcMain.handle("output-log-to-welcome-console", (e, msg) => {
         toLog(`${msg}`)
+    })
+
+    /** 调用命令生成运行节点 */
+    ipcMain.handle("call-command-generate-node", (e, params) => {
+        return new Promise((resolve, reject) => {
+            // 运行节点
+            const subprocess = childProcess.spawn(getLocalYaklangEngine(), ['mq', '--server', params.ipOrdomain, '--server-port', params.port, '--id', params.nodename])
+            subprocess.stdout.on('data', (data) => {
+                resolve(subprocess.pid)
+            })
+            subprocess.on('error', (error) => {
+                reject(error)
+            })
+            subprocess.stderr.on('data', (data) => {
+                reject(data)
+            })
+        })
+    })
+    /** 删除运行节点 */
+    ipcMain.handle("kill-run-node", (e, params) => {
+        return new Promise((resolve, reject) => {
+            if (isWindows) {
+                childProcess.exec(`taskkill /F /PID ${params.pid}`, (error, stdout, stderr) => {
+                    if (error) {
+                        reject(error)
+                    }
+                    if (stderr) {
+                        reject(stderr)
+                    }
+                    resolve("")
+                })
+            } else {
+                childProcess.exec(`kill -9 ${params.pid}`, (error, stdout, stderr) => {
+                    if (error) {
+                        reject(error)
+                    }
+                    if (stderr) {
+                        reject(stderr)
+                    }
+                    resolve("")
+                })
+            }
+        })
     })
 }

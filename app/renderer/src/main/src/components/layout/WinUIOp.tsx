@@ -3,6 +3,10 @@ import {WinUIOpCloseSvgIcon, WinUIOpMaxSvgIcon, WinUIOpMinSvgIcon, WinUIOpRestor
 import {useMemoizedFn} from "ahooks"
 
 import styles from "./uiOperate.module.scss"
+import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
+import { useRunNodeStore } from "@/store/runNode"
+import { yakitFailed } from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -24,6 +28,21 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
             ipcRenderer.removeAllListeners("callback-win-unmaximize")
         }
     }, [])
+
+    /**
+     * 运行节点
+     */
+    const {runNodeList} = useRunNodeStore()
+    const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
+
+    const handleCloseSoft = () => {
+        // 如果运行节点存在
+        if (Array.from(runNodeList).length) {
+            setCloseRunNodeItemVerifyVisible(true)
+            return
+        }
+        operate("close")
+    }
 
     return (
         <div
@@ -50,9 +69,21 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
                     <div className={styles["divider-style"]}></div>
                 </div>
 
-                <div className={styles["op-btn"]} onClick={() => operate("close")}>
+                <div className={styles["op-btn"]} onClick={handleCloseSoft}>
                     <WinUIOpCloseSvgIcon className={styles["icon-style"]} />
                 </div>
+                {/* 关闭运行节点确认弹框 */}
+                <YakitHint
+                    visible={closeRunNodeItemVerifyVisible}
+                    title='是否确认关闭节点'
+                    content='关闭Yakit会默认关掉所有启用的节点'
+                    onOk={() => {
+                        operate("close")
+                    }}
+                    onCancel={() => {
+                        setCloseRunNodeItemVerifyVisible(false)
+                    }}
+                />
             </div>
         </div>
     )
