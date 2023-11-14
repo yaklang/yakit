@@ -4,7 +4,9 @@ import {
     SolidPluginProtScanIcon,
     SolidSparklesPluginIcon,
     SolidDocumentSearchPluginIcon,
-    SolidCollectionPluginIcon
+    SolidCollectionPluginIcon,
+    SolidCloudpluginIcon,
+    SolidPrivatepluginIcon
 } from "@/assets/icon/colors"
 import {ReactNode} from "react"
 import {CodecPluginTemplate} from "../invoker/data/CodecPluginTemplate"
@@ -120,4 +122,15 @@ export const DefaultStatusList: TypeSelectOpt[] = [
     {key: "0", ...aduitStatusToName["0"]},
     {key: "1", ...aduitStatusToName["1"]},
     {key: "2", ...aduitStatusToName["2"]}
+]
+
+/** @name 公开状态对应展示信息 */
+export const publicStatusToInfo: Record<string, {name: string; icon: ReactNode}> = {
+    "1": {name: "公开", icon: <SolidCloudpluginIcon />},
+    "2": {name: "私密", icon: <SolidPrivatepluginIcon />}
+}
+/** @name 公开状态选择列表 */
+export const DefaultPublicStatusList: TypeSelectOpt[] = [
+    {key: "1", ...publicStatusToInfo["1"]},
+    {key: "2", ...publicStatusToInfo["2"]}
 ]

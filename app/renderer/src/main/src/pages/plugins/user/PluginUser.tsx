@@ -20,10 +20,9 @@ import {
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {useMemoizedFn, useDebounceFn, useControllableValue, useInViewport, useLatest, useDebounceEffect} from "ahooks"
-import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import cloneDeep from "lodash/cloneDeep"
-import {PluginsContainer, PluginsLayout, defaultSearch, pluginStatusToName, statusTag} from "../baseTemplate"
+import {PluginsContainer, PluginsLayout, defaultSearch, statusTag} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
@@ -61,7 +60,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginRecycleList} from "./PluginRecycleList"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {PluginGV} from "../builtInData"
+import {DefaultPublicStatusList, PluginGV} from "../builtInData"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 
@@ -79,20 +78,6 @@ export const mePluginTypeList = [
     {
         label: "回收站",
         value: "recycle"
-    }
-]
-
-/**公开/私密 */
-const onlinePluginTypeList = [
-    {
-        key: "1", // 公开
-        name: pluginStatusToName["1"],
-        icon: <SolidCloudpluginIcon />
-    },
-    {
-        key: "2", // 私密
-        name: pluginStatusToName["2"],
-        icon: <SolidPrivatepluginIcon />
     }
 ]
 
@@ -248,7 +233,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                 hidden={!!plugin}
                 subTitle={
                     userPluginType === "myOnlinePlugin" && (
-                        <TypeSelect active={pluginPrivateSelect} list={onlinePluginTypeList} setActive={onSetActive} />
+                        <TypeSelect active={pluginPrivateSelect} list={DefaultPublicStatusList} setActive={onSetActive} />
                     )
                 }
                 extraHeader={
