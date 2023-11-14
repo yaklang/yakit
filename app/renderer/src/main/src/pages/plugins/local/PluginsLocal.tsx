@@ -31,9 +31,7 @@ import {yakitNotify} from "@/utils/notification"
 import {TypeSelectOpt} from "../funcTemplateType"
 import {API} from "@/services/swagger/resposeType"
 import {Tooltip} from "antd"
-
-import "../plugins.scss"
-import styles from "./PluginsLocal.module.scss"
+import {LoadingOutlined} from "@ant-design/icons"
 import {
     DeleteLocalPluginsByWhereRequestProps,
     DeleteYakScriptRequestProps,
@@ -53,9 +51,12 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {OutputPluginForm} from "@/pages/yakitStore/PluginOperator"
 import emiter from "@/utils/eventBus/eventBus"
-import {PluginLocalUpload} from "./PluginLocalUpload"
+import {PluginLocalUpload, PluginLocalUploadSingle} from "./PluginLocalUpload"
 import {YakitRoute} from "@/routes/newRoute"
 import {DefaultTypeList, PluginGV} from "../builtInData"
+
+import "../plugins.scss"
+import styles from "./PluginsLocal.module.scss"
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -103,6 +104,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [inViewport = true] = useInViewport(pluginsLocalRef)
     const removePluginRef = useRef<YakScript>()
     const removePluginDetailRef = useRef<YakScript>()
+    const filtersDetailRef = useRef<PluginFilterParams>() // 详情中的filter条件
+    const searchDetailRef = useRef<PluginSearchParams>() // 详情中的search条件
+
     const latestLoadingRef = useLatest(loading)
 
     // 选中插件的数量
@@ -153,8 +157,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             setPluginGroupList(res.data)
         })
     })
-    const filtersDetailRef = useRef<PluginFilterParams>() // 详情中的filter条件
-    const searchDetailRef = useRef<PluginSearchParams>() // 详情中的search条件
+
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
@@ -239,7 +242,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const optExtraNode = useMemoizedFn((data: YakScript) => {
         return (
             <LocalExtraOperate
-                isOwn={userInfo.user_id === data.UserId || `${data.UserId}` === "0"}
+                isCorePlugin={!!data.IsCorePlugin}
+                isOwn={userInfo.user_id === +data.UserId || +data.UserId === 0}
                 onRemovePlugin={() => onRemovePluginBefore(data)}
                 onExportPlugin={() => onExportPlugin(data)}
                 onEditPlugin={() => onEditPlugin(data)}
@@ -247,9 +251,19 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             />
         )
     })
+
     /** 上传 */
     const onUploadPlugin = useMemoizedFn((data: YakScript) => {
-        yakitNotify("success", "上传~~~")
+        if (!userInfo.isLogin) {
+            yakitNotify("error", "登录后才可上次插件")
+            return
+        }
+        const m = showYakitModal({
+            type: "white",
+            title: "上传插件",
+            content: <PluginLocalUploadSingle plugin={data} onClose={() => m.destroy()} />,
+            footer: null
+        })
     })
     /**编辑 */
     const onEditPlugin = useMemoizedFn((data: YakScript) => {
@@ -599,7 +613,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                             user={data.Author || ""}
                                             isCorePlugin={!!data.IsCorePlugin}
                                             official={!!data.OnlineOfficial}
-                                            // prImgs={data.prs}
+                                            prImgs={(data.CollaboratorInfo || []).map((ele) => ele.HeadImg)}
                                             time={data.UpdatedAt || 0}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
@@ -635,6 +649,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                 isShowSearchResultEmpty={+response.Total === 0}
                                 showIndex={showPluginIndex.current}
                                 setShowIndex={setShowPluginIndex}
+                                keyName='ScriptName'
                             />
                         ) : (
                             <div className={styles["plugin-local-empty"]}>
@@ -671,10 +686,17 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 })
 
 export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((props) => {
-    const {isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
-    const onRemove = useMemoizedFn((e) => {
+    const {isCorePlugin, isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
+    const [removeLoading, setRemoveLoading] = useState<boolean>(false)
+    const onRemove = useMemoizedFn(async (e) => {
         e.stopPropagation()
-        onRemovePlugin()
+        setRemoveLoading(true)
+        try {
+            await onRemovePlugin()
+        } catch (error) {}
+        setTimeout(() => {
+            setRemoveLoading(false)
+        }, 200)
     })
     const onExport = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -682,17 +704,28 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
     })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
+        if (isCorePlugin) {
+            yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
+            return
+        }
         onEditPlugin()
     })
     const onUpload = useMemoizedFn((e) => {
         e.stopPropagation()
         onUploadPlugin()
     })
+    const isShowUpload = useMemo(() => {
+        return isOwn && !isCorePlugin
+    }, [isCorePlugin, isOwn])
     return (
         <div className={styles["local-extra-operate-wrapper"]}>
-            <Tooltip title='删除' destroyTooltipOnHide={true}>
-                <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
-            </Tooltip>
+            {removeLoading ? (
+                <YakitButton type='text2' icon={<LoadingOutlined />} />
+            ) : (
+                <Tooltip title='删除' destroyTooltipOnHide={true}>
+                    <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
+                </Tooltip>
+            )}
             <div className='divider-style' />
             <Tooltip title='导出' destroyTooltipOnHide={true}>
                 <YakitButton type='text2' icon={<OutlineExportIcon onClick={onExport} />} />
@@ -701,7 +734,7 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
             <Tooltip title='编辑' destroyTooltipOnHide={true}>
                 <YakitButton type='text2' icon={<OutlinePencilaltIcon onClick={onEdit} />} />
             </Tooltip>
-            {isOwn && (
+            {isShowUpload && (
                 <>
                     <div className='divider-style' />
                     <YakitButton
