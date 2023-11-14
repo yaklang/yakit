@@ -701,6 +701,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                             help={data.help || ""}
                                             img={data.head_img || ""}
                                             user={data.authors || ""}
+                                            prImgs={(data.collaborator || []).map((ele) => ele.head_img)}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
                                             official={data.official}
