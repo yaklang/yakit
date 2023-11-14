@@ -541,6 +541,7 @@ export const apiUpdatePluginPrivateMine: (query: API.UpPluginsPrivateRequest) =>
                 data: {...query}
             })
                 .then((res: API.ActionSucceeded) => {
+                    yakitNotify("success", "公开/私密修改成功")
                     resolve(res)
                 })
                 .catch((err) => {
