@@ -552,6 +552,8 @@ service Yak {
   rpc QueryTrafficTCPReassembled(QueryTrafficTCPReassembledRequest) returns (QueryTrafficTCPReassembledResponse);
 
   rpc DuplexConnection(stream DuplexConnectionRequest) returns (stream DuplexConnectionResponse);
+
+  rpc SmokingEvaluatePluginBatch(SmokingEvaluatePluginBatchRequest) returns (stream SmokingEvaluatePluginBatchResponse);
 }
 
 message DuplexConnectionRequest {
@@ -3101,6 +3103,13 @@ message YakScript {
   string RiskType = 32;
   QueryYakScriptRiskDetailByCWEResponse RiskDetail = 33;
   string RiskAnnotation = 34;
+  // 协作者
+  repeated Collaborator CollaboratorInfo = 35;
+}
+
+message Collaborator {
+  string HeadImg = 1;
+  string UserName = 2;
 }
 
 message SaveNewYakScriptRequest {
@@ -4126,4 +4135,15 @@ message ExportHTTPFuzzerTaskToYamlRequest{
 message ExportHTTPFuzzerTaskToYamlResponse{
   GeneralResponse Status = 1;
   string YamlContent = 2;
+}
+
+
+message SmokingEvaluatePluginBatchRequest {
+  repeated string ScriptNames = 1;
+}
+
+message SmokingEvaluatePluginBatchResponse {
+  double Progress = 1;
+  string Message = 2;
+  string MessageType = 3;
 }
