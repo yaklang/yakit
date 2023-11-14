@@ -54,9 +54,14 @@ import emiter from "@/utils/eventBus/eventBus"
 import {PluginLocalUpload, PluginLocalUploadSingle} from "./PluginLocalUpload"
 import {YakitRoute} from "@/routes/newRoute"
 import {DefaultTypeList, PluginGV} from "../builtInData"
+import {RemoteGV} from "@/yakitGV"
+import {randomString} from "@/utils/randomUtil"
+import usePluginUploadHooks, {SaveYakScriptToOnlineRequest} from "../pluginUploadHooks"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
+
+const {ipcRenderer} = window.require("electron")
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -106,6 +111,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const removePluginDetailRef = useRef<YakScript>()
     const filtersDetailRef = useRef<PluginFilterParams>() // 详情中的filter条件
     const searchDetailRef = useRef<PluginSearchParams>() // 详情中的search条件
+    const taskTokenRef = useRef(randomString(40))
+    const uploadPluginRef = useRef<YakScript>() //上传暂存的插件数据
 
     const latestLoadingRef = useLatest(loading)
 
@@ -134,6 +141,32 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         fetchList(true)
     }, [userInfo.isLogin, filters])
 
+    /**上传成功后需要修改列表中的数据 */
+    const onUploadSuccess = useMemoizedFn(() => {
+        if (uploadPluginRef.current) {
+            ipcRenderer
+                .invoke("GetYakScriptByName", {Name: uploadPluginRef.current.ScriptName})
+                .then((i: YakScript) => {
+                    dispatch({
+                        type: "update",
+                        payload: {
+                            item: i
+                        }
+                    })
+                })
+                .catch(() => {
+                    fetchList(true)
+                    yakitNotify("error", "查询最新的本地数据失败,自动刷新列表")
+                })
+        }
+    })
+    const {onStart: onStartUploadPlugin} = usePluginUploadHooks({
+        taskToken: taskTokenRef.current,
+        onUploadData: () => {},
+        onUploadSuccess: onUploadSuccess,
+        onUploadEnd: () => {},
+        onUploadError: () => {}
+    })
     const onRefLocalPluginList = useMemoizedFn(() => {
         fetchList(true)
     })
@@ -253,16 +286,36 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
 
     /** 上传 */
-    const onUploadPlugin = useMemoizedFn((data: YakScript) => {
+    const onUploadPlugin = useMemoizedFn(async (data: YakScript) => {
         if (!userInfo.isLogin) {
             yakitNotify("error", "登录后才可上次插件")
             return
         }
-        const m = showYakitModal({
-            type: "white",
-            title: "上传插件",
-            content: <PluginLocalUploadSingle plugin={data} onClose={() => m.destroy()} />,
-            footer: null
+        uploadPluginRef.current = data
+        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+            if (setting) {
+                const values = JSON.parse(setting)
+                if (data.OnlineBaseUrl === values.BaseUrl) {
+                    const params: SaveYakScriptToOnlineRequest = {
+                        ScriptNames: [data.ScriptName],
+                        IsPrivate: !!data.OnlineIsPrivate
+                    }
+                    onStartUploadPlugin(params)
+                } else {
+                    const m = showYakitModal({
+                        type: "white",
+                        title: "上传插件",
+                        content: (
+                            <PluginLocalUploadSingle
+                                plugin={data}
+                                onUploadSuccess={onUploadSuccess}
+                                onClose={() => m.destroy()}
+                            />
+                        ),
+                        footer: null
+                    })
+                }
+            }
         })
     })
     /**编辑 */
@@ -688,6 +741,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((props) => {
     const {isCorePlugin, isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
+    const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const onRemove = useMemoizedFn(async (e) => {
         e.stopPropagation()
         setRemoveLoading(true)
@@ -710,9 +764,16 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
         }
         onEditPlugin()
     })
-    const onUpload = useMemoizedFn((e) => {
+    const onUpload = useMemoizedFn(async (e) => {
         e.stopPropagation()
-        onUploadPlugin()
+
+        setUploadLoading(true)
+        try {
+            await onUploadPlugin()
+        } catch (error) {}
+        setTimeout(() => {
+            setUploadLoading(false)
+        }, 200)
     })
     const isShowUpload = useMemo(() => {
         return isOwn && !isCorePlugin
@@ -741,6 +802,7 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
                         icon={<OutlineClouduploadIcon />}
                         onClick={onUpload}
                         className={styles["cloud-upload-icon"]}
+                        loading={uploadLoading}
                     >
                         上传
                     </YakitButton>
