@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Input, Tooltip} from "antd"
+import {Form, Input, Tooltip} from "antd"
 import {MenuOutlined} from "@ant-design/icons"
 import {useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -15,11 +15,13 @@ import {
     OutlineExportIcon,
     OutlineFolderaddIcon,
     OutlineImportIcon,
+    OutlinePaperclipIcon,
     OutlinePencilaltIcon,
     OutlinePlusIcon,
-    OutlineTrashIcon
+    OutlineTrashIcon,
+    OutlineXIcon
 } from "@/assets/icon/outline"
-import {OutlineAddPayloadIcon} from "./icon"
+import {OutlineAddPayloadIcon, PropertyIcon} from "./icon"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {
@@ -29,15 +31,119 @@ import {
     SolidDocumenttextIcon,
     SolidDotsverticalIcon,
     SolidDragsortIcon,
-    SolidFolderopenIcon
+    SolidFolderopenIcon,
+    SolidXcircleIcon
 } from "@/assets/icon/solid"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import Dragger from "antd/lib/upload/Dragger"
 const {ipcRenderer} = window.require("electron")
+
+interface CreateDictionariesProps {
+    onClose: () => void
+}
+
+// 新建字典
+export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => {
+    const {onClose} = props
+    // 可上传文件类型
+    const FileType = ["image/png", "image/jpeg", "image/png"]
+    return (
+        <div className={styles["create-dictionaries"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>新建字典</div>
+                <div className={styles["extra"]} onClick={onClose}>
+                    <OutlineXIcon />
+                </div>
+            </div>
+            <div className={styles["explain"]}>
+                <div className={styles["explain-bg"]}>
+                    <div className={styles["title"]}>可根据需求选择以下存储方式，存储方式不影响使用：</div>
+                    <div className={styles["content"]}>
+                        <div className={styles["item"]}>
+                            <div className={styles["dot"]}>1</div>
+                            <div className={styles["text"]}>
+                                文件存储：将字典以文件形式保存在本地，不支持命中次数，
+                                <span className={styles["hight-text"]}>上传速度更快</span>
+                            </div>
+                        </div>
+                        <div className={styles["item"]}>
+                            <div className={styles["dot"]}>2</div>
+                            <div className={styles["text"]}>
+                                数据库存储：将字典数据读取后保存在数据库中，支持命中次数，
+                                <span className={styles["hight-text"]}>搜索更方便</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className={styles["info-box"]}>
+                <div className={styles["input-box"]}>
+                    <div className={styles["name"]}>
+                        字典名<span className={styles["must"]}>*</span>:
+                    </div>
+                    <div>
+                        <YakitInput style={{width: "100%"}} placeholder='请输入...' />
+                    </div>
+                </div>
+                <div className={styles["upload-dragger-box"]}>
+                    <Dragger
+                        className={styles["upload-dragger"]}
+                        accept={FileType.join(",")}
+                        // accept=".jpg, .jpeg, .png"
+                        multiple={false}
+                        maxCount={1}
+                        showUploadList={false}
+                        beforeUpload={(f) => {
+                            if (!FileType.includes(f.type)) {
+                                failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
+                                return false
+                            }
+
+                            return false
+                        }}
+                    >
+                        <div className={styles["upload-info"]}>
+                            <div className={styles["add-file-icon"]}>
+                                <PropertyIcon />
+                            </div>
+                            <div className={styles["content"]}>
+                                <div className={styles["title"]}>
+                                    可将文件拖入框内，或<span className={styles["hight-light"]}>点击此处导入</span>
+                                </div>
+                                <div className={styles["sub-title"]}>支持文件夹批量上传</div>
+                            </div>
+                        </div>
+                    </Dragger>
+                </div>
+                <div className={styles["upload-list"]}>
+                    <div className={styles["upload-list-item"]}>
+                        <div className={styles["link-icon"]}>
+                            <OutlinePaperclipIcon />
+                        </div>
+                        <div className={styles["text"]}>/sersdsfsd/v1l14n/yakit-projects/sersdsfsd/v1l14n/yakit-projects/projects/project-111.yakitp</div>
+                        <div className={styles["close-icon"]}>
+                            <SolidXcircleIcon />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className={styles["submit-box"]}>
+                <YakitButton disabled={true} type='outline1' icon={<SolidDatabaseIcon />}>
+                    数据库存储
+                </YakitButton>
+                <YakitButton disabled={true} icon={<SolidDocumenttextIcon />}>
+                    文件存储
+                </YakitButton>
+            </div>
+        </div>
+    )
+}
 
 export interface NewPayloadTableProps {}
 export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     return <div className={styles["new-payload-table"]}></div>
 }
-export interface DragDataProps {}
 export interface NewPayloadListProps {}
 
 // 示例数据，可以根据实际需求进行修改
@@ -101,6 +207,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     const [selectItem, setSelectItem] = useState<number>()
     // 拖放结束时的回调函数
     const onDragEnd = (result) => {
+        console.log("result", result)
         const {source, destination, draggableId, type} = result
 
         if (!destination) {
@@ -161,6 +268,20 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                             onClick: ({key}) => {
                                 switch (key) {
                                     case "createDictionaries":
+                                        const m = showYakitModal({
+                                            title: null,
+                                            footer: null,
+                                            width: 520,
+                                            type: "white",
+                                            closable: false,
+                                            content: (
+                                                <CreateDictionaries
+                                                    onClose={() => {
+                                                        m.destroy()
+                                                    }}
+                                                />
+                                            )
+                                        })
                                         break
                                     case "createFolder":
                                         break
@@ -294,16 +415,16 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                     label: (
                                         <div className={styles["extra-menu"]}>
                                             <OutlineImportIcon />
-                                            <div className={styles["menu-name"]}>导入 Payload</div>
+                                            <div className={styles["menu-name"]}>扩充字典</div>
                                         </div>
                                     )
                                 },
                                 {
-                                    key: "exportDictionaries",
+                                    key: "exportTxt",
                                     label: (
                                         <div className={styles["extra-menu"]}>
                                             <OutlineExportIcon />
-                                            <div className={styles["menu-name"]}>导出字典</div>
+                                            <div className={styles["menu-name"]}>导出 Txt</div>
                                         </div>
                                     )
                                 },
@@ -338,6 +459,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                             }
                         }}
                         dropdown={{
+                            overlayClassName: styles["payload-list-menu"],
                             trigger: ["click"],
                             placement: "bottomRight",
                             onVisibleChange: (v) => {
@@ -512,6 +634,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         }
                     }}
                     dropdown={{
+                        overlayClassName: styles["payload-list-menu"],
                         trigger: ["click"],
                         placement: "bottomRight",
                         onVisibleChange: (v) => {
