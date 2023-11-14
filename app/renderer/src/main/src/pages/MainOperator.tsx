@@ -599,17 +599,23 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             dragAreaDom.addEventListener(
                 "drop",
                 function (e: {
+                    dataTransfer: any
                     preventDefault: () => void
                     target: {getBoundingClientRect: () => any}
                     clientY: number
                 }) {
                     e.preventDefault()
-                    const rect = dragAreaDom.getBoundingClientRect()
-                    const y = e.clientY - rect.top
-                    const currentTop = y >= rect.height - 43 - 10 ? rect.height - 43 - 10 : y
-                    chartCSDragItemDom.style.top = currentTop <= 0 ? 0 : currentTop + "px"
+                    if (e.dataTransfer.getData("dragItem") === "chartCSDragItem") {
+                        const rect = dragAreaDom.getBoundingClientRect()
+                        const y = e.clientY - rect.top
+                        const currentTop = y >= rect.height - 43 - 10 ? rect.height - 43 - 10 : y
+                        chartCSDragItemDom.style.top = currentTop <= 0 ? 0 : currentTop + "px"
+                    }
                 }
             )
+            chartCSDragItemDom.addEventListener("dragstart", function (e) {
+                e.dataTransfer.setData("dragItem", "chartCSDragItem")
+            })
         }
     }, [chartCSDragItemRef, chartCSDragAreaRef])
 
