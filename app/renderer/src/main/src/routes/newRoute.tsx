@@ -338,7 +338,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.HTTPFuzzer,
     YakitRoute.WebsiteTree,
     YakitRoute.DB_Ports,
-    YakitRoute.Beta_DebugPlugin
+    YakitRoute.Beta_DebugPlugin,
+    YakitRoute.DB_HTTPHistory,
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
