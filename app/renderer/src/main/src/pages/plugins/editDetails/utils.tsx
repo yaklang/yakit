@@ -2,10 +2,10 @@ import {YakScript} from "@/pages/invoker/schema"
 import {PluginDataProps, YakParamProps, localYakInfo} from "../pluginsType"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
-import {DownloadOnlinePluginProps} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {GetYakScriptByOnlineIDRequest} from "@/pages/yakitStore/YakitStorePage"
 import {yakitNotify} from "@/utils/notification"
 import {toolDelInvalidKV} from "@/utils/tool"
+import {apiDownloadPluginMine} from "../utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -238,7 +238,7 @@ export const uploadOnlinePlugin = (
     isModify: boolean,
     callback?: (plugin?: YakScript) => any
 ) => {
-    console.log("api", info)
+    console.log("api-upload", info)
     // 往线上上传插件
     NetWorkApi<API.PluginsEditRequest, API.PluginsResponse>({
         method: "post",
@@ -252,11 +252,7 @@ export const uploadOnlinePlugin = (
                 return
             }
             // 下载插件
-            ipcRenderer
-                .invoke("DownloadOnlinePluginById", {
-                    OnlineID: res.id,
-                    UUID: res.uuid
-                } as DownloadOnlinePluginProps)
+            apiDownloadPluginMine({UUID: [res.uuid]})
                 .then(() => {
                     // 刷新插件菜单
                     setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
@@ -277,7 +273,6 @@ export const uploadOnlinePlugin = (
                 })
                 .catch((err) => {
                     if (callback) callback()
-                    yakitNotify("error", "插件下载本地失败:" + err)
                 })
         })
         .catch((err) => {
@@ -300,11 +295,7 @@ export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugi
     })
         .then((res) => {
             // 下载插件
-            ipcRenderer
-                .invoke("DownloadOnlinePluginById", {
-                    OnlineID: res.id,
-                    UUID: res.uuid
-                } as DownloadOnlinePluginProps)
+            apiDownloadPluginMine({UUID: [res.uuid]})
                 .then(() => {
                     // 刷新插件菜单
                     setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
@@ -325,7 +316,6 @@ export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugi
                 })
                 .catch((err) => {
                     if (callback) callback()
-                    yakitNotify("error", "插件下载本地失败:" + err)
                 })
         })
         .catch((err) => {

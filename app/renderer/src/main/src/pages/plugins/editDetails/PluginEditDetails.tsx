@@ -46,6 +46,13 @@ import {YakitRoute} from "@/routes/newRoute"
 import {DefaultTypeList, PluginGV, pluginTypeToName} from "../builtInData"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {getRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
+import {showModal} from "@/utils/showModal"
+import {YakScriptRunner} from "@/pages/invoker/ExecYakScript"
+import {YakScriptParamsSetter} from "@/pages/invoker/YakScriptParamsSetter"
+import {queryYakScriptList} from "@/pages/yakitStore/network"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
@@ -69,11 +76,11 @@ interface PluginEditDetailsProps {
 export interface SavePluginInfoSignalProps {
     route: YakitRoute
     isOnline: boolean
-    info: YakScript
+    pluginId: number
 }
 
 export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
-    const {id} = props
+    const {id: pluginId} = props
 
     // 编辑时的旧数据
     const [info, setInfo] = useState<YakScript>()
@@ -121,12 +128,27 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     })
 
     useEffect(() => {
-        if (id) {
-            fetchPluginInfo(id)
+        if (pluginId) {
+            fetchPluginInfo(pluginId)
         }
-    }, [id])
+    }, [pluginId])
+
+    const privateDomain = useRef<string>("")
+    // 获取私有域地址
+    const fetchPrivateDomain = useMemoizedFn(() => {
+        getRemoteValue(RemoteGV.HttpSetting).then((value: string) => {
+            if (value) {
+                try {
+                    privateDomain.current = JSON.parse(value)?.BaseUrl
+                } catch (error) {}
+            }
+        })
+    })
 
     const {userInfo} = useStore()
+    useEffect(() => {
+        if (userInfo.isLogin) fetchPrivateDomain()
+    }, [userInfo])
 
     // 当前插件是否为本人插件
     const isUser = useMemo(() => {
@@ -134,7 +156,12 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     }, [info, userInfo])
 
     // 是否为编辑状态
-    const isModify = useMemo(() => !!info, [info])
+    const isModify = useMemo(() => {
+        console.log("ismodify", info, privateDomain.current)
+        if (!info) return false
+        if (info.OnlineBaseUrl !== privateDomain.current) return false
+        return true
+    }, [info, privateDomain.current])
 
     // 页面分块步骤式展示-相关逻辑
     const [path, setPath] = useState<"type" | "info" | "setting">("type")
@@ -370,8 +397,109 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     })
 
     /** 页面右上角的按钮组操作 start */
+    const debugPlugin = useMemoizedFn((data: YakScript) => {
+        const yakScriptInfo: YakScript = {...data}
+        const exec = (extraParams?: YakExecutorParam[]) => {
+            if (yakScriptInfo.Params.length <= 0) {
+                showModal({
+                    title: "立即执行",
+                    width: 1000,
+                    content: (
+                        <>
+                            <YakScriptRunner
+                                consoleHeight={"200px"}
+                                debugMode={true}
+                                script={yakScriptInfo}
+                                params={[...(extraParams || [])]}
+                            />
+                        </>
+                    )
+                })
+            } else {
+                let m = showModal({
+                    title: "确认想要执行的参数",
+                    width: "70%",
+                    content: (
+                        <>
+                            <YakScriptParamsSetter
+                                {...yakScriptInfo}
+                                saveDebugParams={true}
+                                onParamsConfirm={(params) => {
+                                    m.destroy()
+                                    showModal({
+                                        title: "立即执行",
+                                        width: 1000,
+                                        content: (
+                                            <>
+                                                <YakScriptRunner
+                                                    debugMode={true}
+                                                    script={yakScriptInfo}
+                                                    params={[...params, ...(extraParams || [])]}
+                                                />
+                                            </>
+                                        )
+                                    })
+                                }}
+                            />
+                        </>
+                    )
+                })
+            }
+        }
+        if (yakScriptInfo.EnablePluginSelector) {
+            queryYakScriptList(
+                yakScriptInfo.PluginSelectorTypes || "mitm,port-scan",
+                (i) => {
+                    exec([{Key: "__yakit_plugin_names__", Value: i.map((i) => i.ScriptName).join("|")}])
+                },
+                undefined,
+                10,
+                undefined,
+                undefined,
+                undefined,
+                () => {
+                    exec([{Key: "__yakit_plugin_names__", Value: "no-such-plugin"}])
+                }
+            )
+        } else {
+            exec()
+        }
+    })
     // 调试
-    const onDebug = useMemoizedFn(() => {})
+    const onDebug = useMemoizedFn(async () => {
+        if (saveLoading || onlineLoading || modifyLoading) return
+        setSaveLoading(true)
+
+        const obj: PluginDataProps | undefined = await convertPluginInfo()
+        // 基础验证未通过
+        if (!obj) {
+            closeSaveLoading()
+            return
+        }
+        // 出现未知错误，未获取到插件名
+        if (!obj.ScriptName) {
+            yakitNotify("error", "未获取到插件名，请关闭页面后重试")
+            closeSaveLoading()
+            return
+        }
+
+        const request: localYakInfo = convertLocalToLocalInfo(isModify, {info: info, modify: obj})
+        setSaveLoading(true)
+        ipcRenderer
+            .invoke("SaveLocalPlugin", request)
+            .then((data: YakScript) => {
+                debugPlugin(data)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", `保存 Yak 模块失败: ${e} 无法调试`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setSaveLoading(false)
+                }, 200)
+            })
+    })
+
     const [onlineLoading, setOnlineLoading] = useState<boolean>(false)
     // 同步至云端
     const onSyncCloud = useMemoizedFn(async () => {
@@ -606,6 +734,11 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                 }, 200)
             })
         }
+        if (!isSubmit) {
+            setTimeout(() => {
+                setModifyLoading(false)
+            }, 200)
+        }
         setModifyReason(false)
     })
 
@@ -640,7 +773,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     }, [])
 
     useEffect(() => {
-        if (id) {
+        if (pluginId) {
             setSubscribeClose(YakitRoute.ModifyYakitScript, {
                 close: {
                     title: "插件未保存",
@@ -705,13 +838,13 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         }
 
         return () => {
-            if (id) {
+            if (pluginId) {
                 removeSubscribeClose(YakitRoute.ModifyYakitScript)
             } else {
                 removeSubscribeClose(YakitRoute.AddYakitScript)
             }
         }
-    }, [id])
+    }, [pluginId])
     // 销毁二次提示的实例(新建|编辑 状态放一起处理)
     const onDestroyInstance = useMemoizedFn((state?: boolean) => {
         try {
@@ -772,7 +905,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             const param: SavePluginInfoSignalProps = {
                 route: parent,
                 isOnline: !!isOnline,
-                info: info
+                pluginId: +info.Id || 0
             }
             emiter.emit("savePluginInfoSignal", JSON.stringify(param))
         }
@@ -782,7 +915,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         <div className={styles["plugin-edit-details-wrapper"]}>
             <div className={styles["plugin-edit-details-header"]}>
                 <div className={styles["header-title"]}>
-                    <div className={styles["title-style"]}>{isModify ? "修改插件" : "新建插件"}</div>
+                    <div className={styles["title-style"]}>{pluginId ? "修改插件" : "新建插件"}</div>
                     {isModify && (
                         <div className={styles["title-extra-wrapper"]}>
                             <YakitTag color={pluginTypeToName[typeParams.Type].color as any}>
@@ -1231,6 +1364,8 @@ const UploadPluginModal: React.FC<UploadPluginModalProps> = memo((props) => {
             } else {
                 onCancel(false)
             }
+        } else {
+            onCancel(value)
         }
     })
 

@@ -320,6 +320,18 @@ export interface FilterPopoverBtnProps {
     type?: "check" | "online" | "user" | "local"
 }
 
+/** 插件源码评分模块 */
+export interface CodeScoreModuleProps {
+    /** 插件类型 */
+    type: string
+    /** 插件源码 */
+    code: string
+    /** 是否开始评分 */
+    isStart: boolean
+    /** 执行完后的回调(合格给ture，不合格给false) */
+    callback: (value: boolean) => any
+}
+
 /** 插件源码评分弹窗 */
 export interface CodeScoreModalProps {
     /** 插件类型 */

@@ -1500,12 +1500,6 @@ export const statusTag: {[key: string]: ReactNode} = {
     )
 }
 
-/** 个人插件状态对应展示名称 */
-export const pluginStatusToName: Record<string, string> = {
-    "1": "公开",
-    "2": "私密"
-}
-
 /** 搜索过滤条件对应展示名称 */
 export const filterToName: Record<string, string> = {
     type: "插件状态",
