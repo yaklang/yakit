@@ -2,6 +2,7 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {
     AuthorImgProps,
     CodeScoreModalProps,
+    CodeScoreModuleProps,
     FilterPopoverBtnProps,
     FuncBtnProps,
     FuncFilterPopoverProps,
@@ -1539,21 +1540,16 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
     )
 })
 
-/** @name 插件源码评分弹窗 */
-export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
-    const {type, code, visible, onCancel} = props
+/** @name 插件源码评分模块(包含评分逻辑),可和别的模块组合成新UI一起使用 */
+export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
+    const {type, code, isStart, callback} = props
 
     const [loading, setLoading] = useState<boolean>(true)
     const [response, setResponse] = useState<SmokingEvaluateResponse>()
 
-    useEffect(() => {
-        if (visible) {
-            onTest()
-        } else {
-            setLoading(true)
-            setResponse(undefined)
-        }
-    }, [visible])
+    const fetchStartState = useMemoizedFn(() => {
+        return isStart
+    })
 
     // 开始评分
     const onTest = useMemoizedFn(() => {
@@ -1561,21 +1557,113 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
         ipcRenderer
             .invoke("SmokingEvaluatePlugin", {PluginType: type, Code: code})
             .then((rsp: SmokingEvaluateResponse) => {
-                if (!visible) return
+                if (!fetchStartState()) return
                 setResponse(rsp)
                 if (+rsp?.Score >= 60) {
                     setTimeout(() => {
-                        onSuccess()
+                        callback(true)
                     }, 1000)
+                } else {
+                    callback(false)
                 }
             })
             .catch((e) => {
                 yakitNotify("error", `插件基础测试失败: ${e}`)
+                callback(false)
             })
             .finally(() => {
                 setLoading(false)
             })
     })
+
+    useEffect(() => {
+        if (isStart) {
+            onTest()
+        }
+    }, [isStart])
+
+    return (
+        <div className={styles["code-score-modal"]}>
+            <div className={styles["header-wrapper"]}>
+                <div className={styles["title-style"]}>检测项包含：</div>
+                <div className={styles["header-body"]}>
+                    <div className={styles["opt-content"]}>
+                        <div className={styles["content-order"]}>1</div>
+                        基础编译测试，判断语法是否符合规范，是否存在不正确语法；
+                    </div>
+                    <div className={styles["opt-content"]}>
+                        <div className={styles["content-order"]}>2</div>
+                        把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
+                    </div>
+                    <div className={styles["opt-content"]}>
+                        <div className={styles["content-order"]}>3</div>
+                        检查插件执行过程是否会发生崩溃。
+                    </div>
+                </div>
+            </div>
+            {loading && (
+                <div className={styles["loading-wrapper"]}>
+                    <div className={styles["loading-body"]}>
+                        <div className={styles["loading-icon"]}>
+                            <YakitSpin spinning={true} />
+                        </div>
+                        <div className={styles["loading-title"]}>
+                            <div className={styles["title-style"]}>检测中，请耐心等待...</div>
+                            <div className={styles["subtitle-style"]}>
+                                一般来说，检测将会在 <span className={styles["active-style"]}>10-20s</span> 内结束
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {!loading && (
+                <div className={styles["loading-wrapper"]}>
+                    <div className={styles["error-list"]}>
+                        {response && (
+                            <div className={styles["list-body"]}>
+                                {(response?.Results || []).map((item) => {
+                                    return (
+                                        <div className={styles["list-opt"]}>
+                                            <div className={styles["opt-header"]}>
+                                                <PluginTestErrorIcon />
+                                                {item.Item}
+                                            </div>
+                                            <div className={styles["opt-content"]}>{item.Suggestion}</div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                        {response && (+response?.Score || 0) < 60 && (
+                            <div className={styles["opt-results"]}>
+                                <SolidExclamationIcon />
+                                <div className={styles["content-style"]}>（上传失败，请修复后再上传）</div>
+                            </div>
+                        )}
+                        {response && (+response?.Score || 0) >= 60 && (
+                            <div className={styles["opt-results"]}>
+                                <div className={styles["success-score"]}>
+                                    {+response?.Score}
+                                    <span className={styles["suffix-style"]}>分</span>
+                                </div>
+                                <div className={styles["content-style"]}>（表现良好，开始上传插件中...）</div>
+                            </div>
+                        )}
+                        {!response && (
+                            <div className={styles["opt-results"]}>
+                                <div className={styles["content-style"]}>检查错误，请关闭后再次尝试!</div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+})
+
+/** @name 插件源码评分弹窗 */
+export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
+    const {type, code, visible, onCancel} = props
 
     // 不合格|取消
     const onFailed = useMemoizedFn(() => {
@@ -1584,6 +1672,12 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
     // 合格
     const onSuccess = useMemoizedFn(() => {
         onCancel(true)
+    })
+
+    const moduleCallback = useMemoizedFn((value: boolean) => {
+        if (value) {
+            onSuccess()
+        }
     })
 
     return (
@@ -1598,81 +1692,7 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
             footer={null}
             onCancel={onFailed}
         >
-            <div className={styles["code-score-modal"]}>
-                <div className={styles["header-wrapper"]}>
-                    <div className={styles["title-style"]}>检测项包含：</div>
-                    <div className={styles["header-body"]}>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>1</div>
-                            基础编译测试，判断语法是否符合规范，是否存在不正确语法；
-                        </div>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>2</div>
-                            把基础防误报服务器作为测试基准，防止条件过于宽松导致的误报；
-                        </div>
-                        <div className={styles["opt-content"]}>
-                            <div className={styles["content-order"]}>3</div>
-                            检查插件执行过程是否会发生崩溃。
-                        </div>
-                    </div>
-                </div>
-                {loading && (
-                    <div className={styles["loading-wrapper"]}>
-                        <div className={styles["loading-body"]}>
-                            <div className={styles["loading-icon"]}>
-                                <YakitSpin spinning={true} />
-                            </div>
-                            <div className={styles["loading-title"]}>
-                                <div className={styles["title-style"]}>检测中，请耐心等待...</div>
-                                <div className={styles["subtitle-style"]}>
-                                    一般来说，检测将会在 <span className={styles["active-style"]}>10-20s</span> 内结束
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {!loading && (
-                    <div className={styles["loading-wrapper"]}>
-                        <div className={styles["error-list"]}>
-                            {response && (
-                                <div className={styles["list-body"]}>
-                                    {(response?.Results || []).map((item) => {
-                                        return (
-                                            <div className={styles["list-opt"]}>
-                                                <div className={styles["opt-header"]}>
-                                                    <PluginTestErrorIcon />
-                                                    {item.Item}
-                                                </div>
-                                                <div className={styles["opt-content"]}>{item.Suggestion}</div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            )}
-                            {response && (+response?.Score || 0) < 60 && (
-                                <div className={styles["opt-results"]}>
-                                    <SolidExclamationIcon />
-                                    <div className={styles["content-style"]}>（上传失败，请修复后再上传）</div>
-                                </div>
-                            )}
-                            {response && (+response?.Score || 0) >= 60 && (
-                                <div className={styles["opt-results"]}>
-                                    <div className={styles["success-score"]}>
-                                        {+response?.Score}
-                                        <span className={styles["suffix-style"]}>分</span>
-                                    </div>
-                                    <div className={styles["content-style"]}>（表现良好，开始上传插件中...）</div>
-                                </div>
-                            )}
-                            {!response && (
-                                <div className={styles["opt-results"]}>
-                                    <div className={styles["content-style"]}>检查错误，请关闭后再次尝试!</div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
+            <CodeScoreModule type={type} code={code} isStart={visible} callback={moduleCallback} />
         </YakitModal>
     )
 })
