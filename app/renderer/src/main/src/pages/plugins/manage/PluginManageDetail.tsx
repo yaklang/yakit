@@ -443,7 +443,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
             if (type === "nopass") {
                 setStatusLoading(true)
-                onChangeStatus({isPass: true, description: reason}, (value) => {
+                onChangeStatus({isPass: false, description: reason}, (value) => {
                     if (value) {
                         if (plugin) {
                             setPlugin({...plugin, status: 2})
@@ -630,12 +630,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                         />
                                                     </>
                                                 )}
-                                                <FuncBtn
+                                                {/* <FuncBtn
                                                     maxWidth={1100}
                                                     icon={<OutlineCursorclickIcon />}
                                                     name={"去使用"}
                                                     onClick={onRun}
-                                                />
+                                                /> */}
                                             </div>
                                         }
                                         img={plugin.head_img}
