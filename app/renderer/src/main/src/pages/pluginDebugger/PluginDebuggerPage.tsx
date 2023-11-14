@@ -224,7 +224,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                             handleChangePluginType={handleChangePluginType}
                         ></SecondNodeHeader>
                         <div style={{height: "calc(100% - 34px)"}}>
-                            {tabActiveKey === "code" ? (
+                            <div style={{display: tabActiveKey === "code" ? "block" : "none", height: '100%'}}>
                                 <NewHTTPPacketEditor
                                     key={refreshEditor}
                                     language={pluginType === "nuclei" ? "yaml" : "yak"}
@@ -232,30 +232,29 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                                     originValue={StringToUint8Array(code)}
                                     onChange={(val) => setCode(Uint8ArrayToString(val))}
                                 />
-                            ) : (
-                                <>
-                                    {showPluginExec ? (
-                                        <PluginDebuggerExec
-                                            pluginType={pluginType}
-                                            pluginName={currentPluginName}
-                                            builder={builder}
-                                            code={code}
-                                            targets={builder.Input || ""}
-                                            onOperator={(obj) => {
-                                                yakitNotify("info", "初始化插件调试成功")
-                                                setOperator(obj)
-                                            }}
-                                            onExecuting={(result) => {
-                                                setPluginExecuting(result)
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className={styles.emptyPosition}>
-                                            <YakitEmpty description={"点击【执行插件】以开始"} />
-                                        </div>
-                                    )}
-                                </>
-                            )}
+                            </div>
+                            <div style={{display: tabActiveKey === "execResult" ? "block" : "none", height: '100%'}}>
+                                {showPluginExec ? (
+                                    <PluginDebuggerExec
+                                        pluginType={pluginType}
+                                        pluginName={currentPluginName}
+                                        builder={builder}
+                                        code={code}
+                                        targets={builder.Input || ""}
+                                        onOperator={(obj) => {
+                                            yakitNotify("info", "初始化插件调试成功")
+                                            setOperator(obj)
+                                        }}
+                                        onExecuting={(result) => {
+                                            setPluginExecuting(result)
+                                        }}
+                                    />
+                                ) : (
+                                    <div className={styles.emptyPosition}>
+                                        <YakitEmpty description={"点击【执行插件】以开始"} />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 }
