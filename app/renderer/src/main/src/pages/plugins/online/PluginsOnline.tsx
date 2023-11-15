@@ -132,7 +132,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
         {wait: 200, leading: true}
     ).run
     return (
-        <OnlineJudgment>
+        <>
             <div className={styles["plugins-online"]}>
                 <div id='pluginsOnline' ref={pluginsOnlineRef} className={classNames(styles["plugins-online-body"])}>
                     <div
@@ -156,7 +156,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
                     </div>
                 </div>
             </div>
-        </OnlineJudgment>
+        </>
     )
 })
 const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, ref) => {

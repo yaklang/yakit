@@ -213,7 +213,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         {wait: 500, leading: true}
     ).run
     return (
-        <OnlineJudgment isJudgingLogin={true}>
+        <>
             {!!plugin && (
                 <PluginUserDetail
                     info={plugin}
@@ -358,7 +358,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     }}
                 />
             )}
-        </OnlineJudgment>
+        </>
     )
 })
 
