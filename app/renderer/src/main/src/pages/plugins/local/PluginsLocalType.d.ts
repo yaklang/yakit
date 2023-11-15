@@ -47,6 +47,11 @@ export interface PluginsLocalDetailProps {
     spinLoading: boolean
     /**详情的批量上传 */
     onDetailsBatchUpload: (s: string[]) => void
+    /** 当前展示插件的索引 */
+    currentIndex: number
+    setCurrentIndex: (index: number) => void
+    /**删除的loading */
+    removeLoading:boolean
 }
 
 export interface PluginLocalBackProps {

@@ -40,7 +40,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginUserDetail} from "./PluginUserDetail"
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
-import {PrivatePluginIcon} from "@/assets/newIcon"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {API} from "@/services/swagger/resposeType"
 import {TypeSelectOpt} from "../funcTemplateType"
@@ -69,6 +68,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginUser.module.scss"
+import {SolidPrivatepluginIcon} from "@/assets/icon/colors"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -118,6 +118,11 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         onDownloadBatch: () => {},
         onRemovePluginDetailSingleBefore: () => {},
         onDetailSearch: () => {}
+    })
+    // 当前展示的插件序列
+    const showUserPluginIndex = useRef<number>(0)
+    const setShowUserPluginIndex = useMemoizedFn((index: number) => {
+        showUserPluginIndex.current = index
     })
 
     const pluginRecycleListRef = useRef<PluginRecycleListRefProps>({
@@ -222,6 +227,8 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     dispatch={dispatch}
                     onRemovePluginDetailSingleBefore={pluginUserListRef.current.onRemovePluginDetailSingleBefore}
                     onDetailSearch={pluginUserListRef.current.onDetailSearch}
+                    currentIndex={showUserPluginIndex.current}
+                    setCurrentIndex={setShowUserPluginIndex}
                 />
             )}
             <PluginsLayout
@@ -235,7 +242,11 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                 hidden={!!plugin}
                 subTitle={
                     userPluginType === "myOnlinePlugin" && (
-                        <TypeSelect active={pluginPrivateSelect} list={DefaultPublicStatusList} setActive={onSetActive} />
+                        <TypeSelect
+                            active={pluginPrivateSelect}
+                            list={DefaultPublicStatusList}
+                            setActive={onSetActive}
+                        />
                     )
                 }
                 extraHeader={
@@ -317,6 +328,8 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         defaultSelectList={selectListUser}
                         onRefreshRecycleList={onRefreshRecycleList}
                         setDownloadLoading={setDownloadLoading}
+                        currentIndex={showUserPluginIndex.current}
+                        setCurrentIndex={setShowUserPluginIndex}
                     />
                 </div>
                 <div
@@ -363,7 +376,9 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             defaultAllCheck,
             defaultSelectList,
             onRefreshRecycleList,
-            setDownloadLoading
+            setDownloadLoading,
+            currentIndex,
+            setCurrentIndex
         } = props
         /** 是否为加载更多 */
         const [loading, setLoading] = useState<boolean>(false)
@@ -472,18 +487,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             })
         })
 
-        // 当前展示的插件序列
-        const showPluginIndex = useRef<number>(0)
-        const setShowPluginIndex = useMemoizedFn((index: number) => {
-            showPluginIndex.current = index
-        })
-
         const fetchList = useDebounceFn(
             useMemoizedFn(async (reset?: boolean) => {
                 // if (latestLoadingRef.current) return //先注释，有影响
                 if (reset) {
                     isLoadingRef.current = true
-                    setShowPluginIndex(0)
+                    setCurrentIndex(0)
                 }
                 setLoading(true)
 
@@ -566,12 +575,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         })
         /** 单项副标题组件 */
         const optSubTitle = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            return <>{data.is_private ? <PrivatePluginIcon /> : statusTag[`${data.status}`]}</>
+            return <>{data.is_private ? <SolidPrivatepluginIcon /> : statusTag[`${data.status}`]}</>
         })
         /** 单项点击回调 */
         const optClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
             setPlugin(data)
-            setShowPluginIndex(index)
+            setCurrentIndex(index)
         })
         const onUserSelect = useMemoizedFn((key: string, data: YakitPluginOnlineDetail) => {
             switch (key) {
@@ -843,8 +852,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                                 loading={loading}
                                 hasMore={hasMore}
                                 updateList={onUpdateList}
-                                showIndex={showPluginIndex.current}
-                                setShowIndex={setShowPluginIndex}
+                                showIndex={currentIndex}
+                                setShowIndex={setCurrentIndex}
                             />
                         ) : (
                             <div className={styles["plugin-user-empty"]}>

@@ -72,7 +72,6 @@ import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TypeSelectOpt} from "../funcTemplateType"
 import {DefaultTypeList, PluginGV} from "../builtInData"
-import {BackInfoProps} from "../manage/PluginManageDetail"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
@@ -205,6 +204,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [visibleUploadAll, setVisibleUploadAll] = useState<boolean>(false)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
+
     // 获取筛选栏展示状态
     useEffect(() => {
         getRemoteValue(PluginGV.StoreFilterCloseStatus).then((value: string) => {
@@ -486,6 +486,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         defaultFilter={filters}
                         downloadLoading={downloadLoading}
                         onDetailSearch={onDetailSearch}
+                        currentIndex={showPluginIndex.current}
+                        setCurrentIndex={setShowPluginIndex}
                     />
                 </div>
             )}
