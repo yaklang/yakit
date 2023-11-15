@@ -60,7 +60,10 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         onDetailSearch,
         spinLoading,
         onDetailsBatchRemove,
-        onDetailsBatchUpload
+        onDetailsBatchUpload,
+        currentIndex,
+        setCurrentIndex,
+        removeLoading
     } = props
     const [executorShow, setExecutorShow] = useState<boolean>(true)
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
@@ -70,7 +73,9 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
 
     const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
 
-    const [removeLoading, setRemoveLoading] = useState<boolean>(false)
+    const [plugin, setPlugin] = useState<YakScript>()
+    // 因为组件 RollingLoadList 的定向滚动功能初始不执行，所以设置一个初始变量跳过初始状态
+    const [scrollTo, setScrollTo] = useState<number>(0)
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -78,11 +83,16 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         else return selectList.length
     }, [allCheck, selectList])
 
-    const [plugin, setPlugin] = useState<YakScript>()
     const userInfo = useStore((s) => s.userInfo)
+
     useEffect(() => {
-        if (info) setPlugin({...info})
-        else setPlugin(undefined)
+        if (info) {
+            setPlugin({...info})
+            // 必须加上延时，不然本次操作会成为组件(RollingLoadList)的初始数据
+            setTimeout(() => {
+                setScrollTo(currentIndex)
+            }, 100)
+        } else setPlugin(undefined)
     }, [info])
 
     // 返回
@@ -130,7 +140,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     const onUpload = useMemoizedFn((e) => {
         e.stopPropagation()
     })
-    const onPluginClick = useMemoizedFn((data: YakScript) => {
+    const onPluginClick = useMemoizedFn((data: YakScript, index: number) => {
+        setCurrentIndex(index)
         setPlugin({...data})
         if (data.ScriptName !== plugin?.ScriptName) {
             setExecutorShow(false)
@@ -243,7 +254,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         setSelectList([])
     })
     /**详情批量删除 */
-    const onBatchRemove = useMemoizedFn(() => {
+    const onBatchRemove = useMemoizedFn(async () => {
         const params: PluginLocalDetailBackProps = {allCheck, selectList, search, filter: filters, selectNum}
         onDetailsBatchRemove(params)
         setAllCheck(false)
@@ -306,6 +317,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 selected={selectNum}
                 listProps={{
                     rowKey: "ScriptName",
+                    numberRoll: scrollTo,
                     data: response.Data,
                     loadMoreData: loadMoreData,
                     classNameRow: "plugin-details-opt-wrapper",
@@ -331,7 +343,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         )
                     },
                     page: response.Pagination.Page,
-                    hasMore: response.Total !== response.Data.length,
+                    hasMore: +response.Total !== response.Data.length,
                     loading: loading,
                     defItemHeight: 46
                 }}
@@ -339,7 +351,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 search={search}
                 setSearch={setSearch}
                 onSearch={onSearch}
-                spinLoading={spinLoading}
+                spinLoading={spinLoading || removeLoading}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs defaultActiveKey='execute' tabPosition='right' className='plugins-tabs'>

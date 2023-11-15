@@ -25,6 +25,9 @@ export interface PluginUserListProps {
     setPlugin: (p?: YakitPluginOnlineDetail) => void
     onRefreshRecycleList: () => void
     setDownloadLoading: (b: boolean) => void
+    /** 当前展示插件的索引 */
+    currentIndex: number
+    setCurrentIndex: (index: number) => void
 }
 
 export interface PluginRecycleListProps {
@@ -77,6 +80,9 @@ export interface PluginUserDetailProps {
     onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
     /** 搜索功能回调 */
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
+    /** 当前展示插件的索引 */
+    currentIndex: number
+    setCurrentIndex: (index: number) => void
 }
 export interface PluginUserDetailBackProps {
     search: PluginSearchParams
