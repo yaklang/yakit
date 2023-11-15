@@ -117,11 +117,17 @@ import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
-import { FuzzerParamItem, AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import { HTTPResponseExtractor } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
-import { ConfigNetworkPage } from "@/components/configNetwork/ConfigNetworkPage"
-import { PluginEditDetails } from "@/pages/plugins/editDetails/PluginEditDetails"
+import {
+    FuzzerParamItem,
+    AdvancedConfigValueProps
+} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
+import {PluginEditDetails} from "@/pages/plugins/editDetails/PluginEditDetails"
 import {PluginManage} from "@/pages/plugins/manage/PluginManage"
+import {PluginsLocal} from "@/pages/plugins/local/PluginsLocal"
+import {PluginUser} from "@/pages/plugins/user/PluginUser"
+import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
@@ -351,6 +357,9 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DB_Ports,
     YakitRoute.Beta_DebugPlugin,
     YakitRoute.DB_HTTPHistory,
+    YakitRoute.Plugin_Audit,
+    YakitRoute.AddYakitScript,
+    YakitRoute.ModifyYakitScript
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -484,11 +493,19 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Mod_Brute:
             return <BrutePage sendTarget={params?.bruteParams} />
         case YakitRoute.Plugin_Store:
-            return <PluginStore />
+            return (
+                <OnlineJudgment>
+                    <PluginsOnline />
+                </OnlineJudgment>
+            )
         case YakitRoute.Plugin_Owner:
-            return <PluginOwner />
+            return (
+                <OnlineJudgment isJudgingLogin={true}>
+                    <PluginUser />
+                </OnlineJudgment>
+            )
         case YakitRoute.Plugin_Local:
-            return <PluginLocal />
+            return <PluginsLocal />
         case YakitRoute.BatchExecutorPage:
             return <BatchExecutorPageEx />
         case YakitRoute.DNSLog:
