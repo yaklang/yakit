@@ -345,7 +345,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                     page: response.Pagination.Page,
                     hasMore: +response.Total !== response.Data.length,
                     loading: loading,
-                    defItemHeight: 46
+                    defItemHeight: 46,
+                    isRef:spinLoading
                 }}
                 onBack={onPluginBack}
                 search={search}
