@@ -968,6 +968,8 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
                     }
                 }
             })
+            // 我的插件详情修改私密公开状态，需要使用回调
+            onSelect("editState", plugin)
         })
     })
     const onClick = useMemoizedFn(({key}) => {
