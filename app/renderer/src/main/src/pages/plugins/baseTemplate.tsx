@@ -188,7 +188,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                         {filterExtra || null}
                     </div>
                 </div>
-                <YakitSpin spinning={!!spinLoading} className={styles["filter-list"]}>
+                <YakitSpin spinning={!!spinLoading} wrapperClassName={styles["filter-list"]}>
                     <RollingLoadList {...listProps} />
                 </YakitSpin>
             </div>
