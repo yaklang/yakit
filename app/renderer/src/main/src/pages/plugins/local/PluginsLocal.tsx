@@ -78,21 +78,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [hasMore, setHasMore] = useState<boolean>(true)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
-    // 获取筛选栏展示状态
-    useEffect(() => {
-        getRemoteValue(PluginGV.LocalFilterCloseStatus).then((value: string) => {
-            if (value === "true") setShowFilter(true)
-            if (value === "false") setShowFilter(false)
-        })
-    }, [])
-    // 缓存筛选栏展示状态
-    useDebounceEffect(
-        () => {
-            setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
-        },
-        [showFilter],
-        {wait: 500}
-    )
+    const [removeLoading, setRemoveLoading] = useState<boolean>(false)
 
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<YakScript[]>([])
@@ -123,6 +109,22 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     }, [allCheck, selectList, response.Total])
 
     const userInfo = useStore((s) => s.userInfo)
+    // 获取筛选栏展示状态
+    useEffect(() => {
+        getRemoteValue(PluginGV.LocalFilterCloseStatus).then((value: string) => {
+            if (value === "true") setShowFilter(true)
+            if (value === "false") setShowFilter(false)
+        })
+    }, [])
+    // 缓存筛选栏展示状态
+    useDebounceEffect(
+        () => {
+            setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
+        },
+        [showFilter],
+        {wait: 500}
+    )
+
     useEffect(() => {
         emiter.on("onRefLocalPluginList", onRefLocalPluginList)
         return () => {
@@ -389,7 +391,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**批量删除 */
     const onRemovePluginBatch = useMemoizedFn(async () => {
-        setLoading(true)
+        setRemoveLoading(true)
         try {
             if (allCheck) {
                 //带条件删除全部
@@ -413,7 +415,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         getInitTotal()
         getPluginGroupListLocal()
         setRemoteValue(PluginGV.LocalPluginRemoveCheck, `${pluginRemoveCheck}`)
-        setLoading(false)
+        setRemoveLoading(false)
         fetchList(true)
     })
     /**删除提示弹窗 */
@@ -562,6 +564,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     spinLoading={loading && isLoadingRef.current}
                     onDetailsBatchRemove={onDetailsBatchRemove}
                     onDetailsBatchUpload={onDetailsBatchUpload}
+                    currentIndex={showPluginIndex.current}
+                    setCurrentIndex={setShowPluginIndex}
+                    removeLoading={removeLoading}
                 />
             )}
             <PluginsLayout

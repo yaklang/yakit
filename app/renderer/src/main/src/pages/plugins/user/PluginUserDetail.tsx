@@ -48,7 +48,9 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         defaultSearchValue,
         dispatch,
         onRemovePluginDetailSingleBefore,
-        onDetailSearch
+        onDetailSearch,
+        currentIndex,
+        setCurrentIndex
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
@@ -60,6 +62,9 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
 
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
 
+    // 因为组件 RollingLoadList 的定向滚动功能初始不执行，所以设置一个初始变量跳过初始状态
+    const [scrollTo, setScrollTo] = useState<number>(0)
+
     const userInfo = useStore((s) => s.userInfo)
 
     // 选中插件的数量
@@ -69,8 +74,13 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     }, [allCheck, selectList])
 
     useEffect(() => {
-        if (info) setPlugin({...info})
-        else setPlugin(undefined)
+        if (info) {
+            setPlugin({...info})
+            // 必须加上延时，不然本次操作会成为组件(RollingLoadList)的初始数据
+            setTimeout(() => {
+                setScrollTo(currentIndex)
+            }, 100)
+        } else setPlugin(undefined)
     }, [info])
 
     const onRun = useMemoizedFn(() => {})
@@ -152,7 +162,8 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         if (value) setSelectList([])
         setAllCheck(value)
     })
-    const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+    const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
+        setCurrentIndex(index)
         setPlugin({...data})
     })
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
@@ -206,6 +217,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                 selected={selectNum}
                 listProps={{
                     rowKey: "uuid",
+                    numberRoll: scrollTo,
                     data: response.data,
                     loadMoreData: onLoadMoreData,
                     classNameRow: "plugin-details-opt-wrapper",
@@ -234,7 +246,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                         )
                     },
                     page: response.pagemeta.page,
-                    hasMore: response.pagemeta.total !== response.data.length,
+                    hasMore: +response.pagemeta.total !== response.data.length,
                     loading: loading,
                     defItemHeight: 46
                 }}
