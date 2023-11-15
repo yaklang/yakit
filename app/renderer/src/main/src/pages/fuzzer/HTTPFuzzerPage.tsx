@@ -1763,6 +1763,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         setQuery={setQuery}
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
+                                                        pageId={props.id}
                                                     />
                                                 )}
                                                 {!showSuccess && (
@@ -1773,6 +1774,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         setQuery={setQuery}
                                                         isEnd={loading}
                                                         extractedMap={extractedMap}
+                                                        pageId={props.id}
                                                     />
                                                 )}
                                             </>
@@ -1913,7 +1915,6 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     const onGetExportFuzzerCallBackEvent = useMemoizedFn((v) => {
         try {
             const obj: {listTable: FuzzerResponse[]; type: "all" | "payload",pageId:string} = JSON.parse(v)
-
             if(obj.pageId === pageId){
                 const {listTable, type} = obj
                 if (type === "all") {
