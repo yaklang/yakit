@@ -342,3 +342,17 @@ export interface CodeScoreModalProps {
     /** 关闭弹窗(true:合格|false:不合格) */
     onCancel: (value: boolean) => any
 }
+
+/** 插件源码评分返回信息 */
+export interface CodeScoreSmokingEvaluateResponseProps {
+    Score: number
+    Results: CodeScoreSmokingEvaluateResultProps[]
+}
+/** 插件源码评分返回Results详细信息 */
+export interface CodeScoreSmokingEvaluateResultProps {
+    /**前端循环key使用 */
+    IdKey:string
+    Item: string
+    Suggestion: string
+    ExtraInfo: Uint8Array
+}
