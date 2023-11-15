@@ -67,6 +67,9 @@ export interface PluginsOnlineDetailProps {
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
     /** 查询第一页的loading */
     spinLoading: boolean
+    /** 当前展示插件的索引 */
+    currentIndex: number
+    setCurrentIndex: (index: number) => any
 }
 
 export interface OnlineBackInfoProps {
@@ -110,5 +113,5 @@ export interface DownloadArgumentProps {
 
 export interface PluginsUploadAllProps {
     visible: boolean
-    setVisible: (b:boolean)=>void
+    setVisible: (b: boolean) => void
 }
