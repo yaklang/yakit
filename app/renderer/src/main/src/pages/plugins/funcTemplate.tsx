@@ -3,6 +3,7 @@ import {
     AuthorImgProps,
     CodeScoreModalProps,
     CodeScoreModuleProps,
+    CodeScoreSmokingEvaluateResponseProps,
     FilterPopoverBtnProps,
     FuncBtnProps,
     FuncFilterPopoverProps,
@@ -85,6 +86,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SmokingEvaluateResponse} from "../pluginDebugger/SmokingEvaluate"
 import {pluginTypeToName} from "./builtInData"
 import UnLogin from "@/assets/unLogin.png"
+import {v4 as uuidv4} from "uuid"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -1534,7 +1536,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
     const {type, code, isStart, callback} = props
 
     const [loading, setLoading] = useState<boolean>(true)
-    const [response, setResponse] = useState<SmokingEvaluateResponse>()
+    const [response, setResponse] = useState<CodeScoreSmokingEvaluateResponseProps>()
 
     const fetchStartState = useMemoizedFn(() => {
         return isStart
@@ -1545,9 +1547,13 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         setLoading(true)
         ipcRenderer
             .invoke("SmokingEvaluatePlugin", {PluginType: type, Code: code})
-            .then((rsp: SmokingEvaluateResponse) => {
+            .then((rsp: CodeScoreSmokingEvaluateResponseProps) => {
                 if (!fetchStartState()) return
-                setResponse(rsp)
+                const newResults = rsp.Results.map((ele) => ({...ele, Id: uuidv4()}))
+                setResponse({
+                    Score: rsp.Score,
+                    Results: newResults
+                })
                 if (+rsp?.Score >= 60) {
                     setTimeout(() => {
                         callback(true)
@@ -1617,7 +1623,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                             <div className={styles["list-body"]}>
                                 {(response?.Results || []).map((item) => {
                                     return (
-                                        <div className={styles["list-opt"]}>
+                                        <div className={styles["list-opt"]} key={item.Id}>
                                             <div className={styles["opt-header"]}>
                                                 <PluginTestErrorIcon />
                                                 {item.Item}
