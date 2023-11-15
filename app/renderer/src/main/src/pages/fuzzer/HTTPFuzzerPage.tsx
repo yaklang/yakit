@@ -1914,13 +1914,18 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
 
     const onGetExportFuzzerCallBackEvent = useMemoizedFn((v) => {
         try {
-            const obj: {listTable: FuzzerResponse[]; type: "all" | "payload",pageId:string} = JSON.parse(v)
+            const obj: {listTable: any; type: "all" | "payload",pageId:string} = JSON.parse(v)
             if(obj.pageId === pageId){
                 const {listTable, type} = obj
+                const newListTable = listTable.map((item)=>({
+                    ...item,
+                    RequestRaw:StringToUint8Array(item.RequestRaw),
+                    ResponseRaw:StringToUint8Array(item.ResponseRaw)
+                }))
                 if (type === "all") {
-                    exportHTTPFuzzerResponse(listTable)
+                    exportHTTPFuzzerResponse(newListTable)
                 } else {
-                    exportPayloadResponse(listTable)
+                    exportPayloadResponse(newListTable)
                 }
             }
             

@@ -10,7 +10,7 @@ export const exportHTTPFuzzerResponse = (responses: FuzzerResponse[]) => {
             "Host": {StringValue: `${i.Host}`},
             "ContentType": {StringValue: `${i.ContentType}`},
             "BodyLength": {StringValue: `${i.BodyLength}`},
-            "Request": {BytesValue: i.RequestRaw,},
+            "Request": {BytesValue: i.RequestRaw},
             "Response": {BytesValue: i.ResponseRaw},
             "Payload": {StringValue: (i?.Payloads || []).join("|")},
             "ExtractedResults": {StringValue: (i?.ExtractedResults || []).map((i)=>`${i.Key}: ${i.Value}`).join("|")},
