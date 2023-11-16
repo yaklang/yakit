@@ -1623,7 +1623,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                             <div className={styles["list-body"]}>
                                 {(response?.Results || []).map((item) => {
                                     return (
-                                        <div className={styles["list-opt"]} key={item.Id}>
+                                        <div className={styles["list-opt"]} key={item.IdKey}>
                                             <div className={styles["opt-header"]}>
                                                 <PluginTestErrorIcon />
                                                 {item.Item}

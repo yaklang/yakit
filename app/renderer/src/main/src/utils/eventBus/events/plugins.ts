@@ -9,4 +9,6 @@ export type PluginsEventProps = {
     onRefOnlinePluginList: string
     /** 刷新我的插件列表 */
     onRefUserPluginList: string
+    /** 刷新本地插件详情页面的选中的插件数据 */
+    onRefLocalDetailSelectPlugin: string
 }
