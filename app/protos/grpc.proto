@@ -385,6 +385,7 @@ service Yak {
   rpc ImportMITMReplacerRules(ImportMITMReplacerRulesRequest) returns (Empty);
   rpc GetCurrentRules(Empty) returns (MITMContentReplacers);
   rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
+  rpc GenerateURL(GenerateURLRequest) returns (GenerateURLResponse);
 
   rpc ExtractDataToFile(stream ExtractDataToFileRequest) returns (stream ExtractDataToFileResult);
 
@@ -1848,8 +1849,8 @@ message QueryYakScriptRiskDetailByCWERequest {
 }
 
 message QueryYakScriptRiskDetailByCWEResponse {
-  string Id = 1;
-  string CWEName = 2;
+  string CWEId = 1;
+  string RiskType = 2;
   string Description = 3;
   string CWESolution = 4;
 }
@@ -3043,6 +3044,7 @@ message QueryYakScriptRequest {
 
   bool IgnoreGeneralModuleOrder = 15;
   repeated string Family = 16;
+  string UUID = 17;
 }
 
 message QueryYakScriptResponse {
@@ -4146,4 +4148,15 @@ message SmokingEvaluatePluginBatchResponse {
   double Progress = 1;
   string Message = 2;
   string MessageType = 3;
+}
+
+message GenerateURLRequest{
+  string Scheme = 1;
+  string Host = 2;
+  int32 Port = 3;
+  string Username = 4;
+  string Password = 5;
+}
+message GenerateURLResponse{
+  string URL = 1;
 }
