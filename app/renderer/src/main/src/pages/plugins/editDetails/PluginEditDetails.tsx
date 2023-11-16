@@ -53,6 +53,7 @@ import {showModal} from "@/utils/showModal"
 import {YakScriptRunner} from "@/pages/invoker/ExecYakScript"
 import {YakScriptParamsSetter} from "@/pages/invoker/YakScriptParamsSetter"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
+import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
@@ -76,7 +77,7 @@ interface PluginEditDetailsProps {
 export interface SavePluginInfoSignalProps {
     route: YakitRoute
     isOnline: boolean
-    pluginId: number
+    pluginId: string
 }
 
 export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
@@ -157,7 +158,6 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
     // 是否为编辑状态
     const isModify = useMemo(() => {
-        console.log("ismodify", info, privateDomain.current)
         if (!info) return false
         if (info.OnlineBaseUrl !== privateDomain.current) return false
         return true
@@ -381,7 +381,12 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                 yakitNotify("success", "创建 / 保存 插件成功")
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
                 // 出发保存成功的信号事件
-                onLocalAndOnlineSend(data)
+                if (pluginId) {
+                    onLocalAndOnlineSend(data)
+                } else {
+                    onUpdatePageList("local")
+                }
+
                 // 外界触发的二次提示的回调事件
                 onDestroyInstance(true)
             })
@@ -648,6 +653,8 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             }
             copyOnlinePlugin(request, (value) => {
                 if (value) {
+                    // if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                    onUpdatePageList("owner")
                     onDestroyInstance(true)
                 }
                 setTimeout(() => {
@@ -659,7 +666,9 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             if (modifyInfo.current?.type === "nuclei") {
                 uploadOnlinePlugin({...modifyInfo.current, is_private: !(param?.type === "public")}, false, (value) => {
                     if (value) {
-                        if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                        // if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                        onUpdatePageList("owner")
+                        onUpdatePageList("online")
                         onDestroyInstance(true)
                     }
                     setTimeout(() => {
@@ -678,7 +687,8 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             if (param && param?.type === "private") {
                 uploadOnlinePlugin({...modifyInfo.current, is_private: true}, false, (value) => {
                     if (value) {
-                        if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                        // if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                        onUpdatePageList("owner")
                         onDestroyInstance(true)
                     }
                     setTimeout(() => {
@@ -698,9 +708,10 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             if (value) {
                 setTimeout(() => {
                     setPluginTest(false)
-                }, 100)
-                setModifyReason(true)
+                    setModifyReason(true)
+                }, 1000)
             } else {
+                setPluginTest(false)
                 setTimeout(() => {
                     // 终端提交按钮的加载状态
                     setModifyLoading(false)
@@ -712,14 +723,16 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         // 评分并上传后的回调逻辑
         if (value) {
             if (info) {
-                if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                // if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                onUpdatePageList("owner")
+                onUpdatePageList("online")
                 onDestroyInstance(true)
             }
         }
-        setPluginTest(false)
         setTimeout(() => {
+            setPluginTest(false)
             setOnlineLoading(false)
-        }, 200)
+        }, 500)
     })
     // 描述修改插件内容
     const [modifyReason, setModifyReason] = useState<boolean>(false)
@@ -727,6 +740,9 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         if (isSubmit && modifyInfo.current) {
             uploadOnlinePlugin({...modifyInfo.current, uuid: info?.UUID, logDescription: content}, true, (value) => {
                 if (value) {
+                    // if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
+                    onUpdatePageList("owner")
+                    onUpdatePageList("online")
                     onDestroyInstance(true)
                 }
                 setTimeout(() => {
@@ -905,9 +921,26 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             const param: SavePluginInfoSignalProps = {
                 route: parent,
                 isOnline: !!isOnline,
-                pluginId: +info.Id || 0
+                pluginId: info.ScriptName || ""
             }
             emiter.emit("savePluginInfoSignal", JSON.stringify(param))
+        }
+    })
+    // 保存插件信息后-刷新商店|我的|本地列表数据
+    const onUpdatePageList = useMemoizedFn((key: string) => {
+        switch (key) {
+            case "online":
+                emiter.emit("onRefOnlinePluginList", "")
+                break
+            case "owner":
+                emiter.emit("onRefUserPluginList", "")
+                break
+            case "local":
+                emiter.emit("onRefLocalPluginList", "")
+                break
+
+            default:
+                break
         }
     })
 
@@ -1263,6 +1296,58 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
         >
             <div className={styles["plugin-editor-modal-body"]}>
                 <YakitEditor type='yak' value={content} setValue={setContent} />
+            </div>
+        </YakitModal>
+    )
+})
+
+interface PluginDiffEditorModalProps {
+    /** 原代码 */
+    oldCode: string
+    /** 对比代码 */
+    newCode: string
+    visible: boolean
+    setVisible: (content: string) => any
+}
+/** @name 对比器放大版编辑器 */
+export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo((props) => {
+    const {oldCode, newCode, visible, setVisible} = props
+
+    const [content, setContent] = useState<string>("")
+    const [update, setUpdate] = useState<boolean>(false)
+
+    useEffect(() => {
+        if (visible) {
+            setContent(newCode || "")
+            setUpdate(!update)
+        } else {
+            setContent("")
+        }
+    }, [visible])
+
+    return (
+        <YakitModal
+            title='源码'
+            subTitle='可在此定义插件输入原理，并编写输出 UI'
+            type='white'
+            width='80%'
+            centered={true}
+            maskClosable={false}
+            closable={true}
+            closeIcon={<OutlineArrowscollapseIcon className={styles["plugin-editor-modal-close-icon"]} />}
+            footer={null}
+            visible={visible}
+            onCancel={() => setVisible(content)}
+        >
+            <div className={styles["plugin-editor-modal-body"]}>
+                <YakitDiffEditor
+                    leftDefaultCode={oldCode}
+                    leftReadOnly={true}
+                    rightDefaultCode={content}
+                    setRightCode={setContent}
+                    triggerUpdate={update}
+                    language='yak'
+                />
             </div>
         </YakitModal>
     )

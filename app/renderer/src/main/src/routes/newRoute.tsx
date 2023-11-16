@@ -122,6 +122,7 @@ import { HTTPResponseExtractor } from "@/pages/fuzzer/MatcherAndExtractionCard/M
 import { ConfigNetworkPage } from "@/components/configNetwork/ConfigNetworkPage"
 import { PluginEditDetails } from "@/pages/plugins/editDetails/PluginEditDetails"
 import {PluginManage} from "@/pages/plugins/manage/PluginManage"
+import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -590,7 +591,11 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Beta_Codec:
             return <NewCodecPage />
         case YakitRoute.Plugin_Audit:
-            return <PluginManage />
+            return (
+                <OnlineJudgment isJudgingLogin={true}>
+                    <PluginManage />
+                </OnlineJudgment>
+            )
         default:
             return <div />
     }
