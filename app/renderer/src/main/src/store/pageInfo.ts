@@ -34,10 +34,13 @@ export interface PageNodeItemProps {
     // pageChildrenList: PageNodeItemProps[]
 }
 
-/** 页面保存的数据,目前只加了webFuzzer */
+/** 页面保存的数据*/
 interface PageParamsInfoProps {
+    /** YakitRoute.HTTPFuzzer webFuzzer页面缓存数据 */
     webFuzzerPageInfo?: WebFuzzerPageInfoProps
     pluginInfoEditor?: {source: YakitRoute}
+    /** YakitRoute.Plugin_Local 本地插件页面缓存数据 */
+    pluginLocalPageInfo?: {uuid: string}
 }
 
 export interface WebFuzzerPageInfoProps {

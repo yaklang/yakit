@@ -28,6 +28,8 @@ export interface PluginUserListProps {
     /** 当前展示插件的索引 */
     currentIndex: number
     setCurrentIndex: (index: number) => void
+    /**删除loading */
+    setRemoveLoading: (b: boolean) => void
 }
 
 export interface PluginRecycleListProps {
@@ -57,6 +59,7 @@ export interface PluginUserListRefProps {
     onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
     /** 搜索功能回调 */
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
+    onDetailsBatchRemove: (newParams: UserBackInfoProps) => void
 }
 export interface PluginRecycleListRefProps {
     allCheck: boolean
@@ -83,10 +86,31 @@ export interface PluginUserDetailProps {
     /** 当前展示插件的索引 */
     currentIndex: number
     setCurrentIndex: (index: number) => void
+    /**详情的下载 */
+    onDetailsBatchDownload: (newParams: UserBackInfoProps) => void
+    /** 详情的批量删除 */
+    onDetailsBatchRemove: (newParams: UserBackInfoProps) => void
+    /**删除 loading */
+    removeLoading: boolean
+    /**下载 loading */
+    downloadLoading: boolean
 }
 export interface PluginUserDetailBackProps {
     search: PluginSearchParams
     filter: PluginFilterParams
     selectList: string[]
     allCheck: boolean
+}
+
+export interface UserBackInfoProps {
+    /** 是否全选 */
+    allCheck: boolean
+    /** 选中插件集合 */
+    selectList: string[]
+    /** 搜索内容条件 */
+    search: PluginSearchParams
+    /** 搜索过滤条件 */
+    filter: PluginFilterParams
+    /**勾选数量 */
+    selectNum: number
 }
