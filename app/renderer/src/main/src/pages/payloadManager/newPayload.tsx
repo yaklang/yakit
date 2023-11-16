@@ -44,6 +44,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import Dragger from "antd/lib/upload/Dragger"
 import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOperatorContentType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {v4 as uuidv4} from "uuid"
 const {ipcRenderer} = window.require("electron")
 
 interface CreateDictionariesProps {
@@ -278,7 +279,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     })
 
     // 根据Id获取此项
-    const findItemById = useMemoizedFn((items: DataItem[], targetId: string) => {
+    const findItemById = useMemoizedFn((items: DataItem[], targetId: string): DataItem | null => {
         for (const item of items) {
             if (item.id.toString() === targetId) {
                 return item
@@ -306,7 +307,97 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         }
         return null
     })
-
+    // 组外两个游离的文件合成组 或者 组外的文件拖拽到组外的文件夹合成组
+    const mergingGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const {source, destination, draggableId, type, combine} = result
+        if (!combine) {
+            return
+        }
+        const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
+        const sourceItem: DataItem = copyData[source.index]
+        const combineItem = findItemById(data, combine.draggableId)
+        // 组外的文件拖拽到组外的文件夹合成组
+        if (sourceItem.type === "file" && combineItem && combineItem.type === "folders") {
+            // 移除此项
+            copyData.splice(source.index, 1)
+            combineItem.node = combineItem.node ? [sourceItem, ...combineItem.node] : [sourceItem]
+            const newData = copyData.map((item) => {
+                if (item.id === combineItem.id) {
+                    return combineItem
+                }
+                return item
+            })
+            setData(newData)
+        }
+        // 组外两个游离的文件合成组
+        if (sourceItem.type === "file" && combineItem && combineItem.type === "file") {
+            // 移除此项
+            copyData.splice(source.index, 1)
+            // 生成 UUID
+            const uuid = uuidv4()
+            // 将 UUID 转换为整数
+            const integerId = parseInt(uuid.replace(/-/g, ""), 16)
+            const newData = copyData.map((item) => {
+                if (item.id === combineItem.id) {
+                    return {
+                        type: "folders",
+                        name: "未命名检测",
+                        id: integerId,
+                        isFold: true,
+                        node: [combineItem, sourceItem]
+                    }
+                }
+                return item
+            })
+            setData(newData)
+        }
+    })
+    // 组内的文件拖拽到组外并和组外的文件夹合成组(组内向组外合并)
+    const mergeWithinAndOutsideGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const {source, destination, draggableId, type, combine} = result
+        if (!combine) {
+            return
+        }
+        const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
+        const sourceFolders = findFoldersById(copyData, source.droppableId)
+        const combineItem = findItemById(data, combine.draggableId)
+        if (sourceFolders && sourceFolders?.node && combineItem && combineItem.type === "folders") {
+            const sourceItem = sourceFolders.node[source.index]
+            sourceFolders.node.splice(source.index, 1)
+            combineItem.node = combineItem.node ? [sourceItem, ...combineItem.node] : [sourceItem]
+            const newData = copyData.map((item) => {
+                if (item.id === sourceFolders.id) {
+                    return sourceFolders
+                }
+                if (item.id === combineItem.id) {
+                    return combineItem
+                }
+                return item
+            })
+            setData(newData)
+        }
+        if (sourceFolders && sourceFolders?.node && combineItem && combineItem.type === "file") {
+            const sourceItem = sourceFolders.node[source.index]
+            sourceFolders.node.splice(source.index, 1)
+            // 生成 UUID
+            const uuid = uuidv4()
+            // 将 UUID 转换为整数
+            const integerId = parseInt(uuid.replace(/-/g, ""), 16)
+            const newData = copyData.map((item) => {
+                if (item.id === combineItem.id) {
+                    return {
+                        type: "folders",
+                        name: "未命名检测",
+                        id: integerId,
+                        isFold: true,
+                        node: [combineItem, sourceItem]
+                    }
+                }
+                return item
+            })
+            setData(newData)
+        }
+    })
     // 拖放结束时的回调函数
     const onDragEnd = useMemoizedFn((result) => {
         try {
@@ -314,13 +405,13 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             const {source, destination, draggableId, type, combine} = result
             /** 合并组   ---------start--------- */
             if (result.combine) {
-                // 组外两个游离的文件合成组
+                // 组外两个游离的文件合成组 或者 组外的文件拖拽到组外的文件夹合成组
                 if (source.droppableId === "droppable-payload" && combine.droppableId === "droppable-payload") {
-                    // mergingGroup(result)
+                    mergingGroup(result)
                 }
                 // 组内的文件拖拽到组外并和组外的文件夹合成组(组内向组外合并)
                 if (source.droppableId !== "droppable-payload" && combine.droppableId === "droppable-payload") {
-                    // mergeWithinAndOutsideGroup(result)
+                    mergeWithinAndOutsideGroup(result)
                 }
             }
             /** 合并组   ---------end--------- */
@@ -328,7 +419,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                 return
             }
             setIsCombineEnabled(true)
-            // console.log("source,destination ", source, destination)
             const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
             // 同层内拖拽(最外层)
             if (source.droppableId === "droppable-payload" && destination.droppableId === "droppable-payload") {
@@ -342,8 +432,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                     const newArray: DataItem[] = moveArrayElement(foldersArr.node, source.index, destination.index)
                     foldersArr.node = newArray
                     const newData = copyData.map((item) => {
-                        // console.log("item---",item);
-
                         if (item.id === foldersArr.id) {
                             return foldersArr
                         }
@@ -376,7 +464,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                     source.droppableId !== "droppable-payload" &&
                     destination.droppableId !== "droppable-payload"
                 ) {
-                    console.log("source---", source, destination)
                     const foldersItem = findFoldersById(copyData, source.droppableId)
                     const dropFoldersItem = findFoldersById(copyData, destination.droppableId)
                     if (foldersItem?.node && dropFoldersItem) {
@@ -438,8 +525,8 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
 
     const onBeforeCapture = useMemoizedFn((result: DragDropContextResultProps) => {
         // 根据Id判断其是否为文件
-        const item: DataItem = findItemById(data, result.draggableId)
-        if (item.type === "file") {
+        const item = findItemById(data, result.draggableId)
+        if (item && item.type === "file") {
             setDropType(droppableGroup)
             setSubDropType(droppableGroup)
         } else {
