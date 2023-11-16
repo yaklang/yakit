@@ -27,12 +27,12 @@ import {useStore} from "@/store"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
+import {DownloadOnlinePluginsRequest, apiDownloadPluginMine, apiQueryYakScript} from "../utils"
+import {QueryYakScriptRequest} from "@/pages/invoker/schema"
 
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
 import classNames from "classnames"
-import {DownloadOnlinePluginsRequest, apiDownloadPluginMine, apiQueryYakScript} from "../utils"
-import {QueryYakScriptRequest} from "@/pages/invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
