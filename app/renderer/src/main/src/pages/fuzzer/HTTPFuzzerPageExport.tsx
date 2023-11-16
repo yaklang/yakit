@@ -2,7 +2,7 @@ import React from "react";
 import {FuzzerResponse} from "./HTTPFuzzerPage";
 import {exportData, ExtractableData, ExtractableValue} from "../../utils/exporter";
 
-export const exportHTTPFuzzerResponse = (responses: FuzzerResponse[]) => {
+export const exportHTTPFuzzerResponse = (responses: FuzzerResponse[],extractedMap) => {
     exportData(responses.map(i => {
         return {
             "Method": {StringValue: i.Method},
@@ -13,7 +13,11 @@ export const exportHTTPFuzzerResponse = (responses: FuzzerResponse[]) => {
             "Request": {BytesValue: i.RequestRaw},
             "Response": {BytesValue: i.ResponseRaw},
             "Payload": {StringValue: (i?.Payloads || []).join("|")},
-            "ExtractedResults": {StringValue: (i?.ExtractedResults || []).map((i)=>`${i.Key}: ${i.Value}`).join("|")},
+            "ExtractedResults": {StringValue: 
+                extractedMap&&extractedMap.size > 0 ?
+                extractedMap.get(i["UUID"]) || "-"
+                :(i?.ExtractedResults || []).map((i)=>`${i.Key}: ${i.Value}`).join("|")
+            },
         }
     }) as any)
 }

@@ -1451,6 +1451,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         emiter.emit("onOpenMatchingAndExtractionCard",props.id)
                     }
                 }}
+                extractedMap={extractedMap}
                 pageId={props.id}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
@@ -1854,6 +1855,7 @@ interface SecondNodeExtraProps {
     isShowMatch?: boolean
     matchSubmit?: () => void
     pageId?: string
+    extractedMap?: Map<string, string>
 }
 
 /**
@@ -1880,6 +1882,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         retrySubmit,
         isShowMatch = false,
         matchSubmit,
+        extractedMap,
         pageId
     } = props
 
@@ -1923,7 +1926,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     ResponseRaw:StringToUint8Array(item.ResponseRaw)
                 }))
                 if (type === "all") {
-                    exportHTTPFuzzerResponse(newListTable)
+                    exportHTTPFuzzerResponse(newListTable,extractedMap)
                 } else {
                     exportPayloadResponse(newListTable)
                 }
