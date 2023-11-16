@@ -3,6 +3,7 @@ import {
     AuthorImgProps,
     CodeScoreModalProps,
     CodeScoreModuleProps,
+    CodeScoreSmokingEvaluateResponseProps,
     FilterPopoverBtnProps,
     FuncBtnProps,
     FuncFilterPopoverProps,
@@ -84,6 +85,8 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SmokingEvaluateResponse} from "../pluginDebugger/SmokingEvaluate"
 import {pluginTypeToName} from "./builtInData"
+import UnLogin from "@/assets/unLogin.png"
+import {v4 as uuidv4} from "uuid"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -829,7 +832,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
         if (isCorePlugin) {
             return <AuthorImg icon={pluginTypeToName[type].icon} />
         }
-        return <AuthorImg src={img || ""} builtInIcon={official ? "official" : undefined} />
+        return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])
 
     return (
@@ -1057,10 +1060,6 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
         } catch (error) {}
         return arr
     }, [tags])
-    /** 是否有作者 */
-    const noUser = useMemo(() => {
-        return !img && !user
-    }, [img, user])
     /** 贡献者数据 */
     const contributes = useMemo(() => {
         if (prImgs.length <= 5) return {arr: prImgs, length: 0}
@@ -1072,7 +1071,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
         if (isCorePlugin) {
             return <AuthorImg icon={pluginTypeToName[type].icon} />
         }
-        return <AuthorImg src={img || ""} builtInIcon={official ? "official" : undefined} />
+        return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])
     return (
         <div className={styles["grid-layout-opt-wrapper"]} onClick={onclick}>
@@ -1120,36 +1119,27 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                             </div>
                         </div>
 
-                        <div
-                            className={classNames(
-                                {[styles["help-wrapper"]]: !noUser, [styles["help-noshow-user-wrapper"]]: noUser},
-                                "yakit-content-multiLine-ellipsis"
-                            )}
-                        >
+                        <div className={classNames(styles["help-wrapper"], "yakit-content-multiLine-ellipsis")}>
                             {help || "No Description about it."}
                         </div>
 
-                        {!noUser && (
-                            <div className={styles["user-wrapper"]}>
-                                <div className={styles["user-body"]}>
-                                    {authorImgNode}
-                                    <div className={classNames(styles["user-style"], "yakit-content-single-ellipsis")}>
-                                        {user || ""}
-                                    </div>
-                                    <AuthorIcon />
+                        <div className={styles["user-wrapper"]}>
+                            <div className={styles["user-body"]}>
+                                {authorImgNode}
+                                <div className={classNames(styles["user-style"], "yakit-content-single-ellipsis")}>
+                                    {user || "anonymous"}
                                 </div>
-                                <div className={styles["contribute-body"]}>
-                                    {contributes.arr.map((item, index) => {
-                                        return (
-                                            <img key={`${item}-${index}`} src={item} className={styles["img-style"]} />
-                                        )
-                                    })}
-                                    {contributes.length > 0 && (
-                                        <div className={styles["more-style"]}>{`+${contributes.length}`}</div>
-                                    )}
-                                </div>
+                                <AuthorIcon />
                             </div>
-                        )}
+                            <div className={styles["contribute-body"]}>
+                                {contributes.arr.map((item, index) => {
+                                    return <img key={`${item}-${index}`} src={item} className={styles["img-style"]} />
+                                })}
+                                {contributes.length > 0 && (
+                                    <div className={styles["more-style"]}>{`+${contributes.length}`}</div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1546,7 +1536,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
     const {type, code, isStart, callback} = props
 
     const [loading, setLoading] = useState<boolean>(true)
-    const [response, setResponse] = useState<SmokingEvaluateResponse>()
+    const [response, setResponse] = useState<CodeScoreSmokingEvaluateResponseProps>()
 
     const fetchStartState = useMemoizedFn(() => {
         return isStart
@@ -1557,9 +1547,13 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         setLoading(true)
         ipcRenderer
             .invoke("SmokingEvaluatePlugin", {PluginType: type, Code: code})
-            .then((rsp: SmokingEvaluateResponse) => {
+            .then((rsp: CodeScoreSmokingEvaluateResponseProps) => {
                 if (!fetchStartState()) return
-                setResponse(rsp)
+                const newResults = rsp.Results.map((ele) => ({...ele, Id: uuidv4()}))
+                setResponse({
+                    Score: rsp.Score,
+                    Results: newResults
+                })
                 if (+rsp?.Score >= 60) {
                     setTimeout(() => {
                         callback(true)
@@ -1629,7 +1623,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                             <div className={styles["list-body"]}>
                                 {(response?.Results || []).map((item) => {
                                     return (
-                                        <div className={styles["list-opt"]}>
+                                        <div className={styles["list-opt"]} key={item.IdKey}>
                                             <div className={styles["opt-header"]}>
                                                 <PluginTestErrorIcon />
                                                 {item.Item}

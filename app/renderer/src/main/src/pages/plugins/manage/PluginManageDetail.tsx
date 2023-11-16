@@ -504,7 +504,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
 
         if (!plugin) return null
-
+        
         return (
             <PluginDetails<YakitPluginOnlineDetail>
                 title='插件管理'
@@ -652,6 +652,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                         user={plugin.authors}
                                         pluginId={plugin.uuid}
                                         updated_at={plugin.updated_at}
+                                        prImgs={(plugin.collaborator || []).map((ele) => ({
+                                            headImg: ele.head_img,
+                                            userName: ele.user_name
+                                        }))}
                                     />
 
                                     {+plugin.status === 0 ? (

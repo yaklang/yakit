@@ -105,6 +105,12 @@ export interface YakScript {
     RiskType?: string
     RiskDetail?: QueryYakScriptRiskDetailByCWEResponse
     RiskAnnotation?: string
+    CollaboratorInfo?: Collaborator[]
+}
+
+export interface Collaborator {
+    HeadImg: string
+    UserName: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
@@ -126,6 +132,7 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
 
     // 展示信息中，插件商店的顺序和本地顺序不应该一样
     IgnoreGeneralModuleOrder?: boolean
+    UUId?: string
 }
 
 /*

@@ -59,7 +59,12 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         onDetailExport,
         onDetailSearch,
         spinLoading,
-        onDetailsBatchRemove
+        onDetailsBatchRemove,
+        onDetailsBatchUpload,
+        currentIndex,
+        setCurrentIndex,
+        removeLoading,
+        onJumpToLocalPluginDetailByUUID
     } = props
     const [executorShow, setExecutorShow] = useState<boolean>(true)
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
@@ -69,7 +74,9 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
 
     const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
 
-    const [removeLoading, setRemoveLoading] = useState<boolean>(false)
+    const [plugin, setPlugin] = useState<YakScript>()
+    // 因为组件 RollingLoadList 的定向滚动功能初始不执行，所以设置一个初始变量跳过初始状态
+    const [scrollTo, setScrollTo] = useState<number>(0)
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -77,12 +84,24 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         else return selectList.length
     }, [allCheck, selectList])
 
-    const [plugin, setPlugin] = useState<YakScript>()
     const userInfo = useStore((s) => s.userInfo)
+
     useEffect(() => {
-        if (info) setPlugin({...info})
-        else setPlugin(undefined)
+        if (info) {
+            setPlugin({...info})
+            // 必须加上延时，不然本次操作会成为组件(RollingLoadList)的初始数据
+            setTimeout(() => {
+                setScrollTo(currentIndex)
+            }, 100)
+        } else setPlugin(undefined)
     }, [info])
+
+    useEffect(() => {
+        emiter.on("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
+        return () => {
+            emiter.off("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
+        }
+    }, [])
 
     // 返回
     const onPluginBack = useMemoizedFn(() => {
@@ -112,6 +131,10 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
+        if (plugin?.IsCorePlugin) {
+            yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
+            return
+        }
         if (plugin?.Id && +plugin.Id) {
             emiter.emit(
                 "openPage",
@@ -125,7 +148,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     const onUpload = useMemoizedFn((e) => {
         e.stopPropagation()
     })
-    const onPluginClick = useMemoizedFn((data: YakScript) => {
+    const onPluginClick = useMemoizedFn((data: YakScript, index: number) => {
+        setCurrentIndex(index)
         setPlugin({...data})
         if (data.ScriptName !== plugin?.ScriptName) {
             setExecutorShow(false)
@@ -238,11 +262,20 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         setSelectList([])
     })
     /**详情批量删除 */
-    const onBatchRemove = useMemoizedFn(() => {
+    const onBatchRemove = useMemoizedFn(async () => {
         const params: PluginLocalDetailBackProps = {allCheck, selectList, search, filter: filters, selectNum}
         onDetailsBatchRemove(params)
         setAllCheck(false)
         setSelectList([])
+    })
+    /**详情批量上传 */
+    const onBatchUpload = useMemoizedFn(() => {
+        if (selectList.length === 0) {
+            yakitNotify("error", "请先勾选数据")
+            return
+        }
+        const names = selectList.map((ele) => ele.ScriptName)
+        onDetailsBatchUpload(names)
     })
     if (!plugin) return null
     return (
@@ -265,7 +298,12 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='local' />
                         <div style={{height: 12}} className='divider-style'></div>
                         <Tooltip title='上传插件' overlayClassName='plugins-tooltip'>
-                            <YakitButton type='text2' icon={<OutlineExportIcon />} />
+                            <YakitButton
+                                type='text2'
+                                disabled={allCheck || selectList.length === 0}
+                                icon={<OutlineExportIcon />}
+                                onClick={onBatchUpload}
+                            />
                         </Tooltip>
                         <div style={{height: 12}} className='divider-style'></div>
                         {removeLoading ? (
@@ -286,7 +324,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 total={response.Total}
                 selected={selectNum}
                 listProps={{
-                    rowKey: "uuid",
+                    rowKey: "ScriptName",
+                    numberRoll: scrollTo,
                     data: response.Data,
                     loadMoreData: loadMoreData,
                     classNameRow: "plugin-details-opt-wrapper",
@@ -296,32 +335,32 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                             <PluginDetailsListItem<YakScript>
                                 order={i}
                                 plugin={info}
-                                selectUUId={plugin.UUID}
+                                selectUUId={plugin.ScriptName} //本地用的ScriptName代替uuid
                                 check={check}
                                 headImg={info.HeadImg || ""}
-                                pluginUUId={info.UUID}
+                                pluginUUId={info.ScriptName} //本地用的ScriptName代替uuid
                                 pluginName={info.ScriptName}
                                 help={info.Help}
                                 content={info.Content}
                                 optCheck={optCheck}
                                 official={!!info.OnlineOfficial}
-                                // isCorePlugin={info.is_core_plugin}
-                                isCorePlugin={false}
+                                isCorePlugin={!!info.IsCorePlugin}
                                 pluginType={info.Type}
                                 onPluginClick={onPluginClick}
                             />
                         )
                     },
                     page: response.Pagination.Page,
-                    hasMore: response.Total !== response.Data.length,
+                    hasMore: +response.Total !== response.Data.length,
                     loading: loading,
-                    defItemHeight: 46
+                    defItemHeight: 46,
+                    isRef: spinLoading
                 }}
                 onBack={onPluginBack}
                 search={search}
                 setSearch={setSearch}
                 onSearch={onSearch}
-                spinLoading={spinLoading}
+                spinLoading={spinLoading || removeLoading}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs defaultActiveKey='execute' tabPosition='right' className='plugins-tabs'>
@@ -429,6 +468,10 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     user={plugin.Author}
                                     pluginId={plugin.UUID}
                                     updated_at={plugin.UpdatedAt || 0}
+                                    prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
+                                        headImg: ele.HeadImg,
+                                        userName: ele.UserName
+                                    }))}
                                 />
                                 <div className={styles["details-editor-wrapper"]}>
                                     <YakitEditor type={"yak"} value={plugin.Content} />

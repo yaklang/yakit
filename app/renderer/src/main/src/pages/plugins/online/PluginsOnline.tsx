@@ -16,6 +16,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
     OutlineCalendarIcon,
     OutlineClouddownloadIcon,
+    OutlineClouduploadIcon,
     OutlineSearchIcon,
     OutlineSwitchverticalIcon,
     OutlineXIcon
@@ -43,6 +44,7 @@ import {
     PluginsOnlineHeardProps,
     PluginsOnlineListProps,
     PluginsOnlineProps,
+    PluginsUploadAllProps,
     YakitCombinationSearchCircleProps,
     YakitPluginOnlineDetail
 } from "./PluginsOnlineType"
@@ -51,7 +53,7 @@ import {API} from "@/services/swagger/resposeType"
 import {PluginsContainer, PluginsLayout, defaultSearch} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {PluginsOnlineDetail} from "./PluginsOnlineDetail"
-import {SolidPluscircleIcon} from "@/assets/icon/solid"
+import {SolidClouduploadIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
@@ -70,10 +72,13 @@ import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TypeSelectOpt} from "../funcTemplateType"
 import {DefaultTypeList, PluginGV} from "../builtInData"
-import {BackInfoProps} from "../manage/PluginManageDetail"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {isCommunityEdition} from "@/utils/envfile"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {PluginUpload} from "../local/PluginLocalUpload"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -127,7 +132,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
         {wait: 200, leading: true}
     ).run
     return (
-        <OnlineJudgment>
+        <>
             <div className={styles["plugins-online"]}>
                 <div id='pluginsOnline' ref={pluginsOnlineRef} className={classNames(styles["plugins-online-body"])}>
                     <div
@@ -151,14 +156,14 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
                     </div>
                 </div>
             </div>
-        </OnlineJudgment>
+        </>
     )
 })
 const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, ref) => {
     const {refresh, isShowRoll, plugin, setPlugin, inViewport} = props
 
     /** 插件展示(列表|网格) */
-    const [isList, setIsList] = useState<boolean>(true)
+    const [isList, setIsList] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<string[]>([])
     const [allCheck, setAllCheck] = useState<boolean>(false)
     /** 是否为加载更多 */
@@ -196,8 +201,16 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [visibleOnline, setVisibleOnline] = useState<boolean>(false)
+    const [visibleUploadAll, setVisibleUploadAll] = useState<boolean>(false)
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
+
+    /** 是否为初次加载 */
+    const isLoadingRef = useRef<boolean>(true)
+    const latestLoadingRef = useLatest(loading)
+
+    const userInfo = useStore((s) => s.userInfo)
+
     // 获取筛选栏展示状态
     useEffect(() => {
         getRemoteValue(PluginGV.StoreFilterCloseStatus).then((value: string) => {
@@ -205,20 +218,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             if (value === "false") setShowFilter(false)
         })
     }, [])
-    // 缓存筛选栏展示状态
-    useDebounceEffect(
-        () => {
-            setRemoteValue(PluginGV.StoreFilterCloseStatus, `${!!showFilter}`)
-        },
-        [showFilter],
-        {wait: 500}
-    )
-
-    /** 是否为初次加载 */
-    const isLoadingRef = useRef<boolean>(true)
-    const latestLoadingRef = useLatest(loading)
-
-    const userInfo = useStore((s) => s.userInfo)
     useEffect(() => {
         getInitTotal()
     }, [userInfo.isLogin, inViewport])
@@ -230,6 +229,16 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useEffect(() => {
         getPluginGroupList()
     }, [userInfo.isLogin, inViewport])
+
+    useEffect(() => {
+        emiter.on("onRefOnlinePluginList", onRefOnlinePluginList)
+        return () => {
+            emiter.off("onRefOnlinePluginList", onRefOnlinePluginList)
+        }
+    }, [])
+    const onRefOnlinePluginList = useMemoizedFn(() => {
+        fetchList(true)
+    })
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -449,6 +458,21 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         filtersDetailRef.current = detailFilter
         fetchList(true)
     })
+    const onUploadAll = useMemoizedFn(() => {
+        if (!userInfo.isLogin) {
+            yakitNotify("error", "请先登录")
+            return
+        }
+        if (userInfo.role !== "admin") {
+            yakitNotify("error", "暂无权限")
+            return
+        }
+        setVisibleUploadAll(true)
+    })
+    const onSetShowFilter = useMemoizedFn((v) => {
+        setRemoteValue(PluginGV.StoreFilterCloseStatus, `${!!showFilter}`)
+        setShowFilter(v)
+    })
     return (
         <>
             {!!plugin && (
@@ -468,6 +492,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         defaultFilter={filters}
                         downloadLoading={downloadLoading}
                         onDetailSearch={onDetailSearch}
+                        currentIndex={showPluginIndex.current}
+                        setCurrentIndex={setShowPluginIndex}
                     />
                 </div>
             )}
@@ -508,7 +534,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 <PluginsContainer
                     loading={loading && isLoadingRef.current}
                     visible={showFilter}
-                    setVisible={setShowFilter}
+                    setVisible={onSetShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
                     groupList={pluginGroupList}
@@ -526,7 +552,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         filters={filters}
                         setFilters={setFilters}
                         visible={showFilter}
-                        setVisible={setShowFilter}
+                        setVisible={onSetShowFilter}
                         extraHeader={
                             <div className={styles["plugin-list-extra-heard"]}>
                                 <FuncFilterPopover
@@ -665,7 +691,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             help={data.help || ""}
                                             img={data.head_img || ""}
                                             user={data.authors || ""}
-                                            // prImgs={[]}
+                                            prImgs={(data.collaborator || []).map((ele) => ele.head_img)}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
                                             official={!!data.isCorePlugin}
@@ -704,20 +730,57 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 setShowIndex={setShowPluginIndex}
                             />
                         ) : (
-                            <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
+                            <div className={styles["plugin-online-empty"]}>
+                                <YakitEmpty
+                                    title='暂无数据'
+                                    description={isCommunityEdition() ? "" : "可将本地所有插件一键上传"}
+                                />
+                                {userInfo.role === "admin" && (
+                                    <div className={styles["plugin-online-buttons"]}>
+                                        <YakitButton
+                                            type='outline1'
+                                            icon={<OutlineClouduploadIcon />}
+                                            onClick={onUploadAll}
+                                        >
+                                            一键上传
+                                        </YakitButton>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </PluginsList>
                 </PluginsContainer>
             </PluginsLayout>
-            {visibleOnline && (
-                <YakitGetOnlinePlugin
-                    visible={visibleOnline}
-                    setVisible={(v) => {
-                        setVisibleOnline(v)
-                    }}
-                />
-            )}
+            {visibleOnline && <YakitGetOnlinePlugin visible={visibleOnline} setVisible={setVisibleOnline} />}
+            {visibleUploadAll && <PluginsUploadAll visible={visibleUploadAll} setVisible={setVisibleUploadAll} />}
         </>
+    )
+})
+
+const PluginsUploadAll: React.FC<PluginsUploadAllProps> = React.memo((props) => {
+    const {visible, setVisible} = props
+    const onCancel = useMemoizedFn(() => {
+        setVisible(false)
+    })
+    return (
+        <YakitHint
+            visible={visible}
+            title='一键上传'
+            heardIcon={<SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            footer={null}
+            isDrag={true}
+            mask={false}
+        >
+            <PluginUpload
+                isUploadAll={true}
+                isPrivate={false}
+                onSave={onCancel}
+                onCancel={onCancel}
+                pluginNames={[]}
+                show={visible}
+                footerClassName={styles["upload-all-btns"]}
+            />
+        </YakitHint>
     )
 })
 

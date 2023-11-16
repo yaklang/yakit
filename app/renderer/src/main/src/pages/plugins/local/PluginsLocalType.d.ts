@@ -6,6 +6,8 @@ import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 export interface PluginsLocalProps {}
 
 export interface LocalExtraOperateProps {
+    /**是否为内置插件 */
+    isCorePlugin: boolean
     /**是否是自己的插件 */
     isOwn: boolean
     /**删除插件 */
@@ -43,6 +45,15 @@ export interface PluginsLocalDetailProps {
     onDetailsBatchRemove: (q: PluginLocalDetailBackProps) => void
     /** 查询第一页的loading 也可以理解为page为1时需要的loading；也可以用于点击搜索后重新计算虚拟列表时候加载第二页 */
     spinLoading: boolean
+    /**详情的批量上传 */
+    onDetailsBatchUpload: (s: string[]) => void
+    /** 当前展示插件的索引 */
+    currentIndex: number
+    setCurrentIndex: (index: number) => void
+    /**删除的loading */
+    removeLoading: boolean
+    /**传线上的UUID,传入本地详情进行使用 */
+    onJumpToLocalPluginDetailByUUID: () => void
 }
 
 export interface PluginLocalBackProps {

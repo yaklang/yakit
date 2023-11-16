@@ -31,7 +31,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
         const [loading, setLoading] = useState<boolean>(false)
         const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
         const [selectList, setSelectList] = useState<string[]>([])
-        const [isList, setIsList] = useState<boolean>(true)
+        const [isList, setIsList] = useState<boolean>(false)
         const [hasMore, setHasMore] = useState<boolean>(true)
         const [search, setSearch] = useControllableValue<PluginSearchParams>(props, {
             defaultValuePropName: "searchValue",
@@ -334,7 +334,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                                             help={data.help || ""}
                                             img={data.head_img || ""}
                                             user={data.authors || ""}
-                                            // prImgs={data.prs}
+                                            prImgs={(data.collaborator||[]).map(ele=>ele.head_img)}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
                                             official={!!data.isCorePlugin}

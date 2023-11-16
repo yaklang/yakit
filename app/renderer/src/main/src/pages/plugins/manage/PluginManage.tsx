@@ -99,14 +99,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             if (value === "false") setShowFilter(false)
         })
     }, [])
-    // 缓存筛选栏展示状态
-    useDebounceEffect(
-        () => {
-            setRemoteValue(PluginGV.AuditFilterCloseStatus, `${!!showFilter}`)
-        },
-        [showFilter],
-        {wait: 500}
-    )
 
     const [filters, setFilters] = useState<PluginFilterParams>({
         plugin_type: [],
@@ -569,7 +561,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         activeDetailData.current = {...data}
         onShowDelPlugin()
     })
-
+    const onSetShowFilter = useMemoizedFn((v) => {
+        setRemoteValue(PluginGV.AuditFilterCloseStatus, `${!!showFilter}`)
+        setShowFilter(v)
+    })
     return (
         <div ref={layoutRef} className={styles["plugin-manage-layout"]}>
             {!!plugin && (
@@ -664,7 +659,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 <PluginsContainer
                     loading={loading && isLoadingRef.current}
                     visible={showFilter}
-                    setVisible={setShowFilter}
+                    setVisible={onSetShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={onFilter}
                     groupList={pluginFilters}
@@ -679,7 +674,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         filters={filters}
                         setFilters={setFilters}
                         visible={showFilter}
-                        setVisible={setShowFilter}
+                        setVisible={onSetShowFilter}
                     >
                         {initTotal > 0 ? (
                             <ListShowContainer<YakitPluginOnlineDetail>
@@ -701,6 +696,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                             help={data.help || ""}
                                             img={data.head_img || ""}
                                             user={data.authors || ""}
+                                            prImgs={(data.collaborator || []).map((ele) => ele.head_img)}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
                                             official={data.official}

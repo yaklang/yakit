@@ -44,12 +44,19 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         onBatchDownload,
         downloadLoading,
         onDetailSearch,
-        spinLoading
+        spinLoading,
+        currentIndex,
+        setCurrentIndex
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [allCheck, setAllCheck] = useState<boolean>(defaultAllCheck)
     const [selectList, setSelectList] = useState<string[]>(defaultSelectList)
     const [filters, setFilters] = useState<PluginFilterParams>(cloneDeep(defaultFilter))
+
+    // 因为组件 RollingLoadList 的定向滚动功能初始不执行，所以设置一个初始变量跳过初始状态
+    const [scrollTo, setScrollTo] = useState<number>(0)
+
+    const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
 
     const userInfo = useStore((s) => s.userInfo)
 
@@ -59,11 +66,14 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         else return selectList.length
     }, [allCheck, selectList])
 
-    const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
-
     useEffect(() => {
-        if (info) setPlugin({...info})
-        else setPlugin(undefined)
+        if (info) {
+            setPlugin({...info})
+            // 必须加上延时，不然本次操作会成为组件(RollingLoadList)的初始数据
+            setTimeout(() => {
+                setScrollTo(currentIndex)
+            }, 100)
+        } else setPlugin(undefined)
     }, [info])
 
     const onRun = useMemoizedFn(() => {})
@@ -124,7 +134,8 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
         if (value) setSelectList([])
         setAllCheck(value)
     })
-    const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail) => {
+    const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
+        setCurrentIndex(index)
         setPlugin({...data})
     })
     const onDownload = useMemoizedFn(() => {
@@ -177,6 +188,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             selected={selectNum}
             listProps={{
                 rowKey: "uuid",
+                numberRoll: scrollTo,
                 data: response.data,
                 loadMoreData: loadMoreData,
                 classNameRow: "plugin-details-opt-wrapper",
@@ -195,17 +207,17 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                             content={info.content}
                             optCheck={optCheck}
                             official={info.official}
-                            // isCorePlugin={info.is_core_plugin}
-                            isCorePlugin={false}
+                            isCorePlugin={!!info.isCorePlugin}
                             pluginType={info.type}
                             onPluginClick={onPluginClick}
                         />
                     )
                 },
                 page: response.pagemeta.page,
-                hasMore: response.pagemeta.total !== response.data.length,
+                hasMore: +response.pagemeta.total !== response.data.length,
                 loading: loading,
-                defItemHeight: 46
+                defItemHeight: 46,
+                isRef: spinLoading
             }}
             onBack={onPluginBack}
             search={search}
@@ -253,7 +265,10 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                                 user={plugin.authors}
                                 pluginId={plugin.uuid}
                                 updated_at={plugin.updated_at}
-                                prImgs={[]}
+                                prImgs={(plugin.collaborator || []).map((ele) => ({
+                                    headImg: ele.head_img,
+                                    userName: ele.user_name
+                                }))}
                             />
                             <div className={styles["details-editor-wrapper"]}>
                                 <YakitEditor type={"yak"} value={plugin.content} />
