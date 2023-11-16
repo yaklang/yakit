@@ -1303,7 +1303,7 @@ const setPluginGroup = (obj, onRefList, onClose, msg) => {
         .catch((err) => {})
 }
 
-const RemovePluginGroup: React.FC<SetPluginGroupProps> = (props) => {
+export const RemovePluginGroup: React.FC<SetPluginGroupProps> = (props) => {
     const {selectedRowKeysRecordOnline, onRefList, onClose, queryOnline, isSelectAllOnline} = props
 
     const selectItemType: string[] = Array.from(
@@ -1387,7 +1387,7 @@ interface SetPluginGroupProps {
     onRefList: () => void
 }
 const pluginGroupArr:string[] = ["基础扫描","操作系统类漏洞","WEB中间件漏洞","WEB应用漏洞","网络安全设备漏洞","OA产品漏洞","CMS产品漏洞", "弱口令", "CVE合规漏洞"]
-const AddPluginGroup: React.FC<SetPluginGroupProps> = (props) => {
+export const AddPluginGroup: React.FC<SetPluginGroupProps> = (props) => {
     const {selectedRowKeysRecordOnline, isSelectAllOnline, queryOnline, onClose, onRefList} = props
     const [_, setGroupName, getGroupName] = useGetState<string[]>([])
 
