@@ -314,6 +314,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             wait: 200
         }
     )
+    const fuzzerIndexArr = useRef<string[]>([])
     useEffect(() => {
         const token = fuzzTokenRef.current
         const dataToken = `${token}-data`
@@ -367,9 +368,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     failedBufferRef.current.set(FuzzerIndex, [r])
                 }
             }
+            if(!fuzzerIndexArr.current.includes(FuzzerIndex)){
+                fuzzerIndexArr.current.push(FuzzerIndex)
+            }
             updateData(FuzzerIndex)
         })
         ipcRenderer.on(endToken, () => {
+            fuzzerIndexArr.current.map((FuzzerIndex)=>{
+                updateDataFun(FuzzerIndex)
+            })
             setTimeout(() => {
                 setLoading(false)
             }, 300)
@@ -410,51 +417,54 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
         }
     })
-    const updateData = useThrottleFn(
-        (fuzzerIndex: string) => {
-            const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
-            const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
-            if (failedBuffer.length + successBuffer.length === 0) {
-                return
-            }
-            const newSequenceList = sequenceList.map((item) => {
-                if (item.disabled) {
-                    return {
-                        ...item,
-                        disabled: item.id === fuzzerIndex ? false : true
-                    }
-                } else {
-                    return item
+    const updateDataFun = (fuzzerIndex: string) => {
+        const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
+        const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
+        if (failedBuffer.length + successBuffer.length === 0) {
+            return
+        }
+        const newSequenceList = sequenceList.map((item) => {
+            if (item.disabled) {
+                return {
+                    ...item,
+                    disabled: item.id === fuzzerIndex ? false : true
                 }
-            })
-            setSequenceList([...newSequenceList])
-
-            let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
-            let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
-            if (successBuffer.length + failedBuffer.length === 1) {
-                const onlyOneResponse = successBuffer.length === 1 ? successBuffer[0] : failedBuffer[0]
-                // 设置第一个 response
-                setResponse(fuzzerIndex, {
-                    id: fuzzerIndex,
-                    onlyOneResponse,
-                    successCount: currentSuccessCount,
-                    failedCount: currentFailedCount,
-                    successFuzzer: successBuffer,
-                    failedFuzzer: failedBuffer
-                })
-                return
+            } else {
+                return item
             }
-            const currentResponse = getResponse(fuzzerIndex)
-            const newResponse: ResponseProps = {
+        })
+        setSequenceList([...newSequenceList])
+
+        let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
+        let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
+        if (successBuffer.length + failedBuffer.length === 1) {
+            const onlyOneResponse = successBuffer.length === 1 ? successBuffer[0] : failedBuffer[0]
+            // 设置第一个 response
+            setResponse(fuzzerIndex, {
                 id: fuzzerIndex,
-                onlyOneResponse: emptyFuzzer,
-                ...currentResponse,
+                onlyOneResponse,
                 successCount: currentSuccessCount,
                 failedCount: currentFailedCount,
-                successFuzzer: [...successBuffer],
-                failedFuzzer: [...failedBuffer]
-            }
-            setResponse(fuzzerIndex, newResponse)
+                successFuzzer: successBuffer,
+                failedFuzzer: failedBuffer
+            })
+            return
+        }
+        const currentResponse = getResponse(fuzzerIndex)
+        const newResponse: ResponseProps = {
+            id: fuzzerIndex,
+            onlyOneResponse: emptyFuzzer,
+            ...currentResponse,
+            successCount: currentSuccessCount,
+            failedCount: currentFailedCount,
+            successFuzzer: [...successBuffer],
+            failedFuzzer: [...failedBuffer]
+        }
+        setResponse(fuzzerIndex, newResponse)
+    }
+    const updateData = useThrottleFn(
+        (fuzzerIndex: string) => {
+            updateDataFun(fuzzerIndex)
         },
         {wait: 200}
     ).run
@@ -641,7 +651,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 httpParams.push(httpParamsItem)
             }
         })
-        // console.log("httpParams", httpParams)
         return httpParams
     })
 
@@ -670,11 +679,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         resetResponse()
         resetDroppedCount()
         setCurrentSelectResponse(undefined)
+        fuzzerIndexArr.current = []
         const newSequenceList = sequenceList.map((item) => ({...item, disabled: true}))
         setSequenceList([...newSequenceList])
+        
         ipcRenderer.invoke("HTTPFuzzerSequence", {Requests: getHttpParams()}, fuzzTokenRef.current)
     })
     const onForcedStop = useMemoizedFn(() => {
+        fuzzerIndexArr.current = []
         setLoading(false)
         ipcRenderer.invoke("cancel-HTTPFuzzerSequence", fuzzTokenRef.current)
     })
