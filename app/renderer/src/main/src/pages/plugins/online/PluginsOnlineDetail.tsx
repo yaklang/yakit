@@ -18,6 +18,7 @@ import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJour
 import {LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
+import {onlineUseToLocalDetail} from "../utils"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
@@ -75,8 +76,11 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             }, 100)
         } else setPlugin(undefined)
     }, [info])
-
-    const onRun = useMemoizedFn(() => {})
+    /**去使用，跳转到本地插件详情页面 */
+    const onUse = useMemoizedFn(() => {
+        if (!plugin) return
+        onlineUseToLocalDetail(plugin.uuid)
+    })
     // 返回
     const onPluginBack = useMemoizedFn(() => {
         onBack({
@@ -257,7 +261,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                                             maxWidth={1100}
                                             icon={<OutlineCursorclickIcon />}
                                             name={"去使用"}
-                                            onClick={onRun}
+                                            onClick={onUse}
                                         />
                                     </div>
                                 }

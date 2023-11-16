@@ -63,6 +63,7 @@ import {usePageInfo} from "@/store/pageInfo"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
+import {SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -321,6 +322,19 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         if (value) setSelectList([...selectList, data])
         else setSelectList(selectList.filter((item) => item.ScriptName !== data.ScriptName))
     })
+
+    /** 单项副标题组件 */
+    const optSubTitle = useMemoizedFn((data: YakScript) => {
+        if (!data.OnlineBaseUrl) return <></>
+        if (data.OnlineOfficial) {
+            return <SolidOfficialpluginIcon />
+        }
+        if (data.OnlineIsPrivate) {
+            return <SolidPrivatepluginIcon />
+        } else {
+            return <SolidCloudpluginIcon />
+        }
+    })
     /** 单项额外操作组件 */
     const optExtraNode = useMemoizedFn((data: YakScript) => {
         return (
@@ -338,7 +352,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     /** 上传 */
     const onUploadPlugin = useMemoizedFn(async (data: YakScript) => {
         if (!userInfo.isLogin) {
-            yakitNotify("error", "登录后才可上次插件")
+            yakitNotify("error", "登录后才可上传插件")
             return
         }
         uploadPluginRef.current = data
@@ -727,6 +741,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                             prImgs={(data.CollaboratorInfo || []).map((ele) => ele.HeadImg)}
                                             time={data.UpdatedAt || 0}
                                             extraFooter={optExtraNode}
+                                            subTitle={optSubTitle}
                                             onClick={optClick}
                                         />
                                     )

@@ -274,7 +274,8 @@ try {
      *  @description 打开软化后这个订阅会一直存在，直到关闭软件;后续再看看优化方法
      */
     const unFuzzerCacheData = usePageInfo.subscribe(
-        (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+        // (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+        (state) => state.pages.get("httpFuzzer") || [], // 因为循环引用导致开发环境热加载YakitRoute.HTTPFuzzer为undefined
         (selectedState, previousSelectedState) => {
             saveFuzzerCache(selectedState)
         }
