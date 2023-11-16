@@ -1074,6 +1074,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.removeAllListeners("login-out")
         }
     }, [])
+    // 登录用户非高权限时，软件已打开的高权限页面需自动关闭
+    useEffect(() => {
+        const {isLogin} = userInfo
+        if (!isLogin ) {
+            const closePage: OnlyPageCache[] = [{route: YakitRoute.Plugin_Audit, menuName: ""}]
+            for (let item of closePage) {
+                removeMenuPage(item)
+            }
+        }
+    }, [userInfo])
     /** ---------- 登录状态变化的逻辑 end ---------- */
     /** ---------- 简易企业版 start ---------- */
     useEffect(() => {

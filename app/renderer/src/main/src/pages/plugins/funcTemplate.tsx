@@ -897,6 +897,7 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
             const newArr = data.slice(order, order + gridCol)
             arr.push(newArr)
         }
+        console.log("arrds", arr)
         return arr
     }, [data, gridCol])
 
@@ -1580,6 +1581,11 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         if (isStart) {
             onTest()
         }
+
+        return () => {
+            setLoading(false)
+            setResponse(undefined)
+        }
     }, [isStart])
 
     return (
@@ -1690,9 +1696,10 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
             closable={true}
             visible={visible}
             footer={null}
+            destroyOnClose={true}
             onCancel={onFailed}
         >
-            <CodeScoreModule type={type} code={code} isStart={visible} callback={moduleCallback} />
+            {visible && <CodeScoreModule type={type} code={code} isStart={visible} callback={moduleCallback} />}
         </YakitModal>
     )
 })

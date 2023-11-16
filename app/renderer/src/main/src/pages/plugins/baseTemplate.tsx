@@ -62,7 +62,7 @@ import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {yakitNotify} from "@/utils/notification"
 import {BuiltInTags} from "./editDetails/builtInData"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {PluginEditorModal} from "./editDetails/PluginEditDetails"
+import {PluginDiffEditorModal, PluginEditorModal} from "./editDetails/PluginEditDetails"
 import {PluginGV, aduitStatusToName, pluginTypeToName} from "./builtInData"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 
@@ -369,14 +369,14 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
             if (data) {
                 form.setFieldsValue({...data})
                 setBugInfo(data.RiskDetail ? {...data.RiskDetail} : undefined)
-                if (data?.RiskDetail && data.RiskDetail.CWEName) {
+                if (data?.RiskDetail && data.RiskDetail.RiskType) {
                     // 判断是否为自定义漏洞类型
                     const bugFilter =
-                        initBugList.current.findIndex((item) => item.RiskType === (data.RiskDetail?.CWEName || "")) ===
+                        initBugList.current.findIndex((item) => item.RiskType === (data.RiskDetail?.RiskType || "")) ===
                         -1
                     if (bugFilter) {
                         setBugList(
-                            [{RiskType: data.RiskDetail?.CWEName || "", CWEId: data.RiskDetail?.Id || "0"}].concat([
+                            [{RiskType: data.RiskDetail?.RiskType || "", CWEId: data.RiskDetail?.CWEId || "0"}].concat([
                                 ...initBugList.current
                             ])
                         )
@@ -491,16 +491,16 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                     .invoke("PluginsGetRiskInfo", {CWEId: opt.valueId})
                     .then((res: RiskOptInfoProps) => {
                         setBugInfo({
-                            Id: opt?.valueId || "0",
-                            CWEName: value,
+                            CWEId: opt?.valueId || "0",
+                            RiskType: value,
                             Description: res?.Description || "",
                             CWESolution: res?.CWESolution || ""
                         })
                     })
                     .catch(() => {
                         setBugInfo({
-                            Id: opt?.valueId || "0",
-                            CWEName: value,
+                            CWEId: opt?.valueId || "0",
+                            RiskType: value,
                             Description: "",
                             CWESolution: ""
                         })
@@ -626,7 +626,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                         </div>
                         <div className={styles["bug-info"]}>
                             <div className={styles["info-title"]}>{`${
-                                bugInfo?.Id && bugInfo.Id !== "0" ? "CWE-" + bugInfo.Id + " " : ""
+                                bugInfo?.CWEId && bugInfo.CWEId !== "0" ? "CWE-" + bugInfo.CWEId + " " : ""
                             }${userRisk}`}</div>
                             {isHasBugInfo ? (
                                 <div className={styles["info-content"]}>
@@ -1329,10 +1329,22 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
 export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) => {
     const {isDiff, newCode, oldCode = "", setCode} = props
 
+    // 更新对比器内容
+    const [update, setUpdate] = useState<boolean>(false)
+
     const [codeModal, setCodeModal] = useState<boolean>(false)
     const onModifyCode = useMemoizedFn((content: string) => {
         if (newCode !== content) setCode(content)
         setCodeModal(false)
+    })
+
+    const [diffCodeModal, setDiffCodeModal] = useState<boolean>(false)
+    const onDiffModifyCode = useMemoizedFn((content: string) => {
+        if (newCode !== content) {
+            setCode(content)
+            setUpdate(!update)
+        }
+        setDiffCodeModal(false)
     })
 
     return (
@@ -1343,7 +1355,7 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
                     size='small'
                     type='text2'
                     icon={<OutlineArrowsexpandIcon />}
-                    onClick={() => setCodeModal(true)}
+                    onClick={() => (isDiff ? setDiffCodeModal(true) : setCodeModal(true))}
                 />
             </div>
             {isDiff ? (
@@ -1365,6 +1377,7 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
                                 leftReadOnly={true}
                                 rightDefaultCode={newCode}
                                 setRightCode={setCode}
+                                triggerUpdate={update}
                                 language='yak'
                             />
                         </div>
@@ -1377,6 +1390,12 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
             )}
 
             <PluginEditorModal visible={codeModal} setVisible={onModifyCode} code={newCode} />
+            <PluginDiffEditorModal
+                oldCode={oldCode}
+                newCode={newCode}
+                visible={diffCodeModal}
+                setVisible={onDiffModifyCode}
+            />
         </div>
     )
 })

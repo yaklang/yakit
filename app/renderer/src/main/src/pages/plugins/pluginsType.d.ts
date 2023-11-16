@@ -67,8 +67,8 @@ export interface PluginDataProps {
 /** ---------- grpc插件数据结构定义 start ---------- */
 /** 漏洞类型的描述和修复建议 */
 export interface QueryYakScriptRiskDetailByCWEResponse {
-    Id: string
-    CWEName: string
+    CWEId: string
+    RiskType: string
     Description: string
     CWESolution: string
 }
