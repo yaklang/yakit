@@ -269,7 +269,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     )
 })
 
-interface YakitGetOnlinePluginProps {
+export interface YakitGetOnlinePluginProps {
     /**@name 'online'默认首页 mine 个人, recycle 回收站 check 审核页面" */
     listType?: "online" | "mine" | "recycle" | "check"
     visible: boolean

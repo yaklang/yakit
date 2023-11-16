@@ -5,7 +5,12 @@ import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
 import {isCommunityEdition} from "@/utils/envfile"
 import {compareAsc} from "../yakitStore/viewers/base"
-import {GetYakScriptTagsAndTypeResponse, QueryYakScriptRequest, QueryYakScriptsResponse} from "../invoker/schema"
+import {
+    GetYakScriptTagsAndTypeResponse,
+    QueryYakScriptRequest,
+    QueryYakScriptsResponse,
+    YakScript
+} from "../invoker/schema"
 import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {pluginTypeToName} from "./builtInData"
@@ -852,6 +857,32 @@ export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promi
                 .catch((err) => {
                     yakitNotify("error", "操作失败：" + err)
                     reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "操作失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+interface GetYakScriptByOnlineIDRequest {
+    UUID: string
+}
+/**
+ * @description 通过线上uuid查询本地插件数据
+ */
+export const apiGetYakScriptByOnlineID: (query: GetYakScriptByOnlineIDRequest) => Promise<YakScript> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("GetYakScriptByOnlineID", {
+                    ...query
+                } as GetYakScriptByOnlineIDRequest)
+                .then((newScript: YakScript) => {
+                    resolve(newScript)
+                })
+                .catch((e) => {
+                    yakitNotify("error", "查询本地插件错误" + e)
                 })
         } catch (error) {
             yakitNotify("error", "操作失败：" + error)
