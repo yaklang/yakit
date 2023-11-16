@@ -37,11 +37,11 @@ import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/
 import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
 import {convertRemoteToLocalParams, convertRemoteToRemoteInfo} from "../editDetails/utils"
 import {yakitNotify} from "@/utils/notification"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 import classNames from "classnames"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -140,6 +140,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     console.log("res", res)
                     if (res) {
                         setPlugin({...res})
+                        // 记录日志id(带对比时的提交id)
+                        diffIDRef.current = res.up_log_id || 0
                         // 源码
                         setContent(res.content)
                         if (+res.status !== 0) return
@@ -155,8 +157,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                             Help: res.help,
                             RiskType: res.riskType,
                             RiskDetail: {
-                                Id: res.riskDetail?.cweId || "",
-                                CWEName: res.riskDetail?.riskType || "",
+                                CWEId: res.riskDetail?.cweId || "",
+                                RiskType: res.riskDetail?.riskType || "",
                                 Description: res.riskDetail?.description || "",
                                 CWESolution: res.riskDetail?.solution || ""
                             },
@@ -281,6 +283,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         )
 
         const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
+        // diff日志ID
+        const diffIDRef = useRef<number>(0)
         // 插件类型(漏洞类型|其他类型)
         const isRisk = useMemo(() => {
             if ((info as any)?.riskType) return "bug"
@@ -397,7 +401,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         listType: "check",
                         status: isPass ? "true" : "false",
                         uuid: plugin.uuid,
-                        logDescription: description || undefined
+                        logDescription: description || undefined,
+                        upPluginLogId: diffIDRef.current || undefined
                     }
                     const info: API.PluginsRequest | undefined = await convertPluginInfo()
                     if (!info) return
@@ -405,7 +410,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     try {
                         info.tags = JSON.parse(plugin.tags || "[]")
                     } catch (error) {}
-                    console.log("{...info, ...audit}", {...info, ...audit})
+                    console.log("audit-submit-api", {...info, ...audit})
                     // if (callback) callback(false)
                     apiAuditPluginDetaiCheck({...info, ...audit})
                         .then(() => {
@@ -434,12 +439,17 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             setShowReason({visible: true, type: "nopass"})
         })
         // 关闭原因窗口
-        const onCancelReason = useMemoizedFn(() => {
+        const onCancelReason = useMemoizedFn((loading?: boolean) => {
             setShowReason({visible: false, type: "del"})
+            if (typeof loading !== "boolean" || !loading) {
+                setTimeout(() => {
+                    setStatusLoading(false)
+                }, 200)
+            }
         })
         const onReasonCallback = useMemoizedFn((reason: string) => {
             const type = showReason.type
-            onCancelReason()
+            onCancelReason(true)
 
             if (type === "nopass") {
                 setStatusLoading(true)

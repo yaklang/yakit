@@ -16,10 +16,18 @@ import {
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
     OutlinePencilaltIcon,
-    OutlinePluscircleIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useDebounceEffect, useDebounceFn, useGetState, useInViewport, useLatest, useLockFn, useMemoizedFn} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useInViewport,
+    useLatest,
+    useLockFn,
+    useMemoizedFn,
+    useUpdateEffect
+} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -33,7 +41,6 @@ import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {yakitNotify} from "@/utils/notification"
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
-import {OnlineJudgment} from "../onlineJudgment/OnlineJudgment"
 import {
     DownloadOnlinePluginsRequest,
     PluginsQueryProps,
@@ -44,12 +51,14 @@ import {
     convertDownloadOnlinePluginBatchRequestParams,
     convertPluginsRequestParams
 } from "../utils"
-import {isCommunityEdition} from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {DefaultStatusList, PluginGV} from "../builtInData"
+import {showModal} from "@/utils/showModal"
+import {SolidChevrondownIcon} from "@/assets/icon/solid"
+import {AddPluginGroup, RemovePluginGroup} from "@/pages/yakitStore/store/PluginStore"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
@@ -70,8 +79,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             setInitTotal(+res.pagemeta.total)
         })
     })
-    useEffect(() => {
+    useUpdateEffect(() => {
         getInitTotal()
+        onInit(true)
     }, [inViewPort])
 
     // 获取插件列表数据-相关逻辑
@@ -137,7 +147,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
         apiFetchCheckList(query)
             .then((res) => {
-                console.log("data", res.data)
+                console.log("plugin-manage-date", res.data)
                 if (!res.data) res.data = []
                 dispatch({
                     type: "add",
@@ -178,6 +188,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
     // 页面初始化的首次列表请求
     useEffect(() => {
+        getInitTotal()
         onInit()
     }, [])
     // 滚动更多加载
@@ -194,13 +205,15 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         {wait: 500}
     )
     // 过滤条件搜索
-    useDebounceEffect(
-        () => {
+    useUpdateEffect(() => {
+        onFilterFetchList()
+    }, [filters])
+    const onFilterFetchList = useDebounceFn(
+        useMemoizedFn(() => {
             fetchList(true)
-        },
-        [filters],
+        }),
         {wait: 500}
-    )
+    ).run
     const onFilter = useMemoizedFn((value: Record<string, API.PluginsSearchData[]>) => {
         setFilters({...value})
     })
@@ -231,9 +244,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         setAllcheck(value)
     })
 
-    const [showGroup, setShowGroup] = useState<boolean>(false)
-    // 添加至分组
-    const onAddGroup = useMemoizedFn(() => {})
+    // 清空选中并刷新列表
+    const onClearSelecteds = useMemoizedFn(() => {
+        if (allCheck) setAllcheck(false)
+        setSelectList([])
+        onInit()
+    })
 
     /** 批量修改插件作者 */
     const [showModifyAuthor, setShowModifyAuthor] = useState<boolean>(false)
@@ -376,9 +392,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             // 清空操作(无视搜索条件)
             if (selectTotal === 0 && !onlyPlugin) {
                 apiDelPlugins({description: reason}, () => {
-                    if (allCheck) setAllcheck(false)
-                    setSelectList([])
-                    onInit()
+                    onClearSelecteds()
 
                     // 如果是详情的清空，则返回首页
                     setTimeout(() => {
@@ -422,9 +436,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     delRequest = {uuid: selectUuids, description: reason}
                 }
                 apiDelPlugins(delRequest, () => {
-                    if (allCheck) setAllcheck(false)
-                    setSelectList([])
-                    onInit()
+                    onClearSelecteds()
 
                     if (detailRef && detailRef.current) {
                         detailRef.current.onDelCallback([], true)
@@ -441,6 +453,42 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const showPluginIndex = useRef<number>(0)
     const setShowPluginIndex = useMemoizedFn((index: number) => {
         showPluginIndex.current = index
+    })
+
+    // 插件分组
+    const onGroupMenu = useMemoizedFn((key: string) => {
+        switch (key) {
+            case "add-group":
+                const m = showModal({
+                    width: "40%",
+                    content: (
+                        <AddPluginGroup
+                            onRefList={onClearSelecteds}
+                            onClose={() => m.destroy()}
+                            selectedRowKeysRecordOnline={selectList as any}
+                            isSelectAllOnline={false}
+                            queryOnline={{bind_me: false, recycle: false}}
+                        />
+                    )
+                })
+                return m
+            case "edit-group":
+                const n = showModal({
+                    width: "35%",
+                    content: (
+                        <RemovePluginGroup
+                            onRefList={onClearSelecteds}
+                            onClose={() => n.destroy()}
+                            selectedRowKeysRecordOnline={selectList as any}
+                            isSelectAllOnline={false}
+                            queryOnline={{bind_me: false, recycle: false}}
+                        />
+                    )
+                })
+                return n
+            default:
+                return
+        }
     })
 
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail | undefined>()
@@ -524,196 +572,204 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
     return (
         <div ref={layoutRef} className={styles["plugin-manage-layout"]}>
-            <OnlineJudgment isJudgingLogin={true}>
-                {!!plugin && (
-                    <PluginManageDetail
-                        ref={detailRef}
-                        listLoading={loading}
-                        response={response}
-                        dispatch={dispatch}
-                        info={plugin}
-                        defaultAllCheck={allCheck}
-                        defaultSelectList={selectList}
-                        defaultSearch={searchs}
-                        defaultFilter={filters}
-                        downloadLoading={downloadLoading}
-                        onBatchDownload={onBatchDownload}
-                        onPluginDel={onDetailDel}
-                        currentIndex={showPluginIndex.current}
-                        setCurrentIndex={setShowPluginIndex}
-                        onBack={onBack}
-                        loadMoreData={onUpdateList}
-                        onDetailSearch={onDetailSearch}
-                    />
-                )}
+            {!!plugin && (
+                <PluginManageDetail
+                    ref={detailRef}
+                    listLoading={loading}
+                    response={response}
+                    dispatch={dispatch}
+                    info={plugin}
+                    defaultAllCheck={allCheck}
+                    defaultSelectList={selectList}
+                    defaultSearch={searchs}
+                    defaultFilter={filters}
+                    downloadLoading={downloadLoading}
+                    onBatchDownload={onBatchDownload}
+                    onPluginDel={onDetailDel}
+                    currentIndex={showPluginIndex.current}
+                    setCurrentIndex={setShowPluginIndex}
+                    onBack={onBack}
+                    loadMoreData={onUpdateList}
+                    onDetailSearch={onDetailSearch}
+                />
+            )}
 
-                <PluginsLayout
-                    title='插件管理'
-                    hidden={!!plugin}
-                    subTitle={
-                        <TypeSelect active={pluginStatusSelect} list={DefaultStatusList} setActive={onSetActive} />
-                    }
-                    extraHeader={
-                        <div className='extra-header-wrapper'>
-                            <FuncSearch
-                                maxWidth={1000}
-                                value={searchs}
-                                onSearch={onKeywordAndUser.run}
-                                onChange={setSearchs}
+            <PluginsLayout
+                title='插件管理'
+                hidden={!!plugin}
+                subTitle={<TypeSelect active={pluginStatusSelect} list={DefaultStatusList} setActive={onSetActive} />}
+                extraHeader={
+                    <div className='extra-header-wrapper'>
+                        <FuncSearch
+                            maxWidth={1000}
+                            value={searchs}
+                            onSearch={onKeywordAndUser.run}
+                            onChange={setSearchs}
+                        />
+                        <div className='divider-style'></div>
+                        <div className='btn-group-wrapper'>
+                            {isEnpriTraceAgent() && (
+                                <FuncFilterPopover
+                                    maxWidth={1150}
+                                    icon={<SolidChevrondownIcon />}
+                                    name='插件分组'
+                                    disabled={selectNum === 0 && !allCheck}
+                                    button={{
+                                        type: "outline2",
+                                        size: "large"
+                                    }}
+                                    menu={{
+                                        type: "primary",
+                                        data: [
+                                            {key: "add-group", label: "加入分组"},
+                                            {key: "edit-group", label: "编辑分组"}
+                                        ],
+                                        onClick: ({key}) => {
+                                            onGroupMenu(key)
+                                        }
+                                    }}
+                                    placement='bottomRight'
+                                />
+                            )}
+                            <FuncBtn
+                                maxWidth={1150}
+                                icon={<OutlinePencilaltIcon />}
+                                disabled={selectList.length === 0}
+                                type='outline2'
+                                size='large'
+                                name={"修改作者"}
+                                onClick={onShowModifyAuthor}
                             />
-                            <div className='divider-style'></div>
-                            <div className='btn-group-wrapper'>
-                                {!isCommunityEdition() && (
-                                    <FuncBtn
-                                        maxWidth={1150}
-                                        icon={<OutlinePluscircleIcon />}
-                                        disabled={selectList.length === 0}
-                                        type='outline2'
-                                        size='large'
-                                        name={"添加至分组"}
-                                        onClick={onAddGroup}
-                                    />
-                                )}
-                                <FuncBtn
-                                    maxWidth={1150}
-                                    icon={<OutlinePencilaltIcon />}
-                                    disabled={selectList.length === 0}
-                                    type='outline2'
-                                    size='large'
-                                    name={"修改作者"}
-                                    onClick={onShowModifyAuthor}
-                                />
-                                <FuncBtn
-                                    maxWidth={1150}
-                                    icon={<OutlineClouddownloadIcon />}
-                                    type='outline2'
-                                    size='large'
-                                    loading={downloadLoading}
-                                    name={selectNum > 0 ? "下载" : "一键下载"}
-                                    onClick={() => onBatchDownload()}
-                                />
-                                <FuncBtn
-                                    maxWidth={1150}
-                                    icon={<OutlineTrashIcon />}
-                                    type='outline2'
-                                    size='large'
-                                    name={selectNum > 0 ? "删除" : "清空"}
-                                    onClick={onShowDelPlugin}
-                                />
-                            </div>
+                            <FuncBtn
+                                maxWidth={1150}
+                                icon={<OutlineClouddownloadIcon />}
+                                type='outline2'
+                                size='large'
+                                loading={downloadLoading}
+                                name={selectNum > 0 ? "下载" : "一键下载"}
+                                onClick={() => onBatchDownload()}
+                            />
+                            <FuncBtn
+                                maxWidth={1150}
+                                icon={<OutlineTrashIcon />}
+                                type='outline2'
+                                size='large'
+                                name={selectNum > 0 ? "删除" : "清空"}
+                                onClick={onShowDelPlugin}
+                            />
                         </div>
-                    }
+                    </div>
+                }
+            >
+                <PluginsContainer
+                    loading={loading && isLoadingRef.current}
+                    visible={showFilter}
+                    setVisible={setShowFilter}
+                    selecteds={filters as Record<string, API.PluginsSearchData[]>}
+                    onSelect={onFilter}
+                    groupList={pluginFilters}
                 >
-                    <PluginsContainer
-                        loading={loading && isLoadingRef.current}
+                    <PluginsList
+                        checked={allCheck}
+                        onCheck={onCheck}
+                        isList={isList}
+                        setIsList={setIsList}
+                        total={response.pagemeta.total}
+                        selected={selectNum}
+                        filters={filters}
+                        setFilters={setFilters}
                         visible={showFilter}
                         setVisible={setShowFilter}
-                        selecteds={filters as Record<string, API.PluginsSearchData[]>}
-                        onSelect={onFilter}
-                        groupList={pluginFilters}
                     >
-                        <PluginsList
-                            checked={allCheck}
-                            onCheck={onCheck}
-                            isList={isList}
-                            setIsList={setIsList}
-                            total={response.pagemeta.total}
-                            selected={selectNum}
-                            filters={filters}
-                            setFilters={setFilters}
-                            visible={showFilter}
-                            setVisible={setShowFilter}
-                        >
-                            {initTotal > 0 ? (
-                                <ListShowContainer<YakitPluginOnlineDetail>
-                                    id='pluginManage'
-                                    isList={isList}
-                                    data={response.data}
-                                    gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                        const {index, data} = info
-                                        const check = allCheck || selectUUIDs.includes(data.uuid)
-                                        return (
-                                            <GridLayoutOpt
-                                                order={index}
-                                                data={data}
-                                                checked={check}
-                                                onCheck={optCheck}
-                                                title={info.index + data.script_name}
-                                                type={data.type}
-                                                tags={data.tags}
-                                                help={data.help || ""}
-                                                img={data.head_img || ""}
-                                                user={data.authors || ""}
-                                                time={data.updated_at}
-                                                isCorePlugin={!!data.isCorePlugin}
-                                                official={data.official}
-                                                subTitle={optSubTitle}
-                                                extraFooter={optExtraNode}
-                                                onClick={optClick}
-                                            />
-                                        )
-                                    }}
-                                    gridHeight={210}
-                                    listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
-                                        const {index, data} = info
-                                        const check = allCheck || selectUUIDs.includes(data.uuid)
-                                        return (
-                                            <ListLayoutOpt
-                                                order={index}
-                                                data={data}
-                                                checked={check}
-                                                onCheck={optCheck}
-                                                img={data.head_img}
-                                                title={info.index + data.script_name}
-                                                help={data.help || ""}
-                                                time={data.updated_at}
-                                                type={""}
-                                                isCorePlugin={!!data.isCorePlugin}
-                                                official={data.official}
-                                                subTitle={optSubTitle}
-                                                extraNode={optExtraNode}
-                                                onClick={optClick}
-                                            />
-                                        )
-                                    }}
-                                    listHeight={73}
-                                    loading={loading}
-                                    hasMore={hasMore}
-                                    updateList={onUpdateList}
-                                    showIndex={showPluginIndex.current}
-                                    setShowIndex={setShowPluginIndex}
-                                    isShowSearchResultEmpty={+response.pagemeta.total === 0}
-                                />
-                            ) : (
-                                <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
-                            )}
-                        </PluginsList>
-                    </PluginsContainer>
-                </PluginsLayout>
+                        {initTotal > 0 ? (
+                            <ListShowContainer<YakitPluginOnlineDetail>
+                                id='pluginManage'
+                                isList={isList}
+                                data={response.data}
+                                gridNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
+                                    const {index, data} = info
+                                    const check = allCheck || selectUUIDs.includes(data.uuid)
+                                    return (
+                                        <GridLayoutOpt
+                                            order={index}
+                                            data={data}
+                                            checked={check}
+                                            onCheck={optCheck}
+                                            title={info.index + data.script_name}
+                                            type={data.type}
+                                            tags={data.tags}
+                                            help={data.help || ""}
+                                            img={data.head_img || ""}
+                                            user={data.authors || ""}
+                                            time={data.updated_at}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={data.official}
+                                            subTitle={optSubTitle}
+                                            extraFooter={optExtraNode}
+                                            onClick={optClick}
+                                        />
+                                    )
+                                }}
+                                gridHeight={210}
+                                listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
+                                    const {index, data} = info
+                                    const check = allCheck || selectUUIDs.includes(data.uuid)
+                                    return (
+                                        <ListLayoutOpt
+                                            order={index}
+                                            data={data}
+                                            checked={check}
+                                            onCheck={optCheck}
+                                            img={data.head_img}
+                                            title={info.index + data.script_name}
+                                            help={data.help || ""}
+                                            time={data.updated_at}
+                                            type={""}
+                                            isCorePlugin={!!data.isCorePlugin}
+                                            official={data.official}
+                                            subTitle={optSubTitle}
+                                            extraNode={optExtraNode}
+                                            onClick={optClick}
+                                        />
+                                    )
+                                }}
+                                listHeight={73}
+                                loading={loading}
+                                hasMore={hasMore}
+                                updateList={onUpdateList}
+                                showIndex={showPluginIndex.current}
+                                setShowIndex={setShowPluginIndex}
+                                isShowSearchResultEmpty={+response.pagemeta.total === 0}
+                            />
+                        ) : (
+                            <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
+                        )}
+                    </PluginsList>
+                </PluginsContainer>
+            </PluginsLayout>
 
-                <ModifyAuthorModal
-                    visible={showModifyAuthor}
-                    setVisible={setShowModifyAuthor}
-                    plugins={selectUUIDs}
-                    onOK={onModifyAuthor}
+            <ModifyAuthorModal
+                visible={showModifyAuthor}
+                setVisible={setShowModifyAuthor}
+                plugins={selectUUIDs}
+                onOK={onModifyAuthor}
+            />
+            <ReasonModal
+                visible={showReason.visible}
+                setVisible={onCancelReason}
+                type={showReason.type}
+                total={!!activeDelPlugin.current ? 1 : selectNum || response.pagemeta.total}
+                onOK={onReasonCallback}
+            />
+            {showBatchDownload && (
+                <YakitGetOnlinePlugin
+                    listType='check'
+                    visible={showBatchDownload}
+                    setVisible={(v) => {
+                        setShowBatchDownload(v)
+                    }}
                 />
-                <ReasonModal
-                    visible={showReason.visible}
-                    setVisible={onCancelReason}
-                    type={showReason.type}
-                    total={!!activeDelPlugin.current ? 1 : selectNum || response.pagemeta.total}
-                    onOK={onReasonCallback}
-                />
-                {showBatchDownload && (
-                    <YakitGetOnlinePlugin
-                        listType='check'
-                        visible={showBatchDownload}
-                        setVisible={(v) => {
-                            setShowBatchDownload(v)
-                        }}
-                    />
-                )}
-            </OnlineJudgment>
+            )}
         </div>
     )
 }
@@ -912,85 +968,3 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
         </YakitModal>
     )
 })
-
-interface PluginsGroupBtnProps {}
-/** */
-// const PluginsGroupBtn: React.FC<PluginsGroupBtnProps> = memo((props) => {
-//     const {} = props
-
-//     const menuData = [
-//         {
-//             title: "加入分组",
-//             number: 10,
-//             onClickBatch: () => {
-//                 const m = showModal({
-//                     width: "40%",
-//                     content: (
-//                         <AddPluginGroup
-//                             onRefList={onRefList}
-//                             onClose={() => m.destroy()}
-//                             selectedRowKeysRecordOnline={selectedRowKeysRecordOnline}
-//                             isSelectAllOnline={isSelectAllOnline}
-//                             queryOnline={queryOnline}
-//                         />
-//                     )
-//                 })
-//                 return m
-//             }
-//         },
-//         {
-//             title: "编辑分组",
-//             number: 10,
-//             onClickBatch: () => {
-//                 const n = showModal({
-//                     width: "35%",
-//                     content: (
-//                         <RemovePluginGroup
-//                             onRefList={onRefList}
-//                             onClose={() => n.destroy()}
-//                             selectedRowKeysRecordOnline={selectedRowKeysRecordOnline}
-//                             isSelectAllOnline={isSelectAllOnline}
-//                             queryOnline={queryOnline}
-//                         />
-//                     )
-//                 })
-//                 return n
-//             }
-//         }
-//     ]
-
-//     return (
-//         <YakitPopover
-//             overlayClassName={style["http-history-table-drop-down-popover"]}
-//             content={
-//                 <Menu className={style["http-history-table-drop-down-batch"]}>
-//                     {menuData.map((m) => {
-//                         return (
-//                             <Menu.Item
-//                                 onClick={() => {
-//                                     m.onClickBatch()
-//                                 }}
-//                                 key={m.title}
-//                             >
-//                                 {m.title}
-//                             </Menu.Item>
-//                         )
-//                     })}
-//                 </Menu>
-//             }
-//             trigger='click'
-//             placement='bottomLeft'
-//         >
-//             <Button
-//                 style={{margin: "0 12px 0 0"}}
-//                 size='small'
-//                 onClick={(e) => {
-//                     e.stopPropagation()
-//                 }}
-//             >
-//                 插件分组
-//                 <ChevronDownIcon style={{color: "#85899E"}} />
-//             </Button>
-//         </YakitPopover>
-//     )
-// })
