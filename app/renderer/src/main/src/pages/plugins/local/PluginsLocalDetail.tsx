@@ -63,7 +63,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         onDetailsBatchUpload,
         currentIndex,
         setCurrentIndex,
-        removeLoading
+        removeLoading,
+        onJumpToLocalPluginDetailByUUID
     } = props
     const [executorShow, setExecutorShow] = useState<boolean>(true)
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
@@ -94,6 +95,13 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
             }, 100)
         } else setPlugin(undefined)
     }, [info])
+
+    useEffect(() => {
+        emiter.on("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
+        return () => {
+            emiter.off("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
+        }
+    }, [])
 
     // 返回
     const onPluginBack = useMemoizedFn(() => {
@@ -346,7 +354,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                     hasMore: +response.Total !== response.Data.length,
                     loading: loading,
                     defItemHeight: 46,
-                    isRef:spinLoading
+                    isRef: spinLoading
                 }}
                 onBack={onPluginBack}
                 search={search}

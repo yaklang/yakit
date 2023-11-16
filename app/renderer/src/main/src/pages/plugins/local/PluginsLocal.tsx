@@ -38,6 +38,7 @@ import {
     apiDeleteLocalPluginsByWhere,
     apiDeleteYakScript,
     apiFetchGroupStatisticsLocal,
+    apiGetYakScriptByOnlineID,
     apiQueryYakScript,
     apiQueryYakScriptTotal,
     convertDeleteLocalPluginsByWhereRequestParams,
@@ -57,6 +58,8 @@ import {DefaultTypeList, PluginGV} from "../builtInData"
 import {RemoteGV} from "@/yakitGV"
 import {randomString} from "@/utils/randomUtil"
 import usePluginUploadHooks, {SaveYakScriptToOnlineRequest} from "../pluginUploadHooks"
+import {shallow} from "zustand/shallow"
+import {usePageInfo} from "@/store/pageInfo"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
@@ -68,7 +71,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     /** 是否为加载更多 */
     const [loading, setLoading] = useState<boolean>(false)
     /** 插件展示(列表|网格) */
-    const [isList, setIsList] = useState<boolean>(true)
+    const [isList, setIsList] = useState<boolean>(false)
 
     const [plugin, setPlugin] = useState<YakScript>()
     const [filters, setFilters] = useState<PluginFilterParams>({plugin_type: [], tags: []})
@@ -99,6 +102,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const searchDetailRef = useRef<PluginSearchParams>() // 详情中的search条件
     const taskTokenRef = useRef(randomString(40))
     const uploadPluginRef = useRef<YakScript>() //上传暂存的插件数据
+    const onlineExternalIncomingPluginsRef = useRef<YakScript>() // 插件商店/我的插件详情中点击去使用传过来的插件暂存数据
 
     const latestLoadingRef = useLatest(loading)
 
@@ -116,15 +120,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             if (value === "false") setShowFilter(false)
         })
     }, [])
-    // 缓存筛选栏展示状态
-    useDebounceEffect(
-        () => {
-            setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
-        },
-        [showFilter],
-        {wait: 500}
-    )
-
     useEffect(() => {
         emiter.on("onRefLocalPluginList", onRefLocalPluginList)
         return () => {
@@ -142,6 +137,51 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     useEffect(() => {
         fetchList(true)
     }, [userInfo.isLogin, filters])
+
+    const {pluginLocalPageData, clearDataByRoute} = usePageInfo(
+        (s) => ({
+            pluginLocalPageData: s.pages?.get(YakitRoute.Plugin_Local) || {
+                pageList: [],
+                routeKey: "",
+                singleNode: true
+            },
+            clearDataByRoute: s.clearDataByRoute
+        }),
+        shallow
+    )
+    const onSetOnlineExternalIncomingPluginsRef = useMemoizedFn((item?: YakScript) => {
+        onlineExternalIncomingPluginsRef.current = item
+    })
+    /** 传线上的UUID,传入本地详情进行使用 */
+    const onJumpToLocalPluginDetailByUUID = useMemoizedFn(() => {
+        const pageList = pluginLocalPageData?.pageList || []
+        if (pageList.length === 0) return
+        const uuid = pageList[0].pageParamsInfo?.pluginLocalPageInfo?.uuid || ""
+        if (!uuid) return
+        apiGetYakScriptByOnlineID({UUID: uuid})
+            .then((item) => {
+                const index = response.Data.findIndex((ele) => ele.ScriptName === item.ScriptName)
+                if (index === -1) {
+                    // 不存在，主动塞列表中
+                    dispatch({
+                        type: "unshift",
+                        payload: {
+                            item
+                        }
+                    })
+                    setShowPluginIndex(0)
+                } else {
+                    //存在直接选中跳详情
+                    setShowPluginIndex(index)
+                }
+                onSetOnlineExternalIncomingPluginsRef(item)
+                setPlugin(item)
+            })
+            .finally(() => {
+                // 查询后，需要清除缓存数据中的uuid，目前只有uuid，所以直接清除该路由的缓存数据
+                clearDataByRoute(YakitRoute.Plugin_Local)
+            })
+    })
 
     /**上传成功后需要修改列表中的数据 */
     const onUploadSuccess = useMemoizedFn(() => {
@@ -198,6 +238,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
             if (reset) {
                 isLoadingRef.current = true
+                onSetOnlineExternalIncomingPluginsRef(undefined)
                 setShowPluginIndex(0)
             }
             setLoading(true)
@@ -218,15 +259,23 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 if (!res.Data) res.Data = []
                 const length = res.Data.length + response.Data.length
                 setHasMore(length < +res.Total)
+                const newData = res.Data.filter(
+                    (ele) => ele.ScriptName !== onlineExternalIncomingPluginsRef.current?.ScriptName
+                )
                 dispatch({
                     type: "add",
                     payload: {
-                        response: res
+                        response: {
+                            ...res,
+                            Data: newData
+                        }
                     }
                 })
                 if (+res.Pagination.Page === 1) {
                     setAllCheck(false)
                     setSelectList([])
+                    // 本地插件页面未打开，插件商店/我的插件点击去使用，先加载第一页的数据，再将数据中心的缓存数据添加到数组头部
+                    onJumpToLocalPluginDetailByUUID()
                 }
             } catch (error) {}
             setTimeout(() => {
@@ -236,7 +285,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }),
         {wait: 200, leading: true}
     ).run
-
     // 滚动更多加载
     const onUpdateList = useMemoizedFn(() => {
         fetchList()
@@ -544,6 +592,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const onDetailsBatchUpload = useMemoizedFn((names) => {
         onBatchUpload(names)
     })
+    const onSetShowFilter = useMemoizedFn((v) => {
+        setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
+        setShowFilter(v)
+    })
     return (
         <>
             {!!plugin && (
@@ -567,6 +619,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     currentIndex={showPluginIndex.current}
                     setCurrentIndex={setShowPluginIndex}
                     removeLoading={removeLoading}
+                    onJumpToLocalPluginDetailByUUID={onJumpToLocalPluginDetailByUUID}
                 />
             )}
             <PluginsLayout
@@ -632,7 +685,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 <PluginsContainer
                     loading={loading && isLoadingRef.current}
                     visible={showFilter}
-                    setVisible={setShowFilter}
+                    setVisible={onSetShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
                     groupList={pluginGroupList}
@@ -647,7 +700,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                         filters={filters}
                         setFilters={setFilters}
                         visible={showFilter}
-                        setVisible={setShowFilter}
+                        setVisible={onSetShowFilter}
                     >
                         {initTotal > 0 ? (
                             <ListShowContainer<YakScript>

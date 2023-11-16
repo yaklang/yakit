@@ -163,7 +163,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const {refresh, isShowRoll, plugin, setPlugin, inViewport} = props
 
     /** 插件展示(列表|网格) */
-    const [isList, setIsList] = useState<boolean>(true)
+    const [isList, setIsList] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<string[]>([])
     const [allCheck, setAllCheck] = useState<boolean>(false)
     /** 是否为加载更多 */
@@ -205,6 +205,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
 
+    /** 是否为初次加载 */
+    const isLoadingRef = useRef<boolean>(true)
+    const latestLoadingRef = useLatest(loading)
+
+    const userInfo = useStore((s) => s.userInfo)
+
     // 获取筛选栏展示状态
     useEffect(() => {
         getRemoteValue(PluginGV.StoreFilterCloseStatus).then((value: string) => {
@@ -212,20 +218,6 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             if (value === "false") setShowFilter(false)
         })
     }, [])
-    // 缓存筛选栏展示状态
-    useDebounceEffect(
-        () => {
-            setRemoteValue(PluginGV.StoreFilterCloseStatus, `${!!showFilter}`)
-        },
-        [showFilter],
-        {wait: 500}
-    )
-
-    /** 是否为初次加载 */
-    const isLoadingRef = useRef<boolean>(true)
-    const latestLoadingRef = useLatest(loading)
-
-    const userInfo = useStore((s) => s.userInfo)
     useEffect(() => {
         getInitTotal()
     }, [userInfo.isLogin, inViewport])
@@ -237,6 +229,16 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useEffect(() => {
         getPluginGroupList()
     }, [userInfo.isLogin, inViewport])
+
+    useEffect(() => {
+        emiter.on("onRefOnlinePluginList", onRefOnlinePluginList)
+        return () => {
+            emiter.off("onRefOnlinePluginList", onRefOnlinePluginList)
+        }
+    }, [])
+    const onRefOnlinePluginList = useMemoizedFn(() => {
+        fetchList(true)
+    })
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -467,6 +469,10 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         }
         setVisibleUploadAll(true)
     })
+    const onSetShowFilter = useMemoizedFn((v) => {
+        setRemoteValue(PluginGV.StoreFilterCloseStatus, `${!!showFilter}`)
+        setShowFilter(v)
+    })
     return (
         <>
             {!!plugin && (
@@ -528,7 +534,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 <PluginsContainer
                     loading={loading && isLoadingRef.current}
                     visible={showFilter}
-                    setVisible={setShowFilter}
+                    setVisible={onSetShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
                     groupList={pluginGroupList}
@@ -546,7 +552,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                         filters={filters}
                         setFilters={setFilters}
                         visible={showFilter}
-                        setVisible={setShowFilter}
+                        setVisible={onSetShowFilter}
                         extraHeader={
                             <div className={styles["plugin-list-extra-heard"]}>
                                 <FuncFilterPopover

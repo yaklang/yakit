@@ -51,7 +51,9 @@ export interface PluginsLocalDetailProps {
     currentIndex: number
     setCurrentIndex: (index: number) => void
     /**删除的loading */
-    removeLoading:boolean
+    removeLoading: boolean
+    /**传线上的UUID,传入本地详情进行使用 */
+    onJumpToLocalPluginDetailByUUID: () => void
 }
 
 export interface PluginLocalBackProps {

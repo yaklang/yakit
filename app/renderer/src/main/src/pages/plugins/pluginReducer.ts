@@ -168,7 +168,7 @@ export const initialLocalState: QueryYakScriptsResponse = {
     Total: 0
 }
 
-type LocalPluginType = "add" | "update" | "remove"
+type LocalPluginType = "add" | "update" | "remove" | "unshift"
 
 // 定义 action 的类型
 export interface LocalPluginAppAction {
@@ -234,6 +234,22 @@ export const pluginLocalReducer = (
                     ...state,
                     Total: Number(state.Total) - itemList.length,
                     Data: state.Data.filter((ele) => !filters.includes(ele.ScriptName))
+                }
+            } else {
+                return state
+            }
+        case "unshift":
+            if (item) {
+                const newData = [
+                    {
+                        ...item
+                    },
+                    ...state.Data
+                ]
+                return {
+                    ...state,
+                    Total: Number(state.Total) + 1,
+                    Data: newData
                 }
             } else {
                 return state

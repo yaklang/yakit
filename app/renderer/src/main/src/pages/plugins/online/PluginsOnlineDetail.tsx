@@ -214,9 +214,10 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                     )
                 },
                 page: response.pagemeta.page,
-                hasMore: response.pagemeta.total !== response.data.length,
+                hasMore: +response.pagemeta.total !== response.data.length,
                 loading: loading,
-                defItemHeight: 46
+                defItemHeight: 46,
+                isRef: spinLoading
             }}
             onBack={onPluginBack}
             search={search}

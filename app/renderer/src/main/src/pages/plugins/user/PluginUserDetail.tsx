@@ -21,7 +21,7 @@ import {MePluginType, OnlineUserExtraOperate, mePluginTypeList} from "./PluginUs
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
-import {PluginUserDetailProps} from "./PluginUserType"
+import {PluginUserDetailProps, UserBackInfoProps} from "./PluginUserType"
 import {PrivatePluginIcon} from "@/assets/newIcon"
 import {useStore} from "@/store"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
@@ -31,6 +31,8 @@ import {YakitRoute} from "@/routes/newRoute"
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
 import classNames from "classnames"
+import {DownloadOnlinePluginsRequest, apiDownloadPluginMine, apiQueryYakScript} from "../utils"
+import {QueryYakScriptRequest} from "@/pages/invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -50,7 +52,11 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         onRemovePluginDetailSingleBefore,
         onDetailSearch,
         currentIndex,
-        setCurrentIndex
+        setCurrentIndex,
+        onDetailsBatchDownload,
+        onDetailsBatchRemove,
+        removeLoading,
+        downloadLoading
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
@@ -82,8 +88,34 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
             }, 100)
         } else setPlugin(undefined)
     }, [info])
-
-    const onRun = useMemoizedFn(() => {})
+    /**去使用，跳转到本地插件详情页面 */
+    const onUse = useMemoizedFn(() => {
+        if (!plugin) return
+        const query: QueryYakScriptRequest = {
+            Pagination: {
+                Page: 1,
+                Limit: 1,
+                Order: "",
+                OrderBy: ""
+            },
+            UUId: plugin.uuid
+        }
+        apiQueryYakScript(query).then((res) => {
+            if (+res.Total > 0) {
+                emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: plugin.uuid}}))
+            } else {
+                let downloadParams: DownloadOnlinePluginsRequest = {
+                    UUID: [plugin.uuid]
+                }
+                apiDownloadPluginMine(downloadParams).then(() => {
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: plugin.uuid}})
+                    )
+                })
+            }
+        })
+    })
     // 返回
     const onPluginBack = useMemoizedFn(() => {
         onBack({
@@ -181,13 +213,25 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     })
     /**搜索需要清空勾选 */
     const onSearch = useMemoizedFn(async () => {
-        setSpinLoading(true)
         try {
             await onDetailSearch(search, filters)
         } catch (error) {}
         setAllCheck(false)
         setSelectList([])
-        setSpinLoading(false)
+    })
+    /**详情批量删除 */
+    const onBatchRemove = useMemoizedFn(async () => {
+        const params: UserBackInfoProps = {allCheck, selectList, search, filter: filters, selectNum}
+        onDetailsBatchRemove(params)
+        setAllCheck(false)
+        setSelectList([])
+    })
+    /**详情批量下载 */
+    const onBatchDownload = useMemoizedFn(async () => {
+        const params: UserBackInfoProps = {allCheck, selectList, search, filter: filters, selectNum}
+        onDetailsBatchDownload(params)
+        setAllCheck(false)
+        setSelectList([])
     })
     if (!plugin) return null
     return (
@@ -199,11 +243,11 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                         <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='user' />
                         <div style={{height: 12}} className='divider-style'></div>
                         <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
-                            <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} />
+                            <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} onClick={onBatchDownload} />
                         </Tooltip>
                         <div style={{height: 12}} className='divider-style'></div>
                         <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
-                            <YakitButton type='text2' icon={<OutlineTrashIcon />} />
+                            <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onBatchRemove} />
                         </Tooltip>
                         <div style={{height: 12}} className='divider-style'></div>
                         <YakitButton type='text' onClick={onNewAddPlugin}>
@@ -237,8 +281,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                                 content={info.content}
                                 optCheck={optCheck}
                                 official={info.official}
-                                // isCorePlugin={info.is_core_plugin}
-                                isCorePlugin={false}
+                                isCorePlugin={!!info.isCorePlugin}
                                 pluginType={info.type}
                                 extra={optExtra}
                                 onPluginClick={onPluginClick}
@@ -248,13 +291,14 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                     page: response.pagemeta.page,
                     hasMore: +response.pagemeta.total !== response.data.length,
                     loading: loading,
-                    defItemHeight: 46
+                    defItemHeight: 46,
+                    isRef: spinLoading
                 }}
                 onBack={onPluginBack}
                 search={search}
                 setSearch={setSearch}
                 onSearch={onSearch}
-                spinLoading={spinLoading}
+                spinLoading={spinLoading || removeLoading || downloadLoading}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs tabPosition='right' className='plugins-tabs'>
@@ -276,7 +320,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                                                 maxWidth={1100}
                                                 icon={<OutlineCursorclickIcon />}
                                                 name={"去使用"}
-                                                onClick={onRun}
+                                                onClick={onUse}
                                             />
                                         </div>
                                     }
