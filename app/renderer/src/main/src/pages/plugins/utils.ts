@@ -14,6 +14,7 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {pluginTypeToName} from "./builtInData"
+import {YakitRoute} from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -887,6 +888,33 @@ export const apiGetYakScriptByOnlineID: (query: GetYakScriptByOnlineIDRequest) =
         } catch (error) {
             yakitNotify("error", "操作失败：" + error)
             reject(error)
+        }
+    })
+}
+
+/**
+ * @description 插件商店/我的插件详情点击去使用，跳转本地详情
+ */
+export const onlineUseToLocalDetail = (uuid: string) => {
+    const query: QueryYakScriptRequest = {
+        Pagination: {
+            Page: 1,
+            Limit: 1,
+            Order: "",
+            OrderBy: ""
+        },
+        UUId: uuid
+    }
+    apiQueryYakScript(query).then((res) => {
+        if (+res.Total > 0) {
+            emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
+        } else {
+            let downloadParams: DownloadOnlinePluginsRequest = {
+                UUID: [uuid]
+            }
+            apiDownloadPluginMine(downloadParams).then(() => {
+                emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
+            })
         }
     })
 }

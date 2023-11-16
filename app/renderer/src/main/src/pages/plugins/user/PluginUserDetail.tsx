@@ -1,23 +1,17 @@
-import React, {ReactNode, useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {PluginDetailHeader, PluginDetails, PluginDetailsListItem, statusTag} from "../baseTemplate"
 import {
     OutlineClouddownloadIcon,
     OutlineCursorclickIcon,
-    OutlineDotshorizontalIcon,
-    OutlineFilterIcon,
-    OutlineLockclosedIcon,
-    OutlineLockopenIcon,
-    OutlineShareIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
-import {API} from "@/services/swagger/resposeType"
+import {useMemoizedFn} from "ahooks"
 import {Tabs, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {FilterPopoverBtn, FuncBtn} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {yakitNotify} from "@/utils/notification"
-import {MePluginType, OnlineUserExtraOperate, mePluginTypeList} from "./PluginUser"
+import {OnlineUserExtraOperate} from "./PluginUser"
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
@@ -27,12 +21,10 @@ import {useStore} from "@/store"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
-import {DownloadOnlinePluginsRequest, apiDownloadPluginMine, apiQueryYakScript} from "../utils"
-import {QueryYakScriptRequest} from "@/pages/invoker/schema"
+import {onlineUseToLocalDetail} from "../utils"
 
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
-import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -91,30 +83,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     /**去使用，跳转到本地插件详情页面 */
     const onUse = useMemoizedFn(() => {
         if (!plugin) return
-        const query: QueryYakScriptRequest = {
-            Pagination: {
-                Page: 1,
-                Limit: 1,
-                Order: "",
-                OrderBy: ""
-            },
-            UUId: plugin.uuid
-        }
-        apiQueryYakScript(query).then((res) => {
-            if (+res.Total > 0) {
-                emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: plugin.uuid}}))
-            } else {
-                let downloadParams: DownloadOnlinePluginsRequest = {
-                    UUID: [plugin.uuid]
-                }
-                apiDownloadPluginMine(downloadParams).then(() => {
-                    emiter.emit(
-                        "openPage",
-                        JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: plugin.uuid}})
-                    )
-                })
-            }
-        })
+        onlineUseToLocalDetail(plugin.uuid)
     })
     // 返回
     const onPluginBack = useMemoizedFn(() => {
