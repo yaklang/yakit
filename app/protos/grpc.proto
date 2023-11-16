@@ -1956,8 +1956,8 @@ message QueryYakScriptRiskDetailByCWERequest {
 }
 
 message QueryYakScriptRiskDetailByCWEResponse {
-  string Id = 1;
-  string CWEName = 2;
+  string CWEId = 1;
+  string RiskType = 2;
   string Description = 3;
   string CWESolution = 4;
 }
@@ -3151,6 +3151,7 @@ message QueryYakScriptRequest {
 
   bool IgnoreGeneralModuleOrder = 15;
   repeated string Family = 16;
+  string UUID = 17;
 }
 
 message QueryYakScriptResponse {
