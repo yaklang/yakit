@@ -371,7 +371,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                         allowClear: true,
                         data: extraSetting.data || [],
                         optText: "key",
-                        value: (`${i.Value}` || "").split(",").filter(i => !!i),
+                        value: i.Value ? (`${i.Value}` || "").split(",").filter(i => !!i) : [],
                         setValue: (value) => {
                             originParams[index].Value = value
                             setOriginParams([...originParams])

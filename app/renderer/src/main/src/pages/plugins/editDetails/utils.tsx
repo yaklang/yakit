@@ -91,8 +91,8 @@ export const convertLocalToLocalInfo = (
     request.Help = modify.Help
     request.RiskType = modify.RiskType
     request.RiskDetail = {
-        Id: modify.RiskDetail?.Id || "",
-        CWEName: modify.RiskDetail?.CWEName || "",
+        CWEId: modify.RiskDetail?.CWEId || "",
+        RiskType: modify.RiskDetail?.RiskType || "",
         Description: modify.RiskDetail?.Description || "",
         CWESolution: modify.RiskDetail?.CWESolution || ""
     }
@@ -136,8 +136,8 @@ export const convertLocalToRemoteInfo = (
             help: info.Help,
             riskType: info.RiskType,
             riskDetail: {
-                cweId: info.RiskDetail?.Id || "",
-                riskType: info.RiskDetail?.CWEName || "",
+                cweId: info.RiskDetail?.CWEId || "",
+                riskType: info.RiskDetail?.RiskType || "",
                 description: info.RiskDetail?.Description || "",
                 solution: info.RiskDetail?.CWESolution || ""
             },
@@ -161,8 +161,8 @@ export const convertLocalToRemoteInfo = (
     request.help = modify.Help
     request.riskType = modify.RiskType
     request.riskDetail = {
-        cweId: modify.RiskDetail?.Id || "",
-        riskType: modify.RiskDetail?.CWEName || "",
+        cweId: modify.RiskDetail?.CWEId || "",
+        riskType: modify.RiskDetail?.RiskType || "",
         description: modify.RiskDetail?.Description || "",
         solution: modify.RiskDetail?.CWESolution || ""
     }
@@ -205,8 +205,8 @@ export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify: Plugi
     request.help = modify.Help
     request.riskType = modify.RiskType
     request.riskDetail = {
-        cweId: modify.RiskDetail?.Id || "",
-        riskType: modify.RiskDetail?.CWEName || "",
+        cweId: modify.RiskDetail?.CWEId || "",
+        riskType: modify.RiskDetail?.RiskType || "",
         description: modify.RiskDetail?.Description || "",
         solution: modify.RiskDetail?.CWESolution || ""
     }
@@ -238,7 +238,7 @@ export const uploadOnlinePlugin = (
     isModify: boolean,
     callback?: (plugin?: YakScript) => any
 ) => {
-    console.log("api-upload", info)
+    console.log("api-upload", JSON.stringify(info))
     // 往线上上传插件
     NetWorkApi<API.PluginsEditRequest, API.PluginsResponse>({
         method: "post",
@@ -267,12 +267,15 @@ export const uploadOnlinePlugin = (
                             yakitNotify("success", "上传云端成功")
                         })
                         .catch((e) => {
-                            if (callback) callback()
+                            // @ts-ignore
+                            if (callback) callback(true)
                             yakitNotify("error", `查询本地插件错误:${e}`)
                         })
                 })
                 .catch((err) => {
-                    if (callback) callback()
+                    // @ts-ignore
+                    if (callback) callback(true)
+                    yakitNotify("error", `插件下载本地失败:${err}`)
                 })
         })
         .catch((err) => {
@@ -310,12 +313,15 @@ export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugi
                             yakitNotify("success", "复制插件成功")
                         })
                         .catch((e) => {
-                            if (callback) callback()
+                            // @ts-ignore
+                            if (callback) callback(true)
                             yakitNotify("error", `查询本地插件错误:${e}`)
                         })
                 })
                 .catch((err) => {
-                    if (callback) callback()
+                    // @ts-ignore
+                    if (callback) callback(true)
+                    yakitNotify("error", `插件下载本地失败:${err}`)
                 })
         })
         .catch((err) => {
