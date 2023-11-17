@@ -25,6 +25,7 @@ import { YakitInputProps } from "../yakitUI/YakitInput/YakitInputType"
  * @property {boolean} isReset：重置表格条件 滚动至0
  * @property {boolean} isShowTotal：内置的total是否显示；true显示，false不显示
  * @property {number} currentIndex：当前row的index
+ * @property {number} scrollToIndex：滚动到指定index
  * @property {boolean} isRefresh： 刷新表格 滚动至0
  * @property {boolean} disableSorting：禁用排序
  * @property {object} query：查询条件
@@ -62,8 +63,9 @@ export interface TableVirtualResizeProps<T> {
     scrollToBottom?: number // 默认300
     isReset?: boolean //重置表格条件 滚动至0
     isShowTotal?: boolean
-    currentIndex?: number //滚动到当前row的index
+    currentIndex?: number // 当前row的index
     setCurrentIndex?: (v?:number) => void
+    scrollToIndex?: number // 滚动到指定index
     isRefresh?: boolean //刷新表格 滚动至0
     disableSorting?: boolean //禁用排序
     query?: object

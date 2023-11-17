@@ -647,7 +647,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             </div>
                             <div className={styles["portAsset-table"]}>
                                 <TableVirtualResize<PortAsset>
-                                    currentIndex={scrollToIndex}
+                                    scrollToIndex={scrollToIndex}
                                     containerClassName={styles["portAsset-table-list-container"]}
                                     query={params}
                                     isRefresh={isRefresh}
