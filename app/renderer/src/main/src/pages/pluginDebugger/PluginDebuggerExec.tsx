@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from "react";
-import {HTTPRequestBuilderParams} from "@/pages/httpRequestBuilder/HTTPRequestBuilder";
 import {useGetState, useMemoizedFn} from "ahooks";
 import {randomString} from "@/utils/randomUtil";
 import {ExecResult} from "@/pages/invoker/schema";
@@ -7,6 +6,7 @@ import {failed, info} from "@/utils/notification";
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream";
 import {AutoCard} from "@/components/AutoCard";
 import {PluginResultUI} from "@/pages/yakitStore/viewers/base";
+import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder";
 
 const {ipcRenderer} = window.require("electron");
 

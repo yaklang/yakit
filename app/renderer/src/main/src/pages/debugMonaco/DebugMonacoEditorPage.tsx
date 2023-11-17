@@ -11,6 +11,7 @@ import {DemoItemSelectOne} from "@/demoComponents/itemSelect/ItemSelect";
 import {RiskTableDemo} from "@/components/playground/RiskTableDemo";
 import {ChaosMakerRulesDemo} from "@/components/playground/ChaosMakerRulesDemo";
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
+import {HybridScanDemo} from "@/components/playground/hybrid/HybridScanDemo";
 
 export interface DebugMonacoEditorPageProp {
 
@@ -56,6 +57,7 @@ a=1&b=2 Content-Length: a
     return <div style={{height: "100%"}}>
         <AutoCard
             title={<DemoItemSelectOne label={"调试组件"} data={[
+                {value: "hybrid-scan-demo", label: "HybridScan 批量"},
                 {value: "chaos-maker-rule", label: "流量生成器规则"},
                 {value: "risk-table", label: "漏洞查询规则"},
                 {value: "pcapx", label: "抓包工具"},
@@ -67,6 +69,8 @@ a=1&b=2 Content-Length: a
             {
                 (() => {
                     switch (mode) {
+                        case "hybrid-scan-demo":
+                            return <HybridScanDemo/>
                         case "chaos-maker-rule":
                             return <ChaosMakerRulesDemo/>
                         case "risk-table":
