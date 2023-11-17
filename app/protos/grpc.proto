@@ -135,6 +135,8 @@ service Yak {
   rpc LoadNucleiTemplates(Empty) returns (Empty);
   rpc AutoUpdateYakModule(Empty) returns (stream ExecResult);
   rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
+
+  // ExecBatch Script
   rpc ExecBatchYakScript(ExecBatchYakScriptRequest) returns (stream ExecBatchYakScriptResult);
   rpc GetExecBatchYakScriptUnfinishedTask(Empty) returns (GetExecBatchYakScriptUnfinishedTaskResponse);
   rpc GetExecBatchYakScriptUnfinishedTaskByUid(GetExecBatchYakScriptUnfinishedTaskByUidRequest) returns (ExecBatchYakScriptRequest);
@@ -381,6 +383,7 @@ service Yak {
   rpc ImportMITMReplacerRules(ImportMITMReplacerRulesRequest) returns (Empty);
   rpc GetCurrentRules(Empty) returns (MITMContentReplacers);
   rpc SetCurrentRules(MITMContentReplacers) returns (Empty);
+  rpc GenerateURL(GenerateURLRequest) returns (GenerateURLResponse);
 
   rpc ExtractDataToFile(stream ExtractDataToFileRequest) returns (stream ExtractDataToFileResult);
 
@@ -543,6 +546,62 @@ service Yak {
   rpc QueryTrafficTCPReassembled(QueryTrafficTCPReassembledRequest) returns (QueryTrafficTCPReassembledResponse);
 
   rpc DuplexConnection(stream DuplexConnectionRequest) returns (stream DuplexConnectionResponse);
+
+  rpc SmokingEvaluatePluginBatch(SmokingEvaluatePluginBatchRequest) returns (stream SmokingEvaluatePluginBatchResponse);
+
+  // 混合批量扫描
+  rpc HybridScan(stream HybridScanRequest) returns (stream HybridScanResponse);
+}
+
+message HybridScanResponse {
+  // 计算整体任务进度等信息
+  int64 TotalTargets = 1;
+  int64 TotalPlugins = 2;
+  int64 TotalTasks = 3;
+  int64 FinishedTasks = 4;
+  int64 FinishedTargets = 5;
+  int64 ActiveTasks = 6;
+  int64 ActiveTargets = 7;
+
+  // 混合扫描任务ID，一般用来恢复任务或者暂停任务
+  string HybridScanTaskId = 8;
+
+  string CurrentPluginName = 9;
+  ExecResult ExecResult = 10;
+}
+
+// 输入目标，可以通过 input/file + template 构建可能带认证或其他内容的模版
+message HybridScanInputTarget {
+  string Input = 1;
+  repeated string InputFile = 2;
+  HTTPRequestBuilderParams HTTPRequestTemplate = 3;
+}
+
+// 输入插件：幂等的，相同的参数，结果是一致的，这样通过记录索引就能恢复进度
+message HybridScanPluginConfig {
+  repeated string PluginNames = 1;
+  QueryYakScriptRequest Filter = 2;
+}
+
+message HybridScanRequest {
+  // 控制帧字段
+  bool Control = 9;
+  // new: 新任务
+  // resume: 恢复任务
+  // pause: 暂停任务
+  // stop: 停止任务
+  string HybridScanMode = 8;
+  string ResumeTaskId = 1;
+
+  // 其他参数
+  int64 Concurrent = 2;
+  float TotalTimeoutSecond = 3;
+  string Proxy = 4;
+  float SingleTimeoutSecond = 5;
+
+  // 新任务
+  HybridScanPluginConfig Plugin = 6;
+  HybridScanInputTarget Targets = 7;
 }
 
 message DuplexConnectionRequest {
@@ -4035,4 +4094,26 @@ message ExportHTTPFuzzerTaskToYamlRequest{
 message ExportHTTPFuzzerTaskToYamlResponse{
   GeneralResponse Status = 1;
   string YamlContent = 2;
+}
+
+
+message SmokingEvaluatePluginBatchRequest {
+  repeated string ScriptNames = 1;
+}
+
+message SmokingEvaluatePluginBatchResponse {
+  double Progress = 1;
+  string Message = 2;
+  string MessageType = 3;
+}
+
+message GenerateURLRequest{
+  string Scheme = 1;
+  string Host = 2;
+  int32 Port = 3;
+  string Username = 4;
+  string Password = 5;
+}
+message GenerateURLResponse{
+  string URL = 1;
 }
