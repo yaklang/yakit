@@ -18,8 +18,12 @@ export interface HTTPPacketFuzzable {
 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable {
     websocket?: boolean
-    pageType?: "MITM"
+    pageType?: HTTPHistorySourcePageType
 }
+
+
+// 使用 HTTPHistory 控件的来源页面
+export type HTTPHistorySourcePageType = "MITM" | "History";
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {pageType} = props
