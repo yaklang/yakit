@@ -62,7 +62,9 @@ export enum RemoteGV {
      /** @name webFuzzer页面以及每个页面的数据缓存字段 */
     FuzzerCache="fuzzer-list-cache",
     /** @name webFuzzer序列的缓存字段 */
-    FuzzerSequenceCache = "fuzzer_sequence_cache"
+    FuzzerSequenceCache = "fuzzer_sequence_cache",
+    /** @name history页面左侧tabs */
+    HistoryLeftTabs = "history_left_tabs"
 }
 
 /** 项目逻辑全局变量 */
