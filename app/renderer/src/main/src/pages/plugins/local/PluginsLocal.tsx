@@ -40,6 +40,7 @@ import {
     apiFetchGroupStatisticsLocal,
     apiGetYakScriptByOnlineID,
     apiQueryYakScript,
+    apiQueryYakScriptByYakScriptName,
     apiQueryYakScriptTotal,
     convertDeleteLocalPluginsByWhereRequestParams,
     convertLocalPluginsRequestParams
@@ -60,10 +61,11 @@ import {randomString} from "@/utils/randomUtil"
 import usePluginUploadHooks, {SaveYakScriptToOnlineRequest} from "../pluginUploadHooks"
 import {shallow} from "zustand/shallow"
 import {usePageInfo} from "@/store/pageInfo"
+import {SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
+import {SavePluginInfoSignalProps} from "../editDetails/PluginEditDetails"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
-import {SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -103,7 +105,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const searchDetailRef = useRef<PluginSearchParams>() // 详情中的search条件
     const taskTokenRef = useRef(randomString(40))
     const uploadPluginRef = useRef<YakScript>() //上传暂存的插件数据
-    const onlineExternalIncomingPluginsRef = useRef<YakScript>() // 插件商店/我的插件详情中点击去使用传过来的插件暂存数据
+    const externalIncomingPluginsRef = useRef<YakScript>() // 1.插件商店/我的插件详情中点击去使用传过来的插件暂存数据 2.新建插件/编辑插件：更新了本地插件数据后，本地列表插件页面需要更新对应的数据
 
     const latestLoadingRef = useLatest(loading)
 
@@ -123,8 +125,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     }, [])
     useEffect(() => {
         emiter.on("onRefLocalPluginList", onRefLocalPluginList)
+        emiter.on("savePluginInfoSignal", onRefPlugin)
         return () => {
             emiter.off("onRefLocalPluginList", onRefLocalPluginList)
+            emiter.off("savePluginInfoSignal", onRefPlugin)
         }
     }, [])
     useEffect(() => {
@@ -150,8 +154,34 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }),
         shallow
     )
-    const onSetOnlineExternalIncomingPluginsRef = useMemoizedFn((item?: YakScript) => {
-        onlineExternalIncomingPluginsRef.current = item
+    /**编辑插件修改后，保存成功后，需要刷新本地列表数据和详情数据 */
+    const onRefPlugin = useMemoizedFn((data: string) => {
+        try {
+            const pluginInfo: SavePluginInfoSignalProps = JSON.parse(data)
+            if (pluginInfo.route !== YakitRoute.Plugin_Local) return
+            apiQueryYakScriptByYakScriptName({
+                pluginName: pluginInfo.pluginName
+            }).then((item: YakScript) => {
+                const index = response.Data.findIndex((ele) => ele.ScriptName === item.ScriptName)
+                if (index === -1) {
+                    fetchList(true)
+                } else {
+                    dispatch({
+                        type: "update",
+                        payload: {
+                            item
+                        }
+                    })
+                    if (plugin) {
+                        setShowPluginIndex(index)
+                        setPlugin({...item})
+                    }
+                }
+            })
+        } catch (error) {}
+    })
+    const onSetExternalIncomingPluginsRef = useMemoizedFn((item?: YakScript) => {
+        externalIncomingPluginsRef.current = item
     })
     /** 传线上的UUID,传入本地详情进行使用 */
     const onJumpToLocalPluginDetailByUUID = useMemoizedFn(() => {
@@ -175,7 +205,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     //存在直接选中跳详情
                     setShowPluginIndex(index)
                 }
-                onSetOnlineExternalIncomingPluginsRef(item)
+                onSetExternalIncomingPluginsRef(item)
                 setPlugin(item)
             })
             .finally(() => {
@@ -239,7 +269,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
             if (reset) {
                 isLoadingRef.current = true
-                onSetOnlineExternalIncomingPluginsRef(undefined)
+                onSetExternalIncomingPluginsRef(undefined)
                 setShowPluginIndex(0)
             }
             setLoading(true)
@@ -261,7 +291,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 const length = res.Data.length + response.Data.length
                 setHasMore(length < +res.Total)
                 const newData = res.Data.filter(
-                    (ele) => ele.ScriptName !== onlineExternalIncomingPluginsRef.current?.ScriptName
+                    (ele) => ele.ScriptName !== externalIncomingPluginsRef.current?.ScriptName
                 )
                 dispatch({
                     type: "add",
@@ -326,9 +356,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     /** 单项副标题组件 */
     const optSubTitle = useMemoizedFn((data: YakScript) => {
         if (!data.OnlineBaseUrl) return <></>
-        if (data.OnlineOfficial) {
-            return <SolidOfficialpluginIcon />
-        }
         if (data.OnlineIsPrivate) {
             return <SolidPrivatepluginIcon />
         } else {
@@ -765,6 +792,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                             official={!!data.OnlineOfficial}
                                             extraNode={optExtraNode}
                                             onClick={optClick}
+                                            subTitle={optSubTitle}
                                         />
                                     )
                                 }}

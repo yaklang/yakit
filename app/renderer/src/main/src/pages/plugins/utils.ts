@@ -918,3 +918,47 @@ export const onlineUseToLocalDetail = (uuid: string) => {
         }
     })
 }
+
+interface QueryYakScriptByYakScriptNameRequest {
+    pluginName: string
+}
+
+/**
+ * @description 插件商店/我的插件详情点击去使用，跳转本地详情
+ */
+export const apiQueryYakScriptByYakScriptName: (query: QueryYakScriptByYakScriptNameRequest) => Promise<YakScript> = (
+    query
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery: QueryYakScriptRequest = {
+                Pagination: {
+                    Page: 1,
+                    Limit: 1,
+                    Order: "",
+                    OrderBy: ""
+                },
+                IncludedScriptNames: [query.pluginName]
+            }
+            ipcRenderer
+                .invoke("QueryYakScript", {
+                    ...newQuery
+                })
+                .then((item: QueryYakScriptsResponse) => {
+                    if (item.Data.length > 0) {
+                        resolve(item.Data[0])
+                    } else {
+                        yakitNotify("error", "未查询到该插件")
+                        reject("未查询到该插件")
+                    }
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "查询本地插件错误" + e)
+                    reject(e)
+                })
+        } catch (error) {
+            yakitNotify("error", "查询本地插件错误" + error)
+            reject(error)
+        }
+    })
+}

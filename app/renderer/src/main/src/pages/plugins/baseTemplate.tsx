@@ -274,9 +274,9 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                                     styles["text-style"],
                                     "yakit-content-single-ellipsis"
                                 )}
-                                title={user || ""}
+                                title={user || "anonymous"}
                             >
-                                {user || ""}
+                                {user || "anonymous"}
                             </div>
                             <AuthorIcon />
                         </div>

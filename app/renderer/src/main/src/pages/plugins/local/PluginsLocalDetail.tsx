@@ -33,6 +33,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
+import {SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
@@ -277,6 +278,15 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         const names = selectList.map((ele) => ele.ScriptName)
         onDetailsBatchUpload(names)
     })
+    /** 单项副标题组件 */
+    const optExtra = useMemoizedFn((data: YakScript) => {
+        if (!data.OnlineBaseUrl) return <></>
+        if (data.OnlineIsPrivate) {
+            return <SolidPrivatepluginIcon />
+        } else {
+            return <SolidCloudpluginIcon />
+        }
+    })
     if (!plugin) return null
     return (
         <>
@@ -347,6 +357,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                 isCorePlugin={!!info.IsCorePlugin}
                                 pluginType={info.Type}
                                 onPluginClick={onPluginClick}
+                                extra={optExtra}
                             />
                         )
                     },
