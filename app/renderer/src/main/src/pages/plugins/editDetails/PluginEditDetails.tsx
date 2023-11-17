@@ -77,7 +77,7 @@ interface PluginEditDetailsProps {
 export interface SavePluginInfoSignalProps {
     route: YakitRoute
     isOnline: boolean
-    pluginId: string
+    pluginName: string
 }
 
 export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
@@ -921,7 +921,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             const param: SavePluginInfoSignalProps = {
                 route: parent,
                 isOnline: !!isOnline,
-                pluginId: info.ScriptName || ""
+                pluginName: info.ScriptName || ""
             }
             emiter.emit("savePluginInfoSignal", JSON.stringify(param))
         }
