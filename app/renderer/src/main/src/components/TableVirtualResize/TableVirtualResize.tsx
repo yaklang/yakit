@@ -113,6 +113,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         renderTitle,
         isShowTitle = true,
         getTableRef,
+        scrollToIndex,
         currentIndex,
         setCurrentIndex,
         isRefresh,
@@ -212,8 +213,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             setCurrentRow(undefined)
             return
         }
-        scrollTo(currentIndex)
     }, [currentIndex])
+
+    // 滚动到指定index
+    useEffect(() => {
+        if (scrollToIndex !== undefined) {
+            scrollTo(scrollToIndex)
+        }
+    }, [scrollToIndex])
 
     const [inViewport] = useInViewport(containerRef)
 

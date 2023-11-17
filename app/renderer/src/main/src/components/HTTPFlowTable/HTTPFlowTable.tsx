@@ -761,6 +761,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     // const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
     const [currentIndex, setCurrentIndex] = useState<number>()
+    const [scrollToIndex, setScrollToIndex] = useState<number>()
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
@@ -814,6 +815,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ...params,
             SearchURL: props.searchURL
         })
+        setScrollToIndex(0)
         setCurrentIndex(undefined)
         setSelected(undefined)
         setSelectedRowKeys([])
@@ -828,15 +830,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         try {
             const obj: {historyId:string,id:string} = JSON.parse(v)
             if(historyId===obj.historyId){
-                let currentIndex:number|undefined = undefined
+                let scrollToIndex:number|undefined = undefined
                 data.some((item,index)=>{
                     if(item.Id+"" === obj.id){
-                        currentIndex=index
+                        scrollToIndex=index
                     }
                     return item.Id+"" === obj.id
                 })
-                if(currentIndex !== undefined){
-                    setCurrentIndex(currentIndex)
+                if(scrollToIndex !== undefined){
+                    setScrollToIndex(scrollToIndex)
                 }
             }
         } catch (error) {}
@@ -2459,6 +2461,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ref={tableRef}
                     currentIndex={currentIndex}
                     setCurrentIndex={setCurrentIndex}
+                    scrollToIndex={scrollToIndex}
                     query={params}
                     titleHeight={38}
                     renderTitle={
