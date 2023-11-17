@@ -82,7 +82,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     useEffect(() => {
         getRemoteValue(RemoteGV.HistoryLeftTabs).then((setting: string) => {
             if (setting) {
-                setHTTPHistoryTabs(JSON.parse(setting))
+                const tabs = JSON.parse(setting)
+                setHTTPHistoryTabs(tabs)
+                const findItem = tabs.find((item: HTTPHistoryTabsItem) => item.contShow)
+                if (findItem) {
+                    setCurTabKey(findItem.key)
+                }
             }
         })
     }, [])

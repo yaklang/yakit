@@ -933,6 +933,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             .finally(() => {})
     })
     const onScrollTo = useMemoizedFn(()=>{
+        console.log(123, historyId);
         if(historyId){
             emiter.emit("onScrollToByClick",JSON.stringify({historyId,id}))
         }
