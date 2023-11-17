@@ -121,8 +121,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }, [yakurl])
 
     const getWebTreeData = async (yakurl: string) => {
-        try {
-            const res = await loadFromYakURLRaw(yakurl)
+        loadFromYakURLRaw(yakurl, (res) => {
             setWebTreeData(
                 res.Resources.map((item: YakURLResource, index: number) => {
                     return {
@@ -133,9 +132,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     }
                 })
             )
-        } catch (error) {
+        }).catch((error) => {
             yakitFailed(`加载失败: ${error}`)
-        }
+        })
     }
 
     const refreshChildrenByParent = useMemoizedFn((parentKey: string, nodes: TreeNode[]) => {
