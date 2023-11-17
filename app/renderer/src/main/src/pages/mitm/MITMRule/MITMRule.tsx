@@ -548,6 +548,30 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     replacers: newRules
                 })
                 .then((val) => {
+                    const findOpenRepRule = newRules.find(item => (!item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)))
+                    if (findOpenRepRule !== undefined) {
+                        Modal.confirm({
+                            title: "温馨提示",
+                            icon: <ExclamationCircleOutlined />,
+                            content: "检测到开启了替换规则，可能会影响劫持",
+                            okText: "确认",
+                            cancelButtonProps: { style: { display: 'none' } }, // 隐藏取消按钮
+                            closable: true,
+                            centered: true,
+                            closeIcon: (
+                                <div
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        Modal.destroyAll()
+                                    }}
+                                    className='modal-remove-icon'
+                                >
+                                    <RemoveIcon />
+                                </div>
+                            ),
+                            okButtonProps: { size: "small", className: "modal-ok-button" }
+                        })
+                    }
                     setVisible(false)
                     success("保存成功")
                 })
