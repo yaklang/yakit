@@ -40,6 +40,7 @@ import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITM
 import classNames from "classnames"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import { ExclamationCircleOutlined } from "@ant-design/icons"
 
 const {Text} = Typography
 const {Item} = Form
@@ -248,7 +249,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             enableInitialPlugin,
             plugins,
             enableHttp2,
-            openRepRuleFlag,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -261,9 +261,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             let tip = ""
             if (downstreamProxy) {
                 tip += `下游代理:${downstreamProxy}`
-            }
-            if (openRepRuleFlag) {
-                tip += "|启用替换规则"
             }
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
@@ -315,6 +312,29 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 )
         }
     })
+
+    useEffect(() => {
+        if (status !== 'idle') {
+            getRules()
+        }
+    }, [status, visible])
+    const getRules = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("GetCurrentRules", {})
+            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                const findOpenRepRule = newRules.find(item => (!item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)))
+                if (findOpenRepRule !== undefined) {
+                    if (tip.indexOf('启用替换规则') === -1) {
+                        setTip(tip + '|启用替换规则')
+                    }
+                } else {
+                    setTip(tip.replace('|启用替换规则', ''))
+                }
+            })
+            .catch((e) => yakitFailed("获取规则列表失败:" + e))
+    })
+
     return (
         <>
             <div className={style["mitm-page"]} ref={mitmPageRef}>
@@ -348,7 +368,6 @@ interface MITMServerProps {
         enableInitialPlugin: boolean,
         defaultPlugins: string[],
         enableHttp2: boolean,
-        openRepRuleFlag: boolean,
         clientCertificates: ClientCertificate[],
         extra?: ExtraMITMServerProps
     ) => any
@@ -395,7 +414,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             downstreamProxy,
             enableInitialPlugin,
             enableHttp2,
-            openRepRuleFlag,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
@@ -407,7 +425,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     enableInitialPlugin,
                     enableInitialPlugin ? checkList : [],
                     enableHttp2,
-                    openRepRuleFlag,
                     certs,
                     extra
                 )
