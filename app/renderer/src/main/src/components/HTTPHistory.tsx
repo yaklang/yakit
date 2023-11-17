@@ -8,7 +8,7 @@ import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
-import {getRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
 import styles from "./HTTPHistory.module.scss"
 import classNames from "classnames"
@@ -16,6 +16,7 @@ import YakitTree, {TreeKey} from "./yakitUI/YakitTree/YakitTree"
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURLResource} from "@/pages/yakURLTree/data"
+import {RemoteGV} from "@/yakitGV"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -78,6 +79,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         }
     ])
     const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
+    useEffect(() => {
+        getRemoteValue(RemoteGV.HistoryLeftTabs).then((setting: string) => {
+            if (setting) {
+                setHTTPHistoryTabs(JSON.parse(setting))
+            }
+        })
+    }, [])
     const handleTabClick = (item: HTTPHistoryTabsItem) => {
         const copyHTTPHistoryTabs = structuredClone(hTTPHistoryTabs)
         copyHTTPHistoryTabs.forEach((i) => {
@@ -87,6 +95,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 i.contShow = false
             }
         })
+        setRemoteValue(RemoteGV.HistoryLeftTabs, JSON.stringify(copyHTTPHistoryTabs))
         setHTTPHistoryTabs(copyHTTPHistoryTabs)
         setCurTabKey(item.key)
     }
@@ -121,16 +130,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     }
                 })
             )
-
-            // 初始化若检索到树-网站树tab自动打开，反之不打开
-            // 若搜索出来的树没有值，不关闭网站树tab
-            const copyHTTPHistoryTabs = structuredClone(hTTPHistoryTabs)
-            copyHTTPHistoryTabs.forEach((i) => {
-                if (i.key === "web-tree") {
-                    i.contShow = i.contShow || !!res.Resources.length
-                }
-            })
-            setHTTPHistoryTabs(copyHTTPHistoryTabs)
         } catch (error) {
             yakitFailed(`加载失败: ${error}`)
         }
