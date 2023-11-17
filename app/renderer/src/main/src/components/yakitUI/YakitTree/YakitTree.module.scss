@@ -56,6 +56,10 @@
             display: flex;
         }
 
+        .ant-tree-title {
+            white-space: nowrap;
+        }
+
         .ant-tree-checkbox-inner {
             border-color: var(--checkbox-border-color);
             border-radius: 4px;
