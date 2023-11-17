@@ -548,7 +548,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 Modal.confirm({
                     title: "温馨提示",
                     icon: <ExclamationCircleOutlined />,
-                    content: "检测到开启了替换规则，可能会影响劫持，是否确认开启",
+                    content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
                     okText: "确认",
                     cancelText: "取消",
                     closable: true,
