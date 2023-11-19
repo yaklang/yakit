@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {
+    HybridScanActiveTask,
     HybridScanControlRequest,
     HybridScanInputTarget,
     HybridScanPluginConfig,
@@ -8,12 +9,13 @@ import {
     HybridScanStatisticResponse
 } from "@/models/HybridScan";
 import {ExecResult, genDefaultPagination} from "@/pages/invoker/schema";
-import {Space, Tag} from "antd";
+import {Divider, Space, Tag} from "antd";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {randomString} from "@/utils/randomUtil";
 import {failed, info} from "@/utils/notification";
-import {useCookieState} from "ahooks";
+import {useCookieState, useGetState, useMap} from "ahooks";
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
 
 export interface HybridScanDemoProp {
 
@@ -35,7 +37,7 @@ export const HybridScanDemo: React.FC<HybridScanDemoProp> = (props) => {
         },
     })
     const [plugin, setPlugin] = React.useState<HybridScanPluginConfig>({
-        PluginNames: ["基础 XSS 检测"],
+        PluginNames: ["基础 XSS 检测", "开放 URL 重定向漏洞"],
         Filter: {Pagination: genDefaultPagination() /* Pagination is ignore for hybrid scan */}
     })
 
@@ -49,10 +51,25 @@ export const HybridScanDemo: React.FC<HybridScanDemoProp> = (props) => {
         TotalTargets: 0,
         TotalTasks: 0
     })
+    const [activeTasks, setActiveTasks, getActiveTasks] = useGetState<HybridScanActiveTask[]>([]);
 
     useEffect(() => {
+        setActiveTasks([])
         ipcRenderer.on(`${token}-data`, async (e, data: HybridScanResponse) => {
             setStatus(data)
+
+            if (!!data?.UpdateActiveTask) {
+                if (data.UpdateActiveTask.Operator === "remove") {
+                    setActiveTasks(getActiveTasks().filter((v) => {
+                        if (data?.UpdateActiveTask !== undefined) {
+                            return v.Index !== data?.UpdateActiveTask.Index
+                        }
+                        return true
+                    }))
+                } else if (data.UpdateActiveTask.Operator === "create") {
+                    setActiveTasks([...getActiveTasks(), data.UpdateActiveTask])
+                }
+            }
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
             failed(`[HybridScan] error:  ${error}`)
@@ -81,12 +98,15 @@ export const HybridScanDemo: React.FC<HybridScanDemoProp> = (props) => {
                     setLoading(true)
 
                     // send target / plugin
-                    ipcRenderer.invoke("HybridScan", {Targets: target, Plugin: plugin}, token).then(() => {
+                    ipcRenderer.invoke("HybridScan", {
+                        Targets: target,
+                        Plugin: plugin,
+                    }, token).then(() => {
                         info("发送扫描目标与插件成功")
                     })
                 })
             }}>启动</YakitButton>
-            <YakitButton disabled={!loading} onClick={() => {
+            <YakitButton danger={true} disabled={!loading} onClick={() => {
                 ipcRenderer.invoke("cancel-HybridScan", token)
                 setTimeout(() => {
                     setToken(randomString(40))
@@ -103,9 +123,22 @@ export const HybridScanDemo: React.FC<HybridScanDemoProp> = (props) => {
                 })}
             </Space>
         </AutoCard>}
-        secondNode={<AutoCard title={"执行结果"}>
+        secondNode={<AutoCard title={"执行结果"} size={"small"}>
             <Space direction={"vertical"}>
-                {JSON.stringify(status)}
+                <Space>
+                    <YakitTag>{"总目标"}: {status.TotalTargets}</YakitTag>
+                    <YakitTag>{"已完成目标"}: {status.FinishedTargets}</YakitTag>
+                    <YakitTag>{"正在执行的目标"}: {status.ActiveTargets}</YakitTag>
+                    <YakitTag>{"总任务量"}: {status.TotalTasks}</YakitTag>
+                    <YakitTag>{"正在执行的任务"}: {status.ActiveTasks}</YakitTag>
+                    <YakitTag>{"已经完成的任务"}: {status.FinishedTasks}</YakitTag>
+                </Space>
+                <Divider/>
+                <Space direction={"vertical"}>
+                    {activeTasks.map(i => {
+                        return <YakitTag>{i.Index}: [{i.PluginName}] 执行目标: {i.Url}</YakitTag>
+                    })}
+                </Space>
             </Space>
         </AutoCard>}
     />

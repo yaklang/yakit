@@ -567,7 +567,23 @@ message HybridScanResponse {
   string HybridScanTaskId = 8;
 
   string CurrentPluginName = 9;
+
   ExecResult ExecResult = 10;
+
+  // 这字段表示的是，正在执行的任务可以展示出来
+  HybridScanUpdateActiveTaskTable UpdateActiveTask = 11;
+}
+
+message HybridScanUpdateActiveTaskTable {
+  // create: 这个任务正在执行，推入栈中
+  // remove: 这个任务执行完毕，弹出栈
+  string Operator = 1;
+
+  string Index = 2;
+  bool IsHttps = 3;
+  bytes HTTPRequest = 4;
+  string Url = 6;
+  string PluginName = 5;
 }
 
 // 输入目标，可以通过 input/file + template 构建可能带认证或其他内容的模版
@@ -598,6 +614,7 @@ message HybridScanRequest {
   float TotalTimeoutSecond = 3;
   string Proxy = 4;
   float SingleTimeoutSecond = 5;
+  bool Detach = 10;
 
   // 新任务
   HybridScanPluginConfig Plugin = 6;
