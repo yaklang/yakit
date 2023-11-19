@@ -54,4 +54,16 @@ export interface HybridScanStatisticResponse {
 export interface HybridScanResponse extends HybridScanStatisticResponse {
     CurrentPluginName: string;
     ExecResult: ExecResult
+
+    UpdateActiveTask?: HybridScanActiveTask;
+}
+
+export interface HybridScanActiveTask {
+    Operator: "create" | "remove";
+    Index: string;
+
+    IsHttps: boolean;
+    HTTPRequest: Uint8Array;
+    PluginName: string;
+    Url: string;
 }
