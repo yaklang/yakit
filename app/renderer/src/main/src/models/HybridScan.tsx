@@ -67,3 +67,16 @@ export interface HybridScanActiveTask {
     PluginName: string;
     Url: string;
 }
+
+export interface HybridScanTask {
+    Id: number;
+    CreatedAt: number;
+    UpdatedAt: number;
+    TaskId: string;
+    Status: 'executing' | 'paused' | 'done'; // 如果 Status 有固定的几个值，可以使用联合类型
+    TotalTargets: number;
+    TotalPlugins: number;
+    TotalTasks: number;
+    FinishedTasks: number;
+    FinishedTargets: number;
+}

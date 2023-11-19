@@ -251,4 +251,36 @@ module.exports = (win, getClient) => {
         stream.write(params)
         handlerHelper.registerHandler(win, stream, streamHybridScanMap, token)
     })
+
+    // asyncQueryHybridScanTask wrapper
+    const asyncQueryHybridScanTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryHybridScanTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryHybridScanTask", async (e, params) => {
+        return await asyncQueryHybridScanTask(params)
+    })
+
+    // asyncDeleteHybridScanTask wrapper
+    const asyncDeleteHybridScanTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteHybridScanTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteHybridScanTask", async (e, params) => {
+        return await asyncDeleteHybridScanTask(params)
+    })
 }
