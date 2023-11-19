@@ -551,6 +551,40 @@ service Yak {
 
   // 混合批量扫描
   rpc HybridScan(stream HybridScanRequest) returns (stream HybridScanResponse);
+  rpc QueryHybridScanTask(QueryHybridScanTaskRequest) returns (QueryHybridScanTaskResponse);
+  rpc DeleteHybridScanTask(DeleteHybridScanTaskRequest) returns (Empty);
+}
+
+message DeleteHybridScanTaskRequest {
+  string TaskId = 1;
+  bool DeleteAll = 2;
+}
+
+message HybridScanTask {
+  int64 Id = 1;
+  int64 CreatedAt = 2;
+  int64 UpdatedAt = 3;
+  string TaskId = 4;
+  string Status = 5; // executing / paused / done
+  // exec status
+  int64 TotalTargets = 6;
+  int64 TotalPlugins = 7;
+  int64 TotalTasks = 8;
+  int64 FinishedTasks = 9;
+  int64 FinishedTargets = 10;
+}
+
+message QueryHybridScanTaskResponse {
+  Paging Pagination = 1;
+  repeated HybridScanTask Data = 2;
+  int64 Total = 3;
+}
+
+message QueryHybridScanTaskRequest {
+  Paging Pagination = 1;
+  int64 FromId = 2;
+  int64 UntilId = 3;
+  string Status = 4;
 }
 
 message HybridScanResponse {
@@ -614,7 +648,7 @@ message HybridScanRequest {
   float TotalTimeoutSecond = 3;
   string Proxy = 4;
   float SingleTimeoutSecond = 5;
-  bool Detach = 10;
+  bool Detach = 10; // 背后执行，就算进程结束了，也会执行，不太关心 context
 
   // 新任务
   HybridScanPluginConfig Plugin = 6;
