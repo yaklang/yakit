@@ -135,7 +135,9 @@ const queryTitle = {
     status: "审核状态",
     group: "插件分组"
 }
-
+/**
+ * @deprecated 没有使用了
+ */
 export const PluginStore: React.FC<PluginStoreProp> = (props) => {
     const [script, setScript] = useState<YakScript>()
     const [loading, setLoading] = useState(false)
