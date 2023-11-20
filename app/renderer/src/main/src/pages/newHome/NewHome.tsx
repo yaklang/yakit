@@ -3,7 +3,7 @@ import {Row, Col} from "antd"
 import {ArrowRightOutlined} from "@ant-design/icons"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {NetWorkApi} from "@/services/fetch"
-import {useStore, YakitStoreParams} from "@/store"
+import {useStore} from "@/store"
 import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn, useSize, useInViewport} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
@@ -449,7 +449,6 @@ interface countAddObjProps {
 interface PlugInShopNewIncreProps {}
 const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     const {setOpenPage, inViewport, setEchartsError} = props
-    const {storeParams, setYakitStoreParams} = YakitStoreParams()
     const [countAddObj, setCountAddObj] = useState<countAddObjProps>()
     const [hotArr, setHotArr] = useState<string[]>([])
     const [hotError, setHotError] = useState<boolean>(false)
