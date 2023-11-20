@@ -251,6 +251,11 @@ interface DataItem {
     node?: DataItem[]
 }
 
+interface MoveLevelProps {
+    draggableId: string
+    level: "inside" | "outside"
+}
+
 const droppable = "droppable"
 const droppableGroup = "droppableGroup"
 
@@ -260,8 +265,12 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
 
     const [dropType, setDropType] = useState<string>(droppable)
     const [subDropType, setSubDropType] = useState<string>(droppableGroup)
+    const [combineIds, setCombineIds] = useState<string[]>([])
     const [isCombineEnabled, setIsCombineEnabled] = useState<boolean>(true)
 
+    const [moveLevel, setMoveLevel] = useState<MoveLevelProps>()
+
+    const moveLevelRef = useRef<MoveLevelProps>()
     // 根据数组下标进行位置互换
     const moveArrayElement = useMemoizedFn((arr, fromIndex, toIndex) => {
         // 检查下标是否有效
@@ -298,7 +307,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             if (item.id.toString() === targetId) {
                 return item
             } else if (item.type === "folders" && item.node) {
-                const foundInNode = findItemById(item.node, targetId)
+                const foundInNode = findFoldersById(item.node, targetId)
                 if (foundInNode) {
                     return item
                 }
@@ -323,12 +332,14 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                     // mergeWithinAndOutsideGroup(result)
                 }
             }
+            setIsCombineEnabled(true)
+            setMoveLevel(undefined)
+            setCombineIds([])
+            moveLevelRef.current = undefined
             /** 合并组   ---------end--------- */
             if (!destination && !source) {
                 return
             }
-            setIsCombineEnabled(true)
-            // console.log("source,destination ", source, destination)
             const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
             // 同层内拖拽(最外层)
             if (source.droppableId === "droppable-payload" && destination.droppableId === "droppable-payload") {
@@ -424,14 +435,51 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         (result) => {
             console.log("result---xxx", result)
             const {index, droppableId} = result.source
-            const {combine} = result
-            if (droppableId === "droppable-payload") {
-                // 拖动的来源item是组时，不用合并
-            }
+            const {combine, destination, draggableId} = result
+            // if (droppableId === "droppable-payload") {
+            //     // 拖动的来源item是组时，不用合并
+            // }
+
+            const moveNode = findItemById(data, draggableId)
             if (combine) {
                 // 检测到合并的情况
                 console.log("检测到合并的情况")
+                const ids = [combine.draggableId, draggableId]
+                // 如果拖拽的是文件夹 则不允许合并
+                const moveType = findItemById(data, draggableId)
+                if (moveType && moveType.type !== "folders") {
+                    setCombineIds(ids)
+                }
+                // // 由内合并至外层
+                // if(droppableId!=="droppable-payload"&&combine.droppableId==="droppable-payload"){
+
+                // }
+                setMoveLevel(moveLevelRef.current)
+                return
             }
+            // 拖拽文件时 层级变动 更改样式
+            if (moveNode && destination && moveNode.type === "file") {
+                if (
+                    (droppableId === "droppable-payload" || destination.droppableId === "droppable-payload") &&
+                    droppableId !== destination.droppableId
+                ) {
+                    const moveLevelObj: MoveLevelProps = {
+                        draggableId,
+                        level: droppableId === "droppable-payload" ? "inside" : "outside"
+                    }
+                    moveLevelRef.current = moveLevelObj
+                    setMoveLevel(moveLevelObj)
+                } else {
+                    const moveLevelObj: MoveLevelProps = {
+                        draggableId,
+                        level: droppableId === "droppable-payload" ? "outside" : "inside"
+                    }
+                    moveLevelRef.current = moveLevelObj
+                    setMoveLevel(moveLevelObj)
+                }
+            }
+
+            setCombineIds([])
         },
         {wait: 200}
     ).run
@@ -450,7 +498,11 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
 
     const onDragStart = useMemoizedFn((result: DragDropContextResultProps) => {
         if (!result.source) return
-        // setIsCombineEnabled(false)
+        // 如果拖拽的是文件夹 则不允许合并
+        const moveType = findItemById(data, result.draggableId)
+        if (moveType && moveType.type === "folders") {
+            setIsCombineEnabled(false)
+        }
     })
     return (
         <div className={styles["new-payload-list"]}>
@@ -533,50 +585,60 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                         >
                             {(provided) => (
                                 <div ref={provided.innerRef} {...provided.droppableProps}>
-                                    {data.map((item, index) => (
-                                        <Draggable
-                                            key={item.id.toString()}
-                                            draggableId={item.id.toString()}
-                                            index={index}
-                                        >
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    style={{
-                                                        // ...provided.draggableProps.style
-                                                        ...getItemStyle(
-                                                            snapshot.isDragging,
-                                                            provided.draggableProps.style
-                                                        )
-                                                    }}
-                                                >
-                                                    {/* 渲染你的文件夹或文件组件 */}
-                                                    {/* 使用 item.type 来区分文件夹和文件 */}
-                                                    {item.type === "folders" ? (
-                                                        // 渲染文件夹组件
-                                                        <FolderComponent
-                                                            folder={item}
-                                                            selectItem={selectItem}
-                                                            setSelectItem={setSelectItem}
-                                                            data={data}
-                                                            setData={setData}
-                                                            subDropType={subDropType}
-                                                        />
-                                                    ) : (
-                                                        // 渲染文件组件
-                                                        <FileComponent
-                                                            file={item}
-                                                            selectItem={selectItem}
-                                                            setSelectItem={setSelectItem}
-                                                            fileOutside={true}
-                                                        />
-                                                    )}
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
+                                    {data.map((item, index) => {
+                                        const fileOutside =
+                                            moveLevel?.draggableId === item.id.toString()
+                                                ? moveLevel.level === "outside"
+                                                : true
+                                        const isCombine = combineIds[0] === item.id.toString()
+                                        return (
+                                            <Draggable
+                                                key={item.id.toString()}
+                                                draggableId={item.id.toString()}
+                                                index={index}
+                                            >
+                                                {(provided, snapshot) => (
+                                                    <div
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                        style={{
+                                                            // ...provided.draggableProps.style
+                                                            ...getItemStyle(
+                                                                snapshot.isDragging,
+                                                                provided.draggableProps.style
+                                                            )
+                                                        }}
+                                                    >
+                                                        {/* 渲染你的文件夹或文件组件 */}
+                                                        {/* 使用 item.type 来区分文件夹和文件 */}
+                                                        {item.type === "folders" ? (
+                                                            // 渲染文件夹组件
+                                                            <FolderComponent
+                                                                folder={item}
+                                                                selectItem={selectItem}
+                                                                setSelectItem={setSelectItem}
+                                                                data={data}
+                                                                setData={setData}
+                                                                subDropType={subDropType}
+                                                                moveLevel={moveLevel}
+                                                                isCombine={isCombine}
+                                                            />
+                                                        ) : (
+                                                            // 渲染文件组件
+                                                            <FileComponent
+                                                                file={item}
+                                                                selectItem={selectItem}
+                                                                setSelectItem={setSelectItem}
+                                                                isInside={!fileOutside}
+                                                                isCombine={isCombine}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        )
+                                    })}
                                     {provided.placeholder}
                                 </div>
                             )}
@@ -591,13 +653,12 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
 interface FileComponentCloneProps {
     file: DataItem
     selectItem?: number
-    fileOutside?: boolean
-    fileInside?: boolean
+    isInside?: boolean
 }
 
 // 用于生成拖拽文件元素
 export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => {
-    const {file, selectItem, fileOutside, fileInside} = props
+    const {file, selectItem, isInside = true} = props
     const menuOpen = false
     return (
         <div
@@ -605,8 +666,8 @@ export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => 
                 [styles["file-active"]]: file.id === selectItem,
                 [styles["file-no-active"]]: file.id !== selectItem,
                 [styles["file-menu"]]: menuOpen && file.id !== selectItem,
-                [styles["file-outside"]]: fileOutside,
-                [styles["file-inside"]]: fileInside
+                [styles["file-outside"]]: !isInside,
+                [styles["file-inside"]]: isInside
             })}
         >
             <div className={styles["file-header"]}>
@@ -649,9 +710,12 @@ interface FolderComponentProps {
     data: DataItem[]
     setData: (v: DataItem[]) => void
     subDropType: string
+    moveLevel?: MoveLevelProps
+    // 是否合并
+    isCombine?: boolean
 }
 export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
-    const {folder, selectItem, setSelectItem, data, setData, subDropType} = props
+    const {folder, selectItem, setSelectItem, data, setData, subDropType, moveLevel, isCombine} = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(false)
     const [inputName, setInputName] = useState<string>(folder.name)
@@ -695,7 +759,10 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             ) : (
                 <div
                     className={classNames(styles["folder"], {
-                        [styles["folder-menu"]]: menuOpen
+                        [styles["folder-menu"]]: menuOpen,
+                        [styles["folder-combine"]]: isCombine,
+                        [styles["folder-no-combine"]]: !isCombine,
+                        [styles["folder-border"]]: !isCombine && !menuOpen
                     })}
                     onClick={() => onIsFold(folder.id)}
                 >
@@ -800,6 +867,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                             folder.node?.filter((item, index) => `${item.id}` === rubric.draggableId) || []
 
                         const cloneStyle = cloneItemStyle(provided.draggableProps.style)
+                        const fileInside =
+                            moveLevel?.draggableId === file[0].id.toString() ? moveLevel.level === "inside" : true
                         return (
                             <div
                                 {...provided.draggableProps}
@@ -809,7 +878,11 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                             >
                                 <>
                                     {file.length > 0 && (
-                                        <FileComponentClone file={file[0]} selectItem={selectItem} fileInside={true} />
+                                        <FileComponentClone
+                                            file={file[0]}
+                                            selectItem={selectItem}
+                                            isInside={fileInside}
+                                        />
                                     )}
                                 </>
                             </div>
@@ -835,7 +908,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                     file={file}
                                                     selectItem={selectItem}
                                                     setSelectItem={setSelectItem}
-                                                    fileInside={true}
+                                                    isInside={true}
                                                 />
                                             </div>
                                         )}
@@ -854,12 +927,14 @@ interface FileComponentProps {
     file: DataItem
     selectItem?: number
     setSelectItem: (id: number) => void
-    fileOutside?: boolean
-    fileInside?: boolean
+    // 是否为内层
+    isInside?: boolean
+    // 是否合并
+    isCombine?: boolean
 }
 
 export const FileComponent: React.FC<FileComponentProps> = (props) => {
-    const {file, selectItem, setSelectItem, fileOutside, fileInside} = props
+    const {file, selectItem, setSelectItem, isInside = true, isCombine} = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(false)
     const [inputName, setInputName] = useState<string>(file.name)
@@ -884,7 +959,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     return (
         <>
             {isEditInput ? (
-                <div className={styles["file-input"]} style={{paddingLeft: fileInside ? 28 : 8}}>
+                <div className={styles["file-input"]} style={{paddingLeft: isInside ? 28 : 8}}>
                     <YakitInput
                         value={inputName}
                         autoFocus
@@ -907,8 +982,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         [styles["file-active"]]: file.id === selectItem,
                         [styles["file-no-active"]]: file.id !== selectItem,
                         [styles["file-menu"]]: menuOpen && file.id !== selectItem,
-                        [styles["file-outside"]]: fileOutside,
-                        [styles["file-inside"]]: fileInside
+                        [styles["file-combine"]]: isCombine,
+                        [styles["file-outside"]]: !isInside,
+                        [styles["file-inside"]]: isInside
                     })}
                     onClick={() => {
                         setSelectItem(file.id)
