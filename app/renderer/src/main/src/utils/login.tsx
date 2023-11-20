@@ -12,7 +12,10 @@ export const loginOut = async (userInfo: UserInfoProps) => {
     // await aboutLoginUpload(userInfo.token)
     NetWorkApi<null, API.ActionSucceeded>({
         method: "get",
-        url: "logout/online"
+        url: "logout/online",
+        headers: {
+            Authorization: userInfo.token
+        }
     })
         .then((res) => {
             loginOutLocal(userInfo)

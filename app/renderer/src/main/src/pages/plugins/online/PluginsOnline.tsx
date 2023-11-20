@@ -273,15 +273,13 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useUpdateEffect(() => {
         if (isCommunityEdition()) return
         // 企业版切换需要刷新插件商店商店列表+统计
-        fetchList(true)
-        getPluginGroupList()
-        getInitTotal()
+        onSwitchPrivateDomainRefOnlinePluginInit()
     }, [userInfo.isLogin])
     useEffect(() => {
         getInitTotal()
     }, [inViewport])
     // 请求数据
-    useUpdateEffect(() => {
+    useEffect(() => {
         fetchList(true)
     }, [refresh, filters, otherSearch])
 
@@ -290,11 +288,19 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     }, [inViewport])
 
     useEffect(() => {
+        emiter.on("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)
         emiter.on("onRefOnlinePluginList", onRefOnlinePluginList)
         return () => {
+            emiter.off("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)
             emiter.off("onRefOnlinePluginList", onRefOnlinePluginList)
         }
     }, [])
+    /**切换私有域，刷新初始化的total和列表数据 */
+    const onSwitchPrivateDomainRefOnlinePluginInit = useMemoizedFn(() => {
+        fetchList(true)
+        getPluginGroupList()
+        getInitTotal()
+    })
     /**
      * @description 刷新搜索条件,目前触发地方(首页-插件热点触发的插件商店搜索条件过滤)
      */
@@ -814,6 +820,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 updateList={onUpdateList}
                                 showIndex={showPluginIndex.current}
                                 setShowIndex={setShowPluginIndex}
+                                isShowSearchResultEmpty={+response.pagemeta.total === 0}
                             />
                         ) : (
                             <div className={styles["plugin-online-empty"]}>
