@@ -41,6 +41,8 @@ interface PageParamsInfoProps {
     pluginInfoEditor?: {source: YakitRoute}
     /** YakitRoute.Plugin_Local 本地插件页面缓存数据 */
     pluginLocalPageInfo?: {uuid: string}
+    /**YakitRoute.Plugin_Store 插件商店页面 */
+    pluginOnlinePageInfo?: {keyword: string; plugin_type: string}
 }
 
 export interface WebFuzzerPageInfoProps {
