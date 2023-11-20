@@ -7,6 +7,7 @@
         height: 100%;
         .hTTPHistory-tab-wrap {
             display: flex;
+            width: 100%;
             height: 100%;
             .hTTPHistory-tab {
                 width: 24px;
@@ -34,7 +35,7 @@
             }
             .hTTPHistory-tab-cont-item {
                 overflow: auto;
-                width: 320px;
+                width: 100%;
                 height: 100%;
                 padding: 15px;
                 padding-right: 0;

@@ -1,4 +1,5 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
+import type {DataNode as TreeNode} from "antd/es/tree"
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
@@ -201,6 +202,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setSecondNodeVisible(!onlyShowFirstNode && typeof defaultFold === "boolean")
     }, [onlyShowFirstNode, defaultFold])
 
+    const openTabsFlag = useMemo(() => {
+        return hTTPHistoryTabs.every((item) => item.contShow)
+    }, [hTTPHistoryTabs])
+
     return (
         <div
             ref={ref}
@@ -210,11 +215,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 paddingRight: pageType === "history" ? 16 : 0
             }}
         >
-            <AutoCard bodyStyle={{margin: 0, padding: 0, overflow: "hidden"}} bordered={false}>
-                <YakitResizeBox
-                    firstNode={() => (
-                        <div className={styles["hTTPHistory-firstNode-wrap"]}>
-                            {pageType === "history" && (
+            <YakitResizeBox
+                isShowDefaultLineStyle={pageType === "history"}
+                freeze={pageType === "history" && openTabsFlag}
+                firstMinSize={pageType === "history" ? (openTabsFlag ? "325px" : "24px") : 0}
+                firstRatio={pageType === "history" ? (openTabsFlag ? "20%" : "24px") : "0px"}
+                firstNode={() => {
+                    if (pageType === "history") {
+                        return (
+                            <div className={styles["hTTPHistory-firstNode-wrap"]}>
                                 <div className={styles["hTTPHistory-tab-wrap"]}>
                                     <div className={styles["hTTPHistory-tab"]}>
                                         {hTTPHistoryTabs.map((item) => (
@@ -239,6 +248,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     >
                                         <YakitTree
                                             multiple={false}
+                                            searchPlaceholder='请输入域名或URL进行搜索'
                                             treeData={webTreeData}
                                             loadData={onLoadWebTreeData}
                                             onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
@@ -253,18 +263,20 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         ></YakitTree>
                                     </div>
                                 </div>
-                            )}
+                            </div>
+                        )
+                    }
+                    return <></>
+                }}
+                secondMinSize={pageType === "history" ? "720px" : "100%"}
+                secondRatio={pageType === "history" ? "80%" : "100%"}
+                secondNode={() => (
+                    <YakitResizeBox
+                        firstNode={() => (
                             <div
-                                className={styles["hTTPHistory-table"]}
                                 style={{
-                                    width:
-                                        pageType === "history"
-                                            ? `calc(100% - ${
-                                                  hTTPHistoryTabs.some((item) => item.contShow) ? 344 : 24
-                                              }px)`
-                                            : "100%",
                                     paddingTop: pageType === "history" ? 8 : 0,
-                                    paddingLeft: pageType === "history" ? 16 : 0
+                                    paddingLeft: pageType === "history" ? 12 : 0
                                 }}
                             >
                                 <HTTPFlowTable
@@ -291,41 +303,41 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     historyId={historyId}
                                 />
                             </div>
-                        </div>
-                    )}
-                    firstMinSize={160}
-                    isVer={true}
-                    freeze={!onlyShowFirstNode}
-                    firstRatio={onlyShowFirstNode ? "100%" : undefined}
-                    secondNodeStyle={{
-                        padding: onlyShowFirstNode ? 0 : undefined,
-                        display: onlyShowFirstNode ? "none" : ""
-                    }}
-                    secondMinSize={50}
-                    secondNode={() => (
-                        <>
-                            {secondNodeVisible && (
-                                <div style={{width: "100%", height: "100%"}}>
-                                    <HTTPFlowDetailMini
-                                        noHeader={true}
-                                        search={highlightSearch}
-                                        id={selected?.Id || 0}
-                                        defaultHttps={selected?.IsHTTPS}
-                                        Tags={selected?.Tags}
-                                        sendToWebFuzzer={true}
-                                        selectedFlow={selected}
-                                        refresh={refresh}
-                                        defaultFold={defaultFold}
-                                        pageType={pageType}
-                                        historyId={historyId}
-                                        // defaultHeight={detailHeight}
-                                    />
-                                </div>
-                            )}
-                        </>
-                    )}
-                />
-            </AutoCard>
+                        )}
+                        firstMinSize={160}
+                        isVer={true}
+                        freeze={!onlyShowFirstNode}
+                        firstRatio={onlyShowFirstNode ? "100%" : undefined}
+                        secondNodeStyle={{
+                            padding: onlyShowFirstNode ? 0 : undefined,
+                            display: onlyShowFirstNode ? "none" : ""
+                        }}
+                        secondMinSize={50}
+                        secondNode={() => (
+                            <>
+                                {secondNodeVisible && (
+                                    <div style={{width: "100%", height: "100%"}}>
+                                        <HTTPFlowDetailMini
+                                            noHeader={true}
+                                            search={highlightSearch}
+                                            id={selected?.Id || 0}
+                                            defaultHttps={selected?.IsHTTPS}
+                                            Tags={selected?.Tags}
+                                            sendToWebFuzzer={true}
+                                            selectedFlow={selected}
+                                            refresh={refresh}
+                                            defaultFold={defaultFold}
+                                            pageType={pageType}
+                                            historyId={historyId}
+                                            // defaultHeight={detailHeight}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    />
+                )}
+            ></YakitResizeBox>
         </div>
     )
 }

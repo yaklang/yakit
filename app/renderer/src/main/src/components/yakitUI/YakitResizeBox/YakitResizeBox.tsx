@@ -252,8 +252,12 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
     const dragSecondSize = useRef<number>()
 
     // 最小值（存在 firstMinSize + secondMinSize > 整个控件）对此特殊情况额外处理，按照比例直接分配
-    const [FirstMinSize, setFirstMinSize] = useState<string | number>(firstMinSize)
+    const [FirstMinSize, setFirstMinSize] = useState<string | number>()
     const [SecondMinSize, setSecondMinSize] = useState<string | number>(secondMinSize)
+
+    useEffect(() => {
+        setFirstMinSize(firstMinSize)
+    }, [firstMinSize])
 
     // 特殊情况处理
     const specialSizeFun = useMemoizedFn((size: number) => {
