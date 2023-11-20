@@ -14,6 +14,7 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {pluginTypeToName} from "./builtInData"
+import {YakitRoute} from "@/routes/newRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -886,6 +887,83 @@ export const apiGetYakScriptByOnlineID: (query: GetYakScriptByOnlineIDRequest) =
                 })
         } catch (error) {
             yakitNotify("error", "操作失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @description 插件商店/我的插件详情点击去使用，跳转本地详情
+ */
+export const onlineUseToLocalDetail = (uuid: string, listType: "online" | "mine") => {
+    const query: QueryYakScriptRequest = {
+        Pagination: {
+            Page: 1,
+            Limit: 1,
+            Order: "",
+            OrderBy: ""
+        },
+        UUID: uuid
+    }
+    apiQueryYakScript(query).then((res) => {
+        if (+res.Total > 0) {
+            emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
+        } else {
+            let downloadParams: DownloadOnlinePluginsRequest = {
+                UUID: [uuid]
+            }
+            if (listType === "online") {
+                apiDownloadPluginOnline(downloadParams).then(() => {
+                    emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
+                })
+            } else if (listType === "mine") {
+                apiDownloadPluginMine(downloadParams).then(() => {
+                    emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
+                })
+            }
+        }
+    })
+}
+
+interface QueryYakScriptByYakScriptNameRequest {
+    pluginName: string
+}
+
+/**
+ * @description 插件商店/我的插件详情点击去使用，跳转本地详情
+ */
+export const apiQueryYakScriptByYakScriptName: (query: QueryYakScriptByYakScriptNameRequest) => Promise<YakScript> = (
+    query
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const newQuery: QueryYakScriptRequest = {
+                Pagination: {
+                    Page: 1,
+                    Limit: 1,
+                    Order: "",
+                    OrderBy: ""
+                },
+                IncludedScriptNames: [query.pluginName]
+            }
+            ipcRenderer
+                .invoke("QueryYakScript", {
+                    ...newQuery
+                })
+                .then((item: QueryYakScriptsResponse) => {
+                    if (item.Data.length > 0) {
+                        resolve(item.Data[0])
+                    } else {
+                        yakitNotify("error", "未查询到该插件")
+                        reject("未查询到该插件")
+                    }
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "查询本地插件错误" + e)
+                    reject(e)
+                })
+        } catch (error) {
+            yakitNotify("error", "查询本地插件错误" + error)
             reject(error)
         }
     })

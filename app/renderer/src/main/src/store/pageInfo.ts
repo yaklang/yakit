@@ -41,6 +41,8 @@ interface PageParamsInfoProps {
     pluginInfoEditor?: {source: YakitRoute}
     /** YakitRoute.Plugin_Local 本地插件页面缓存数据 */
     pluginLocalPageInfo?: {uuid: string}
+    /**YakitRoute.Plugin_Store 插件商店页面 */
+    pluginOnlinePageInfo?: {keyword: string; plugin_type: string}
 }
 
 export interface WebFuzzerPageInfoProps {
@@ -274,7 +276,8 @@ try {
      *  @description 打开软化后这个订阅会一直存在，直到关闭软件;后续再看看优化方法
      */
     const unFuzzerCacheData = usePageInfo.subscribe(
-        (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+        // (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+        (state) => state.pages.get("httpFuzzer") || [], // 因为循环引用导致开发环境热加载YakitRoute.HTTPFuzzer为undefined
         (selectedState, previousSelectedState) => {
             saveFuzzerCache(selectedState)
         }

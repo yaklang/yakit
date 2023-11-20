@@ -71,7 +71,7 @@ import {
 import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TypeSelectOpt} from "../funcTemplateType"
-import {DefaultTypeList, PluginGV} from "../builtInData"
+import {DefaultTypeList, PluginGV, pluginTypeToName} from "../builtInData"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
@@ -79,15 +79,56 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {isCommunityEdition} from "@/utils/envfile"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {PluginUpload} from "../local/PluginLocalUpload"
-
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 import classNames from "classnames"
 import "../plugins.scss"
 
+/**插件商店页面的处理缓存中的搜索参数 */
+const getPluginOnlinePageData = (pluginOnlinePageData) => {
+    const pageList = pluginOnlinePageData?.pageList || []
+    if (pageList.length === 0) {
+        return {
+            keyword: "",
+            plugin_type: []
+        }
+    }
+    const {keyword, plugin_type} = pageList[0].pageParamsInfo?.pluginOnlinePageInfo || {
+        keyword: "",
+        plugin_type: ""
+    }
+    const types = !!plugin_type ? plugin_type.split(",") : []
+    const typeList: API.PluginsSearchData[] = types.map((ele) => ({
+        value: ele,
+        label: pluginTypeToName[ele]?.name || "",
+        count: 0
+    }))
+    return {
+        keyword,
+        plugin_type: typeList || []
+    }
+}
+
 export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) => {
+    const {pluginOnlinePageData} = usePageInfo(
+        (s) => ({
+            pluginOnlinePageData: s.pages?.get(YakitRoute.Plugin_Store) || {
+                pageList: [],
+                routeKey: "",
+                singleNode: true
+            }
+        }),
+        shallow
+    )
     const [isShowRoll, setIsShowRoll] = useState<boolean>(true)
 
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
-    const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
+    const [search, setSearch] = useState<PluginSearchParams>(
+        cloneDeep({
+            ...defaultSearch,
+            keyword: getPluginOnlinePageData(pluginOnlinePageData).keyword || ""
+        })
+    )
     const [refresh, setRefresh] = useState<boolean>(false)
 
     const pluginsOnlineRef = useRef<HTMLDivElement>(null)
@@ -159,9 +200,20 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
         </>
     )
 })
+
 const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, ref) => {
     const {refresh, isShowRoll, plugin, setPlugin, inViewport} = props
-
+    const {pluginOnlinePageData, clearDataByRoute} = usePageInfo(
+        (s) => ({
+            pluginOnlinePageData: s.pages?.get(YakitRoute.Plugin_Store) || {
+                pageList: [],
+                routeKey: "",
+                singleNode: true
+            },
+            clearDataByRoute: s.clearDataByRoute
+        }),
+        shallow
+    )
     /** 插件展示(列表|网格) */
     const [isList, setIsList] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<string[]>([])
@@ -170,7 +222,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     const [loading, setLoading] = useState<boolean>(false)
     const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
     const [filters, setFilters] = useState<PluginFilterParams>({
-        plugin_type: [],
+        plugin_type: getPluginOnlinePageData(pluginOnlinePageData).plugin_type,
         tags: []
     })
 
@@ -218,17 +270,24 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             if (value === "false") setShowFilter(false)
         })
     }, [])
+    useUpdateEffect(() => {
+        if (isCommunityEdition()) return
+        // 企业版切换需要刷新插件商店商店列表+统计
+        fetchList(true)
+        getPluginGroupList()
+        getInitTotal()
+    }, [userInfo.isLogin])
     useEffect(() => {
         getInitTotal()
-    }, [userInfo.isLogin, inViewport])
+    }, [inViewport])
     // 请求数据
     useUpdateEffect(() => {
         fetchList(true)
-    }, [userInfo.isLogin, refresh, filters, otherSearch])
+    }, [refresh, filters, otherSearch])
 
     useEffect(() => {
         getPluginGroupList()
-    }, [userInfo.isLogin, inViewport])
+    }, [inViewport])
 
     useEffect(() => {
         emiter.on("onRefOnlinePluginList", onRefOnlinePluginList)
@@ -236,8 +295,32 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             emiter.off("onRefOnlinePluginList", onRefOnlinePluginList)
         }
     }, [])
+    /**
+     * @description 刷新搜索条件,目前触发地方(首页-插件热点触发的插件商店搜索条件过滤)
+     */
+    const onRefQuery = useMemoizedFn(() => {
+        const {keyword = "", plugin_type = []} = getPluginOnlinePageData(pluginOnlinePageData)
+        if (!!keyword) {
+            setSearch({
+                userName: "",
+                keyword: keyword,
+                type: "keyword"
+            })
+        }
+        if (plugin_type.length > 0) {
+            setFilters({
+                ...filters,
+                plugin_type
+            })
+        }
+        // 设置完搜索条件后清除
+        clearDataByRoute(YakitRoute.Plugin_Store)
+    })
     const onRefOnlinePluginList = useMemoizedFn(() => {
-        fetchList(true)
+        onRefQuery()
+        setTimeout(() => {
+            fetchList(true)
+        }, 200)
     })
 
     // 选中插件的数量
@@ -431,8 +514,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setAllCheck(backValues.allCheck)
         setSelectList(backValues.selectList)
     })
-    const onSearch = useMemoizedFn(() => {
-        fetchList(true)
+    const onSearch = useMemoizedFn((val) => {
+        setSearch(val)
+        setTimeout(() => {
+            fetchList(true)
+        }, 200)
     })
     const pluginTypeSelect: TypeSelectOpt[] = useMemo(() => {
         return (
@@ -694,7 +780,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             prImgs={(data.collaborator || []).map((ele) => ele.head_img)}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
-                                            official={!!data.isCorePlugin}
+                                            official={!!data.official}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
                                         />

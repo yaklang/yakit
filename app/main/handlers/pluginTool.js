@@ -104,7 +104,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("cancel-DownloadOnlinePlugins", handlerHelper.cancelHandler(streamDownloadOnlinePluginsAll))
     ipcMain.handle("DownloadOnlinePlugins", async (e, params, token) => {
         params.Token = USER_INFO.token
-        let stream = getClient().DownloadOnlinePluginAll(params)
+        let stream = getClient().DownloadOnlinePlugins(params)
         handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginsAll, token)
     })
 
@@ -250,10 +250,5 @@ module.exports = (win, getClient) => {
     // 删除本地插件,带条件
     ipcMain.handle("DeleteLocalPluginsByWhere", async (e, params) => {
         return await asyncDeleteLocalPluginsByWhere(params)
-    })
-
-    // 参数携带
-    ipcMain.on("yakit-store-params", (event, arg) => {
-        win.webContents.send("get-yakit-store-params", arg)
     })
 }

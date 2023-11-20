@@ -220,12 +220,12 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
     const {pluginName, help, titleNode, tags, extraNode, img, user, pluginId, updated_at, prImgs = []} = props
 
     const tagList = useMemo(() => {
+        if (!tags) return []
+        if (tags === "null") return []
         let arr: string[] = []
         try {
-            arr = JSON.parse(tags || "[]")
-        } catch (error) {
-            arr = []
-        }
+            arr = tags ? tags.split(",") : []
+        } catch (error) {}
         return arr
     }, [tags])
 
@@ -274,9 +274,9 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                                     styles["text-style"],
                                     "yakit-content-single-ellipsis"
                                 )}
-                                title={user || ""}
+                                title={user || "anonymous"}
                             >
-                                {user || ""}
+                                {user || "anonymous"}
                             </div>
                             <AuthorIcon />
                         </div>
@@ -1475,7 +1475,7 @@ export const PluginContributesListItem: React.FC<PluginContributesListItemProps>
     return (
         <div className={styles["contributes-item-wrapper"]}>
             <AuthorImg size='small' src={contributesHeadImg || ""} />
-            <span className="content-ellipsis ">{contributesName}</span>
+            <span className='content-ellipsis '>{contributesName}</span>
         </div>
     )
 })
