@@ -219,16 +219,23 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         })
     }, [])
     useEffect(() => {
+        if (isCommunityEdition()) return
+        // 企业版切换需要刷新插件商店商店列表+统计
+        fetchList(true)
+        getPluginGroupList()
         getInitTotal()
-    }, [userInfo.isLogin, inViewport])
+    }, [userInfo.isLogin])
+    useEffect(() => {
+        getInitTotal()
+    }, [inViewport])
     // 请求数据
     useUpdateEffect(() => {
         fetchList(true)
-    }, [userInfo.isLogin, refresh, filters, otherSearch])
+    }, [refresh, filters, otherSearch])
 
     useEffect(() => {
         getPluginGroupList()
-    }, [userInfo.isLogin, inViewport])
+    }, [inViewport])
 
     useEffect(() => {
         emiter.on("onRefOnlinePluginList", onRefOnlinePluginList)
@@ -431,8 +438,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setAllCheck(backValues.allCheck)
         setSelectList(backValues.selectList)
     })
-    const onSearch = useMemoizedFn(() => {
-        fetchList(true)
+    const onSearch = useMemoizedFn((val) => {
+        setSearch(val)
+        setTimeout(() => {
+            fetchList(true)
+        }, 200)
     })
     const pluginTypeSelect: TypeSelectOpt[] = useMemo(() => {
         return (
@@ -694,7 +704,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                             prImgs={(data.collaborator || []).map((ele) => ele.head_img)}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
-                                            official={!!data.isCorePlugin}
+                                            official={!!data.official}
                                             extraFooter={optExtraNode}
                                             onClick={optClick}
                                         />

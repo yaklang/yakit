@@ -903,7 +903,7 @@ export const onlineUseToLocalDetail = (uuid: string) => {
             Order: "",
             OrderBy: ""
         },
-        UUId: uuid
+        UUID: uuid
     }
     apiQueryYakScript(query).then((res) => {
         if (+res.Total > 0) {
