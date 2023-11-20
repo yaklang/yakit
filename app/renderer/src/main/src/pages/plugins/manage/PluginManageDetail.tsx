@@ -41,9 +41,6 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
-import classNames from "classnames"
-
-const {ipcRenderer} = window.require("electron")
 
 const {TabPane} = Tabs
 
@@ -60,7 +57,11 @@ export interface BackInfoProps {
 }
 
 export interface DetailRefProps {
-    /** 删除的回调(value-删除的插件数组; isFailed-是否失败) */
+    /**
+     * @name 删除的回调
+     * @param value 删除的插件数组
+     * @param isFailed 是否失败
+     */
     onDelCallback: (value: YakitPluginOnlineDetail[], isFailed?: boolean) => any
 }
 
@@ -140,8 +141,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     console.log("res", res)
                     if (res) {
                         setPlugin({...res})
-                        // 记录日志id(带对比时的提交id)
-                        diffIDRef.current = res.up_log_id || 0
                         // 源码
                         setContent(res.content)
                         if (+res.status !== 0) return
@@ -166,7 +165,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                             Tags: []
                         }
                         try {
-                            infoData.Tags = JSON.parse(res.tags || "[]")
+                            infoData.Tags = (res.tags || "").split(",") || []
                         } catch (error) {}
                         if (!infoData.RiskType) infoData.RiskDetail = undefined
                         setInfoParams({...infoData})
@@ -257,12 +256,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
 
         // 删除事件的结果回调
-        const onDelCallback: DetailRefProps["onDelCallback"] = useMemoizedFn((value, isfailed) => {
-            if (!isfailed) {
-                if (value.length === 0) {
-                    if (allCheck) setAllcheck(false)
-                    setSelectList([])
-                } else {
+        const onDelCallback: DetailRefProps["onDelCallback"] = useMemoizedFn((value, isFailed) => {
+            if (!isFailed) {
+                if (value.length > 0) {
                     const index = selectUUIDs.findIndex((item) => value[0]?.uuid === item)
                     if (index > -1) {
                         onOptCheck(value[0], false)
@@ -282,7 +278,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             []
         )
 
-        const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
+        const [plugin, setPlugin] = useState<API.PluginsAuditDetailResponse>()
         // diff日志ID
         const diffIDRef = useRef<number>(0)
         // 插件类型(漏洞类型|其他类型)
@@ -334,6 +330,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         // 将各部分组件内的数据取出并转换
         const convertPluginInfo = useMemoizedFn(async () => {
             if (!plugin) return undefined
+
+            if (+plugin.status !== 0) {
+                const obj = convertRemoteToRemoteInfo(plugin)
+                return obj
+            }
+
             const data: PluginDataProps = {
                 ScriptName: plugin.script_name,
                 Type: plugin.type,
@@ -392,7 +394,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     isPass: boolean
                     description?: string
                 },
-                callback?: (value: boolean) => any
+                callback?: (value?: API.PluginsAuditDetailResponse) => any
             ) => {
                 const {isPass, description = ""} = param
 
@@ -402,25 +404,31 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         status: isPass ? "true" : "false",
                         uuid: plugin.uuid,
                         logDescription: description || undefined,
-                        upPluginLogId: diffIDRef.current || undefined
+                        upPluginLogId: plugin.up_log_id || 0
                     }
                     const info: API.PluginsRequest | undefined = await convertPluginInfo()
-                    if (!info) return
+                    if (!info) {
+                        if (callback) callback()
+                        return
+                    }
 
-                    try {
-                        info.tags = JSON.parse(plugin.tags || "[]")
-                    } catch (error) {}
                     console.log("audit-submit-api", {...info, ...audit})
-                    // if (callback) callback(false)
+
                     apiAuditPluginDetaiCheck({...info, ...audit})
                         .then(() => {
-                            if (callback) callback(true)
+                            if (callback)
+                                callback({
+                                    ...(info as any),
+                                    tags: (info.tags || []).join(","),
+                                    risk_annotation: info.annotation,
+                                    downloaded_total: info.download_total || 0
+                                })
                         })
                         .catch(() => {
-                            if (callback) callback(false)
+                            if (callback) callback()
                         })
                 } else {
-                    if (callback) callback(false)
+                    if (callback) callback()
                 }
             }
         )
@@ -455,15 +463,13 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 setStatusLoading(true)
                 onChangeStatus({isPass: false, description: reason}, (value) => {
                     if (value) {
-                        if (plugin) {
-                            setPlugin({...plugin, status: 2})
-                            dispatch({
-                                type: "update",
-                                payload: {
-                                    item: {...plugin, status: 2}
-                                }
-                            })
-                        }
+                        setPlugin({...value, status: 2})
+                        dispatch({
+                            type: "update",
+                            payload: {
+                                item: {...value, status: 2}
+                            }
+                        })
                     }
                     setTimeout(() => {
                         setStatusLoading(false)
@@ -477,15 +483,13 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             setStatusLoading(true)
             onChangeStatus({isPass: true}, (value) => {
                 if (value) {
-                    if (plugin) {
-                        setPlugin({...plugin, status: 1})
-                        dispatch({
-                            type: "update",
-                            payload: {
-                                item: {...plugin, status: 1}
-                            }
-                        })
-                    }
+                    setPlugin({...value, status: 1})
+                    dispatch({
+                        type: "update",
+                        payload: {
+                            item: {...value, status: 1}
+                        }
+                    })
                 }
                 setTimeout(() => {
                     setStatusLoading(false)
@@ -504,7 +508,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
 
         if (!plugin) return null
-        
+
         return (
             <PluginDetails<YakitPluginOnlineDetail>
                 title='插件管理'
@@ -523,7 +527,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 onClick={onDownload}
                             />
                         </Tooltip>
-                        <div style={{height: 12}} className='divider-style'></div>
+                        {/* <div style={{height: 12}} className='divider-style'></div>
                         <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
                             <YakitButton
                                 type='text2'
@@ -533,7 +537,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                     onBatchDel()
                                 }}
                             />
-                        </Tooltip>
+                        </Tooltip> */}
                     </div>
                 }
                 checked={allCheck}
