@@ -54,7 +54,6 @@ export default function usePluginUploadHooks(props: PluginUploadHooks) {
         const params: SaveYakScriptToOnlineRequest = {
             ...uploadParams
         }
-        console.log("SaveYakScriptToOnline", params)
         ipcRenderer.invoke("SaveYakScriptToOnline", params, taskToken)
     }
     const onCancel = () => {

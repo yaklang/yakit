@@ -410,6 +410,7 @@ export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = R
     const {plugin, onClose, onUploadSuccess} = props
     const [current, setCurrent] = useState<number>(0)
     const [isPrivate, setIsPrivate] = useState<boolean>(true)
+    const [uploadLoading, setUploadLoading] = useState<boolean>(false)
 
     const taskTokenRef = useRef(randomString(40))
 
@@ -420,8 +421,12 @@ export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = R
             onUploadSuccess()
             onClose()
         },
-        onUploadEnd: () => {},
-        onUploadError: () => {}
+        onUploadEnd: () => {
+            setUploadLoading(false)
+        },
+        onUploadError: () => {
+            setUploadLoading(false)
+        }
     })
 
     const onPrivateSelectionPrev = useMemoizedFn((v) => {
@@ -435,20 +440,27 @@ export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = R
             IsPrivate: isPrivate,
             All: false
         }
+        setUploadLoading(true)
         onStart(params)
     })
     const steps = useMemo(() => {
         return [
             {
                 title: "选私密/公开",
-                content: <PluginIsPrivateSelectionSingle onUpload={onUpload} onNext={onPrivateSelectionPrev} />
+                content: (
+                    <PluginIsPrivateSelectionSingle
+                        onUpload={onUpload}
+                        onNext={onPrivateSelectionPrev}
+                        uploadLoading={uploadLoading}
+                    />
+                )
             },
             {
                 title: "自动检测",
                 content: <PluginAutoTestSingle plugin={plugin} onNext={onUpload} />
             }
         ]
-    }, [current, plugin, isPrivate])
+    }, [current, plugin, isPrivate, uploadLoading])
     return (
         <div className={styles["plugin-local-upload-single"]}>
             <div className={styles["plugin-local-upload-steps-content"]}>{steps[current]?.content}</div>
@@ -476,13 +488,14 @@ const PluginAutoTestSingle: React.FC<PluginAutoTestSingleProps> = React.memo((pr
 })
 
 interface PluginIsPrivateSelectionSingleProps {
+    uploadLoading: boolean
     /**下一步 */
     onNext: (b: boolean) => void
     /**上传 */
     onUpload: (b: boolean) => void
 }
 const PluginIsPrivateSelectionSingle: React.FC<PluginIsPrivateSelectionSingleProps> = React.memo((props) => {
-    const {onNext, onUpload} = props
+    const {uploadLoading, onNext, onUpload} = props
     const [isPrivate, setIsPrivate] = useState<boolean>(true)
 
     const onClickNext = useMemoizedFn(() => {
@@ -529,7 +542,9 @@ const PluginIsPrivateSelectionSingle: React.FC<PluginIsPrivateSelectionSinglePro
             </div>
             <div className={styles["plugin-local-upload-steps-action"]}>
                 {isPrivate ? (
-                    <YakitButton onClick={onClickUpload}>上传</YakitButton>
+                    <YakitButton onClick={onClickUpload} loading={uploadLoading}>
+                        上传
+                    </YakitButton>
                 ) : (
                     <YakitButton onClick={onClickNext}>检测并上传</YakitButton>
                 )}
