@@ -54,22 +54,6 @@ export interface StoreParamsProps{
     isShowYakitStorePage:boolean
 }
 
-interface YakitStoreParamsProps{
-    /**@name 插件商店Home页面筛选参数 */
-    storeParams: StoreParamsProps
-    setYakitStoreParams: (info: StoreParamsProps) => void
-}
-const typeOnline = "yak,mitm,packet-hack,port-scan,codec,nuclei"
-export const YakitStoreParams = create<YakitStoreParamsProps>((set, get) => ({
-    storeParams: {
-        keywords: "",
-        plugin_type:typeOnline,
-        isShowYakitStorePage:false,
-        time_search:"",
-    },
-    setYakitStoreParams: (info) => set({storeParams: info})
-}))
-
 export interface DynamicStatusProps extends ResultObjProps{
     /**是否远程控制中*/
     isDynamicStatus:boolean
