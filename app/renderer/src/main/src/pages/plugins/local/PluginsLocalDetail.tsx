@@ -97,7 +97,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         } else setPlugin(undefined)
     }, [info])
 
-    useEffect(() => {
+    useEffect(() => { 
         emiter.on("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
         return () => {
             emiter.off("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
