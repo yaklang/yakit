@@ -79,7 +79,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     /**去使用，跳转到本地插件详情页面 */
     const onUse = useMemoizedFn(() => {
         if (!plugin) return
-        onlineUseToLocalDetail(plugin.uuid)
+        onlineUseToLocalDetail(plugin.uuid, "online")
     })
     // 返回
     const onPluginBack = useMemoizedFn(() => {
