@@ -60,12 +60,16 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
             [allCheck, selectList]
         )
         useEffect(() => {
-            getInitTotal()
-            getPluginRemoveCheck()
+            if (isLogin) {
+                getInitTotal()
+                getPluginRemoveCheck()
+            }
         }, [isLogin, inViewport, refresh])
         // 页面初始化的首次列表请求
         useEffect(() => {
-            fetchList(true)
+            if (isLogin) {
+                fetchList(true)
+            }
         }, [isLogin, refresh])
         useEffect(() => {
             setIsSelectRecycleNum(selectList.length > 0)
@@ -334,7 +338,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                                             help={data.help || ""}
                                             img={data.head_img || ""}
                                             user={data.authors || ""}
-                                            prImgs={(data.collaborator||[]).map(ele=>ele.head_img)}
+                                            prImgs={(data.collaborator || []).map((ele) => ele.head_img)}
                                             time={data.updated_at}
                                             isCorePlugin={!!data.isCorePlugin}
                                             official={!!data.isCorePlugin}
