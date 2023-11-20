@@ -11,4 +11,6 @@ export type PluginsEventProps = {
     onRefUserPluginList: string
     /** 刷新本地插件详情页面的选中的插件数据 */
     onRefLocalDetailSelectPlugin: string
+    /** 修改私有域成功后发送的信号 */
+    onSwitchPrivateDomain: string
 }
