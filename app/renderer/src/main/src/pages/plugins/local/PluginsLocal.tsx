@@ -158,7 +158,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const onRefPlugin = useMemoizedFn((data: string) => {
         try {
             const pluginInfo: SavePluginInfoSignalProps = JSON.parse(data)
-            if (pluginInfo.route !== YakitRoute.Plugin_Local) return
             apiQueryYakScriptByYakScriptName({
                 pluginName: pluginInfo.pluginName
             }).then((item: YakScript) => {
@@ -455,8 +454,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         setAllCheck(backValues.allCheck)
         setSelectList(backValues.selectList)
     })
-    const onSearch = useMemoizedFn(() => {
-        fetchList(true)
+    const onSearch = useMemoizedFn((val) => {
+        setSearch(val)
+        setTimeout(() => {
+            fetchList(true)
+        }, 200)
     })
     const pluginTypeSelect: TypeSelectOpt[] = useMemo(() => {
         return (

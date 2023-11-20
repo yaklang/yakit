@@ -187,12 +187,15 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         setAllCheckUser(backValues.allCheck)
         setSelectListUser(backValues.selectList)
     })
-    const onSearch = useMemoizedFn(() => {
-        if (userPluginType === "myOnlinePlugin") {
-            setRefreshUser(!refreshUser)
-        } else {
-            setRefreshRecycle(!refreshRecycle)
-        }
+    const onSearch = useMemoizedFn((val) => {
+        setSearch(val)
+        setTimeout(() => {
+            if (userPluginType === "myOnlinePlugin") {
+                setRefreshUser(!refreshUser)
+            } else {
+                setRefreshRecycle(!refreshRecycle)
+            }
+        }, 200)
     })
     const pluginPrivateSelect: TypeSelectOpt[] = useMemo(() => {
         return (
@@ -486,14 +489,20 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             setAllCheck(defaultAllCheck)
         }, [defaultAllCheck])
         useEffect(() => {
-            getInitTotal()
-            getPluginRemoveCheck()
+            if (isLogin) {
+                getInitTotal()
+                getPluginRemoveCheck()
+            }
         }, [isLogin, inViewport, refresh])
         useEffect(() => {
-            fetchList(true)
+            if (isLogin) {
+                fetchList(true)
+            }
         }, [isLogin, refresh, filters])
         useEffect(() => {
-            getPluginGroupList()
+            if (isLogin) {
+                getPluginGroupList()
+            }
         }, [isLogin, inViewport])
         useEffect(() => {
             setIsSelectUserNum(selectList.length > 0 || allCheck)

@@ -263,6 +263,7 @@
             height: 100%;
             padding: 16px;
             border-radius: 8px;
+            min-height: 320px;
         }
         &-tip {
             color: var(--yakit-helper-text-color);
