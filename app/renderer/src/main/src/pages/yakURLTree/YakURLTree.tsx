@@ -17,7 +17,7 @@ export interface YakURLTreeProp {
 const DirectoryTree = Tree.DirectoryTree;
 
 
-interface TreeNode {
+export interface TreeNode {
     title: string;
     key: string;
     isLeaf?: boolean;

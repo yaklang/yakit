@@ -1,6 +1,6 @@
 import React, {useState} from "react"
 import {Tree} from "antd"
-import type {DataNode, TreeProps} from "antd/es/tree"
+import type {TreeProps} from "antd/es/tree"
 import {OutlineDocumentIcon, OutlineMinusIcon, OutlinePlusIcon} from "@/assets/icon/outline"
 import {YakitInput} from "../YakitInput/YakitInput"
 import {useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
@@ -8,6 +8,7 @@ import styles from "./YakitTree.module.scss"
 import {YakitEmpty} from "../YakitEmpty/YakitEmpty"
 import {YakitButton} from "../YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
+import {TreeNode} from "@/pages/yakURLTree/YakURLTree";
 
 export type TreeKey = string | number
 
@@ -15,14 +16,14 @@ interface YakitTreeProps extends TreeProps {
     showIcon?: boolean // 是否展示treeNode节点前的icon 默认 -> 展示
     icon?: React.ReactNode // treeNode节点前的icon 默认 -> 文件图标
     searchPlaceholder?: string // 搜索框placeholder 默认 -> 请输入关键词搜索
-    treeData: DataNode[] // 需要满足 DataNode类型的数组
+    treeData: TreeNode[] // 需要满足 DataNode类型的数组
     expandedAllKeys?: boolean // 是否展开所有节点 ----- expandedAllKeys 优先级高于expandedKeys
     expandedKeys?: TreeKey[] // 展开节点的key结合 若设置selectedKeys或checkedKeys需要自动展开节点的话，需要手动找到父节点的key去组装expandedKeys传进来才能实现自动展开功能。autoExpandParent主要是针对手动点击触发的自动展开
     onExpandedKeys?: (expandedKeys: TreeKey[]) => void // 若传了expandedKeys -> onExpand必传（需改变传过来的expandedKeys）
     selectedKeys?: TreeKey[]
-    onSelectedKeys?: (selectedKeys: TreeKey[], selectedNodes: DataNode[]) => void
+    onSelectedKeys?: (selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => void
     checkedKeys?: TreeKey[]
-    onCheckedKeys?: (checkedKeys: TreeKey[], checkedNodes: DataNode[]) => void
+    onCheckedKeys?: (checkedKeys: TreeKey[], checkedNodes: TreeNode[]) => void
     searchValue?: string
     onSearchValue?: (searchValue: string) => void
     refreshTree?: () => void
@@ -81,12 +82,12 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
         setAutoExpandParent(false)
         props.onExpandedKeys && props.onExpandedKeys(expandedKeys)
     }
-    const expandedKeysFun = (treeData: DataNode[]) => {
+    const expandedKeysFun = (treeData: TreeNode[]) => {
         if (treeData && treeData.length === 0) {
             return []
         }
         let arr: TreeKey[] = []
-        const expandedKeysFn = (treeData: DataNode[]) => {
+        const expandedKeysFn = (treeData: TreeNode[]) => {
             treeData.forEach((item, index) => {
                 arr.push(item.key)
                 if (item.children && item.children.length > 0) {
@@ -104,7 +105,7 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
     const onTreeSelect = (
         selectedKeys: TreeKey[],
         info: {
-            selectedNodes: DataNode[]
+            selectedNodes: TreeNode[]
         }
     ) => {
         setSelectedKeys(selectedKeys)
