@@ -104,9 +104,6 @@ import {
     PrivateSolidWebsiteTreeIcon,
     PrivateSolidWebsocketFuzzerIcon
 } from "./privateIcon"
-import {PluginStore} from "@/pages/yakitStore/store/PluginStore"
-import {PluginOwner} from "@/pages/yakitStore/owner/PluginOwner"
-import {PluginLocal} from "@/pages/yakitStore/local/PluginLocal"
 import {ControlAdminPage} from "@/pages/dynamicControl/DynamicControl"
 import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage"
 import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"

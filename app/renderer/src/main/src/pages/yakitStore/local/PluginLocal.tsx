@@ -40,7 +40,7 @@ import {
     DownOutlined,
     CloudUploadOutlined
 } from "@ant-design/icons"
-import {UserInfoProps, useStore, YakitStoreParams} from "@/store"
+import {UserInfoProps, useStore} from "@/store"
 import {useCreation, useGetState, useMemoizedFn, useDebounce, useSize} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -172,7 +172,7 @@ export const PluginLocal: React.FC<PluginLocalProp> = (props) => {
     // 全局登录状态
     const {userInfo} = useStore()
 
-    const [publicKeyword, setPublicKeyword] = useState<string>()
+    const [publicKeyword, setPublicKeyword] = useState<string>('')
 
     const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
     // 统计查询
