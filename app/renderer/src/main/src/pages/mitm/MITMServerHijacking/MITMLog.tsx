@@ -685,6 +685,9 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             .catch((e: any) => {
                 yakitNotify("error", `历史记录删除失败: ${e}`)
             })
+            .finally(() => {
+                emiter.emit("onDeleteToUpdate",JSON.stringify({sourcePage:"MITM"}))
+            })
     })
 
     return (

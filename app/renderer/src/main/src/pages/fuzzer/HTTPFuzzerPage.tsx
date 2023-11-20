@@ -1451,6 +1451,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         emiter.emit("onOpenMatchingAndExtractionCard",props.id)
                     }
                 }}
+                extractedMap={extractedMap}
                 pageId={props.id}
             />
             <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
@@ -1763,6 +1764,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         setQuery={setQuery}
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
+                                                        pageId={props.id}
                                                     />
                                                 )}
                                                 {!showSuccess && (
@@ -1773,6 +1775,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         setQuery={setQuery}
                                                         isEnd={loading}
                                                         extractedMap={extractedMap}
+                                                        pageId={props.id}
                                                     />
                                                 )}
                                             </>
@@ -1852,6 +1855,7 @@ interface SecondNodeExtraProps {
     isShowMatch?: boolean
     matchSubmit?: () => void
     pageId?: string
+    extractedMap?: Map<string, string>
 }
 
 /**
@@ -1878,6 +1882,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         retrySubmit,
         isShowMatch = false,
         matchSubmit,
+        extractedMap,
         pageId
     } = props
 
@@ -1912,14 +1917,18 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
 
     const onGetExportFuzzerCallBackEvent = useMemoizedFn((v) => {
         try {
-            const obj: {listTable: FuzzerResponse[]; type: "all" | "payload",pageId:string} = JSON.parse(v)
-
+            const obj: {listTable: any; type: "all" | "payload",pageId:string} = JSON.parse(v)
             if(obj.pageId === pageId){
                 const {listTable, type} = obj
+                const newListTable = listTable.map((item)=>({
+                    ...item,
+                    RequestRaw:StringToUint8Array(item.RequestRaw),
+                    ResponseRaw:StringToUint8Array(item.ResponseRaw)
+                }))
                 if (type === "all") {
-                    exportHTTPFuzzerResponse(listTable)
+                    exportHTTPFuzzerResponse(newListTable,extractedMap)
                 } else {
-                    exportPayloadResponse(listTable)
+                    exportPayloadResponse(newListTable)
                 }
             }
             
