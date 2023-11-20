@@ -423,6 +423,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Plugin_Local:
                 pluginLocal(params)
                 break
+            case YakitRoute.Plugin_Store:
+                pluginStore(params)
+                break
             default:
                 break
         }
@@ -473,26 +476,61 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             // uuid存在的，先将数据缓存至数据中心,后再打开页面
             const newPageNode: PageNodeItemProps = {
                 id: `${randomString(8)}`,
-                routeKey: YakitRoute.HTTPFuzzer,
-                pageGroupId: '0',
-                pageId: YakitRoute.Plugin_Local,// 用路由key作为页面id
+                routeKey: YakitRoute.Plugin_Local,
+                pageGroupId: "0",
+                pageId: YakitRoute.Plugin_Local, // 用路由key作为页面id
                 pageName: YakitRouteToPageInfo[YakitRoute.Plugin_Local]?.label || "",
                 pageParamsInfo: {
-                    pluginLocalPageInfo:{
+                    pluginLocalPageInfo: {
                         uuid
                     }
                 },
                 sortFieId: 0
             }
-            const pages:PageProps={
-                routeKey:YakitRoute.Plugin_Local,
-                singleNode:true,
-                pageList:[newPageNode],
+            const pages: PageProps = {
+                routeKey: YakitRoute.Plugin_Local,
+                singleNode: true,
+                pageList: [newPageNode]
             }
             setPagesData(YakitRoute.Plugin_Local, pages)
         }
         emiter.emit("onRefLocalPluginList", "")
         openMenuPage({route: YakitRoute.Plugin_Local})
+    })
+    /**
+     * @name 插件商店
+     * @description 首页的统计模块，点击需要携带搜索参数跳转插件商店页面
+     * @param {string} keyword 携带的关键字搜索条件
+     * @param {string} plugin_type 携带的插件类型搜索条件
+     */
+    const pluginStore = useMemoizedFn((data: {keyword: string,plugin_type:string}) => {
+        const {keyword,plugin_type} = data || {}
+
+        if (keyword||plugin_type) {
+            // uuid存在的，先将数据缓存至数据中心,后再打开页面
+            const newPageNode: PageNodeItemProps = {
+                id: `${randomString(8)}`,
+                routeKey: YakitRoute.Plugin_Store,
+                pageGroupId: "0",
+                pageId: YakitRoute.Plugin_Store, // 用路由key作为页面id
+                pageName: YakitRouteToPageInfo[YakitRoute.Plugin_Store]?.label || "",
+                pageParamsInfo: {
+                    pluginOnlinePageInfo: {
+                        keyword:keyword||'',
+                        plugin_type:plugin_type||''
+                    }
+                },
+                sortFieId: 0
+            }
+            const pages: PageProps = {
+                routeKey: YakitRoute.Plugin_Store,
+                singleNode: true,
+                pageList: [newPageNode]
+            }
+            setPagesData(YakitRoute.Plugin_Store, pages)
+        }
+        emiter.emit("onRefOnlinePluginList", "")
+        openMenuPage({route: YakitRoute.Plugin_Store})
     })
 
     /** @name 渲染端通信-关闭一个指定页面 */
@@ -1112,7 +1150,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 登录用户非高权限时，软件已打开的高权限页面需自动关闭
     useEffect(() => {
         const {isLogin} = userInfo
-        if (!isLogin ) {
+        if (!isLogin) {
             const closePage: OnlyPageCache[] = [{route: YakitRoute.Plugin_Audit, menuName: ""}]
             for (let item of closePage) {
                 removeMenuPage(item)
