@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import type {DataNode as TreeNode} from "antd/es/tree"
+import {TreeNode} from "@/pages/yakURLTree/YakURLTree";
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
@@ -30,6 +30,7 @@ export interface HTTPHistoryProp extends HTTPPacketFuzzable {
 }
 
 type tabKeys = "web-tree"
+
 interface HTTPHistoryTabsItem {
     key: tabKeys
     label: string
@@ -253,7 +254,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                                 setSecondNodeVisible(false)
                                             }}
                                             onSearchValue={(value) => {
-                                                setYakURL("website:///" + value)
+                                                setYakURL("website://" + value)
                                             }}
                                             refreshTree={() => getWebTreeData("website:///")}
                                         ></YakitTree>
@@ -284,7 +285,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                               } as YakQueryHTTPFlowRequest)
                                             : undefined
                                     }
-                                    searchURL={selectedNodes.map((item) => item.title).join(",")}
+                                    searchURL={selectedNodes.map((node) => {
+                                        const urlItem = node.data?.Extra.find(item => item.Key === 'url');
+                                        return urlItem ? urlItem.Value : '';
+                                    }).filter(url => url !== '').join(",")}
                                     // tableHeight={200}
                                     // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {
