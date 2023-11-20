@@ -33,7 +33,7 @@ import {
     PoweroffOutlined,
     DownOutlined
 } from "@ant-design/icons"
-import {UserInfoProps, useStore, YakitStoreParams} from "@/store"
+import {UserInfoProps, useStore} from "@/store"
 import {useGetState, useMemoizedFn, useDebounceEffect, useDebounce, useSize} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -57,7 +57,6 @@ import {PluginGV} from "@/pages/plugins/builtInData"
 
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import "../YakitStorePage.scss"
-
 
 const {Search} = Input
 const {Option} = Select
@@ -130,7 +129,7 @@ const queryTitle = {
     status: "审核状态",
     group: "插件分组"
 }
-
+/**@deprecated 暂时没有使用，已废弃 */
 export const PluginOwner: React.FC<PluginOwnerProp> = (props) => {
     const [script, setScript] = useState<YakScript>()
     const [loading, setLoading] = useState(false)
@@ -154,20 +153,15 @@ export const PluginOwner: React.FC<PluginOwnerProp> = (props) => {
     const [isEdit, setMonitorEdit] = useState<boolean>(false)
     // 全局登录状态
     const {userInfo} = useStore()
-    // 插件仓库参数及页面状态
-    const {storeParams, setYakitStoreParams} = YakitStoreParams()
 
-    const [publicKeyword, setPublicKeyword] = useState<string>(storeParams.keywords)
+    const [publicKeyword, setPublicKeyword] = useState<string>()
 
     const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
     // 统计查询
     const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
     const [statisticsQueryOnline, setStatisticsQueryOnline, getStatisticsQueryOnline] =
         useGetState<SearchPluginOnlineRequest>({
-            ...defQueryOnline,
-            keywords: storeParams.keywords,
-            plugin_type: storeParams.plugin_type,
-            time_search: storeParams.time_search
+            ...defQueryOnline
         })
     const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
     // 统计数据
