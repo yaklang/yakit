@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {TreeNode} from "@/pages/yakURLTree/YakURLTree";
+import {TreeNode} from "@/pages/yakURLTree/YakURLTree"
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
@@ -113,6 +113,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
      */
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
+    const [searchValue, setSearchValue] = useState<string>("")
 
     const [yakurl, setYakURL] = useState<string>("website:///")
     useEffect(() => {
@@ -123,6 +124,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }, [yakurl])
 
     const getWebTreeData = async (yakurl: string) => {
+        console.log(1233, yakurl)
         loadFromYakURLRaw(yakurl, (res) => {
             setWebTreeData(
                 res.Resources.map((item: YakURLResource, index: number) => {
@@ -219,45 +221,48 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 firstNode={() => {
                     if (pageType === "history") {
                         return (
-                            <div className={styles["hTTPHistory-firstNode-wrap"]}>
-                                <div className={styles["hTTPHistory-tab-wrap"]}>
-                                    <div className={styles["hTTPHistory-tab"]}>
-                                        {hTTPHistoryTabs.map((item) => (
-                                            <div
-                                                className={classNames(styles["hTTPHistory-tab-item"], {
-                                                    [styles["hTTPHistory-tab-item-active"]]: curTabKey === item.key,
-                                                    [styles["hTTPHistory-tab-item-unshowCont"]]:
-                                                        curTabKey === item.key && !item.contShow
-                                                })}
-                                                key={item.key}
-                                                onClick={() => {
-                                                    handleTabClick(item)
-                                                }}
-                                            >
-                                                {item.label}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div
-                                        className={classNames(styles["hTTPHistory-tab-cont-item"], styles["tree-wrap"])}
-                                        style={{display: tabContItemShow("web-tree") ? "block" : "none"}}
-                                    >
-                                        <YakitTree
-                                            multiple={false}
-                                            searchPlaceholder='请输入域名或URL进行搜索'
-                                            treeData={webTreeData}
-                                            loadData={onLoadWebTreeData}
-                                            onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-                                                setSelectedNodes(selectedNodes)
-                                                setOnlyShowFirstNode(true)
-                                                setSecondNodeVisible(false)
+                            <div className={styles["hTTPHistory-tab-wrap"]}>
+                                <div className={styles["hTTPHistory-tab"]}>
+                                    {hTTPHistoryTabs.map((item) => (
+                                        <div
+                                            className={classNames(styles["hTTPHistory-tab-item"], {
+                                                [styles["hTTPHistory-tab-item-active"]]: curTabKey === item.key,
+                                                [styles["hTTPHistory-tab-item-unshowCont"]]:
+                                                    curTabKey === item.key && !item.contShow
+                                            })}
+                                            key={item.key}
+                                            onClick={() => {
+                                                handleTabClick(item)
                                             }}
-                                            onSearchValue={(value) => {
-                                                setYakURL("website://" + value)
-                                            }}
-                                            refreshTree={() => getWebTreeData("website:///")}
-                                        ></YakitTree>
-                                    </div>
+                                        >
+                                            {item.label}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div
+                                    className={classNames(styles["hTTPHistory-tab-cont-item"], styles["tree-wrap"])}
+                                    style={{display: tabContItemShow("web-tree") ? "block" : "none"}}
+                                >
+                                    <YakitTree
+                                        multiple={false}
+                                        searchPlaceholder='请输入域名或URL进行搜索'
+                                        treeData={webTreeData}
+                                        loadData={onLoadWebTreeData}
+                                        onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
+                                            setSelectedNodes(selectedNodes)
+                                            setOnlyShowFirstNode(true)
+                                            setSecondNodeVisible(false)
+                                        }}
+                                        searchValue={searchValue}
+                                        onSearchValue={(value) => {
+                                            setSearchValue(value)
+                                            setYakURL("website://" + value)
+                                        }}
+                                        refreshTree={() => {
+                                            setSearchValue("")
+                                            getWebTreeData("website:///")
+                                        }}
+                                    ></YakitTree>
                                 </div>
                             </div>
                         )
@@ -284,10 +289,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                               } as YakQueryHTTPFlowRequest)
                                             : undefined
                                     }
-                                    searchURL={selectedNodes.map((node) => {
-                                        const urlItem = node.data?.Extra.find(item => item.Key === 'url');
-                                        return urlItem ? urlItem.Value : '';
-                                    }).filter(url => url !== '').join(",")}
+                                    searchURL={selectedNodes
+                                        .map((node) => {
+                                            const urlItem = node.data?.Extra.find((item) => item.Key === "url")
+                                            return urlItem ? urlItem.Value : ""
+                                        })
+                                        .filter((url) => url !== "")
+                                        .join(",")}
                                     // tableHeight={200}
                                     // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {

@@ -8,7 +8,7 @@ import styles from "./YakitTree.module.scss"
 import {YakitEmpty} from "../YakitEmpty/YakitEmpty"
 import {YakitButton} from "../YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
-import {TreeNode} from "@/pages/yakURLTree/YakURLTree";
+import {TreeNode} from "@/pages/yakURLTree/YakURLTree"
 
 export type TreeKey = string | number
 
@@ -29,7 +29,7 @@ interface YakitTreeProps extends TreeProps {
     checkedKeys?: TreeKey[]
     onCheckedKeys?: (checkedKeys: TreeKey[], checkedNodes: TreeNode[]) => void
     showSearch?: boolean // 是否显示搜索框 默认 -> 显示
-    defaultSearchValue?: string // 默认初始搜索内容
+    searchValue?: string // 搜索内容
     onSearchValue?: (searchValue: string) => void
     refreshTree?: () => void // 刷新树
 }
@@ -123,8 +123,8 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
      */
     const [searchValue, setSearchValue] = useState("")
     useEffect(() => {
-        setSearchValue(props.defaultSearchValue || "")
-    }, [props.defaultSearchValue])
+        setSearchValue(props.searchValue || "")
+    }, [props.searchValue])
     const debounceSearch = useDebounceFn(
         (value) => {
             props.onSearchValue && props.onSearchValue(value)
@@ -134,7 +134,7 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
     const onSearchChange = useMemoizedFn((e: {target: {value: string}}) => {
         const value = e.target.value
         setSearchValue(value)
-        debounceSearch.run(searchValue)
+        debounceSearch.run(value)
         setAutoExpandParent(true)
     })
 
