@@ -1833,6 +1833,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 删除成功时 通知History/Mitm页面更新
     const onUpdateHistoryOrMitm = useMemoizedFn(() => {
         // History更新通知MITM 反之亦然
+        // 说明： 此处emit并非是通知当前组件 而是通知复用此组件的其余组件 根据pageType区分
         emiter.emit("onDeleteToUpdate",JSON.stringify({sourcePage:pageType}))
     })
 
