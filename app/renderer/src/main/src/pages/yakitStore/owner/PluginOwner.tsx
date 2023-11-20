@@ -154,7 +154,7 @@ export const PluginOwner: React.FC<PluginOwnerProp> = (props) => {
     // 全局登录状态
     const {userInfo} = useStore()
 
-    const [publicKeyword, setPublicKeyword] = useState<string>()
+    const [publicKeyword, setPublicKeyword] = useState<string>("")
 
     const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
     // 统计查询
