@@ -3,7 +3,6 @@ import {TreeNode} from "@/pages/yakURLTree/YakURLTree";
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
-import {AutoCard} from "./AutoCard"
 import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
@@ -212,17 +211,17 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             ref={ref}
             className={styles.hTTPHistory}
             style={{
-                paddingBottom: pageType === "history" ? 13 : 0,
-                paddingRight: pageType === "history" ? 16 : 0
+                paddingBottom: pageType === "History" ? 13 : 0,
+                paddingRight: pageType === "History" ? 16 : 0
             }}
         >
             <YakitResizeBox
-                isShowDefaultLineStyle={pageType === "history"}
-                freeze={pageType === "history" && openTabsFlag}
-                firstMinSize={pageType === "history" ? (openTabsFlag ? "325px" : "24px") : 0}
-                firstRatio={pageType === "history" ? (openTabsFlag ? "20%" : "24px") : "0px"}
+                isShowDefaultLineStyle={pageType === "History"}
+                freeze={pageType === "History" && openTabsFlag}
+                firstMinSize={pageType === "History" ? (openTabsFlag ? "325px" : "24px") : 0}
+                firstRatio={pageType === "History" ? (openTabsFlag ? "20%" : "24px") : "0px"}
                 firstNode={() => {
-                    if (pageType === "history") {
+                    if (pageType === "History") {
                         return (
                             <div className={styles["hTTPHistory-firstNode-wrap"]}>
                                 <div className={styles["hTTPHistory-tab-wrap"]}>
@@ -269,15 +268,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     }
                     return <></>
                 }}
-                secondMinSize={pageType === "history" ? "720px" : "100%"}
-                secondRatio={pageType === "history" ? "80%" : "100%"}
+                secondMinSize={pageType === "History" ? "720px" : "100%"}
+                secondRatio={pageType === "History" ? "80%" : "100%"}
                 secondNode={() => (
                     <YakitResizeBox
                         firstNode={() => (
                             <div
                                 style={{
-                                    paddingTop: pageType === "history" ? 8 : 0,
-                                    paddingLeft: pageType === "history" ? 12 : 0
+                                    paddingTop: pageType === "History" ? 8 : 0,
+                                    paddingLeft: pageType === "History" ? 12 : 0
                                 }}
                             >
                                 <HTTPFlowTable
