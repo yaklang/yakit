@@ -660,7 +660,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                 >
                     <Form.Item noStyle name='Tags' rules={[{required: true, message: "Tags必填"}]}>
                         <YakitSelect
-                            wrapperClassName={styles["modify-select"]}
+                            wrapperClassName={styles["multiple-modify-select"]}
                             mode='tags'
                             maxTagCount={5}
                             allowClear
