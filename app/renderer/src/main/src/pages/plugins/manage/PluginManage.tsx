@@ -18,16 +18,7 @@ import {
     OutlinePencilaltIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {
-    useDebounceEffect,
-    useDebounceFn,
-    useGetState,
-    useInViewport,
-    useLatest,
-    useLockFn,
-    useMemoizedFn,
-    useUpdateEffect
-} from "ahooks"
+import {useDebounceFn, useGetState, useInViewport, useLatest, useLockFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -62,9 +53,6 @@ import {AddPluginGroup, RemovePluginGroup} from "@/pages/yakitStore/store/Plugin
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
-import classNames from "classnames"
-
-const {ipcRenderer} = window.require("electron")
 
 interface PluginManageProps {}
 
@@ -79,6 +67,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             setInitTotal(+res.pagemeta.total)
         })
     })
+    // 由不可见变为可见时，刷新总数统计和筛选条件数据
     useUpdateEffect(() => {
         getInitTotal()
         onInit(true)
@@ -99,6 +88,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             if (value === "false") setShowFilter(false)
         })
     }, [])
+    const onSetShowFilter = useMemoizedFn((v) => {
+        setRemoteValue(PluginGV.AuditFilterCloseStatus, `${!!showFilter}`)
+        setShowFilter(v)
+    })
 
     const [filters, setFilters] = useState<PluginFilterParams>({
         plugin_type: [],
@@ -120,46 +113,49 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const [hasMore, setHasMore] = useState<boolean>(true)
 
     // 获取插件列表数据
-    const fetchList = useMemoizedFn((reset?: boolean) => {
-        if (latestLoadingRef.current) return
-        if (reset) {
-            isLoadingRef.current = true
-            setShowPluginIndex(0)
-        }
+    const fetchList = useDebounceFn(
+        useMemoizedFn((reset?: boolean) => {
+            if (latestLoadingRef.current) return
+            if (reset) {
+                isLoadingRef.current = true
+                setShowPluginIndex(0)
+            }
 
-        setLoading(true)
-        const params: PluginListPageMeta = !!reset
-            ? {...defaultPagemeta}
-            : {
-                  page: response.pagemeta.page + 1,
-                  limit: response.pagemeta.limit || 20
-              }
-        // api接口请求参数
-        const query: PluginsQueryProps = {...convertPluginsRequestParams({...filters}, searchs, params)}
+            setLoading(true)
+            const params: PluginListPageMeta = !!reset
+                ? {...defaultPagemeta}
+                : {
+                      page: response.pagemeta.page + 1,
+                      limit: response.pagemeta.limit || 20
+                  }
+            // api接口请求参数
+            const query: PluginsQueryProps = {...convertPluginsRequestParams({...filters}, searchs, params)}
 
-        apiFetchCheckList(query)
-            .then((res) => {
-                console.log("plugin-manage-date", res.data)
-                if (!res.data) res.data = []
-                dispatch({
-                    type: "add",
-                    payload: {
-                        response: {...res}
-                    }
+            apiFetchCheckList(query)
+                .then((res) => {
+                    console.log("plugin-manage-date", res.data, JSON.stringify(res.pagemeta))
+                    if (!res.data) res.data = []
+                    dispatch({
+                        type: "add",
+                        payload: {
+                            response: {...res}
+                        }
+                    })
+
+                    const dataLength = response.data.concat(res.data)
+                    const isMore = res.data.length < res.pagemeta.limit || dataLength.length >= res.pagemeta.total
+                    setHasMore(!isMore)
+
+                    isLoadingRef.current = false
                 })
-
-                const dataLength = response.data.concat(res.data)
-                const isMore = res.data.length < res.pagemeta.limit || dataLength.length >= res.pagemeta.total
-                setHasMore(!isMore)
-
-                isLoadingRef.current = false
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 300)
-            })
-    })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 300)
+                })
+        }),
+        {wait: 300}
+    ).run
 
     const [pluginFilters, setPluginFilters] = useState<API.PluginsSearch[]>([])
     // 获取所有过滤条件统计数据
@@ -189,23 +185,14 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     })
 
     // 关键词|作者搜索
-    // 触发列表的搜索(未完成)
-    const onKeywordAndUser = useDebounceFn(
-        useMemoizedFn((value: PluginSearchParams) => {
-            fetchList(true)
-        }),
-        {wait: 500}
-    )
+    const onKeywordAndUser = useMemoizedFn((value: PluginSearchParams) => {
+        fetchList(true)
+    })
+
     // 过滤条件搜索
     useUpdateEffect(() => {
-        onFilterFetchList()
+        fetchList(true)
     }, [filters])
-    const onFilterFetchList = useDebounceFn(
-        useMemoizedFn(() => {
-            fetchList(true)
-        }),
-        {wait: 500}
-    ).run
     const onFilter = useMemoizedFn((value: Record<string, API.PluginsSearchData[]>) => {
         setFilters({...value})
     })
@@ -330,7 +317,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 删除插件集合接口
     const apiDelPlugins = useMemoizedFn(
         (params?: API.PluginsWhereDeleteRequest, thenCallback?: () => any, catchCallback?: () => any) => {
-            setLoading(true)
             console.log("plugins method:delete", params)
             apiDeletePluginCheck(params)
                 .then(() => {
@@ -341,11 +327,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         detailRef.current.onDelCallback([], false)
                     }
                     if (catchCallback) catchCallback()
-                })
-                .finally(() => {
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
                 })
         }
     )
@@ -384,42 +365,44 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             // 清空操作(无视搜索条件)
             if (selectTotal === 0 && !onlyPlugin) {
                 apiDelPlugins({description: reason}, () => {
+                    setSearchs({...delSearch})
+                    setFilters({...delFilter})
                     onClearSelecteds()
-
-                    // 如果是详情的清空，则返回首页
-                    setTimeout(() => {
-                        if (plugin) setPlugin(undefined)
-                    }, 200)
+                    if (!!plugin) setPlugin(undefined)
                 })
             }
             // 单个删除
             else if (!!onlyPlugin) {
                 let delRequest: API.PluginsWhereDeleteRequest = {uuid: [onlyPlugin.uuid]}
                 apiDelPlugins({...delRequest, description: reason}, () => {
-                    if (onlyPlugin) {
-                        const next: YakitPluginOnlineDetail = response.data[showPluginIndex.current + 1]
+                    // 当前
 
-                        dispatch({
-                            type: "remove",
-                            payload: {
-                                itemList: [onlyPlugin]
-                            }
-                        })
-                        const index = selectUUIDs.findIndex((item) => item === onlyPlugin?.uuid)
-                        if (index > -1) {
-                            optCheck(onlyPlugin, false)
+                    const next: YakitPluginOnlineDetail = response.data[showPluginIndex.current + 1]
+                    dispatch({
+                        type: "remove",
+                        payload: {
+                            itemList: [onlyPlugin]
                         }
-                        onInit(true)
+                    })
 
-                        setPlugin({...next})
+                    if (!!plugin) {
                         // 将删除结果回传到详情页
                         if (detailRef && detailRef.current) {
                             detailRef.current.onDelCallback([onlyPlugin], true)
                         }
+                        setPlugin({...next})
+                    } else {
+                        // 首页的单独删除
+                        const index = selectUUIDs.findIndex((item) => item === onlyPlugin?.uuid)
+                        if (index > -1) {
+                            optCheck(onlyPlugin, false)
+                        }
                     }
+                    onInit(true)
                 })
             }
             // 批量删除
+            // 详情的批量删除成功后自动返回首页
             else if (!activeDelPlugin.current) {
                 let delRequest: API.PluginsWhereDeleteRequest = {}
                 if (delAllCheck) {
@@ -428,11 +411,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     delRequest = {uuid: selectUuids, description: reason}
                 }
                 apiDelPlugins(delRequest, () => {
+                    setSearchs({...delSearch})
+                    setFilters({...delFilter})
                     onClearSelecteds()
-
-                    if (detailRef && detailRef.current) {
-                        detailRef.current.onDelCallback([], true)
-                    }
+                    if (!!plugin) setPlugin(undefined)
                 })
             }
         }
@@ -561,10 +543,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         activeDetailData.current = {...data}
         onShowDelPlugin()
     })
-    const onSetShowFilter = useMemoizedFn((v) => {
-        setRemoteValue(PluginGV.AuditFilterCloseStatus, `${!!showFilter}`)
-        setShowFilter(v)
-    })
+
     return (
         <div ref={layoutRef} className={styles["plugin-manage-layout"]}>
             {!!plugin && (
@@ -595,12 +574,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 subTitle={<TypeSelect active={pluginStatusSelect} list={DefaultStatusList} setActive={onSetActive} />}
                 extraHeader={
                     <div className='extra-header-wrapper'>
-                        <FuncSearch
-                            maxWidth={1000}
-                            value={searchs}
-                            onSearch={onKeywordAndUser.run}
-                            onChange={setSearchs}
-                        />
+                        <FuncSearch maxWidth={1000} value={searchs} onSearch={onKeywordAndUser} onChange={setSearchs} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
                             {isEnpriTraceAgent() && (
@@ -629,7 +603,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                             <FuncBtn
                                 maxWidth={1150}
                                 icon={<OutlinePencilaltIcon />}
-                                disabled={selectList.length === 0}
+                                disabled={selectNum === 0 && !allCheck}
                                 type='outline2'
                                 size='large'
                                 name={"修改作者"}
@@ -824,7 +798,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
         NetWorkApi<API.UpPluginsUserRequest, API.ActionSucceeded>({
             method: "post",
             url: "up/plugins/user",
-            data: {uuid: plugins, user_id: +value}
+            data: {uuid: plugins, user_id: +value || 0}
         })
             .then((res) => {
                 onOK()

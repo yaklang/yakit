@@ -83,7 +83,6 @@ import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {API} from "@/services/swagger/resposeType"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {SmokingEvaluateResponse} from "../pluginDebugger/SmokingEvaluate"
 import {pluginTypeToName} from "./builtInData"
 import UnLogin from "@/assets/unLogin.png"
 import {v4 as uuidv4} from "uuid"
@@ -900,7 +899,6 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
             const newArr = data.slice(order, order + gridCol)
             arr.push(newArr)
         }
-        console.log("arrds", arr)
         return arr
     }, [data, gridCol])
 
