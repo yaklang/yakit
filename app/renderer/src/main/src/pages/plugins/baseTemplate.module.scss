@@ -330,6 +330,17 @@
             }
         }
     }
+    .multiple-modify-select {
+        height: 11px;
+        :global {
+            .ant-select-selector {
+                padding-left: 30px !important;
+            }
+            .ant-select-selection-overflow-item {
+                margin-top: 1px !important;
+            }
+        }
+    }
     .modify-select-icon {
         position: absolute;
         top: 2px;
