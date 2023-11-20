@@ -3241,6 +3241,7 @@ message SaveNewYakScriptRequest {
   string RiskType = 17;
   QueryYakScriptRiskDetailByCWEResponse RiskDetail = 18;
   string RiskAnnotation = 19;
+  int64 Id = 20;
 }
 
 message SaveYakScriptToOnlineRequest {
