@@ -36,6 +36,10 @@ interface HTTPHistoryTabsItem {
     contShow: boolean
 }
 
+
+// 使用 HTTPHistory 控件的来源页面
+export type HTTPHistorySourcePageType = "MITM" | "History";
+
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {pageType} = props
     const ref = useRef(null)
@@ -124,7 +128,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }, [yakurl])
 
     const getWebTreeData = async (yakurl: string) => {
-        console.log(1233, yakurl)
         loadFromYakURLRaw(yakurl, (res) => {
             setWebTreeData(
                 res.Resources.map((item: YakURLResource, index: number) => {
@@ -289,13 +292,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                               } as YakQueryHTTPFlowRequest)
                                             : undefined
                                     }
-                                    searchURL={selectedNodes
-                                        .map((node) => {
-                                            const urlItem = node.data?.Extra.find((item) => item.Key === "url")
-                                            return urlItem ? urlItem.Value : ""
-                                        })
-                                        .filter((url) => url !== "")
-                                        .join(",")}
+                                    searchURL={selectedNodes.map((node) => {
+                                        const urlItem = node.data?.Extra.find(item => item.Key === 'url');
+                                        return urlItem ? urlItem.Value : '';
+                                    }).filter(url => url !== '').join(",")}
                                     // tableHeight={200}
                                     // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {
