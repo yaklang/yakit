@@ -375,6 +375,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                                 updateList={onUpdateList}
                                 showIndex={showPluginIndex.current}
                                 setShowIndex={setShowPluginIndex}
+                                isShowSearchResultEmpty={+response.pagemeta.total === 0}
                             />
                         ) : (
                             <YakitEmpty title='暂无数据' style={{marginTop: 80}} />

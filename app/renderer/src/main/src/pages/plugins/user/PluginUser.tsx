@@ -906,6 +906,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                                 updateList={onUpdateList}
                                 showIndex={currentIndex}
                                 setShowIndex={setCurrentIndex}
+                                isShowSearchResultEmpty={+response.pagemeta.total === 0}
                             />
                         ) : (
                             <div className={styles["plugin-user-empty"]}>

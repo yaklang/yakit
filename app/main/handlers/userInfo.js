@@ -285,6 +285,7 @@ module.exports = (win, getClient) => {
 
     ipcMain.on("edit-baseUrl", (event, arg) => {
         HttpSetting.httpBaseURL = arg.baseUrl
+        USER_INFO.token = ''
         win.webContents.send("edit-baseUrl-status", {ok: true, info: "更改成功"})
         win.webContents.send("refresh-new-home", {ok: true, info: "刷新成功"})
     })
