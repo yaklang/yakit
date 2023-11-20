@@ -238,6 +238,7 @@
         justify-content: space-between;
         align-items: center;
         height: 36px;
+        padding-left: 2px;
         .header-body {
             display: flex;
             align-items: center;
@@ -364,6 +365,7 @@
         width: 100%;
         flex: 1 0 0;
         overflow: hidden;
+        padding-left: 2px;
     }
 }
 .plugins-list-tag-total-popover {

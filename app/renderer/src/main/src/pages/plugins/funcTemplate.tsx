@@ -278,9 +278,9 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
                 ...keywordSearch
             })
             // 清空输入框后搜索
-            if (!value && value !== search.keyword) {
-                onsearch(keywordSearch)
-            }
+            // if (!value && value !== search.keyword) {
+            //     onsearch(keywordSearch)
+            // }
         } else {
             const userNameSearch: PluginSearchParams = {
                 ...search,
@@ -289,9 +289,9 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
             setSearch({
                 ...userNameSearch
             })
-            if (!value && value !== search.userName) {
-                onsearch(userNameSearch)
-            }
+            // if (!value && value !== search.userName) {
+            //     onsearch(userNameSearch)
+            // }
         }
     })
     const onSearch = useMemoizedFn(() => {
@@ -1056,7 +1056,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
         if (tags === "null") return []
         let arr: string[] = []
         try {
-            arr = JSON.parse(tags)
+            arr = tags ? tags.split(",") : []
         } catch (error) {}
         return arr
     }, [tags])
