@@ -330,13 +330,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** ---------- 新逻辑 start ---------- */
 
-    /** @name 渲染端通信-从顶部菜单里打开一个指定页面 */
+    /**
+     * @name 渲染端通信-从顶部菜单里打开一个指定页面
+     * @description 本通信方法 替换 老方法"open-route-page-callback"(ipc通信)
+     * @description 作用：快速打开一个页面，不带参
+     */
     useEffect(() => {
         emiter.on("menuOpenPage", menuOpenPage)
         return () => {
             emiter.off("menuOpenPage", menuOpenPage)
         }
     }, [])
+
     const menuOpenPage = useMemoizedFn((res: string) => {
         // @ts-ignore
         let data: RouteToPageProps = {}
@@ -398,7 +403,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
 
-    /** @name 渲染端通信-打开一个指定页面 */
+    /**
+     * @name 渲染端通信-打开一个指定页面
+     * @description 本通信方法 替换 老方法"fetch-send-to-tab"(ipc通信)
+     * @description 作用：快速打开一个页面，带参
+     */
     useEffect(() => {
         emiter.on("openPage", onOpenPage)
         return () => {

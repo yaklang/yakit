@@ -63,6 +63,7 @@ export const convertLocalToLocalInfo = (
     let request: localYakInfo = {}
     if (isModify && info) {
         request = {
+            Id: +info.Id || undefined,
             ScriptName: info.ScriptName,
             Content: info.Content,
             Type: info.Type,
@@ -188,39 +189,46 @@ export const convertLocalToRemoteInfo = (
  * @param idModify 线上插件详细信息
  * @param modify 本地插件编辑信息
  */
-export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify: PluginDataProps) => {
+export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: PluginDataProps) => {
     // @ts-ignore
     const request: API.PluginsRequest = {
         ...info,
         annotation: info.risk_annotation,
-        tags: undefined
+        tags: undefined,
+        download_total: +info.downloaded_total || 0
     }
     try {
-        request.tags = JSON.parse(info.tags)
+        request.tags = (info.tags || "").split(",") || []
     } catch (error) {}
 
-    // 更新可编辑配置的内容
-    request.script_name = modify.ScriptName
-    request.type = modify.Type
-    request.help = modify.Help
-    request.riskType = modify.RiskType
-    request.riskDetail = {
-        cweId: modify.RiskDetail?.CWEId || "",
-        riskType: modify.RiskDetail?.RiskType || "",
-        description: modify.RiskDetail?.Description || "",
-        solution: modify.RiskDetail?.CWESolution || ""
+    if (!!modify) {
+        // 更新可编辑配置的内容
+        request.script_name = modify.ScriptName
+        request.type = modify.Type
+        request.help = modify.Help
+        request.riskType = modify.RiskType
+        request.riskDetail = {
+            cweId: modify.RiskDetail?.CWEId || "",
+            riskType: modify.RiskDetail?.RiskType || "",
+            description: modify.RiskDetail?.Description || "",
+            solution: modify.RiskDetail?.CWESolution || ""
+        }
+        request.annotation = modify.RiskAnnotation
+        request.tags = modify.Tags?.split(",") || []
+        request.params = modify.Params ? convertLocalToRemoteParams(modify.Params) : undefined
+        request.enable_plugin_selector = modify.EnablePluginSelector
+        request.plugin_selector_types = modify.PluginSelectorTypes
+        request.content = modify.Content
     }
-    request.annotation = modify.RiskAnnotation
-    request.tags = modify.Tags?.split(",") || []
-    request.params = modify.Params ? convertLocalToRemoteParams(modify.Params) : undefined
-    request.enable_plugin_selector = modify.EnablePluginSelector
-    request.plugin_selector_types = modify.PluginSelectorTypes
-    request.content = modify.Content
 
     // 没有tags就赋值为undefined
     if (request.tags?.length === 0) request.tags = undefined
     // 非漏洞类型的插件清空漏洞类型详情
-    if (!request.riskType) request.riskDetail = undefined
+    if (!request.riskType) {
+        request.riskType = undefined
+        request.riskDetail = undefined
+        request.annotation = undefined
+    }
     // 分组为空字符时清空值(影响后端数据处理)
     if (!request.group) request.group = undefined
 
