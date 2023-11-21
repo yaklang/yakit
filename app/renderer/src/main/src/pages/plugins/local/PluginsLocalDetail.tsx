@@ -62,10 +62,12 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         spinLoading,
         onDetailsBatchRemove,
         onDetailsBatchUpload,
+        onDetailsBatchSingle,
         currentIndex,
         setCurrentIndex,
         removeLoading,
-        onJumpToLocalPluginDetailByUUID
+        onJumpToLocalPluginDetailByUUID,
+        uploadLoading
     } = props
     const [executorShow, setExecutorShow] = useState<boolean>(true)
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
@@ -97,7 +99,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         } else setPlugin(undefined)
     }, [info])
 
-    useEffect(() => { 
+    useEffect(() => {
         emiter.on("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
         return () => {
             emiter.off("onRefLocalDetailSelectPlugin", onJumpToLocalPluginDetailByUUID)
@@ -148,6 +150,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const onUpload = useMemoizedFn((e) => {
         e.stopPropagation()
+        if (!plugin) return
+        onDetailsBatchSingle(plugin)
     })
     const onPluginClick = useMemoizedFn((data: YakScript, index: number) => {
         setCurrentIndex(index)
@@ -287,6 +291,10 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
             return <SolidCloudpluginIcon />
         }
     })
+    const isShowUpload: boolean = useMemo(() => {
+        const isOwn = userInfo.user_id === +(plugin?.UserId || "0") || +(plugin?.UserId || "0") === 0
+        return isOwn && !plugin?.IsCorePlugin
+    }, [plugin?.IsCorePlugin, plugin?.UserId, userInfo.user_id])
     if (!plugin) return null
     return (
         <>
@@ -461,13 +469,13 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                                 button={{type: "text2"}}
                                                 placement='bottomRight'
                                             />
-                                            {userInfo.user_id === plugin.UserId && (
+                                            {isShowUpload && (
                                                 <>
-                                                    <div className='divider-style' />
                                                     <YakitButton
                                                         icon={<OutlineClouduploadIcon />}
                                                         onClick={onUpload}
                                                         className={styles["cloud-upload-icon"]}
+                                                        loading={uploadLoading}
                                                     >
                                                         上传
                                                     </YakitButton>
