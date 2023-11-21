@@ -6,6 +6,8 @@ import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 export interface PluginsLocalProps {}
 
 export interface LocalExtraOperateProps {
+    /**是否为本地插件 */
+    isLocalPlugin: boolean
     /**是否为内置插件 */
     isCorePlugin: boolean
     /**是否是自己的插件 */
@@ -58,6 +60,8 @@ export interface PluginsLocalDetailProps {
     onJumpToLocalPluginDetailByUUID: () => void
     /**上传的loading */
     uploadLoading: boolean
+    /**私有域地址 */
+    privateDomain:string
 }
 
 export interface PluginLocalBackProps {
