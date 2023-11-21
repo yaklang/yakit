@@ -28,6 +28,7 @@ export interface HTTPHistoryProp extends HTTPPacketFuzzable {
 }
 
 type tabKeys = "web-tree"
+
 interface HTTPHistoryTabsItem {
     key: tabKeys
     label: string
@@ -115,6 +116,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
     const [treeLoading, setTreeLoading] = useState<boolean>(false)
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
+    const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
     const [searchValue, setSearchValue] = useState<string>("")
 
     const [yakurl, setYakURL] = useState<string>("website:///")
@@ -210,6 +212,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         return hTTPHistoryTabs.every((item) => item.contShow)
     }, [hTTPHistoryTabs])
 
+    useEffect(() => {
+        // 假设 selectedNodes 的第一个节点是您想要设置的节点
+        const node = selectedNodes[0];
+        if (node) {
+            setSelectedNodeParamsKey([node.data!.ResourceName]);
+        }
+    }, [selectedNodes]); // 只有当 selectedNodes 改变时才运行
     return (
         <div
             ref={ref}
@@ -256,7 +265,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         treeData={webTreeData}
                                         loadData={onLoadWebTreeData}
                                         onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-                                            console.log(1234, selectedNodes[0].data);
+                                            console.log(1234, selectedNodes[0]?.data);
                                             setSelectedNodes(selectedNodes)
                                             setOnlyShowFirstNode(true)
                                             setSecondNodeVisible(false)
@@ -294,9 +303,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     params={
                                         props?.websocket
                                             ? ({
-                                                  OnlyWebsocket: true
-                                              } as YakQueryHTTPFlowRequest)
-                                            : undefined
+                                                OnlyWebsocket: true,
+
+                                            } as YakQueryHTTPFlowRequest)
+                                            : {
+                                                IncludeInUrl: selectedNodeParamsKey
+                                            } as YakQueryHTTPFlowRequest
                                     }
                                     searchURL={selectedNodes
                                         .map((node: TreeNode) => {
@@ -305,6 +317,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         })
                                         .filter((url) => url !== "")
                                         .join(",")}
+                                    IncludeInUrl={selectedNodeParamsKey}
                                     // tableHeight={200}
                                     // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {
