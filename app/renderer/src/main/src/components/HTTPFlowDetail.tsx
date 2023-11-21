@@ -793,6 +793,7 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flowResponse?: Uint8Array
     flowRequestLoad?: boolean
     flowResponseLoad?: boolean
+    pageType?: "MITM" | "history"
 }
 
 interface HTTPFlowBareProps {
@@ -813,7 +814,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         flowResponse,
         flowRequestLoad,
         flowResponseLoad,
-        historyId
+        historyId,
+        pageType
     } = props
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
@@ -950,7 +952,17 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 跳转指定网站树节点
     const handleJumpWebTree = useMemoizedFn(() => {
         if (flow?.Url) {
-            emiter.emit("onWebTreeSearchVal", JSON.stringify({searchValue: flow?.Url.split('?')[0]}))
+            let url = new URL(flow.Url)
+            let path: string[] = url.pathname.split("/").filter((item) => item)
+            path.unshift(url.origin)
+
+            let str = ""
+            let arr: string[] = []
+            for (let i = 0; i < path.length; i++) {
+                str += (i !== 0 ? "/" : "") + path[i] 
+                arr.push(str)
+            }
+            emiter.emit("onJumpWebTree", JSON.stringify({path: arr}))
         }
     })
 
@@ -996,17 +1008,20 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 titleEle.push(<span style={{fontSize: 12}}>Request</span>)
                             }
                             titleEle.push(
-                                <>
-                                    <YakitTag
-                                        color={"info"}
-                                        style={{marginLeft: 6, cursor: "pointer"}}
-                                        onClick={onScrollTo}
-                                    >
-                                        id：{id}
-                                    </YakitTag>
-                                    <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
-                                </>
+                                <YakitTag
+                                    color={"info"}
+                                    style={{marginLeft: 6, cursor: "pointer"}}
+                                    onClick={onScrollTo}
+                                >
+                                    id：{id}
+                                </YakitTag>
                             )
+                            // history页面
+                            if (pageType === "history" && false) {
+                                titleEle.push(
+                                    <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
+                                )
+                            }
                             return titleEle
                         })()}
                         originValue={originResValue}

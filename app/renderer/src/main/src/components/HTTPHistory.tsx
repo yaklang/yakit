@@ -10,12 +10,19 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
 import styles from "./HTTPHistory.module.scss"
 import classNames from "classnames"
-import YakitTree, {TreeKey, TreeNode, TreeNodeType, renderTreeNodeIcon} from "./yakitUI/YakitTree/YakitTree"
+import YakitTree, {TreeKey, TreeNode} from "./yakitUI/YakitTree/YakitTree"
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
+import {
+    OutlineDocumentIcon,
+    OutlineFolderremoveIcon,
+    OutlineLink2Icon,
+    OutlineVariableIcon
+} from "@/assets/icon/outline"
+import {SolidFolderaddIcon} from "@/assets/icon/solid"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -29,6 +36,7 @@ export interface HTTPHistoryProp extends HTTPPacketFuzzable {
 }
 
 type tabKeys = "web-tree"
+type TreeNodeType = "dir" | "file" | "query" | "path"
 
 interface HTTPHistoryTabsItem {
     key: tabKeys
@@ -117,77 +125,110 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     /**
      * 网站树
      */
+    const treeWrapRef = useRef<any>()
+    const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
+    const [searchWebTreeData, setSearchWebTreeData] = useState<TreeNode[]>([]) // 搜索框有值时得网站树
+    const [searchTreeFlag, setSearchTreeFlag] = useState<boolean>(false) // 判断是否是搜索树
+    const [searchValue, setSearchValue] = useState<string>("")
     const [treeLoading, setTreeLoading] = useState<boolean>(false)
+    const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
+    const [hoveredKeys, setHoveredKeys] = useState<TreeKey>("") // 定位树节点key
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
-    const [searchValue, setSearchValue] = useState<string>("")
 
-    const [yakurl, setYakURL] = useState<string>("website:///")
+    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+        entries.forEach((entry) => {
+            const target = entry.target
+            setTreeWrapHeight(target.getBoundingClientRect().height)
+        })
+    })
+
     useEffect(() => {
-        if (!yakurl) {
-            return
+        if (treeWrapRef.current) {
+            resizeObserver.observe(treeWrapRef.current)
         }
-        getWebTreeData(yakurl)
-    }, [yakurl])
+    }, [treeWrapRef.current])
 
-    // 部分和树相关状态重置
-    const resetInitStatus = () => {
-        setSelectedKeys([])
-        setSelectedNodes([])
-        setOnlyShowFirstNode(true)
-        setSecondNodeVisible(false)
+    const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
+        const iconsEle = {
+            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
+            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
+            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
+        }
+        return iconsEle[treeNodeType] || <></>
     }
 
-    const getWebTreeData = async (yakurl: string) => {
+    useEffect(() => {
+        getWebTreeData("website://")
+    }, []) // 网站树
+
+    const getWebTreeData = (yakurl: string) => {
         setTreeLoading(true)
+
         loadFromYakURLRaw(yakurl, (res) => {
             setTreeLoading(false)
-            resetInitStatus()
-            // 请求第一层数据
-            setWebTreeData(
-                res.Resources.map((item: YakURLResource, index: number) => {
-                    return {
-                        title: item.VerboseName,
-                        key: index + "",
-                        isLeaf: !item.HaveChildrenNodes,
-                        data: item,
-                        icon: renderTreeNodeIcon(item.ResourceType as TreeNodeType)
-                    }
-                })
-            )
+            setSelectedKeys([])
+            setWebTreeData([])
+            setSearchWebTreeData([])
+
+            if (yakurl !== "website://") {
+                setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
+            } else {
+                // 请求第一层数据
+                setWebTreeData(assembleFirstTreeNode(res.Resources))
+            }
         }).catch((error) => {
             setTreeLoading(false)
             yakitFailed(`加载失败: ${error}`)
         })
     }
 
-    const refreshChildrenByParent = useMemoizedFn((parentKey: string, nodes: TreeNode[]) => {
-        const pathsBlock: string[] = parentKey.split("-")
-        const paths: string[] = pathsBlock.map((_, index) => {
-            return pathsBlock.slice(undefined, index + 1).join("-")
-        })
-
-        function visitData(d: TreeNode[], depth: number) {
-            if (depth + 1 > paths.length) {
-                return
+    // 树节点第一层组装树
+    const assembleFirstTreeNode = (arr) => {
+        return arr.map((item: YakURLResource, index: number) => {
+            // const id = searchValue ? item.ResourceName : item.VerboseName
+            const id = index
+            return {
+                title: item.VerboseName,
+                filterTreeNode: () => {
+                    return true
+                },
+                key: id,
+                isLeaf: !item.HaveChildrenNodes,
+                data: item,
+                icon: ({expanded}) => {
+                    if (item.ResourceType === "dir") {
+                        return expanded ? (
+                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                        ) : (
+                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                        )
+                    }
+                    return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
+                }
             }
-            d.forEach((i) => {
-                if (i.key !== paths[depth]) {
-                    return
-                }
+        })
+    }
 
-                if (depth + 1 !== paths.length) {
-                    visitData(i.children || [], depth + 1)
-                    return
+    const refreshChildrenByParent = useMemoizedFn((origin: TreeNode[], parentKey: string, nodes: TreeNode[]) => {
+        const arr = origin.map((node) => {
+            if (node.key === parentKey) {
+                return {
+                    ...node,
+                    children: nodes
                 }
-                i.children = nodes
-            })
-        }
-
-        visitData(webTreeData, 0)
-        return webTreeData
+            }
+            if (node.children) {
+                return {
+                    ...node,
+                    children: refreshChildrenByParent(node.children, parentKey, nodes)
+                }
+            }
+            return node
+        })
+        return arr
     })
 
     const onLoadWebTreeData = ({key, children, data}: any) => {
@@ -201,15 +242,30 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 data.Url,
                 (rsp) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
+                        // const id = key + "/" + i.ResourceName
+                        const id = key + "-" + index
                         return {
                             title: i.VerboseName,
-                            key: `${key}-${index}`,
+                            key: id,
                             isLeaf: !i.HaveChildrenNodes,
                             data: i,
-                            icon: renderTreeNodeIcon(i.ResourceType as TreeNodeType)
+                            icon: ({expanded}) => {
+                                if (i.ResourceType === "dir") {
+                                    return expanded ? (
+                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                                    ) : (
+                                        <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                                    )
+                                }
+                                return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
+                            }
                         }
                     })
-                    setWebTreeData([...refreshChildrenByParent(key, newNodes)])
+                    if (searchTreeFlag) {
+                        setSearchWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
+                    } else {
+                        setWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
+                    }
                     resolve()
                 },
                 reject
@@ -225,22 +281,29 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         } else {
             setSelectedNodeParamsKey([])
         }
-    }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行\
+    }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行
 
     // 跳转网站树指定节点
-    const getSearchValue = useMemoizedFn((value) => {
-        if (inViewport) {
-            const val = JSON.parse(value)
-            setSearchValue(val.searchValue)
-            setYakURL("website://" + val.searchValue)
-        }
-    })
-    useEffect(() => {
-        emiter.on("onWebTreeSearchVal", getSearchValue)
-        return () => {
-            emiter.off("onWebTreeSearchVal", getSearchValue)
-        }
-    }, [])
+    // const onJumpWebTree = useMemoizedFn((value) => {
+    //     if (inViewport && curTabKey === "web-tree") {
+    //         const val = JSON.parse(value) // HTTPFlowDetailRequestAndResponse组件发送传过来的数据
+    //         const path = val.path // 需要展开得节点数组
+    //         const jumpTreeKey = path[path.length - 1] // 定位节点得key
+    //         setHoveredKeys(jumpTreeKey)
+    //         setExpandedKeys(path) // 展开树
+    //         // 当是搜索树跳转过来时
+    //         if (searchTreeFlag) {
+    //             setSearchValue("")
+    //             getWebTreeData("website://")
+    //         }
+    //     }
+    // })
+    // useEffect(() => {
+    //     emiter.on("onJumpWebTree", onJumpWebTree)
+    //     return () => {
+    //         emiter.off("onJumpWebTree", onJumpWebTree)
+    //     }
+    // }, [])
 
     // 编辑器部分是否显示
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
@@ -285,25 +348,38 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                 </div>
                                 <div
                                     className={classNames(styles["hTTPHistory-tab-cont-item"], styles["tree-wrap"])}
-                                    style={{display: tabContItemShow("web-tree") ? "block" : "none"}}
+                                    style={{
+                                        display: tabContItemShow("web-tree") ? "block" : "none",
+                                        overflowY: "hidden"
+                                    }}
+                                    ref={treeWrapRef}
                                 >
                                     <YakitTree
+                                        height={treeWrapHeight - 30}
                                         multiple={false}
                                         searchPlaceholder='请输入域名或URL进行搜索'
                                         treeLoading={treeLoading}
-                                        treeData={webTreeData}
+                                        treeData={searchTreeFlag ? searchWebTreeData : webTreeData}
                                         loadData={onLoadWebTreeData}
                                         searchValue={searchValue}
                                         onSearch={(value) => {
                                             setSearchValue(value)
-                                            setYakURL("website://" + value)
+                                            setSearchTreeFlag(!!value)
+                                            setExpandedKeys([])
+                                            getWebTreeData("website://" + value)
                                         }}
                                         refreshTree={() => {
                                             setSearchValue("")
-                                            getWebTreeData("website:///")
+                                            setExpandedKeys([])
+                                            setSelectedKeys([])
+                                            setSearchTreeFlag(false)
+                                            getWebTreeData("website://")
                                         }}
+                                        expandedKeys={expandedKeys}
+                                        onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
                                         onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
+                                            console.log("selectedNodes", selectedKeys, expandedKeys)
                                             setSelectedKeys(selectedKeys)
                                             setSelectedNodes(selectedNodes)
                                             setOnlyShowFirstNode(true)
@@ -335,9 +411,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             ? ({
                                                   OnlyWebsocket: true
                                               } as YakQueryHTTPFlowRequest)
-                                            : ({
-                                                  IncludeInUrl: selectedNodeParamsKey
-                                              } as YakQueryHTTPFlowRequest)
+                                            : undefined
                                     }
                                     searchURL={selectedNodes
                                         .map((node: TreeNode) => {

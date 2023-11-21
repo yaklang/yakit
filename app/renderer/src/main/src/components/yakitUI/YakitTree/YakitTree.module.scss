@@ -1,4 +1,6 @@
 .yakitTree {
+    display: flex;
+    flex-direction: column;
     --checkbox-active-color: var(--yakit-primary-6);
     --checkbox-background-color: var(--yakit-primary-5);
     --checkbox-background-disabled-color: var(--yakit-disable-text-color);
@@ -13,26 +15,36 @@
         justify-content: space-between;
     }
 
+    .tree-wrap {
+        flex: 1;
+    }
+
     .switcher-icon {
         border-radius: 4px;
         border: 1px solid #eaecf3;
         color: #85899e;
         svg {
-            height: 14px;
-            width: 14px;
+            height: 12px;
+            width: 12px;
             margin: 2px;
         }
     }
 
     :global {
-
         .yakitTreeNode-icon {
             color: #85899e;
             margin-top: 4px;
             svg {
-                height: 18px;
-                width: 18px;
+                height: 16px;
+                width: 16px;
+                path {
+                    stroke-width: 1.5;
+                }
             }
+        }
+
+        .ant-tree-list-scrollbar-thumb {
+            background: #c1c1c1 !important;
         }
 
         .ant-spin-spinning {
@@ -51,7 +63,7 @@
         }
 
         .ant-tree .ant-tree-node-content-wrapper:hover {
-            background-color: var(--yakit-primary-3);
+            background-color: var(--yakit-primary-2);
         }
 
         .ant-tree-iconEle {
