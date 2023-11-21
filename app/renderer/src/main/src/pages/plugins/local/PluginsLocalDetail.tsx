@@ -67,7 +67,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         setCurrentIndex,
         removeLoading,
         onJumpToLocalPluginDetailByUUID,
-        uploadLoading
+        uploadLoading,
+        privateDomain
     } = props
     const [executorShow, setExecutorShow] = useState<boolean>(true)
     const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
@@ -284,7 +285,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     /** 单项副标题组件 */
     const optExtra = useMemoizedFn((data: YakScript) => {
-        if (!data.OnlineBaseUrl) return <></>
+        if (privateDomain !== data.OnlineBaseUrl) return <></>
         if (data.OnlineIsPrivate) {
             return <SolidPrivatepluginIcon />
         } else {
@@ -292,9 +293,11 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         }
     })
     const isShowUpload: boolean = useMemo(() => {
+        if (plugin?.IsCorePlugin) return false
+        if (plugin?.isLocalPlugin) return true
         const isOwn = userInfo.user_id === +(plugin?.UserId || "0") || +(plugin?.UserId || "0") === 0
-        return isOwn && !plugin?.IsCorePlugin
-    }, [plugin?.IsCorePlugin, plugin?.UserId, userInfo.user_id])
+        return isOwn
+    }, [plugin?.isLocalPlugin, plugin?.IsCorePlugin, plugin?.UserId, userInfo.user_id])
     if (!plugin) return null
     return (
         <>
@@ -499,7 +502,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         </TabPane>
                         <TabPane tab='日志' key='log'>
                             <div className={styles["plugin-log-wrapper"]}>
-                                <YakitPluginOnlineJournal pluginId={plugin.OnlineId} />
+                                <YakitPluginOnlineJournal pluginId={+plugin.OnlineId} />
                             </div>
                         </TabPane>
                         <TabPane tab='问题反馈' key='feedback' disabled={true}>
