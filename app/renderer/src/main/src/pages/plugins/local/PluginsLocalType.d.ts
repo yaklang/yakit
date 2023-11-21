@@ -44,7 +44,7 @@ export interface PluginsLocalDetailProps {
     /** 搜索功能回调 */
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
     /** 详情的批量删除回调 */
-    onDetailsBatchRemove: (q: PluginLocalDetailBackProps) => void
+    // onDetailsBatchRemove: (q: PluginLocalDetailBackProps) => void
     /** 查询第一页的loading 也可以理解为page为1时需要的loading；也可以用于点击搜索后重新计算虚拟列表时候加载第二页 */
     spinLoading: boolean
     /**详情的批量上传 */
@@ -55,13 +55,13 @@ export interface PluginsLocalDetailProps {
     currentIndex: number
     setCurrentIndex: (index: number) => void
     /**删除的loading */
-    removeLoading: boolean
+    // removeLoading: boolean
     /**传线上的UUID,传入本地详情进行使用 */
     onJumpToLocalPluginDetailByUUID: () => void
     /**上传的loading */
     uploadLoading: boolean
     /**私有域地址 */
-    privateDomain:string
+    privateDomain: string
 }
 
 export interface PluginLocalBackProps {
