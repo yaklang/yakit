@@ -35,6 +35,7 @@ export interface YakitInputSearchProps extends Omit<SearchProps,"size">{
  */
 export interface InternalTextAreaProps extends TextAreaProps {
     wrapperClassName?: string
+    textAreaStyle?: React.CSSProperties
 }
 
 /**

@@ -44,6 +44,8 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import Dragger from "antd/lib/upload/Dragger"
 import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOperatorContentType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {v4 as uuidv4} from "uuid"
+import { NewPayloadTable } from "./newPayloadTable"
 const {ipcRenderer} = window.require("electron")
 
 interface CreateDictionariesProps {
@@ -167,10 +169,6 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     )
 }
 
-export interface NewPayloadTableProps {}
-export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
-    return <div className={styles["new-payload-table"]}></div>
-}
 export interface NewPayloadListProps {}
 
 // 示例数据，可以根据实际需求进行修改
@@ -1237,8 +1235,11 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                 </div>
             </div>
             <div className={styles["content"]}>
-                <div className={styles["editor-box"]}>
+                {/* <div className={styles["editor-box"]}>
                     <YakitEditor type='plaintext' noLineNumber={true} />
+                </div> */}
+                <div className={styles['table-box']}>
+                    <NewPayloadTable/>
                 </div>
             </div>
         </div>

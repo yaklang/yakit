@@ -103,7 +103,7 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
 }
 
 const InternalTextArea: React.FC<InternalTextAreaProps> = (props) => {
-    const {wrapperClassName, style, ...restProps} = props
+    const {wrapperClassName, style,textAreaStyle, ...restProps} = props
     return (
         <div
             className={classNames(
