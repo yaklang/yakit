@@ -60,12 +60,12 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         onDetailExport,
         onDetailSearch,
         spinLoading,
-        onDetailsBatchRemove,
+        // onDetailsBatchRemove,
         onDetailsBatchUpload,
         onDetailsBatchSingle,
         currentIndex,
         setCurrentIndex,
-        removeLoading,
+        // removeLoading,
         onJumpToLocalPluginDetailByUUID,
         uploadLoading,
         privateDomain
@@ -268,12 +268,12 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         setSelectList([])
     })
     /**详情批量删除 */
-    const onBatchRemove = useMemoizedFn(async () => {
-        const params: PluginLocalDetailBackProps = {allCheck, selectList, search, filter: filters, selectNum}
-        onDetailsBatchRemove(params)
-        setAllCheck(false)
-        setSelectList([])
-    })
+    // const onBatchRemove = useMemoizedFn(async () => {
+    //     const params: PluginLocalDetailBackProps = {allCheck, selectList, search, filter: filters, selectNum}
+    //     onDetailsBatchRemove(params)
+    //     setAllCheck(false)
+    //     setSelectList([])
+    // })
     /**详情批量上传 */
     const onBatchUpload = useMemoizedFn(() => {
         if (selectList.length === 0) {
@@ -326,14 +326,14 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                 onClick={onBatchUpload}
                             />
                         </Tooltip>
-                        <div style={{height: 12}} className='divider-style'></div>
-                        {removeLoading ? (
+                        {/* <div style={{height: 12}} className='divider-style'></div> */}
+                        {/* {removeLoading ? (
                             <YakitButton type='text2' icon={<LoadingOutlined />} />
                         ) : (
                             <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
                                 <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onBatchRemove} />
                             </Tooltip>
-                        )}
+                        )} */}
                         <div style={{height: 12}} className='divider-style'></div>
                         <YakitButton type='text' onClick={onNewAddPlugin}>
                             新建插件
@@ -382,7 +382,8 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 search={search}
                 setSearch={setSearch}
                 onSearch={onSearch}
-                spinLoading={spinLoading || removeLoading}
+                // spinLoading={spinLoading || removeLoading}
+                spinLoading={spinLoading}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs defaultActiveKey='execute' tabPosition='right' className='plugins-tabs'>

@@ -641,15 +641,16 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         filtersDetailRef.current = detailFilter
         fetchList(true)
     })
-    const onDetailsBatchRemove = useMemoizedFn((newParams: PluginLocalDetailBackProps) => {
-        setAllCheck(newParams.allCheck)
-        setFilters(newParams.filter)
-        setSearch(newParams.search)
-        setSelectList(newParams.selectList)
-        setTimeout(() => {
-            onRemovePluginBatchBefore()
-        }, 200)
-    })
+    // /**详情中的批量删除 */
+    // const onDetailsBatchRemove = useMemoizedFn((newParams: PluginLocalDetailBackProps) => {
+    //     setAllCheck(newParams.allCheck)
+    //     setFilters(newParams.filter)
+    //     setSearch(newParams.search)
+    //     setSelectList(newParams.selectList)
+    //     setTimeout(() => {
+    //         onRemovePluginBatchBefore()
+    //     }, 200)
+    // })
     const onBatchUpload = useMemoizedFn((selectScriptNameList: string[]) => {
         if (!userInfo.isLogin) {
             yakitNotify("error", "请登录后上传")
@@ -701,12 +702,12 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     onDetailExport={onExport}
                     onDetailSearch={onDetailSearch}
                     spinLoading={loading && isLoadingRef.current}
-                    onDetailsBatchRemove={onDetailsBatchRemove}
+                    // onDetailsBatchRemove={onDetailsBatchRemove}
                     onDetailsBatchUpload={onDetailsBatchUpload}
                     onDetailsBatchSingle={onDetailsBatchSingle}
                     currentIndex={showPluginIndex.current}
                     setCurrentIndex={setShowPluginIndex}
-                    removeLoading={removeLoading}
+                    // removeLoading={removeLoading}
                     onJumpToLocalPluginDetailByUUID={onJumpToLocalPluginDetailByUUID}
                     uploadLoading={uploadLoading}
                     privateDomain={privateDomain}

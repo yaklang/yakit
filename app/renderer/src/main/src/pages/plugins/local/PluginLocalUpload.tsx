@@ -328,7 +328,6 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
             if (data.MessageType === "finalError") {
                 setIsHaveError(true)
             } else {
-                yakitNotify("success", "上传完毕,全部成功")
                 setTimeout(() => {
                     onSave()
                 }, 200)
