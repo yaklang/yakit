@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react"
 import {Tree} from "antd"
-import type {TreeProps} from "antd/es/tree"
+import type {DataNode, TreeProps} from "antd/es/tree"
 import {OutlineDocumentIcon, OutlineMinusIcon, OutlinePlusIcon} from "@/assets/icon/outline"
 import {YakitInput} from "../YakitInput/YakitInput"
 import {useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
@@ -8,11 +8,14 @@ import styles from "./YakitTree.module.scss"
 import {YakitEmpty} from "../YakitEmpty/YakitEmpty"
 import {YakitButton} from "../YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
-import {TreeNode} from "@/pages/yakURLTree/YakURLTree"
 import {YakitSpin} from "../YakitSpin/YakitSpin"
+import {YakURLResource} from "@/pages/yakURLTree/data"
 
 export type TreeKey = string | number
 
+export interface TreeNode extends DataNode {
+    data?: YakURLResource
+}
 /**
  * 目前基本上只封装了样式
  */
@@ -176,9 +179,8 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
                     {props.treeData.length ? (
                         <Tree
                             {...props}
-                            showLine={showLine ? {showLeafIcon: false} : false} // 不允许展示默认的文件图标
+                            showLine={showLine ? {showLeafIcon: false} : false}
                             showIcon={showIcon}
-                            icon={showIcon && icon}
                             switcherIcon={(p: {expanded: boolean}) => {
                                 return p.expanded ? (
                                     <OutlineMinusIcon className={styles["switcher-icon"]} />

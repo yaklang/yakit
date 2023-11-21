@@ -9,6 +9,7 @@ import {YakURLResource} from "@/pages/yakURLTree/data";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {InputItem} from "@/utils/inputUtil";
+import { TreeNode } from "@/components/yakitUI/YakitTree/YakitTree";
 
 export interface YakURLTreeProp {
 
@@ -16,14 +17,6 @@ export interface YakURLTreeProp {
 
 const DirectoryTree = Tree.DirectoryTree;
 
-
-export interface TreeNode {
-    title: string;
-    key: string;
-    isLeaf?: boolean;
-    children?: TreeNode[];
-    data?: YakURLResource
-}
 
 export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
         const [data, setData] = useState<TreeNode[]>([]);
@@ -100,7 +93,7 @@ export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
                                     data: i,
                                     isLeaf: !i.HaveChildrenNodes,
                                 }));
-                                setData([...refreshChildrenByParent(node.key, newNodes)])
+                                setData([...refreshChildrenByParent(node.key + "", newNodes)])
                                 resolve(rsp)
                             }, reject)
                         })

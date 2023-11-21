@@ -24,15 +24,6 @@
         }
     }
 
-    .outlineDocument-icon {
-        color: #85899e;
-        margin-top: 4px;
-        svg {
-            height: 18px;
-            width: 18px;
-        }
-    }
-
     :global {
         .ant-spin-spinning {
             margin-top: 20px;
@@ -174,6 +165,17 @@
             .ant-tree-checkbox-inner {
                 background-color: var(--checkbox-border-color) !important;
             }
+        }
+    }
+}
+
+:global {
+    .YakitTree-outlineDoc-icon {
+        color: #85899e;
+        margin-top: 4px;
+        svg {
+            height: 18px;
+            width: 18px;
         }
     }
 }

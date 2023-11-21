@@ -1,5 +1,4 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {TreeNode} from "@/pages/yakURLTree/YakURLTree"
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
@@ -11,11 +10,12 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
 import styles from "./HTTPHistory.module.scss"
 import classNames from "classnames"
-import YakitTree, {TreeKey} from "./yakitUI/YakitTree/YakitTree"
+import YakitTree, {TreeKey, TreeNode} from "./yakitUI/YakitTree/YakitTree"
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {RemoteGV} from "@/yakitGV"
+import {OutlineDocumentIcon} from "@/assets/icon/outline"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -29,16 +29,14 @@ export interface HTTPHistoryProp extends HTTPPacketFuzzable {
 }
 
 type tabKeys = "web-tree"
-
 interface HTTPHistoryTabsItem {
     key: tabKeys
     label: string
     contShow: boolean
 }
 
-
 // 使用 HTTPHistory 控件的来源页面
-export type HTTPHistorySourcePageType = "MITM" | "History";
+export type HTTPHistorySourcePageType = "MITM" | "History"
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {pageType} = props
@@ -138,7 +136,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                         title: item.VerboseName,
                         key: index + "",
                         isLeaf: !item.HaveChildrenNodes,
-                        data: item
+                        data: item,
+                        icon: <OutlineDocumentIcon className='YakitTree-outlineDoc-icon' />
                     }
                 })
             )
@@ -190,7 +189,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             title: i.VerboseName,
                             key: `${key}-${index}`,
                             isLeaf: !i.HaveChildrenNodes,
-                            data: i
+                            data: i,
+                            icon: <OutlineDocumentIcon className='YakitTree-outlineDoc-icon' />
                         }
                     })
                     setWebTreeData([...refreshChildrenByParent(key, newNodes)])
@@ -298,10 +298,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                               } as YakQueryHTTPFlowRequest)
                                             : undefined
                                     }
-                                    searchURL={selectedNodes.map((node) => {
-                                        const urlItem = node.data?.Extra.find(item => item.Key === 'url');
-                                        return urlItem ? urlItem.Value : '';
-                                    }).filter(url => url !== '').join(",")}
+                                    searchURL={selectedNodes
+                                        .map((node: TreeNode) => {
+                                            const urlItem = node.data?.Extra.find((item) => item.Key === "url")
+                                            return urlItem ? urlItem.Value : ""
+                                        })
+                                        .filter((url) => url !== "")
+                                        .join(",")}
                                     // tableHeight={200}
                                     // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {
