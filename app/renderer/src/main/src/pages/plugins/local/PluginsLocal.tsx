@@ -95,6 +95,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [pluginRemoveCheck, setPluginRemoveCheck] = useState<boolean>(false)
     const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
 
+    const [uploadLoading, setUploadLoading] = useState<boolean>(false) //上传的loading
+
     /** 是否为初次加载 */
     const isLoadingRef = useRef<boolean>(true)
     const pluginsLocalRef = useRef<HTMLDivElement>(null)
@@ -230,6 +232,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     fetchList(true)
                     yakitNotify("error", "查询最新的本地数据失败,自动刷新列表")
                 })
+                .finally(() =>
+                    setTimeout(() => {
+                        setUploadLoading(false)
+                    }, 200)
+                )
         }
     })
     const {onStart: onStartUploadPlugin} = usePluginUploadHooks({
@@ -382,6 +389,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             return
         }
         uploadPluginRef.current = data
+        setUploadLoading(true)
         getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
             if (setting) {
                 const values = JSON.parse(setting)
@@ -635,6 +643,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const onDetailsBatchUpload = useMemoizedFn((names) => {
         onBatchUpload(names)
     })
+    const onDetailsBatchSingle = useMemoizedFn((plugin: YakScript) => {
+        onUploadPlugin(plugin)
+    })
     const onSetShowFilter = useMemoizedFn((v) => {
         setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
         setShowFilter(v)
@@ -659,10 +670,12 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     spinLoading={loading && isLoadingRef.current}
                     onDetailsBatchRemove={onDetailsBatchRemove}
                     onDetailsBatchUpload={onDetailsBatchUpload}
+                    onDetailsBatchSingle={onDetailsBatchSingle}
                     currentIndex={showPluginIndex.current}
                     setCurrentIndex={setShowPluginIndex}
                     removeLoading={removeLoading}
                     onJumpToLocalPluginDetailByUUID={onJumpToLocalPluginDetailByUUID}
+                    uploadLoading={uploadLoading}
                 />
             )}
             <PluginsLayout
