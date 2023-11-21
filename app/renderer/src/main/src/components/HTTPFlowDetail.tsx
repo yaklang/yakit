@@ -950,7 +950,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 跳转指定网站树节点
     const handleJumpWebTree = useMemoizedFn(() => {
         if (flow?.Url) {
-            emiter.emit("onWebTreeSearchVal", JSON.stringify({searchValue: flow?.Url.split('?')[0]}))
+            console.log('flow', flow);
+            emiter.emit("onWebTreeSearchVal", JSON.stringify({searchValue: flow?.Url.split('?')[0].replace(flow?.Path, "")}))
         }
     })
 

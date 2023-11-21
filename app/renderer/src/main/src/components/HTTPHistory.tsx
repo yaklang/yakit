@@ -10,7 +10,12 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
 import styles from "./HTTPHistory.module.scss"
 import classNames from "classnames"
-import YakitTree, {TreeKey, TreeNode, TreeNodeType, renderTreeNodeIcon} from "./yakitUI/YakitTree/YakitTree"
+import YakitTree, {
+    TreeKey,
+    TreeNode,
+    TreeNodeType,
+    renderTreeNodeIcon
+} from "./yakitUI/YakitTree/YakitTree"
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURLResource} from "@/pages/yakURLTree/data"
@@ -119,10 +124,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
      */
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
     const [treeLoading, setTreeLoading] = useState<boolean>(false)
+    const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
     const [searchValue, setSearchValue] = useState<string>("")
+
+    useEffect(() => {
+        console.log('webTreeData', webTreeData[0]);
+    }, [webTreeData])
 
     const [yakurl, setYakURL] = useState<string>("website:///")
     useEffect(() => {
@@ -227,12 +237,25 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         }
     }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行\
 
+    useEffect(() => {
+        console.log(123, expandedKeys)
+    }, [expandedKeys])
+
     // 跳转网站树指定节点
     const getSearchValue = useMemoizedFn((value) => {
         if (inViewport) {
             const val = JSON.parse(value)
-            setSearchValue(val.searchValue)
-            setYakURL("website://" + val.searchValue)
+            // const obj = webTreeData.find((item) => item.title === val.searchValue)
+            // if (obj) {
+            //     const arr: TreeKey[] = []
+            //     const arr2 = [...expandedKeys, obj.key]
+            //     arr2.forEach((j) => {
+            //         if (!arr.includes(j)) {
+            //             arr.push(j)
+            //         }
+            //     })
+            //     setExpandedKeys(arr)
+            // }
         }
     })
     useEffect(() => {
@@ -302,8 +325,11 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             setSearchValue("")
                                             getWebTreeData("website:///")
                                         }}
+                                        expandedKeys={expandedKeys}
+                                        onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
                                         onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
+                                            console.log('selectedNodes', selectedNodes[0]);
                                             setSelectedKeys(selectedKeys)
                                             setSelectedNodes(selectedNodes)
                                             setOnlyShowFirstNode(true)
