@@ -280,7 +280,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             <div
                                 style={{
                                     paddingTop: pageType === "history" ? 8 : 0,
-                                    paddingLeft: pageType === "history" ? 12 : 0
+                                    paddingLeft: pageType === "history" ? 12 : 0,
+                                    height: "100%"
                                 }}
                             >
                                 <HTTPFlowTable
