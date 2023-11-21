@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react"
 import {Tree} from "antd"
 import type {DataNode, TreeProps} from "antd/es/tree"
-import {OutlineDocumentIcon, OutlineMinusIcon, OutlinePlusIcon} from "@/assets/icon/outline"
+import {OutlineDocumentIcon, OutlineLink2Icon, OutlineMinusIcon, OutlinePlusIcon, OutlineVariableIcon} from "@/assets/icon/outline"
 import {YakitInput} from "../YakitInput/YakitInput"
 import {useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
 import styles from "./YakitTree.module.scss"
@@ -13,9 +13,20 @@ import {YakURLResource} from "@/pages/yakURLTree/data"
 
 export type TreeKey = string | number
 
-export interface TreeNode extends DataNode {
-    data?: YakURLResource
+export type TreeNodeType = "dir" | "file" | "query" | "path"
+export const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
+    const iconsEle = {
+        ['file']: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
+        ['query']: <OutlineVariableIcon className='yakitTreeNode-icon' />,
+        ['path']: <OutlineLink2Icon className='yakitTreeNode-icon' />,
+    }
+    return iconsEle[treeNodeType] || <></>
 }
+
+export interface TreeNode extends DataNode {
+    data?: YakURLResource // 树节点其他额外数据
+}
+
 /**
  * 目前基本上只封装了样式
  */

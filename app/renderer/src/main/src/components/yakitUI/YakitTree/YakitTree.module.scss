@@ -25,6 +25,16 @@
     }
 
     :global {
+
+        .yakitTreeNode-icon {
+            color: #85899e;
+            margin-top: 4px;
+            svg {
+                height: 18px;
+                width: 18px;
+            }
+        }
+
         .ant-spin-spinning {
             margin-top: 20px;
             .ant-spin-dot {
@@ -161,17 +171,6 @@
             .ant-tree-checkbox-inner {
                 background-color: var(--checkbox-border-color) !important;
             }
-        }
-    }
-}
-
-:global {
-    .YakitTree-outlineDoc-icon {
-        color: #85899e;
-        margin-top: 4px;
-        svg {
-            height: 18px;
-            width: 18px;
         }
     }
 }

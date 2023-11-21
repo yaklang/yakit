@@ -10,12 +10,11 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
 import styles from "./HTTPHistory.module.scss"
 import classNames from "classnames"
-import YakitTree, {TreeKey, TreeNode} from "./yakitUI/YakitTree/YakitTree"
+import YakitTree, {TreeKey, TreeNode, TreeNodeType, renderTreeNodeIcon} from "./yakitUI/YakitTree/YakitTree"
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {RemoteGV} from "@/yakitGV"
-import {OutlineDocumentIcon} from "@/assets/icon/outline"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -137,7 +136,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                         key: index + "",
                         isLeaf: !item.HaveChildrenNodes,
                         data: item,
-                        icon: <OutlineDocumentIcon className='YakitTree-outlineDoc-icon' />
+                        icon: renderTreeNodeIcon(item.ResourceType as TreeNodeType)
                     }
                 })
             )
@@ -190,7 +189,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             key: `${key}-${index}`,
                             isLeaf: !i.HaveChildrenNodes,
                             data: i,
-                            icon: <OutlineDocumentIcon className='YakitTree-outlineDoc-icon' />
+                            icon: renderTreeNodeIcon(i.ResourceType as TreeNodeType)
                         }
                     })
                     setWebTreeData([...refreshChildrenByParent(key, newNodes)])
@@ -257,6 +256,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         treeData={webTreeData}
                                         loadData={onLoadWebTreeData}
                                         onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
+                                            console.log(1234, selectedNodes[0].data);
                                             setSelectedNodes(selectedNodes)
                                             setOnlyShowFirstNode(true)
                                             setSecondNodeVisible(false)
