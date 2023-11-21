@@ -46,8 +46,8 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         currentIndex,
         setCurrentIndex,
         onDetailsBatchDownload,
-        onDetailsBatchRemove,
-        removeLoading,
+        // onDetailsBatchRemove,
+        // removeLoading,
         downloadLoading
     } = props
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearchValue))
@@ -189,12 +189,12 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
         setSelectList([])
     })
     /**详情批量删除 */
-    const onBatchRemove = useMemoizedFn(async () => {
-        const params: UserBackInfoProps = {allCheck, selectList, search, filter: filters, selectNum}
-        onDetailsBatchRemove(params)
-        setAllCheck(false)
-        setSelectList([])
-    })
+    // const onBatchRemove = useMemoizedFn(async () => {
+    //     const params: UserBackInfoProps = {allCheck, selectList, search, filter: filters, selectNum}
+    //     onDetailsBatchRemove(params)
+    //     setAllCheck(false)
+    //     setSelectList([])
+    // })
     /**详情批量下载 */
     const onBatchDownload = useMemoizedFn(async () => {
         const params: UserBackInfoProps = {allCheck, selectList, search, filter: filters, selectNum}
@@ -214,10 +214,10 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                         <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
                             <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} onClick={onBatchDownload} />
                         </Tooltip>
-                        <div style={{height: 12}} className='divider-style'></div>
+                        {/* <div style={{height: 12}} className='divider-style'></div>
                         <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
                             <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onBatchRemove} />
-                        </Tooltip>
+                        </Tooltip> */}
                         <div style={{height: 12}} className='divider-style'></div>
                         <YakitButton type='text' onClick={onNewAddPlugin}>
                             新建插件
@@ -267,7 +267,8 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                 search={search}
                 setSearch={setSearch}
                 onSearch={onSearch}
-                spinLoading={spinLoading || removeLoading || downloadLoading}
+                // spinLoading={spinLoading || removeLoading || downloadLoading}
+                spinLoading={spinLoading || downloadLoading}
             >
                 <div className={styles["details-content-wrapper"]}>
                     <Tabs tabPosition='right' className='plugins-tabs'>
