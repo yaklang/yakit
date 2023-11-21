@@ -59,7 +59,8 @@ export interface PluginUserListRefProps {
     onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
     /** 搜索功能回调 */
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
-    onDetailsBatchRemove: (newParams: UserBackInfoProps) => void
+    /**详情中的删除 */
+    // onDetailsBatchRemove: (newParams: UserBackInfoProps) => void
 }
 export interface PluginRecycleListRefProps {
     allCheck: boolean
@@ -89,9 +90,9 @@ export interface PluginUserDetailProps {
     /**详情的下载 */
     onDetailsBatchDownload: (newParams: UserBackInfoProps) => void
     /** 详情的批量删除 */
-    onDetailsBatchRemove: (newParams: UserBackInfoProps) => void
+    // onDetailsBatchRemove: (newParams: UserBackInfoProps) => void
     /**删除 loading */
-    removeLoading: boolean
+    // removeLoading: boolean
     /**下载 loading */
     downloadLoading: boolean
 }

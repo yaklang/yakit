@@ -119,8 +119,8 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         onRemovePluginBatchBefore: () => {},
         onDownloadBatch: () => {},
         onRemovePluginDetailSingleBefore: () => {},
-        onDetailSearch: () => {},
-        onDetailsBatchRemove: () => {}
+        onDetailSearch: () => {}
+        // onDetailsBatchRemove: () => {}
     })
     // 当前展示的插件序列
     const showUserPluginIndex = useRef<number>(0)
@@ -250,9 +250,9 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                     onDetailSearch={pluginUserListRef.current.onDetailSearch}
                     currentIndex={showUserPluginIndex.current}
                     setCurrentIndex={setShowUserPluginIndex}
-                    onDetailsBatchRemove={pluginUserListRef.current.onDetailsBatchRemove}
+                    // onDetailsBatchRemove={pluginUserListRef.current.onDetailsBatchRemove}
                     onDetailsBatchDownload={onBatchDownload}
-                    removeLoading={removeLoading}
+                    // removeLoading={removeLoading}
                     downloadLoading={downloadLoading}
                 />
             )}
@@ -463,8 +463,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 onRemovePluginBatchBefore,
                 onDownloadBatch,
                 onRemovePluginDetailSingleBefore,
-                onDetailSearch,
-                onDetailsBatchRemove
+                onDetailSearch
+                // onDetailsBatchRemove
             }),
             [allCheck, selectList]
         )
@@ -517,15 +517,15 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             fetchList(true)
         })
         /**详情中的批量删除 */
-        const onDetailsBatchRemove = useMemoizedFn((newParams: UserBackInfoProps) => {
-            setAllCheck(newParams.allCheck)
-            setFilters(newParams.filter)
-            setSearch(newParams.search)
-            setSelectList(newParams.selectList)
-            setTimeout(() => {
-                onRemovePluginBatchBefore()
-            }, 200)
-        })
+        // const onDetailsBatchRemove = useMemoizedFn((newParams: UserBackInfoProps) => {
+        //     setAllCheck(newParams.allCheck)
+        //     setFilters(newParams.filter)
+        //     setSearch(newParams.search)
+        //     setSelectList(newParams.selectList)
+        //     setTimeout(() => {
+        //         onRemovePluginBatchBefore()
+        //     }, 200)
+        // })
         const getInitTotal = useMemoizedFn(() => {
             apiFetchMineList({
                 page: 1,
