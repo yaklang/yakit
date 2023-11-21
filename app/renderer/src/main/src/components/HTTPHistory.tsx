@@ -15,6 +15,7 @@ import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {RemoteGV} from "@/yakitGV"
+import emiter from "@/utils/eventBus/eventBus"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -109,12 +110,16 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const tabContItemShow = (key: tabKeys) => {
         return curTabKey === key && hTTPHistoryTabs.find((item) => item.key === curTabKey)?.contShow
     }
+    const openTabsFlag = useMemo(() => {
+        return hTTPHistoryTabs.every((item) => item.contShow)
+    }, [hTTPHistoryTabs])
 
     /**
      * 网站树
      */
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
     const [treeLoading, setTreeLoading] = useState<boolean>(false)
+    const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
     const [searchValue, setSearchValue] = useState<string>("")
@@ -127,10 +132,20 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         getWebTreeData(yakurl)
     }, [yakurl])
 
+    // 部分和树相关状态重置
+    const resetInitStatus = () => {
+        setSelectedKeys([])
+        setSelectedNodes([])
+        setOnlyShowFirstNode(true)
+        setSecondNodeVisible(false)
+    }
+
     const getWebTreeData = async (yakurl: string) => {
         setTreeLoading(true)
         loadFromYakURLRaw(yakurl, (res) => {
             setTreeLoading(false)
+            resetInitStatus()
+            // 请求第一层数据
             setWebTreeData(
                 res.Resources.map((item: YakURLResource, index: number) => {
                     return {
@@ -202,23 +217,37 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         })
     }
 
+    useEffect(() => {
+        // 假设 selectedNodes 的第一个节点是您想要设置的节点
+        const node = selectedNodes[0]
+        if (node) {
+            setSelectedNodeParamsKey([node.data!.ResourceName])
+        } else {
+            setSelectedNodeParamsKey([])
+        }
+    }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行\
+
+    // 跳转网站树指定节点
+    const getSearchValue = useMemoizedFn((value) => {
+        if (inViewport) {
+            const val = JSON.parse(value)
+            setSearchValue(val.searchValue)
+            setYakURL("website://" + val.searchValue)
+        }
+    })
+    useEffect(() => {
+        emiter.on("onWebTreeSearchVal", getSearchValue)
+        return () => {
+            emiter.off("onWebTreeSearchVal", getSearchValue)
+        }
+    }, [])
+
     // 编辑器部分是否显示
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
     useEffect(() => {
         setSecondNodeVisible(!onlyShowFirstNode && typeof defaultFold === "boolean")
     }, [onlyShowFirstNode, defaultFold])
 
-    const openTabsFlag = useMemo(() => {
-        return hTTPHistoryTabs.every((item) => item.contShow)
-    }, [hTTPHistoryTabs])
-
-    useEffect(() => {
-        // 假设 selectedNodes 的第一个节点是您想要设置的节点
-        const node = selectedNodes[0];
-        if (node) {
-            setSelectedNodeParamsKey([node.data!.ResourceName]);
-        }
-    }, [selectedNodes]); // 只有当 selectedNodes 改变时才运行
     return (
         <div
             ref={ref}
@@ -264,20 +293,21 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         treeLoading={treeLoading}
                                         treeData={webTreeData}
                                         loadData={onLoadWebTreeData}
-                                        onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-                                            console.log(1234, selectedNodes[0]?.data);
-                                            setSelectedNodes(selectedNodes)
-                                            setOnlyShowFirstNode(true)
-                                            setSecondNodeVisible(false)
-                                        }}
                                         searchValue={searchValue}
-                                        onSearchValue={(value) => {
+                                        onSearch={(value) => {
                                             setSearchValue(value)
                                             setYakURL("website://" + value)
                                         }}
                                         refreshTree={() => {
                                             setSearchValue("")
                                             getWebTreeData("website:///")
+                                        }}
+                                        selectedKeys={selectedKeys}
+                                        onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
+                                            setSelectedKeys(selectedKeys)
+                                            setSelectedNodes(selectedNodes)
+                                            setOnlyShowFirstNode(true)
+                                            setSecondNodeVisible(false)
                                         }}
                                     ></YakitTree>
                                 </div>
@@ -303,12 +333,11 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     params={
                                         props?.websocket
                                             ? ({
-                                                OnlyWebsocket: true,
-
-                                            } as YakQueryHTTPFlowRequest)
-                                            : {
-                                                IncludeInUrl: selectedNodeParamsKey
-                                            } as YakQueryHTTPFlowRequest
+                                                  OnlyWebsocket: true
+                                              } as YakQueryHTTPFlowRequest)
+                                            : ({
+                                                  IncludeInUrl: selectedNodeParamsKey
+                                              } as YakQueryHTTPFlowRequest)
                                     }
                                     searchURL={selectedNodes
                                         .map((node: TreeNode) => {

@@ -1,9 +1,15 @@
 import React, {useEffect, useState} from "react"
 import {Tree} from "antd"
 import type {DataNode, TreeProps} from "antd/es/tree"
-import {OutlineDocumentIcon, OutlineLink2Icon, OutlineMinusIcon, OutlinePlusIcon, OutlineVariableIcon} from "@/assets/icon/outline"
+import {
+    OutlineDocumentIcon,
+    OutlineLink2Icon,
+    OutlineMinusIcon,
+    OutlinePlusIcon,
+    OutlineVariableIcon
+} from "@/assets/icon/outline"
 import {YakitInput} from "../YakitInput/YakitInput"
-import {useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import styles from "./YakitTree.module.scss"
 import {YakitEmpty} from "../YakitEmpty/YakitEmpty"
 import {YakitButton} from "../YakitButton/YakitButton"
@@ -16,9 +22,9 @@ export type TreeKey = string | number
 export type TreeNodeType = "dir" | "file" | "query" | "path"
 export const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
     const iconsEle = {
-        ['file']: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
-        ['query']: <OutlineVariableIcon className='yakitTreeNode-icon' />,
-        ['path']: <OutlineLink2Icon className='yakitTreeNode-icon' />,
+        ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
+        ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
+        ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
     }
     return iconsEle[treeNodeType] || <></>
 }
@@ -46,7 +52,7 @@ interface YakitTreeProps extends TreeProps {
     onCheckedKeys?: (checkedKeys: TreeKey[], checkedNodes: TreeNode[]) => void
     showSearch?: boolean // 是否显示搜索框 默认 -> 显示
     searchValue?: string // 搜索内容
-    onSearchValue?: (searchValue: string) => void
+    onSearch?: (searchValue: string) => void // 点击搜索icon Or 关闭icon回调
     refreshTree?: () => void // 刷新树
 }
 
@@ -54,7 +60,6 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
     const {
         showLine = true,
         showIcon = true,
-        icon = <OutlineDocumentIcon className={styles["outlineDocument-icon"]} />,
         showSearch = true,
         searchPlaceholder = "请输入关键词搜索",
         expandedAllKeys = false
@@ -141,16 +146,12 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
     useEffect(() => {
         setSearchValue(props.searchValue || "")
     }, [props.searchValue])
-    const debounceSearch = useDebounceFn(
-        (value) => {
-            props.onSearchValue && props.onSearchValue(value)
-        },
-        {wait: 500, leading: true, trailing: true}
-    )
     const onSearchChange = useMemoizedFn((e: {target: {value: string}}) => {
         const value = e.target.value
         setSearchValue(value)
-        debounceSearch.run(value)
+    })
+    const onSearch = useMemoizedFn((value) => {
+        props.onSearch && props.onSearch(value)
         setAutoExpandParent(true)
     })
 
@@ -171,6 +172,7 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
                         placeholder={searchPlaceholder}
                         allowClear
                         onChange={onSearchChange}
+                        onSearch={onSearch}
                         value={searchValue}
                     />
                 )}

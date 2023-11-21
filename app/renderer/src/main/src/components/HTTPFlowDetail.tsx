@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo, useRef} from "react"
+import React, {useEffect, useState, useMemo, useRef, ReactNode} from "react"
 import {
     Button,
     Card,
@@ -44,8 +44,9 @@ import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "./yakitUI/YakitTag/YakitCheckableTag"
 import {YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import { openABSFileLocated } from "@/utils/openWebsite"
+import {openABSFileLocated} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
+import {OutlineLog2Icon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -69,7 +70,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     refresh?: boolean
     defaultFold?: boolean
 
-    pageType?: "MITM" | 'history'
+    pageType?: "MITM" | "history"
     historyId?: string
 }
 
@@ -467,7 +468,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh, defaultFold = false,pageType} = props
+    const {id, selectedFlow, refresh, defaultFold = false, pageType} = props
     const [flow, setFlow] = useState<HTTPFlow>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
     const [flowResponse, setFlowResponse] = useState<Uint8Array>()
@@ -608,7 +609,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [infoType])
 
     const mainCol: number = useMemo(() => {
-        if(pageType==="MITM"){
+        if (pageType === "MITM") {
             return 24
         }
         let col: number = 19
@@ -633,133 +634,141 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         />
                     )}
                 </Col>
-                {pageType!=="MITM"&&<>
-                {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
-                    <Col span={5}>
-                        <NewHTTPPacketEditor
-                            title={
-                                <Button.Group size={"small"}>
-                                    {existedInfoType.map((i) => {
-                                        return (
-                                            <YakitButton
-                                                size='small'
-                                                type={infoType === i ? "primary" : "outline2"}
-                                                onClick={() => {
-                                                    setInfoType(i)
-                                                }}
-                                                key={i}
-                                            >
-                                                {infoTypeVerbose(i)}
-                                            </YakitButton>
-                                        )
-                                    })}
-                                </Button.Group>
-                            }
-                            readOnly={true}
-                            noLineNumber={true}
-                            noMinimap={true}
-                            noHex={true}
-                            hideSearch={true}
-                            refreshTrigger={infoType}
-                            loading={infoTypeLoading}
-                            extraEnd={
-                                <div className={classNames(styles["http-history-fold-box"])}>
-                                    <div className={styles["http-history-icon-box"]}>
-                                        <Tooltip placement='top' title='向右收起'>
-                                            <SideBarOpenIcon
-                                                className={styles["fold-icon"]}
-                                                onClick={() => {
-                                                    setRemoteValue("IsFoldValue", JSON.stringify({is: true, id}))
-                                                    setFold(true)
-                                                }}
-                                            />
-                                        </Tooltip>
-                                    </div>
-                                </div>
-                            }
-                            originValue={(() => {
-                                switch (infoType) {
-                                    case "domains":
-                                        return StringToUint8Array(
-                                            "# 根域 (Root-Domains)\r\n" +
-                                                (flow?.RootDomains || []).join("\r\n") +
-                                                "\r\n\r\n# 域名 (Domain) \r\n" +
-                                                (flow?.Domains || []).join("\r\n")
-                                        )
-                                    case "json":
-                                        return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
-                                    default:
-                                        return new Uint8Array()
-                                }
-                            })()}
-                            editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
-                            isShowBeautifyRender={false}
-                        />
-                    </Col>
-                )}
-                {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && !isFold && (
-                    <Col span={5}>
-                        <HTTPFlowExtractedDataTable
-                            httpFlowHash={flow?.Hash || ""}
-                            title={
-                                <div className={styles["table-header"]}>
-                                    <Button.Group size={"small"}>
-                                        {existedInfoType.map((i) => {
-                                            return (
-                                                <YakitButton
-                                                    size='small'
-                                                    type={infoType === i ? "primary" : "outline2"}
-                                                    onClick={() => {
-                                                        setInfoType(i)
-                                                    }}
-                                                    key={i}
-                                                >
-                                                    {infoTypeVerbose(i)}
-                                                </YakitButton>
-                                            )
-                                        })}
-                                    </Button.Group>
-                                    <div className={classNames(styles["http-history-fold-box"])}>
-                                        <div className={styles["http-history-icon-box"]}>
+                {pageType !== "MITM" && (
+                    <>
+                        {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
+                            <Col span={5}>
+                                <NewHTTPPacketEditor
+                                    title={
+                                        <Button.Group size={"small"}>
+                                            {existedInfoType.map((i) => {
+                                                return (
+                                                    <YakitButton
+                                                        size='small'
+                                                        type={infoType === i ? "primary" : "outline2"}
+                                                        onClick={() => {
+                                                            setInfoType(i)
+                                                        }}
+                                                        key={i}
+                                                    >
+                                                        {infoTypeVerbose(i)}
+                                                    </YakitButton>
+                                                )
+                                            })}
+                                        </Button.Group>
+                                    }
+                                    readOnly={true}
+                                    noLineNumber={true}
+                                    noMinimap={true}
+                                    noHex={true}
+                                    hideSearch={true}
+                                    refreshTrigger={infoType}
+                                    loading={infoTypeLoading}
+                                    extraEnd={
+                                        <div className={classNames(styles["http-history-fold-box"])}>
+                                            <div className={styles["http-history-icon-box"]}>
+                                                <Tooltip placement='top' title='向右收起'>
+                                                    <SideBarOpenIcon
+                                                        className={styles["fold-icon"]}
+                                                        onClick={() => {
+                                                            setRemoteValue(
+                                                                "IsFoldValue",
+                                                                JSON.stringify({is: true, id})
+                                                            )
+                                                            setFold(true)
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                            </div>
+                                        </div>
+                                    }
+                                    originValue={(() => {
+                                        switch (infoType) {
+                                            case "domains":
+                                                return StringToUint8Array(
+                                                    "# 根域 (Root-Domains)\r\n" +
+                                                        (flow?.RootDomains || []).join("\r\n") +
+                                                        "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                        (flow?.Domains || []).join("\r\n")
+                                                )
+                                            case "json":
+                                                return StringToUint8Array((flow?.JsonObjects || []).join("\r\n"))
+                                            default:
+                                                return new Uint8Array()
+                                        }
+                                    })()}
+                                    editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
+                                    isShowBeautifyRender={false}
+                                />
+                            </Col>
+                        )}
+                        {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && !isFold && (
+                            <Col span={5}>
+                                <HTTPFlowExtractedDataTable
+                                    httpFlowHash={flow?.Hash || ""}
+                                    title={
+                                        <div className={styles["table-header"]}>
+                                            <Button.Group size={"small"}>
+                                                {existedInfoType.map((i) => {
+                                                    return (
+                                                        <YakitButton
+                                                            size='small'
+                                                            type={infoType === i ? "primary" : "outline2"}
+                                                            onClick={() => {
+                                                                setInfoType(i)
+                                                            }}
+                                                            key={i}
+                                                        >
+                                                            {infoTypeVerbose(i)}
+                                                        </YakitButton>
+                                                    )
+                                                })}
+                                            </Button.Group>
+                                            <div className={classNames(styles["http-history-fold-box"])}>
+                                                <div className={styles["http-history-icon-box"]}>
+                                                    <Tooltip placement='top' title='向右收起'>
+                                                        <SideBarOpenIcon
+                                                            className={styles["fold-icon"]}
+                                                            onClick={() => {
+                                                                setRemoteValue(
+                                                                    "IsFoldValue",
+                                                                    JSON.stringify({is: true, id})
+                                                                )
+                                                                setFold(true)
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                />
+                            </Col>
+                        )}
+                        {existedInfoType.length === 0 && !isFold && (
+                            <Col span={5}>
+                                <div className={styles["empty-box"]}>
+                                    <div className={classNames(styles["empty-box-fold-box"])}>
+                                        <div className={styles["empty-box-icon-box"]}>
                                             <Tooltip placement='top' title='向右收起'>
                                                 <SideBarOpenIcon
                                                     className={styles["fold-icon"]}
                                                     onClick={() => {
-                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true, id}))
+                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
                                                         setFold(true)
                                                     }}
                                                 />
                                             </Tooltip>
                                         </div>
                                     </div>
+                                    <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
                                 </div>
-                            }
-                        />
-                    </Col>
+                            </Col>
+                        )}
+                    </>
                 )}
-                {existedInfoType.length === 0 && !isFold && (
-                    <Col span={5}>
-                        <div className={styles["empty-box"]}>
-                            <div className={classNames(styles["empty-box-fold-box"])}>
-                                <div className={styles["empty-box-icon-box"]}>
-                                    <Tooltip placement='top' title='向右收起'>
-                                        <SideBarOpenIcon
-                                            className={styles["fold-icon"]}
-                                            onClick={() => {
-                                                setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
-                                                setFold(true)
-                                            }}
-                                        />
-                                    </Tooltip>
-                                </div>
-                            </div>
-                            <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
-                        </div>
-                    </Col>
-                )}
-                </>}
             </Row>
-            {isFold && pageType!=="MITM" && (
+            {isFold && pageType !== "MITM" && (
                 <div className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}>
                     <div className={classNames(styles["http-history-icon-box"])} style={{height: 32}}>
                         <Tooltip placement='top' title='向左展开'>
@@ -874,9 +883,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
-    useUpdateEffect(()=>{
-      setOriginResValue(flowRequest || new Uint8Array())
-    },[flowRequestLoad])
+    useUpdateEffect(() => {
+        setOriginResValue(flowRequest || new Uint8Array())
+    }, [flowRequestLoad])
 
     useEffect(() => {
         // 复原数据
@@ -932,10 +941,16 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             .catch((err) => {})
             .finally(() => {})
     })
-    const onScrollTo = useMemoizedFn(()=>{
-        console.log(123, historyId);
-        if(historyId){
-            emiter.emit("onScrollToByClick",JSON.stringify({historyId,id}))
+    const onScrollTo = useMemoizedFn(() => {
+        if (historyId) {
+            emiter.emit("onScrollToByClick", JSON.stringify({historyId, id}))
+        }
+    })
+
+    // 跳转指定网站树节点
+    const handleJumpWebTree = useMemoizedFn(() => {
+        if (flow?.Url) {
+            emiter.emit("onWebTreeSearchVal", JSON.stringify({searchValue: flow?.Url.split('?')[0]}))
         }
     })
 
@@ -950,34 +965,50 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 }
                 return (
                     <NewHTTPPacketEditor
-                        title={
-                            isShowBeforeData &&
-                            beforeResValue.length > 0 ? (
-                                <div className={classNames(styles["type-options-checkable-tag"])}>
-                                    <YakitCheckableTag
-                                        checked={resType === "current"}
-                                        onChange={(checked) => {
-                                            if (checked) {
-                                                setResType("current")
-                                            }
-                                        }}
+                        title={(() => {
+                            let titleEle: ReactNode[] = []
+                            if (isShowBeforeData && beforeResValue.length > 0) {
+                                titleEle.push(
+                                    <div className={classNames(styles["type-options-checkable-tag"])}>
+                                        <YakitCheckableTag
+                                            checked={resType === "current"}
+                                            onChange={(checked) => {
+                                                if (checked) {
+                                                    setResType("current")
+                                                }
+                                            }}
+                                        >
+                                            请求
+                                        </YakitCheckableTag>
+                                        <YakitCheckableTag
+                                            checked={resType === "request"}
+                                            onChange={(checked) => {
+                                                if (checked) {
+                                                    setResType("request")
+                                                }
+                                            }}
+                                        >
+                                            原始请求
+                                        </YakitCheckableTag>
+                                    </div>
+                                )
+                            } else {
+                                titleEle.push(<span style={{fontSize: 12}}>Request</span>)
+                            }
+                            titleEle.push(
+                                <>
+                                    <YakitTag
+                                        color={"info"}
+                                        style={{marginLeft: 6, cursor: "pointer"}}
+                                        onClick={onScrollTo}
                                     >
-                                        请求
-                                    </YakitCheckableTag>
-                                    <YakitCheckableTag
-                                        checked={resType === "request"}
-                                        onChange={(checked) => {
-                                            if (checked) {
-                                                setResType("request")
-                                            }
-                                        }}
-                                    >
-                                        原始请求
-                                    </YakitCheckableTag>
-                                    <YakitTag color={"info"} style={{marginLeft: 6,cursor:"pointer"}} onClick={onScrollTo}>id：{id}</YakitTag>
-                                </div>
-                            ):<><span style={{fontSize: 12}}>Request</span><YakitTag color={"info"} style={{marginLeft: 6,cursor:"pointer"}} onClick={onScrollTo}>id：{id}</YakitTag></>
-                        }
+                                        id：{id}
+                                    </YakitTag>
+                                    <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
+                                </>
+                            )
+                            return titleEle
+                        })()}
                         originValue={originResValue}
                         readOnly={true}
                         noLineNumber={true}
@@ -1006,7 +1037,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             leftTitle: "请求",
                             rightTitle: "原始请求"
                         }}
-                        onEditor={(Editor)=>{
+                        onEditor={(Editor) => {
                             setReqEditor(Editor)
                         }}
                     />
@@ -1080,10 +1111,15 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                                     switch (key) {
                                                         case "tooLargeResponseHeaderFile":
                                                             ipcRenderer
-                                                                .invoke("is-file-exists", flow.TooLargeResponseHeaderFile)
+                                                                .invoke(
+                                                                    "is-file-exists",
+                                                                    flow.TooLargeResponseHeaderFile
+                                                                )
                                                                 .then((flag: boolean) => {
                                                                     if (flag) {
-                                                                        openABSFileLocated(flow.TooLargeResponseHeaderFile)
+                                                                        openABSFileLocated(
+                                                                            flow.TooLargeResponseHeaderFile
+                                                                        )
                                                                     } else {
                                                                         failed("目标文件已不存在!")
                                                                     }
@@ -1095,7 +1131,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                                                 .invoke("is-file-exists", flow.TooLargeResponseBodyFile)
                                                                 .then((flag: boolean) => {
                                                                     if (flag) {
-                                                                        openABSFileLocated(flow.TooLargeResponseBodyFile)
+                                                                        openABSFileLocated(
+                                                                            flow.TooLargeResponseBodyFile
+                                                                        )
                                                                     } else {
                                                                         failed("目标文件已不存在!")
                                                                     }
@@ -1151,7 +1189,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             leftTitle: "响应",
                             rightTitle: "原始响应"
                         }}
-                        onEditor={(Editor)=>{
+                        onEditor={(Editor) => {
                             setResEditor(Editor)
                         }}
                     />
