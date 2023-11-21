@@ -966,11 +966,6 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
     })
     /**私密改公开，需要走自动评分，评分通过后才可以修改状态 */
     const onPluginTest = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-        // nuclei yaml 插件不执行评分流程
-        if (data.type === "nuclei") {
-            onUpdatePrivate(data)
-            return
-        }
         const m = showYakitModal({
             title: null,
             footer: null,
