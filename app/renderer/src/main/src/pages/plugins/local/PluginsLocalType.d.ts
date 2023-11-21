@@ -47,6 +47,8 @@ export interface PluginsLocalDetailProps {
     spinLoading: boolean
     /**详情的批量上传 */
     onDetailsBatchUpload: (s: string[]) => void
+    /**详情的单个上传 */
+    onDetailsBatchSingle: (y: YakScript) => void
     /** 当前展示插件的索引 */
     currentIndex: number
     setCurrentIndex: (index: number) => void
@@ -54,6 +56,8 @@ export interface PluginsLocalDetailProps {
     removeLoading: boolean
     /**传线上的UUID,传入本地详情进行使用 */
     onJumpToLocalPluginDetailByUUID: () => void
+    /**上传的loading */
+    uploadLoading: boolean
 }
 
 export interface PluginLocalBackProps {
