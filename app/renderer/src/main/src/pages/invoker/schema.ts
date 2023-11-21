@@ -106,6 +106,8 @@ export interface YakScript {
     RiskDetail?: QueryYakScriptRiskDetailByCWEResponse
     RiskAnnotation?: string
     CollaboratorInfo?: Collaborator[]
+    /**前端判断使用，该插件是否为本地插件，OnlineBaseUrl与当前最新的私有域不一样则为本地插件 */
+    isLocalPlugin?: boolean
 }
 
 export interface Collaborator {

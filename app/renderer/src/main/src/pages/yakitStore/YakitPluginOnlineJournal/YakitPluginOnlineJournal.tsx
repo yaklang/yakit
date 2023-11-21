@@ -46,7 +46,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
     })
     const [isRef, setIsRef] = useState(false)
     useEffect(() => {
-        if (pluginId >= 0) {
+        if (pluginId > 0) {
             setLineLoading(true)
             getJournalList(1)
         }
@@ -70,6 +70,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                 if (!res.data) {
                     res.data = []
                 }
+                console.log("apply/update/plugin", payload, res)
                 const data = payload.page === 1 ? res.data : resJournal.data.concat(res.data)
                 const isMore = res.data.length < resJournal.pagemeta.limit || data.length === res.pagemeta.total
                 setHasMore(!isMore)
