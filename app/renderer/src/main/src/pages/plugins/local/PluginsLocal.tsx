@@ -6,7 +6,7 @@ import {
     PluginsLocalProps
 } from "./PluginsLocalType"
 import {SolidChevrondownIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
-import {useMemoizedFn, useInViewport, useDebounceFn, useLatest, useDebounceEffect} from "ahooks"
+import {useMemoizedFn, useInViewport, useDebounceFn, useLatest, useUpdateEffect} from "ahooks"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {defaultSearch, PluginsLayout, PluginsContainer} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
@@ -97,6 +97,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 
     const [uploadLoading, setUploadLoading] = useState<boolean>(false) //上传的loading
 
+    const [privateDomain, setPrivateDomain] = useState<string>("") // 私有域地址
+
     /** 是否为初次加载 */
     const isLoadingRef = useRef<boolean>(true)
     const pluginsLocalRef = useRef<HTMLDivElement>(null)
@@ -124,13 +126,16 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             if (value === "true") setShowFilter(true)
             if (value === "false") setShowFilter(false)
         })
+        getPrivateDomainAndRefList()
     }, [])
     useEffect(() => {
         emiter.on("onRefLocalPluginList", onRefLocalPluginList)
         emiter.on("savePluginInfoSignal", onRefPlugin)
+        emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
         return () => {
             emiter.off("onRefLocalPluginList", onRefLocalPluginList)
             emiter.off("savePluginInfoSignal", onRefPlugin)
+            emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
         }
     }, [])
     useEffect(() => {
@@ -140,8 +145,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     useEffect(() => {
         getPluginGroupListLocal()
     }, [userInfo.isLogin, inViewport])
-    // 页面初始化的首次列表请求
-    useEffect(() => {
+    // userInfo.isLogin, filters发生变化的时候触发；初始请求数据在 getPrivateDomainAndRefList
+    useUpdateEffect(() => {
         fetchList(true)
     }, [userInfo.isLogin, filters])
 
@@ -156,6 +161,19 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }),
         shallow
     )
+
+    /**获取最新的私有域,并刷新列表 */
+    const getPrivateDomainAndRefList = useMemoizedFn(() => {
+        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+            if (setting) {
+                const values = JSON.parse(setting)
+                setPrivateDomain(values.BaseUrl)
+                setTimeout(() => {
+                    fetchList(true)
+                }, 200)
+            }
+        })
+    })
     /**编辑插件修改后，保存成功后，需要刷新本地列表数据和详情数据 */
     const onRefPlugin = useMemoizedFn((data: string) => {
         try {
@@ -163,6 +181,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             apiQueryYakScriptByYakScriptName({
                 pluginName: pluginInfo.pluginName
             }).then((item: YakScript) => {
+                // 本地列表是按更新时间排序的，如果当前列表没有该数据，刷新类别，数据会在第一页第一个
                 const index = response.Data.findIndex((ele) => ele.ScriptName === item.ScriptName)
                 if (index === -1) {
                     fetchList(true)
@@ -173,10 +192,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                             item
                         }
                     })
-                    if (plugin) {
-                        setShowPluginIndex(index)
-                        setPlugin({...item})
-                    }
+                }
+                if (plugin) {
+                    setShowPluginIndex(index)
+                    setPlugin({...item})
                 }
             })
         } catch (error) {}
@@ -232,19 +251,20 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     fetchList(true)
                     yakitNotify("error", "查询最新的本地数据失败,自动刷新列表")
                 })
-                .finally(() =>
-                    setTimeout(() => {
-                        setUploadLoading(false)
-                    }, 200)
-                )
         }
     })
     const {onStart: onStartUploadPlugin} = usePluginUploadHooks({
         taskToken: taskTokenRef.current,
         onUploadData: () => {},
         onUploadSuccess: onUploadSuccess,
-        onUploadEnd: () => {},
-        onUploadError: () => {}
+        onUploadEnd: () => {
+            setTimeout(() => {
+                setUploadLoading(false)
+            }, 200)
+        },
+        onUploadError: () => {
+            yakitNotify("error", "上传失败")
+        }
     })
     const onRefLocalPluginList = useMemoizedFn(() => {
         fetchList(true)
@@ -298,7 +318,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 setHasMore(length < +res.Total)
                 const newData = res.Data.filter(
                     (ele) => ele.ScriptName !== externalIncomingPluginsRef.current?.ScriptName
-                )
+                ).map((ele) => ({
+                    ...ele,
+                    isLocalPlugin: privateDomain !== ele.OnlineBaseUrl
+                }))
+                console.log("res-local", res)
                 dispatch({
                     type: "add",
                     payload: {
@@ -361,7 +385,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 
     /** 单项副标题组件 */
     const optSubTitle = useMemoizedFn((data: YakScript) => {
-        if (!data.OnlineBaseUrl) return <></>
+        if (data.isLocalPlugin) return <></>
         if (data.OnlineIsPrivate) {
             return <SolidPrivatepluginIcon />
         } else {
@@ -372,6 +396,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const optExtraNode = useMemoizedFn((data: YakScript) => {
         return (
             <LocalExtraOperate
+                isLocalPlugin={!!data.isLocalPlugin}
                 isCorePlugin={!!data.IsCorePlugin}
                 isOwn={userInfo.user_id === +data.UserId || +data.UserId === 0}
                 onRemovePlugin={() => onRemovePluginBefore(data)}
@@ -389,32 +414,30 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             return
         }
         uploadPluginRef.current = data
-        setUploadLoading(true)
-        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
-            if (setting) {
-                const values = JSON.parse(setting)
-                if (data.OnlineBaseUrl === values.BaseUrl) {
-                    const params: SaveYakScriptToOnlineRequest = {
-                        ScriptNames: [data.ScriptName],
-                        IsPrivate: !!data.OnlineIsPrivate
-                    }
-                    onStartUploadPlugin(params)
-                } else {
-                    const m = showYakitModal({
-                        type: "white",
-                        title: "上传插件",
-                        content: (
-                            <PluginLocalUploadSingle
-                                plugin={data}
-                                onUploadSuccess={onUploadSuccess}
-                                onClose={() => m.destroy()}
-                            />
-                        ),
-                        footer: null
-                    })
-                }
+
+        if (data.OnlineBaseUrl === privateDomain) {
+            const params: SaveYakScriptToOnlineRequest = {
+                ScriptNames: [data.ScriptName],
+                IsPrivate: !!data.OnlineIsPrivate
             }
-        })
+            setUploadLoading(true)
+            onStartUploadPlugin(params)
+        } else {
+            const m = showYakitModal({
+                type: "white",
+                title: "上传插件",
+                content: (
+                    <PluginLocalUploadSingle
+                        plugin={data}
+                        onUploadSuccess={onUploadSuccess}
+                        onClose={() => {
+                            m.destroy()
+                        }}
+                    />
+                ),
+                footer: null
+            })
+        }
     })
     /**编辑 */
     const onEditPlugin = useMemoizedFn((data: YakScript) => {
@@ -636,7 +659,17 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         const m = showYakitModal({
             type: "white",
             title: "批量上传插件",
-            content: <PluginLocalUpload pluginNames={selectScriptNameList} onClose={() => m.destroy()} />,
+            content: (
+                <PluginLocalUpload
+                    pluginNames={selectScriptNameList}
+                    onClose={() => {
+                        m.destroy()
+                        setTimeout(() => {
+                            fetchList(true)
+                        }, 200)
+                    }}
+                />
+            ),
             footer: null
         })
     })
@@ -676,6 +709,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     removeLoading={removeLoading}
                     onJumpToLocalPluginDetailByUUID={onJumpToLocalPluginDetailByUUID}
                     uploadLoading={uploadLoading}
+                    privateDomain={privateDomain}
                 />
             )}
             <PluginsLayout
@@ -855,7 +889,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 })
 
 export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((props) => {
-    const {isCorePlugin, isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
+    const {isLocalPlugin, isCorePlugin, isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const onRemove = useMemoizedFn(async (e) => {
@@ -892,8 +926,10 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
         }, 200)
     })
     const isShowUpload = useMemo(() => {
-        return isOwn && !isCorePlugin
-    }, [isCorePlugin, isOwn])
+        if (isCorePlugin) return false
+        if (isLocalPlugin) return true
+        return isOwn
+    }, [isLocalPlugin, isCorePlugin, isOwn])
     return (
         <div className={styles["local-extra-operate-wrapper"]}>
             {removeLoading ? (

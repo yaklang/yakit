@@ -267,7 +267,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                 <div className={styles["left-wrapper"]}>
                     <div className={styles["left-wrapper"]}>
                         <div className={styles["author-wrapper"]}>
-                            <AuthorImg src={img || ""} />
+                            <AuthorImg src={img || UnLogin} />
                             <div
                                 className={classNames(
                                     styles["name-wrapper"],
@@ -309,22 +309,27 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                             </>
                         )}
                     </div>
-
-                    <div
-                        style={{marginLeft: contributes.length > 0 ? 8 : 16}}
-                        className={styles["divider-style"]}
-                    ></div>
-                    <div className={styles["id-wrapper"]}>
-                        <div
-                            className={classNames(
-                                styles["text-wrapper"],
-                                styles["text-style"],
-                                "yakit-content-single-ellipsis"
-                            )}
-                            title={`插件ID : ${pluginId}`}
-                        >{`插件ID : ${pluginId}`}</div>
-                        <CopyComponents className={classNames(styles["copy-icon-style"])} copyText={pluginId} />
-                    </div>
+                    {pluginId && (
+                        <>
+                            <div
+                                style={{marginLeft: contributes.length > 0 ? 8 : 16}}
+                                className={styles["divider-style"]}
+                            />
+                            <div className={styles["id-wrapper"]}>
+                                <div
+                                    className={classNames(
+                                        styles["text-wrapper"],
+                                        styles["text-style"],
+                                        "yakit-content-single-ellipsis"
+                                    )}
+                                    title={`插件ID : ${pluginId}`}
+                                >
+                                    {`插件ID : ${pluginId}`}
+                                </div>
+                                <CopyComponents className={classNames(styles["copy-icon-style"])} copyText={pluginId} />
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <div className={styles["divider-style"]}></div>
