@@ -9,6 +9,7 @@ import {YakitEmpty} from "../YakitEmpty/YakitEmpty"
 import {YakitButton} from "../YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
 import {TreeNode} from "@/pages/yakURLTree/YakURLTree"
+import {YakitSpin} from "../YakitSpin/YakitSpin"
 
 export type TreeKey = string | number
 
@@ -20,6 +21,7 @@ interface YakitTreeProps extends TreeProps {
     showIcon?: boolean // 是否展示treeNode节点前的icon 默认 -> 展示
     icon?: React.ReactNode // treeNode节点前的icon 默认 -> 文件图标
     searchPlaceholder?: string // 搜索框placeholder 默认 -> 请输入关键词搜索
+    treeLoading?: boolean // 树加载loading
     treeData: TreeNode[] // 需要满足 DataNode类型的数组
     expandedAllKeys?: boolean // 是否展开所有节点 ----- expandedAllKeys 优先级高于expandedKeys
     expandedKeys?: TreeKey[] // 展开节点的key结合 若设置selectedKeys或checkedKeys需要自动展开节点的话，需要手动找到父节点的key去组装expandedKeys传进来才能实现自动展开功能。autoExpandParent主要是针对手动点击触发的自动展开
@@ -167,29 +169,35 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
                     />
                 )}
             </div>
-            {props.treeData.length ? (
-                <Tree
-                    {...props}
-                    showLine={showLine ? {showLeafIcon: false} : false} // 不允许展示默认的文件图标
-                    showIcon={showIcon}
-                    icon={showIcon && icon}
-                    switcherIcon={(p: {expanded: boolean}) => {
-                        return p.expanded ? (
-                            <OutlineMinusIcon className={styles["switcher-icon"]} />
-                        ) : (
-                            <OutlinePlusIcon className={styles["switcher-icon"]} />
-                        )
-                    }}
-                    autoExpandParent={autoExpandParent}
-                    onExpand={onExpand}
-                    expandedKeys={expandedKeys}
-                    selectedKeys={selectedKeys}
-                    onSelect={onTreeSelect}
-                    checkedKeys={checkedKeys}
-                    onCheck={onTreeCheck}
-                />
+            {props.treeLoading ? (
+                <YakitSpin />
             ) : (
-                <YakitEmpty />
+                <>
+                    {props.treeData.length ? (
+                        <Tree
+                            {...props}
+                            showLine={showLine ? {showLeafIcon: false} : false} // 不允许展示默认的文件图标
+                            showIcon={showIcon}
+                            icon={showIcon && icon}
+                            switcherIcon={(p: {expanded: boolean}) => {
+                                return p.expanded ? (
+                                    <OutlineMinusIcon className={styles["switcher-icon"]} />
+                                ) : (
+                                    <OutlinePlusIcon className={styles["switcher-icon"]} />
+                                )
+                            }}
+                            autoExpandParent={autoExpandParent}
+                            onExpand={onExpand}
+                            expandedKeys={expandedKeys}
+                            selectedKeys={selectedKeys}
+                            onSelect={onTreeSelect}
+                            checkedKeys={checkedKeys}
+                            onCheck={onTreeCheck}
+                        />
+                    ) : (
+                        <YakitEmpty />
+                    )}
+                </>
             )}
         </div>
     )

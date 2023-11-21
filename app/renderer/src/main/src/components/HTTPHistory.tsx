@@ -116,6 +116,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
      * 网站树
      */
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
+    const [treeLoading, setTreeLoading] = useState<boolean>(false)
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [searchValue, setSearchValue] = useState<string>("")
 
@@ -128,7 +129,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }, [yakurl])
 
     const getWebTreeData = async (yakurl: string) => {
+        setTreeLoading(true)
         loadFromYakURLRaw(yakurl, (res) => {
+            setTreeLoading(false)
             setWebTreeData(
                 res.Resources.map((item: YakURLResource, index: number) => {
                     return {
@@ -140,6 +143,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 })
             )
         }).catch((error) => {
+            setTreeLoading(false)
             yakitFailed(`加载失败: ${error}`)
         })
     }
@@ -249,6 +253,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     <YakitTree
                                         multiple={false}
                                         searchPlaceholder='请输入域名或URL进行搜索'
+                                        treeLoading={treeLoading}
                                         treeData={webTreeData}
                                         loadData={onLoadWebTreeData}
                                         onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {

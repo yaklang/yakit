@@ -18,20 +18,29 @@
         border: 1px solid #eaecf3;
         color: #85899e;
         svg {
-            height: 16px;
-            width: 16px;
+            height: 14px;
+            width: 14px;
+            margin: 2px;
         }
     }
 
     .outlineDocument-icon {
-        color: "#85899E";
+        color: #85899e;
+        margin-top: 4px;
         svg {
-            height: 16px;
-            width: 16px;
+            height: 18px;
+            width: 18px;
         }
     }
 
     :global {
+        .ant-spin-spinning {
+            margin-top: 20px;
+            .ant-spin-dot {
+                margin: auto;
+            }
+        }
+
         .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
             color: #ffffff;
             background-color: var(--yakit-primary-5);
@@ -45,11 +54,11 @@
         }
 
         .ant-tree-switcher {
-            margin-right: 8px;
+            padding: 2px;
         }
 
         .ant-tree-iconEle {
-            margin-right: 8px;
+            margin-right: 2px;
         }
 
         .ant-tree-node-content-wrapper {
