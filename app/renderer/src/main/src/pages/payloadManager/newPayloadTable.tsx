@@ -7,7 +7,7 @@ import styles from "./newPayloadTable.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import type {InputRef} from "antd"
-import {Divider, Popconfirm, Table} from "antd"
+import {Divider, Popconfirm, Table, Tooltip} from "antd"
 import type {FormInstance} from "antd/es/form"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -195,7 +195,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             render: (text) => <div className={styles["basic"]}>{text}</div>
         },
         {
-            title: "命中次数",
+            title: () => <Tooltip title={"新增命中次数字段，命中次数越高，在爆破时优先级也会越高"}>命中次数</Tooltip>,
             dataIndex: "count",
             width: 102,
             filterIcon: (filtered) => (
