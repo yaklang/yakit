@@ -121,7 +121,8 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                 // 编辑插件页面-初始时默认展示第二部分
                 setTimeout(() => {
                     setPath("info")
-                }, 200)
+                    document.querySelector("#plugin-details-info")?.scrollIntoView(true)
+                }, 500)
             })
             .catch((e: any) => {
                 yakitNotify("error", "查询插件信息失败:" + e)
@@ -530,6 +531,12 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             return
         }
 
+        if (pluginId) {
+            saveLocal(obj, () => {
+                setSaveLoading(false)
+            })
+        }
+
         modalTypeRef.current = "close"
         isUpload.current = true
         modifyInfo.current = convertLocalToRemoteInfo(isModify, {info: info, modify: obj})
@@ -581,28 +588,26 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             return
         }
 
-        saveLocal(obj, (data) => {
-            setSaveLoading(false)
-        })
-
         modalTypeRef.current = "close"
         isUpload.current = false
         modifyInfo.current = convertLocalToRemoteInfo(isModify, {info: info, modify: obj})
 
         if (info && modifyInfo.current.script_name !== info?.ScriptName) {
             yakitNotify("error", "提交修改功能请勿改动插件名称")
+            setTimeout(() => {
+                setModifyLoading(false)
+            }, 200)
             return
         }
+
+        saveLocal(obj, (data) => {
+            setSaveLoading(false)
+        })
 
         // 私密插件只填写描述修改内容
         if (modifyInfo.current.is_private) {
             setModifyReason(true)
         } else {
-            // nuclei yaml 插件不执行评分流程
-            if (modifyInfo.current?.type === "nuclei") {
-                setModifyReason(true)
-                return
-            }
             // 公开插件先进行评分，在填写描述修改内容
             setPluginTest(true)
         }
@@ -684,22 +689,6 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                 }, 200)
             })
         } else {
-            // nuclei yaml 插件不执行评分流程
-            if (modifyInfo.current?.type === "nuclei") {
-                uploadOnlinePlugin({...modifyInfo.current, is_private: !(param?.type === "public")}, false, (value) => {
-                    if (value) {
-                        if (typeof value !== "boolean") onLocalAndOnlineSend(value, true)
-                        onUpdatePageList("owner")
-                        onUpdatePageList("online")
-                        onDestroyInstance(true)
-                    }
-                    setTimeout(() => {
-                        setOnlineLoading(false)
-                    }, 200)
-                })
-                return
-            }
-
             // 公开的新插件需要走基础检测流程
             if (param && param?.type === "public") {
                 modifyInfo.current = {...modifyInfo.current, is_private: false}
@@ -1180,11 +1169,20 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                     />
                                 </div>
                                 <div className={styles["editor-body"]}>
-                                    <YakitEditor type='yak' value={code} setValue={setCode} />
+                                    <YakitEditor
+                                        type={typeParams.Type === "nuclei" ? "yaml" : "yak"}
+                                        value={code}
+                                        setValue={setCode}
+                                    />
                                 </div>
                             </div>
                         </div>
-                        <PluginEditorModal visible={codeModal} setVisible={onModifyCode} code={code} />
+                        <PluginEditorModal
+                            language={typeParams.Type === "nuclei" ? "yaml" : "yak"}
+                            visible={codeModal}
+                            setVisible={onModifyCode}
+                            code={code}
+                        />
                     </div>
                 </div>
             </div>
@@ -1283,13 +1281,15 @@ const KindTag: React.FC<KindTagProps> = memo((props) => {
 })
 
 interface PluginEditorModalProps {
+    /** 源码语言 */
+    language?: string
     visible: boolean
     setVisible: (content: string) => any
     code: string
 }
 /** @name 源码放大版编辑器 */
 export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) => {
-    const {visible, setVisible, code} = props
+    const {language = "yak", visible, setVisible, code} = props
 
     const [content, setContent] = useState<string>("")
 
@@ -1316,13 +1316,15 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
             onCancel={() => setVisible(content)}
         >
             <div className={styles["plugin-editor-modal-body"]}>
-                <YakitEditor type='yak' value={content} setValue={setContent} />
+                <YakitEditor type={language} value={content} setValue={setContent} />
             </div>
         </YakitModal>
     )
 })
 
 interface PluginDiffEditorModalProps {
+    /** 源码语言 */
+    language?: string
     /** 原代码 */
     oldCode: string
     /** 对比代码 */
@@ -1332,7 +1334,7 @@ interface PluginDiffEditorModalProps {
 }
 /** @name 对比器放大版编辑器 */
 export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo((props) => {
-    const {oldCode, newCode, visible, setVisible} = props
+    const {language = "yak", oldCode, newCode, visible, setVisible} = props
 
     const [content, setContent] = useState<string>("")
     const [update, setUpdate] = useState<boolean>(false)
@@ -1367,7 +1369,7 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
                     rightDefaultCode={content}
                     setRightCode={setContent}
                     triggerUpdate={update}
-                    language='yak'
+                    language={language}
                 />
             </div>
         </YakitModal>

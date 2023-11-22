@@ -990,7 +990,13 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
                             {itemArr.map((item, index) => {
                                 const order = ele.index * gridCol + index
                                 return (
-                                    <div key={item[keyName]} className={styles["item-wrapper"]}>
+                                    <div
+                                        key={item[keyName]}
+                                        className={classNames(styles["item-wrapper"], {
+                                            [styles["first-item-wrapper"]]: index === 0,
+                                            [styles["last-item-wrapper"]]: index === gridCol - 1
+                                        })}
+                                    >
                                         {render({index: order, data: item})}
                                     </div>
                                 )
@@ -1086,7 +1092,10 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
             <div className={classNames(styles["opt-body"], {[styles["opt-active-body"]]: checked})}>
                 <div className={styles["opt-content"]}>
                     <div className={styles["title-wrapper"]}>
-                        <div className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}>
+                        <div
+                            className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}
+                            title={title}
+                        >
                             {title}
                         </div>
                         {subtitle()}
