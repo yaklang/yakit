@@ -13,6 +13,7 @@ import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineClouddownloadIcon,
+    OutlineDatabasebackupIcon,
     OutlineDocumentdownloadIcon,
     OutlineDocumentduplicateIcon,
     OutlineExportIcon,
@@ -48,6 +49,8 @@ import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOper
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {v4 as uuidv4} from "uuid"
 import {NewPayloadTable} from "./newPayloadTable"
+import {callCopyToClipboard} from "@/utils/basic"
+import { YakitInputNumber } from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -118,13 +121,23 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     const {onClose, type} = props
     const isDictionaries = type === "dictionaries"
     // 可上传文件类型
-    const FileType = ["image/png", "image/jpeg", "image/png"]
+    const FileType = ["text/plain", "text/csv"]
+    // 收集上传的数据
+    const [dictionariesName, setDictionariesName] = useState<string>("")
+    const [uploadList, setUploadList] = useState<string[]>([])
+
+    const isDisabled = useMemo(() => {
+        if (isDictionaries) {
+            return uploadList.length === 0 || dictionariesName.length === 0
+        }
+        return uploadList.length === 0
+    }, [uploadList, dictionariesName, isDictionaries])
 
     return (
         <div className={styles["create-dictionaries"]}>
             <>
                 <div className={styles["header"]}>
-                    <div className={styles["title"]}>{isDictionaries ? "新建字典" : "导入到护网专用工具"}</div>
+                    <div className={styles["title"]}>{isDictionaries ? "新建字典" : "扩充到护网专用工具"}</div>
                     <div className={styles["extra"]} onClick={onClose}>
                         <OutlineXIcon />
                     </div>
@@ -159,7 +172,14 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                 字典名<span className={styles["must"]}>*</span>:
                             </div>
                             <div>
-                                <YakitInput style={{width: "100%"}} placeholder='请输入...' />
+                                <YakitInput
+                                    style={{width: "100%"}}
+                                    placeholder='请输入...'
+                                    value={dictionariesName}
+                                    onChange={(e) => {
+                                        setDictionariesName(e.target.value)
+                                    }}
+                                />
                             </div>
                         </div>
                     )}
@@ -171,12 +191,16 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                             multiple={false}
                             maxCount={1}
                             showUploadList={false}
-                            beforeUpload={(f) => {
+                            beforeUpload={(f: any) => {
                                 if (!FileType.includes(f.type)) {
-                                    failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
+                                    failed(`${f.name}非txt、csv文件，请上传正确格式文件！`)
                                     return false
                                 }
-
+                                if (uploadList.includes(f.path)) {
+                                    warn("此文件已选择")
+                                    return
+                                }
+                                setUploadList([...uploadList, f.path])
                                 return false
                             }}
                         >
@@ -195,35 +219,41 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                         </Dragger>
                     </div>
                     <div className={styles["upload-list"]}>
-                        <div className={styles["upload-list-item"]}>
-                            <div className={styles["link-icon"]}>
-                                <OutlinePaperclipIcon />
+                        {uploadList.map((item, index) => (
+                            <div className={styles["upload-list-item"]} key={index}>
+                                <div className={styles["link-icon"]}>
+                                    <OutlinePaperclipIcon />
+                                </div>
+                                <div className={styles["text"]}>{item}</div>
+                                <div
+                                    className={styles["close-icon"]}
+                                    onClick={() => {
+                                        const newUploadList = uploadList.filter((itemIn) => itemIn !== item)
+                                        setUploadList(newUploadList)
+                                    }}
+                                >
+                                    <SolidXcircleIcon />
+                                </div>
                             </div>
-                            <div className={styles["text"]}>
-                                /sersdsfsd/v1l14n/yakit-projects/sersdsfsd/v1l14n/yakit-projects/projects/project-111.yakitp
-                            </div>
-                            <div className={styles["close-icon"]}>
-                                <SolidXcircleIcon />
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
                 <div className={styles["submit-box"]}>
                     {isDictionaries ? (
                         <>
-                            <YakitButton disabled={true} type='outline1' icon={<SolidDatabaseIcon />}>
+                            <YakitButton disabled={isDisabled} type='outline1' icon={<SolidDatabaseIcon />}>
                                 数据库存储
                             </YakitButton>
-                            <YakitButton disabled={true} icon={<SolidDocumenttextIcon />}>
+                            <YakitButton disabled={isDisabled} icon={<SolidDocumenttextIcon />}>
                                 文件存储
                             </YakitButton>
                         </>
                     ) : (
                         <>
-                            <YakitButton disabled={true} type='outline1'>
+                            <YakitButton disabled={isDisabled} type='outline1'>
                                 取消
                             </YakitButton>
-                            <YakitButton disabled={true}>导入</YakitButton>
+                            <YakitButton disabled={isDisabled}>导入</YakitButton>
                         </>
                     )}
                 </div>
@@ -628,7 +658,9 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                             placement: "bottomRight"
                         }}
                     >
-                        <YakitButton type='secondary2' icon={<OutlinePlusIcon />} />
+                        <Tooltip title={"新增"}>
+                            <YakitButton type='secondary2' icon={<OutlinePlusIcon />} />
+                        </Tooltip>
                     </YakitDropdownMenu>
                 </div>
             </div>
@@ -805,7 +837,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             {isEditInput ? (
                 <div className={styles["file-input"]} style={{paddingLeft: 8}}>
                     <YakitInput
-                        value={123}
+                        value={inputName}
                         autoFocus
                         showCount
                         maxLength={50}
@@ -1007,7 +1039,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             case 1:
                 return <SolidDatabaseIcon />
             case 2:
-                return <SolidDatabaseIcon />
+                return <SolidDocumenttextIcon />
             default:
                 return <SolidDatabaseIcon />
         }
@@ -1020,6 +1052,103 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             setInputName(file.name)
         }
     })
+
+    const fileMenuData = useMemo(() => {
+        return [
+            {
+                key: "copyFuzztag",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineDocumentduplicateIcon />
+                        <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                    </div>
+                )
+            },
+            {
+                key: "importPayload",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineImportIcon />
+                        <div className={styles["menu-name"]}>扩充字典</div>
+                    </div>
+                )
+            },
+            {
+                key: "exportTxt",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineExportIcon />
+                        <div className={styles["menu-name"]}>导出为txt</div>
+                    </div>
+                )
+            },
+            {
+                key: "rename",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlinePencilaltIcon />
+                        <div className={styles["menu-name"]}>重命名</div>
+                    </div>
+                )
+            },
+            {
+                key: "delete",
+                label: (
+                    <div className={styles["extra-menu"]}>
+                        <OutlineTrashIcon />
+                        <div className={styles["menu-name"]}>删除</div>
+                    </div>
+                )
+            }
+        ]
+        // return [
+        //     {
+        //         key: "copyFuzztag",
+        //         label: (
+        //             <div className={styles["extra-menu"]}>
+        //                 <OutlineDocumentduplicateIcon />
+        //                 <div className={styles["menu-name"]}>复制 Fuzztag</div>
+        //             </div>
+        //         )
+        //     },
+        //     {
+        //         key: "exportTxt",
+        //         label: (
+        //             <div className={styles["extra-menu"]}>
+        //                 <OutlineImportIcon />
+        //                 <div className={styles["menu-name"]}>扩充字典</div>
+        //             </div>
+        //         )
+        //     },
+        //     {
+        //         key: "rename",
+        //         label: (
+        //             <div className={styles["extra-menu"]}>
+        //                 <OutlinePencilaltIcon />
+        //                 <div className={styles["menu-name"]}>重命名</div>
+        //             </div>
+        //         )
+        //     },
+        //     {
+        //         key: "toDatabase",
+        //         label: (
+        //             <div className={styles["extra-menu"]}>
+        //                 <OutlineDatabasebackupIcon />
+        //                 <div className={styles["menu-name"]}>转为数据库存储</div>
+        //             </div>
+        //         )
+        //     },
+        //     {
+        //         key: "delete",
+        //         label: (
+        //             <div className={styles["extra-menu"]}>
+        //                 <OutlineTrashIcon />
+        //                 <div className={styles["menu-name"]}>删除</div>
+        //             </div>
+        //         )
+        //     }
+        // ]
+    }, [])
     return (
         <>
             {isEditInput ? (
@@ -1062,8 +1191,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                             <SolidDatabaseIcon />
                         </div>
                         {/* <div className={classNames(styles['file-icon'],styles['file-icon-document'])}>
-                    <SolidDocumenttextIcon/>
-                </div> */}
+                            <SolidDocumenttextIcon/>
+                        </div> */}
 
                         <div className={styles["file-name"]}>{file.name}</div>
                     </div>
@@ -1077,57 +1206,12 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         <div className={styles["file-count"]}>10</div>
                         <YakitDropdownMenu
                             menu={{
-                                data: [
-                                    {
-                                        key: "copyFuzztag",
-                                        label: (
-                                            <div className={styles["extra-menu"]}>
-                                                <OutlineDocumentduplicateIcon />
-                                                <div className={styles["menu-name"]}>复制 Fuzztag</div>
-                                            </div>
-                                        )
-                                    },
-                                    {
-                                        key: "importPayload",
-                                        label: (
-                                            <div className={styles["extra-menu"]}>
-                                                <OutlineImportIcon />
-                                                <div className={styles["menu-name"]}>导入 Payload</div>
-                                            </div>
-                                        )
-                                    },
-                                    {
-                                        key: "exportDictionaries",
-                                        label: (
-                                            <div className={styles["extra-menu"]}>
-                                                <OutlineExportIcon />
-                                                <div className={styles["menu-name"]}>导出字典</div>
-                                            </div>
-                                        )
-                                    },
-                                    {
-                                        key: "rename",
-                                        label: (
-                                            <div className={styles["extra-menu"]}>
-                                                <OutlinePencilaltIcon />
-                                                <div className={styles["menu-name"]}>重命名</div>
-                                            </div>
-                                        )
-                                    },
-                                    {
-                                        key: "delete",
-                                        label: (
-                                            <div className={styles["extra-menu"]}>
-                                                <OutlineTrashIcon />
-                                                <div className={styles["menu-name"]}>删除</div>
-                                            </div>
-                                        )
-                                    }
-                                ],
+                                data: fileMenuData,
                                 onClick: ({key}) => {
                                     setMenuOpen(false)
                                     switch (key) {
                                         case "copyFuzztag":
+                                            callCopyToClipboard("666")
                                             break
                                         case "importPayload":
                                             const m = showYakitModal({
@@ -1146,8 +1230,14 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                 )
                                             })
                                             break
+                                        case "exportTxt":
+                                            break
                                         case "rename":
                                             setEditInput(true)
+                                            break
+                                        case "toDatabase":
+                                            break
+                                        case "delete":
                                             break
                                         default:
                                             break
@@ -1211,13 +1301,13 @@ export const PayloadEditForm: React.FC<PayloadEditFormProps> = (props) => {
                         </div>
                     }
                 >
-                    <YakitInput
-                        allowClear
-                        size='small'
+                    <YakitInputNumber
+                        // size='small'
+                        style={{width:"100%"}}
                         value={""}
                         placeholder='请输入命中次数...'
-                        onChange={(e) => {
-                            const {value} = e.target
+                        onChange={(value) => {
+
                         }}
                     />
                 </Form.Item>
@@ -1229,19 +1319,34 @@ export const PayloadEditForm: React.FC<PayloadEditFormProps> = (props) => {
 interface PayloadContentProps {
     isExpand: boolean
     setExpand: (v: boolean) => void
+    showContentType: "editor" | "table"
 }
 
 export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
-    const {isExpand, setExpand} = props
+    const {isExpand, setExpand, showContentType} = props
+    const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
+    const [editorValue, setEditorValue] = useState<string>("")
+    const Expand = () => (
+        <div
+            className={styles["icon-box"]}
+            onClick={() => {
+                setExpand(!isExpand)
+            }}
+        >
+            {isExpand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+        </div>
+    )
     return (
         <div className={styles["payload-content"]}>
             <div className={styles["header"]}>
                 <div className={styles["title-box"]}>
-                    <div className={styles["title"]}>护网专用工具</div>
+                    <div className={styles["title"]}>
+                        {showContentType === "editor" ? "pass_top25" : "护网专用工具"}
+                    </div>
                     <div className={styles["sun-title"]}>{`可以通过 fuzz 模块 {{x(字典名)}} 来渲染`}</div>
                 </div>
-                <div className={styles["extra"]}>
-                    {/* <>
+                {showContentType === "table" && (
+                    <div className={styles["extra"]}>
                         <YakitInput.Search
                             placeholder='请输入关键词搜索'
                             // value={params.Keyword}
@@ -1258,55 +1363,82 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                         <YakitButton type='outline2' icon={<OutlineExportIcon />}>
                             导出
                         </YakitButton>
-                        <YakitButton icon={<OutlinePlusIcon />}>新增</YakitButton>
-                    </> */}
-                    <>
-                        <YakitButton type='outline1' colors='danger' icon={<OutlineTrashIcon />} />
-                        <YakitButton type='outline2' icon={<OutlineExportIcon />}>
-                            导出
-                        </YakitButton>
-                        <YakitButton type='outline2' icon={<SolidSparklesIcon />}>
-                            自动去重
-                        </YakitButton>
-                        <YakitButton
-                            onClick={() => {
-                                const m = showYakitModal({
-                                    title: "编辑",
-                                    width: 448,
-                                    type: "white",
-                                    onOkText: "保存",
-                                    // closable: false,
-                                    content: <PayloadEditForm onClose={() => m.destroy()} />
-                                })
-                            }}
-                            icon={<SolidPencilaltIcon />}
-                        >
-                            编辑
-                        </YakitButton>
-                    </>
-                    {/* <>
-                        <YakitButton type='outline2' icon={<OutlineXIcon />}>
-                            取消
-                        </YakitButton>
-                        <YakitButton icon={<SolidStoreIcon />}>保存</YakitButton>
-                    </> */}
-                    <div
-                        className={styles["icon-box"]}
-                        onClick={() => {
-                            setExpand(!isExpand)
-                        }}
-                    >
-                        {isExpand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                        <YakitButton icon={<OutlinePlusIcon />}>扩充</YakitButton>
+                        {Expand()}
                     </div>
-                </div>
+                )}
+
+                {showContentType === "editor" && (
+                    <>
+                        <div
+                            className={classNames(styles["extra"], {
+                                [styles["extra-hidden"]]: !isEditMonaco
+                            })}
+                        >
+                            <YakitButton
+                                type='outline2'
+                                icon={<OutlineXIcon />}
+                                onClick={() => {
+                                    setEditMonaco(false)
+                                }}
+                            >
+                                取消
+                            </YakitButton>
+                            <YakitButton
+                                icon={<SolidStoreIcon />}
+                                onClick={() => {
+                                    setEditMonaco(false)
+                                }}
+                            >
+                                保存
+                            </YakitButton>
+                            {Expand()}
+                        </div>
+
+                        <div
+                            className={classNames(styles["extra"], {
+                                [styles["extra-hidden"]]: isEditMonaco
+                            })}
+                        >
+                            <YakitButton type='outline1' colors='danger' icon={<OutlineTrashIcon />} />
+                            <YakitButton type='outline2' icon={<OutlineExportIcon />}>
+                                导出
+                            </YakitButton>
+                            <YakitButton type='outline2' icon={<SolidSparklesIcon />}>
+                                自动去重
+                            </YakitButton>
+                            <YakitButton
+                                onClick={() => {
+                                    setEditMonaco(true)
+                                }}
+                                icon={<SolidPencilaltIcon />}
+                            >
+                                编辑
+                            </YakitButton>
+                            {Expand()}
+                        </div>
+                    </>
+                )}
             </div>
             <div className={styles["content"]}>
-                {/* <div className={styles["editor-box"]}>
-                    <YakitEditor type='plaintext' noLineNumber={true} />
-                </div> */}
-                <div className={styles["table-box"]}>
-                    <NewPayloadTable />
-                </div>
+                {showContentType === "editor" && (
+                    <div className={styles["editor-box"]}>
+                        <YakitEditor
+                            type='plaintext'
+                            readOnly={!isEditMonaco}
+                            noLineNumber={true}
+                            value={editorValue}
+                            setValue={(content: string) => {
+                                setEditorValue(content)
+                            }}
+                        />
+                    </div>
+                )}
+                {showContentType === "table" && (
+                    <div className={styles["table-box"]}>
+                        <NewPayloadTable />
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -1316,6 +1448,7 @@ export interface NewPayloadProps {}
 export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
+    const [showContentType, setContentType] = useState<"editor" | "table">("table")
     return (
         <div className={styles["new-payload"]}>
             {!isExpand && (
@@ -1337,12 +1470,14 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                     }
                 />
             </div> */}
-            {/* <div className={styles["no-data"]}>
-                <YakitEmpty
-                    title='请点击左侧列表，选择想要查看的字典'
-                />
-            </div> */}
-            <PayloadContent isExpand={isExpand} setExpand={setExpand} />
+
+            {showContentType ? (
+                <PayloadContent isExpand={isExpand} setExpand={setExpand} showContentType={showContentType} />
+            ) : (
+                <div className={styles["no-data"]}>
+                    <YakitEmpty title='请点击左侧列表，选择想要查看的字典' />
+                </div>
+            )}
         </div>
     )
 }
