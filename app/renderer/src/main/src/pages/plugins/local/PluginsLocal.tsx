@@ -928,8 +928,9 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
     })
     const isShowUpload = useMemo(() => {
         if (isCorePlugin) return false
-        if (isLocalPlugin) return true
-        return isOwn
+        // if (isLocalPlugin) return true
+
+        return isLocalPlugin
     }, [isLocalPlugin, isCorePlugin, isOwn])
     return (
         <div className={styles["local-extra-operate-wrapper"]}>
