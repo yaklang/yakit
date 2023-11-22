@@ -259,6 +259,7 @@ export const uploadOnlinePlugin = (
                 if (callback) callback(true)
                 return
             }
+            console.log("upload-download-api", JSON.stringify({ListType: "mine", UUID: [res.uuid]}))
             // 下载插件
             apiDownloadPluginMine({UUID: [res.uuid]})
                 .then(() => {
@@ -305,6 +306,7 @@ export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugi
         data: info
     })
         .then((res) => {
+            console.log("copy-download-api", JSON.stringify({ListType: "mine", UUID: [res.uuid]}))
             // 下载插件
             apiDownloadPluginMine({UUID: [res.uuid]})
                 .then(() => {
