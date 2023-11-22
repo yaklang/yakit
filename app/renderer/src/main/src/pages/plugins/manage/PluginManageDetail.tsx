@@ -666,6 +666,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                             headImg: ele.head_img,
                                             userName: ele.user_name
                                         }))}
+                                        type={plugin.type}
                                     />
 
                                     {+plugin.status === 0 ? (
