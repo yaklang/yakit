@@ -952,7 +952,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 跳转指定网站树节点
     const handleJumpWebTree = useMemoizedFn(() => {
         if (flow?.Url) {
-            console.log(123, flow)
+            console.log('flow', flow)
             let treeData = {
                 title: "https://www.baidu.com",
                 key: "https://www.baidu.com",
@@ -5501,6 +5501,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             let url = new URL(flow.Url)
             let path: string[] = url.pathname.split("/").filter((item) => item)
             path.unshift(url.origin)
+            console.log('path', path);
             emiter.emit("onJumpWebTree", JSON.stringify({treeData, path}))
         }
     })

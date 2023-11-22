@@ -126,7 +126,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [searchValue, setSearchValue] = useState<string>("")
 
     useEffect(() => {
-        console.log(123, webTreeData);
+        console.log(123, webTreeData)
     }, [webTreeData])
 
     const [yakurl, setYakURL] = useState<string>("website:///")
@@ -232,15 +232,16 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const path = val.path // 需要展开得节点数组
             const jumpTreeKey = path[path.length - 1] // 定位节点得key
             const jumpParentKey = val.treeData.key // 发送过来对象第一层得key
+            let findNodeFlag = false // 判断是否找到跳转子节点
             // 当跳转的就是第一层时
             if (jumpParentKey === jumpTreeKey) {
+                findNodeFlag = true
                 setSelectedKeys([jumpTreeKey]) // 暂时是用select标识选中的目标节点
                 return
             }
-
-            let findNodeFlag = false // 判断是否找到跳转子节点
-
+        
             const findTreeNode = webTreeData.find((item) => item.key === jumpParentKey) // 找到第一层的树节点
+            console.log('是否找到父节点', findTreeNode)
             if (findTreeNode) {
                 // 组装所需要的树结构
                 val.treeData.icon = renderTreeNodeIcon(findTreeNode?.data?.ResourceType as TreeNodeType)
@@ -273,8 +274,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     }
                 })
 
-                setWebTreeData(newWebTreeData)
-                setExpandedKeys(path)
+                if (findNodeFlag) {
+                    setWebTreeData(newWebTreeData)
+                    setExpandedKeys(path)
+                }
             }
 
             if (!findNodeFlag) {
