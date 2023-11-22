@@ -51,6 +51,7 @@ import {RemoveIcon} from "@/assets/newIcon"
 import {isCommunityEdition} from "@/utils/envfile"
 import {CodeGV} from "@/yakitGV"
 import {DatabaseFirstMenuProps, YakitRoute} from "@/routes/newRoute"
+import emiter from "@/utils/eventBus/eventBus"
 
 export interface YakScriptOperatorProp {
     yakScriptId: number
@@ -1090,30 +1091,43 @@ export const LocalPluginExecutor: React.FC<LocalPluginExecutorProps> = React.mem
                             </Space>
                         </Space>
                     }
-                    // extraNode={
-                    //     !fromMenu && (
-                    //         <Space>
-                    //             <Tooltip placement='top' title={"插件管理"}>
-                    //                 <Button
-                    //                     type={"link"}
-                    //                     icon={<SettingOutlined />}
-                    //                     onClick={() => setSettingShow(!settingShow)}
-                    //                 />
-                    //             </Tooltip>
-                    //             <Tooltip placement='top' title={"编辑插件"}>
-                    //                 <Button
-                    //                     type={"link"}
-                    //                     icon={<EditOutlined />}
-                    //                     style={{color: "#a7a7a7"}}
-                    //                     onClick={(e) => {
-                    //                         setMonitorEdit && setMonitorEdit(true)
-                    //                         setIsEdit(true)
-                    //                     }}
-                    //                 />
-                    //             </Tooltip>
-                    //         </Space>
-                    //     )
-                    // }
+                    extraNode={
+                        !fromMenu && (
+                            <Space>
+                                {/* <Tooltip placement='top' title={"插件管理"}>
+                                    <Button
+                                        type={"link"}
+                                        icon={<SettingOutlined />}
+                                        onClick={() => setSettingShow(!settingShow)}
+                                    />
+                                </Tooltip> */}
+                                <Tooltip placement='top' title={"编辑插件"}>
+                                    <Button
+                                        type={"link"}
+                                        icon={<EditOutlined />}
+                                        style={{color: "#a7a7a7"}}
+                                        onClick={(e) => {
+                                            // setMonitorEdit && setMonitorEdit(true)
+                                            // setIsEdit(true)
+                                            if (script?.IsCorePlugin) {
+                                                yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
+                                                return
+                                            }
+                                            if (script?.Id && +script.Id) {
+                                                emiter.emit(
+                                                    "openPage",
+                                                    JSON.stringify({
+                                                        route: YakitRoute.ModifyYakitScript,
+                                                        params: {source: YakitRoute.Plugin_Local, id: +script.Id}
+                                                    })
+                                                )
+                                            }
+                                        }}
+                                    />
+                                </Tooltip>
+                            </Space>
+                        )
+                    }
                     script={script}
                     size={size}
                     extraYakExecutorParams={extraParams}
