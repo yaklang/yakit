@@ -273,6 +273,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                                     headImg: ele.head_img,
                                     userName: ele.user_name
                                 }))}
+                                type={plugin.type}
                             />
                             <div className={styles["details-editor-wrapper"]}>
                                 <YakitEditor type={"yak"} value={plugin.content} />
