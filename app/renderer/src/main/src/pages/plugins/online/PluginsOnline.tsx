@@ -273,7 +273,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useUpdateEffect(() => {
         if (isCommunityEdition()) return
         // 企业版切换需要刷新插件商店商店列表+统计
-        onSwitchPrivateDomainRefOnlinePluginInit()
+        if (userInfo.isLogin) onSwitchPrivateDomainRefOnlinePluginInit()
     }, [userInfo.isLogin])
     useEffect(() => {
         getInitTotal()
@@ -568,7 +568,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     return (
         <>
             {!!plugin && (
-                <div className={styles["plugins-online-detail"]}>
+                <div
+                    className={classNames(styles["plugins-online-detail"], {
+                        [styles["plugins-online-detail-ee-or-es"]]: !isCommunityEdition()
+                    })}
+                >
                     <PluginsOnlineDetail
                         info={plugin}
                         defaultSelectList={selectList}
