@@ -84,6 +84,8 @@ export interface PluginDetailHeaderProps {
     updated_at: number
     /**协作者信息 */
     prImgs?: CollaboratorInfoProps[]
+    /**插件类型 */
+    type: string
 }
 /**协作者信息 */
 export interface CollaboratorInfoProps {
