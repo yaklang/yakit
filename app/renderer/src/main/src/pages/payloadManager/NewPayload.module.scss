@@ -86,9 +86,11 @@
                 border: 1px solid #eaecf3;
                 background-color: rgb(240, 242, 245);
             }
-            .table-box{
+            .table-box {
                 height: 100%;
                 width: 100%;
+                overflow-x: hidden;
+                overflow-y: scroll;
             }
         }
     }
@@ -374,6 +376,12 @@
     height: 40px;
     display: flex;
     align-items: center;
+    :global {
+        .ant-input-affix-wrapper {
+            height: 36px;
+            padding: 8px;
+        }
+    }
 }
 .file-inside {
     border: 1px solid transparent;
@@ -523,12 +531,12 @@
         }
     }
 }
-.folder-no-combine{
+.folder-no-combine {
     border: 1px solid transparent;
 }
-.folder-border{
+.folder-border {
     border: 1px solid transparent;
-   border-bottom: 1px solid #eaecf3; 
+    border-bottom: 1px solid #eaecf3;
 }
 .folder {
     padding: 10px 8px;
@@ -616,5 +624,111 @@
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;
+    }
+}
+
+.yaklang-engine-hint-wrapper {
+    width: 100%;
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    position: relative;
+
+    .hint-left-wrapper {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+
+        .hint-icon {
+            width: 32px;
+            height: 32px;
+            color: #ffb660;
+            svg {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    }
+
+    .hint-right-wrapper {
+        flex: 1;
+        overflow: hidden;
+        .hint-right-title {
+            height: 24px;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 24px;
+            color: var(--yakit-header-color);
+            margin-bottom: 8px;
+        }
+
+        .hint-right-content {
+            margin-top: 8px;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--yakit-body-text-color);
+        }
+
+        .hint-right-download {
+            .download-progress {
+                .progress-title {
+                    margin-top: 6px;
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 600;
+                    line-height: 16px;
+                }
+                :global {
+                    .ant-progress-text {
+                        display: block;
+                        margin-left: 0;
+                        margin-top: 2px;
+                    }
+                }
+            }
+
+            .download-info-wrapper {
+                margin-top: 8px;
+                display: flex;
+                height: 16px;
+                font-size: 12px;
+                line-height: 16px;
+                color: var(--yakit-helper-text-color);
+
+                .divider-wrapper {
+                    margin: 0 8px;
+                    width: 1px;
+                    height: 16px;
+                    display: flex;
+                    align-items: center;
+
+                    .divider-style {
+                        width: 100%;
+                        height: 12px;
+                        border: 1px solid var(--yakit-border-color);
+                    }
+                }
+            }
+            .log-info {
+                margin-top: 16px;
+                .log-item {
+                    color: #85899e;
+                    font-size: 14px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 24px;
+
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+            .download-btn {
+                margin-top: 24px;
+                display: flex;
+                justify-content: right;
+                gap: 8px;
+            }
+        }
     }
 }
