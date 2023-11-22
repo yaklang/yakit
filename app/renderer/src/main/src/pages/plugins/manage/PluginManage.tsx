@@ -133,7 +133,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
             apiFetchCheckList(query)
                 .then((res) => {
-                    console.log("plugin-manage-date", res.data, JSON.stringify(res.pagemeta))
+                    // console.log("plugin-manage-date", res.data, JSON.stringify(res.pagemeta))
                     if (!res.data) res.data = []
                     dispatch({
                         type: "add",

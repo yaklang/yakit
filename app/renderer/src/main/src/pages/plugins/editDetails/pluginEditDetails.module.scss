@@ -156,6 +156,55 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+            .modify-advice {
+                padding: 12px;
+                display: flex;
+                gap: 8px;
+                border-radius: 8px;
+                background: linear-gradient(90deg, rgba(136, 99, 247, 0.1) 0%, rgba(247, 170, 99, 0.1) 100%);
+                .advice-icon {
+                    svg {
+                        width: 24px;
+                        height: 24px;
+                        color: #ffb660;
+                    }
+                }
+                .advice-body {
+                    flex: 1 0 0;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    .advice-content {
+                        width: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        .content-title {
+                            height: 20px;
+                            color: #31343f;
+                            font-size: 14px;
+                            font-weight: 600;
+                            line-height: 20px;
+                        }
+                        .content-style {
+                            color: #85899e;
+                            font-size: 12px;
+                            line-height: 16px;
+                        }
+                    }
+                    .advice-user {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+
+                        color: #31343f;
+                        font-size: 12px;
+                        line-height: 16px;
+                    }
+                }
+            }
+
             .setting-body {
                 width: 100%;
                 display: flex;
