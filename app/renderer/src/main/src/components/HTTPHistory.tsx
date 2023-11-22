@@ -10,12 +10,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
 import styles from "./HTTPHistory.module.scss"
 import classNames from "classnames"
-import YakitTree, {
-    TreeKey,
-    TreeNode,
-    TreeNodeType,
-    renderTreeNodeIcon
-} from "./yakitUI/YakitTree/YakitTree"
+import YakitTree, {TreeKey, TreeNode, TreeNodeType, renderTreeNodeIcon} from "./yakitUI/YakitTree/YakitTree"
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURLResource} from "@/pages/yakURLTree/data"
@@ -130,10 +125,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
     const [searchValue, setSearchValue] = useState<string>("")
 
-    useEffect(() => {
-        console.log('webTreeData', webTreeData[0]);
-    }, [webTreeData])
-
     const [yakurl, setYakURL] = useState<string>("website:///")
     useEffect(() => {
         if (!yakurl) {
@@ -144,6 +135,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 部分和树相关状态重置
     const resetInitStatus = () => {
+        setExpandedKeys([])
         setSelectedKeys([])
         setSelectedNodes([])
         setOnlyShowFirstNode(true)
@@ -235,33 +227,97 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         } else {
             setSelectedNodeParamsKey([])
         }
-    }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行\
-
-    useEffect(() => {
-        console.log(123, expandedKeys)
-    }, [expandedKeys])
+    }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行
 
     // 跳转网站树指定节点
-    const getSearchValue = useMemoizedFn((value) => {
+    const onJumpWebTree = useMemoizedFn((value) => {
         if (inViewport) {
             const val = JSON.parse(value)
-            // const obj = webTreeData.find((item) => item.title === val.searchValue)
-            // if (obj) {
-            //     const arr: TreeKey[] = []
-            //     const arr2 = [...expandedKeys, obj.key]
-            //     arr2.forEach((j) => {
-            //         if (!arr.includes(j)) {
-            //             arr.push(j)
-            //         }
-            //     })
-            //     setExpandedKeys(arr)
-            // }
+            const jumpTreeTitle = val.jumpTreeTitle
+            const parentTitle = val.treeData.title // 第一层title
+            const findTreeNode = webTreeData.find((item) => item.title === parentTitle) // 找到第一层的树节点
+            const parentKey = findTreeNode?.key
+            if (findTreeNode && parentKey) {
+                // 组装所需要的树结构
+                val.treeData.key = parentKey
+                val.treeData.icon = renderTreeNodeIcon(findTreeNode?.data?.ResourceType as TreeNodeType)
+                val.treeData.isLeaf = !findTreeNode?.data?.HaveChildrenNodes
+                let expandedKeysList: TreeKey[] = [parentKey]
+                let findNodeFlag = false
+
+                // 当跳转的就是第一层时
+                if (parentTitle === jumpTreeTitle) {
+                    findNodeFlag = true
+                    setSelectedKeys([parentKey])
+                }
+
+                const assembleTree = (treeData: TreeNode[], parentKey: TreeKey) => {
+                    treeData.forEach((item, index) => {
+                        item.key = `${parentKey}-${index}`
+                        item.icon = renderTreeNodeIcon(item?.data?.ResourceType as TreeNodeType)
+                        item.isLeaf = !item?.data?.HaveChildrenNodes
+                        expandedKeysList.push(item.key)
+                        // 跳转定位选中树节点
+                        console.log("检测跳转是否匹配", item.title, jumpTreeTitle, item.title === jumpTreeTitle, item.key)
+                        if (item.title === jumpTreeTitle) {
+                            findNodeFlag = true
+                            // 暂时是用select标识选中的目标节点
+                            setSelectedKeys([item.key])
+
+                            // 组装展开keys - 目前有问题
+                            let expandedKeysList: TreeKey[] = []
+                            const getExpandedKeys = (keyStr: string) => {
+                                expandedKeysList.push(keyStr)
+                                let index = keyStr.lastIndexOf("-")
+                                if (index !== -1) {
+                                    getExpandedKeys(keyStr.slice(0, index))
+                                }
+                            }
+                            
+                            if (item.key.split("-").length > 2) {
+                                getExpandedKeys(item.key)
+                            } else {
+                                expandedKeysList.push(item.key.split("-")[0], item.key)
+                            }
+
+                            const allExpandedKeys: TreeKey[] = [...expandedKeysList]
+                            let newExpandedKeys: TreeKey[] = []
+                            allExpandedKeys.forEach((item) => {
+                                if (!newExpandedKeys.includes(item)) {
+                                    newExpandedKeys.push(item)
+                                }
+                            })
+                            setExpandedKeys(newExpandedKeys)
+                        }
+                        if (item.children && item.children.length) {
+                            assembleTree(item.children, item.key)
+                        }
+                    })
+                }
+                assembleTree(val.treeData.children, parentKey)
+                
+                if (!findNodeFlag) {
+                    yakitFailed('当前网站树为找到匹配节点树，请手动刷新网站树')
+                }
+
+                // 重新塞组装好的树节点
+                let newWebTreeData: TreeNode[] = []
+                webTreeData.forEach((item) => {
+                    if (item.key === parentKey) {
+                        newWebTreeData.push(val.treeData)
+                    } else {
+                        newWebTreeData.push(item)
+                    }
+                })
+
+                setWebTreeData(newWebTreeData)
+            }
         }
     })
     useEffect(() => {
-        emiter.on("onWebTreeSearchVal", getSearchValue)
+        emiter.on("onJumpWebTree", onJumpWebTree)
         return () => {
-            emiter.off("onWebTreeSearchVal", getSearchValue)
+            emiter.off("onJumpWebTree", onJumpWebTree)
         }
     }, [])
 
@@ -329,7 +385,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
                                         onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-                                            console.log('selectedNodes', selectedNodes[0]);
+                                            console.log("selectedNodes", selectedNodes[0])
                                             setSelectedKeys(selectedKeys)
                                             setSelectedNodes(selectedNodes)
                                             setOnlyShowFirstNode(true)
