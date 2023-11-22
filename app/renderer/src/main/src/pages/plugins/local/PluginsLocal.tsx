@@ -414,7 +414,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             return
         }
         uploadPluginRef.current = data
-
+        // 也可以用后面加的isLocalPlugin判断
         if (data.OnlineBaseUrl === privateDomain) {
             const params: SaveYakScriptToOnlineRequest = {
                 ScriptNames: [data.ScriptName],
