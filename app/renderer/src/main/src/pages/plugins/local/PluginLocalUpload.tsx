@@ -83,6 +83,15 @@ export const PluginLocalUpload: React.FC<PluginLocalUploadProps> = React.memo((p
                     <YakitSteps.YakitStep key={item.title} title={item.title} />
                 ))}
             </YakitSteps>
+            <div className={styles["header-wrapper"]}>
+                <div className={styles["title-style"]}>提示：</div>
+                <div className={styles["header-body"]}>
+                    <div className={styles["opt-content"]}>
+                        <div className={styles["content-order"]}>1</div>
+                        批量上传只支持新增，更新插件请点击编辑逐个进行更新
+                    </div>
+                </div>
+            </div>
             <div className={styles["plugin-local-upload-steps-content"]}>{steps[current]?.content}</div>
         </div>
     )
@@ -341,7 +350,6 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
         onUploadEnd: () => {},
         onUploadError: () => {
             setIsShowRetry(true)
-            yakitNotify("error", "批量上传异常，请重试")
         }
     })
     const startUpload = useMemoizedFn(() => {
