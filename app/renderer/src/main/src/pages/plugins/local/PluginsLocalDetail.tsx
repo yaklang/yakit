@@ -294,10 +294,11 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const isShowUpload: boolean = useMemo(() => {
         if (plugin?.IsCorePlugin) return false
-        if (plugin?.isLocalPlugin) return true
-        const isOwn = userInfo.user_id === +(plugin?.UserId || "0") || +(plugin?.UserId || "0") === 0
-        return isOwn
-    }, [plugin?.isLocalPlugin, plugin?.IsCorePlugin, plugin?.UserId, userInfo.user_id])
+        // if (plugin?.isLocalPlugin) return true
+        // const isOwn = userInfo.user_id === +(plugin?.UserId || "0") || +(plugin?.UserId || "0") === 0
+        // return isOwn
+        return !!plugin?.isLocalPlugin
+    }, [plugin?.isLocalPlugin, plugin?.IsCorePlugin])
     if (!plugin) return null
     return (
         <>
