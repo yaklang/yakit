@@ -815,7 +815,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         flowRequestLoad,
         flowResponseLoad,
         historyId,
-        pageType,
+        pageType
     } = props
 
     const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
@@ -952,1721 +952,4553 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 跳转指定网站树节点
     const handleJumpWebTree = useMemoizedFn(() => {
         if (flow?.Url) {
-            // 目前拿的是路径最后一层path值取匹配的title
-            let jumpTreeTitle = ""
-            if (flow.Path === "/") {
-                const index = flow.Url.lastIndexOf("/")
-                jumpTreeTitle = index === flow.Url.length - 1 ? flow.Url.slice(0, -1) : flow.Url
-            } else {
-                const str = flow.Path.split("?")[0]
-                const index = str.lastIndexOf("/")
-                if (index === str.length - 1) {
-                    const str2 = str.slice(0, index)
-                    jumpTreeTitle = str2.slice(str2.lastIndexOf("/") + 1)
-                } else {
-                    jumpTreeTitle = str.slice(index + 1)
-                }
-            }
+            // TODO 目前拿的是路径最后一层path值取匹配的title，需要改为id取匹配
+            // let jumpTreeTitle = ""
+            // if (flow.Path === "/") {
+            //     const index = flow.Url.lastIndexOf("/")
+            //     jumpTreeTitle = index === flow.Url.length - 1 ? flow.Url.slice(0, -1) : flow.Url
+            // } else {
+            //     const str = flow.Path.split("?")[0]
+            //     const index = str.lastIndexOf("/")
+            //     if (index === str.length - 1) {
+            //         const str2 = str.slice(0, index)
+            //         jumpTreeTitle = str2.slice(str2.lastIndexOf("/") + 1)
+            //     } else {
+            //         jumpTreeTitle = str.slice(index + 1)
+            //     }
+            // }
+
             // 假数据 以https://zxgghn.25ku.com为例
-            let treeData = {
-                title: "https://zxgghn.25ku.com",
-                data: {
-                    Extra: [
+            let treeData ={
+                "title": "https://www.baidu.com",
+                "key": "10",
+                "isLeaf": false,
+                "data": {
+                    "Extra": [
                         {
-                            Key: "url",
-                            Value: "https://zxgghn.25ku.com"
+                            "Key": "url",
+                            "Value": "https://www.baidu.com"
                         }
                     ],
-                    ResourceType: "dir",
-                    VerboseType: "filesystem-directory",
-                    ResourceName: "/",
-                    VerboseName: "https://zxgghn.25ku.com",
-                    Size: "0",
-                    SizeVerbose: "",
-                    ModifiedTimestamp: "0",
-                    Path: "/",
-                    YakURLVerbose: "website://zxgghn.25ku.com/",
-                    Url: {
-                        Query: [
+                    "ResourceType": "dir",
+                    "VerboseType": "filesystem-directory",
+                    "ResourceName": "/",
+                    "VerboseName": "https://www.baidu.com",
+                    "Size": "0",
+                    "SizeVerbose": "",
+                    "ModifiedTimestamp": "0",
+                    "Path": "/",
+                    "YakURLVerbose": "website://www.baidu.com/",
+                    "Url": {
+                        "Query": [
                             {
-                                Key: "schema",
-                                Value: "https"
+                                "Key": "schema",
+                                "Value": "https"
                             },
                             {
-                                Key: "op",
-                                Value: "list"
-                            },
-                            {
-                                Key: "op",
-                                Value: "list"
-                            },
-                            {
-                                Key: "op",
-                                Value: "list"
+                                "Key": "op",
+                                "Value": "list"
                             }
                         ],
-                        FromRaw: "",
-                        Schema: "website",
-                        User: "",
-                        Pass: "",
-                        Location: "zxgghn.25ku.com",
-                        Path: "/"
+                        "FromRaw": "",
+                        "Schema": "website",
+                        "User": "",
+                        "Pass": "",
+                        "Location": "www.baidu.com",
+                        "Path": "/"
                     },
-                    HaveChildrenNodes: true
+                    "HaveChildrenNodes": true
                 },
-                children: [
+                "icon": {
+                    "key": null,
+                    "ref": null,
+                    "props": {},
+                    "_owner": null,
+                    "_store": {}
+                },
+                "children": [
                     {
-                        title: "source",
-                        data: {
-                            Extra: [
+                        "title": "sugrec",
+                        "key": "10-0",
+                        "isLeaf": false,
+                        "data": {
+                            "Extra": [
                                 {
-                                    Key: "url",
-                                    Value: "https://zxgghn.25ku.com/source"
+                                    "Key": "url",
+                                    "Value": "https://www.baidu.com/sugrec"
                                 }
                             ],
-                            ResourceType: "path",
-                            VerboseType: "website-path",
-                            ResourceName: "source",
-                            VerboseName: "source",
-                            Size: "2",
-                            SizeVerbose: "2",
-                            ModifiedTimestamp: "0",
-                            Path: "/source",
-                            YakURLVerbose: "",
-                            Url: {
-                                Query: [
+                            "ResourceType": "path",
+                            "VerboseType": "website-path",
+                            "ResourceName": "sugrec",
+                            "VerboseName": "sugrec/[16]",
+                            "Size": "16",
+                            "SizeVerbose": "16",
+                            "ModifiedTimestamp": "0",
+                            "Path": "/sugrec",
+                            "YakURLVerbose": "",
+                            "Url": {
+                                "Query": [
                                     {
-                                        Key: "schema",
-                                        Value: "https"
+                                        "Key": "schema",
+                                        "Value": "https"
                                     },
                                     {
-                                        Key: "op",
-                                        Value: "list"
+                                        "Key": "op",
+                                        "Value": "list"
                                     },
                                     {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
+                                        "Key": "op",
+                                        "Value": "list"
                                     }
                                 ],
-                                FromRaw: "",
-                                Schema: "website",
-                                User: "",
-                                Pass: "",
-                                Location: "zxgghn.25ku.com",
-                                Path: "/source"
+                                "FromRaw": "",
+                                "Schema": "website",
+                                "User": "",
+                                "Pass": "",
+                                "Location": "www.baidu.com",
+                                "Path": "/sugrec"
                             },
-                            HaveChildrenNodes: true
+                            "HaveChildrenNodes": true
                         },
-                        children: [
+                        "icon": {
+                            "key": null,
+                            "ref": null,
+                            "props": {
+                                "className": "yakitTreeNode-icon"
+                            },
+                            "_owner": null,
+                            "_store": {}
+                        },
+                        "children": [
                             {
-                                title: "k-fe",
-                                data: {
-                                    Extra: [
+                                "title": "wd",
+                                "key": "10-0-0",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
                                         {
-                                            Key: "url",
-                                            Value: "https://zxgghn.25ku.com/source/k-fe"
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
                                         }
                                     ],
-                                    ResourceType: "path",
-                                    VerboseType: "website-path",
-                                    ResourceName: "k-fe",
-                                    VerboseName: "k-fe",
-                                    Size: "1",
-                                    SizeVerbose: "1",
-                                    ModifiedTimestamp: "0",
-                                    Path: "/source/k-fe",
-                                    YakURLVerbose: "",
-                                    Url: {
-                                        Query: [
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "wd",
+                                    "VerboseName": "wd",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
                                             {
-                                                Key: "schema",
-                                                Value: "https"
+                                                "Key": "schema",
+                                                "Value": "https"
                                             },
                                             {
-                                                Key: "op",
-                                                Value: "list"
+                                                "Key": "op",
+                                                "Value": "list"
                                             },
                                             {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
+                                                "Key": "op",
+                                                "Value": "list"
                                             }
                                         ],
-                                        FromRaw: "",
-                                        Schema: "website",
-                                        User: "",
-                                        Pass: "",
-                                        Location: "zxgghn.25ku.com",
-                                        Path: "/source/k-fe"
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
                                     },
-                                    HaveChildrenNodes: true
+                                    "HaveChildrenNodes": false
                                 },
-                                children: [
-                                    {
-                                        title: "static",
-                                        data: {
-                                            Extra: [
-                                                {
-                                                    Key: "url",
-                                                    Value: "https://zxgghn.25ku.com/source/k-fe/static"
-                                                }
-                                            ],
-                                            ResourceType: "path",
-                                            VerboseType: "website-path",
-                                            ResourceName: "static",
-                                            VerboseName: "static",
-                                            Size: "1",
-                                            SizeVerbose: "1",
-                                            ModifiedTimestamp: "0",
-                                            Path: "/source/k-fe/static",
-                                            YakURLVerbose: "",
-                                            Url: {
-                                                Query: [
-                                                    {
-                                                        Key: "schema",
-                                                        Value: "https"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    }
-                                                ],
-                                                FromRaw: "",
-                                                Schema: "website",
-                                                User: "",
-                                                Pass: "",
-                                                Location: "zxgghn.25ku.com",
-                                                Path: "/source/k-fe/static"
-                                            },
-                                            HaveChildrenNodes: true
-                                        },
-                                        children: [
-                                            {
-                                                title: "e",
-                                                data: {
-                                                    Extra: [
-                                                        {
-                                                            Key: "url",
-                                                            Value: "https://zxgghn.25ku.com/source/k-fe/static/e"
-                                                        }
-                                                    ],
-                                                    ResourceType: "path",
-                                                    VerboseType: "website-path",
-                                                    ResourceName: "e",
-                                                    VerboseName: "e",
-                                                    Size: "1",
-                                                    SizeVerbose: "1",
-                                                    ModifiedTimestamp: "0",
-                                                    Path: "/source/k-fe/static/e",
-                                                    YakURLVerbose: "",
-                                                    Url: {
-                                                        Query: [
-                                                            {
-                                                                Key: "schema",
-                                                                Value: "https"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            }
-                                                        ],
-                                                        FromRaw: "",
-                                                        Schema: "website",
-                                                        User: "",
-                                                        Pass: "",
-                                                        Location: "zxgghn.25ku.com",
-                                                        Path: "/source/k-fe/static/e"
-                                                    },
-                                                    HaveChildrenNodes: true
-                                                },
-                                                children: [
-                                                    {
-                                                        title: "xccb",
-                                                        data: {
-                                                            Extra: [
-                                                                {
-                                                                    Key: "url",
-                                                                    Value: "https://zxgghn.25ku.com/source/k-fe/static/e/xccb"
-                                                                }
-                                                            ],
-                                                            ResourceType: "path",
-                                                            VerboseType: "website-path",
-                                                            ResourceName: "xccb",
-                                                            VerboseName: "xccb",
-                                                            Size: "1",
-                                                            SizeVerbose: "1",
-                                                            ModifiedTimestamp: "0",
-                                                            Path: "/source/k-fe/static/e/xccb",
-                                                            YakURLVerbose: "",
-                                                            Url: {
-                                                                Query: [
-                                                                    {
-                                                                        Key: "schema",
-                                                                        Value: "https"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    }
-                                                                ],
-                                                                FromRaw: "",
-                                                                Schema: "website",
-                                                                User: "",
-                                                                Pass: "",
-                                                                Location: "zxgghn.25ku.com",
-                                                                Path: "/source/k-fe/static/e/xccb"
-                                                            },
-                                                            HaveChildrenNodes: true
-                                                        },
-                                                        children: [
-                                                            {
-                                                                title: "openjs",
-                                                                data: {
-                                                                    Extra: [
-                                                                        {
-                                                                            Key: "url",
-                                                                            Value: "https://zxgghn.25ku.com/source/k-fe/static/e/xccb/openjs"
-                                                                        }
-                                                                    ],
-                                                                    ResourceType: "path",
-                                                                    VerboseType: "website-path",
-                                                                    ResourceName: "openjs",
-                                                                    VerboseName: "openjs",
-                                                                    Size: "1",
-                                                                    SizeVerbose: "1",
-                                                                    ModifiedTimestamp: "0",
-                                                                    Path: "/source/k-fe/static/e/xccb/openjs",
-                                                                    YakURLVerbose: "",
-                                                                    Url: {
-                                                                        Query: [
-                                                                            {
-                                                                                Key: "schema",
-                                                                                Value: "https"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            }
-                                                                        ],
-                                                                        FromRaw: "",
-                                                                        Schema: "website",
-                                                                        User: "",
-                                                                        Pass: "",
-                                                                        Location: "zxgghn.25ku.com",
-                                                                        Path: "/source/k-fe/static/e/xccb/openjs"
-                                                                    },
-                                                                    HaveChildrenNodes: true
-                                                                },
-                                                                children: [
-                                                                    {
-                                                                        title: "x.js",
-                                                                        data: {
-                                                                            Extra: [
-                                                                                {
-                                                                                    Key: "url",
-                                                                                    Value: "https://zxgghn.25ku.com/source/k-fe/static/e/xccb/openjs/x.js"
-                                                                                }
-                                                                            ],
-                                                                            ResourceType: "",
-                                                                            VerboseType: "",
-                                                                            ResourceName: "x.js",
-                                                                            VerboseName: "x.js",
-                                                                            Size: "1",
-                                                                            SizeVerbose: "1",
-                                                                            ModifiedTimestamp: "0",
-                                                                            Path: "/source/k-fe/static/e/xccb/openjs/x.js",
-                                                                            YakURLVerbose: "",
-                                                                            Url: {
-                                                                                Query: [
-                                                                                    {
-                                                                                        Key: "schema",
-                                                                                        Value: "https"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    }
-                                                                                ],
-                                                                                FromRaw: "",
-                                                                                Schema: "website",
-                                                                                User: "",
-                                                                                Pass: "",
-                                                                                Location: "zxgghn.25ku.com",
-                                                                                Path: "/source/k-fe/static/e/xccb/openjs/x.js"
-                                                                            },
-                                                                            HaveChildrenNodes: false
-                                                                        }
-                                                                    }
-                                                                ]
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                ]
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
                             },
                             {
-                                title: "idc_fez",
-                                data: {
-                                    Extra: [
+                                "title": "sid",
+                                "key": "10-0-1",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
                                         {
-                                            Key: "url",
-                                            Value: "https://zxgghn.25ku.com/source/idc_fez"
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
                                         }
                                     ],
-                                    ResourceType: "path",
-                                    VerboseType: "website-path",
-                                    ResourceName: "idc_fez",
-                                    VerboseName: "idc_fez",
-                                    Size: "1",
-                                    SizeVerbose: "1",
-                                    ModifiedTimestamp: "0",
-                                    Path: "/source/idc_fez",
-                                    YakURLVerbose: "",
-                                    Url: {
-                                        Query: [
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "sid",
+                                    "VerboseName": "sid",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
                                             {
-                                                Key: "schema",
-                                                Value: "https"
+                                                "Key": "schema",
+                                                "Value": "https"
                                             },
                                             {
-                                                Key: "op",
-                                                Value: "list"
+                                                "Key": "op",
+                                                "Value": "list"
                                             },
                                             {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
+                                                "Key": "op",
+                                                "Value": "list"
                                             }
                                         ],
-                                        FromRaw: "",
-                                        Schema: "website",
-                                        User: "",
-                                        Pass: "",
-                                        Location: "zxgghn.25ku.com",
-                                        Path: "/source/idc_fez"
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
                                     },
-                                    HaveChildrenNodes: true
+                                    "HaveChildrenNodes": false
                                 },
-                                children: [
-                                    {
-                                        title: "production",
-                                        data: {
-                                            Extra: [
-                                                {
-                                                    Key: "url",
-                                                    Value: "https://zxgghn.25ku.com/source/idc_fez/production"
-                                                }
-                                            ],
-                                            ResourceType: "path",
-                                            VerboseType: "website-path",
-                                            ResourceName: "production",
-                                            VerboseName: "production",
-                                            Size: "1",
-                                            SizeVerbose: "1",
-                                            ModifiedTimestamp: "0",
-                                            Path: "/source/idc_fez/production",
-                                            YakURLVerbose: "",
-                                            Url: {
-                                                Query: [
-                                                    {
-                                                        Key: "schema",
-                                                        Value: "https"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    }
-                                                ],
-                                                FromRaw: "",
-                                                Schema: "website",
-                                                User: "",
-                                                Pass: "",
-                                                Location: "zxgghn.25ku.com",
-                                                Path: "/source/idc_fez/production"
-                                            },
-                                            HaveChildrenNodes: true
-                                        },
-                                        children: [
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "sc",
+                                "key": "10-0-2",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "sc",
+                                    "VerboseName": "sc",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
                                             {
-                                                title: "j",
-                                                data: {
-                                                    Extra: [
-                                                        {
-                                                            Key: "url",
-                                                            Value: "https://zxgghn.25ku.com/source/idc_fez/production/j"
-                                                        }
-                                                    ],
-                                                    ResourceType: "path",
-                                                    VerboseType: "website-path",
-                                                    ResourceName: "j",
-                                                    VerboseName: "j",
-                                                    Size: "1",
-                                                    SizeVerbose: "1",
-                                                    ModifiedTimestamp: "0",
-                                                    Path: "/source/idc_fez/production/j",
-                                                    YakURLVerbose: "",
-                                                    Url: {
-                                                        Query: [
-                                                            {
-                                                                Key: "schema",
-                                                                Value: "https"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            }
-                                                        ],
-                                                        FromRaw: "",
-                                                        Schema: "website",
-                                                        User: "",
-                                                        Pass: "",
-                                                        Location: "zxgghn.25ku.com",
-                                                        Path: "/source/idc_fez/production/j"
-                                                    },
-                                                    HaveChildrenNodes: true
-                                                },
-                                                children: [
-                                                    {
-                                                        title: "openjs",
-                                                        data: {
-                                                            Extra: [
-                                                                {
-                                                                    Key: "url",
-                                                                    Value: "https://zxgghn.25ku.com/source/idc_fez/production/j/openjs"
-                                                                }
-                                                            ],
-                                                            ResourceType: "path",
-                                                            VerboseType: "website-path",
-                                                            ResourceName: "openjs",
-                                                            VerboseName: "openjs",
-                                                            Size: "1",
-                                                            SizeVerbose: "1",
-                                                            ModifiedTimestamp: "0",
-                                                            Path: "/source/idc_fez/production/j/openjs",
-                                                            YakURLVerbose: "",
-                                                            Url: {
-                                                                Query: [
-                                                                    {
-                                                                        Key: "schema",
-                                                                        Value: "https"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    }
-                                                                ],
-                                                                FromRaw: "",
-                                                                Schema: "website",
-                                                                User: "",
-                                                                Pass: "",
-                                                                Location: "zxgghn.25ku.com",
-                                                                Path: "/source/idc_fez/production/j/openjs"
-                                                            },
-                                                            HaveChildrenNodes: true
-                                                        },
-                                                        children: [
-                                                            {
-                                                                title: "sv.js",
-                                                                data: {
-                                                                    Extra: [
-                                                                        {
-                                                                            Key: "url",
-                                                                            Value: "https://zxgghn.25ku.com/source/idc_fez/production/j/openjs/sv.js"
-                                                                        }
-                                                                    ],
-                                                                    ResourceType: "",
-                                                                    VerboseType: "",
-                                                                    ResourceName: "sv.js",
-                                                                    VerboseName: "sv.js",
-                                                                    Size: "1",
-                                                                    SizeVerbose: "1",
-                                                                    ModifiedTimestamp: "0",
-                                                                    Path: "/source/idc_fez/production/j/openjs/sv.js",
-                                                                    YakURLVerbose: "",
-                                                                    Url: {
-                                                                        Query: [
-                                                                            {
-                                                                                Key: "schema",
-                                                                                Value: "https"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            }
-                                                                        ],
-                                                                        FromRaw: "",
-                                                                        Schema: "website",
-                                                                        User: "",
-                                                                        Pass: "",
-                                                                        Location: "zxgghn.25ku.com",
-                                                                        Path: "/source/idc_fez/production/j/openjs/sv.js"
-                                                                    },
-                                                                    HaveChildrenNodes: false
-                                                                }
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
                                             }
-                                        ]
-                                    }
-                                ]
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "req",
+                                "key": "10-0-3",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "req",
+                                    "VerboseName": "req",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "prod",
+                                "key": "10-0-4",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "prod",
+                                    "VerboseName": "prod",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "pre",
+                                "key": "10-0-5",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "pre",
+                                    "VerboseName": "pre",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "p",
+                                "key": "10-0-6",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "p",
+                                    "VerboseName": "p",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "json",
+                                "key": "10-0-7",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "json",
+                                    "VerboseName": "json",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "ie",
+                                "key": "10-0-8",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "ie",
+                                    "VerboseName": "ie",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "hisdata",
+                                "key": "10-0-9",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "hisdata",
+                                    "VerboseName": "hisdata",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "from",
+                                "key": "10-0-10",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "from",
+                                    "VerboseName": "from",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "csor",
+                                "key": "10-0-11",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "csor",
+                                    "VerboseName": "csor",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "cb",
+                                "key": "10-0-12",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "cb",
+                                    "VerboseName": "cb",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "bs",
+                                "key": "10-0-13",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "bs",
+                                    "VerboseName": "bs",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "_t",
+                                "key": "10-0-14",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "_t",
+                                    "VerboseName": "_t",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "_",
+                                "key": "10-0-15",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/sugrec"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "_",
+                                    "VerboseName": "_",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/sugrec",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/sugrec"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
                             }
                         ]
                     },
                     {
-                        title: "qmoshe.js",
-                        data: {
-                            Extra: [
+                        "title": "s",
+                        "key": "10-1",
+                        "isLeaf": false,
+                        "data": {
+                            "Extra": [
                                 {
-                                    Key: "url",
-                                    Value: "https://zxgghn.25ku.com/qmoshe.js"
+                                    "Key": "url",
+                                    "Value": "https://www.baidu.com/s"
                                 }
                             ],
-                            ResourceType: "",
-                            VerboseType: "",
-                            ResourceName: "qmoshe.js",
-                            VerboseName: "qmoshe.js",
-                            Size: "4",
-                            SizeVerbose: "4",
-                            ModifiedTimestamp: "0",
-                            Path: "/qmoshe.js",
-                            YakURLVerbose: "",
-                            Url: {
-                                Query: [
+                            "ResourceType": "path",
+                            "VerboseType": "website-path",
+                            "ResourceName": "s",
+                            "VerboseName": "s/[32]",
+                            "Size": "32",
+                            "SizeVerbose": "32",
+                            "ModifiedTimestamp": "0",
+                            "Path": "/s",
+                            "YakURLVerbose": "",
+                            "Url": {
+                                "Query": [
                                     {
-                                        Key: "schema",
-                                        Value: "https"
+                                        "Key": "schema",
+                                        "Value": "https"
                                     },
                                     {
-                                        Key: "op",
-                                        Value: "list"
+                                        "Key": "op",
+                                        "Value": "list"
                                     },
                                     {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
+                                        "Key": "op",
+                                        "Value": "list"
                                     }
                                 ],
-                                FromRaw: "",
-                                Schema: "website",
-                                User: "",
-                                Pass: "",
-                                Location: "zxgghn.25ku.com",
-                                Path: "/qmoshe.js"
+                                "FromRaw": "",
+                                "Schema": "website",
+                                "User": "",
+                                "Pass": "",
+                                "Location": "www.baidu.com",
+                                "Path": "/s"
                             },
-                            HaveChildrenNodes: false
+                            "HaveChildrenNodes": true
+                        },
+                        "icon": {
+                            "key": null,
+                            "ref": null,
+                            "props": {
+                                "className": "yakitTreeNode-icon"
+                            },
+                            "_owner": null,
+                            "_store": {}
+                        },
+                        "children": [
+                            {
+                                "title": "wd",
+                                "key": "10-1-0",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "wd",
+                                    "VerboseName": "wd",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "ver",
+                                "key": "10-1-1",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "ver",
+                                    "VerboseName": "ver",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "usm",
+                                "key": "10-1-2",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "usm",
+                                    "VerboseName": "usm",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "tn",
+                                "key": "10-1-3",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "tn",
+                                    "VerboseName": "tn",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "sug",
+                                "key": "10-1-4",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "sug",
+                                    "VerboseName": "sug",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "sa",
+                                "key": "10-1-5",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "sa",
+                                    "VerboseName": "sa",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_t",
+                                "key": "10-1-6",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_t",
+                                    "VerboseName": "rsv_t",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_sug7",
+                                "key": "10-1-7",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_sug7",
+                                    "VerboseName": "rsv_sug7",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_sug4",
+                                "key": "10-1-8",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_sug4",
+                                    "VerboseName": "rsv_sug4",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_sug3",
+                                "key": "10-1-9",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_sug3",
+                                    "VerboseName": "rsv_sug3",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_sug2",
+                                "key": "10-1-10",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_sug2",
+                                    "VerboseName": "rsv_sug2",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_sug1",
+                                "key": "10-1-11",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_sug1",
+                                    "VerboseName": "rsv_sug1",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_stat",
+                                "key": "10-1-12",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_stat",
+                                    "VerboseName": "rsv_stat",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_sid",
+                                "key": "10-1-13",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_sid",
+                                    "VerboseName": "rsv_sid",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_pq",
+                                "key": "10-1-14",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_pq",
+                                    "VerboseName": "rsv_pq",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_n",
+                                "key": "10-1-15",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_n",
+                                    "VerboseName": "rsv_n",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_idx",
+                                "key": "10-1-16",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_idx",
+                                    "VerboseName": "rsv_idx",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_enter",
+                                "key": "10-1-17",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_enter",
+                                    "VerboseName": "rsv_enter",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_dl",
+                                "key": "10-1-18",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_dl",
+                                    "VerboseName": "rsv_dl",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_btype",
+                                "key": "10-1-19",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_btype",
+                                    "VerboseName": "rsv_btype",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsv_bp",
+                                "key": "10-1-20",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsv_bp",
+                                    "VerboseName": "rsv_bp",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsp",
+                                "key": "10-1-21",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsp",
+                                    "VerboseName": "rsp",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rsf",
+                                "key": "10-1-22",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rsf",
+                                    "VerboseName": "rsf",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rqlang",
+                                "key": "10-1-23",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rqlang",
+                                    "VerboseName": "rqlang",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "rqid",
+                                "key": "10-1-24",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "rqid",
+                                    "VerboseName": "rqid",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "pstg",
+                                "key": "10-1-25",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "pstg",
+                                    "VerboseName": "pstg",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "prefixsug",
+                                "key": "10-1-26",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "prefixsug",
+                                    "VerboseName": "prefixsug",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "pn",
+                                "key": "10-1-27",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "pn",
+                                    "VerboseName": "pn",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "oq",
+                                "key": "10-1-28",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "oq",
+                                    "VerboseName": "oq",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "mod",
+                                "key": "10-1-29",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "mod",
+                                    "VerboseName": "mod",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "istc",
+                                "key": "10-1-30",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "istc",
+                                    "VerboseName": "istc",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "isnop",
+                                "key": "10-1-31",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "isnop",
+                                    "VerboseName": "isnop",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "isid",
+                                "key": "10-1-32",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "isid",
+                                    "VerboseName": "isid",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "isbd",
+                                "key": "10-1-33",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "isbd",
+                                    "VerboseName": "isbd",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "inputT",
+                                "key": "10-1-34",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "inputT",
+                                    "VerboseName": "inputT",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "ie",
+                                "key": "10-1-35",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "ie",
+                                    "VerboseName": "ie",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "hsug",
+                                "key": "10-1-36",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "hsug",
+                                    "VerboseName": "hsug",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "hisfilter",
+                                "key": "10-1-37",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "hisfilter",
+                                    "VerboseName": "hisfilter",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "from",
+                                "key": "10-1-38",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "from",
+                                    "VerboseName": "from",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "fr",
+                                "key": "10-1-39",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "fr",
+                                    "VerboseName": "fr",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "fenlei",
+                                "key": "10-1-40",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "fenlei",
+                                    "VerboseName": "fenlei",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "f4s",
+                                "key": "10-1-41",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "f4s",
+                                    "VerboseName": "f4s",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "f",
+                                "key": "10-1-42",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "f",
+                                    "VerboseName": "f",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "csq",
+                                "key": "10-1-43",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "csq",
+                                    "VerboseName": "csq",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "csor",
+                                "key": "10-1-44",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "csor",
+                                    "VerboseName": "csor",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "cqid",
+                                "key": "10-1-45",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "cqid",
+                                    "VerboseName": "cqid",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "clist",
+                                "key": "10-1-46",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "clist",
+                                    "VerboseName": "clist",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "cl",
+                                "key": "10-1-47",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "cl",
+                                    "VerboseName": "cl",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "chk",
+                                "key": "10-1-48",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "chk",
+                                    "VerboseName": "chk",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "bs",
+                                "key": "10-1-49",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "bs",
+                                    "VerboseName": "bs",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "_ss",
+                                "key": "10-1-50",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "_ss",
+                                    "VerboseName": "_ss",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "_cr1",
+                                "key": "10-1-51",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "_cr1",
+                                    "VerboseName": "_cr1",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "_ck",
+                                "key": "10-1-52",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/s"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "_ck",
+                                    "VerboseName": "_ck",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/s",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/s"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "title": "link",
+                        "key": "10-2",
+                        "isLeaf": false,
+                        "data": {
+                            "Extra": [
+                                {
+                                    "Key": "url",
+                                    "Value": "https://www.baidu.com/link"
+                                }
+                            ],
+                            "ResourceType": "path",
+                            "VerboseType": "website-path",
+                            "ResourceName": "link",
+                            "VerboseName": "link/[15]",
+                            "Size": "15",
+                            "SizeVerbose": "15",
+                            "ModifiedTimestamp": "0",
+                            "Path": "/link",
+                            "YakURLVerbose": "",
+                            "Url": {
+                                "Query": [
+                                    {
+                                        "Key": "schema",
+                                        "Value": "https"
+                                    },
+                                    {
+                                        "Key": "op",
+                                        "Value": "list"
+                                    },
+                                    {
+                                        "Key": "op",
+                                        "Value": "list"
+                                    }
+                                ],
+                                "FromRaw": "",
+                                "Schema": "website",
+                                "User": "",
+                                "Pass": "",
+                                "Location": "www.baidu.com",
+                                "Path": "/link"
+                            },
+                            "HaveChildrenNodes": true
+                        },
+                        "icon": {
+                            "key": null,
+                            "ref": null,
+                            "props": {
+                                "className": "yakitTreeNode-icon"
+                            },
+                            "_owner": null,
+                            "_store": {}
+                        },
+                        "children": [
+                            {
+                                "title": "wd",
+                                "key": "10-2-0",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/link"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "wd",
+                                    "VerboseName": "wd",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/link",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/link"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "url",
+                                "key": "10-2-1",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/link"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "url",
+                                    "VerboseName": "url",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/link",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/link"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            },
+                            {
+                                "title": "eqid",
+                                "key": "10-2-2",
+                                "isLeaf": true,
+                                "data": {
+                                    "Extra": [
+                                        {
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/link"
+                                        }
+                                    ],
+                                    "ResourceType": "file",
+                                    "VerboseType": "website-file-with-query",
+                                    "ResourceName": "eqid",
+                                    "VerboseName": "eqid",
+                                    "Size": "1",
+                                    "SizeVerbose": "1",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/link",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
+                                            {
+                                                "Key": "schema",
+                                                "Value": "https"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            },
+                                            {
+                                                "Key": "op",
+                                                "Value": "list"
+                                            }
+                                        ],
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/link"
+                                    },
+                                    "HaveChildrenNodes": false
+                                },
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "title": "content-search.xml",
+                        "key": "10-3",
+                        "isLeaf": true,
+                        "data": {
+                            "Extra": [
+                                {
+                                    "Key": "url",
+                                    "Value": "https://www.baidu.com/content-search.xml"
+                                }
+                            ],
+                            "ResourceType": "",
+                            "VerboseType": "",
+                            "ResourceName": "content-search.xml",
+                            "VerboseName": "content-search.xml/[6]",
+                            "Size": "6",
+                            "SizeVerbose": "6",
+                            "ModifiedTimestamp": "0",
+                            "Path": "/content-search.xml",
+                            "YakURLVerbose": "",
+                            "Url": {
+                                "Query": [
+                                    {
+                                        "Key": "schema",
+                                        "Value": "https"
+                                    },
+                                    {
+                                        "Key": "op",
+                                        "Value": "list"
+                                    }
+                                ],
+                                "FromRaw": "",
+                                "Schema": "website",
+                                "User": "",
+                                "Pass": "",
+                                "Location": "www.baidu.com",
+                                "Path": "/content-search.xml"
+                            },
+                            "HaveChildrenNodes": false
+                        },
+                        "icon": {
+                            "key": null,
+                            "ref": null,
+                            "props": {},
+                            "_owner": null,
+                            "_store": {}
                         }
                     },
                     {
-                        title: "production",
-                        data: {
-                            Extra: [
+                        "title": "cache",
+                        "key": "10-4",
+                        "isLeaf": false,
+                        "data": {
+                            "Extra": [
                                 {
-                                    Key: "url",
-                                    Value: "https://zxgghn.25ku.com/production"
+                                    "Key": "url",
+                                    "Value": "https://www.baidu.com/cache"
                                 }
                             ],
-                            ResourceType: "path",
-                            VerboseType: "website-path",
-                            ResourceName: "production",
-                            VerboseName: "production",
-                            Size: "2",
-                            SizeVerbose: "2",
-                            ModifiedTimestamp: "0",
-                            Path: "/production",
-                            YakURLVerbose: "",
-                            Url: {
-                                Query: [
+                            "ResourceType": "path",
+                            "VerboseType": "website-path",
+                            "ResourceName": "cache",
+                            "VerboseName": "cache/[2]",
+                            "Size": "2",
+                            "SizeVerbose": "2",
+                            "ModifiedTimestamp": "0",
+                            "Path": "/cache",
+                            "YakURLVerbose": "",
+                            "Url": {
+                                "Query": [
                                     {
-                                        Key: "schema",
-                                        Value: "https"
+                                        "Key": "schema",
+                                        "Value": "https"
                                     },
                                     {
-                                        Key: "op",
-                                        Value: "list"
+                                        "Key": "op",
+                                        "Value": "list"
                                     },
                                     {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
+                                        "Key": "op",
+                                        "Value": "list"
                                     }
                                 ],
-                                FromRaw: "",
-                                Schema: "website",
-                                User: "",
-                                Pass: "",
-                                Location: "zxgghn.25ku.com",
-                                Path: "/production"
+                                "FromRaw": "",
+                                "Schema": "website",
+                                "User": "",
+                                "Pass": "",
+                                "Location": "www.baidu.com",
+                                "Path": "/cache"
                             },
-                            HaveChildrenNodes: true
+                            "HaveChildrenNodes": true
                         },
-                        children: [
+                        "icon": {
+                            "key": null,
+                            "ref": null,
+                            "props": {
+                                "className": "yakitTreeNode-icon"
+                            },
+                            "_owner": null,
+                            "_store": {}
+                        },
+                        "children": [
                             {
-                                title: "jedgf",
-                                data: {
-                                    Extra: [
+                                "title": "aladdin",
+                                "key": "10-4-0",
+                                "isLeaf": false,
+                                "data": {
+                                    "Extra": [
                                         {
-                                            Key: "url",
-                                            Value: "https://zxgghn.25ku.com/production/jedgf"
+                                            "Key": "url",
+                                            "Value": "https://www.baidu.com/cache/aladdin"
                                         }
                                     ],
-                                    ResourceType: "path",
-                                    VerboseType: "website-path",
-                                    ResourceName: "jedgf",
-                                    VerboseName: "jedgf",
-                                    Size: "1",
-                                    SizeVerbose: "1",
-                                    ModifiedTimestamp: "0",
-                                    Path: "/production/jedgf",
-                                    YakURLVerbose: "",
-                                    Url: {
-                                        Query: [
+                                    "ResourceType": "path",
+                                    "VerboseType": "website-path",
+                                    "ResourceName": "aladdin",
+                                    "VerboseName": "aladdin/[2]",
+                                    "Size": "2",
+                                    "SizeVerbose": "2",
+                                    "ModifiedTimestamp": "0",
+                                    "Path": "/cache/aladdin",
+                                    "YakURLVerbose": "",
+                                    "Url": {
+                                        "Query": [
                                             {
-                                                Key: "schema",
-                                                Value: "https"
+                                                "Key": "schema",
+                                                "Value": "https"
                                             },
                                             {
-                                                Key: "op",
-                                                Value: "list"
+                                                "Key": "op",
+                                                "Value": "list"
                                             },
                                             {
-                                                Key: "op",
-                                                Value: "list"
+                                                "Key": "op",
+                                                "Value": "list"
                                             },
                                             {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
+                                                "Key": "op",
+                                                "Value": "list"
                                             }
                                         ],
-                                        FromRaw: "",
-                                        Schema: "website",
-                                        User: "",
-                                        Pass: "",
-                                        Location: "zxgghn.25ku.com",
-                                        Path: "/production/jedgf"
+                                        "FromRaw": "",
+                                        "Schema": "website",
+                                        "User": "",
+                                        "Pass": "",
+                                        "Location": "www.baidu.com",
+                                        "Path": "/cache/aladdin"
                                     },
-                                    HaveChildrenNodes: true
+                                    "HaveChildrenNodes": true
                                 },
-                                children: [
+                                "icon": {
+                                    "key": null,
+                                    "ref": null,
+                                    "props": {
+                                        "className": "yakitTreeNode-icon"
+                                    },
+                                    "_owner": null,
+                                    "_store": {}
+                                },
+                                "children": [
                                     {
-                                        title: "common",
-                                        data: {
-                                            Extra: [
+                                        "title": "ui",
+                                        "key": "10-4-0-0",
+                                        "isLeaf": false,
+                                        "data": {
+                                            "Extra": [
                                                 {
-                                                    Key: "url",
-                                                    Value: "https://zxgghn.25ku.com/production/jedgf/common"
+                                                    "Key": "url",
+                                                    "Value": "https://www.baidu.com/cache/aladdin/ui"
                                                 }
                                             ],
-                                            ResourceType: "path",
-                                            VerboseType: "website-path",
-                                            ResourceName: "common",
-                                            VerboseName: "common",
-                                            Size: "1",
-                                            SizeVerbose: "1",
-                                            ModifiedTimestamp: "0",
-                                            Path: "/production/jedgf/common",
-                                            YakURLVerbose: "",
-                                            Url: {
-                                                Query: [
+                                            "ResourceType": "path",
+                                            "VerboseType": "website-path",
+                                            "ResourceName": "ui",
+                                            "VerboseName": "ui/[2]",
+                                            "Size": "2",
+                                            "SizeVerbose": "2",
+                                            "ModifiedTimestamp": "0",
+                                            "Path": "/cache/aladdin/ui",
+                                            "YakURLVerbose": "",
+                                            "Url": {
+                                                "Query": [
                                                     {
-                                                        Key: "schema",
-                                                        Value: "https"
+                                                        "Key": "schema",
+                                                        "Value": "https"
                                                     },
                                                     {
-                                                        Key: "op",
-                                                        Value: "list"
+                                                        "Key": "op",
+                                                        "Value": "list"
                                                     },
                                                     {
-                                                        Key: "op",
-                                                        Value: "list"
+                                                        "Key": "op",
+                                                        "Value": "list"
                                                     },
                                                     {
-                                                        Key: "op",
-                                                        Value: "list"
+                                                        "Key": "op",
+                                                        "Value": "list"
                                                     },
                                                     {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
+                                                        "Key": "op",
+                                                        "Value": "list"
                                                     }
                                                 ],
-                                                FromRaw: "",
-                                                Schema: "website",
-                                                User: "",
-                                                Pass: "",
-                                                Location: "zxgghn.25ku.com",
-                                                Path: "/production/jedgf/common"
+                                                "FromRaw": "",
+                                                "Schema": "website",
+                                                "User": "",
+                                                "Pass": "",
+                                                "Location": "www.baidu.com",
+                                                "Path": "/cache/aladdin/ui"
                                             },
-                                            HaveChildrenNodes: true
+                                            "HaveChildrenNodes": true
                                         },
-                                        children: [
+                                        "icon": {
+                                            "key": null,
+                                            "ref": null,
+                                            "props": {
+                                                "className": "yakitTreeNode-icon"
+                                            },
+                                            "_owner": null,
+                                            "_store": {}
+                                        },
+                                        "children": [
                                             {
-                                                title: "a",
-                                                data: {
-                                                    Extra: [
+                                                "title": "tabs5",
+                                                "key": "10-4-0-0-0",
+                                                "isLeaf": false,
+                                                "data": {
+                                                    "Extra": [
                                                         {
-                                                            Key: "url",
-                                                            Value: "https://zxgghn.25ku.com/production/jedgf/common/a"
+                                                            "Key": "url",
+                                                            "Value": "https://www.baidu.com/cache/aladdin/ui/tabs5"
                                                         }
                                                     ],
-                                                    ResourceType: "path",
-                                                    VerboseType: "website-path",
-                                                    ResourceName: "a",
-                                                    VerboseName: "a",
-                                                    Size: "1",
-                                                    SizeVerbose: "1",
-                                                    ModifiedTimestamp: "0",
-                                                    Path: "/production/jedgf/common/a",
-                                                    YakURLVerbose: "",
-                                                    Url: {
-                                                        Query: [
+                                                    "ResourceType": "path",
+                                                    "VerboseType": "website-path",
+                                                    "ResourceName": "tabs5",
+                                                    "VerboseName": "tabs5/[2]",
+                                                    "Size": "2",
+                                                    "SizeVerbose": "2",
+                                                    "ModifiedTimestamp": "0",
+                                                    "Path": "/cache/aladdin/ui/tabs5",
+                                                    "YakURLVerbose": "",
+                                                    "Url": {
+                                                        "Query": [
                                                             {
-                                                                Key: "schema",
-                                                                Value: "https"
+                                                                "Key": "schema",
+                                                                "Value": "https"
                                                             },
                                                             {
-                                                                Key: "op",
-                                                                Value: "list"
+                                                                "Key": "op",
+                                                                "Value": "list"
                                                             },
                                                             {
-                                                                Key: "op",
-                                                                Value: "list"
+                                                                "Key": "op",
+                                                                "Value": "list"
                                                             },
                                                             {
-                                                                Key: "op",
-                                                                Value: "list"
+                                                                "Key": "op",
+                                                                "Value": "list"
                                                             },
                                                             {
-                                                                Key: "op",
-                                                                Value: "list"
+                                                                "Key": "op",
+                                                                "Value": "list"
                                                             },
                                                             {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
+                                                                "Key": "op",
+                                                                "Value": "list"
                                                             }
                                                         ],
-                                                        FromRaw: "",
-                                                        Schema: "website",
-                                                        User: "",
-                                                        Pass: "",
-                                                        Location: "zxgghn.25ku.com",
-                                                        Path: "/production/jedgf/common/a"
+                                                        "FromRaw": "",
+                                                        "Schema": "website",
+                                                        "User": "",
+                                                        "Pass": "",
+                                                        "Location": "www.baidu.com",
+                                                        "Path": "/cache/aladdin/ui/tabs5"
                                                     },
-                                                    HaveChildrenNodes: true
+                                                    "HaveChildrenNodes": true
                                                 },
-                                                children: [
+                                                "icon": {
+                                                    "key": null,
+                                                    "ref": null,
+                                                    "props": {
+                                                        "className": "yakitTreeNode-icon"
+                                                    },
+                                                    "_owner": null,
+                                                    "_store": {}
+                                                },
+                                                "children": [
                                                     {
-                                                        title: "production",
-                                                        data: {
-                                                            Extra: [
+                                                        "title": "tabs5.js",
+                                                        "key": "10-4-0-0-0-0",
+                                                        "isLeaf": false,
+                                                        "data": {
+                                                            "Extra": [
                                                                 {
-                                                                    Key: "url",
-                                                                    Value: "https://zxgghn.25ku.com/production/jedgf/common/a/production"
+                                                                    "Key": "url",
+                                                                    "Value": "https://www.baidu.com/cache/aladdin/ui/tabs5/tabs5.js"
                                                                 }
                                                             ],
-                                                            ResourceType: "path",
-                                                            VerboseType: "website-path",
-                                                            ResourceName: "production",
-                                                            VerboseName: "production",
-                                                            Size: "1",
-                                                            SizeVerbose: "1",
-                                                            ModifiedTimestamp: "0",
-                                                            Path: "/production/jedgf/common/a/production",
-                                                            YakURLVerbose: "",
-                                                            Url: {
-                                                                Query: [
+                                                            "ResourceType": "path",
+                                                            "VerboseType": "website-path",
+                                                            "ResourceName": "tabs5.js",
+                                                            "VerboseName": "tabs5.js/[2]",
+                                                            "Size": "2",
+                                                            "SizeVerbose": "2",
+                                                            "ModifiedTimestamp": "0",
+                                                            "Path": "/cache/aladdin/ui/tabs5/tabs5.js",
+                                                            "YakURLVerbose": "",
+                                                            "Url": {
+                                                                "Query": [
                                                                     {
-                                                                        Key: "schema",
-                                                                        Value: "https"
+                                                                        "Key": "schema",
+                                                                        "Value": "https"
                                                                     },
                                                                     {
-                                                                        Key: "op",
-                                                                        Value: "list"
+                                                                        "Key": "op",
+                                                                        "Value": "list"
                                                                     },
                                                                     {
-                                                                        Key: "op",
-                                                                        Value: "list"
+                                                                        "Key": "op",
+                                                                        "Value": "list"
                                                                     },
                                                                     {
-                                                                        Key: "op",
-                                                                        Value: "list"
+                                                                        "Key": "op",
+                                                                        "Value": "list"
                                                                     },
                                                                     {
-                                                                        Key: "op",
-                                                                        Value: "list"
+                                                                        "Key": "op",
+                                                                        "Value": "list"
                                                                     },
                                                                     {
-                                                                        Key: "op",
-                                                                        Value: "list"
+                                                                        "Key": "op",
+                                                                        "Value": "list"
                                                                     },
                                                                     {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
+                                                                        "Key": "op",
+                                                                        "Value": "list"
                                                                     }
                                                                 ],
-                                                                FromRaw: "",
-                                                                Schema: "website",
-                                                                User: "",
-                                                                Pass: "",
-                                                                Location: "zxgghn.25ku.com",
-                                                                Path: "/production/jedgf/common/a/production"
+                                                                "FromRaw": "",
+                                                                "Schema": "website",
+                                                                "User": "",
+                                                                "Pass": "",
+                                                                "Location": "www.baidu.com",
+                                                                "Path": "/cache/aladdin/ui/tabs5/tabs5.js"
                                                             },
-                                                            HaveChildrenNodes: true
+                                                            "HaveChildrenNodes": true
                                                         },
-                                                        children: [
+                                                        "icon": {
+                                                            "key": null,
+                                                            "ref": null,
+                                                            "props": {
+                                                                "className": "yakitTreeNode-icon"
+                                                            },
+                                                            "_owner": null,
+                                                            "_store": {}
+                                                        },
+                                                        "children": [
                                                             {
-                                                                title: "k_t",
-                                                                data: {
-                                                                    Extra: [
+                                                                "title": "v",
+                                                                "key": "10-4-0-0-0-0-0",
+                                                                "isLeaf": true,
+                                                                "data": {
+                                                                    "Extra": [
                                                                         {
-                                                                            Key: "url",
-                                                                            Value: "https://zxgghn.25ku.com/production/jedgf/common/a/production/k_t"
+                                                                            "Key": "url",
+                                                                            "Value": "https://www.baidu.com/cache/aladdin/ui/tabs5/tabs5.js"
                                                                         }
                                                                     ],
-                                                                    ResourceType: "path",
-                                                                    VerboseType: "website-path",
-                                                                    ResourceName: "k_t",
-                                                                    VerboseName: "k_t",
-                                                                    Size: "1",
-                                                                    SizeVerbose: "1",
-                                                                    ModifiedTimestamp: "0",
-                                                                    Path: "/production/jedgf/common/a/production/k_t",
-                                                                    YakURLVerbose: "",
-                                                                    Url: {
-                                                                        Query: [
+                                                                    "ResourceType": "file",
+                                                                    "VerboseType": "website-file-with-query",
+                                                                    "ResourceName": "v",
+                                                                    "VerboseName": "v",
+                                                                    "Size": "1",
+                                                                    "SizeVerbose": "1",
+                                                                    "ModifiedTimestamp": "0",
+                                                                    "Path": "/cache/aladdin/ui/tabs5/tabs5.js",
+                                                                    "YakURLVerbose": "",
+                                                                    "Url": {
+                                                                        "Query": [
                                                                             {
-                                                                                Key: "schema",
-                                                                                Value: "https"
+                                                                                "Key": "schema",
+                                                                                "Value": "https"
                                                                             },
                                                                             {
-                                                                                Key: "op",
-                                                                                Value: "list"
+                                                                                "Key": "op",
+                                                                                "Value": "list"
                                                                             },
                                                                             {
-                                                                                Key: "op",
-                                                                                Value: "list"
+                                                                                "Key": "op",
+                                                                                "Value": "list"
                                                                             },
                                                                             {
-                                                                                Key: "op",
-                                                                                Value: "list"
+                                                                                "Key": "op",
+                                                                                "Value": "list"
                                                                             },
                                                                             {
-                                                                                Key: "op",
-                                                                                Value: "list"
+                                                                                "Key": "op",
+                                                                                "Value": "list"
                                                                             },
                                                                             {
-                                                                                Key: "op",
-                                                                                Value: "list"
+                                                                                "Key": "op",
+                                                                                "Value": "list"
                                                                             },
                                                                             {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
+                                                                                "Key": "op",
+                                                                                "Value": "list"
                                                                             }
                                                                         ],
-                                                                        FromRaw: "",
-                                                                        Schema: "website",
-                                                                        User: "",
-                                                                        Pass: "",
-                                                                        Location: "zxgghn.25ku.com",
-                                                                        Path: "/production/jedgf/common/a/production/k_t"
+                                                                        "FromRaw": "",
+                                                                        "Schema": "website",
+                                                                        "User": "",
+                                                                        "Pass": "",
+                                                                        "Location": "www.baidu.com",
+                                                                        "Path": "/cache/aladdin/ui/tabs5/tabs5.js"
                                                                     },
-                                                                    HaveChildrenNodes: true
+                                                                    "HaveChildrenNodes": false
                                                                 },
-                                                                children: [
-                                                                    {
-                                                                        title: "resource",
-                                                                        data: {
-                                                                            Extra: [
-                                                                                {
-                                                                                    Key: "url",
-                                                                                    Value: "https://zxgghn.25ku.com/production/jedgf/common/a/production/k_t/resource"
-                                                                                }
-                                                                            ],
-                                                                            ResourceType: "path",
-                                                                            VerboseType: "website-path",
-                                                                            ResourceName: "resource",
-                                                                            VerboseName: "resource",
-                                                                            Size: "1",
-                                                                            SizeVerbose: "1",
-                                                                            ModifiedTimestamp: "0",
-                                                                            Path: "/production/jedgf/common/a/production/k_t/resource",
-                                                                            YakURLVerbose: "",
-                                                                            Url: {
-                                                                                Query: [
-                                                                                    {
-                                                                                        Key: "schema",
-                                                                                        Value: "https"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    },
-                                                                                    {
-                                                                                        Key: "op",
-                                                                                        Value: "list"
-                                                                                    }
-                                                                                ],
-                                                                                FromRaw: "",
-                                                                                Schema: "website",
-                                                                                User: "",
-                                                                                Pass: "",
-                                                                                Location: "zxgghn.25ku.com",
-                                                                                Path: "/production/jedgf/common/a/production/k_t/resource"
-                                                                            },
-                                                                            HaveChildrenNodes: true
-                                                                        },
-                                                                        children: [
-                                                                            {
-                                                                                title: "a.js",
-                                                                                data: {
-                                                                                    Extra: [
-                                                                                        {
-                                                                                            Key: "url",
-                                                                                            Value: "https://zxgghn.25ku.com/production/jedgf/common/a/production/k_t/resource/a.js"
-                                                                                        }
-                                                                                    ],
-                                                                                    ResourceType: "",
-                                                                                    VerboseType: "",
-                                                                                    ResourceName: "a.js",
-                                                                                    VerboseName: "a.js",
-                                                                                    Size: "1",
-                                                                                    SizeVerbose: "1",
-                                                                                    ModifiedTimestamp: "0",
-                                                                                    Path: "/production/jedgf/common/a/production/k_t/resource/a.js",
-                                                                                    YakURLVerbose: "",
-                                                                                    Url: {
-                                                                                        Query: [
-                                                                                            {
-                                                                                                Key: "schema",
-                                                                                                Value: "https"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            },
-                                                                                            {
-                                                                                                Key: "op",
-                                                                                                Value: "list"
-                                                                                            }
-                                                                                        ],
-                                                                                        FromRaw: "",
-                                                                                        Schema: "website",
-                                                                                        User: "",
-                                                                                        Pass: "",
-                                                                                        Location: "zxgghn.25ku.com",
-                                                                                        Path: "/production/jedgf/common/a/production/k_t/resource/a.js"
-                                                                                    },
-                                                                                    HaveChildrenNodes: false
-                                                                                }
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                ]
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
-                                title: "hcb",
-                                data: {
-                                    Extra: [
-                                        {
-                                            Key: "url",
-                                            Value: "https://zxgghn.25ku.com/production/hcb"
-                                        }
-                                    ],
-                                    ResourceType: "path",
-                                    VerboseType: "website-path",
-                                    ResourceName: "hcb",
-                                    VerboseName: "hcb",
-                                    Size: "1",
-                                    SizeVerbose: "1",
-                                    ModifiedTimestamp: "0",
-                                    Path: "/production/hcb",
-                                    YakURLVerbose: "",
-                                    Url: {
-                                        Query: [
-                                            {
-                                                Key: "schema",
-                                                Value: "https"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            }
-                                        ],
-                                        FromRaw: "",
-                                        Schema: "website",
-                                        User: "",
-                                        Pass: "",
-                                        Location: "zxgghn.25ku.com",
-                                        Path: "/production/hcb"
-                                    },
-                                    HaveChildrenNodes: true
-                                },
-                                children: [
-                                    {
-                                        title: "ed",
-                                        data: {
-                                            Extra: [
-                                                {
-                                                    Key: "url",
-                                                    Value: "https://zxgghn.25ku.com/production/hcb/ed"
-                                                }
-                                            ],
-                                            ResourceType: "path",
-                                            VerboseType: "website-path",
-                                            ResourceName: "ed",
-                                            VerboseName: "ed",
-                                            Size: "1",
-                                            SizeVerbose: "1",
-                                            ModifiedTimestamp: "0",
-                                            Path: "/production/hcb/ed",
-                                            YakURLVerbose: "",
-                                            Url: {
-                                                Query: [
-                                                    {
-                                                        Key: "schema",
-                                                        Value: "https"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    }
-                                                ],
-                                                FromRaw: "",
-                                                Schema: "website",
-                                                User: "",
-                                                Pass: "",
-                                                Location: "zxgghn.25ku.com",
-                                                Path: "/production/hcb/ed"
-                                            },
-                                            HaveChildrenNodes: true
-                                        },
-                                        children: [
-                                            {
-                                                title: "y",
-                                                data: {
-                                                    Extra: [
-                                                        {
-                                                            Key: "url",
-                                                            Value: "https://zxgghn.25ku.com/production/hcb/ed/y"
-                                                        }
-                                                    ],
-                                                    ResourceType: "path",
-                                                    VerboseType: "website-path",
-                                                    ResourceName: "y",
-                                                    VerboseName: "y",
-                                                    Size: "1",
-                                                    SizeVerbose: "1",
-                                                    ModifiedTimestamp: "0",
-                                                    Path: "/production/hcb/ed/y",
-                                                    YakURLVerbose: "",
-                                                    Url: {
-                                                        Query: [
-                                                            {
-                                                                Key: "schema",
-                                                                Value: "https"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            }
-                                                        ],
-                                                        FromRaw: "",
-                                                        Schema: "website",
-                                                        User: "",
-                                                        Pass: "",
-                                                        Location: "zxgghn.25ku.com",
-                                                        Path: "/production/hcb/ed/y"
-                                                    },
-                                                    HaveChildrenNodes: true
-                                                },
-                                                children: [
-                                                    {
-                                                        title: "resource",
-                                                        data: {
-                                                            Extra: [
-                                                                {
-                                                                    Key: "url",
-                                                                    Value: "https://zxgghn.25ku.com/production/hcb/ed/y/resource"
-                                                                }
-                                                            ],
-                                                            ResourceType: "path",
-                                                            VerboseType: "website-path",
-                                                            ResourceName: "resource",
-                                                            VerboseName: "resource",
-                                                            Size: "1",
-                                                            SizeVerbose: "1",
-                                                            ModifiedTimestamp: "0",
-                                                            Path: "/production/hcb/ed/y/resource",
-                                                            YakURLVerbose: "",
-                                                            Url: {
-                                                                Query: [
-                                                                    {
-                                                                        Key: "schema",
-                                                                        Value: "https"
+                                                                "icon": {
+                                                                    "key": null,
+                                                                    "ref": null,
+                                                                    "props": {
+                                                                        "className": "yakitTreeNode-icon"
                                                                     },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    },
-                                                                    {
-                                                                        Key: "op",
-                                                                        Value: "list"
-                                                                    }
-                                                                ],
-                                                                FromRaw: "",
-                                                                Schema: "website",
-                                                                User: "",
-                                                                Pass: "",
-                                                                Location: "zxgghn.25ku.com",
-                                                                Path: "/production/hcb/ed/y/resource"
-                                                            },
-                                                            HaveChildrenNodes: true
-                                                        },
-                                                        children: [
-                                                            {
-                                                                title: "i_rr.js",
-                                                                data: {
-                                                                    Extra: [
-                                                                        {
-                                                                            Key: "url",
-                                                                            Value: "https://zxgghn.25ku.com/production/hcb/ed/y/resource/i_rr.js"
-                                                                        }
-                                                                    ],
-                                                                    ResourceType: "",
-                                                                    VerboseType: "",
-                                                                    ResourceName: "i_rr.js",
-                                                                    VerboseName: "i_rr.js",
-                                                                    Size: "1",
-                                                                    SizeVerbose: "1",
-                                                                    ModifiedTimestamp: "0",
-                                                                    Path: "/production/hcb/ed/y/resource/i_rr.js",
-                                                                    YakURLVerbose: "",
-                                                                    Url: {
-                                                                        Query: [
-                                                                            {
-                                                                                Key: "schema",
-                                                                                Value: "https"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            },
-                                                                            {
-                                                                                Key: "op",
-                                                                                Value: "list"
-                                                                            }
-                                                                        ],
-                                                                        FromRaw: "",
-                                                                        Schema: "website",
-                                                                        User: "",
-                                                                        Pass: "",
-                                                                        Location: "zxgghn.25ku.com",
-                                                                        Path: "/production/hcb/ed/y/resource/i_rr.js"
-                                                                    },
-                                                                    HaveChildrenNodes: false
+                                                                    "_owner": null,
+                                                                    "_store": {}
                                                                 }
                                                             }
                                                         ]
@@ -2678,288 +5510,13 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 ]
                             }
                         ]
-                    },
-                    {
-                        title: "js",
-                        data: {
-                            Extra: [
-                                {
-                                    Key: "url",
-                                    Value: "https://zxgghn.25ku.com/js"
-                                }
-                            ],
-                            ResourceType: "path",
-                            VerboseType: "website-path",
-                            ResourceName: "js",
-                            VerboseName: "js",
-                            Size: "1",
-                            SizeVerbose: "1",
-                            ModifiedTimestamp: "0",
-                            Path: "/js",
-                            YakURLVerbose: "",
-                            Url: {
-                                Query: [
-                                    {
-                                        Key: "schema",
-                                        Value: "https"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
-                                    }
-                                ],
-                                FromRaw: "",
-                                Schema: "website",
-                                User: "",
-                                Pass: "",
-                                Location: "zxgghn.25ku.com",
-                                Path: "/js"
-                            },
-                            HaveChildrenNodes: true
-                        },
-                        children: [
-                            {
-                                title: "logo",
-                                data: {
-                                    Extra: [
-                                        {
-                                            Key: "url",
-                                            Value: "https://zxgghn.25ku.com/js/logo"
-                                        }
-                                    ],
-                                    ResourceType: "path",
-                                    VerboseType: "website-path",
-                                    ResourceName: "logo",
-                                    VerboseName: "logo",
-                                    Size: "1",
-                                    SizeVerbose: "1",
-                                    ModifiedTimestamp: "0",
-                                    Path: "/js/logo",
-                                    YakURLVerbose: "",
-                                    Url: {
-                                        Query: [
-                                            {
-                                                Key: "schema",
-                                                Value: "https"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            },
-                                            {
-                                                Key: "op",
-                                                Value: "list"
-                                            }
-                                        ],
-                                        FromRaw: "",
-                                        Schema: "website",
-                                        User: "",
-                                        Pass: "",
-                                        Location: "zxgghn.25ku.com",
-                                        Path: "/js/logo"
-                                    },
-                                    HaveChildrenNodes: true
-                                },
-                                children: [
-                                    {
-                                        title: "js",
-                                        data: {
-                                            Extra: [
-                                                {
-                                                    Key: "url",
-                                                    Value: "https://zxgghn.25ku.com/js/logo/js"
-                                                }
-                                            ],
-                                            ResourceType: "path",
-                                            VerboseType: "website-path",
-                                            ResourceName: "js",
-                                            VerboseName: "js",
-                                            Size: "1",
-                                            SizeVerbose: "1",
-                                            ModifiedTimestamp: "0",
-                                            Path: "/js/logo/js",
-                                            YakURLVerbose: "",
-                                            Url: {
-                                                Query: [
-                                                    {
-                                                        Key: "schema",
-                                                        Value: "https"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    },
-                                                    {
-                                                        Key: "op",
-                                                        Value: "list"
-                                                    }
-                                                ],
-                                                FromRaw: "",
-                                                Schema: "website",
-                                                User: "",
-                                                Pass: "",
-                                                Location: "zxgghn.25ku.com",
-                                                Path: "/js/logo/js"
-                                            },
-                                            HaveChildrenNodes: true
-                                        },
-                                        children: [
-                                            {
-                                                title: "logo.js",
-                                                data: {
-                                                    Extra: [
-                                                        {
-                                                            Key: "url",
-                                                            Value: "https://zxgghn.25ku.com/js/logo/js/logo.js"
-                                                        }
-                                                    ],
-                                                    ResourceType: "",
-                                                    VerboseType: "",
-                                                    ResourceName: "logo.js",
-                                                    VerboseName: "logo.js",
-                                                    Size: "1",
-                                                    SizeVerbose: "1",
-                                                    ModifiedTimestamp: "0",
-                                                    Path: "/js/logo/js/logo.js",
-                                                    YakURLVerbose: "",
-                                                    Url: {
-                                                        Query: [
-                                                            {
-                                                                Key: "schema",
-                                                                Value: "https"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            },
-                                                            {
-                                                                Key: "op",
-                                                                Value: "list"
-                                                            }
-                                                        ],
-                                                        FromRaw: "",
-                                                        Schema: "website",
-                                                        User: "",
-                                                        Pass: "",
-                                                        Location: "zxgghn.25ku.com",
-                                                        Path: "/js/logo/js/logo.js"
-                                                    },
-                                                    HaveChildrenNodes: false
-                                                }
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        title: "jnkhlay.js",
-                        data: {
-                            Extra: [
-                                {
-                                    Key: "url",
-                                    Value: "https://zxgghn.25ku.com/jnkhlay.js"
-                                }
-                            ],
-                            ResourceType: "",
-                            VerboseType: "",
-                            ResourceName: "jnkhlay.js",
-                            VerboseName: "jnkhlay.js",
-                            Size: "3",
-                            SizeVerbose: "3",
-                            ModifiedTimestamp: "0",
-                            Path: "/jnkhlay.js",
-                            YakURLVerbose: "",
-                            Url: {
-                                Query: [
-                                    {
-                                        Key: "schema",
-                                        Value: "https"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
-                                    },
-                                    {
-                                        Key: "op",
-                                        Value: "list"
-                                    }
-                                ],
-                                FromRaw: "",
-                                Schema: "website",
-                                User: "",
-                                Pass: "",
-                                Location: "zxgghn.25ku.com",
-                                Path: "/jnkhlay.js"
-                            },
-                            HaveChildrenNodes: false
-                        }
                     }
                 ]
             }
 
-            emiter.emit("onJumpWebTree", JSON.stringify({treeData, jumpTreeTitle}))
+            const jumpTreeKey = "10-1"
+
+            emiter.emit("onJumpWebTree", JSON.stringify({treeData, jumpTreeKey}))
         }
     })
 

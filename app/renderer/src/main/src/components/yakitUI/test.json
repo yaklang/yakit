@@ -1,0 +1,206 @@
+// 若匹配的是 0-0-0 这个节点，返回数据格式大致如下 ，还需要单独给一个字段标识目前节点的key返回给前端
+{
+    "title": "0",
+    "key": "0",
+    "data": {
+        "Extra": [
+            {
+                "Key": "url",
+                "Value": "https://www.baidu.com"
+            }
+        ],
+        "ResourceType": "dir",
+        "VerboseType": "filesystem-directory",
+        "ResourceName": "/",
+        "VerboseName": "https://www.baidu.com",
+        "Size": "0",
+        "SizeVerbose": "",
+        "ModifiedTimestamp": "0",
+        "Path": "/",
+        "YakURLVerbose": "website://www.baidu.com/",
+        "Url": {
+            "Query": [
+                {
+                    "Key": "schema",
+                    "Value": "https"
+                },
+                {
+                    "Key": "op",
+                    "Value": "list"
+                }
+            ],
+            "FromRaw": "",
+            "Schema": "website",
+            "User": "",
+            "Pass": "",
+            "Location": "www.baidu.com",
+            "Path": "/"
+        },
+        "HaveChildrenNodes": true
+    },
+    "children": [
+        {
+            "title": "0-0",
+            "key": "0-0",
+            "data": {
+                "Extra": [
+                    {
+                        "Key": "url",
+                        "Value": "https://www.baidu.com"
+                    }
+                ],
+                "ResourceType": "dir",
+                "VerboseType": "filesystem-directory",
+                "ResourceName": "/",
+                "VerboseName": "https://www.baidu.com",
+                "Size": "0",
+                "SizeVerbose": "",
+                "ModifiedTimestamp": "0",
+                "Path": "/",
+                "YakURLVerbose": "website://www.baidu.com/",
+                "Url": {
+                    "Query": [
+                        {
+                            "Key": "schema",
+                            "Value": "https"
+                        },
+                        {
+                            "Key": "op",
+                            "Value": "list"
+                        }
+                    ],
+                    "FromRaw": "",
+                    "Schema": "website",
+                    "User": "",
+                    "Pass": "",
+                    "Location": "www.baidu.com",
+                    "Path": "/"
+                },
+                "HaveChildrenNodes": true
+            },
+            "children": [
+                { // 这一层的所有children需要返回
+                    "title": "0-0-0",
+                    "key": "0-0-0",
+                    "data": {
+                        "Extra": [
+                            {
+                                "Key": "url",
+                                "Value": "https://www.baidu.com"
+                            }
+                        ],
+                        "ResourceType": "dir",
+                        "VerboseType": "filesystem-directory",
+                        "ResourceName": "/",
+                        "VerboseName": "https://www.baidu.com",
+                        "Size": "0",
+                        "SizeVerbose": "",
+                        "ModifiedTimestamp": "0",
+                        "Path": "/",
+                        "YakURLVerbose": "website://www.baidu.com/",
+                        "Url": {
+                            "Query": [
+                                {
+                                    "Key": "schema",
+                                    "Value": "https"
+                                },
+                                {
+                                    "Key": "op",
+                                    "Value": "list"
+                                }
+                            ],
+                            "FromRaw": "",
+                            "Schema": "website",
+                            "User": "",
+                            "Pass": "",
+                            "Location": "www.baidu.com",
+                            "Path": "/"
+                        },
+                        "HaveChildrenNodes": true
+                    },
+                    "children": []
+                },
+                { // 这一层可不返children
+                    "title": "0-0-1",
+                    "key": "0-0-1",
+                    "data": {
+                        "Extra": [
+                            {
+                                "Key": "url",
+                                "Value": "https://www.baidu.com"
+                            }
+                        ],
+                        "ResourceType": "dir",
+                        "VerboseType": "filesystem-directory",
+                        "ResourceName": "/",
+                        "VerboseName": "https://www.baidu.com",
+                        "Size": "0",
+                        "SizeVerbose": "",
+                        "ModifiedTimestamp": "0",
+                        "Path": "/",
+                        "YakURLVerbose": "website://www.baidu.com/",
+                        "Url": {
+                            "Query": [
+                                {
+                                    "Key": "schema",
+                                    "Value": "https"
+                                },
+                                {
+                                    "Key": "op",
+                                    "Value": "list"
+                                }
+                            ],
+                            "FromRaw": "",
+                            "Schema": "website",
+                            "User": "",
+                            "Pass": "",
+                            "Location": "www.baidu.com",
+                            "Path": "/"
+                        },
+                        "HaveChildrenNodes": true
+                    }
+                }
+            ]
+        },
+        { // 这一层可不返children
+            "title": "0-1",
+            "key": "0-1",
+            "data": {
+                "Extra": [
+                    {
+                        "Key": "url",
+                        "Value": "https://www.baidu.com"
+                    }
+                ],
+                "ResourceType": "dir",
+                "VerboseType": "filesystem-directory",
+                "ResourceName": "/",
+                "VerboseName": "https://www.baidu.com",
+                "Size": "0",
+                "SizeVerbose": "",
+                "ModifiedTimestamp": "0",
+                "Path": "/",
+                "YakURLVerbose": "website://www.baidu.com/",
+                "Url": {
+                    "Query": [
+                        {
+                            "Key": "schema",
+                            "Value": "https"
+                        },
+                        {
+                            "Key": "op",
+                            "Value": "list"
+                        }
+                    ],
+                    "FromRaw": "",
+                    "Schema": "website",
+                    "User": "",
+                    "Pass": "",
+                    "Location": "www.baidu.com",
+                    "Path": "/"
+                },
+                "HaveChildrenNodes": true
+            }
+        }
+    ]
+}
