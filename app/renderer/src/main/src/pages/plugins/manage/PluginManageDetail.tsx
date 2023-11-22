@@ -279,13 +279,11 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         )
 
         const [plugin, setPlugin] = useState<API.PluginsAuditDetailResponse>()
-        // diff日志ID
-        const diffIDRef = useRef<number>(0)
         // 插件类型(漏洞类型|其他类型)
         const isRisk = useMemo(() => {
-            if ((info as any)?.riskType) return "bug"
+            if ((plugin as any)?.riskType) return "bug"
             return "other"
-        }, [info])
+        }, [plugin])
 
         // 修改者信息
         const [apply, setApply] = useState<{name: string; img: string; description: string}>()
@@ -432,7 +430,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 }
             }
         )
-
+        // 更新item后刷新虚拟列表
+        const [recalculation, setRecalculation] = useState<boolean>(false)
         // 原因窗口
         const [showReason, setShowReason] = useState<{visible: boolean; type: "nopass" | "del"}>({
             visible: false,
@@ -470,6 +469,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 item: {...value, status: 2}
                             }
                         })
+                        setTimeout(() => {
+                            setRecalculation(!recalculation)
+                        }, 200)
                     }
                     setTimeout(() => {
                         setStatusLoading(false)
@@ -490,6 +492,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                             item: {...value, status: 1}
                         }
                     })
+                    setTimeout(() => {
+                        setRecalculation(!recalculation)
+                    }, 200)
                 }
                 setTimeout(() => {
                     setStatusLoading(false)
@@ -549,6 +554,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     numberRoll: scrollTo,
                     data: response.data,
                     loadMoreData: loadMoreData,
+                    recalculation: recalculation,
                     classNameRow: "plugin-details-opt-wrapper",
                     renderRow: (info, i) => {
                         const check = allCheck || selectUUIDs.includes(info.uuid)

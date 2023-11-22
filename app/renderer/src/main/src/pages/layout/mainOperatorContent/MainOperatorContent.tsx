@@ -26,7 +26,8 @@ import {
     SingletonPageRoute,
     NoPaddingRoute,
     ComponentParams,
-    defaultFixedTabs
+    defaultFixedTabs,
+    LogOutCloseRoutes
 } from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import {useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
@@ -1160,9 +1161,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     useEffect(() => {
         const {isLogin} = userInfo
         if (!isLogin) {
-            const closePage: OnlyPageCache[] = [{route: YakitRoute.Plugin_Audit, menuName: ""}]
-            for (let item of closePage) {
-                removeMenuPage(item)
+            for (let item of LogOutCloseRoutes) {
+                removeMenuPage({route: item, menuName: ""})
             }
         }
     }, [userInfo])

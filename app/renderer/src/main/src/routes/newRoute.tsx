@@ -361,6 +361,8 @@ export const NoPaddingRoute: YakitRoute[] = [
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
+/** 用户退出登录后，需自动关闭的页面 */
+export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit]
 
 export interface ComponentParams {
     // Route.HTTPFuzzer 参数
