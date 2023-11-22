@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Divider, Form, Input, Tooltip} from "antd"
+import {Divider, Form, Input, Progress, Tooltip} from "antd"
 import {MenuOutlined} from "@ant-design/icons"
 import {useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -13,6 +13,7 @@ import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineClouddownloadIcon,
+    OutlineDocumentdownloadIcon,
     OutlineDocumentduplicateIcon,
     OutlineExportIcon,
     OutlineFolderaddIcon,
@@ -30,6 +31,7 @@ import {
     SolidChevrondownIcon,
     SolidChevronrightIcon,
     SolidDatabaseIcon,
+    SolidDocumentdownloadIcon,
     SolidDocumenttextIcon,
     SolidDotsverticalIcon,
     SolidDragsortIcon,
@@ -45,9 +47,67 @@ import Dragger from "antd/lib/upload/Dragger"
 import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOperatorContentType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {v4 as uuidv4} from "uuid"
-import { NewPayloadTable } from "./newPayloadTable"
+import {NewPayloadTable} from "./newPayloadTable"
 const {ipcRenderer} = window.require("electron")
 
+interface UploadStatusInfoProps {
+    title: string
+}
+
+export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
+    const {title} = props
+    return (
+        <div className={styles["yaklang-engine-hint-wrapper"]}>
+            <div className={styles["hint-left-wrapper"]}>
+                <div className={styles["hint-icon"]}>
+                    <SolidDocumentdownloadIcon />
+                </div>
+            </div>
+
+            <div className={styles["hint-right-wrapper"]}>
+                <div className={styles["hint-right-download"]}>
+                    <div className={styles["hint-right-title"]}>{title}</div>
+                    <div className={styles["download-progress"]}>
+                        <Progress
+                            strokeColor='#F28B44'
+                            trailColor='#F0F2F5'
+                            percent={Math.floor((0.25 || 0) * 100)}
+                            showInfo={false}
+                        />
+                        <div className={styles["progress-title"]}>进度 25%</div>
+                    </div>
+                    <div className={styles["download-info-wrapper"]}>
+                        <div>剩余时间 : {(0.06 || 0).toFixed(2)}s</div>
+                        <div className={styles["divider-wrapper"]}>
+                            <div className={styles["divider-style"]}></div>
+                        </div>
+                        <div>耗时 : {(0.04 || 0).toFixed(2)}s</div>
+                        <div className={styles["divider-wrapper"]}>
+                            <div className={styles["divider-style"]}></div>
+                        </div>
+                        <div>下载速度 : {((1000000 || 0) / 1000000).toFixed(2)}M/s</div>
+                    </div>
+                    <div className={styles["log-info"]}>
+                        <div className={styles["log-item"]}>开始导入Payload：</div>
+                        <div className={styles["log-item"]}>
+                            打开本地文件：/sers/v1l14n/yakit-projects/projects/project-111.yakitproject
+                        </div>
+                        <div className={styles["log-item"]}>正在读取文件</div>
+                        <div className={styles["log-item"]}>正在解压数据库</div>
+                        <div className={styles["log-item"]}>解压完成，正在解密数据库</div>
+                        <div className={styles["log-item"]}>读取基本信息</div>
+                        <div className={styles["log-item"]}>导入成功</div>
+                    </div>
+                    <div className={styles["download-btn"]}>
+                        <YakitButton loading={false} size='max' type='outline2' onClick={() => {}}>
+                            取消
+                        </YakitButton>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
 interface CreateDictionariesProps {
     type: "dictionaries" | "payload"
     onClose: () => void
@@ -62,109 +122,114 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
 
     return (
         <div className={styles["create-dictionaries"]}>
-            <div className={styles["header"]}>
-                <div className={styles["title"]}>{isDictionaries ? "新建字典" : "导入到护网专用工具"}</div>
-                <div className={styles["extra"]} onClick={onClose}>
-                    <OutlineXIcon />
-                </div>
-            </div>
-            {isDictionaries && (
-                <div className={styles["explain"]}>
-                    <div className={styles["explain-bg"]}>
-                        <div className={styles["title"]}>可根据需求选择以下存储方式，存储方式不影响使用：</div>
-                        <div className={styles["content"]}>
-                            <div className={styles["item"]}>
-                                <div className={styles["dot"]}>1</div>
-                                <div className={styles["text"]}>
-                                    文件存储：将字典以文件形式保存在本地，不支持命中次数，
-                                    <span className={styles["hight-text"]}>上传速度更快</span>
-                                </div>
-                            </div>
-                            <div className={styles["item"]}>
-                                <div className={styles["dot"]}>2</div>
-                                <div className={styles["text"]}>
-                                    数据库存储：将字典数据读取后保存在数据库中，支持命中次数，
-                                    <span className={styles["hight-text"]}>搜索更方便</span>
-                                </div>
-                            </div>
-                        </div>
+            <>
+                <div className={styles["header"]}>
+                    <div className={styles["title"]}>{isDictionaries ? "新建字典" : "导入到护网专用工具"}</div>
+                    <div className={styles["extra"]} onClick={onClose}>
+                        <OutlineXIcon />
                     </div>
                 </div>
-            )}
-            <div className={styles["info-box"]}>
                 {isDictionaries && (
-                    <div className={styles["input-box"]}>
-                        <div className={styles["name"]}>
-                            字典名<span className={styles["must"]}>*</span>:
-                        </div>
-                        <div>
-                            <YakitInput style={{width: "100%"}} placeholder='请输入...' />
-                        </div>
-                    </div>
-                )}
-                <div className={styles["upload-dragger-box"]}>
-                    <Dragger
-                        className={styles["upload-dragger"]}
-                        accept={FileType.join(",")}
-                        // accept=".jpg, .jpeg, .png"
-                        multiple={false}
-                        maxCount={1}
-                        showUploadList={false}
-                        beforeUpload={(f) => {
-                            if (!FileType.includes(f.type)) {
-                                failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
-                                return false
-                            }
-
-                            return false
-                        }}
-                    >
-                        <div className={styles["upload-info"]}>
-                            <div className={styles["add-file-icon"]}>
-                                <PropertyIcon />
-                            </div>
+                    <div className={styles["explain"]}>
+                        <div className={styles["explain-bg"]}>
+                            <div className={styles["title"]}>可根据需求选择以下存储方式，存储方式不影响使用：</div>
                             <div className={styles["content"]}>
-                                <div className={styles["title"]}>
-                                    可将文件拖入框内，或<span className={styles["hight-light"]}>点击此处导入</span>
+                                <div className={styles["item"]}>
+                                    <div className={styles["dot"]}>1</div>
+                                    <div className={styles["text"]}>
+                                        文件存储：将字典以文件形式保存在本地，不支持命中次数，
+                                        <span className={styles["hight-text"]}>上传速度更快</span>
+                                    </div>
                                 </div>
-                                <div className={styles["sub-title"]}>支持文件夹批量上传</div>
+                                <div className={styles["item"]}>
+                                    <div className={styles["dot"]}>2</div>
+                                    <div className={styles["text"]}>
+                                        数据库存储：将字典数据读取后保存在数据库中，支持命中次数，
+                                        <span className={styles["hight-text"]}>搜索更方便</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </Dragger>
-                </div>
-                <div className={styles["upload-list"]}>
-                    <div className={styles["upload-list-item"]}>
-                        <div className={styles["link-icon"]}>
-                            <OutlinePaperclipIcon />
+                    </div>
+                )}
+                <div className={styles["info-box"]}>
+                    {isDictionaries && (
+                        <div className={styles["input-box"]}>
+                            <div className={styles["name"]}>
+                                字典名<span className={styles["must"]}>*</span>:
+                            </div>
+                            <div>
+                                <YakitInput style={{width: "100%"}} placeholder='请输入...' />
+                            </div>
                         </div>
-                        <div className={styles["text"]}>
-                            /sersdsfsd/v1l14n/yakit-projects/sersdsfsd/v1l14n/yakit-projects/projects/project-111.yakitp
-                        </div>
-                        <div className={styles["close-icon"]}>
-                            <SolidXcircleIcon />
+                    )}
+                    <div className={styles["upload-dragger-box"]}>
+                        <Dragger
+                            className={styles["upload-dragger"]}
+                            accept={FileType.join(",")}
+                            // accept=".jpg, .jpeg, .png"
+                            multiple={false}
+                            maxCount={1}
+                            showUploadList={false}
+                            beforeUpload={(f) => {
+                                if (!FileType.includes(f.type)) {
+                                    failed(`${f.name}非png、png、jpeg文件，请上传正确格式文件！`)
+                                    return false
+                                }
+
+                                return false
+                            }}
+                        >
+                            <div className={styles["upload-info"]}>
+                                <div className={styles["add-file-icon"]}>
+                                    <PropertyIcon />
+                                </div>
+                                <div className={styles["content"]}>
+                                    <div className={styles["title"]}>
+                                        可将文件拖入框内，或
+                                        <span className={styles["hight-light"]}>点击此处导入</span>
+                                    </div>
+                                    <div className={styles["sub-title"]}>支持文件夹批量上传</div>
+                                </div>
+                            </div>
+                        </Dragger>
+                    </div>
+                    <div className={styles["upload-list"]}>
+                        <div className={styles["upload-list-item"]}>
+                            <div className={styles["link-icon"]}>
+                                <OutlinePaperclipIcon />
+                            </div>
+                            <div className={styles["text"]}>
+                                /sersdsfsd/v1l14n/yakit-projects/sersdsfsd/v1l14n/yakit-projects/projects/project-111.yakitp
+                            </div>
+                            <div className={styles["close-icon"]}>
+                                <SolidXcircleIcon />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div className={styles["submit-box"]}>
-                {isDictionaries ? (
-                    <>
-                        <YakitButton disabled={true} type='outline1' icon={<SolidDatabaseIcon />}>
-                            数据库存储
-                        </YakitButton>
-                        <YakitButton disabled={true} icon={<SolidDocumenttextIcon />}>
-                            文件存储
-                        </YakitButton>
-                    </>
-                ) : (
-                    <>
-                        <YakitButton disabled={true} type='outline1'>
-                            取消
-                        </YakitButton>
-                        <YakitButton disabled={true}>导入</YakitButton>
-                    </>
-                )}
-            </div>
+                <div className={styles["submit-box"]}>
+                    {isDictionaries ? (
+                        <>
+                            <YakitButton disabled={true} type='outline1' icon={<SolidDatabaseIcon />}>
+                                数据库存储
+                            </YakitButton>
+                            <YakitButton disabled={true} icon={<SolidDocumenttextIcon />}>
+                                文件存储
+                            </YakitButton>
+                        </>
+                    ) : (
+                        <>
+                            <YakitButton disabled={true} type='outline1'>
+                                取消
+                            </YakitButton>
+                            <YakitButton disabled={true}>导入</YakitButton>
+                        </>
+                    )}
+                </div>
+            </>
+
+            {/* <UploadStatusInfo title="导入中..."/> */}
         </div>
     )
 }
@@ -827,6 +892,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             {isEditInput ? (
                 <div className={styles["file-input"]} style={{paddingLeft: 8}}>
                     <YakitInput
+                        value={123}
                         autoFocus
                         showCount
                         maxLength={50}
@@ -1325,8 +1391,8 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                 {/* <div className={styles["editor-box"]}>
                     <YakitEditor type='plaintext' noLineNumber={true} />
                 </div> */}
-                <div className={styles['table-box']}>
-                    <NewPayloadTable/>
+                <div className={styles["table-box"]}>
+                    <NewPayloadTable />
                 </div>
             </div>
         </div>
@@ -1356,6 +1422,11 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                             <YakitButton icon={<OutlineAddPayloadIcon />}>新建字典</YakitButton>
                         </>
                     }
+                />
+            </div> */}
+            {/* <div className={styles["no-data"]}>
+                <YakitEmpty
+                    title='请点击左侧列表，选择想要查看的字典'
                 />
             </div> */}
             <PayloadContent isExpand={isExpand} setExpand={setExpand} />
