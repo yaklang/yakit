@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useRef, useState} from "react"
 import {} from "@ant-design/icons"
-import {useGetState} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./newPayloadTable.module.scss"
@@ -12,7 +12,16 @@ import type {FormInstance} from "antd/es/form"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {OutlinePencilaltIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowdownIcon,
+    OutlineArrowupIcon,
+    OutlinePencilaltIcon,
+    OutlineSelectorIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {PayloadEditForm} from "./newPayload"
 const {ipcRenderer} = window.require("electron")
 
 interface EditableCellProps {
@@ -68,7 +77,13 @@ const EditableCell: React.FC<EditableCellProps> = ({
                 <div style={{position: "absolute", top: 0, left: 0, height: "100%", width: "100%", overflow: "hidden"}}>
                     <YakitInput.TextArea
                         style={{height: "100%"}}
-                        textAreaStyle={{height: "100%", resize: "none", fontSize: "13px"}}
+                        textAreaStyle={{
+                            height: "100%",
+                            resize: "none",
+                            fontSize: "12px",
+                            padding: "7px 15px",
+                            lineHeight: "16px"
+                        }}
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
                         autoFocus
@@ -141,11 +156,20 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             count: 888
         }
     ])
+    const [sortStatus, setSortStatus] = useState<"desc" | "asc">()
 
     const handleDelete = (key: React.Key) => {
         const newData = dataSource.filter((item) => item.key !== key)
         setDataSource(newData)
     }
+
+    const handleSort = useMemoizedFn((v: "desc" | "asc") => {
+        if (sortStatus === v) {
+            setSortStatus(undefined)
+        } else {
+            setSortStatus(v)
+        }
+    })
 
     const defaultColumns: (ColumnTypes[number] & {editable?: boolean; dataIndex: string})[] = [
         {
@@ -168,13 +192,47 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             title: "字典内容",
             dataIndex: "dictionary",
             editable: true,
-            // width: "30%"
             render: (text) => <div className={styles["basic"]}>{text}</div>
         },
         {
             title: "命中次数",
             dataIndex: "count",
-            width: 88,
+            width: 102,
+            filterIcon: (filtered) => (
+                <OutlineSelectorIcon
+                    className={classNames(styles["selector-icon"], {
+                        [styles["active-selector-icon"]]: sortStatus !== undefined
+                    })}
+                />
+            ),
+            filterDropdown: ({setSelectedKeys, selectedKeys, confirm, clearFilters}) => (
+                <div className={styles["filter-box"]}>
+                    <div
+                        className={classNames(styles["filter-item"], {
+                            [styles["active-filter-item"]]: sortStatus === "asc",
+                            [styles["hover-filter-item"]]: sortStatus !== "asc"
+                        })}
+                        onClick={() => handleSort("asc")}
+                    >
+                        <div className={styles["icon"]}>
+                            <OutlineArrowupIcon />
+                        </div>
+                        <div className={styles["content"]}>升序</div>
+                    </div>
+                    <div
+                        className={classNames(styles["filter-item"], {
+                            [styles["active-filter-item"]]: sortStatus === "desc",
+                            [styles["hover-filter-item"]]: sortStatus !== "desc"
+                        })}
+                        onClick={() => handleSort("desc")}
+                    >
+                        <div className={styles["icon"]}>
+                            <OutlineArrowdownIcon />
+                        </div>
+                        <div className={styles["content"]}>降序</div>
+                    </div>
+                </div>
+            ),
             render: (text) => <div className={styles["basic"]}>{text}</div>
         },
         {
@@ -185,11 +243,23 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             render: (_, record: {key: React.Key}) => {
                 return (
                     <div className={styles["table-operation"]}>
-                        <Popconfirm title='确认删除?' placement='left' onConfirm={() => handleDelete(record.key)}>
+                        <YakitPopconfirm title='确认删除?' placement='left' onConfirm={() => handleDelete(record.key)}>
                             <OutlineTrashIcon className={styles["delete"]} />
-                        </Popconfirm>
+                        </YakitPopconfirm>
                         <Divider type='vertical' style={{top: 1, height: 12, margin: "0px 12px"}} />
-                        <OutlinePencilaltIcon className={styles["edit"]} />
+                        <OutlinePencilaltIcon
+                            className={styles["edit"]}
+                            onClick={() => {
+                                const m = showYakitModal({
+                                    title: "编辑",
+                                    width: 448,
+                                    type: "white",
+                                    onOkText: "保存",
+                                    // closable: false,
+                                    content: <PayloadEditForm onClose={() => m.destroy()} />
+                                })
+                            }}
+                        />
                     </div>
                 )
             }
@@ -291,7 +361,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                     total: 100,
                     pageSizeOptions: ["10", "20", "30", "40"], // 指定每页显示条目数量的选项
                     showSizeChanger: true, // 是否显示切换每页条目数量的控件
-                    showTotal: (i) => <span className={styles['show-total']}>共{i}条记录</span>,
+                    showTotal: (i) => <span className={styles["show-total"]}>共{i}条记录</span>,
                     onChange: (page: number, limit?: number) => {
                         // update(page, limit)
                     },
