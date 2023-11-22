@@ -125,6 +125,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
     const [searchValue, setSearchValue] = useState<string>("")
 
+    useEffect(() => {
+        console.log(123, webTreeData);
+    }, [webTreeData])
+
     const [yakurl, setYakURL] = useState<string>("website:///")
     useEffect(() => {
         if (!yakurl) {
@@ -151,8 +155,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setWebTreeData(
                 res.Resources.map((item: YakURLResource, index: number) => {
                     return {
-                        title: item.VerboseName.replace(new RegExp("/\\[\\d+\\]", "g"), ""),
-                        key: index + "",
+                        title: item.VerboseName,
+                        key: item.VerboseName,
                         isLeaf: !item.HaveChildrenNodes,
                         data: item,
                         icon: renderTreeNodeIcon(item.ResourceType as TreeNodeType)
@@ -165,31 +169,23 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         })
     }
 
-    const refreshChildrenByParent = useMemoizedFn((parentKey: string, nodes: TreeNode[]) => {
-        const pathsBlock: string[] = parentKey.split("-")
-        const paths: string[] = pathsBlock.map((_, index) => {
-            return pathsBlock.slice(undefined, index + 1).join("-")
-        })
-
-        function visitData(d: TreeNode[], depth: number) {
-            if (depth + 1 > paths.length) {
-                return
+    const refreshChildrenByParent = useMemoizedFn((origin: TreeNode[], parentKey: string, nodes: TreeNode[]) => {
+        const arr = origin.map((node) => {
+            if (node.key === parentKey) {
+                return {
+                    ...node,
+                    children: nodes
+                }
             }
-            d.forEach((i) => {
-                if (i.key !== paths[depth]) {
-                    return
+            if (node.children) {
+                return {
+                    ...node,
+                    children: refreshChildrenByParent(node.children, parentKey, nodes)
                 }
-
-                if (depth + 1 !== paths.length) {
-                    visitData(i.children || [], depth + 1)
-                    return
-                }
-                i.children = nodes
-            })
-        }
-
-        visitData(webTreeData, 0)
-        return webTreeData
+            }
+            return node
+        })
+        return arr
     })
 
     const onLoadWebTreeData = ({key, children, data}: any) => {
@@ -204,14 +200,14 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 (rsp) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
                         return {
-                            title: i.VerboseName.replace(new RegExp("/\\[\\d+\\]", "g"), ""),
-                            key: `${key}-${index}`,
+                            title: i.VerboseName,
+                            key: i.ResourceName,
                             isLeaf: !i.HaveChildrenNodes,
                             data: i,
                             icon: renderTreeNodeIcon(i.ResourceType as TreeNodeType)
                         }
                     })
-                    setWebTreeData([...refreshChildrenByParent(key, newNodes)])
+                    setWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
                     resolve()
                 },
                 reject
@@ -233,7 +229,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const onJumpWebTree = useMemoizedFn((value) => {
         if (inViewport && curTabKey === "web-tree") {
             const val = JSON.parse(value) // HTTPFlowDetailRequestAndResponse组件发送传过来的数据
-            const jumpTreeKey = val.jumpTreeKey // 发送过来的目标节点的唯一值key
+            const path = val.path // 需要展开得节点数组
+            const jumpTreeKey = path[path.length - 1] // 定位节点得key
             const jumpParentKey = val.treeData.key // 发送过来对象第一层得key
             // 当跳转的就是第一层时
             if (jumpParentKey === jumpTreeKey) {
@@ -242,6 +239,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             }
 
             let findNodeFlag = false // 判断是否找到跳转子节点
+
             const findTreeNode = webTreeData.find((item) => item.key === jumpParentKey) // 找到第一层的树节点
             if (findTreeNode) {
                 // 组装所需要的树结构
@@ -253,38 +251,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                         item.icon = renderTreeNodeIcon(item?.data?.ResourceType as TreeNodeType)
                         item.isLeaf = !item?.data?.HaveChildrenNodes
                         // 跳转定位选中树节点
-                        console.log("检测跳转是否匹配", item.key, jumpTreeKey, item.key === jumpTreeKey)
                         if (item.key === jumpTreeKey) {
                             findNodeFlag = true
                             // 暂时是用select标识选中的目标节点
-                            setSelectedKeys([item.key])
-
-                            // 根据-分割拿到所有展开得父节点keys
-                            let expandedKeysList: TreeKey[] = []
-                            const getExpandedKeys = (keyStr: string) => {
-                                expandedKeysList.push(keyStr)
-                                let index = keyStr.lastIndexOf("-")
-                                if (index !== -1) {
-                                    getExpandedKeys(keyStr.slice(0, index))
-                                }
-                            }
-                            if (String(item.key).split("-").length > 2) {
-                                // 类似 0-1-0
-                                getExpandedKeys(String(item.key))
-                            } else {
-                                // 类似与'0-1'这种key
-                                expandedKeysList.push(String(item.key).split("-")[0], item.key)
-                            }
-
-                            // 展开key去重
-                            const allExpandedKeys: TreeKey[] = [...expandedKeysList]
-                            let newExpandedKeys: TreeKey[] = []
-                            allExpandedKeys.forEach((item) => {
-                                if (!newExpandedKeys.includes(item)) {
-                                    newExpandedKeys.push(item)
-                                }
-                            })
-                            setExpandedKeys(newExpandedKeys)
+                            setSelectedKeys([jumpTreeKey])
                         }
                         if (item.children && item.children.length) {
                             assembleTree(item.children)
@@ -304,6 +274,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 })
 
                 setWebTreeData(newWebTreeData)
+                setExpandedKeys(path)
             }
 
             if (!findNodeFlag) {
