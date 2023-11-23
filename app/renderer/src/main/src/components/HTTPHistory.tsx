@@ -175,7 +175,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         return arr.map((item: YakURLResource) => {
             const id = searchValue ? item.ResourceName : item.VerboseName
             return {
-                title: item.VerboseName,
+                title:
+                    hoveredKeys === id && !selectedKeys.includes(hoveredKeys) ? (
+                        <span style={{backgroundColor: "var(--yakit-primary-2)"}}>{item.VerboseName}</span>
+                    ) : (
+                        item.VerboseName
+                    ),
                 key: id,
                 isLeaf: !item.HaveChildrenNodes,
                 data: item,
@@ -225,7 +230,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i) => {
                         const id = key + "/" + i.ResourceName
                         return {
-                            title: i.VerboseName,
+                            title:
+                                hoveredKeys === id && !selectedKeys.includes(hoveredKeys) ? (
+                                    <span style={{backgroundColor: "var(--yakit-primary-2)"}}>{i.VerboseName}</span>
+                                ) : (
+                                    i.VerboseName
+                                ),
                             key: id,
                             isLeaf: !i.HaveChildrenNodes,
                             data: i,
@@ -351,6 +361,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         selectedKeys={selectedKeys}
                                         onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
                                             console.log("selectedNodes", selectedNodes)
+                                            setHoveredKeys("")
                                             setSelectedKeys(selectedKeys)
                                             setSelectedNodes(selectedNodes)
                                             setOnlyShowFirstNode(true)
