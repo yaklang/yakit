@@ -144,21 +144,18 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         return iconsEle[treeNodeType] || <></>
     }
 
-    const [yakurl, setYakURL] = useState<string>("website:///")
     useEffect(() => {
-        if (!yakurl) {
-            return
-        }
-        getWebTreeData(yakurl)
-    }, [yakurl])
+        getWebTreeData("website://" + searchValue)
+    }, [searchValue]) // 网站树
 
     const getWebTreeData = async (yakurl: string) => {
         setTreeLoading(true)
         loadFromYakURLRaw(yakurl, (res) => {
             setTreeLoading(false)
-            console.log("第一层数据请求", expandedKeys, selectedKeys)
             setSelectedKeys([])
-            setExpandedKeys([])
+            if (!hoveredKeys) {
+                setExpandedKeys([])
+            }
             if (searchValue) {
                 setWebTreeData([])
                 setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
@@ -272,8 +269,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const val = JSON.parse(value) // HTTPFlowDetailRequestAndResponse组件发送传过来的数据
             const path = val.path // 需要展开得节点数组
             const jumpTreeKey = path[path.length - 1] // 定位节点得key
-            setExpandedKeys(path) // 展开树
             setHoveredKeys(jumpTreeKey)
+            setExpandedKeys(path) // 展开树
+            // 当是搜索树跳转过来时
+            if (searchWebTreeData.length) {
+                setSearchValue("")
+            }
         }
     })
     useEffect(() => {
@@ -336,17 +337,14 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         loadData={onLoadWebTreeData}
                                         searchValue={searchValue}
                                         onSearch={(value) => {
+                                            setHoveredKeys("")
                                             setSearchValue(value)
-                                            setYakURL("website://" + value)
                                         }}
                                         refreshTree={() => {
                                             setSearchValue("")
                                             setExpandedKeys([])
                                             setSelectedKeys([])
-                                            setSelectedNodes([])
-                                            setOnlyShowFirstNode(true)
-                                            setSecondNodeVisible(false)
-                                            getWebTreeData("website:///")
+                                            setHoveredKeys("")
                                         }}
                                         expandedKeys={expandedKeys}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
