@@ -145,11 +145,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }
 
     useEffect(() => {
-        getWebTreeData("website://" + searchValue)
-    }, [searchValue]) // 网站树
+        getWebTreeData("website://")
+    }, []) // 网站树
 
     const getWebTreeData = async (yakurl: string) => {
         setTreeLoading(true)
+        console.log(1111, yakurl);
+        
         loadFromYakURLRaw(yakurl, (res) => {
             setTreeLoading(false)
             setSelectedKeys([])
@@ -172,6 +174,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 树节点第一层组装树
     const assembleFirstTreeNode = (arr) => {
+        console.log(123, arr);
+        
         return arr.map((item: YakURLResource) => {
             const id = searchValue ? item.ResourceName : item.VerboseName
             return {
@@ -349,12 +353,14 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         onSearch={(value) => {
                                             setHoveredKeys("")
                                             setSearchValue(value)
+                                            getWebTreeData("website://" + value)
                                         }}
                                         refreshTree={() => {
                                             setSearchValue("")
                                             setExpandedKeys([])
                                             setSelectedKeys([])
                                             setHoveredKeys("")
+                                            getWebTreeData("website://")
                                         }}
                                         expandedKeys={expandedKeys}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
