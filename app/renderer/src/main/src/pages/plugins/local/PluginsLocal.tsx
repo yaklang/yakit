@@ -322,7 +322,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     ...ele,
                     isLocalPlugin: privateDomain !== ele.OnlineBaseUrl
                 }))
-                console.log("res-local", res)
                 dispatch({
                     type: "add",
                     payload: {

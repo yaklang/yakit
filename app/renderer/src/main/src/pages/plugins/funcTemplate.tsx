@@ -1140,7 +1140,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                             </div>
                             <div className={styles["contribute-body"]}>
                                 {contributes.arr.map((item, index) => {
-                                    return <img key={`${item}-${index}`} src={item} className={styles["img-style"]} />
+                                    return <img key={`${item}-${index}`} src={item||UnLogin} className={styles["img-style"]} />
                                 })}
                                 {contributes.length > 0 && (
                                     <div className={styles["more-style"]}>{`+${contributes.length}`}</div>
