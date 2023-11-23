@@ -35,7 +35,6 @@ import AccountAdminPage from "@/pages/loginOperationMenu/AccountAdminPage"
 import RoleAdminPage from "@/pages/loginOperationMenu/RoleAdminPage"
 import {HoleCollectPage} from "@/pages/loginOperationMenu/HoleCollectPage"
 import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
-import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
@@ -323,7 +322,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.HoleCollectPage,
     YakitRoute.LicenseAdminPage,
     YakitRoute.TrustListPage,
-    YakitRoute.PlugInAdminPage,
     YakitRoute.AddYakitScript,
     YakitRoute.ModifyYakitScript,
     YakitRoute.OnlinePluginRecycleBin,
@@ -550,8 +548,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <LicenseAdminPage />
         case YakitRoute.TrustListPage:
             return <TrustListPage />
-        case YakitRoute.PlugInAdminPage:
-            return <PlugInAdminPage />
         case YakitRoute.ControlAdminPage:
             return <ControlAdminPage />
         case YakitRoute.BatchExecutorRecover:

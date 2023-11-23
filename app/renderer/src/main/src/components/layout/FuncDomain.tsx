@@ -309,7 +309,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             setUserMenu([
                 {key: "trust-list", title: "用户管理"},
                 {key: "license-admin", title: "License管理"},
-                {key: "plugIn-admin", title: "插件权限"},
                 {key: "plugin-aduit", title: "插件管理"},
                 {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
             ])
@@ -615,9 +614,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             }
                                             if (key === "license-admin") {
                                                 onOpenPage({route: YakitRoute.LicenseAdminPage})
-                                            }
-                                            if (key === "plugIn-admin") {
-                                                onOpenPage({route: YakitRoute.PlugInAdminPage})
                                             }
                                             if (key === "plugin-aduit") {
                                                 onOpenPage({route: YakitRoute.Plugin_Audit})
