@@ -150,8 +150,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const getWebTreeData = async (yakurl: string) => {
         setTreeLoading(true)
-        console.log(1111, yakurl);
-        
+        console.log(1111, yakurl)
+
         loadFromYakURLRaw(yakurl, (res) => {
             setTreeLoading(false)
             setSelectedKeys([])
@@ -174,8 +174,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 树节点第一层组装树
     const assembleFirstTreeNode = (arr) => {
-        console.log(123, arr);
-        
+        console.log(123, arr)
+
         return arr.map((item: YakURLResource) => {
             const id = searchValue ? item.ResourceName : item.VerboseName
             return {
@@ -185,6 +185,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     ) : (
                         item.VerboseName
                     ),
+                filterTreeNode: () => {
+                    return true
+                },
                 key: id,
                 isLeaf: !item.HaveChildrenNodes,
                 data: item,
