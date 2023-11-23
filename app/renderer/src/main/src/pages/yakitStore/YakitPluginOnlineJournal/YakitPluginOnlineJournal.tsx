@@ -5,10 +5,10 @@ import {API} from "@/services/swagger/resposeType"
 import {failed} from "@/utils/notification"
 import {getRandomInt} from "@/utils/randomUtil"
 import {CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, LoadingOutlined} from "@ant-design/icons"
-import {useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {Timeline, Button, Card, Spin, Popover} from "antd"
 import moment from "moment"
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {CodeComparisonDiff} from "./YakitPluginJournalDetails"
 import ReactResizeDetector from "react-resize-detector"
 import "./YakitPluginOnlineJournal.scss"
@@ -45,6 +45,16 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
         data: []
     })
     const [isRef, setIsRef] = useState(false)
+
+    const journalListRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(journalListRef)
+
+    useEffect(() => {
+        if (inViewport) {
+            getJournalList(1)
+        }
+    }, [inViewport])
+
     useEffect(() => {
         if (pluginId > 0) {
             setLineLoading(true)
@@ -118,7 +128,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
     })
 
     return (
-        <div className='journal-content'>
+        <div className='journal-content' ref={journalListRef}>
             <ReactResizeDetector
                 onResize={(width) => {
                     if (!width) {
@@ -141,6 +151,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                         loadMoreData={loadMoreData}
                         rowKey='id'
                         defItemHeight={32}
+                        isRef={isRef}
                         renderRow={(item: API.ApplyPluginLists, index) => (
                             <Timeline.Item dot={showDot(item.merge_status)}>
                                 <div className='journal-list-item'>
