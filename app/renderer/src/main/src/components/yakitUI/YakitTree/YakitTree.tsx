@@ -16,6 +16,7 @@ import {YakitButton} from "../YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
 import {YakitSpin} from "../YakitSpin/YakitSpin"
 import {YakURLResource} from "@/pages/yakURLTree/data"
+import {TreeNode as YakitTreeNode} from "antd/lib/tree-select"
 
 export type TreeKey = string | number
 

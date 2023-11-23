@@ -121,6 +121,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [treeLoading, setTreeLoading] = useState<boolean>(false)
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
+    const [hoveredKeys, setHoveredKeys] = useState<TreeKey[]>([]) // 定位树节点key集合
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
     const [searchValue, setSearchValue] = useState<string>("")
@@ -137,26 +138,22 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         getWebTreeData(yakurl)
     }, [yakurl])
 
-    // 部分和树相关状态重置
-    const resetInitStatus = () => {
-        setExpandedKeys([])
-        setSelectedKeys([])
-        setSelectedNodes([])
-        setOnlyShowFirstNode(true)
-        setSecondNodeVisible(false)
-    }
-
     const getWebTreeData = async (yakurl: string) => {
         setTreeLoading(true)
         loadFromYakURLRaw(yakurl, (res) => {
             setTreeLoading(false)
-            resetInitStatus()
+            setExpandedKeys([])
+            setSelectedKeys([])
+            setSelectedNodes([])
+            setOnlyShowFirstNode(true)
+            setSecondNodeVisible(false)
+
             // 请求第一层数据
             setWebTreeData(
                 res.Resources.map((item: YakURLResource, index: number) => {
                     return {
                         title: item.VerboseName,
-                        key: item.VerboseName,
+                        key: searchValue ? item.ResourceName : item.VerboseName,
                         isLeaf: !item.HaveChildrenNodes,
                         data: item,
                         icon: renderTreeNodeIcon(item.ResourceType as TreeNodeType)
@@ -201,7 +198,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
                         return {
                             title: i.VerboseName,
-                            key: i.ResourceName,
+                            key: key + "/" + i.ResourceName,
                             isLeaf: !i.HaveChildrenNodes,
                             data: i,
                             icon: renderTreeNodeIcon(i.ResourceType as TreeNodeType)
@@ -231,58 +228,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const val = JSON.parse(value) // HTTPFlowDetailRequestAndResponse组件发送传过来的数据
             const path = val.path // 需要展开得节点数组
             const jumpTreeKey = path[path.length - 1] // 定位节点得key
-            const jumpParentKey = val.treeData.key // 发送过来对象第一层得key
-            let findNodeFlag = false // 判断是否找到跳转子节点
-            // 当跳转的就是第一层时
-            if (jumpParentKey === jumpTreeKey) {
-                findNodeFlag = true
-                setSelectedKeys([jumpTreeKey]) // 暂时是用select标识选中的目标节点
-                return
-            }
-        
-            const findTreeNode = webTreeData.find((item) => item.key === jumpParentKey) // 找到第一层的树节点
-            console.log('是否找到父节点', findTreeNode)
-            if (findTreeNode) {
-                // 组装所需要的树结构
-                val.treeData.icon = renderTreeNodeIcon(findTreeNode?.data?.ResourceType as TreeNodeType)
-                val.treeData.isLeaf = !findTreeNode?.data?.HaveChildrenNodes
-
-                const assembleTree = (treeData: TreeNode[]) => {
-                    treeData.forEach((item, index) => {
-                        item.icon = renderTreeNodeIcon(item?.data?.ResourceType as TreeNodeType)
-                        item.isLeaf = !item?.data?.HaveChildrenNodes
-                        // 跳转定位选中树节点
-                        if (item.key === jumpTreeKey) {
-                            findNodeFlag = true
-                            // 暂时是用select标识选中的目标节点
-                            setSelectedKeys([jumpTreeKey])
-                        }
-                        if (item.children && item.children.length) {
-                            assembleTree(item.children)
-                        }
-                    })
-                }
-                assembleTree(val.treeData.children)
-
-                // 重新塞组装好的树节点
-                let newWebTreeData: TreeNode[] = []
-                webTreeData.forEach((item) => {
-                    if (item.key === jumpParentKey) {
-                        newWebTreeData.push(val.treeData)
-                    } else {
-                        newWebTreeData.push(item)
-                    }
-                })
-
-                if (findNodeFlag) {
-                    setWebTreeData(newWebTreeData)
-                    setExpandedKeys(path)
-                }
-            }
-
-            if (!findNodeFlag) {
-                yakitFailed("当前网站树为找到匹配节点树")
-            }
+            setExpandedKeys(path) // 展开树
+            setHoveredKeys([jumpTreeKey])
         }
     })
     useEffect(() => {
@@ -351,6 +298,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         refreshTree={() => {
                                             setSearchValue("")
                                             getWebTreeData("website:///")
+                                            setOnlyShowFirstNode(true)
+                                            setSecondNodeVisible(false)
                                         }}
                                         expandedKeys={expandedKeys}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
