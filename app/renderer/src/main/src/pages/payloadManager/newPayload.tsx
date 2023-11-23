@@ -1,9 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Divider, Form, Input, Progress, Tooltip} from "antd"
-import {MenuOutlined} from "@ant-design/icons"
 import {useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
 import styles from "./NewPayload.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -12,9 +9,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
-    OutlineClouddownloadIcon,
-    OutlineDatabasebackupIcon,
-    OutlineDocumentdownloadIcon,
     OutlineDocumentduplicateIcon,
     OutlineExportIcon,
     OutlineFolderaddIcon,
@@ -48,9 +42,11 @@ import Dragger from "antd/lib/upload/Dragger"
 import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOperatorContentType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {v4 as uuidv4} from "uuid"
-import {NewPayloadTable} from "./newPayloadTable"
+import {DeletePayloadProps, NewPayloadTable, Payload, PayloadAddEditForm, QueryPayloadParams} from "./newPayloadTable"
 import {callCopyToClipboard} from "@/utils/basic"
-import { YakitInputNumber } from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {ExecResult, PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
+import {randomString} from "@/utils/randomUtil"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -114,17 +110,22 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
 interface CreateDictionariesProps {
     type: "dictionaries" | "payload"
     onClose: () => void
+    title: string
 }
 
 // 新建字典
 export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => {
-    const {onClose, type} = props
+    const {onClose, type,title} = props
     const isDictionaries = type === "dictionaries"
     // 可上传文件类型
     const FileType = ["text/plain", "text/csv"]
     // 收集上传的数据
     const [dictionariesName, setDictionariesName] = useState<string>("")
     const [uploadList, setUploadList] = useState<string[]>([])
+
+    // token
+    const [token, setToken] = useState(randomString(20))
+    const [fileToken, setFileToken] = useState(randomString(20))
 
     const isDisabled = useMemo(() => {
         if (isDictionaries) {
@@ -133,11 +134,130 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
         return uploadList.length === 0
     }, [uploadList, dictionariesName, isDictionaries])
 
+    // 数据库存储
+    const onSavePayload = useMemoizedFn(() => {
+        ipcRenderer.invoke(
+            "SavePayloadStream",
+            {
+                IsFile: false,
+                Content: dictionariesName,
+                FileName: uploadList
+            },
+            token
+        )
+    })
+
+    // 文件存储
+    const onSavePayloadToFile = useMemoizedFn(() => {
+        ipcRenderer.invoke(
+            "SavePayloadToFileStream",
+            {
+                IsFile: true,
+                Content: dictionariesName,
+                FileName: uploadList
+            },
+            fileToken
+        )
+    })
+
+    // 取消数据库任务
+    const cancelSavePayload = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-SavePayload", token)
+    })
+
+    // 取消文件存储任务
+    const cancelSavePayloadFile = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-SavePayloadFile", fileToken)
+    })
+
+    // 监听数据库任务
+    useEffect(() => {
+        ipcRenderer.on(`${token}-data`, async (e: any, data: ExecResult) => {
+            if (data.IsMessage) {
+                try {
+                    // let messageJsonRaw = Buffer.from(data.Message).toString("utf8")
+                    // let logInfo = ExtractExecResultMessageToYakitPort(JSON.parse(messageJsonRaw))
+                    // if (!logInfo) return
+                    // if (logInfo.isOpen) {
+                    //     openPort.current.unshift(logInfo)
+                    //     // 限制20条数据
+                    //     openPort.current = openPort.current.slice(0, 20)
+                    // } else {
+                    //     // closedPort.current.unshift(logInfo)
+                    // }
+                } catch (e) {
+                    failed("解析端口扫描结果失败...")
+                }
+            }
+        })
+        ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
+            failed(`[SimpleDetect] error:  ${error}`)
+        })
+        ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
+            info("[SimpleDetect] finished")
+        })
+
+        const syncPorts = () => {
+            // if (openPort.current) setOpenPorts([...openPort.current])
+        }
+
+        syncPorts()
+        let id = setInterval(syncPorts, 1000)
+        return () => {
+            clearInterval(id)
+            ipcRenderer.invoke("cancel-SimpleDetect", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    }, [])
+
+    // 监听文件存储任务
+    useEffect(() => {
+        ipcRenderer.on(`${fileToken}-data`, async (e: any, data: ExecResult) => {
+            if (data.IsMessage) {
+                try {
+                    // let messageJsonRaw = Buffer.from(data.Message).toString("utf8")
+                    // let logInfo = ExtractExecResultMessageToYakitPort(JSON.parse(messageJsonRaw))
+                    // if (!logInfo) return
+                    // if (logInfo.isOpen) {
+                    //     openPort.current.unshift(logInfo)
+                    //     // 限制20条数据
+                    //     openPort.current = openPort.current.slice(0, 20)
+                    // } else {
+                    //     // closedPort.current.unshift(logInfo)
+                    // }
+                } catch (e) {
+                    failed("解析端口扫描结果失败...")
+                }
+            }
+        })
+        ipcRenderer.on(`${fileToken}-error`, (e: any, error: any) => {
+            failed(`[SimpleDetect] error:  ${error}`)
+        })
+        ipcRenderer.on(`${fileToken}-end`, (e: any, data: any) => {
+            info("[SimpleDetect] finished")
+        })
+
+        const syncPorts = () => {
+            // if (openPort.current) setOpenPorts([...openPort.current])
+        }
+
+        syncPorts()
+        let id = setInterval(syncPorts, 1000)
+        return () => {
+            clearInterval(id)
+            ipcRenderer.invoke("cancel-SimpleDetect", fileToken)
+            ipcRenderer.removeAllListeners(`${fileToken}-data`)
+            ipcRenderer.removeAllListeners(`${fileToken}-error`)
+            ipcRenderer.removeAllListeners(`${fileToken}-end`)
+        }
+    }, [])
     return (
         <div className={styles["create-dictionaries"]}>
             <>
                 <div className={styles["header"]}>
-                    <div className={styles["title"]}>{isDictionaries ? "新建字典" : "扩充到护网专用工具"}</div>
+                    <div className={styles["title"]}>{title}</div>
                     <div className={styles["extra"]} onClick={onClose}>
                         <OutlineXIcon />
                     </div>
@@ -241,10 +361,19 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                 <div className={styles["submit-box"]}>
                     {isDictionaries ? (
                         <>
-                            <YakitButton disabled={isDisabled} type='outline1' icon={<SolidDatabaseIcon />}>
+                            <YakitButton
+                                disabled={isDisabled}
+                                type='outline1'
+                                icon={<SolidDatabaseIcon />}
+                                onClick={onSavePayload}
+                            >
                                 数据库存储
                             </YakitButton>
-                            <YakitButton disabled={isDisabled} icon={<SolidDocumenttextIcon />}>
+                            <YakitButton
+                                disabled={isDisabled}
+                                icon={<SolidDocumenttextIcon />}
+                                onClick={onSavePayloadToFile}
+                            >
                                 文件存储
                             </YakitButton>
                         </>
@@ -335,12 +464,44 @@ const cloneItemStyle = (draggableStyle) => {
     }
 }
 
+// 根据Id获取此项
+const findItemById = (items: DataItem[], targetId: string): DataItem | null => {
+    for (const item of items) {
+        if (item.id.toString() === targetId) {
+            return item
+        } else if (item.type === "folders" && item.node) {
+            const foundInNode = findItemById(item.node, targetId)
+            if (foundInNode) {
+                return foundInNode
+            }
+        }
+    }
+    return null
+}
+
+// 根据Id获取当前文件夹
+const findFoldersById = (items: DataItem[], targetId: string) => {
+    for (const item of items) {
+        if (item.id.toString() === targetId) {
+            return item
+        } else if (item.type === "folders" && item.node) {
+            const foundInNode = findFoldersById(item.node, targetId)
+            if (foundInNode) {
+                return item
+            }
+        }
+    }
+    return null
+}
+
 interface DataItem {
     type: string
     name: string
     id: number
     // 文件夹才有 isFold 作用于判断是否展开 默认展开
     isFold?: boolean
+    // 是否为新建
+    isCreate?: boolean
     node?: DataItem[]
 }
 
@@ -364,6 +525,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     const [moveLevel, setMoveLevel] = useState<MoveLevelProps>()
 
     const moveLevelRef = useRef<MoveLevelProps>()
+
     // 根据数组下标进行位置互换
     const moveArrayElement = useMemoizedFn((arr, fromIndex, toIndex) => {
         // 检查下标是否有效
@@ -379,35 +541,24 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         return arr // 返回移动后的数组
     })
 
-    // 根据Id获取此项
-    const findItemById = useMemoizedFn((items: DataItem[], targetId: string): DataItem | null => {
-        for (const item of items) {
-            if (item.id.toString() === targetId) {
-                return item
-            } else if (item.type === "folders" && item.node) {
-                const foundInNode = findItemById(item.node, targetId)
-                if (foundInNode) {
-                    return foundInNode
-                }
-            }
-        }
-        return null
-    })
+    useEffect(() => {
+        onQueryGroup()
+    }, [])
 
-    // 根据Id获取当前文件夹
-    const findFoldersById = useMemoizedFn((items: DataItem[], targetId: string) => {
-        for (const item of items) {
-            if (item.id.toString() === targetId) {
-                return item
-            } else if (item.type === "folders" && item.node) {
-                const foundInNode = findFoldersById(item.node, targetId)
-                if (foundInNode) {
-                    return item
-                }
-            }
-        }
-        return null
-    })
+    const onQueryGroup = () => {
+        ipcRenderer
+            .invoke("GetAllPayloadGroup")
+            .then((data: {Groups: string[]}) => {
+                console.log("Groups", data)
+
+                // setGroups(data.Groups || [])
+            })
+            .catch((e: any) => {
+                failed(e?.details || "call GetAllPayloadGroup failed")
+            })
+            .finally()
+    }
+
     // 组外两个游离的文件合成组 或者 组外的文件拖拽到组外的文件夹合成组
     const mergingGroup = useMemoizedFn((result: DragDropContextResultProps) => {
         const {source, destination, draggableId, type, combine} = result
@@ -725,6 +876,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                             closable: false,
                                             content: (
                                                 <CreateDictionaries
+                                                    title="新建字典"
                                                     type='dictionaries'
                                                     onClose={() => {
                                                         m.destroy()
@@ -734,6 +886,20 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                         })
                                         break
                                     case "createFolder":
+                                        // 生成 UUID
+                                        const uuid = uuidv4()
+                                        // 将 UUID 转换为整数
+                                        const integerId = parseInt(uuid.replace(/-/g, ""), 16)
+                                        setData([
+                                            {
+                                                type: "folders",
+                                                name: "",
+                                                isFold: true,
+                                                id: integerId,
+                                                isCreate: true
+                                            },
+                                            ...data
+                                        ])
                                         break
                                     default:
                                         break
@@ -899,7 +1065,7 @@ interface FolderComponentProps {
 export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const {folder, selectItem, setSelectItem, data, setData, subDropType, moveLevel, isCombine} = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
-    const [isEditInput, setEditInput] = useState<boolean>(false)
+    const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
     const [inputName, setInputName] = useState<string>(folder.name)
     const onIsFold = useMemoizedFn((id: number) => {
         // 文件夹只会存在第一层 不用递归遍历
@@ -915,8 +1081,21 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const onChangeValue = useMemoizedFn(() => {
         setEditInput(false)
         if (inputName.length > 0) {
+            // 新建
+            if (folder.isCreate) {
+            }
+            // 编辑
+            else {
+            }
         } else {
-            setInputName(folder.name)
+            // 创建时为空则不创建
+            if (folder.isCreate) {
+                setData(data.filter((item) => !item.isCreate))
+            }
+            // 编辑时为空恢复
+            else {
+                setInputName(folder.name)
+            }
         }
     })
     return (
@@ -1012,6 +1191,23 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                         case "copyFuzztag":
                                             break
                                         case "addChildPayload":
+                                            // 注: 此处需注意文件夹
+                                            const m = showYakitModal({
+                                                title: null,
+                                                footer: null,
+                                                width: 520,
+                                                type: "white",
+                                                closable: false,
+                                                content: (
+                                                    <CreateDictionaries
+                                                        title="新建子集字典"
+                                                        type='dictionaries'
+                                                        onClose={() => {
+                                                            m.destroy()
+                                                        }}
+                                                    />
+                                                )
+                                            })
                                             break
                                         case "rename":
                                             setEditInput(true)
@@ -1119,7 +1315,7 @@ interface FileComponentProps {
 export const FileComponent: React.FC<FileComponentProps> = (props) => {
     const {file, selectItem, setSelectItem, isInside = true, isCombine} = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
-    const [isEditInput, setEditInput] = useState<boolean>(false)
+    const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
     const [inputName, setInputName] = useState<string>(file.name)
     const judgeFileIcon = useMemoizedFn((key) => {
         switch (key) {
@@ -1135,6 +1331,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     const onChangeValue = useMemoizedFn(() => {
         setEditInput(false)
         if (inputName.length > 0) {
+            
         } else {
             setInputName(file.name)
         }
@@ -1309,6 +1506,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                 closable: false,
                                                 content: (
                                                     <CreateDictionaries
+                                                        title="扩充到护网专用工具"
                                                         type='payload'
                                                         onClose={() => {
                                                             m.destroy()
@@ -1351,57 +1549,6 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         </>
     )
 }
-interface PayloadEditFormProps {
-    onClose: () => void
-}
-
-export const PayloadEditForm: React.FC<PayloadEditFormProps> = (props) => {
-    const {onClose} = props
-    const [form] = Form.useForm()
-    const onFinish = useMemoizedFn(() => {})
-
-    return (
-        <div className={styles["payload-edit-form"]}>
-            <Form layout='vertical' form={form} onFinish={onFinish}>
-                <Form.Item
-                    label={
-                        <div className={styles["name"]}>
-                            字典内容<span className={styles["must"]}>*</span>:
-                        </div>
-                    }
-                >
-                    <YakitInput.TextArea
-                        rows={3}
-                        allowClear
-                        size='small'
-                        value={""}
-                        onChange={(e) => {
-                            const {value} = e.target
-                        }}
-                        placeholder='请输入字典内容...'
-                    />
-                </Form.Item>
-                <Form.Item
-                    label={
-                        <div className={styles["name"]}>
-                            命中次数<span className={styles["must"]}></span>:
-                        </div>
-                    }
-                >
-                    <YakitInputNumber
-                        // size='small'
-                        style={{width:"100%"}}
-                        value={""}
-                        placeholder='请输入命中次数...'
-                        onChange={(value) => {
-
-                        }}
-                    />
-                </Form.Item>
-            </Form>
-        </div>
-    )
-}
 
 interface PayloadContentProps {
     isExpand: boolean
@@ -1413,6 +1560,17 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
     const {isExpand, setExpand, showContentType} = props
     const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
     const [editorValue, setEditorValue] = useState<string>("")
+
+    const [deletePayloadArr, setDeletePayloadArr] = useState<number[]>([])
+    const [params, setParams, getParams] = useGetState<QueryPayloadParams>({
+        Keyword: "",
+        Folder: "",
+        Group: "",
+        Pagination: {Page: 1, Limit: 20, Order: "asc", OrderBy: "id"}
+    })
+    const [response, setResponse] = useState<QueryGeneralResponse<Payload>>()
+    const pagination: PaginationSchema | undefined = response?.Pagination
+
     const Expand = () => (
         <div
             className={styles["icon-box"]}
@@ -1423,6 +1581,42 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             {isExpand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
         </div>
     )
+
+    const onQueryPayload = useMemoizedFn((page?: number, limit?: number) => {
+        const obj: QueryPayloadParams = {
+            ...getParams(),
+            Pagination: {
+                ...getParams().Pagination,
+                Page: page || getParams().Pagination.Page,
+                Limit: limit || getParams().Pagination.Limit
+            }
+        }
+        console.log("参数---", obj)
+        ipcRenderer
+            .invoke("QueryPayload", obj)
+            .then((data) => {
+                console.log("获取table数据", data)
+
+                setResponse(data)
+            })
+            .catch((e: any) => {
+                failed(e?.details || "query payload failed")
+            })
+    })
+
+    const onDeletePayload = useMemoizedFn((deletePayload: DeletePayloadProps) => {
+        ipcRenderer
+            .invoke("DeletePayload", deletePayload)
+            .then(() => {
+                onQueryPayload(pagination?.Page, pagination?.Limit)
+                setDeletePayloadArr([])
+                success("删除成功")
+            })
+            .catch((e: any) => {
+                failed("删除失败：" + e)
+            })
+    })
+
     return (
         <div className={styles["payload-content"]}>
             <div className={styles["header"]}>
@@ -1436,21 +1630,44 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                     <div className={styles["extra"]}>
                         <YakitInput.Search
                             placeholder='请输入关键词搜索'
-                            // value={params.Keyword}
+                            value={params.Keyword}
                             onChange={(e) => {
-                                // setParams({...params, Keyword: e.target.value})
+                                setParams({...params, Keyword: e.target.value})
                             }}
                             style={{maxWidth: 200}}
                             onSearch={() => {
-                                // updateData()
+                                onQueryPayload()
                             }}
                         />
                         <Divider type='vertical' style={{top: 1, height: 16}} />
-                        <YakitButton type='outline1' colors='danger' icon={<OutlineTrashIcon />} />
+                        <YakitButton
+                            type='outline1'
+                            colors='danger'
+                            icon={<OutlineTrashIcon />}
+                            disabled={deletePayloadArr.length === 0}
+                            onClick={() => {
+                                if (deletePayloadArr.length > 0) {
+                                    onDeletePayload({Ids: deletePayloadArr})
+                                }
+                            }}
+                        />
                         <YakitButton type='outline2' icon={<OutlineExportIcon />}>
                             导出
                         </YakitButton>
-                        <YakitButton icon={<OutlinePlusIcon />}>扩充</YakitButton>
+                        <YakitButton
+                            icon={<OutlinePlusIcon />}
+                            onClick={() => {
+                                const m = showYakitModal({
+                                    title: "扩充",
+                                    width: 448,
+                                    type: "white",
+                                    footer: null,
+                                    content: <PayloadAddEditForm onClose={() => m.destroy()} />
+                                })
+                            }}
+                        >
+                            扩充
+                        </YakitButton>
                         {Expand()}
                     </div>
                 )}
@@ -1523,7 +1740,17 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                 )}
                 {showContentType === "table" && (
                     <div className={styles["table-box"]}>
-                        <NewPayloadTable />
+                        <NewPayloadTable
+                            deletePayloadArr={deletePayloadArr}
+                            setDeletePayloadArr={setDeletePayloadArr}
+                            onDeletePayload={onDeletePayload}
+                            onQueryPayload={onQueryPayload}
+                            pagination={pagination}
+                            params={params}
+                            response={response}
+                            setResponse={setResponse}
+                            setParams={setParams}
+                        />
                     </div>
                 )}
             </div>
