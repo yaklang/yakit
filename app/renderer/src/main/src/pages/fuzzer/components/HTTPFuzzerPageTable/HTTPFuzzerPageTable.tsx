@@ -51,6 +51,7 @@ interface HTTPFuzzerPageTableProps {
     isShowDebug?: boolean
     /**点击调试回调 */
     onDebug?: (res: string) => void
+    pageId?: string
 }
 
 /**
@@ -112,7 +113,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             isEnd,
             setExportData,
             isShowDebug,
-            onDebug
+            onDebug,
+            pageId
         } = props
         const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
         const [loading, setLoading] = useState<boolean>(false)
@@ -599,8 +601,16 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const onGetExportFuzzerEvent = useMemoizedFn((v: string) => {
             try {
-                const {pageId,type} = JSON.parse(v)
-                emiter.emit("onGetExportFuzzerCallBack", JSON.stringify({listTable, type ,pageId})) 
+                const obj:{pageId:string,type:"all" | "payload"} = JSON.parse(v)
+                if(pageId===obj.pageId){
+                    // 处理Uint8Array经过JSON.parse(JSON.stringify())导致数据损失和变形
+                    const newListTable = listTable.map((item)=>({
+                        ...item,
+                        RequestRaw:Uint8ArrayToString(item.RequestRaw),
+                        ResponseRaw:Uint8ArrayToString(item.ResponseRaw)
+                    }))
+                    emiter.emit("onGetExportFuzzerCallBack", JSON.stringify({listTable:newListTable, type:obj.type ,pageId})) 
+                }
             } catch (error) {}
             
             

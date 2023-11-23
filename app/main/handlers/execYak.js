@@ -195,9 +195,9 @@ module.exports = (win, getClient) => {
 
     const streamInteractiveRunYakCodeMap = new Map()
     ipcMain.handle("cancel-InteractiveRunYakCode", handlerHelper.cancelHandler(streamInteractiveRunYakCodeMap))
-    ipcMain.handle("InteractiveRunYakCodeWrite", (e, token,data) => {
+    ipcMain.handle("InteractiveRunYakCodeWrite", (e, token, data) => {
         let stream = streamInteractiveRunYakCodeMap.get(token)
-        if (!!stream){
+        if (!!stream) {
             stream.write(data)
         }
     })
@@ -210,16 +210,16 @@ module.exports = (win, getClient) => {
             if (!win) {
                 return
             }
-            if (data.Scope && data.Scope.length > 0){
-                win.webContents.send(`${token}-data-scope`, data.Scope)    
+            if (data.Scope && data.Scope.length > 0) {
+                win.webContents.send(`${token}-data-scope`, data.Scope)
             }
-            if (data.RawResult){
-                if (Boolean(data.RawResult?.IsMessage) && data.RawResult.Message.toString() === "signal-interactive-exec-end"){
+            if (data.RawResult) {
+                if (Boolean(data.RawResult?.IsMessage) && data.RawResult.Message.toString() === "signal-interactive-exec-end") {
                     win.webContents.send(`${token}-exec-end`)
-                }else{
+                } else {
                     win.webContents.send(`${token}-data`, data.RawResult)
                 }
-                
+
             }
         })
         stream.on("error", (error) => {
@@ -235,5 +235,52 @@ module.exports = (win, getClient) => {
             }
             win.webContents.send(`${token}-end`)
         })
+    })
+
+    const streamHybridScanMap = new Map();
+    ipcMain.handle("cancel-HybridScan", handlerHelper.cancelHandler(streamHybridScanMap));
+    ipcMain.handle("HybridScan", (e, params, token) => {
+        let current = streamHybridScanMap.get(token);
+        if (current !== undefined) {
+            current.write(params)
+            return
+        }
+
+        console.info("HybridScan task start")
+        let stream = getClient().HybridScan();
+        stream.write(params)
+        handlerHelper.registerHandler(win, stream, streamHybridScanMap, token)
+    })
+
+    // asyncQueryHybridScanTask wrapper
+    const asyncQueryHybridScanTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryHybridScanTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryHybridScanTask", async (e, params) => {
+        return await asyncQueryHybridScanTask(params)
+    })
+
+    // asyncDeleteHybridScanTask wrapper
+    const asyncDeleteHybridScanTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteHybridScanTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteHybridScanTask", async (e, params) => {
+        return await asyncDeleteHybridScanTask(params)
     })
 }

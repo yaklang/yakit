@@ -241,7 +241,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 disabled: false
             }))
             setSequenceList([...newSequenceList])
-            onClearRef()
+            setTimeout(()=>{
+               onClearRef() 
+            },1000)
         }
     }, [loading])
     useEffect(() => {
@@ -314,6 +316,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             wait: 200
         }
     )
+    const fuzzerIndexArr = useRef<string[]>([])
     useEffect(() => {
         const token = fuzzTokenRef.current
         const dataToken = `${token}-data`
@@ -367,7 +370,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     failedBufferRef.current.set(FuzzerIndex, [r])
                 }
             }
-            updateData(FuzzerIndex)
+            
+            if(!fuzzerIndexArr.current.includes(FuzzerIndex)){
+                fuzzerIndexArr.current.push(FuzzerIndex)
+            }
+            // updateData(FuzzerIndex)
         })
         ipcRenderer.on(endToken, () => {
             setTimeout(() => {
@@ -410,6 +417,25 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
         }
     })
+
+    useEffect(()=>{
+        const id = setInterval(()=> {
+            fuzzerIndexArr.current.map((fuzzerIndex)=>{
+                let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
+                let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
+                let lastSuccessCount = getResponse(fuzzerIndex)?.successCount || 0
+                let lastFailedCount = getResponse(fuzzerIndex)?.failedCount || 0
+                // 判断是否有更新
+                if(currentSuccessCount!==lastSuccessCount||currentFailedCount!==lastFailedCount){
+                    updateData(fuzzerIndex)
+                }
+            })
+        },500)
+        return () => {
+            clearInterval(id)
+        }
+    },[])
+
     const updateData = useThrottleFn(
         (fuzzerIndex: string) => {
             const successBuffer: FuzzerResponse[] = successBufferRef.current.get(fuzzerIndex) || []
@@ -459,6 +485,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         {wait: 200}
     ).run
     const onClearRef = useMemoizedFn(() => {
+        fuzzerIndexArr.current = []
         successCountRef.current.clear()
         failedCountRef.current.clear()
         successBufferRef.current.clear()

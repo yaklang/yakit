@@ -68,6 +68,7 @@ import {CheckedSvgIcon} from "../layout/icons"
 import {ExportSelect} from "../DataExport/DataExport"
 import emiter from "@/utils/eventBus/eventBus"
 import { MITMConsts } from "@/pages/mitm/MITMConsts"
+import { HTTPHistorySourcePageType } from "../HTTPHistory"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -430,7 +431,7 @@ export interface HTTPFlowTableProp {
     // 筛选控件隐藏
     onlyShowSearch?: boolean
     // 此控件显示的页面
-    pageType?: "MITM"
+    pageType?: HTTPHistorySourcePageType
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -1814,6 +1815,28 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .finally(() => setTimeout(() => setLoading(false), 100))
     })
+
+    const onDeleteToUpdateEvent = useMemoizedFn((v:string) => {
+        const {sourcePage}:{sourcePage?:HTTPHistorySourcePageType} = JSON.parse(v)
+        if(sourcePage&&pageType&&sourcePage!==pageType&&["History","MITM"].includes(sourcePage)&&["History","MITM"].includes(pageType)){
+            updateData()
+        }
+    })
+
+    useEffect(() => {
+        emiter.on("onDeleteToUpdate", onDeleteToUpdateEvent)
+        return () => {
+            emiter.off("onDeleteToUpdate", onDeleteToUpdateEvent)
+        }
+    }, [])
+
+    // 删除成功时 通知History/Mitm页面更新
+    const onUpdateHistoryOrMitm = useMemoizedFn(() => {
+        // History更新通知MITM 反之亦然
+        // 说明： 此处emit并非是通知当前组件 而是通知复用此组件的其余组件 根据pageType区分
+        emiter.emit("onDeleteToUpdate",JSON.stringify({sourcePage:pageType}))
+    })
+
     //删除 重置请求 ID
     const onRemoveHttpHistoryAllAndResetId = useMemoizedFn(() => {
         setLoading(true)
@@ -1826,6 +1849,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 yakitNotify("error", `历史记录删除失败: ${e}`)
             })
             .finally(() => {
+                onUpdateHistoryOrMitm()
                 setTimeout(() => setLoading(false), 500)
             })
     })
@@ -1861,6 +1885,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 yakitNotify("error", `历史记录删除失败: ${e}`)
             })
             .finally(() => {
+                onUpdateHistoryOrMitm()
                 setTimeout(() => setLoading(false), 300)
             })
         setLoading(true)

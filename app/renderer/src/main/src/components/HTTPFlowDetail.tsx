@@ -22,7 +22,7 @@ import {IMonacoEditor, NewHTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
 import {FuzzerResponse} from "../pages/fuzzer/HTTPFuzzerPage"
-import {HTTPPacketFuzzable} from "./HTTPHistory"
+import {HTTPHistorySourcePageType, HTTPPacketFuzzable} from "./HTTPHistory"
 import {AutoSpin} from "./AutoSpin"
 import {Buffer} from "buffer"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
@@ -69,7 +69,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     refresh?: boolean
     defaultFold?: boolean
 
-    pageType?: "MITM"
+    pageType?: HTTPHistorySourcePageType
     historyId?: string
 }
 

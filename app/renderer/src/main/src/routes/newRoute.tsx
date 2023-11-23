@@ -488,7 +488,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.ShellReceiver:
             return <ShellReceiverPage />
         case YakitRoute.DB_HTTPHistory:
-            return <HTTPHistory />
+            return <HTTPHistory pageType="History"/>
         case YakitRoute.DB_Report:
             return <ReportViewerPage />
         case YakitRoute.DB_Risk:
