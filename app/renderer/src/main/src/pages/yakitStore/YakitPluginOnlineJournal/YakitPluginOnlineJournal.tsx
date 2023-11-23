@@ -151,6 +151,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                         loadMoreData={loadMoreData}
                         rowKey='id'
                         defItemHeight={32}
+                        isRef={isRef}
                         renderRow={(item: API.ApplyPluginLists, index) => (
                             <Timeline.Item dot={showDot(item.merge_status)}>
                                 <div className='journal-list-item'>

@@ -1484,7 +1484,7 @@ export const PluginContributesListItem: React.FC<PluginContributesListItemProps>
     const {contributesHeadImg, contributesName} = props
     return (
         <div className={styles["contributes-item-wrapper"]}>
-            <AuthorImg size='small' src={contributesHeadImg || ""} />
+            <AuthorImg size='small' src={contributesHeadImg || UnLogin} />
             <span className='content-ellipsis '>{contributesName}</span>
         </div>
     )
