@@ -3,7 +3,7 @@ import {YakitPluginListOnlineResponse} from "./online/PluginsOnlineType"
 import {NetWorkApi, requestConfig} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
-import {isCommunityEdition} from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 import {compareAsc} from "../yakitStore/viewers/base"
 import {
     GetYakScriptTagsAndTypeResponse,
@@ -276,7 +276,8 @@ export const apiFetchGroupStatisticsCheck: (query?: API.PluginsSearchRequest) =>
             }
             apiFetchGroupStatistics(newQuery)
                 .then((res: API.PluginsSearchResponse) => {
-                    if (isCommunityEdition()) {
+                    // 插件组（线上分组，只有便携版才有）
+                    if (!isEnpriTraceAgent()) {
                         // 插件类型、Tag、审核状态
                         const newData = (res.data || []).filter((ele) => ele.groupName !== "插件分组")
                         resolve({
