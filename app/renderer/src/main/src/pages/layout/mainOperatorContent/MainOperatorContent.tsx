@@ -517,7 +517,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const {keyword,plugin_type} = data || {}
 
         if (keyword||plugin_type) {
-            // uuid存在的，先将数据缓存至数据中心,后再打开页面
+            // 缓存搜索条件
             const newPageNode: PageNodeItemProps = {
                 id: `${randomString(8)}`,
                 routeKey: YakitRoute.Plugin_Store,
@@ -539,7 +539,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             setPagesData(YakitRoute.Plugin_Store, pages)
         }
-        emiter.emit("onRefOnlinePluginList", "")
         openMenuPage({route: YakitRoute.Plugin_Store})
     })
 

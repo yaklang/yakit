@@ -13,7 +13,7 @@ import {createWithEqualityFn} from "zustand/traditional"
  * @description 页面暂存数据
  * @property {PageNodeItemProps[]} pageNodeList 页面的一些信息
  * @property {string} routeKey 路由
- * @property {boolean} singleNode 是否为单开页面
+ * @property {boolean} singleNode 是否为单开页面,单开页面的逻辑暂时没有写
  */
 export interface PageProps {
     pageList: PageNodeItemProps[]
@@ -98,7 +98,7 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                 pages: new Map(),
                 selectGroupId: new Map(),
                 setPagesData: (key, values) => {
-                    const newVal = new Map().set(key, values)
+                    const newVal = new Map(get().pages).set(key, values)
                     set({
                         ...get(),
                         pages: newVal
