@@ -301,7 +301,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                                     type={plugin.type}
                                 />
                                 <div className={styles["details-editor-wrapper"]}>
-                                    <YakitEditor type={"yak"} value={plugin.content} />
+                                    <YakitEditor type={"yak"} value={plugin.content} readOnly={true}/>
                                 </div>
                             </div>
                         </TabPane>
