@@ -996,7 +996,7 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
     /**更改私有状态 */
     const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         const updateItem: API.UpPluginsPrivateRequest = {
-            uuid: [data.uuid],
+            uuid: data.uuid,
             is_private: !data.is_private
         }
         apiUpdatePluginPrivateMine(updateItem).then(() => {
