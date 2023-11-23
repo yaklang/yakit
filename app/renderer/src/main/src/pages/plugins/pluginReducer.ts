@@ -1,5 +1,6 @@
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "./online/PluginsOnlineType"
 import {QueryYakScriptsResponse, YakScript} from "../invoker/schema"
+import cloneDeep from "lodash/cloneDeep"
 
 // ----------------------- 线上
 // 初始 state
@@ -13,7 +14,7 @@ export const initialOnlineState: YakitPluginListOnlineResponse = {
     }
 }
 
-type OnlinePluginType = "add" | "update" | "remove" | "unLikeAndLike" | "download"
+type OnlinePluginType = "add" | "update" | "remove" | "unLikeAndLike" | "download" | "clear"
 
 // 定义 action 的类型
 export interface OnlinePluginAppAction {
@@ -149,6 +150,11 @@ export const pluginOnlineReducer = (
                 }
             }
             return state
+
+        case "clear":
+            return {
+                ...cloneDeep(initialOnlineState)
+            }
         default:
             return state
     }

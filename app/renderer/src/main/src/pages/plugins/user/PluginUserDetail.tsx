@@ -1,10 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react"
 import {PluginDetailHeader, PluginDetails, PluginDetailsListItem, statusTag} from "../baseTemplate"
-import {
-    OutlineClouddownloadIcon,
-    OutlineCursorclickIcon,
-    OutlineTrashIcon
-} from "@/assets/icon/outline"
+import {OutlineClouddownloadIcon, OutlineCursorclickIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
 import {Tabs, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -83,7 +79,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     /**去使用，跳转到本地插件详情页面 */
     const onUse = useMemoizedFn(() => {
         if (!plugin) return
-        onlineUseToLocalDetail(plugin.uuid,'mine')
+        onlineUseToLocalDetail(plugin.uuid, "mine")
     })
     // 返回
     const onPluginBack = useMemoizedFn(() => {
@@ -302,9 +298,10 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                                         headImg: ele.head_img,
                                         userName: ele.user_name
                                     }))}
+                                    type={plugin.type}
                                 />
                                 <div className={styles["details-editor-wrapper"]}>
-                                    <YakitEditor type={"yak"} value={plugin.content} />
+                                    <YakitEditor type={"yak"} value={plugin.content} readOnly={true}/>
                                 </div>
                             </div>
                         </TabPane>

@@ -48,8 +48,8 @@ export default function usePluginUploadHooks(props: PluginUploadHooks) {
                         .filter((ele) => ele.MessageType === "error")
                         .map((ele) => ele.Message)
                     yakitNotify("error", "上传失败:" + message)
+                    onUploadError()
                 }
-                onUploadError()
             }
             onUploadEnd()
             messageListRef.current = []

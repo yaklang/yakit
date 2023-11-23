@@ -217,7 +217,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
 })
 /** @name 插件详情-头部信息(样式未调完整) */
 export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props) => {
-    const {pluginName, help, titleNode, tags, extraNode, img, user, pluginId, updated_at, prImgs = []} = props
+    const {pluginName, help, titleNode, tags, extraNode, img, user, pluginId, updated_at, prImgs = [], type} = props
 
     const tagList = useMemo(() => {
         if (!tags) return []
@@ -257,6 +257,11 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                         </div>
                     </div>
                     <div className={classNames(styles["info-tags"])}>
+                        {pluginTypeToName[type] && pluginTypeToName[type].name && (
+                            <YakitTag color={pluginTypeToName[type]?.color as any}>
+                                {pluginTypeToName[type]?.name}
+                            </YakitTag>
+                        )}
                         <TagsListShow tags={tagList || []} />
                     </div>
                 </div>

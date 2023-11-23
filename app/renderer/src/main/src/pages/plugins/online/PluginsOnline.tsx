@@ -273,7 +273,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useUpdateEffect(() => {
         if (isCommunityEdition()) return
         // 企业版切换需要刷新插件商店商店列表+统计
-        onSwitchPrivateDomainRefOnlinePluginInit()
+        if (userInfo.isLogin) onSwitchPrivateDomainRefOnlinePluginInit()
     }, [userInfo.isLogin])
     useEffect(() => {
         getInitTotal()
@@ -295,6 +295,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             emiter.off("onRefOnlinePluginList", onRefOnlinePluginList)
         }
     }, [])
+    useEffect(() => {
+        /**首页点击热词和类型,更新缓存中的数据,需要刷新插件商店的列表 */
+        if (pluginOnlinePageData.pageList.length > 0) {
+            onRefOnlinePluginListByQuery()
+        }
+    }, [pluginOnlinePageData])
     /**切换私有域，刷新初始化的total和列表数据 */
     const onSwitchPrivateDomainRefOnlinePluginInit = useMemoizedFn(() => {
         fetchList(true)
@@ -304,7 +310,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     /**
      * @description 刷新搜索条件,目前触发地方(首页-插件热点触发的插件商店搜索条件过滤)
      */
-    const onRefQuery = useMemoizedFn(() => {
+    /**首页点击热词和类型,更新缓存中的数据,需要刷新插件商店的列表 */
+    const onRefOnlinePluginListByQuery = useMemoizedFn(() => {
         const {keyword = "", plugin_type = []} = getPluginOnlinePageData(pluginOnlinePageData)
         if (!!keyword) {
             setSearch({
@@ -312,8 +319,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 keyword: keyword,
                 type: "keyword"
             })
+            setTimeout(() => {
+                fetchList(true)
+            }, 200)
         }
         if (plugin_type.length > 0) {
+            // filters修改后会更着useEffect修改
             setFilters({
                 ...filters,
                 plugin_type
@@ -323,10 +334,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         clearDataByRoute(YakitRoute.Plugin_Store)
     })
     const onRefOnlinePluginList = useMemoizedFn(() => {
-        onRefQuery()
-        setTimeout(() => {
-            fetchList(true)
-        }, 200)
+        fetchList(true)
     })
 
     // 选中插件的数量
@@ -568,7 +576,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     return (
         <>
             {!!plugin && (
-                <div className={styles["plugins-online-detail"]}>
+                <div
+                    className={classNames(styles["plugins-online-detail"], {
+                        [styles["plugins-online-detail-ee-or-es"]]: !isCommunityEdition()
+                    })}
+                >
                     <PluginsOnlineDetail
                         info={plugin}
                         defaultSelectList={selectList}

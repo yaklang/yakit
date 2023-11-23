@@ -83,6 +83,7 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
+        min-width: 360px;
         .filter-header {
             width: 100%;
             display: flex;
@@ -237,6 +238,8 @@
                 flex: 1;
                 min-width: 20px;
                 overflow: hidden;
+                display: inline-flex;
+                align-items: center;
             }
         }
     }

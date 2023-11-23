@@ -23,6 +23,10 @@
     .form-item-submit {
         display: flex;
         justify-content: center;
+        .ant-form-item-control-input-content {
+            display: flex;
+            align-items: center;
+        }
     }
     .form-btns {
         display: flex;

@@ -126,6 +126,7 @@ import {PluginsLocal} from "@/pages/plugins/local/PluginsLocal"
 import {PluginUser} from "@/pages/plugins/user/PluginUser"
 import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
+import {isCommunityEdition} from "@/utils/envfile"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -420,6 +421,7 @@ export interface ComponentParams {
     // 插件调试
     generateYamlTemplate?: boolean
     YamlContent?: string
+    scriptName?: string
     // 新建插件
     moduleType?: string
     content?: string
@@ -491,8 +493,9 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Mod_Brute:
             return <BrutePage sendTarget={params?.bruteParams} />
         case YakitRoute.Plugin_Store:
+            // 社区版的插件商店不用判断登录,企业版/简易版的插件商店登录后才可查看
             return (
-                <OnlineJudgment>
+                <OnlineJudgment isJudgingLogin={!isCommunityEdition()}>
                     <PluginsOnline />
                 </OnlineJudgment>
             )
@@ -594,6 +597,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 <PluginDebuggerPage
                     generateYamlTemplate={!!params?.generateYamlTemplate}
                     YamlContent={params?.YamlContent || ""}
+                    scriptName={params?.scriptName || ""}
                 />
             )
         case YakitRoute.Beta_DebugMonacoEditor:

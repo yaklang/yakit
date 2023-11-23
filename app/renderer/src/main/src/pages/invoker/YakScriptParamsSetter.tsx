@@ -27,6 +27,7 @@ import { YakParamProps } from "../plugins/pluginsType";
 
 const {Title} = Typography;
 
+const {ipcRenderer} = window.require("electron")
 export interface YakScriptParamsSetterProps {
     Params: YakParamProps[]
     onParamsConfirm: (params: YakExecutorParam[]) => any
@@ -41,6 +42,8 @@ export interface YakScriptParamsSetterProps {
     styleSize?: "big" | "small"
     loading?: boolean
     ScriptName?: string
+    /**插件类型 */
+    Type?: string
 }
 
 const YAKIT_PLUGIN_DEBUG_PARAMS = "YAKIT_PLUGIN_DEBUG_PARAMS"
@@ -396,6 +399,15 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     };
 
     const submit = () => {
+        /**点击启动任务跳转去插件调试的类型 */
+        const toEditPagePluginType: string[] = ["mitm", "port-scan", "nuclei"]
+        if (toEditPagePluginType.includes(props.Type || "")) {
+            ipcRenderer.invoke("send-to-tab", {
+                type: "**debug-plugin",
+                data: {scriptName: props.ScriptName}
+            })
+            return
+        }
         if (props.onClearData) props.onClearData()
 
         let params = originParams.filter(i => {

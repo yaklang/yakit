@@ -136,6 +136,13 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
 
     const userInfo = useStore((s) => s.userInfo)
 
+    useEffect(() => {
+        emiter.on("onRefUserPluginList", onRefreshUserList)
+        return () => {
+            emiter.off("onRefUserPluginList", onRefreshUserList)
+        }
+    }, [])
+
     const setShowUserPluginIndex = useMemoizedFn((index: number) => {
         showUserPluginIndex.current = index
     })
@@ -205,14 +212,14 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
             })) || []
         )
     }, [filters.plugin_private])
-    /**在回收站时,刷新我的插件 */
+    /**刷新我的插件 */
     const onRefreshUserList = useDebounceFn(
         useMemoizedFn(() => {
             setRefreshUser(!refreshUser)
         }),
         {wait: 500, leading: true}
     ).run
-    /**在选中我的插件时,刷新回收站 */
+    /**刷新回收站 */
     const onRefreshRecycleList = useDebounceFn(
         useMemoizedFn(() => {
             setRefreshRecycle(!refreshRecycle)
@@ -507,15 +514,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         useEffect(() => {
             setIsSelectUserNum(selectList.length > 0 || allCheck)
         }, [selectList.length, allCheck])
-        useEffect(() => {
-            emiter.on("onRefUserPluginList", onRefUserPluginList)
-            return () => {
-                emiter.off("onRefUserPluginList", onRefUserPluginList)
-            }
-        }, [])
-        const onRefUserPluginList = useMemoizedFn(() => {
-            fetchList(true)
-        })
+
         /**详情中的批量删除 */
         // const onDetailsBatchRemove = useMemoizedFn((newParams: UserBackInfoProps) => {
         //     setAllCheck(newParams.allCheck)
@@ -539,6 +538,10 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             useMemoizedFn(async (reset?: boolean) => {
                 // if (latestLoadingRef.current) return //先注释，有影响
                 if (reset) {
+                    dispatch({
+                        type: "clear",
+                        payload: {}
+                    })
                     isLoadingRef.current = true
                     setCurrentIndex(0)
                 }
@@ -993,7 +996,7 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
     /**更改私有状态 */
     const onUpdatePrivate = useMemoizedFn((data: YakitPluginOnlineDetail) => {
         const updateItem: API.UpPluginsPrivateRequest = {
-            uuid: [data.uuid],
+            uuid: data.uuid,
             is_private: !data.is_private
         }
         apiUpdatePluginPrivateMine(updateItem).then(() => {
