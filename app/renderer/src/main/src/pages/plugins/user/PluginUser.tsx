@@ -136,13 +136,6 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
 
     const userInfo = useStore((s) => s.userInfo)
 
-    useEffect(() => {
-        emiter.on("onRefUserPluginList", onRefreshUserList)
-        return () => {
-            emiter.off("onRefUserPluginList", onRefreshUserList)
-        }
-    }, [])
-
     const setShowUserPluginIndex = useMemoizedFn((index: number) => {
         showUserPluginIndex.current = index
     })
@@ -475,6 +468,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             }),
             [allCheck, selectList]
         )
+        useEffect(() => {
+            emiter.on("onRefUserPluginList", onRefreshUserList)
+            return () => {
+                emiter.off("onRefUserPluginList", onRefreshUserList)
+            }
+        }, [])
         // 获取筛选栏展示状态
         useEffect(() => {
             getRemoteValue(PluginGV.OwnerFilterCloseStatus).then((value: string) => {
@@ -525,6 +524,9 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         //         onRemovePluginBatchBefore()
         //     }, 200)
         // })
+        const onRefreshUserList = useMemoizedFn(() => {
+            fetchList(true)
+        })
         const getInitTotal = useMemoizedFn(() => {
             apiFetchMineList({
                 page: 1,
@@ -538,10 +540,6 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             useMemoizedFn(async (reset?: boolean) => {
                 // if (latestLoadingRef.current) return //先注释，有影响
                 if (reset) {
-                    dispatch({
-                        type: "clear",
-                        payload: {}
-                    })
                     isLoadingRef.current = true
                     setCurrentIndex(0)
                 }

@@ -76,6 +76,13 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
             }, 100)
         } else setPlugin(undefined)
     }, [info])
+    useEffect(() => {
+        onRecalculation()
+    }, [response.pagemeta.total])
+    /**刷新我的插件列表 */
+    const onRecalculation = useMemoizedFn(() => {
+        setRecalculation(!recalculation)
+    })
     /**去使用，跳转到本地插件详情页面 */
     const onUse = useMemoizedFn(() => {
         if (!plugin) return
@@ -178,11 +185,15 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
     })
     /**搜索需要清空勾选 */
     const onSearch = useMemoizedFn(async () => {
+        setSpinLoading(true)
         try {
             await onDetailSearch(search, filters)
         } catch (error) {}
         setAllCheck(false)
         setSelectList([])
+        setTimeout(() => {
+            setSpinLoading(false)
+        }, 200)
     })
     /**详情批量删除 */
     // const onBatchRemove = useMemoizedFn(async () => {
@@ -301,7 +312,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = (props) => {
                                     type={plugin.type}
                                 />
                                 <div className={styles["details-editor-wrapper"]}>
-                                    <YakitEditor type={"yak"} value={plugin.content} readOnly={true}/>
+                                    <YakitEditor type={"yak"} value={plugin.content} readOnly={true} />
                                 </div>
                             </div>
                         </TabPane>
