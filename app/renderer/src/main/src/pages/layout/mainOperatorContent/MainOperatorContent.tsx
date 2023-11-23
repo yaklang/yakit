@@ -1149,7 +1149,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 // 只要路由不是Plugin_OP,可以把menuName设置为空字符
                 removeMenuPage({route: YakitRoute.LicenseAdminPage, menuName: ""})
                 removeMenuPage({route: YakitRoute.TrustListPage, menuName: ""})
-                removeMenuPage({route: YakitRoute.PlugInAdminPage, menuName: ""})
             }
             IsEnpriTrace ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
         })
