@@ -42,7 +42,6 @@ interface YakitTreeProps extends TreeProps {
     searchValue?: string // 搜索内容
     onSearch?: (searchValue: string) => void // 点击搜索icon Or 关闭icon回调
     refreshTree?: () => void // 刷新树
-    hoveredKeys?: TreeKey[] // 定位树节点得key
 }
 
 const YakitTree: React.FC<YakitTreeProps> = (props) => {
@@ -52,7 +51,6 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
         showSearch = true,
         searchPlaceholder = "请输入关键词搜索",
         expandedAllKeys = false,
-        hoveredKeys = []
     } = props
 
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>() // 树节点展开key

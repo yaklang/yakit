@@ -408,7 +408,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail id={flow.Id} onClose={onClosed}/>
+            <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
         </div>
     )
 }
@@ -734,11 +734,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>({
-        ...(
-            props.params || {
-                SourceType: "mitm", Tags: []
-            }
-        ),
+        ...(props.params || {
+            SourceType: "mitm",
+            Tags: []
+        }),
         SourceType: props.params?.SourceType || "mitm"
     })
     const [tagsQuery, setTagsQuery] = useState<string[]>([])
@@ -843,7 +842,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const onScrollToByClickEvent = useMemoizedFn((v) => {
         try {
-            const obj: { historyId: string, id: string } = JSON.parse(v)
+            const obj: {historyId: string; id: string} = JSON.parse(v)
             if (historyId === obj.historyId) {
                 let scrollToIndex: number | undefined = undefined
                 data.some((item, index) => {
@@ -856,8 +855,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setScrollToIndex(scrollToIndex)
                 }
             }
-        } catch (error) {
-        }
+        } catch (error) {}
     })
     useEffect(() => {
         emiter.on("onScrollToByClick", onScrollToByClickEvent)
@@ -1102,10 +1100,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .catch((e: any) => {
                 yakitNotify("error", `query HTTP Flow failed: ${e}`)
             })
-            .finally(() => setTimeout(() => {
-                setLoading(false)
-                isGrpcRef.current = false
-            }, 200))
+            .finally(() =>
+                setTimeout(() => {
+                    setLoading(false)
+                    isGrpcRef.current = false
+                }, 200)
+            )
     })
 
     // 偏移量更新顶部数据
@@ -1316,7 +1316,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 updateData()
             }
         }
-
     })
 
     useEffect(() => {
@@ -1531,9 +1530,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 render: (text) => {
                     return text
                         ? `${text}`
-                            .split("|")
-                            .filter((i) => !i.startsWith("YAKIT_COLOR_"))
-                            .join(", ")
+                              .split("|")
+                              .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                              .join(", ")
                         : ""
                 },
                 filterProps: {
@@ -1542,7 +1541,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <SearchIcon/>,
+                    filterIcon: <SearchIcon />,
                     filters: tags
                 }
             },
@@ -1558,7 +1557,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 minWidth: 140,
                 beforeIconExtra: (
                     <div className={classNames(style["body-length-checkbox"])}>
-                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)}/>
+                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
                         <span className={style["tip"]}>大于0</span>
                     </div>
                 ),
@@ -1614,7 +1613,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             {rowData.BodyLength !== -1 && (
                                 <div
                                     className={classNames({
-                                        [style["body-length-text-red"]]: rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
+                                        [style["body-length-text-red"]]:
+                                            rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
                                     })}
                                 >
                                     {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
@@ -1680,7 +1680,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <SearchIcon/>,
+                    filterIcon: <SearchIcon />,
                     filters: contentType
                 }
             },
@@ -1847,8 +1847,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const onDeleteToUpdateEvent = useMemoizedFn((v: string) => {
-        const {sourcePage}: { sourcePage?: HTTPHistorySourcePageType } = JSON.parse(v)
-        if (sourcePage && pageType && sourcePage !== pageType && ["History", "MITM"].includes(sourcePage) && ["History", "MITM"].includes(pageType)) {
+        const {sourcePage}: {sourcePage?: HTTPHistorySourcePageType} = JSON.parse(v)
+        if (
+            sourcePage &&
+            pageType &&
+            sourcePage !== pageType &&
+            ["History", "MITM"].includes(sourcePage) &&
+            ["History", "MITM"].includes(pageType)
+        ) {
             updateData()
         }
     })
@@ -2027,7 +2033,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     .finally(() => setTimeout(() => setLoading(false), 100))
             } else {
                 const Ids: number[] = list.map((item) => parseInt(item.Id + ""))
-                ipcRenderer.invoke("GetHTTPFlowByIds", {Ids}).then((rsp: { Data: HTTPFlow[] }) => {
+                ipcRenderer.invoke("GetHTTPFlowByIds", {Ids}).then((rsp: {Data: HTTPFlow[]}) => {
                     initExcelData(resolve, rsp.Data, {
                         Data: rsp.Data,
                         Total: rsp.Data.length,
@@ -2054,10 +2060,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "数据包扫描",
             label: "数据包扫描",
             number: 10,
-            onClickSingle: () => {
-            },
-            onClickBatch: () => {
-            },
+            onClickSingle: () => {},
+            onClickBatch: () => {},
             children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
                 key: ele.title,
                 label: ele.title
@@ -2086,7 +2090,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "下载 Response Body",
             label: "下载 Response Body",
             onClickSingle: (v) => {
-                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: { Raw: Uint8Array }) => {
+                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
                     saveABSFileToOpen(`response-body.txt`, bytes.Raw)
                 })
             }
@@ -2112,8 +2116,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "复制为 Yak PoC 模版",
             label: "复制为 Yak PoC 模版",
-            onClickSingle: () => {
-            },
+            onClickSingle: () => {},
             children: [
                 {
                     key: "数据包 PoC 模版",
@@ -2129,10 +2132,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "标注颜色",
             label: "标注颜色",
             number: 20,
-            onClickSingle: () => {
-            },
-            onClickBatch: () => {
-            },
+            onClickSingle: () => {},
+            onClickBatch: () => {},
             children: availableColors.map((i) => {
                 return {
                     key: i.title,
@@ -2152,8 +2153,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "发送到对比器",
             label: "发送到对比器",
-            onClickSingle: () => {
-            },
+            onClickSingle: () => {},
             children: [
                 {
                     key: "发送到对比器左侧",
@@ -2170,8 +2170,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "屏蔽",
             label: "屏蔽",
-            onClickSingle: () => {
-            },
+            onClickSingle: () => {},
             children: [
                 {
                     key: "屏蔽该记录",
@@ -2190,10 +2189,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "删除",
             label: "删除",
-            onClickSingle: () => {
-            },
-            onClickBatch: () => {
-            },
+            onClickSingle: () => {},
+            onClickBatch: () => {},
             all: true,
             children: [
                 {
@@ -2447,7 +2444,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         const m = showYakitModal({
             title: "导入分享数据",
-            content: <ShareModal module={YakitRoute.DB_HTTPHistory} shareContent={JSON.stringify(ids)}/>,
+            content: <ShareModal module={YakitRoute.DB_HTTPHistory} shareContent={JSON.stringify(ids)} />,
             onCancel: () => {
                 m.destroy()
                 setSelectedRowKeys([])
@@ -2458,24 +2455,26 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const searchNode = useMemoizedFn(() => {
-        return <YakitInput.Search
-            size='small'
-            placeholder='请输入关键词搜索'
-            value={params.Keyword}
-            onChange={(e) => {
-                setParams({...params, Keyword: e.target.value})
-            }}
-            style={{maxWidth: 200}}
-            onSearch={() => {
-                updateData()
-            }}
-            // 这个事件很关键哈，不要用 onChange
-            onBlur={(e) => {
-                if (props.onSearch) {
-                    props.onSearch(e.target.value)
-                }
-            }}
-        />
+        return (
+            <YakitInput.Search
+                size='small'
+                placeholder='请输入关键词搜索'
+                value={params.Keyword}
+                onChange={(e) => {
+                    setParams({...params, Keyword: e.target.value})
+                }}
+                style={{maxWidth: 200}}
+                onSearch={() => {
+                    updateData()
+                }}
+                // 这个事件很关键哈，不要用 onChange
+                onBlur={(e) => {
+                    if (props.onSearch) {
+                        props.onSearch(e.target.value)
+                    }
+                }}
+            />
+        )
     })
 
     return (
@@ -2510,46 +2509,51 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     query={params}
                     titleHeight={38}
                     renderTitle={
-                        <div className={style["http-history-table-title"]}
-                             style={{...props.httpHistoryTableTitleStyle}}>
+                        <div
+                            className={style["http-history-table-title"]}
+                            style={{...props.httpHistoryTableTitleStyle}}
+                        >
                             <div
                                 className={classNames(
                                     style["http-history-table-title-space-between"],
                                     style["http-history-table-row"]
                                 )}
                             >
-                                <div style={onlyShowSearch ? {marginLeft: 8} : {}}
-                                     className={classNames(style["http-history-table-flex"])}>
-                                    {!onlyShowSearch && SourceType.map((tag) => (
-                                        <YakitCheckableTag
-                                            key={tag.value}
-                                            checked={!!params.SourceType?.split(",").includes(tag.value)}
-                                            onChange={(checked) => {
-                                                if (checked) {
-                                                    const selectTypeList = [
-                                                        ...(params.SourceType?.split(",") || []),
-                                                        tag.value
-                                                    ]
-                                                    setParams({...params, SourceType: selectTypeList.join(",")})
-                                                } else {
-                                                    const selectTypeList = (params.SourceType?.split(",") || []).filter(
-                                                        (ele) => ele !== tag.value
-                                                    )
-                                                    setParams({...params, SourceType: selectTypeList.join(",")})
-                                                }
-                                                setTimeout(() => {
-                                                    updateData()
-                                                }, 10)
-                                            }}
-                                        >
-                                            {tag.text}
-                                        </YakitCheckableTag>
-                                    ))}
+                                <div
+                                    style={onlyShowSearch ? {marginLeft: 8} : {}}
+                                    className={classNames(style["http-history-table-flex"])}
+                                >
+                                    {!onlyShowSearch &&
+                                        SourceType.map((tag) => (
+                                            <YakitCheckableTag
+                                                key={tag.value}
+                                                checked={!!params.SourceType?.split(",").includes(tag.value)}
+                                                onChange={(checked) => {
+                                                    if (checked) {
+                                                        const selectTypeList = [
+                                                            ...(params.SourceType?.split(",") || []),
+                                                            tag.value
+                                                        ]
+                                                        setParams({...params, SourceType: selectTypeList.join(",")})
+                                                    } else {
+                                                        const selectTypeList = (
+                                                            params.SourceType?.split(",") || []
+                                                        ).filter((ele) => ele !== tag.value)
+                                                        setParams({...params, SourceType: selectTypeList.join(",")})
+                                                    }
+                                                    setTimeout(() => {
+                                                        updateData()
+                                                    }, 10)
+                                                }}
+                                            >
+                                                {tag.text}
+                                            </YakitCheckableTag>
+                                        ))}
                                 </div>
                                 <div className={style["http-history-table-flex"]}>
                                     {shieldData?.data.length > 0 && (
                                         <div style={{marginRight: 16}}>
-                                            <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter}/>
+                                            <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} />
                                         </div>
                                     )}
                                     <div className={style["http-history-table-total"]}>
@@ -2559,7 +2563,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 {total}
                                             </span>
                                         </div>
-                                        <Divider type='vertical'/>
+                                        <Divider type='vertical' />
                                         <div className={style["http-history-table-total-item"]}>
                                             <span className={style["http-history-table-total-item-text"]}>
                                                 Selected
@@ -2571,216 +2575,236 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     </div>
                                 </div>
                                 <div className={style["http-history-table-right"]}>
-                                    {!onlyShowSearch && <>
-                                        <YakitButton
-                                            type='text'
-                                            onClick={() => {
-                                                setDrawerFormVisible(true)
-                                            }}
-                                        >
-                                            高级筛选
-                                        </YakitButton>
-                                        {isFilter && (
-                                            <YakitTag color={"success"}>
-                                                已配置
-                                                <CheckedSvgIcon style={{marginLeft: 8}}/>
-                                            </YakitTag>
-                                        )}
-                                        <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
-                                        <div className={classNames(style["http-history-table-right-item"])}>
-                                            {size?.width && size?.width > 1060 && (
-                                                <div className={style["http-history-table-right-label"]}>协议类型</div>
-                                            )}
-                                            <YakitSelect
-                                                size='small'
-                                                value={params.IsWebsocket || ""}
-                                                wrapperStyle={{width: 150}}
-                                                onSelect={(val) => {
-                                                    setParams({...params, IsWebsocket: val})
-                                                    setTimeout(() => {
-                                                        updateData()
-                                                    }, 50)
-                                                }}
-                                            >
-                                                <YakitSelect.Option value=''>全部</YakitSelect.Option>
-                                                <YakitSelect.Option value='http/https'>http/https</YakitSelect.Option>
-                                                <YakitSelect.Option value='websocket'>websocket</YakitSelect.Option>
-                                            </YakitSelect>
-                                        </div>
-                                    </>}
-                                    {
-                                        size?.width && size?.width < 1000 ?
-                                            <YakitPopover
-                                                trigger='click'
-                                                placement='bottomRight'
-                                                content={searchNode}>
-                                                <YakitButton icon={<SearchIcon/>} type='outline2'/>
-                                            </YakitPopover> :
-                                            <YakitInput.Search
-                                                className={style["http-history-table-right-search"]}
-                                                placeholder='请输入关键词搜索'
-                                                value={params.Keyword}
-                                                onChange={(e) => {
-                                                    setParams({...params, Keyword: e.target.value})
-                                                }}
-                                                onSearch={() => {
-                                                    setTimeout(() => {
-                                                        updateData()
-                                                    }, 50)
-                                                }}
-                                                // 这个事件很关键哈，不要用 onChange
-                                                onBlur={(e) => {
-                                                    if (props.onSearch) {
-                                                        props.onSearch(e.target.value)
-                                                    }
-                                                }}
-                                            />
-                                    }
-
-                                    {!onlyShowSearch && <>
-                                        <div className={style["http-history-table-color-swatch"]}>
-                                            <YakitPopover
-                                                overlayClassName={style["http-history-table-color-popover"]}
-                                                content={
-                                                    <ColorSearch
-                                                        color={color}
-                                                        setColor={setColor}
-                                                        onReset={() => setColor([])}
-                                                        onSure={() => onColorSure()}
-                                                        setIsShowColor={setIsShowColor}
-                                                    />
-                                                }
-                                                trigger='click'
-                                                placement='bottomLeft'
-                                                visible={isShowColor}
-                                                onVisibleChange={(visible) => {
-                                                    if (!visible) setIsShowColor(false)
-                                                }}
-                                            >
-                                                <YakitButton
-                                                    type='outline2'
-                                                    isHover={isShowColor}
-                                                    style={{padding: 4}}
-                                                    onClick={() => setIsShowColor(true)}
-                                                >
-                                                    <ColorSwatchIcon/>
-                                                </YakitButton>
-                                            </YakitPopover>
-                                        </div>
-                                        {size?.width && size?.width >= 1000 && <>{(selectedRowKeys.length === 0 && (
+                                    {!onlyShowSearch && (
+                                        <>
                                             <YakitButton
-                                                type='outline2'
-                                                disabled={selectedRowKeys.length === 0}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
+                                                type='text'
+                                                onClick={() => {
+                                                    setDrawerFormVisible(true)
                                                 }}
                                             >
-                                                批量操作
-                                                <ChevronDownIcon style={{color: "#85899E"}}/>
+                                                高级筛选
                                             </YakitButton>
-                                        )) || (
-                                            <YakitPopover
-                                                overlayClassName={style["http-history-table-drop-down-popover"]}
-                                                content={
-                                                    <YakitMenu
-                                                        width={150}
-                                                        selectedKeys={[]}
-                                                        data={menuData
-                                                            .filter((f) => f.onClickBatch)
-                                                            .map((m) => {
-                                                                return {
-                                                                    key: m.key,
-                                                                    label: m.label,
-                                                                    children: m.children?.map((ele) => ({
-                                                                        key: ele.key,
-                                                                        label: ele.label
-                                                                    }))
-                                                                }
-                                                            })}
-                                                        onClick={({key, keyPath}) => {
-                                                            if (keyPath.includes("数据包扫描")) {
-                                                                const currentItemScan = menuData.find(
-                                                                    (f) => f.onClickBatch && f.key === "数据包扫描"
-                                                                )
-                                                                if (!currentItemScan) return
-                                                                onBatch(
-                                                                    (v) => execPacketScan([v.Id], key),
-                                                                    currentItemScan.number || 0,
-                                                                    selectedRowKeys.length === total
-                                                                )
-                                                                return
-                                                            }
-                                                            if (keyPath.includes("标注颜色")) {
-                                                                const currentItemColor = menuData.find(
-                                                                    (f) => f.onClickBatch && f.key === "标注颜色"
-                                                                )
-                                                                const colorItem = availableColors.find(
-                                                                    (e) => e.title === key
-                                                                )
-                                                                if (!currentItemColor || !colorItem) return
-                                                                CalloutColorBatch(
-                                                                    selectedRows,
-                                                                    currentItemColor?.number || 0,
-                                                                    colorItem
-                                                                )
-                                                                return
-                                                            }
-                                                            switch (key) {
-                                                                case "删除记录":
-                                                                    onRemoveHttpHistory({Id: selectedRowKeys})
-                                                                    break
-                                                                case "删除URL":
-                                                                    const urls = selectedRows.map((ele) => ele.Url)
-                                                                    onRemoveHttpHistory({
-                                                                        Filter: {
-                                                                            IncludeInUrl: urls
-                                                                        }
-                                                                    })
-                                                                    break
-                                                                case "删除域名":
-                                                                    const hosts = selectedRows.map(
-                                                                        (ele) => ele.HostPort?.split(":")[0]
-                                                                    )
-                                                                    onRemoveHttpHistory({
-                                                                        Filter: {
-                                                                            IncludeInUrl: hosts
-                                                                        }
-                                                                    })
-                                                                    break
-                                                                default:
-                                                                    const currentItem = menuData.find(
-                                                                        (f) => f.onClickBatch && f.key === key
-                                                                    )
-                                                                    if (!currentItem) return
-                                                                    if (currentItem.onClickBatch)
-                                                                        currentItem.onClickBatch(
-                                                                            selectedRows,
-                                                                            currentItem.number
-                                                                        )
-                                                                    break
-                                                            }
-                                                            setBatchVisible(false)
-                                                        }}
-                                                    />
-                                                }
-                                                trigger='click'
-                                                placement='bottomLeft'
-                                                onVisibleChange={setBatchVisible}
-                                                visible={batchVisible}
-                                            >
-                                                <YakitButton
-                                                    type='outline2'
-                                                    disabled={selectedRowKeys.length === 0}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
+                                            {isFilter && (
+                                                <YakitTag color={"success"}>
+                                                    已配置
+                                                    <CheckedSvgIcon style={{marginLeft: 8}} />
+                                                </YakitTag>
+                                            )}
+                                            <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}} />
+                                            <div className={classNames(style["http-history-table-right-item"])}>
+                                                {size?.width && size?.width > 1060 && (
+                                                    <div className={style["http-history-table-right-label"]}>
+                                                        协议类型
+                                                    </div>
+                                                )}
+                                                <YakitSelect
+                                                    size='small'
+                                                    value={params.IsWebsocket || ""}
+                                                    wrapperStyle={{width: 150}}
+                                                    onSelect={(val) => {
+                                                        setParams({...params, IsWebsocket: val})
+                                                        setTimeout(() => {
+                                                            updateData()
+                                                        }, 50)
                                                     }}
                                                 >
-                                                    批量操作
-                                                    <ChevronDownIcon/>
-                                                </YakitButton>
-                                            </YakitPopover>
-                                        )}
-                                        </>}</>}
+                                                    <YakitSelect.Option value=''>全部</YakitSelect.Option>
+                                                    <YakitSelect.Option value='http/https'>
+                                                        http/https
+                                                    </YakitSelect.Option>
+                                                    <YakitSelect.Option value='websocket'>websocket</YakitSelect.Option>
+                                                </YakitSelect>
+                                            </div>
+                                        </>
+                                    )}
+                                    {size?.width && size?.width < 1000 ? (
+                                        <YakitPopover trigger='click' placement='bottomRight' content={searchNode}>
+                                            <YakitButton icon={<SearchIcon />} type='outline2' />
+                                        </YakitPopover>
+                                    ) : (
+                                        <YakitInput.Search
+                                            className={style["http-history-table-right-search"]}
+                                            placeholder='请输入关键词搜索'
+                                            value={params.Keyword}
+                                            onChange={(e) => {
+                                                setParams({...params, Keyword: e.target.value})
+                                            }}
+                                            onSearch={() => {
+                                                setTimeout(() => {
+                                                    updateData()
+                                                }, 50)
+                                            }}
+                                            // 这个事件很关键哈，不要用 onChange
+                                            onBlur={(e) => {
+                                                if (props.onSearch) {
+                                                    props.onSearch(e.target.value)
+                                                }
+                                            }}
+                                        />
+                                    )}
+
+                                    {!onlyShowSearch && (
+                                        <>
+                                            <div className={style["http-history-table-color-swatch"]}>
+                                                <YakitPopover
+                                                    overlayClassName={style["http-history-table-color-popover"]}
+                                                    content={
+                                                        <ColorSearch
+                                                            color={color}
+                                                            setColor={setColor}
+                                                            onReset={() => setColor([])}
+                                                            onSure={() => onColorSure()}
+                                                            setIsShowColor={setIsShowColor}
+                                                        />
+                                                    }
+                                                    trigger='click'
+                                                    placement='bottomLeft'
+                                                    visible={isShowColor}
+                                                    onVisibleChange={(visible) => {
+                                                        if (!visible) setIsShowColor(false)
+                                                    }}
+                                                >
+                                                    <YakitButton
+                                                        type='outline2'
+                                                        isHover={isShowColor}
+                                                        style={{padding: 4}}
+                                                        onClick={() => setIsShowColor(true)}
+                                                    >
+                                                        <ColorSwatchIcon />
+                                                    </YakitButton>
+                                                </YakitPopover>
+                                            </div>
+                                            {size?.width && size?.width >= 1000 && (
+                                                <>
+                                                    {(selectedRowKeys.length === 0 && (
+                                                        <YakitButton
+                                                            type='outline2'
+                                                            disabled={selectedRowKeys.length === 0}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                            }}
+                                                        >
+                                                            批量操作
+                                                            <ChevronDownIcon style={{color: "#85899E"}} />
+                                                        </YakitButton>
+                                                    )) || (
+                                                        <YakitPopover
+                                                            overlayClassName={
+                                                                style["http-history-table-drop-down-popover"]
+                                                            }
+                                                            content={
+                                                                <YakitMenu
+                                                                    width={150}
+                                                                    selectedKeys={[]}
+                                                                    data={menuData
+                                                                        .filter((f) => f.onClickBatch)
+                                                                        .map((m) => {
+                                                                            return {
+                                                                                key: m.key,
+                                                                                label: m.label,
+                                                                                children: m.children?.map((ele) => ({
+                                                                                    key: ele.key,
+                                                                                    label: ele.label
+                                                                                }))
+                                                                            }
+                                                                        })}
+                                                                    onClick={({key, keyPath}) => {
+                                                                        if (keyPath.includes("数据包扫描")) {
+                                                                            const currentItemScan = menuData.find(
+                                                                                (f) =>
+                                                                                    f.onClickBatch &&
+                                                                                    f.key === "数据包扫描"
+                                                                            )
+                                                                            if (!currentItemScan) return
+                                                                            onBatch(
+                                                                                (v) => execPacketScan([v.Id], key),
+                                                                                currentItemScan.number || 0,
+                                                                                selectedRowKeys.length === total
+                                                                            )
+                                                                            return
+                                                                        }
+                                                                        if (keyPath.includes("标注颜色")) {
+                                                                            const currentItemColor = menuData.find(
+                                                                                (f) =>
+                                                                                    f.onClickBatch &&
+                                                                                    f.key === "标注颜色"
+                                                                            )
+                                                                            const colorItem = availableColors.find(
+                                                                                (e) => e.title === key
+                                                                            )
+                                                                            if (!currentItemColor || !colorItem) return
+                                                                            CalloutColorBatch(
+                                                                                selectedRows,
+                                                                                currentItemColor?.number || 0,
+                                                                                colorItem
+                                                                            )
+                                                                            return
+                                                                        }
+                                                                        switch (key) {
+                                                                            case "删除记录":
+                                                                                onRemoveHttpHistory({
+                                                                                    Id: selectedRowKeys
+                                                                                })
+                                                                                break
+                                                                            case "删除URL":
+                                                                                const urls = selectedRows.map(
+                                                                                    (ele) => ele.Url
+                                                                                )
+                                                                                onRemoveHttpHistory({
+                                                                                    Filter: {
+                                                                                        IncludeInUrl: urls
+                                                                                    }
+                                                                                })
+                                                                                break
+                                                                            case "删除域名":
+                                                                                const hosts = selectedRows.map(
+                                                                                    (ele) => ele.HostPort?.split(":")[0]
+                                                                                )
+                                                                                onRemoveHttpHistory({
+                                                                                    Filter: {
+                                                                                        IncludeInUrl: hosts
+                                                                                    }
+                                                                                })
+                                                                                break
+                                                                            default:
+                                                                                const currentItem = menuData.find(
+                                                                                    (f) =>
+                                                                                        f.onClickBatch && f.key === key
+                                                                                )
+                                                                                if (!currentItem) return
+                                                                                if (currentItem.onClickBatch)
+                                                                                    currentItem.onClickBatch(
+                                                                                        selectedRows,
+                                                                                        currentItem.number
+                                                                                    )
+                                                                                break
+                                                                        }
+                                                                        setBatchVisible(false)
+                                                                    }}
+                                                                />
+                                                            }
+                                                            trigger='click'
+                                                            placement='bottomLeft'
+                                                            onVisibleChange={setBatchVisible}
+                                                            visible={batchVisible}
+                                                        >
+                                                            <YakitButton
+                                                                type='outline2'
+                                                                disabled={selectedRowKeys.length === 0}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                }}
+                                                            >
+                                                                批量操作
+                                                                <ChevronDownIcon />
+                                                            </YakitButton>
+                                                        </YakitPopover>
+                                                    )}
+                                                </>
+                                            )}
+                                        </>
+                                    )}
                                     <div className={style["empty-button"]}>
                                         {!props.noDeleteAll && (
                                             <YakitDropdownMenu
@@ -2855,7 +2879,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             >
                                                 <YakitButton
                                                     type='text2'
-                                                    icon={<RefreshIcon/>}
+                                                    icon={<RefreshIcon />}
                                                     onClick={(e) => e.stopPropagation()}
                                                 />
                                             </Badge>
@@ -2889,8 +2913,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         page: pagination.Page,
                         limit: pagination.Limit,
                         total,
-                        onChange: (page, limit) => {
-                        }
+                        onChange: (page, limit) => {}
                     }}
                     onChange={onTableChange}
                     onSetCurrentRow={onSetCurrentRow}
@@ -2946,7 +2969,7 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
                                         className={classNames(style["tag-del-style"])}
                                         onClick={() => cancleFilter(item)}
                                     >
-                                        <RemoveIcon/>
+                                        <RemoveIcon />
                                     </div>
                                 </div>
                             ))}
@@ -2957,7 +2980,7 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
                     <div className={style["http-history-table-left-shield"]}>
                         <span className='content-ellipsis'>已屏蔽条件</span>
                         <span className={style["http-history-table-left-number"]}>{shieldData?.data.length}</span>
-                        <StatusOfflineIcon className={style["http-history-table-left-shield-icon"]}/>
+                        <StatusOfflineIcon className={style["http-history-table-left-shield-icon"]} />
                     </div>
                 </YakitPopover>
             )}
@@ -3003,12 +3026,12 @@ const ColorSearch = React.memo((props: ColorSearchProps) => {
                             key={ele.color}
                         >
                             <div className={style["http-history-table-color-item-render"]}>{ele.render}</div>
-                            {checked && <CheckIcon className={style["check-icon"]}/>}
+                            {checked && <CheckIcon className={style["check-icon"]} />}
                         </div>
                     )
                 })}
             </div>
-            <FooterBottom className={style["color-select-footer"]} onReset={onReset} onSure={onSure}/>
+            <FooterBottom className={style["color-select-footer"]} onReset={onReset} onSure={onSure} />
         </div>
     )
 })
@@ -3192,13 +3215,13 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
                                         <span className={style["select-item-text"]}>{item.data.label}</span>
-                                        {checked && <CheckIcon className={style["check-icon"]}/>}
+                                        {checked && <CheckIcon className={style["check-icon"]} />}
                                     </div>
                                 )
                             })) || <div className={style["no-data"]}>暂无数据</div>}
                     </div>
                 </div>
-                <FooterBottom onReset={onReset} onSure={onSure}/>
+                <FooterBottom onReset={onReset} onSure={onSure} />
             </div>
         </div>
     )

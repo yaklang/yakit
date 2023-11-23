@@ -962,7 +962,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 str += (i !== 0 ? "/" : "") + path[i] 
                 arr.push(str)
             }
-            console.log("path", arr)
             emiter.emit("onJumpWebTree", JSON.stringify({treeData: {}, path: arr}))
         }
     })
