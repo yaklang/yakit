@@ -827,13 +827,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /** 插件调试 */
     const addPluginDebugger = useMemoizedFn((res: any) => {
-        const {generateYamlTemplate = false, YamlContent = ""} = res || {}
+        const {generateYamlTemplate = false, YamlContent = "",scriptName=''} = res || {}
         openMenuPage(
             {route: YakitRoute.Beta_DebugPlugin},
             {
                 pageParams: {
                     generateYamlTemplate,
-                    YamlContent
+                    YamlContent,
+                    scriptName
                 }
             }
         )
