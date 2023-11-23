@@ -51,6 +51,8 @@ export interface PluginDebuggerPageProp {
     generateYamlTemplate: boolean
     // yaml模板内容
     YamlContent: string
+    /**插件名称 */
+    scriptName: string
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -63,14 +65,14 @@ const pluginTypeData = [
 
 export type PluginTypes = "port-scan" | "mitm" | "nuclei"
 
-export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYamlTemplate, YamlContent}) => {
+export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYamlTemplate, YamlContent,scriptName}) => {
     const [pluginType, setPluginType] = useState<PluginTypes>(generateYamlTemplate ? "nuclei" : "port-scan")
     const [builder, setBuilder] = useState<HTTPRequestBuilderParams>(getDefaultHTTPRequestBuilderParams())
     const [pluginExecuting, setPluginExecuting] = useState<boolean>(false)
     const [showPluginExec, setShowPluginExec] = useState<boolean>(false)
     const [code, setCode] = useState<string>(PortScanPluginTemplate)
     const [originCode, setOriginCode] = useState<string>("")
-    const [currentPluginName, setCurrentPluginName] = useState<string>("")
+    const [currentPluginName, setCurrentPluginName] = useState<string>('')
     const [tabActiveKey, setTabActiveKey] = useState<string>("code")
     const [operator, setOperator] = useState<{ start: () => any; cancel: () => any }>()
     const [refreshEditor, setRefreshEditor] = useState<number>(Math.random())
@@ -223,6 +225,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                             setOriginCode={setOriginCode}
                             setRefreshEditor={setRefreshEditor}
                             handleChangePluginType={handleChangePluginType}
+                            scriptName={scriptName}
                         ></SecondNodeHeader>
                         <div style={{height: "calc(100% - 34px)"}}>
                             <div style={{display: tabActiveKey === "code" ? "block" : "none", height: '100%'}}>
@@ -278,6 +281,8 @@ interface SecondNodeHeaderProps {
     originCode: string
     setOriginCode: (i: string) => void
     handleChangePluginType: (v: PluginTypes) => void
+    /**插件名称 */
+    scriptName:string
 }
 
 const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
@@ -294,13 +299,30 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
          setRefreshEditor,
          originCode,
          setOriginCode,
-         handleChangePluginType
+         handleChangePluginType,
+         scriptName
      }) => {
         const [script, setScript] = useState<YakScript>()
         const [pluginBaseInspectVisible, setPluginBaseInspectVisible] = useState<boolean>(false)
         const [dropdownData, setDropdownData] = useState<{ key: string; label: string }[]>([
             {key: "loadLocalPlugin", label: "加载本地插件"}
         ])
+        useEffect(() => {
+            ipcRenderer
+                .invoke("GetYakScriptByName", {Name: scriptName})
+                .then((i: YakScript) => {
+                    setScript(i)
+                    setPluginType(i.Type as any)
+                    setCode(i.Content)
+                    setOriginCode(i.Content)
+                    setCurrentPluginName(i.ScriptName)
+                    setRefreshEditor(Math.random())
+                    setTabActiveKey("code")
+                })
+                .catch((err) => {
+                    yakitNotify('error','获取本地插件数据失败:'+err)
+                })
+        }, [scriptName])
         useEffect(() => {
             if (!currentPluginName && !generateYamlTemplate) {
                 setDropdownData([
