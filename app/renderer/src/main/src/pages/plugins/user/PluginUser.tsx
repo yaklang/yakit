@@ -31,6 +31,7 @@ import {
     OnlineUserExtraOperateProps,
     PluginRecycleListRefProps,
     PluginUserDetailBackProps,
+    PluginUserDetailRefProps,
     PluginUserListProps,
     PluginUserListRefProps,
     PluginUserProps,
@@ -112,6 +113,9 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
     const [downloadLoading, setDownloadLoading] = useState<boolean>(false) // 我的插件批量下载
     const [removeLoading, setRemoveLoading] = useState<boolean>(false) // 我的插件批量删除
 
+    // 当前展示的插件序列
+    const showUserPluginIndex = useRef<number>(0)
+
     const pluginUserListRef = useRef<PluginUserListRefProps>({
         allCheck: false,
         selectList: [],
@@ -122,8 +126,10 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         onDetailSearch: () => {}
         // onDetailsBatchRemove: () => {}
     })
-    // 当前展示的插件序列
-    const showUserPluginIndex = useRef<number>(0)
+
+    const pluginUserDetailRef = useRef<PluginUserDetailRefProps>({
+        onRecalculation: () => {}
+    })
 
     const pluginRecycleListRef = useRef<PluginRecycleListRefProps>({
         allCheck: false,
@@ -237,6 +243,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
         <>
             {!!plugin && (
                 <PluginUserDetail
+                    ref={pluginUserDetailRef}
                     info={plugin}
                     defaultSelectList={pluginUserListRef.current.selectList}
                     defaultAllCheck={pluginUserListRef.current.allCheck}
@@ -357,6 +364,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         setRemoveLoading={setRemoveLoading}
                         currentIndex={showUserPluginIndex.current}
                         setCurrentIndex={setShowUserPluginIndex}
+                        onRecalculationUserDetail={pluginUserDetailRef.current.onRecalculation}
                     />
                 </div>
                 <div
@@ -407,7 +415,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             setDownloadLoading,
             currentIndex,
             setCurrentIndex,
-            setRemoveLoading
+            setRemoveLoading,
+            onRecalculationUserDetail
         } = props
         /** 是否为加载更多 */
         const [loading, setLoading] = useState<boolean>(false)
@@ -524,8 +533,11 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         //         onRemovePluginBatchBefore()
         //     }, 200)
         // })
-        const onRefreshUserList = useMemoizedFn(() => {
-            fetchList(true)
+        const onRefreshUserList = useMemoizedFn(async () => {
+            try {
+                await fetchList(true)
+            } catch (error) {}
+            onRecalculationUserDetail()
         })
         const getInitTotal = useMemoizedFn(() => {
             apiFetchMineList({
