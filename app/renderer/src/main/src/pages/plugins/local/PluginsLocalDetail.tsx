@@ -499,7 +499,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     type={plugin.Type}
                                 />
                                 <div className={styles["details-editor-wrapper"]}>
-                                    <YakitEditor type={"yak"} value={plugin.Content} />
+                                    <YakitEditor type={"yak"} value={plugin.Content} readOnly={true} />
                                 </div>
                             </div>
                         </TabPane>
