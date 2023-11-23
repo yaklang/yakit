@@ -158,3 +158,30 @@
         
     }
 }
+.payload-edit-form {
+    padding: 8px 24px 8px 24px;
+    .name {
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        margin-bottom: 6px;
+        .must {
+            color: #f4736b;
+        }
+    }
+    .opt-btn{
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    :global {
+        .ant-form-item-label {
+            padding-bottom: 0px;
+        }
+    }
+}
