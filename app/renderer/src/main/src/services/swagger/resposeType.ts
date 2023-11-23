@@ -182,7 +182,7 @@ export declare namespace API {
     user_id: number;
   }
   export interface UpPluginsPrivateRequest {
-    uuid: string[];
+    uuid: string;
     is_private: boolean;
   }
   export interface UpPluginRecycleRequest {
