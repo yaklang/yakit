@@ -30,6 +30,8 @@ export interface PluginUserListProps {
     setCurrentIndex: (index: number) => void
     /**删除loading */
     setRemoveLoading: (b: boolean) => void
+    /**刷新详情数据 */
+    onRecalculationUserDetail: () => void
 }
 
 export interface PluginRecycleListProps {
@@ -69,6 +71,7 @@ export interface PluginRecycleListRefProps {
     onReductionPluginBatchBefore: () => void
 }
 export interface PluginUserDetailProps {
+    ref?: any
     info: YakitPluginOnlineDetail
     defaultAllCheck: boolean
     defaultSelectList: string[]
@@ -114,4 +117,9 @@ export interface UserBackInfoProps {
     filter: PluginFilterParams
     /**勾选数量 */
     selectNum: number
+}
+
+export interface PluginUserDetailRefProps {
+    /**详情重新计算data数据 */
+    onRecalculation: () => void
 }
