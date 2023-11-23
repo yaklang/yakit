@@ -232,15 +232,26 @@ service Yak {
   rpc NewCodec(CodecRequestFlow) returns (CodecResponse);
   rpc PacketPrettifyHelper(PacketPrettifyHelperRequest) returns (PacketPrettifyHelperResponse);
 
-  // Payload 相关接口
-  rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse);
+    // Payload 相关接口
+  // query by [keyword/group/folder]
+  rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse); 
+  // delete by [id/group/folder]
+  rpc DeletePayloadByFolder(DeletePayloadByFolderRequest) returns (Empty);
   rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
-  rpc DeletePayload(DeletePayloadRequest) returns (Empty);
-  rpc SavePayload(SavePayloadRequest) returns (Empty);
+  rpc DeletePayload(DeletePayloadByIdRequest) returns (Empty); 
+  // save payload to database/file
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
+  rpc SavePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress);
+  // update group/folder/payload
+  rpc UpdatePayloadFolder(UpdatePayloadFolderRequest) returns (Empty);
+  rpc UpdatePayloadGroup(UpdatePayloadGroupRequest) returns (Empty);
+  rpc UpdatePayload(UpdatePayloadRequest) returns (Empty); // edit
+  // copy 
+  rpc CopyPayload(CopyPayloadRequest) returns (Empty); // just copy 
+  // get all group
   rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
-  rpc UpdatePayload(UpdatePayloadRequest) returns (Empty);
-  rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse);
+  // get payload in 
+  rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse); // get payload by [group/folder]
 
   // 自动生成补全
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
@@ -3185,8 +3196,22 @@ message GetYakVMBuildInMethodCompletionResponse {
   repeated MethodSuggestion Suggestions = 1;
 }
 
+
+
+message PayloadGroup {
+  string Group = 1;
+  bool IsFile = 2;
+  string Folder = 3;
+}
+
+message PayloadFolder{
+  string Folder =1;
+  repeated PayloadGroup Groups = 2;
+}
+
 message GetAllPayloadGroupResponse {
-  repeated string Groups = 1;
+  repeated PayloadFolder Folder = 1;
+  repeated PayloadGroup Groups = 2;
 }
 
 message SavePayloadRequest {
@@ -3196,16 +3221,36 @@ message SavePayloadRequest {
   repeated string FileName = 4;
 }
 
-message UpdatePayloadRequest{
-  string Group = 1;
-  string OldGroup = 2;
+message UpdatePayloadFolderRequest{
+  string Folder = 1;
+  string OldFolder = 2;
+}
+
+message UpdatePayloadGroupRequest{
+  string GroupName = 1;
+  PayloadGroup Data = 2;
+}
+
+message UpdatePayloadRequest {
+  int64 Id = 1;
+  Payload Data = 2;
+}
+
+// copy payload(get by id) to group
+message CopyPayloadRequest { 
+  int64 id = 1;
+  PayloadGroup group = 2;
 }
 
 message DeletePayloadByGroupRequest {
   string Group = 1;
 }
 
-message DeletePayloadRequest {
+message DeletePayloadByFolderRequest {
+  string Folder = 1;
+}
+
+message DeletePayloadByIdRequest {
   int64 Id = 1;
   repeated int64 Ids = 2;
 }
@@ -3214,6 +3259,7 @@ message QueryPayloadRequest {
   Paging Pagination = 1;
   string Group = 2;
   string Keyword = 3;
+  string Folder = 4; 
 }
 
 message QueryPayloadResponse {
@@ -3227,10 +3273,14 @@ message Payload {
   string Group = 2;
   bytes ContentBytes = 3;
   string Content = 4;
+  string Folder = 5;
+  int64 HitCount = 6;
+  bool IsFile = 7;
 }
 
 message GetAllPayloadRequest {
   string Group = 1;
+  string Folder = 2;
 }
 
 message GetAllPayloadResponse {
