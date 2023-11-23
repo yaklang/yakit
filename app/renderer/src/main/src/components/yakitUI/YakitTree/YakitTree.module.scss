@@ -30,8 +30,11 @@
             color: #85899e;
             margin-top: 4px;
             svg {
-                height: 14px;
-                width: 14px;
+                height: 16px;
+                width: 16px;
+                path {
+                    stroke-width: 1.5
+                }
             }
         }
 

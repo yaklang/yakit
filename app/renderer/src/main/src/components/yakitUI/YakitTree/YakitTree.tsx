@@ -2,11 +2,8 @@ import React, {useEffect, useState} from "react"
 import {Tree} from "antd"
 import type {DataNode, TreeProps} from "antd/es/tree"
 import {
-    OutlineDocumentIcon,
-    OutlineLink2Icon,
     OutlineMinusIcon,
     OutlinePlusIcon,
-    OutlineVariableIcon
 } from "@/assets/icon/outline"
 import {YakitInput} from "../YakitInput/YakitInput"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
@@ -19,16 +16,6 @@ import {YakURLResource} from "@/pages/yakURLTree/data"
 import {TreeNode as YakitTreeNode} from "antd/lib/tree-select"
 
 export type TreeKey = string | number
-
-export type TreeNodeType = "dir" | "file" | "query" | "path"
-export const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
-    const iconsEle = {
-        ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
-        ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
-        ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
-    }
-    return iconsEle[treeNodeType] || <></>
-}
 
 export interface TreeNode extends DataNode {
     data?: YakURLResource // 树节点其他额外数据
@@ -55,6 +42,7 @@ interface YakitTreeProps extends TreeProps {
     searchValue?: string // 搜索内容
     onSearch?: (searchValue: string) => void // 点击搜索icon Or 关闭icon回调
     refreshTree?: () => void // 刷新树
+    hoveredKeys?: TreeKey[] // 定位树节点得key
 }
 
 const YakitTree: React.FC<YakitTreeProps> = (props) => {
@@ -63,7 +51,8 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
         showIcon = true,
         showSearch = true,
         searchPlaceholder = "请输入关键词搜索",
-        expandedAllKeys = false
+        expandedAllKeys = false,
+        hoveredKeys = []
     } = props
 
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>() // 树节点展开key
@@ -164,6 +153,27 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
         props.onCheckedKeys && props.onCheckedKeys(checkedKeys, info.checkedNodes)
     }
 
+    /**
+     * 生成树结构
+     */
+    // const renderTreeNode = (data: TreeNode[] = []) => {
+    //     // 生成树结构
+    //     if (data.length == 0) {
+    //         return
+    //     }
+    //     return data.map((item) => {
+            
+    //         if (item.children && item.children.length > 0) {
+    //             return (
+    //                 <YakitTreeNode key={item.key} title={item.title}>
+    //                     {renderTreeNode(item.children)}
+    //                 </YakitTreeNode>
+    //             )
+    //         }
+    //         return <YakitTreeNode key={item.key} title={item.title}></YakitTreeNode>
+    //     })
+    // }
+
     return (
         <div className={styles.yakitTree}>
             <div className={styles["tree-top-wrap"]}>
@@ -209,7 +219,7 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
                             onSelect={onTreeSelect}
                             checkedKeys={checkedKeys}
                             onCheck={onTreeCheck}
-                        />
+                        ></Tree>
                     ) : (
                         <YakitEmpty />
                     )}

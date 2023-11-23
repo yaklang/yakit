@@ -10,12 +10,20 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
 import styles from "./HTTPHistory.module.scss"
 import classNames from "classnames"
-import YakitTree, {TreeKey, TreeNode, TreeNodeType, renderTreeNodeIcon} from "./yakitUI/YakitTree/YakitTree"
+import YakitTree, {TreeKey, TreeNode} from "./yakitUI/YakitTree/YakitTree"
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
+import {
+    OutlineDocumentIcon,
+    OutlineFolderaddIcon,
+    OutlineFolderremoveIcon,
+    OutlineLink2Icon,
+    OutlineVariableIcon
+} from "@/assets/icon/outline"
+import {SolidFolderaddIcon} from "@/assets/icon/solid"
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -29,6 +37,7 @@ export interface HTTPHistoryProp extends HTTPPacketFuzzable {
 }
 
 type tabKeys = "web-tree"
+type TreeNodeType = "dir" | "file" | "query" | "path"
 
 interface HTTPHistoryTabsItem {
     key: tabKeys
@@ -130,6 +139,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         console.log(123, webTreeData)
     }, [webTreeData])
 
+    const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
+        const iconsEle = {
+            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
+            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
+            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
+        }
+        return iconsEle[treeNodeType] || <></>
+    }
+
     const [yakurl, setYakURL] = useState<string>("website:///")
     useEffect(() => {
         if (!yakurl) {
@@ -156,7 +174,16 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                         key: searchValue ? item.ResourceName : item.VerboseName,
                         isLeaf: !item.HaveChildrenNodes,
                         data: item,
-                        icon: renderTreeNodeIcon(item.ResourceType as TreeNodeType)
+                        icon: ({expanded}) => {
+                            if (item.ResourceType === "dir") {
+                                return expanded ? (
+                                    <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                                ) : (
+                                    <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                                )
+                            }
+                            return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
+                        }
                     }
                 })
             )
@@ -201,7 +228,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             key: key + "/" + i.ResourceName,
                             isLeaf: !i.HaveChildrenNodes,
                             data: i,
-                            icon: renderTreeNodeIcon(i.ResourceType as TreeNodeType)
+                            icon: ({expanded}) => {
+                                if (i.ResourceType === "dir") {
+                                    return expanded ? <OutlineFolderaddIcon /> : <OutlineFolderremoveIcon />
+                                }
+                                return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
+                            }
                         }
                     })
                     setWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
@@ -301,6 +333,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             setOnlyShowFirstNode(true)
                                             setSecondNodeVisible(false)
                                         }}
+                                        hoveredKeys={hoveredKeys}
                                         expandedKeys={expandedKeys}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
