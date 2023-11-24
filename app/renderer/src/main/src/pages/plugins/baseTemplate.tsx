@@ -66,6 +66,7 @@ import {PluginDiffEditorModal, PluginEditorModal} from "./editDetails/PluginEdit
 import {PluginGV, aduitStatusToName, pluginTypeToName} from "./builtInData"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 import UnLogin from "@/assets/unLogin.png"
+import YakitLogo from "@/assets/yakitLogo.png"
 
 import "./plugins.scss"
 import styles from "./baseTemplate.module.scss"
@@ -1429,7 +1430,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
     })
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg icon={pluginTypeToName[pluginType].icon} />
+            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[pluginType].icon} />
         }
         return <AuthorImg src={headImg || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, headImg, pluginType, official])
