@@ -247,12 +247,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 ...data.Url,
                 Query: [{Key: "filter", Value: sourseType}]
             }
-            console.log(123, obj)
 
             requestYakURLList(
                 obj,
                 (rsp) => {
-                    console.log(111111111, rsp.Resources)
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
                         // const id = key + "/" + i.ResourceName
                         const id = key + "-" + index
@@ -289,7 +287,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         // 假设 selectedNodes 的第一个节点是您想要设置的节点
         const node = selectedNodes[0]
         if (node) {
-            setSelectedNodeParamsKey([node.data!.ResourceName])
+            const urlItem = node.data?.Extra.find((item) => item.Key === "url")
+            if (urlItem) {
+                const url = new URL(urlItem.Value)
+                const arr1 = url.pathname.split("/").filter((item) => item)
+                const arr2 = node.data?.Path.split("/").filter((item) => item) || []
+                setSelectedNodeParamsKey(arr1.length ? arr1 : arr2)
+            }
         } else {
             setSelectedNodeParamsKey([])
         }
@@ -392,7 +396,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
                                         onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-                                            console.log("selectedNodes", selectedKeys, expandedKeys)
+                                            console.log("selectedNodes", selectedKeys, selectedNodes)
                                             setSelectedKeys(selectedKeys)
                                             setSelectedNodes(selectedNodes)
                                             setOnlyShowFirstNode(true)
@@ -429,7 +433,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     searchURL={selectedNodes
                                         .map((node: TreeNode) => {
                                             const urlItem = node.data?.Extra.find((item) => item.Key === "url")
-                                            return urlItem ? urlItem.Value : ""
+                                            if (urlItem) {
+                                                const url = new URL(urlItem.Value)
+                                                console.log('searchURL', url.origin);
+                                                return url.origin
+                                            } else {
+                                                return ""
+                                            }
                                         })
                                         .filter((url) => url !== "")
                                         .join(",")}
