@@ -560,7 +560,7 @@ export const PluginLocal: React.FC<PluginLocalProp> = (props) => {
                                             queryName === "status" &&
                                             plugSource === "online" &&
                                             !boolAdmin &&
-                                            userInfo.showStatusSearch !== true
+                                            userInfo.checkPlugin !== true
                                         if (isCommunityEdition() && (UserIsPrivate || OnlineAdmin)) return <></>
                                         if (isEnterpriseEdition() && (UserIsPrivate || OnlineStatusSearch)) return <></>
 

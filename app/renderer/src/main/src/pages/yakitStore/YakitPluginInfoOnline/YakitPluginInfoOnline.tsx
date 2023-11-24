@@ -267,7 +267,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         )
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
-    const isShowAdmin = (isAdmin || userInfo.showStatusSearch) && !plugin.is_private
+    const isShowAdmin = (isAdmin || userInfo.checkPlugin) && !plugin.is_private
     // 是否为企业版
     const isEnterprise = isEnterpriseEdition()
     return (

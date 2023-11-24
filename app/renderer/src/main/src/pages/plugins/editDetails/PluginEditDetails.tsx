@@ -85,6 +85,8 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
     // 编辑时的旧数据
     const [info, setInfo] = useState<YakScript>()
+    // 新建页面时，保存之前点击了调试功能，导致插件先被保存了，从而记录保存插件的id
+    const newToDebugId = useRef<number>(0)
 
     // 通过ID获取插件旧数据
     const fetchPluginInfo = useMemoizedFn((id: number) => {
@@ -398,22 +400,44 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     })
 
     // 插件本地保存
-    const saveLocal = useMemoizedFn((modify: PluginDataProps, callback?: (info?: YakScript) => any) => {
-        const request: localYakInfo = convertLocalToLocalInfo(isModify, {info: info, modify: modify})
-        console.log("local-api", request)
-        if (!saveLoading) setSaveLoading(true)
-        ipcRenderer
-            .invoke("SaveLocalPlugin", request)
-            .then((data: YakScript) => {
-                yakitNotify("success", "创建 / 保存 插件成功")
-                setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
-                onLocalAndOnlineSend(data)
-                if (callback) callback(data)
-            })
-            .catch((e: any) => {
-                yakitNotify("error", `保存 Yak 模块失败: ${e}`)
-                if (callback) callback()
-            })
+    const saveLocal: (modify: PluginDataProps) => Promise<YakScript> = useMemoizedFn((modify) => {
+        return new Promise((resolve, reject) => {
+            // 新建还是编辑逻辑
+            let isModifyState: boolean = false
+
+            // 页面是新建还是编辑
+            if (!isModify) {
+                isModifyState = false
+            } else {
+                // 编辑插件是否为纯本地插件
+                if (isPureLocal) {
+                    isModifyState = true
+                } else {
+                    // 编辑插件是否改动名字
+                    if (modify.ScriptName === info?.ScriptName) {
+                        isModifyState = true
+                    } else {
+                        isModifyState = false
+                    }
+                }
+            }
+
+            const request: localYakInfo = convertLocalToLocalInfo(isModifyState, {info: info, modify: modify})
+            if (!pluginId && newToDebugId.current) request.Id = newToDebugId.current
+            console.log("local-api", request)
+            if (!saveLoading) setSaveLoading(true)
+            ipcRenderer
+                .invoke("SaveLocalPlugin", request)
+                .then((data: YakScript) => {
+                    yakitNotify("success", "创建 / 保存 插件成功")
+                    setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
+                    onLocalAndOnlineSend(data)
+                    resolve(data)
+                })
+                .catch((e: any) => {
+                    reject(e)
+                })
+        })
     })
 
     /** 页面右上角的按钮组操作 start */
@@ -503,14 +527,19 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             return
         }
 
-        saveLocal(obj, (data) => {
-            if (data) {
-                debugPlugin(data)
-            } else {
-                yakitNotify("error", `调试操作失败!`)
-            }
-            closeSaveLoading()
-        })
+        saveLocal(obj)
+            .then((res) => {
+                if (!isModify) {
+                    newToDebugId.current = +res.Id || 0
+                }
+                debugPlugin(res)
+            })
+            .catch((e) => {
+                yakitNotify("error", `调试操作需保存，保存失败: ${e}`)
+            })
+            .finally(() => {
+                closeSaveLoading()
+            })
     })
 
     const [onlineLoading, setOnlineLoading] = useState<boolean>(false)
@@ -529,12 +558,6 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                 setOnlineLoading(false)
             }, 200)
             return
-        }
-
-        if (pluginId) {
-            saveLocal(obj, () => {
-                setSaveLoading(false)
-            })
         }
 
         modalTypeRef.current = "close"
@@ -600,10 +623,6 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             return
         }
 
-        saveLocal(obj, (data) => {
-            setSaveLoading(false)
-        })
-
         // 私密插件只填写描述修改内容
         if (modifyInfo.current.is_private) {
             setModifyReason(true)
@@ -642,13 +661,16 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             return
         }
 
-        saveLocal(obj, (data) => {
-            if (data) {
+        saveLocal(obj)
+            .then((res) => {
                 onDestroyInstance(true)
-            } else {
+            })
+            .catch((e) => {
+                yakitNotify("error", `保存插件失败: ${e}`)
+            })
+            .finally(() => {
                 closeSaveLoading()
-            }
-        })
+            })
     })
 
     // 同步&复制云端
@@ -771,6 +793,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
     // 数据重置
     const onReset = useMemoizedFn(() => {
+        newToDebugId.current = 0
         setTypeParams({
             Type: "yak",
             Kind: "bug"
