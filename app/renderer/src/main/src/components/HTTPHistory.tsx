@@ -147,10 +147,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     })
 
     useEffect(() => {
-        console.log(searchWebTreeData)
-    }, [searchWebTreeData])
-
-    useEffect(() => {
         if (treeWrapRef.current) {
             resizeObserver.observe(treeWrapRef.current)
         }
@@ -288,16 +284,32 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         const node = selectedNodes[0]
         if (node) {
             const urlItem = node.data?.Extra.find((item) => item.Key === "url")
-            if (urlItem) {
-                const url = new URL(urlItem.Value)
-                const arr1 = url.pathname.split("/").filter((item) => item)
-                const arr2 = node.data?.Path.split("/").filter((item) => item) || []
-                setSelectedNodeParamsKey(arr1.length ? arr1 : arr2)
+            if (urlItem && urlItem.Value) {
+                try {
+                    const url = new URL(urlItem.Value)
+                    const arr1 = url.pathname.split("/").filter((item) => item)
+                    const arr2 = node.data?.Path.split("/").filter((item) => item) || []
+                    setSelectedNodeParamsKey(arr1.length ? arr1 : arr2)
+                } catch (_) {
+                    setSelectedNodeParamsKey([])
+                    return 
+                }
+            } else {
+                setSelectedNodeParamsKey([])
             }
         } else {
             setSelectedNodeParamsKey([])
         }
     }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行
+
+    // 刷新网站树
+    const refreshTree = useMemoizedFn(() => {
+        setSearchValue("")
+        setExpandedKeys([])
+        setSelectedKeys([])
+        setSearchTreeFlag(false)
+        getWebTreeData("website:///", sourseType)
+    })
 
     // 跳转网站树指定节点
     // const onJumpWebTree = useMemoizedFn((value) => {
@@ -385,18 +397,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             setExpandedKeys([])
                                             getWebTreeData("website://" + `${value ? value : "/"}`, sourseType)
                                         }}
-                                        refreshTree={() => {
-                                            setSearchValue("")
-                                            setExpandedKeys([])
-                                            setSelectedKeys([])
-                                            setSearchTreeFlag(false)
-                                            getWebTreeData("website:///", sourseType)
-                                        }}
+                                        refreshTree={refreshTree}
                                         expandedKeys={expandedKeys}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
                                         onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-                                            console.log("selectedNodes", selectedKeys, selectedNodes)
+                                            // console.log("selectedNodes", selectedKeys, selectedNodes)
                                             setSelectedKeys(selectedKeys)
                                             setSelectedNodes(selectedNodes)
                                             setOnlyShowFirstNode(true)
@@ -433,10 +439,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     searchURL={selectedNodes
                                         .map((node: TreeNode) => {
                                             const urlItem = node.data?.Extra.find((item) => item.Key === "url")
-                                            if (urlItem) {
-                                                const url = new URL(urlItem.Value)
-                                                console.log('searchURL', url.origin);
-                                                return url.origin
+                                            if (urlItem && urlItem.Value) {
+                                                try {
+                                                    const url = new URL(urlItem.Value)
+                                                    return url.origin
+                                                } catch (_) {
+                                                    return ""
+                                                }
                                             } else {
                                                 return ""
                                             }
@@ -458,12 +467,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     historyId={historyId}
                                     onSourseType={(sourseType) => {
                                         setSourseType(sourseType)
-                                        // 刷新数据
-                                        setSearchValue("")
-                                        setExpandedKeys([])
-                                        setSelectedKeys([])
-                                        setSearchTreeFlag(false)
-                                        getWebTreeData("website:///", sourseType)
+                                        refreshTree()
                                     }}
                                 />
                             </div>
