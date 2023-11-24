@@ -829,7 +829,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
 
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg icon={pluginTypeToName[type].icon} />
+            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[type].icon} />
         }
         return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])
@@ -1073,7 +1073,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
     }, [prImgs])
     const authorImgNode = useMemo(() => {
         if (isCorePlugin) {
-            return <AuthorImg icon={pluginTypeToName[type].icon} />
+            return <AuthorImg src={YakitLogo} icon={pluginTypeToName[type].icon} />
         }
         return <AuthorImg src={img || UnLogin} builtInIcon={official ? "official" : undefined} />
     }, [isCorePlugin, img, official, type])
@@ -1167,9 +1167,9 @@ export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
     const {size = "middle", src, builtInIcon, icon} = props
     const [isError, setIsError] = useState<boolean>(false)
     const srcUrl = useMemo(() => {
-        if (isError) return YakitLogo
+        if (isError) return UnLogin
         if (src) return src
-        else return YakitLogo
+        else return UnLogin
     }, [src, isError])
 
     const imgClass = useMemo(() => {
