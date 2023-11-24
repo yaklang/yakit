@@ -944,7 +944,14 @@ const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props)
                     />
                 ))}
             </div>
-            <YakitModal visible={visibleQRCode} title={null} footer={null} centered={true} width={368}>
+            <YakitModal
+                visible={visibleQRCode}
+                title={null}
+                footer={null}
+                centered={true}
+                width={368}
+                onCancel={() => setVisibleQRCode(false)}
+            >
                 <div className={styles["yakit-modal-code"]}>
                     <div className={styles["yakit-modal-code-heard"]}>
                         <div className={styles["yakit-modal-code-heard-title"]}>
