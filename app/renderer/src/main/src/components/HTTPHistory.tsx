@@ -142,10 +142,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
         entries.forEach((entry) => {
             const target = entry.target
-            console.log(123, target.getBoundingClientRect().height)
             setTreeWrapHeight(target.getBoundingClientRect().height)
         })
     })
+
+    useEffect(() => {
+        console.log(searchWebTreeData)
+    }, [searchWebTreeData])
 
     useEffect(() => {
         if (treeWrapRef.current) {
@@ -168,8 +171,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const getWebTreeData = (yakurl: string, sourseType: string) => {
         setTreeLoading(true)
-        console.log(123, sourseType);
-        
+
         const filter = sourseType.length ? `?filter=${sourseType}` : ""
         loadFromYakURLRaw(yakurl + filter, (res) => {
             setTreeLoading(false)
@@ -241,10 +243,16 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 reject("node.data is empty")
                 return
             }
+            const obj = {
+                ...data.Url,
+                Query: [{Key: "filter", Value: sourseType}]
+            }
+            console.log(123, obj)
 
             requestYakURLList(
-                data.Url,
+                obj,
                 (rsp) => {
+                    console.log(111111111, rsp.Resources)
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
                         // const id = key + "/" + i.ResourceName
                         const id = key + "-" + index
@@ -440,6 +448,11 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     historyId={historyId}
                                     onSourseType={(sourseType) => {
                                         setSourseType(sourseType)
+                                        // 刷新数据
+                                        setSearchValue("")
+                                        setExpandedKeys([])
+                                        setSelectedKeys([])
+                                        setSearchTreeFlag(false)
                                         getWebTreeData("website:///", sourseType)
                                     }}
                                 />
