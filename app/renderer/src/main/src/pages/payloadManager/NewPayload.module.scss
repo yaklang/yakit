@@ -75,7 +75,7 @@
                     }
                 }
             }
-            .extra-hidden{
+            .extra-hidden {
                 display: none;
             }
         }
@@ -464,6 +464,7 @@
         flex-direction: row;
         gap: 4px;
         align-items: center;
+        overflow: hidden;
         .drag-icon {
             svg {
                 height: 12px;
@@ -482,6 +483,9 @@
             font-style: normal;
             font-weight: 400;
             line-height: 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     }
     .extra {
