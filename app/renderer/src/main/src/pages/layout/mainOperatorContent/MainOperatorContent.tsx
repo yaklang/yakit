@@ -2253,7 +2253,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     sortFieId: sourceIndex + 1
                 }
                 onExchangeOrderPages(YakitRoute.HTTPFuzzer, source, destination)
-                const sequenceList = queryFuzzerSequenceCacheDataByGroupId(groupId)
             }
         })
 
@@ -2328,12 +2327,11 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             // 将拖拽的item添加到目的地的组内
             subPage.splice(destinationIndex, 0, newSourceItem)
-
+            
             // 如果组内的item为0 ,需要删除组
             if (sourceGroupChildrenList.length === 0) {
                 const number = subPage.findIndex((ele) => ele.id === sourceGroupId)
                 subPage.splice(number, 1)
-                removePagesDataCacheById(YakitRoute.HTTPFuzzer, sourceItem.id)
                 removeFuzzerSequenceList({
                     groupId: sourceItem.groupId
                 })
