@@ -543,17 +543,56 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 })
         } else {
             // 开启劫持
-            ipcRenderer
-                .invoke("mitm-content-replacers", {
-                    replacers: newRules
+            const findOpenRepRule = newRules.find(item => (!item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)))
+            if (findOpenRepRule !== undefined) {
+                Modal.confirm({
+                    title: "温馨提示",
+                    icon: <ExclamationCircleOutlined />,
+                    content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
+                    okText: "确认",
+                    cancelText: "取消",
+                    closable: true,
+                    centered: true,
+                    closeIcon: (
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                Modal.destroyAll()
+                            }}
+                            className='modal-remove-icon'
+                        >
+                            <RemoveIcon />
+                        </div>
+                    ),
+                    cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                    okButtonProps: { size: "small", className: "modal-ok-button" },
+                    onOk: () => {
+                        ipcRenderer
+                            .invoke("mitm-content-replacers", {
+                                replacers: newRules
+                            })
+                            .then((val) => {
+                                setVisible(false)
+                                success("保存成功")
+                            })
+                            .catch((e) => {
+                                failed(`保存失败: ${e}`)
+                            })
+                    },
                 })
-                .then((val) => {
-                    setVisible(false)
-                    success("保存成功")
-                })
-                .catch((e) => {
-                    failed(`保存失败: ${e}`)
-                })
+            } else {
+                ipcRenderer
+                    .invoke("mitm-content-replacers", {
+                        replacers: newRules
+                    })
+                    .then((val) => {
+                        setVisible(false)
+                        success("保存成功")
+                    })
+                    .catch((e) => {
+                        failed(`保存失败: ${e}`)
+                    })
+            }
         }
     })
     const onBatchNoReplaceOrBan = useMemoizedFn((checked: boolean, text: string) => {
