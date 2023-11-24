@@ -162,20 +162,19 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }
 
     useEffect(() => {
-        getWebTreeData("website://")
+        getWebTreeData("website:///")
     }, []) // 网站树
 
     const getWebTreeData = (yakurl: string) => {
         setTreeLoading(true)
 
-        console.log(123, yakurl + `?filter=${sourseType}`);
         loadFromYakURLRaw(yakurl + `?filter=${sourseType}`, (res) => {
             setTreeLoading(false)
             setSelectedKeys([])
             setWebTreeData([])
             setSearchWebTreeData([])
 
-            if (yakurl !== "website://") {
+            if (yakurl !== "website:///") {
                 setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
             } else {
                 // 请求第一层数据
@@ -368,14 +367,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             setSearchValue(value)
                                             setSearchTreeFlag(!!value)
                                             setExpandedKeys([])
-                                            getWebTreeData("website://" + value)
+
+                                            getWebTreeData("website://" + `${value ? value : '/'}`)
                                         }}
                                         refreshTree={() => {
                                             setSearchValue("")
                                             setExpandedKeys([])
                                             setSelectedKeys([])
                                             setSearchTreeFlag(false)
-                                            getWebTreeData("website://")
+                                            getWebTreeData("website:///")
                                         }}
                                         expandedKeys={expandedKeys}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
