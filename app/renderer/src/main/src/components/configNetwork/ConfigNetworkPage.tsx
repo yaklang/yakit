@@ -36,6 +36,8 @@ export interface GlobalNetworkConfig {
     GlobalProxy: string[]
     EnableSystemProxyFromEnv: boolean
     SkipSaveHTTPFlow: boolean
+    AuthUsername: string
+    AuthPassword: string
 }
 
 export interface IsSetGlobalNetworkConfig {
@@ -76,7 +78,9 @@ const defaultParams: GlobalNetworkConfig = {
     DisallowDomain: [],
     GlobalProxy: [],
     EnableSystemProxyFromEnv: false,
-    SkipSaveHTTPFlow: false
+    SkipSaveHTTPFlow: false,
+    AuthUsername: "",
+    AuthPassword: ""
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -474,6 +478,28 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 onChange={(e) => {
                                     const {value} = e.target
                                     setParams({...params, GlobalProxy: value.split(",")})
+                                }}
+                            />
+                        </Form.Item>
+                        <Form.Item label={"HTTP认证用户名"}>
+                            <YakitInput
+                                allowClear
+                                size='small'
+                                value={params.AuthUsername}
+                                onChange={(e) => {
+                                    const {value} = e.target
+                                    setParams({...params, AuthUsername: value})
+                                }}
+                            />
+                        </Form.Item>
+                        <Form.Item label={"HTTP认证用户密码"}>
+                            <YakitInput
+                                allowClear
+                                size='small'
+                                value={params.AuthPassword}
+                                onChange={(e) => {
+                                    const {value} = e.target
+                                    setParams({...params, AuthPassword: value})
                                 }}
                             />
                         </Form.Item>

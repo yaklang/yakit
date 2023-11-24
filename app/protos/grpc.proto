@@ -244,6 +244,8 @@ service Yak {
   rpc StaticAnalyzeError(StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
   rpc YaklangCompileAndFormat(YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
 
+  rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
+
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
   rpc ViewPortScanCode(Empty) returns (SimpleScript);
@@ -932,6 +934,10 @@ message GlobalNetworkConfig {
 
   // default skip save HTTPFlow
   bool SkipSaveHTTPFlow = 11;
+
+  // http auth info
+  string AuthUsername = 12;
+  string AuthPassword = 13;
 }
 
 message DiagnoseNetworkRequest {
@@ -1677,6 +1683,42 @@ message ExecPacketScanRequest {
 
   // 设置代理
   string Proxy = 11;
+}
+
+message Position {
+  int64 Line = 1;
+  int64 Column = 2;
+}
+
+message YaklangInspectInformationRequest {
+  string YakScriptType = 1;
+  string YakScriptCode = 2;
+  Position StartPos = 3;
+  Position EndPos = 4;
+}
+
+// message RiskInfo {
+//   string Type = 1;
+//   string TypeVerbose = 3;
+//   string Level = 2;
+//   string Cve = 4;
+// }
+
+
+message YaklangInformationKV {
+  string Key = 1;
+  bytes Value = 2;
+  repeated YaklangInformationKV Extern = 3;
+}
+
+message YaklangInformation {
+  string Name = 1;
+  repeated YaklangInformationKV Data = 2;
+}
+
+message YaklangInspectInformationResponse {
+  repeated SuggestionDescription SuggestionMessage = 1;
+  repeated YaklangInformation Information = 2;
 }
 
 message StaticAnalyzeErrorRequest {
@@ -3369,6 +3411,8 @@ message FuzzerRequest {
   bool IsHTTPS = 4;
   bool IsGmTLS = 35;
   bool ForceFuzz = 5;
+  string FuzzTagMode = 50;
+  bool FuzzTagSyncIndex = 51;
   string Proxy = 6;
   double PerRequestTimeoutSeconds = 7;
 
