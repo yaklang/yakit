@@ -365,9 +365,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         searchValue={searchValue}
                                         onSearch={(value) => {
                                             setSearchValue(value)
-                                            setSearchTreeFlag(!!value)
+                                            const flag = value === '/' ? false : !!value
+                                            setSearchTreeFlag(flag)
                                             setExpandedKeys([])
-
                                             getWebTreeData("website://" + `${value ? value : '/'}`)
                                         }}
                                         refreshTree={() => {
@@ -435,7 +435,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     refresh={refresh}
                                     pageType={pageType}
                                     historyId={historyId}
-                                    onSourseType={(sourseType) => setSourseType(sourseType)}
+                                    onSourseType={(sourseType) => {
+                                        setSourseType(sourseType)
+                                        getWebTreeData("website:///")
+                                    }}
                                 />
                             </div>
                         )}
