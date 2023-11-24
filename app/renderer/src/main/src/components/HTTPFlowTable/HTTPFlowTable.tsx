@@ -431,7 +431,7 @@ export interface HTTPFlowTableProp {
     // 筛选控件隐藏
     onlyShowSearch?: boolean
     // 此控件显示的页面
-    pageType?: "MITM" | "history"
+    pageType?: HTTPHistorySourcePageType
     searchURL?: string
     IncludeInUrl?: string[]
 }

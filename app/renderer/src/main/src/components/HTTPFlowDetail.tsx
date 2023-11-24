@@ -70,7 +70,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     refresh?: boolean
     defaultFold?: boolean
 
-    pageType?: "MITM" | "history"
+    pageType?: HTTPHistorySourcePageType
     historyId?: string
 }
 
@@ -793,7 +793,7 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flowResponse?: Uint8Array
     flowRequestLoad?: boolean
     flowResponseLoad?: boolean
-    pageType?: "MITM" | "history"
+    pageType?: HTTPHistorySourcePageType
 }
 
 interface HTTPFlowBareProps {
@@ -1017,7 +1017,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 </YakitTag>
                             )
                             // history页面
-                            if (pageType === "history" && false) {
+                            if (pageType === "History" && false) {
                                 titleEle.push(
                                     <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
                                 )
