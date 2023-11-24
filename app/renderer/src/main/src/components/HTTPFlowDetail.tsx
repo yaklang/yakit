@@ -959,10 +959,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             let str = ""
             let arr: string[] = []
             for (let i = 0; i < path.length; i++) {
-                str += (i !== 0 ? "/" : "") + path[i] 
+                str += (i !== 0 ? "/" : "") + path[i]
                 arr.push(str)
             }
-            emiter.emit("onJumpWebTree", JSON.stringify({treeData: {}, path: arr}))
+            emiter.emit("onJumpWebTree", JSON.stringify({path: arr}))
         }
     })
 
@@ -1017,7 +1017,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 </YakitTag>
                             )
                             // history页面
-                            if (pageType === "history") {
+                            if (pageType === "history" && false) {
                                 titleEle.push(
                                     <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
                                 )
