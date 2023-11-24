@@ -163,11 +163,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }
 
     useEffect(() => {
-        getWebTreeData("website:///")
+        getWebTreeData("website:///", sourseType)
     }, []) // 网站树
 
-    const getWebTreeData = (yakurl: string) => {
+    const getWebTreeData = (yakurl: string, sourseType: string) => {
         setTreeLoading(true)
+        console.log(123, sourseType);
+        
         const filter = sourseType.length ? `?filter=${sourseType}` : ""
         loadFromYakURLRaw(yakurl + filter, (res) => {
             setTreeLoading(false)
@@ -369,14 +371,14 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             const flag = value === "/" ? false : !!value
                                             setSearchTreeFlag(flag)
                                             setExpandedKeys([])
-                                            getWebTreeData("website://" + `${value ? value : "/"}`)
+                                            getWebTreeData("website://" + `${value ? value : "/"}`, sourseType)
                                         }}
                                         refreshTree={() => {
                                             setSearchValue("")
                                             setExpandedKeys([])
                                             setSelectedKeys([])
                                             setSearchTreeFlag(false)
-                                            getWebTreeData("website:///")
+                                            getWebTreeData("website:///", sourseType)
                                         }}
                                         expandedKeys={expandedKeys}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
@@ -438,7 +440,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     historyId={historyId}
                                     onSourseType={(sourseType) => {
                                         setSourseType(sourseType)
-                                        getWebTreeData("website:///")
+                                        getWebTreeData("website:///", sourseType)
                                     }}
                                 />
                             </div>

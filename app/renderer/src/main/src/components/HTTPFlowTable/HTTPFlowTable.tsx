@@ -2422,6 +2422,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setContentTypeQuery("")
         setColor([])
         setCheckBodyLength(false)
+        props.onSourseType && props.onSourseType("mitm")
         setTimeout(() => {
             updateData()
         }, 100)
