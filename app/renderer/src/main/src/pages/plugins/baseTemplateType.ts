@@ -98,13 +98,6 @@ export interface RiskListOptProps {
     RiskType: string
     CWEId: string
 }
-/** 漏洞类型-详情 */
-export interface RiskOptInfoProps {
-    Id: number
-    CWEName: string
-    Description: string
-    CWESolution: string
-}
 // 插件基础信息组件
 export interface PluginModifyInfoProps {
     ref?: any

@@ -1,9 +1,10 @@
-import { ResultObjProps } from "@/pages/dynamicControl/DynamicControl"
-import {API} from "@/services/swagger/resposeType"
+import {ResultObjProps} from "@/pages/dynamicControl/DynamicControl"
 import {create} from "zustand"
 
 export interface UserInfoProps {
+    /** 是否登录 */
     isLogin: boolean
+    /** 登录平台 */
     platform: string | null
     githubName: string | null
     githubHeadImg: string | null
@@ -11,12 +12,14 @@ export interface UserInfoProps {
     wechatHeadImg: string | null
     qqName: string | null
     qqHeadImg: string | null
-    companyName:string | null,
-    companyHeadImg:string |null,
+    companyName: string | null
+    companyHeadImg: string | null
+    /** 角色 */
     role: string | null
     user_id: number | null
-    token: string,
-    showStatusSearch?:boolean
+    token: string
+    /** 是否有插件管理权限 */
+    checkPlugin?: boolean
 }
 interface StoreProps {
     /**@name 登录用户信息 */
@@ -33,37 +36,37 @@ export const useStore = create<StoreProps>((set, get) => ({
         wechatHeadImg: null,
         qqName: null,
         qqHeadImg: null,
-        companyName:null,
-        companyHeadImg:null,
+        companyName: null,
+        companyHeadImg: null,
         role: null,
         user_id: null,
         token: "",
-        showStatusSearch:false,
+        checkPlugin: false
     },
     setStoreUserInfo: (info) => set({userInfo: info})
 }))
 
-export interface StoreParamsProps{
+export interface StoreParamsProps {
     // 关键字搜索参数
-    keywords:string
+    keywords: string
     // 插件类型参数
-    plugin_type:string
+    plugin_type: string
     // 今日/本周
-    time_search:string
+    time_search: string
     // 插件仓库页是否已渲染
-    isShowYakitStorePage:boolean
+    isShowYakitStorePage: boolean
 }
 
-export interface DynamicStatusProps extends ResultObjProps{
+export interface DynamicStatusProps extends ResultObjProps {
     /**是否远程控制中*/
-    isDynamicStatus:boolean
+    isDynamicStatus: boolean
     /**是否被远程控制中*/
-    isDynamicSelfStatus:boolean
+    isDynamicSelfStatus: boolean
     /**私有域地址*/
-    baseUrl:string
+    baseUrl: string
 }
 
-interface YakitDynamicStatusProps{
+interface YakitDynamicStatusProps {
     /**@name 远程控制状态参数 */
     dynamicStatus: DynamicStatusProps
     setDynamicStatus: (info: DynamicStatusProps) => void
@@ -71,15 +74,15 @@ interface YakitDynamicStatusProps{
 
 export const yakitDynamicStatus = create<YakitDynamicStatusProps>((set, get) => ({
     dynamicStatus: {
-        isDynamicStatus:false,
-        isDynamicSelfStatus:false,
-        baseUrl:"",
+        isDynamicStatus: false,
+        isDynamicSelfStatus: false,
+        baseUrl: "",
         id: "",
-        host:"",
-        port:0,
-        note:"",
-        pubpem:"",
-        secret:"",
+        host: "",
+        port: 0,
+        note: "",
+        pubpem: "",
+        secret: ""
     },
     setDynamicStatus: (info) => set({dynamicStatus: info})
 }))

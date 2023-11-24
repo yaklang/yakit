@@ -15,8 +15,7 @@ import {
     PluginSearchParams,
     PluginsContainerProps,
     PluginsLayoutProps,
-    RiskListOptProps,
-    RiskOptInfoProps
+    RiskListOptProps
 } from "./baseTemplateType"
 import {SolidChevrondownIcon, SolidChevronupIcon, SolidDragsortIcon} from "@/assets/icon/solid"
 import {FilterPanel} from "@/components/businessUI/FilterPanel/FilterPanel"
@@ -441,6 +440,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                     setBugList([...initBugList.current])
                 })
                 .catch((e) => {
+                    if (isEdit && kind === "other") return
                     yakitNotify("error", "获取内置漏洞类型失败:" + e)
                 })
                 .finally(() => {
@@ -462,12 +462,24 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                     )
                     if (bugFilter.length > 0) {
                         setBugList([...bugFilter])
+                        setTimeout(() => {
+                            setBugLoading(false)
+                        }, 200)
                     } else {
-                        setBugList([{RiskType: value, CWEId: "0"}])
+                        ipcRenderer
+                            .invoke("PluginsGetRiskInfo", {CWEId: value})
+                            .then((res: QueryYakScriptRiskDetailByCWEResponse) => {
+                                setBugList([{RiskType: res.RiskType || value, CWEId: res.CWEId || "0"}])
+                            })
+                            .catch(() => {
+                                setBugList([{RiskType: value, CWEId: "0"}])
+                            })
+                            .finally(() => {
+                                setTimeout(() => {
+                                    setBugLoading(false)
+                                }, 200)
+                            })
                     }
-                    setTimeout(() => {
-                        setBugLoading(false)
-                    }, 200)
                 } else {
                     setBugList([...initBugList.current])
                 }
@@ -480,13 +492,12 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                 // 将自定义输入的选项进行填充选项列表
                 const bugFilter = initBugList.current.findIndex((item) => item.RiskType === value)
                 if (bugFilter === -1) setBugList([{RiskType: value, CWEId: "0"}].concat([...initBugList.current]))
-
                 ipcRenderer
-                    .invoke("PluginsGetRiskInfo", {CWEId: opt.valueId})
-                    .then((res: RiskOptInfoProps) => {
+                    .invoke("PluginsGetRiskInfo", {CWEId: +opt.valueId})
+                    .then((res: QueryYakScriptRiskDetailByCWEResponse) => {
                         setBugInfo({
-                            CWEId: opt?.valueId || "0",
-                            RiskType: value,
+                            CWEId: res.CWEId || "0",
+                            RiskType: res.RiskType || value,
                             Description: res?.Description || "",
                             CWESolution: res?.CWESolution || ""
                         })

@@ -363,45 +363,27 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
      * @param isUpdate 是否更新缓存数据(不更新则为创建缓存)
      * @param isModify 新建插件还是编辑插件页面
      */
-    const cuPluginEditorStorage = useMemoizedFn((source: YakitRoute, isUpdate?: boolean, isModify?: boolean) => {
+    const cuPluginEditorStorage = useMemoizedFn((source: YakitRoute, isModify?: boolean) => {
         const route: YakitRoute = isModify ? YakitRoute.ModifyYakitScript : YakitRoute.AddYakitScript
 
-        if (isUpdate) {
-            const info: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
-            if (!info) {
-                cuPluginEditorStorage(source, false, isModify)
-                return
-            } else {
-                updatePagesDataCacheById(
-                    route,
-                    _.cloneDeep({
-                        ...info,
-                        pageParamsInfo: {
-                            pluginInfoEditor: {source: source}
-                        }
-                    })
-                )
-            }
-        } else {
-            const pageNodeInfo: PageProps = {
-                pageList: [
-                    {
-                        id: randomString(8),
-                        routeKey: route,
-                        pageGroupId: "0",
-                        pageId: "0",
-                        pageName: YakitRouteToPageInfo[route]?.label || "",
-                        pageParamsInfo: {
-                            pluginInfoEditor: {source: source}
-                        },
-                        sortFieId: 0
-                    }
-                ],
-                routeKey: route,
-                singleNode: true
-            }
-            setPagesData(route, pageNodeInfo)
+        const pageNodeInfo: PageProps = {
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: route,
+                    pageGroupId: "0",
+                    pageId: "0",
+                    pageName: YakitRouteToPageInfo[route]?.label || "",
+                    pageParamsInfo: {
+                        pluginInfoEditor: {source: source}
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: route,
+            singleNode: true
         }
+        setPagesData(route, pageNodeInfo)
     })
 
     /**
@@ -450,9 +432,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (isExist) {
             const modalProps = getSubscribeClose(YakitRoute.AddYakitScript)
             if (modalProps) onModalSecondaryConfirm(modalProps["reset"])
-            cuPluginEditorStorage(source, true, false)
+            cuPluginEditorStorage(source, false)
         } else {
-            cuPluginEditorStorage(source, false, false)
+            cuPluginEditorStorage(source, false)
         }
 
         openMenuPage({route: YakitRoute.AddYakitScript})
@@ -468,9 +450,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             emiter.emit("sendEditPluginId", `${id}`)
             const modalProps = getSubscribeClose(YakitRoute.ModifyYakitScript)
             if (modalProps) onModalSecondaryConfirm(modalProps["reset"])
-            cuPluginEditorStorage(source, true, true)
+            cuPluginEditorStorage(source, true)
         } else {
-            cuPluginEditorStorage(source, false, true)
+            cuPluginEditorStorage(source, true)
         }
         openMenuPage({route: YakitRoute.ModifyYakitScript}, {pageParams: {editPluginId: id}})
     })
@@ -513,10 +495,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
      * @param {string} keyword 携带的关键字搜索条件
      * @param {string} plugin_type 携带的插件类型搜索条件
      */
-    const pluginStore = useMemoizedFn((data: {keyword: string,plugin_type:string}) => {
-        const {keyword,plugin_type} = data || {}
+    const pluginStore = useMemoizedFn((data: {keyword: string; plugin_type: string}) => {
+        const {keyword, plugin_type} = data || {}
 
-        if (keyword||plugin_type) {
+        if (keyword || plugin_type) {
             // 缓存搜索条件
             const newPageNode: PageNodeItemProps = {
                 id: `${randomString(8)}`,
@@ -526,8 +508,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 pageName: YakitRouteToPageInfo[YakitRoute.Plugin_Store]?.label || "",
                 pageParamsInfo: {
                     pluginOnlinePageInfo: {
-                        keyword:keyword||'',
-                        plugin_type:plugin_type||''
+                        keyword: keyword || "",
+                        plugin_type: plugin_type || ""
                     }
                 },
                 sortFieId: 0
@@ -826,7 +808,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /** 插件调试 */
     const addPluginDebugger = useMemoizedFn((res: any) => {
-        const {generateYamlTemplate = false, YamlContent = "",scriptName=''} = res || {}
+        const {generateYamlTemplate = false, YamlContent = "", scriptName = ""} = res || {}
         openMenuPage(
             {route: YakitRoute.Beta_DebugPlugin},
             {

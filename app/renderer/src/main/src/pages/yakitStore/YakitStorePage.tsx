@@ -2845,7 +2845,7 @@ export const YakModuleOnline: React.FC<YakModuleOnlineProps> = (props) => {
      */
     const isShowDelBtn = useMemo(() => {
         if (["admin", "superAdmin"].includes(userInfo.role || "")) return true
-        if (userInfo.showStatusSearch) return true
+        if (userInfo.checkPlugin) return true
         return false
     }, [userInfo])
     const delDisabled = useMemo(() => {
@@ -3414,7 +3414,7 @@ export const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     // 全局登录状态
     const {userInfo} = useStore()
     const isShowAdmin =
-        (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.showStatusSearch && !bind_me)
+        (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.checkPlugin && !bind_me)
     const tagsString = (tags && tags.length > 0 && tags.join(",")) || ""
     return (
         <div className={`plugin-item ${currentId === info.id && "plugin-item-active"}`} onClick={() => onClick(info)}>
@@ -3617,7 +3617,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                         </Select>
                     </Form.Item>
                 )}
-                {((!user && isAdmin) || (user && isShowStatus) || (!user && userInfo.showStatusSearch)) && (
+                {((!user && isAdmin) || (user && isShowStatus) || (!user && userInfo.checkPlugin)) && (
                     <Form.Item name='status' label='审核状态'>
                         <Select size='small' getPopupContainer={() => refTest.current}>
                             <Option value='all'>全部</Option>
