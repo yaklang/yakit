@@ -1,21 +1,21 @@
 const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
-    const handlerHelper = require("./handleStreamWithContext")
+    // const handlerHelper = require("./handleStreamWithContext")
 
-    const streamPayloadMap = new Map()
-    ipcMain.handle("cancel-SavePayload", handlerHelper.cancelHandler(streamPayloadMap))
-    ipcMain.handle("SavePayloadStream", (e, params, token) => {
-        let stream = getClient().SavePayloadStream(params)
-        handlerHelper.registerHandler(win, stream, streamPayloadMap, token)
-    })
+    // const streamPayloadMap = new Map()
+    // ipcMain.handle("cancel-SavePayload", handlerHelper.cancelHandler(streamPayloadMap))
+    // ipcMain.handle("SavePayloadStream", (e, params, token) => {
+    //     let stream = getClient().SavePayloadStream(params)
+    //     handlerHelper.registerHandler(win, stream, streamPayloadMap, token)
+    // })
 
-    const streamPayloadFileMap = new Map()
-    ipcMain.handle("cancel-SavePayloadFile", handlerHelper.cancelHandler(streamPayloadFileMap))
-    ipcMain.handle("SavePayloadToFileStream", (e, params, token) => {
-        let stream = getClient().SavePayloadToFileStream(params)
-        handlerHelper.registerHandler(win, stream, streamPayloadFileMap, token)
-    })
+    // const streamPayloadFileMap = new Map()
+    // ipcMain.handle("cancel-SavePayloadFile", handlerHelper.cancelHandler(streamPayloadFileMap))
+    // ipcMain.handle("SavePayloadToFileStream", (e, params, token) => {
+    //     let stream = getClient().SavePayloadToFileStream(params)
+    //     handlerHelper.registerHandler(win, stream, streamPayloadFileMap, token)
+    // })
 
     const asyncQueryPayload = (params) => {
         return new Promise((resolve, reject) => {
@@ -32,9 +32,51 @@ module.exports = (win, getClient) => {
         return await asyncQueryPayload(params)
     })
 
-    // message DeletePayloadByFolderRequest {
-    //     string Folder = 1;
-    //   }
+    const asyncGetAllPayloadFromFile = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllPayloadFromFile(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllPayloadFromFile", async (e, params) => {
+        return await asyncGetAllPayloadFromFile(params)
+    })
+
+    const asyncUpdateAllPayloadGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdateAllPayloadGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("UpdateAllPayloadGroup", async (e, params) => {
+        return await asyncUpdateAllPayloadGroup(params)
+    })
+
+    const asyncRenamePayloadGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().RenamePayloadGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("RenamePayloadGroup", async (e, params) => {
+        return await asyncRenamePayloadGroup(params)
+    })
+
     const asyncDeletePayloadByFolder = (params) => {
         return new Promise((resolve, reject) => {
             getClient().DeletePayloadByFolder(params, (err, data) => {
@@ -47,12 +89,8 @@ module.exports = (win, getClient) => {
         })
     }
     ipcMain.handle("DeletePayloadByFolder", async (e, params) => {
-        return await asyncDeletePayloadByGroup(params)
+        return await asyncDeletePayloadByFolder(params)
     })
-
-    // message DeletePayloadByGroupRequest {
-    //     string Group = 1;
-    //   }
 
     const asyncDeletePayloadByGroup = (params) => {
         return new Promise((resolve, reject) => {

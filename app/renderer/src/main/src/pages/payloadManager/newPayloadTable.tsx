@@ -24,6 +24,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 const {ipcRenderer} = window.require("electron")
 
 interface EditableCellProps {
@@ -252,9 +253,6 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     const [editingKey, setEditingKey] = useState<number>()
 
     const [sortStatus, setSortStatus] = useState<"desc" | "asc">()
-    useEffect(() => {
-        onQueryPayload()
-    }, [])
 
     const handleSort = useMemoizedFn((v: "desc" | "asc") => {
         if (sortStatus === v) {
@@ -465,8 +463,46 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                         setEditingKey(record.Id)
                         return
                     case "copy":
+                        const m = showYakitModal({
+                            title: "备份到其他字典",
+                            width: 400,
+                            type: "white",
+                            closable: false,
+                            content: (
+                                <div style={{padding: 20}}>
+                                    <YakitSelect value={"b"} onSelect={(val) => {}}>
+                                        <YakitSelect value='B'>B</YakitSelect>
+                                        <YakitSelect value='K'>K</YakitSelect>
+                                        <YakitSelect value='M'>M</YakitSelect>
+                                    </YakitSelect>
+                                </div>
+                            ),
+                            onCancel: () => {
+                                m.destroy()
+                            },
+                            onOk: () => {}
+                        })
                         return
                     case "move":
+                        const y = showYakitModal({
+                            title: "移动到其他字典",
+                            width: 400,
+                            type: "white",
+                            closable: false,
+                            content: (
+                                <div style={{padding: 20}}>
+                                    <YakitSelect value={"b"} onSelect={(val) => {}}>
+                                        <YakitSelect value='B'>B</YakitSelect>
+                                        <YakitSelect value='K'>K</YakitSelect>
+                                        <YakitSelect value='M'>M</YakitSelect>
+                                    </YakitSelect>
+                                </div>
+                            ),
+                            onCancel: () => {
+                                y.destroy()
+                            },
+                            onOk: () => {}
+                        })
                         return
                     case "delete":
                         onDeletePayload && onDeletePayload({Id: record.Id})

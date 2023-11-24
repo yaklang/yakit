@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Divider, Form, Input, Progress, Tooltip} from "antd"
-import {useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import styles from "./NewPayload.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -9,6 +9,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
+    OutlineDatabasebackupIcon,
     OutlineDocumentduplicateIcon,
     OutlineExportIcon,
     OutlineFolderaddIcon,
@@ -47,6 +48,7 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {ExecResult, PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
 import {randomString} from "@/utils/randomUtil"
+import _isEqual from "lodash/isEqual"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -115,7 +117,7 @@ interface CreateDictionariesProps {
 
 // 新建字典
 export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => {
-    const {onClose, type,title} = props
+    const {onClose, type, title} = props
     const isDictionaries = type === "dictionaries"
     // 可上传文件类型
     const FileType = ["text/plain", "text/csv"]
@@ -393,48 +395,52 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     )
 }
 
-export interface NewPayloadListProps {}
+export interface NewPayloadListProps {
+    setGroup: (v: string) => void
+    setFolder: (v: string) => void
+    setContentType: (v: "editor" | "table") => void
+}
 
 // 示例数据，可以根据实际需求进行修改
-const initialData = [
+const initialData: DataItem[] = [
     {
-        type: "folders",
+        type: "Folder",
         name: "文件夹1",
-        id: 11111,
+        id: "11111",
         isFold: true,
         node: [
             {
-                type: "file",
+                type: "File",
                 name: "文件1-1",
-                id: 111111
+                id: "111111"
             },
             {
-                type: "file",
+                type: "File",
                 name: "文件1-2",
-                id: 111112
+                id: "111112"
             }
         ]
     },
     {
-        type: "file",
+        type: "File",
         name: "文件2-2",
-        id: 222222
+        id: "222222"
     },
     {
-        type: "folders",
+        type: "Folder",
         name: "文件夹3",
         isFold: true,
-        id: 333333,
+        id: "333333",
         node: [
             {
-                type: "file",
+                type: "File",
                 name: "文件3-1",
-                id: 3333331
+                id: "3333331"
             },
             {
-                type: "file",
+                type: "File",
                 name: "文件3-2",
-                id: 3333332
+                id: "3333332"
             }
         ]
     }
@@ -469,7 +475,7 @@ const findItemById = (items: DataItem[], targetId: string): DataItem | null => {
     for (const item of items) {
         if (item.id.toString() === targetId) {
             return item
-        } else if (item.type === "folders" && item.node) {
+        } else if (item.type === "Folder" && item.node) {
             const foundInNode = findItemById(item.node, targetId)
             if (foundInNode) {
                 return foundInNode
@@ -484,7 +490,7 @@ const findFoldersById = (items: DataItem[], targetId: string) => {
     for (const item of items) {
         if (item.id.toString() === targetId) {
             return item
-        } else if (item.type === "folders" && item.node) {
+        } else if (item.type === "Folder" && item.node) {
             const foundInNode = findFoldersById(item.node, targetId)
             if (foundInNode) {
                 return item
@@ -494,10 +500,25 @@ const findFoldersById = (items: DataItem[], targetId: string) => {
     return null
 }
 
+// 比较数组是否相等
+const compareArrays = (arr1, arr2) => {
+    if (arr1.length !== arr2.length) {
+        return false
+    }
+
+    for (let i = 0; i < arr1.length; i++) {
+        if (!_isEqual(arr1[i], arr2[i])) {
+            return false
+        }
+    }
+
+    return true
+}
+
 interface DataItem {
-    type: string
+    type: "File" | "Folder" | "DataBase"
     name: string
-    id: number
+    id: string
     // 文件夹才有 isFold 作用于判断是否展开 默认展开
     isFold?: boolean
     // 是否为新建
@@ -510,12 +531,19 @@ interface MoveLevelProps {
     level: "inside" | "outside"
 }
 
+interface PayloadGroupNodeProps {
+    Type: "File" | "Folder" | "DataBase"
+    Name: string
+    Nodes: PayloadGroupNodeProps[]
+}
+
 const droppable = "droppable"
 const droppableGroup = "droppableGroup"
 
 export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
-    const [data, setData] = useState<DataItem[]>(initialData)
-    const [selectItem, setSelectItem] = useState<number>()
+    const {setGroup, setFolder, setContentType} = props
+    const [data, setData] = useState<DataItem[]>([])
+    const [selectItem, setSelectItem] = useState<string>()
 
     const [dropType, setDropType] = useState<string>(droppable)
     const [subDropType, setSubDropType] = useState<string>(droppableGroup)
@@ -523,8 +551,100 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     const [isCombineEnabled, setIsCombineEnabled] = useState<boolean>(true)
 
     const [moveLevel, setMoveLevel] = useState<MoveLevelProps>()
-
     const moveLevelRef = useRef<MoveLevelProps>()
+
+    // 用于比较顺序是否改变
+    const cacheNodesRef = useRef<PayloadGroupNodeProps[]>([])
+
+    useUpdateEffect(() => {
+        onUpdateAllPayloadGroup(data)
+    }, [JSON.stringify(data)])
+
+    useEffect(() => {
+        if (selectItem) {
+            const selectData = findFoldersById(data, selectItem.toString())
+            if (selectData) {
+                if (selectData.type === "Folder") {
+                    setFolder(selectData.name)
+                    let item = selectData.node?.filter((item) => item.id === selectItem) || []
+                    let group: string = item.length > 0 ? item[0].name : ""
+                    let type: string = item.length > 0 ? item[0].type : ""
+                    setGroup(group)
+                    setContentType(type === "DataBase" ? "table" : "editor")
+                } else {
+                    setFolder("")
+                    setGroup(selectData.name)
+                    setContentType(selectData.type === "DataBase" ? "table" : "editor")
+                }
+            }
+        }
+    }, [selectItem])
+
+    // 将渲染数组捏回后端结构数据
+    const dataToNodesFun = useMemoizedFn((data: DataItem[]) => {
+        return data.map((item) => {
+            let obj: PayloadGroupNodeProps = {
+                Name: item.name,
+                Type: item.type,
+                Nodes: []
+            }
+            if (item.node) {
+                obj.Nodes = item.node.map((itemIn) => ({
+                    Name: itemIn.name,
+                    Type: itemIn.type,
+                    Nodes: []
+                }))
+            }
+            return obj
+        })
+    })
+
+    // 将后端结构数据捏成渲染数组
+    const nodesToDataFun = useMemoizedFn((nodes: PayloadGroupNodeProps[]) => {
+        return nodes.map((item) => {
+            const {Type, Name, Nodes} = item
+            let obj: DataItem = {
+                type: Type,
+                name: Name,
+                id: `${Type}-${Name}`
+            }
+            if (Nodes.length > 0) {
+                return {
+                    ...obj,
+                    isFold: true,
+                    node: Nodes.map((itemIn) => ({
+                        type: itemIn.Type,
+                        name: itemIn.Name,
+                        id: `${itemIn.Type}-${itemIn.Name}`
+                    }))
+                }
+            }
+            return obj
+        })
+    })
+
+    // 顺序、合并拖拽时将新的顺序通知后端
+    const onUpdateAllPayloadGroup = useMemoizedFn((data: DataItem[]) => {
+        // 排除新建文件夹
+        const newData = data.filter((item) => item.isCreate !== true)
+        // 将渲染数组捏回后端结构数据
+        const newNodes: PayloadGroupNodeProps[] = dataToNodesFun(newData)
+        // 比较新旧 是否相等
+        const isEqual: boolean = compareArrays(cacheNodesRef.current, newNodes)
+        // 不相等时通知后端顺序变换
+        if (!isEqual) {
+            ipcRenderer
+                .invoke("UpdateAllPayloadGroup", {
+                    Nodes: newNodes
+                })
+                .then(() => {
+                    cacheNodesRef.current = newNodes
+                })
+                .catch((e: any) => {
+                    failed(`数据更新失败：${e}`)
+                })
+        }
+    })
 
     // 根据数组下标进行位置互换
     const moveArrayElement = useMemoizedFn((arr, fromIndex, toIndex) => {
@@ -548,10 +668,11 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     const onQueryGroup = () => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
-            .then((data: {Groups: string[]}) => {
-                console.log("Groups", data)
-
-                // setGroups(data.Groups || [])
+            .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
+                console.log("Groups", res.Nodes)
+                cacheNodesRef.current = res.Nodes
+                let newData: DataItem[] = nodesToDataFun(res.Nodes)
+                setData(newData)
             })
             .catch((e: any) => {
                 failed(e?.details || "call GetAllPayloadGroup failed")
@@ -569,7 +690,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         const sourceItem: DataItem = copyData[source.index]
         const combineItem = findItemById(data, combine.draggableId)
         // 组外的文件拖拽到组外的文件夹合成组
-        if (sourceItem.type === "file" && combineItem && combineItem.type === "folders") {
+        if (sourceItem.type !== "Folder" && combineItem && combineItem.type === "Folder") {
             // 移除此项
             copyData.splice(source.index, 1)
             combineItem.node = combineItem.node ? [sourceItem, ...combineItem.node] : [sourceItem]
@@ -582,22 +703,21 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             setData(newData)
         }
         // 组外两个游离的文件合成组
-        if (sourceItem.type === "file" && combineItem && combineItem.type === "file") {
+        if (sourceItem.type !== "Folder" && combineItem && combineItem.type !== "Folder") {
             // 移除此项
             copyData.splice(source.index, 1)
             // 生成 UUID
             const uuid = uuidv4()
-            // 将 UUID 转换为整数
-            const integerId = parseInt(uuid.replace(/-/g, ""), 16)
             const newData = copyData.map((item) => {
                 if (item.id === combineItem.id) {
-                    return {
-                        type: "folders",
+                    let item: DataItem = {
+                        type: "Folder",
                         name: "未命名检测",
-                        id: integerId,
+                        id: uuid,
                         isFold: true,
                         node: [combineItem, sourceItem]
                     }
+                    return item
                 }
                 return item
             })
@@ -613,7 +733,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
         const sourceFolders = findFoldersById(copyData, source.droppableId)
         const combineItem = findItemById(data, combine.draggableId)
-        if (sourceFolders && sourceFolders?.node && combineItem && combineItem.type === "folders") {
+        if (sourceFolders && sourceFolders?.node && combineItem && combineItem.type === "Folder") {
             const sourceItem = sourceFolders.node[source.index]
             sourceFolders.node.splice(source.index, 1)
             combineItem.node = combineItem.node ? [sourceItem, ...combineItem.node] : [sourceItem]
@@ -628,22 +748,21 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             })
             setData(newData)
         }
-        if (sourceFolders && sourceFolders?.node && combineItem && combineItem.type === "file") {
+        if (sourceFolders && sourceFolders?.node && combineItem && combineItem.type !== "Folder") {
             const sourceItem = sourceFolders.node[source.index]
             sourceFolders.node.splice(source.index, 1)
             // 生成 UUID
             const uuid = uuidv4()
-            // 将 UUID 转换为整数
-            const integerId = parseInt(uuid.replace(/-/g, ""), 16)
             const newData = copyData.map((item) => {
                 if (item.id === combineItem.id) {
-                    return {
-                        type: "folders",
+                    let item: DataItem = {
+                        type: "Folder",
                         name: "未命名检测",
-                        id: integerId,
+                        id: uuid,
                         isFold: true,
                         node: [combineItem, sourceItem]
                     }
+                    return item
                 }
                 return item
             })
@@ -778,7 +897,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                 const ids = [combine.draggableId, draggableId]
                 // 如果拖拽的是文件夹 则不允许合并
                 const moveType = findItemById(data, draggableId)
-                if (moveType && moveType.type !== "folders") {
+                if (moveType && moveType.type !== "Folder") {
                     setCombineIds(ids)
                 }
                 // // 由内合并至外层
@@ -789,7 +908,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                 return
             }
             // 拖拽文件时 层级变动 更改样式
-            if (moveNode && destination && moveNode.type === "file") {
+            if (moveNode && destination && moveNode.type !== "Folder") {
                 if (
                     (droppableId === "droppable-payload" || destination.droppableId === "droppable-payload") &&
                     droppableId !== destination.droppableId
@@ -818,7 +937,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     const onBeforeCapture = useMemoizedFn((result: DragDropContextResultProps) => {
         // 根据Id判断其是否为文件
         const item = findItemById(data, result.draggableId)
-        if (item && item.type === "file") {
+        if (item && item.type !== "Folder") {
             setDropType(droppableGroup)
             setSubDropType(droppableGroup)
         } else {
@@ -831,7 +950,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         if (!result.source) return
         // 如果拖拽的是文件夹 则不允许合并
         const moveType = findItemById(data, result.draggableId)
-        if (moveType && moveType.type === "folders") {
+        if (moveType && moveType.type === "Folder") {
             setIsCombineEnabled(false)
         }
     })
@@ -876,7 +995,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                             closable: false,
                                             content: (
                                                 <CreateDictionaries
-                                                    title="新建字典"
+                                                    title='新建字典'
                                                     type='dictionaries'
                                                     onClose={() => {
                                                         m.destroy()
@@ -888,14 +1007,12 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                     case "createFolder":
                                         // 生成 UUID
                                         const uuid = uuidv4()
-                                        // 将 UUID 转换为整数
-                                        const integerId = parseInt(uuid.replace(/-/g, ""), 16)
                                         setData([
                                             {
-                                                type: "folders",
+                                                type: "Folder",
                                                 name: "",
                                                 isFold: true,
-                                                id: integerId,
+                                                id: uuid,
                                                 isCreate: true
                                             },
                                             ...data
@@ -960,7 +1077,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                                     >
                                                         {/* 渲染你的文件夹或文件组件 */}
                                                         {/* 使用 item.type 来区分文件夹和文件 */}
-                                                        {item.type === "folders" ? (
+                                                        {item.type === "Folder" ? (
                                                             // 渲染文件夹组件
                                                             <FolderComponent
                                                                 folder={item}
@@ -978,6 +1095,8 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                                                 file={item}
                                                                 selectItem={selectItem}
                                                                 setSelectItem={setSelectItem}
+                                                                data={data}
+                                                                setData={setData}
                                                                 isInside={!fileOutside}
                                                                 isCombine={isCombine}
                                                             />
@@ -1000,7 +1119,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
 
 interface FileComponentCloneProps {
     file: DataItem
-    selectItem?: number
+    selectItem?: string
     isInside?: boolean
 }
 
@@ -1053,8 +1172,8 @@ export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => 
 
 interface FolderComponentProps {
     folder: DataItem
-    selectItem?: number
-    setSelectItem: (id: number) => void
+    selectItem?: string
+    setSelectItem: (id: string) => void
     data: DataItem[]
     setData: (v: DataItem[]) => void
     subDropType: string
@@ -1067,7 +1186,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
     const [inputName, setInputName] = useState<string>(folder.name)
-    const onIsFold = useMemoizedFn((id: number) => {
+    const onIsFold = useMemoizedFn((id: string) => {
         // 文件夹只会存在第一层 不用递归遍历
         const newData = data.map((item) => {
             if (item.id === id) {
@@ -1083,9 +1202,18 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         if (inputName.length > 0) {
             // 新建
             if (folder.isCreate) {
+                
             }
             // 编辑
             else {
+                // 文件夹只会存在第一层 不用递归遍历
+                const newData = data.map((item) => {
+                    if (item.id === folder.id) {
+                        return {...item, name: inputName}
+                    }
+                    return item
+                })
+                setData(newData)
             }
         } else {
             // 创建时为空则不创建
@@ -1200,7 +1328,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                 closable: false,
                                                 content: (
                                                     <CreateDictionaries
-                                                        title="新建子集字典"
+                                                        title='新建子集字典'
                                                         type='dictionaries'
                                                         onClose={() => {
                                                             m.destroy()
@@ -1287,6 +1415,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                     file={file}
                                                     selectItem={selectItem}
                                                     setSelectItem={setSelectItem}
+                                                    data={data}
+                                                    setData={setData}
                                                     isInside={true}
                                                 />
                                             </div>
@@ -1304,8 +1434,10 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
 
 interface FileComponentProps {
     file: DataItem
-    selectItem?: number
-    setSelectItem: (id: number) => void
+    selectItem?: string
+    setSelectItem: (id: string) => void
+    data: DataItem[]
+    setData: (v: DataItem[]) => void
     // 是否为内层
     isInside?: boolean
     // 是否合并
@@ -1317,121 +1449,124 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
     const [inputName, setInputName] = useState<string>(file.name)
-    const judgeFileIcon = useMemoizedFn((key) => {
-        switch (key) {
-            case 1:
-                return <SolidDatabaseIcon />
-            case 2:
-                return <SolidDocumenttextIcon />
-            default:
-                return <SolidDatabaseIcon />
-        }
-    })
+
     // 更改文件名
     const onChangeValue = useMemoizedFn(() => {
         setEditInput(false)
         if (inputName.length > 0) {
-            
+            // ipcRenderer
+            //         .invoke("RenamePayloadGroup", {
+            //             Name:file.name,
+            //             NewName:inputName
+            //         })
+            //         .then(() => {
+            //             success('修改成功')
+            //         })
+            //         .catch((e: any) => {
+            //             setInputName(file.name)
+            //             failed(`编辑失败：${e}`)
+            //         })
         } else {
             setInputName(file.name)
         }
     })
 
     const fileMenuData = useMemo(() => {
-        return [
-            {
-                key: "copyFuzztag",
-                label: (
-                    <div className={styles["extra-menu"]}>
-                        <OutlineDocumentduplicateIcon />
-                        <div className={styles["menu-name"]}>复制 Fuzztag</div>
-                    </div>
-                )
-            },
-            {
-                key: "importPayload",
-                label: (
-                    <div className={styles["extra-menu"]}>
-                        <OutlineImportIcon />
-                        <div className={styles["menu-name"]}>扩充字典</div>
-                    </div>
-                )
-            },
-            {
-                key: "exportTxt",
-                label: (
-                    <div className={styles["extra-menu"]}>
-                        <OutlineExportIcon />
-                        <div className={styles["menu-name"]}>导出为txt</div>
-                    </div>
-                )
-            },
-            {
-                key: "rename",
-                label: (
-                    <div className={styles["extra-menu"]}>
-                        <OutlinePencilaltIcon />
-                        <div className={styles["menu-name"]}>重命名</div>
-                    </div>
-                )
-            },
-            {
-                key: "delete",
-                label: (
-                    <div className={styles["extra-menu"]}>
-                        <OutlineTrashIcon />
-                        <div className={styles["menu-name"]}>删除</div>
-                    </div>
-                )
-            }
-        ]
-        // return [
-        //     {
-        //         key: "copyFuzztag",
-        //         label: (
-        //             <div className={styles["extra-menu"]}>
-        //                 <OutlineDocumentduplicateIcon />
-        //                 <div className={styles["menu-name"]}>复制 Fuzztag</div>
-        //             </div>
-        //         )
-        //     },
-        //     {
-        //         key: "exportTxt",
-        //         label: (
-        //             <div className={styles["extra-menu"]}>
-        //                 <OutlineImportIcon />
-        //                 <div className={styles["menu-name"]}>扩充字典</div>
-        //             </div>
-        //         )
-        //     },
-        //     {
-        //         key: "rename",
-        //         label: (
-        //             <div className={styles["extra-menu"]}>
-        //                 <OutlinePencilaltIcon />
-        //                 <div className={styles["menu-name"]}>重命名</div>
-        //             </div>
-        //         )
-        //     },
-        //     {
-        //         key: "toDatabase",
-        //         label: (
-        //             <div className={styles["extra-menu"]}>
-        //                 <OutlineDatabasebackupIcon />
-        //                 <div className={styles["menu-name"]}>转为数据库存储</div>
-        //             </div>
-        //         )
-        //     },
-        //     {
-        //         key: "delete",
-        //         label: (
-        //             <div className={styles["extra-menu"]}>
-        //                 <OutlineTrashIcon />
-        //                 <div className={styles["menu-name"]}>删除</div>
-        //             </div>
-        //         )
-        //     }
-        // ]
+        return file.type === "DataBase"
+            ? [
+                  {
+                      key: "copyFuzztag",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineDocumentduplicateIcon />
+                              <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                          </div>
+                      )
+                  },
+                  {
+                      key: "importPayload",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineImportIcon />
+                              <div className={styles["menu-name"]}>扩充字典</div>
+                          </div>
+                      )
+                  },
+                  {
+                      key: "exportTxt",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineExportIcon />
+                              <div className={styles["menu-name"]}>导出为txt</div>
+                          </div>
+                      )
+                  },
+                  {
+                      key: "rename",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlinePencilaltIcon />
+                              <div className={styles["menu-name"]}>重命名</div>
+                          </div>
+                      )
+                  },
+                  {
+                      key: "delete",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineTrashIcon />
+                              <div className={styles["menu-name"]}>删除</div>
+                          </div>
+                      )
+                  }
+              ]
+            : [
+                  {
+                      key: "copyFuzztag",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineDocumentduplicateIcon />
+                              <div className={styles["menu-name"]}>复制 Fuzztag</div>
+                          </div>
+                      )
+                  },
+                  {
+                      key: "exportTxt",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineImportIcon />
+                              <div className={styles["menu-name"]}>扩充字典</div>
+                          </div>
+                      )
+                  },
+                  {
+                      key: "rename",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlinePencilaltIcon />
+                              <div className={styles["menu-name"]}>重命名</div>
+                          </div>
+                      )
+                  },
+                  {
+                      key: "toDatabase",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineDatabasebackupIcon />
+                              <div className={styles["menu-name"]}>转为数据库存储</div>
+                          </div>
+                      )
+                  },
+                  {
+                      key: "delete",
+                      label: (
+                          <div className={styles["extra-menu"]}>
+                              <OutlineTrashIcon />
+                              <div className={styles["menu-name"]}>删除</div>
+                          </div>
+                      )
+                  }
+              ]
     }, [])
     return (
         <>
@@ -1471,12 +1606,15 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         <div className={styles["drag-icon"]}>
                             <SolidDragsortIcon />
                         </div>
-                        <div className={classNames(styles["file-icon"], styles["file-icon-database"])}>
-                            <SolidDatabaseIcon />
-                        </div>
-                        {/* <div className={classNames(styles['file-icon'],styles['file-icon-document'])}>
-                            <SolidDocumenttextIcon/>
-                        </div> */}
+                        {file.type === "DataBase" ? (
+                            <div className={classNames(styles["file-icon"], styles["file-icon-database"])}>
+                                <SolidDatabaseIcon />
+                            </div>
+                        ) : (
+                            <div className={classNames(styles["file-icon"], styles["file-icon-document"])}>
+                                <SolidDocumenttextIcon />
+                            </div>
+                        )}
 
                         <div className={styles["file-name"]}>{file.name}</div>
                     </div>
@@ -1506,7 +1644,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                 closable: false,
                                                 content: (
                                                     <CreateDictionaries
-                                                        title="扩充到护网专用工具"
+                                                        title='扩充到护网专用工具'
                                                         type='payload'
                                                         onClose={() => {
                                                             m.destroy()
@@ -1551,13 +1689,15 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
 }
 
 interface PayloadContentProps {
-    isExpand: boolean
-    setExpand: (v: boolean) => void
+    isExpand?: boolean
+    setExpand?: (v: boolean) => void
     showContentType: "editor" | "table"
+    group: string
+    folder: string
 }
 
 export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
-    const {isExpand, setExpand, showContentType} = props
+    const {isExpand, setExpand, showContentType, group, folder} = props
     const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
     const [editorValue, setEditorValue] = useState<string>("")
 
@@ -1571,20 +1711,51 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
     const [response, setResponse] = useState<QueryGeneralResponse<Payload>>()
     const pagination: PaginationSchema | undefined = response?.Pagination
 
+    useEffect(() => {
+        // 获取table数据
+        if (showContentType === "table") {
+            onQueryPayload(undefined, undefined, {...params, Group: group, Folder: folder})
+        }
+        // 获取editor数据
+        else {
+            onQueryEditor(group, folder)
+        }
+    }, [group, folder])
+
     const Expand = () => (
         <div
             className={styles["icon-box"]}
             onClick={() => {
-                setExpand(!isExpand)
+                setExpand && setExpand(!isExpand)
             }}
         >
             {isExpand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
         </div>
     )
 
-    const onQueryPayload = useMemoizedFn((page?: number, limit?: number) => {
+    const onQueryEditor = useMemoizedFn((Group: string, Folder: string) => {
+        console.log("获取Editor数据参数", {
+            Group,
+            Folder
+        })
+
+        ipcRenderer
+            .invoke("GetAllPayloadFromFile", {
+                Group,
+                Folder
+            })
+            .then((data) => {
+                console.log("获取Editor数据", data)
+            })
+            .catch((e: any) => {
+                failed("编辑器数据获取失败")
+            })
+    })
+
+    const onQueryPayload = useMemoizedFn((page?: number, limit?: number, newParams?: QueryPayloadParams) => {
         const obj: QueryPayloadParams = {
             ...getParams(),
+            ...newParams,
             Pagination: {
                 ...getParams().Pagination,
                 Page: page || getParams().Pagination.Page,
@@ -1621,9 +1792,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
         <div className={styles["payload-content"]}>
             <div className={styles["header"]}>
                 <div className={styles["title-box"]}>
-                    <div className={styles["title"]}>
-                        {showContentType === "editor" ? "pass_top25" : "护网专用工具"}
-                    </div>
+                    <div className={styles["title"]}>{showContentType === "editor" ? group : "护网专用工具"}</div>
                     <div className={styles["sun-title"]}>{`可以通过 fuzz 模块 {{x(字典名)}} 来渲染`}</div>
                 </div>
                 {showContentType === "table" && (
@@ -1668,7 +1837,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                         >
                             扩充
                         </YakitButton>
-                        {Expand()}
+                        {setExpand && Expand()}
                     </div>
                 )}
 
@@ -1696,7 +1865,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                             >
                                 保存
                             </YakitButton>
-                            {Expand()}
+                            {setExpand && Expand()}
                         </div>
 
                         <div
@@ -1719,7 +1888,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                             >
                                 编辑
                             </YakitButton>
-                            {Expand()}
+                            {setExpand && Expand()}
                         </div>
                     </>
                 )}
@@ -1762,12 +1931,16 @@ export interface NewPayloadProps {}
 export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
-    const [showContentType, setContentType] = useState<"editor" | "table">("table")
+    const [showContentType, setContentType] = useState<"editor" | "table">()
+
+    // table/editor 筛选条件
+    const [group, setGroup] = useState<string>("")
+    const [folder, setFolder] = useState<string>("")
     return (
         <div className={styles["new-payload"]}>
             {!isExpand && (
                 <div className={styles["payload-list-box"]}>
-                    <NewPayloadList />
+                    <NewPayloadList setGroup={setGroup} setFolder={setFolder} setContentType={setContentType} />
                 </div>
             )}
             {/* <div className={styles["no-data"]}>
@@ -1786,7 +1959,13 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
             </div> */}
 
             {showContentType ? (
-                <PayloadContent isExpand={isExpand} setExpand={setExpand} showContentType={showContentType} />
+                <PayloadContent
+                    isExpand={isExpand}
+                    setExpand={setExpand}
+                    showContentType={showContentType}
+                    group={group}
+                    folder={folder}
+                />
             ) : (
                 <div className={styles["no-data"]}>
                     <YakitEmpty title='请点击左侧列表，选择想要查看的字典' />
