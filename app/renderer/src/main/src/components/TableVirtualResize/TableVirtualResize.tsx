@@ -113,6 +113,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         renderTitle,
         isShowTitle = true,
         getTableRef,
+        scrollToIndex,
         currentIndex,
         setCurrentIndex,
         isRefresh,
@@ -208,10 +209,18 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         {wait: 200}
     )
     useEffect(() => {
-        if (currentIndex === undefined) return
-        scrollTo(currentIndex)
-        setCurrentIndex&&setCurrentIndex(undefined)
+        if (currentIndex === undefined) {
+            setCurrentRow(undefined)
+            return
+        }
     }, [currentIndex])
+
+    // 滚动到指定index
+    useEffect(() => {
+        if (scrollToIndex !== undefined) {
+            scrollTo(scrollToIndex)
+        }
+    }, [scrollToIndex])
 
     const [inViewport] = useInViewport(containerRef)
 
@@ -226,6 +235,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 return
             }
             if (!currentRow) {
+                setCurrentIndex && setCurrentIndex(0)
                 setCurrentRow(data[0])
                 if (onSetCurrentRow) onSetCurrentRow(data[0])
                 return
@@ -244,6 +254,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 }
             }
             if (index >= 0) {
+                setCurrentIndex && setCurrentIndex(index)
                 setCurrentRow(data[index])
                 if (onSetCurrentRow) onSetCurrentRow(data[index])
                 setTimeout(() => {
@@ -288,6 +299,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             }
             if (!currentRow) {
                 setCurrentRow(data[0])
+                setCurrentIndex && setCurrentIndex(0)
                 if (onSetCurrentRow) onSetCurrentRow(data[0])
                 return
             }
@@ -308,6 +320,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
             if (index) {
                 setCurrentRow(data[index])
+                setCurrentIndex && setCurrentIndex(index)
                 if (onSetCurrentRow) onSetCurrentRow(data[index])
                 setTimeout(() => {
                     downKey(index)
@@ -635,7 +648,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }
     ).run
     const preSelectRef = useRef<T>() //用来存Shift+Click的第一个目标item
-    const onRowClick = useMemoizedFn((record: T) => {
+    const onRowClick = useMemoizedFn((record: T, rowIndex: number) => {
         if (preSelectRef.current) {
             // 多选 批量选中
             const startKey = preSelectRef.current[renderKey]
@@ -647,11 +660,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const min = Math.min(startKeyIndex, endKeyIndex)
             const selectList = data.filter((_, index) => index >= min && index <= max)
             setSelectedRows(selectList)
+            setCurrentIndex && setCurrentIndex(undefined)
             setCurrentRow(undefined)
             if (onSetCurrentRow) onSetCurrentRow(undefined)
             preSelectRef.current = undefined
         } else {
             setSelectedRows([])
+            setCurrentIndex && setCurrentIndex(rowIndex)
             setCurrentRow(record)
             if (onSetCurrentRow) onSetCurrentRow(record)
             if (props.onRowClick) {
@@ -668,17 +683,19 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             window?.getSelection()?.removeAllRanges()
         }
     })
-    const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent) => {
+    const onRowContextMenu = useMemoizedFn((record: T, e: React.MouseEvent, rowIndex: number) => {
         if ((selectedRows?.length || 0) > 0) {
             const index = selectedRows.findIndex((ele) => ele[renderKey] === record[renderKey])
             // 右键点击范围是否在多选的区域内，不在则清空多选区域，选中右键点击的item
             if (index === -1) {
                 setSelectedRows([])
+                setCurrentIndex && setCurrentIndex(rowIndex)
                 setCurrentRow(record)
                 if (props.onRowContextMenu) props.onRowContextMenu(record, [], e)
                 return
             }
         } else {
+            setCurrentIndex && setCurrentIndex(rowIndex)
             setCurrentRow(record)
         }
 
@@ -1017,8 +1034,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                             renderKey={renderKey}
                                             isLastItem={index === columns.length - 1}
                                             onRowClick={onRowClick}
-                                            onRowContextMenu={(data, e) => {
-                                                onRowContextMenu(data, e)
+                                            onRowContextMenu={(data, e, rowIndex) => {
+                                                onRowContextMenu(data, e, rowIndex)
                                             }}
                                             rowSelection={rowSelection as any}
                                             onChangeCheckboxSingle={onChangeCheckboxSingle}
@@ -1268,8 +1285,8 @@ interface ColRenderProps {
     list: {data: any; index: number}[]
     renderKey: string
     isLastItem: boolean
-    onRowClick: (r: any) => void
-    onRowContextMenu: (r: any, e: any) => void
+    onRowClick: (r: any, rowIndex: number) => void
+    onRowContextMenu: (r: any, e: any, rowIndex: number) => void
     currentRow: any
     selectedRows?: any[]
     rowSelection: RowSelectionProps<any>
@@ -1342,8 +1359,8 @@ const ColRender = React.memo((props: ColRenderProps) => {
                                 columnsItem={columnsItem}
                                 number={item.index}
                                 isLastItem={isLastItem}
-                                onRowClick={() => onRowClick(item.data)}
-                                onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
+                                onRowClick={() => onRowClick(item.data, item.index)}
+                                onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
                                 currentRow={currentRow}
                                 selectedRows={selectedRows}
                                 // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
@@ -1367,8 +1384,8 @@ const ColRender = React.memo((props: ColRenderProps) => {
                                 columnsItem={columnsItem}
                                 number={item.index}
                                 isLastItem={isLastItem}
-                                onRowClick={() => onRowClick(item.data)}
-                                onRowContextMenu={(e) => onRowContextMenu(item.data, e)}
+                                onRowClick={() => onRowClick(item.data, item.index)}
+                                onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
                                 currentRow={currentRow}
                                 selectedRows={selectedRows}
                                 // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}

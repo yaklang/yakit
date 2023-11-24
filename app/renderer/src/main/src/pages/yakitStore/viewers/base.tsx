@@ -36,6 +36,7 @@ import YakitTabs from "@/components/yakitUI/YakitTabs/YakitTabs"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
 import {Uint8ArrayToString} from "@/utils/str"
+import {v4 as uuidv4} from "uuid"
 const {ipcRenderer} = window.require("electron")
 
 export interface StatusCardProps {
@@ -435,7 +436,8 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [flow, setFlow] = useState<HTTPFlow>()
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
-
+    const [historyId, setHistoryId] = useState<string>(uuidv4())
+    
     const getHTTPFlowById = (id: number, rowDate: HTTPFlow) => {
         setFlowRequestLoad(false)
         setFlowResponseLoad(false)
@@ -524,6 +526,7 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                             paddingTop: 12
                         }}
                         onlyShowSearch={true}
+                        historyId={historyId}
                     />
                 }
                 secondNode={
@@ -540,6 +543,7 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                             flowRequestLoad={flowRequestLoad}
                             flowResponseLoad={flowResponseLoad}
                             sendToWebFuzzer={true}
+                            historyId={historyId}
                         />
                     ) : null
                 }
