@@ -142,6 +142,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
         entries.forEach((entry) => {
             const target = entry.target
+            console.log(123, target.getBoundingClientRect().height)
             setTreeWrapHeight(target.getBoundingClientRect().height)
         })
     })
@@ -167,8 +168,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const getWebTreeData = (yakurl: string) => {
         setTreeLoading(true)
-
-        loadFromYakURLRaw(yakurl + `?filter=${sourseType}`, (res) => {
+        const filter = sourseType.length ? `?filter=${sourseType}` : ""
+        loadFromYakURLRaw(yakurl + filter, (res) => {
             setTreeLoading(false)
             setSelectedKeys([])
             setWebTreeData([])
@@ -365,10 +366,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         searchValue={searchValue}
                                         onSearch={(value) => {
                                             setSearchValue(value)
-                                            const flag = value === '/' ? false : !!value
+                                            const flag = value === "/" ? false : !!value
                                             setSearchTreeFlag(flag)
                                             setExpandedKeys([])
-                                            getWebTreeData("website://" + `${value ? value : '/'}`)
+                                            getWebTreeData("website://" + `${value ? value : "/"}`)
                                         }}
                                         refreshTree={() => {
                                             setSearchValue("")
