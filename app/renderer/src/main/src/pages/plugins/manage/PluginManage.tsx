@@ -118,6 +118,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             if (latestLoadingRef.current) return
             if (reset) {
                 isLoadingRef.current = true
+                onCheck(false)
                 setShowPluginIndex(0)
             }
 

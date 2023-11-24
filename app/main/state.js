@@ -1,19 +1,23 @@
 // user info
 const USER_INFO = {
+    /** 是否登录 */
     isLogin: false,
+    /** 登录平台 */
     platform: null,
     githubName: null,
     githubHeadImg: null,
     wechatName: null,
     wechatHeadImg: null,
-    companyName:null,
-    companyHeadImg:null,
+    companyName: null,
+    companyHeadImg: null,
     qqName: null,
     qqHeadImg: null,
+    /** 角色 */
     role: null,
     token: null,
     user_id: 0,
-    showStatusSearch:false,
+    /** 是否有插件管理权限 */
+    checkPlugin: false
 }
 const HttpSetting = {
     httpBaseURL: "https://www.yaklang.com"

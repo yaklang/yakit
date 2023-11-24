@@ -198,7 +198,7 @@ function NewApp() {
                             role: res.role,
                             user_id: res.user_id,
                             token: resToken,
-                            showStatusSearch: res?.showStatusSearch || false
+                            checkPlugin: res?.checkPlugin || false
                         }
                         ipcRenderer.sendSync("sync-update-user", user)
                         setStoreUserInfo(user)

@@ -369,8 +369,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "dynamic-control", title: "发起远程"},
                 {key: "close-dynamic-control", title: "退出远程"},
                 {key: "set-password", title: "修改密码"},
+                {key: "plugin-aduit", title: "插件管理"},
                 {key: "sign-out", title: "退出登录"}
             ]
+            if(!userInfo.checkPlugin){
+                cacheMenu = cacheMenu.filter((item) => item.key !== "plugin-aduit")
+            }
             if (isEnpriTraceAgent()) {
                 cacheMenu = cacheMenu.filter((item) => item.key !== "upload-data")
             }
@@ -386,7 +390,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         } else {
             setUserMenu([{key: "sign-out", title: "退出登录"}])
         }
-    }, [userInfo.role, userInfo.companyHeadImg, dynamicConnect])
+    }, [userInfo.role, userInfo.checkPlugin, userInfo.companyHeadImg, dynamicConnect])
 
     /** 渲染端通信-打开一个指定页面 */
     const onOpenPage = useMemoizedFn((info: RouteToPageProps) => {

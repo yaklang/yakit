@@ -91,7 +91,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         role: res.role,
                         user_id: res.user_id,
                         token: res.token,
-                        showStatusSearch: res?.showStatusSearch || false
+                        checkPlugin: res?.checkPlugin || false
                     }
                     setStoreUserInfo(user)
                     if (data?.next) {
