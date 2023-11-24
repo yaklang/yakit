@@ -434,6 +434,7 @@ export interface HTTPFlowTableProp {
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
     IncludeInUrl?: string[]
+    onSourseType?: (sourseType: string) => void
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -2535,11 +2536,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                             tag.value
                                                         ]
                                                         setParams({...params, SourceType: selectTypeList.join(",")})
+                                                        props.onSourseType && props.onSourseType(selectTypeList.join(","))
                                                     } else {
                                                         const selectTypeList = (
                                                             params.SourceType?.split(",") || []
                                                         ).filter((ele) => ele !== tag.value)
                                                         setParams({...params, SourceType: selectTypeList.join(",")})
+                                                        props.onSourseType && props.onSourseType(selectTypeList.join(","))
                                                     }
                                                     setTimeout(() => {
                                                         updateData()

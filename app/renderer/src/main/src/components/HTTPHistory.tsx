@@ -47,7 +47,6 @@ interface HTTPHistoryTabsItem {
     contShow: boolean
 }
 
-
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {pageType} = props
     const ref = useRef(null)
@@ -138,6 +137,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [hoveredKeys, setHoveredKeys] = useState<TreeKey>("") // 定位树节点key
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
+    const [sourseType, setSourseType] = useState<string>("mitm")
 
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
         entries.forEach((entry) => {
@@ -168,7 +168,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const getWebTreeData = (yakurl: string) => {
         setTreeLoading(true)
 
-        loadFromYakURLRaw(yakurl, (res) => {
+        console.log(123, yakurl + `?filter=${sourseType}`);
+        loadFromYakURLRaw(yakurl + `?filter=${sourseType}`, (res) => {
             setTreeLoading(false)
             setSelectedKeys([])
             setWebTreeData([])
@@ -434,6 +435,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     refresh={refresh}
                                     pageType={pageType}
                                     historyId={historyId}
+                                    onSourseType={(sourseType) => setSourseType(sourseType)}
                                 />
                             </div>
                         )}
