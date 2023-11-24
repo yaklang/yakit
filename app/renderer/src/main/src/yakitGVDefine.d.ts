@@ -28,26 +28,17 @@ export interface DownloadingState {
     size: DownloadingSize
 }
 
-/** @name 登录用户信息(暂不使用) */
-interface UserInfoProps {
-    isLogin: boolean
-    platform: string | null
-    githubName: string | null
-    githubHeadImg: string | null
-    wechatName: string | null
-    wechatHeadImg: string | null
-    qqName: string | null
-    qqHeadImg: string | null
-    companyName: string | null
-    companyHeadImg: string | null
-    role: string | null
-    user_id: number | null
-    token: string
-    showStatusSearch?: boolean
-}
-
 /** @name 当前yakit使用状态 */
-export type YakitStatusType = "link" | "update" | "error" | "install" | "ready" | "database" | "break" | "control-remote" | ""
+export type YakitStatusType =
+    | "link"
+    | "update"
+    | "error"
+    | "install"
+    | "ready"
+    | "database"
+    | "break"
+    | "control-remote"
+    | ""
 
 /** @name funcDomain组件-全局setting功能的点击回调事件类型 */
 export type YakitSettingCallbackType =

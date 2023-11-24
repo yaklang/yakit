@@ -64,7 +64,7 @@ export const defaultUserInfo: UserInfoProps = {
     role: null,
     user_id: null,
     token: "",
-    showStatusSearch: false
+    checkPlugin: false
 }
 
 export interface MainProp {
