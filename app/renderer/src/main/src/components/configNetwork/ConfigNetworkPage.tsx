@@ -19,8 +19,11 @@ import {SolidCheckCircleIcon, SolidLockClosedIcon} from "@/assets/icon/colors"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import classNames from "classnames"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
+import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig";
 
-export interface ConfigNetworkPageProp {}
+export interface ConfigNetworkPageProp {
+}
 
 export interface GlobalNetworkConfig {
     DisableSystemDNS: boolean
@@ -36,6 +39,19 @@ export interface GlobalNetworkConfig {
     GlobalProxy: string[]
     EnableSystemProxyFromEnv: boolean
     SkipSaveHTTPFlow: boolean
+
+    //
+    AppConfigs: ThirdPartyApplicationConfig[]
+}
+
+export interface ThirdPartyApplicationConfig {
+    Type: "zoomeye" | "hunter" | "shodan" | "fofa" | "github" | ""
+    APIKey: string
+    UserIdentifier: string
+    UserSecret?: string
+    Namespace?: string
+    Domain?: string
+    WebhookURL?: string
 }
 
 export interface IsSetGlobalNetworkConfig {
@@ -76,7 +92,8 @@ const defaultParams: GlobalNetworkConfig = {
     DisallowDomain: [],
     GlobalProxy: [],
     EnableSystemProxyFromEnv: false,
-    SkipSaveHTTPFlow: false
+    SkipSaveHTTPFlow: false,
+    AppConfigs: [],
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -124,7 +141,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     .invoke("ValidP12PassWord", {
                         Pkcs12Bytes: res
                     } as IsSetGlobalNetworkConfig)
-                    .then((result: {IsSetPassWord: boolean}) => {
+                    .then((result: { IsSetPassWord: boolean }) => {
                         if (result.IsSetPassWord) {
                             setCertificateParams([
                                 ...(certificateParams || []),
@@ -223,7 +240,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         return (
             <div key={key} className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
                 <div className={styles["decorate"]}>
-                    <RectangleFailIcon />
+                    <RectangleFailIcon/>
                 </div>
                 <div className={styles["card-hide"]}></div>
                 <div className={styles["fail-main"]}>
@@ -233,10 +250,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             closeCard(item)
                         }}
                     >
-                        <CloseIcon />
+                        <CloseIcon/>
                     </div>
                     <div className={styles["title"]}>{item.name}</div>
-                    <SolidLockClosedIcon />
+                    <SolidLockClosedIcon/>
                     <div className={styles["content"]}>未解密</div>
                     <YakitButton
                         type='outline2'
@@ -269,7 +286,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             Pkcs12Bytes: item.Pkcs12Bytes,
                                             Pkcs12Password: item.Pkcs12Password
                                         } as IsSetGlobalNetworkConfig)
-                                        .then((result: {IsSetPassWord: boolean}) => {
+                                        .then((result: { IsSetPassWord: boolean }) => {
                                             if (result.IsSetPassWord) {
                                                 if (Array.isArray(certificateParams)) {
                                                     certificateParams[key].password = false
@@ -297,10 +314,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         return (
             <div key={key} className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
                 <div className={styles["decorate"]}>
-                    <RectangleSucceeIcon />
+                    <RectangleSucceeIcon/>
                 </div>
                 <div className={styles["union"]}>
-                    <UnionIcon />
+                    <UnionIcon/>
                 </div>
                 <div className={styles["card-hide"]}></div>
 
@@ -311,10 +328,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             closeCard(item)
                         }}
                     >
-                        <CloseIcon />
+                        <CloseIcon/>
                     </div>
                     <div className={styles["title"]}>{item.name}</div>
-                    <SolidCheckCircleIcon />
+                    <SolidCheckCircleIcon/>
                     <div className={styles["content"]}>可用</div>
                     <div className={styles["password"]}>******</div>
                 </div>
@@ -326,10 +343,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         return (
             <div className={styles["certificate-box"]}>
                 {Array.isArray(certificateParams) &&
-                    certificateParams.map((item, index) => {
-                        if (item.password) return failCard(item, index)
-                        return succeeCard(item, index)
-                    })}
+                certificateParams.map((item, index) => {
+                    if (item.password) return failCard(item, index)
+                    return succeeCard(item, index)
+                })}
             </div>
         )
     }, [certificateParams])
@@ -437,6 +454,74 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             />
                         )}
                         <Divider orientation={"left"} style={{marginTop: "0px"}}>
+                            第三方应用配置
+                        </Divider>
+                        <Form.Item label={"第三方应用"}>
+                            {(params.AppConfigs || []).map((i, index) => {
+                                return <YakitTag
+                                    key={index}
+                                    onClick={() => {
+                                        let m = showYakitModal({
+                                            title: "修改第三方应用",
+                                            width: 600,
+                                            okButtonProps: {hidden: true},
+                                            closable: true,
+                                            maskClosable: false,
+                                            content: (
+                                                <div style={{margin: 24}}>
+                                                    <ThirdPartyApplicationConfigForm
+                                                        data={i}
+                                                        onAdd={e => {
+                                                            setParams({
+                                                                ...params,
+                                                                AppConfigs: (params.AppConfigs || []).map(i => {
+                                                                    if (i.Type === e.Type) {
+                                                                        i = e
+                                                                    }
+                                                                    return {...i}
+                                                                }),
+                                                            })
+                                                            m.destroy()
+                                                        }}
+                                                    />
+                                                </div>
+                                            )
+                                        });
+                                    }}
+                                >{i.Type}</YakitTag>
+                            })}
+                            <YakitButton type={"outline1"} onClick={() => {
+                                let m = showYakitModal({
+                                    title: "添加第三方应用",
+                                    width: 600,
+                                    okButtonProps: {hidden: true},
+                                    closable: true,
+                                    maskClosable: false,
+                                    content: (
+                                        <div style={{margin: 24}}>
+                                            <ThirdPartyApplicationConfigForm
+                                                onAdd={e => {
+                                                    let existed = false;
+                                                    const existedResult = (params.AppConfigs||[]).map(i => {
+                                                        if (i.Type === e.Type) {
+                                                            existed = true
+                                                            return {...i, ...e}
+                                                        }
+                                                        return {...i}
+                                                    })
+                                                    if(!existed){
+                                                        existedResult.push(e)
+                                                    }
+                                                    setParams({...params, AppConfigs: existedResult})
+                                                    m.destroy()
+                                                }}
+                                            />
+                                        </div>
+                                    )
+                                });
+                            }}>添加第三方应用</YakitButton>
+                        </Form.Item>
+                        <Divider orientation={"left"} style={{marginTop: "0px"}}>
                             其他配置
                         </Divider>
                         <Form.Item label={"禁用IP"} tooltip='配置禁用IP后，yakit将会过滤不会访问，配置多个IP用逗号分隔'>
@@ -495,7 +580,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                             <YakitSwitch
                                 checked={!params.SkipSaveHTTPFlow}
                                 onChange={(val) =>
-                                    setParams({...params, SkipSaveHTTPFlow:!val})
+                                    setParams({...params, SkipSaveHTTPFlow: !val})
                                 }
                             />
                         </Form.Item>

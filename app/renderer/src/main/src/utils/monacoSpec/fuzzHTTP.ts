@@ -1,6 +1,7 @@
 import {monaco} from "react-monaco-editor";
 import {editor, languages, Position} from "monaco-editor";
 import {CancellationToken} from "typescript";
+import "./spaceengine";
 
 // https://microsoft.github.io/monaco-editor/playground.html#extending-language-services-custom-languages
 monaco.languages.register({id: "http"})

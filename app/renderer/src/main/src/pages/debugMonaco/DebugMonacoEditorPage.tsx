@@ -13,6 +13,7 @@ import {ChaosMakerRulesDemo} from "@/components/playground/ChaosMakerRulesDemo";
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
 import {HybridScanDemo} from "@/components/playground/hybrid/HybridScanDemo";
 import {HybridScanTaskTable} from "@/components/playground/hybrid/HybridScanTaskTable";
+import {SpaceEngineOperator} from "@/components/playground/spaceengine/SpaceEngineOperator";
 
 export interface DebugMonacoEditorPageProp {
 
@@ -58,6 +59,7 @@ a=1&b=2 Content-Length: a
     return <div style={{height: "100%"}}>
         <AutoCard
             title={<DemoItemSelectOne label={"调试组件"} data={[
+                {value: "space-engine-operator", label: "空间引擎操作台"},
                 {value: "hybrid-scan-demo", label: "HybridScan 批量"},
                 {value: "hybrid-scan-task", label: "HybridScan 任务列表"},
                 {value: "chaos-maker-rule", label: "流量生成器规则"},
@@ -85,6 +87,8 @@ a=1&b=2 Content-Length: a
                             return <YakitEditor value={value} type={"http"}/>
                         case "fs-tree":
                             return <YakURLTree/>
+                        case "space-engine-operator":
+                            return <SpaceEngineOperator/>
                     }
                     return <div>NO PLUGIN DEMO</div>
                 })()

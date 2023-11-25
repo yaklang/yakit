@@ -244,6 +244,8 @@ service Yak {
   rpc StaticAnalyzeError(StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
   rpc YaklangCompileAndFormat(YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
 
+  rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
+
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
   rpc ViewPortScanCode(Empty) returns (SimpleScript);
@@ -553,6 +555,33 @@ service Yak {
   rpc HybridScan(stream HybridScanRequest) returns (stream HybridScanResponse);
   rpc QueryHybridScanTask(QueryHybridScanTaskRequest) returns (QueryHybridScanTaskResponse);
   rpc DeleteHybridScanTask(DeleteHybridScanTaskRequest) returns (Empty);
+
+  rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
+  rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
+}
+
+message GetSpaceEngineStatusRequest {
+  string Type = 1;
+}
+
+message SpaceEngineStatus {
+  string Type = 1;
+  string Status = 2;
+  string Info = 3;
+  bytes Raw = 4;
+  int64 Used = 5;
+  int64 Remain = 6;
+}
+
+message FetchPortAssetFromSpaceEngineRequest {
+  // zoomeye / hunter / fofa
+  string Type = 1;
+  string Filter = 2;
+  int64 MaxPage = 3;
+  int64 MaxRecord = 4;
+  // page limit
+  int64 PageSize = 5;
+  bool ScanBeforeSave = 6;
 }
 
 message DeleteHybridScanTaskRequest {
@@ -932,6 +961,20 @@ message GlobalNetworkConfig {
 
   // default skip save HTTPFlow
   bool SkipSaveHTTPFlow = 11;
+
+  // 第三方APIKey获取
+  repeated ThirdPartyApplicationConfig AppConfigs = 12;
+}
+
+message ThirdPartyApplicationConfig {
+  // zoomeye / hunter / shodan / fofa / github / token
+  string Type = 1;
+  string APIKey = 2;
+  string UserIdentifier = 3;
+  string UserSecret = 4;
+  string Namespace = 5;
+  string Domain = 6;
+  string WebhookURL = 7;
 }
 
 message DiagnoseNetworkRequest {
@@ -1677,6 +1720,42 @@ message ExecPacketScanRequest {
 
   // 设置代理
   string Proxy = 11;
+}
+
+message Position {
+  int64 Line = 1;
+  int64 Column = 2;
+}
+
+message YaklangInspectInformationRequest {
+  string YakScriptType = 1;
+  string YakScriptCode = 2;
+  Position StartPos = 3;
+  Position EndPos = 4;
+}
+
+// message RiskInfo {
+//   string Type = 1;
+//   string TypeVerbose = 3;
+//   string Level = 2;
+//   string Cve = 4;
+// }
+
+
+message YaklangInformationKV {
+  string Key = 1;
+  bytes Value = 2;
+  repeated YaklangInformationKV Extern = 3;
+}
+
+message YaklangInformation {
+  string Name = 1;
+  repeated YaklangInformationKV Data = 2;
+}
+
+message YaklangInspectInformationResponse {
+  repeated SuggestionDescription SuggestionMessage = 1;
+  repeated YaklangInformation Information = 2;
 }
 
 message StaticAnalyzeErrorRequest {
@@ -2971,6 +3050,7 @@ message QueryPortsRequest {
   bool  TitleEffective = 9;
   string ComplexSelect = 10;
   string Proto = 11;
+  string RuntimeId = 12;
 }
 
 message QueryPortsResponse {
@@ -3369,6 +3449,8 @@ message FuzzerRequest {
   bool IsHTTPS = 4;
   bool IsGmTLS = 35;
   bool ForceFuzz = 5;
+  string FuzzTagMode = 50;
+  bool FuzzTagSyncIndex = 51;
   string Proxy = 6;
   double PerRequestTimeoutSeconds = 7;
 
