@@ -389,26 +389,6 @@ export const SelectOne: React.FC<SelectOneProps> = (p) => {
                 return info
             })}
         />
-        {/*<Radio.Group className={"select-one"} onChange={e => {*/}
-        {/*    // setCurrent(e.target.value)*/}
-        {/*    p.setValue && p.setValue(e.target.value)*/}
-        {/*}} value={p.value} buttonStyle="solid" size={p.size} style={{border: "unset", display: "inline-flex", gap: 4}}*/}
-        {/*>*/}
-
-        {/*    {p.data.map(e => {*/}
-        {/*        const active = e.value === p.value;*/}
-        {/*        return <YakitButton*/}
-        {/*            onClick={()=>{*/}
-        {/*                if (p.setValue) {*/}
-        {/*                    p.setValue(e.value)*/}
-        {/*                }*/}
-        {/*            }}*/}
-        {/*            value={e.value} key={`${e.value}`} size={p.size}  type={active ? "primary" : "outline2"}*/}
-        {/*            disabled={(p.value === e.value ? false : !!p.disabled) || e.disabled}>*/}
-        {/*            {e.text}*/}
-        {/*        </YakitButton>*/}
-        {/*    })}*/}
-        {/*</Radio.Group>*/}
     </Item>
 };
 
