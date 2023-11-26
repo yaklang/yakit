@@ -42,7 +42,7 @@ import {
     convertDownloadOnlinePluginBatchRequestParams,
     convertPluginsRequestParams
 } from "../utils"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -50,6 +50,7 @@ import {DefaultStatusList, PluginGV} from "../builtInData"
 import {showModal} from "@/utils/showModal"
 import {SolidChevrondownIcon} from "@/assets/icon/solid"
 import {AddPluginGroup, RemovePluginGroup} from "@/pages/yakitStore/store/PluginStore"
+import {useStore} from "@/store"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
@@ -72,6 +73,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         getInitTotal()
         onInit(true)
     }, [inViewPort])
+
+    // 用户信息
+    const {userInfo} = useStore()
 
     // 获取插件列表数据-相关逻辑
     /** 是否为加载更多 */
@@ -134,7 +138,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
             apiFetchCheckList(query)
                 .then((res) => {
-                    // console.log("plugin-manage-date", res.data, JSON.stringify(res.pagemeta))
+                    console.log("plugin-manage-date", query, res.data, JSON.stringify(res.pagemeta))
                     if (!res.data) res.data = []
                     dispatch({
                         type: "add",
@@ -231,6 +235,20 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         onInit()
     })
 
+    /** 修改作者按钮展示状态 */
+    const showAuthState = useMemo(() => {
+        if (userInfo.role === "superAdmin") {
+            if (isCommunityEdition()) return true
+            else return false
+        }
+        if (userInfo.role === "admin") {
+            if (isCommunityEdition()) return true
+            if (isEnpriTrace()) return true
+            if (isEnpriTraceAgent()) return true
+            return false
+        }
+        return false
+    }, [userInfo.role])
     /** 批量修改插件作者 */
     const [showModifyAuthor, setShowModifyAuthor] = useState<boolean>(false)
     const onShowModifyAuthor = useMemoizedFn(() => {
@@ -430,6 +448,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         showPluginIndex.current = index
     })
 
+    /** 分组按钮展示状态 */
+    const showAuditState = useMemo(() => {
+        if (!isEnpriTraceAgent()) return false
+        if (userInfo.role === "admin") return true
+        else return false
+    }, [userInfo.role])
     // 插件分组
     const onGroupMenu = useMemoizedFn((key: string) => {
         switch (key) {
@@ -578,7 +602,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         <FuncSearch maxWidth={1000} value={searchs} onSearch={onKeywordAndUser} onChange={setSearchs} />
                         <div className='divider-style'></div>
                         <div className='btn-group-wrapper'>
-                            {isEnpriTraceAgent() && (
+                            {showAuditState && (
                                 <FuncFilterPopover
                                     maxWidth={1150}
                                     icon={<SolidChevrondownIcon />}
@@ -601,15 +625,17 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     placement='bottomRight'
                                 />
                             )}
-                            <FuncBtn
-                                maxWidth={1150}
-                                icon={<OutlinePencilaltIcon />}
-                                disabled={selectNum === 0 && !allCheck}
-                                type='outline2'
-                                size='large'
-                                name={"修改作者"}
-                                onClick={onShowModifyAuthor}
-                            />
+                            {showAuthState && (
+                                <FuncBtn
+                                    maxWidth={1150}
+                                    icon={<OutlinePencilaltIcon />}
+                                    disabled={selectNum === 0 && !allCheck}
+                                    type='outline2'
+                                    size='large'
+                                    name={"修改作者"}
+                                    onClick={onShowModifyAuthor}
+                                />
+                            )}
                             <FuncBtn
                                 maxWidth={1150}
                                 icon={<OutlineClouddownloadIcon />}

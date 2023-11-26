@@ -173,6 +173,7 @@ export const apiFetchCheckList: (query: PluginsQueryProps) => Promise<YakitPlugi
         try {
             const newQuery = {
                 ...query,
+                order_by: query.order_by || "updated_at",
                 listType: "check"
             }
             apiFetchList(newQuery)

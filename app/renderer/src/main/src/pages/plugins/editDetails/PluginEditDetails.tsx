@@ -586,11 +586,6 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         isUpload.current = true
         modifyInfo.current = convertLocalToRemoteInfo(isModify, {info: info, modify: obj})
 
-        if (info && modifyInfo.current.script_name !== info?.ScriptName) {
-            yakitNotify("error", "复制插件功能请勿改动插件名称")
-            return
-        }
-
         setCloudHint({isCopy: true, visible: true})
     })
     const [modifyLoading, setModifyLoading] = useState<boolean>(false)
