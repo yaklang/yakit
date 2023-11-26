@@ -542,7 +542,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                         {
                             validator: async (_, value) => {
                                 if (!value || !value.trim()) return Promise.reject(new Error("插件名称必填"))
-                                if (value.trim().length > 30) return Promise.reject(new Error("名称最长30位"))
+                                if (value.trim().length > 100) return Promise.reject(new Error("名称最长100位"))
                             }
                         }
                     ]}
@@ -552,7 +552,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                         placeholder='请输入...'
                         size='large'
                         prefix={<OutlineIdentificationIcon />}
-                        maxLength={30}
+                        maxLength={100}
                         disabled={isEdit}
                     />
                 </Form.Item>
