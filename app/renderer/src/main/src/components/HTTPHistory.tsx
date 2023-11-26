@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
-import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useGetState, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
@@ -129,15 +129,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
     const [searchWebTreeData, setSearchWebTreeData] = useState<TreeNode[]>([]) // 搜索框有值时得网站树
-    const [searchTreeFlag, setSearchTreeFlag] = useState<boolean>(false) // 判断是否是搜索树
+    const [searchTreeFlag, setSearchTreeFlag, getSearchTreeFlag] = useGetState<boolean>(false) // 判断是否是搜索树
     const [searchValue, setSearchValue] = useState<string>("")
     const [treeLoading, setTreeLoading] = useState<boolean>(false)
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
-    const [hoveredKeys, setHoveredKeys] = useState<TreeKey>("") // 定位树节点key
+    const [hoveredKeys, setHoveredKeys, getHoveredKeys] = useGetState<TreeKey>("") // 定位树节点key
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
-    const [sourseType, setSourseType] = useState<string>("mitm")
+    const [sourseType, setSourseType, getSourseType] = useGetState<string>("mitm")
 
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
         entries.forEach((entry) => {
@@ -162,23 +162,27 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }
 
     useEffect(() => {
-        getWebTreeData("website:///", sourseType)
+        getWebTreeData("website:///", {sourseType})
     }, []) // 网站树
 
-    const getWebTreeData = (yakurl: string, sourseType: string) => {
+    useEffect(() => {
+        console.log("searchWebTreeData", searchWebTreeData)
+    }, [searchWebTreeData])
+
+    const getWebTreeData = (yakurl: string, extra: any) => {
         setTreeLoading(true)
 
-        const filter = sourseType.length ? `?filter=${sourseType}` : ""
+        const filter = extra.sourseType.length ? `?filter=${extra.sourseType}` : ""
         loadFromYakURLRaw(yakurl + filter, (res) => {
             setTreeLoading(false)
             setSelectedKeys([])
-            setWebTreeData([])
-            setSearchWebTreeData([])
 
-            if (yakurl !== "website:///") {
+            // 判断是否是搜索树
+            if (getSearchTreeFlag()) {
+                setWebTreeData([])
                 setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
             } else {
-                // 请求第一层数据
+                setSearchWebTreeData([])
                 setWebTreeData(assembleFirstTreeNode(res.Resources))
             }
         }).catch((error) => {
@@ -190,13 +194,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     // 树节点第一层组装树
     const assembleFirstTreeNode = (arr) => {
         return arr.map((item: YakURLResource, index: number) => {
-            // const id = searchValue ? item.ResourceName : item.VerboseName
-            const id = index
+            const id = getSearchTreeFlag() ? item.ResourceName : item.VerboseName
             return {
-                title: item.VerboseName,
-                filterTreeNode: () => {
-                    return true
-                },
+                title: (
+                    <span style={{backgroundColor: getHoveredKeys() === id ? "var(--yakit-primary-2)" : undefined}}>
+                        {item.VerboseName}
+                    </span>
+                ),
                 key: id,
                 isLeaf: !item.HaveChildrenNodes,
                 data: item,
@@ -233,6 +237,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         return arr
     })
 
+    // 树子节点异步加载组装树
     const onLoadWebTreeData = ({key, children, data}: any) => {
         return new Promise<void>((resolve, reject) => {
             if (data === undefined) {
@@ -248,10 +253,17 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 obj,
                 (rsp) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
-                        // const id = key + "/" + i.ResourceName
-                        const id = key + "-" + index
+                        const id = key + "/" + i.ResourceName
                         return {
-                            title: i.VerboseName,
+                            title: (
+                                <span
+                                    style={{
+                                        backgroundColor: getHoveredKeys() === id ? "var(--yakit-primary-2)" : undefined
+                                    }}
+                                >
+                                    {i.VerboseName}
+                                </span>
+                            ),
                             key: id,
                             isLeaf: !i.HaveChildrenNodes,
                             data: i,
@@ -267,7 +279,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             }
                         }
                     })
-                    if (searchTreeFlag) {
+                    // 判断是否是搜索树
+                    if (getSearchTreeFlag()) {
                         setSearchWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
                     } else {
                         setWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
@@ -278,6 +291,36 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             )
         })
     }
+
+    // 刷新网站树
+    const refreshTree = useMemoizedFn(() => {
+        setSearchValue("")
+        setSearchTreeFlag(false)
+        setHoveredKeys("")
+        setExpandedKeys([])
+        getWebTreeData("website:///", {sourseType})
+    })
+
+    // 跳转网站树指定节点
+    const onJumpWebTree = useMemoizedFn((value) => {
+        if (inViewport && curTabKey === "web-tree") {
+            const val = JSON.parse(value) // HTTPFlowDetailRequestAndResponse组件发送传过来的数据
+            const path = val.path // 需要展开得节点数组
+            const host = val.host // TODO 可能得换，后端需要把模糊搜索改掉
+            const jumpTreeKey = path[path.length - 1] // 定位节点得key
+            setExpandedKeys(path)
+            setHoveredKeys(jumpTreeKey)
+            setSearchValue(host)
+            setSearchTreeFlag(true)
+            getWebTreeData("website://" + host, {sourseType})
+        }
+    })
+    useEffect(() => {
+        emiter.on("onJumpWebTree", onJumpWebTree)
+        return () => {
+            emiter.off("onJumpWebTree", onJumpWebTree)
+        }
+    }, [])
 
     useEffect(() => {
         // 假设 selectedNodes 的第一个节点是您想要设置的节点
@@ -292,7 +335,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     setSelectedNodeParamsKey(arr1.length ? arr1 : arr2)
                 } catch (_) {
                     setSelectedNodeParamsKey([])
-                    return 
+                    return
                 }
             } else {
                 setSelectedNodeParamsKey([])
@@ -301,37 +344,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setSelectedNodeParamsKey([])
         }
     }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行
-
-    // 刷新网站树
-    const refreshTree = useMemoizedFn(() => {
-        setSearchValue("")
-        setExpandedKeys([])
-        setSelectedKeys([])
-        setSearchTreeFlag(false)
-        getWebTreeData("website:///", sourseType)
-    })
-
-    // 跳转网站树指定节点
-    // const onJumpWebTree = useMemoizedFn((value) => {
-    //     if (inViewport && curTabKey === "web-tree") {
-    //         const val = JSON.parse(value) // HTTPFlowDetailRequestAndResponse组件发送传过来的数据
-    //         const path = val.path // 需要展开得节点数组
-    //         const jumpTreeKey = path[path.length - 1] // 定位节点得key
-    //         setHoveredKeys(jumpTreeKey)
-    //         setExpandedKeys(path) // 展开树
-    //         // 当是搜索树跳转过来时
-    //         if (searchTreeFlag) {
-    //             setSearchValue("")
-    //             getWebTreeData("website://")
-    //         }
-    //     }
-    // })
-    // useEffect(() => {
-    //     emiter.on("onJumpWebTree", onJumpWebTree)
-    //     return () => {
-    //         emiter.off("onJumpWebTree", onJumpWebTree)
-    //     }
-    // }, [])
 
     // 编辑器部分是否显示
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
@@ -394,8 +406,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             setSearchValue(value)
                                             const flag = value === "/" ? false : !!value
                                             setSearchTreeFlag(flag)
+                                            setHoveredKeys("")
                                             setExpandedKeys([])
-                                            getWebTreeData("website://" + `${value ? value : "/"}`, sourseType)
+                                            getWebTreeData("website://" + `${value ? value : "/"}`, {sourseType})
                                         }}
                                         refreshTree={refreshTree}
                                         expandedKeys={expandedKeys}
