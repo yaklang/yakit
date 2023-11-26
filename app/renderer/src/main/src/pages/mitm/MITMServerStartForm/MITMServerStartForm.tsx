@@ -21,6 +21,8 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {inputHTTPFuzzerHostConfigItem} from "../../fuzzer//HTTPFuzzerHosts"
 import {RemoveIcon} from "@/assets/newIcon"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -117,7 +119,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-                const findOpenRepRule = newRules.find(item => (!item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)))
+                const findOpenRepRule = newRules.find(
+                    (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
+                )
                 setOpenRepRuleFlag(findOpenRepRule !== undefined)
                 setRules(newRules)
             })
@@ -151,8 +155,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 onOk: () => {
                     execStartMITM(values)
                 },
-                cancelButtonProps: { size: "small", className: "modal-cancel-button" },
-                okButtonProps: { size: "small", className: "modal-ok-button" }
+                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                okButtonProps: {size: "small", className: "modal-ok-button"}
             })
             return
         }
@@ -199,9 +203,11 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, params.enableInitialPlugin ? "true" : "")
         // 记录时间戳
         const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
-        setRemoteValue(MITMConsts.MITMStartTimeStamp,nowTime)
+        setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
     })
     const [width, setWidth] = useState<number>(0)
+
+    const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
 
     return (
         <div className={styles["mitm-server-start-form"]}>
@@ -244,7 +250,16 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     label='下游代理'
                     name='downstreamProxy'
                     help={
-                        "为经过该 MITM 代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描，代理如有密码格式为：http://user:pass@ip:port"
+                        <span className={styles["form-rule-help"]}>
+                            为经过该 MITM
+                            代理的请求再设置一个代理，通常用于访问中国大陆无法访问的网站或访问特殊网络/内网，也可用于接入被动扫描，代理如有密码格式为：http://user:pass@ip:port
+                            <span
+                                className={styles["form-rule-help-setting"]}
+                                onClick={() => setAgentConfigModalVisible(true)}
+                            >
+                                配置用户名密码&nbsp;
+                            </span>
+                        </span>
                     }
                 >
                     <YakitAutoComplete
@@ -334,6 +349,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     </Space>
                 </Item>
             </Form>
+            {/* 代理劫持弹窗 */}
+            <AgentConfigModal
+                agentConfigModalVisible={agentConfigModalVisible}
+                onCloseModal={() => setAgentConfigModalVisible(false)}
+                generateURL={(url) => {
+                    form.setFieldsValue({ downstreamProxy: url })
+                }}
+
+            ></AgentConfigModal>
             <React.Suspense fallback={<div>loading...</div>}>
                 <MITMFormAdvancedConfiguration
                     visible={advancedFormVisible}
@@ -347,5 +371,140 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 />
             </React.Suspense>
         </div>
+    )
+})
+
+interface GenerateURLRequest {
+    Scheme: string
+    Host: string
+    Port: string
+    Username: string
+    Password: string
+}
+
+interface GenerateURLResponse {
+    URL: string
+}
+interface AgentConfigModalParams extends Omit<GenerateURLRequest, "Host" | "Port"> {
+    Address?: string
+}
+
+const initAgentConfigModalParams = {
+    Scheme: "http",
+    Address: "",
+    Username: "",
+    Password: ""
+}
+
+interface AgentConfigModalProp {
+    agentConfigModalVisible: boolean
+    onCloseModal: () => void
+    generateURL: (url: string) => void
+}
+
+// 代理劫持弹窗
+const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
+    const {agentConfigModalVisible, onCloseModal, generateURL} = props
+    const [form] = Form.useForm()
+    const [params, setParams] = useState<AgentConfigModalParams>(initAgentConfigModalParams)
+
+    const onValuesChange = useMemoizedFn((changedValues, allValues) => {
+        const key = Object.keys(changedValues)[0]
+        const value = allValues[key]
+        setParams({...params, [key]: value.trim()})
+    })
+
+    const handleReqParams = () => {
+        const copyParams = structuredClone(params)
+        const address = copyParams.Address
+        delete copyParams.Address
+        // TODO 地址填写格式待确认
+
+        return {
+            ...copyParams,
+            Host: address,
+            Port: address
+        }
+    }
+
+    const onOKFun = useMemoizedFn(async () => {
+        try {
+            const res: GenerateURLResponse = await ipcRenderer.invoke("mitm-agent-hijacking-config", handleReqParams())
+            generateURL(res.URL)
+            onClose()
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    })
+
+    const onClose = useMemoizedFn(() => {
+        setParams(initAgentConfigModalParams)
+        form.setFieldsValue(initAgentConfigModalParams)
+        onCloseModal()
+    })
+
+    return (
+        <YakitModal
+            visible={agentConfigModalVisible}
+            title='代理劫持'
+            width={506}
+            maskClosable={false}
+            closable
+            centered
+            okText='确认'
+            onCancel={onClose}
+            onOk={onOKFun}
+        >
+            <div style={{padding: 15}}>
+                <Form
+                    form={form}
+                    colon={false}
+                    onSubmitCapture={(e) => e.preventDefault()}
+                    labelCol={{span: 6}}
+                    wrapperCol={{span: 18}}
+                    initialValues={{...params}}
+                    style={{height: "100%"}}
+                    onValuesChange={onValuesChange}
+                >
+                    <Form.Item
+                        label='协议'
+                        name='Scheme'
+                        style={{marginBottom: 4}}
+                    >
+                        <YakitSelect
+                            options={["http", "socks5"].map((item) => ({
+                                value: item,
+                                label: item
+                            }))}
+                            size='small'
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        label='地址'
+                        name='Address'
+                        style={{marginBottom: 4}}
+                        rules={[{required: true, message: "请输入地址"}]}
+                    >
+                        <YakitInput placeholder='请输入地址' />
+                    </Form.Item>
+                    <Form.Item
+                        label='用户名'
+                        name='Username'
+                        style={{marginBottom: 4}}
+                        rules={[{required: true, message: "请输入用户名"}]}
+                    >
+                        <YakitInput placeholder='请输入用户名' />
+                    </Form.Item>
+                    <Form.Item
+                        label='密码'
+                        name='Password'
+                        style={{marginBottom: 4}}
+                        rules={[{required: true, message: "请输入密码"}]}
+                    >
+                        <YakitInput.Password placeholder='请输入密码' />
+                    </Form.Item>
+                </Form>
+            </div>
+        </YakitModal>
     )
 })
