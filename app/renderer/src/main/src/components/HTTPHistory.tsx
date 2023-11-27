@@ -403,7 +403,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             ref={ref}
             className={styles.hTTPHistory}
             style={{
-                paddingBottom: pageType === "History" ? 13 : 0,
+                // paddingBottom: pageType === "History" ? 13 : 0,
                 paddingRight: pageType === "History" ? 16 : 0
             }}
         >
@@ -469,6 +469,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 secondRatio={pageType === "History" ? "80%" : "100%"}
                 secondNode={() => (
                     <YakitResizeBox
+                        style={{ paddingBottom: pageType === "History" ? 13 : 0 }}
                         firstNode={() => (
                             <div
                                 style={{
