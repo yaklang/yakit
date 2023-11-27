@@ -434,7 +434,9 @@ export interface HTTPFlowTableProp {
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
     IncludeInUrl?: string[]
-    onSourseType?: (sourseType: string) => void
+    updateDataFlag?: boolean
+    onQueryParams?: (queryParams: string) => void
+    setUpdateDataFlag?: (flag: boolean) => void
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -824,22 +826,29 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [refresh])
 
     // 切换了网站树
-    useUpdateEffect(() => {
-        setParams({
-            ...params,
-            SearchURL: props.searchURL,
-            IncludeInUrl: props.IncludeInUrl
-        })
-        setScrollToIndex(0)
-        setCurrentIndex(undefined)
-        setSelected(undefined)
-        setSelectedRowKeys([])
-        setSelectedRows([])
-        setIsAllSelect(false)
-        setTimeout(() => {
-            updateData()
-        }, 50)
-    }, [props.searchURL, props.IncludeInUrl])
+    useDebounceEffect(
+        () => {
+            setParams({
+                ...params,
+                SearchURL: props.searchURL,
+                IncludeInUrl: props.IncludeInUrl
+            })
+            setScrollToIndex(0)
+            setCurrentIndex(undefined)
+            setSelected(undefined)
+            setSelectedRowKeys([])
+            setSelectedRows([])
+            setIsAllSelect(false)
+            if (props.updateDataFlag) {
+                console.log("11111111111")
+                setTimeout(() => {
+                    updateData()
+                }, 50)
+            }
+        },
+        [props.searchURL, props.IncludeInUrl, props.updateDataFlag],
+        {wait: 300}
+    )
 
     const onScrollToByClickEvent = useMemoizedFn((v) => {
         try {
@@ -1047,8 +1056,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {wait: 500}
     ).run
 
+    const [queryParams, setQueryParams] = useState<string>(JSON.stringify(params))
+    useDebounceEffect(
+        () => {
+            if (!props.updateDataFlag) {
+                console.log('222222222222');
+                props.onQueryParams && props.onQueryParams(queryParams)
+            }
+        },
+        [queryParams, props.updateDataFlag],
+        {
+            wait: 500
+        }
+    )
+
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "offset" | "update") => {
+        setQueryParams(JSON.stringify(query))
         if (isGrpcRef.current) return
         isGrpcRef.current = true
         // 查询数据
@@ -2422,7 +2446,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setContentTypeQuery("")
         setColor([])
         setCheckBodyLength(false)
-        props.onSourseType && props.onSourseType("mitm")
+        props.setUpdateDataFlag && props.setUpdateDataFlag(false)
         setTimeout(() => {
             updateData()
         }, 100)
@@ -2537,13 +2561,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                             tag.value
                                                         ]
                                                         setParams({...params, SourceType: selectTypeList.join(",")})
-                                                        props.onSourseType && props.onSourseType(selectTypeList.join(","))
                                                     } else {
                                                         const selectTypeList = (
                                                             params.SourceType?.split(",") || []
                                                         ).filter((ele) => ele !== tag.value)
                                                         setParams({...params, SourceType: selectTypeList.join(",")})
-                                                        props.onSourseType && props.onSourseType(selectTypeList.join(","))
                                                     }
                                                     setTimeout(() => {
                                                         updateData()

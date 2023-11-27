@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
-import {useGetState, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
@@ -127,17 +127,19 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
      */
     const treeWrapRef = useRef<any>()
     const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
+    const [loading, setLoading] = useState<boolean>(false)
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
+
     const [searchWebTreeData, setSearchWebTreeData] = useState<TreeNode[]>([]) // 搜索框有值时得网站树
     const [searchTreeFlag, setSearchTreeFlag, getSearchTreeFlag] = useGetState<boolean>(false) // 判断是否是搜索树
     const [searchValue, setSearchValue] = useState<string>("")
-    const [treeLoading, setTreeLoading] = useState<boolean>(false)
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
     const [hoveredKeys, setHoveredKeys, getHoveredKeys] = useGetState<TreeKey>("") // 定位树节点key
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string[]>([""])
-    const [sourseType, setSourseType, getSourseType] = useGetState<string>("mitm")
+    const queryParamsRef = useRef<string>("")
+    const [updateDataFlag, setUpdateDataFlag] = useState<boolean>(false)
 
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
         entries.forEach((entry) => {
@@ -161,17 +163,20 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         return iconsEle[treeNodeType] || <></>
     }
 
-    useEffect(() => {
-        getWebTreeData("website:///", {sourseType})
-    }, []) // 网站树
+    const handleFilterParams = () => {
+        const queryString = Object.entries(JSON.parse(queryParamsRef.current))
+            .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value as any)}`)
+            .join("&")
+        console.log("filter", queryString)
+        return queryString
+    }
 
-    const getWebTreeData = (yakurl: string, extra: any) => {
-        setTreeLoading(true)
+    const getWebTreeData = (yakurl: string) => {
+        const filter = `?filter=${handleFilterParams()}`
+        setLoading(true)
 
-        const filter = extra.sourseType.length ? `?filter=${extra.sourseType}` : ""
         loadFromYakURLRaw(yakurl + filter, (res) => {
-            setTreeLoading(false)
-
+            setLoading(false)
             // 判断是否是搜索树
             if (getSearchTreeFlag()) {
                 setWebTreeData([])
@@ -181,7 +186,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 setWebTreeData(assembleFirstTreeNode(res.Resources))
             }
         }).catch((error) => {
-            setTreeLoading(false)
             yakitFailed(`加载失败: ${error}`)
         })
     }
@@ -241,7 +245,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             }
             const obj = {
                 ...data.Url,
-                Query: [{Key: "filter", Value: sourseType}]
+                Query: [{Key: "filter", Value: handleFilterParams()}]
             }
 
             requestYakURLList(
@@ -287,6 +291,39 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         })
     }
 
+    // 搜索树
+    const onSearchTree = useMemoizedFn((value: string) => {
+        const flag = value === "/" ? false : !!value
+        setSearchTreeFlag(flag)
+        setHoveredKeys("")
+        setExpandedKeys([])
+        if (value === "" || (searchValue !== value && searchValue !== "")) {
+            setSelectedNodes([])
+            setSelectedKeys([])
+            setUpdateDataFlag(true)
+        }
+        if (value === "") {
+            setOnlyShowFirstNode(true)
+            setSecondNodeVisible(false)
+        }
+        setSearchValue(value)
+        getWebTreeData("website://" + `${value ? value : "/"}`)
+    })
+
+    const debounceRefreshTree = useDebounceFn(
+        () => {
+            refreshTree()
+        },
+        {
+            wait: 500
+        }
+    ).run
+    const onQueryParams = useMemoizedFn((queryParams) => {
+        queryParamsRef.current = queryParams
+        setUpdateDataFlag(false)
+        debounceRefreshTree()
+    })
+
     // 刷新网站树
     const refreshTree = useMemoizedFn(() => {
         setOnlyShowFirstNode(true)
@@ -297,7 +334,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setExpandedKeys([])
         setSelectedKeys([])
         setSelectedNodes([])
-        getWebTreeData("website:///", {sourseType})
+        getWebTreeData("website:///")
     })
 
     // 跳转网站树指定节点
@@ -312,7 +349,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setSearchValue(host)
             setSearchTreeFlag(true)
             setSelectedKeys([])
-            getWebTreeData("website://" + host, {sourseType})
+            getWebTreeData("website://" + host)
         }
     })
     useEffect(() => {
@@ -321,6 +358,16 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             emiter.off("onJumpWebTree", onJumpWebTree)
         }
     }, [])
+
+    // 点击Select选中树
+    const onSelectedKeys = useMemoizedFn((selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
+        // console.log("selectedNodes", selectedKeys, selectedNodes)
+        setSelectedKeys(selectedKeys)
+        setSelectedNodes(selectedNodes)
+        setOnlyShowFirstNode(true)
+        setSecondNodeVisible(false)
+        setUpdateDataFlag(true)
+    })
 
     useEffect(() => {
         // 假设 selectedNodes 的第一个节点是您想要设置的节点
@@ -395,40 +442,22 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     ref={treeWrapRef}
                                 >
                                     <YakitTree
+                                        treeLoading={loading}
                                         height={treeWrapHeight - 30}
                                         multiple={false}
                                         searchPlaceholder='请输入域名或URL进行搜索'
-                                        treeLoading={treeLoading}
                                         treeData={searchTreeFlag ? searchWebTreeData : webTreeData}
                                         loadData={onLoadWebTreeData}
                                         searchValue={searchValue}
-                                        onSearch={(value) => {
-                                            const flag = value === "/" ? false : !!value
-                                            setSearchTreeFlag(flag)
-                                            setHoveredKeys("")
-                                            setExpandedKeys([])
-                                            if (value === "" || (searchValue !== value && searchValue !== "")) {
-                                                setSelectedNodes([])
-                                                setSelectedKeys([])
-                                            }
-                                            if (value === "") {
-                                                setOnlyShowFirstNode(true)
-                                                setSecondNodeVisible(false)
-                                            }
-                                            setSearchValue(value)
-                                            getWebTreeData("website://" + `${value ? value : "/"}`, {sourseType})
+                                        onSearch={onSearchTree}
+                                        refreshTree={() => {
+                                            setUpdateDataFlag(true)
+                                            refreshTree()
                                         }}
-                                        refreshTree={refreshTree}
                                         expandedKeys={expandedKeys}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
-                                        onSelectedKeys={(selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-                                            // console.log("selectedNodes", selectedKeys, selectedNodes)
-                                            setSelectedKeys(selectedKeys)
-                                            setSelectedNodes(selectedNodes)
-                                            setOnlyShowFirstNode(true)
-                                            setSecondNodeVisible(false)
-                                        }}
+                                        onSelectedKeys={onSelectedKeys}
                                     ></YakitTree>
                                 </div>
                             </div>
@@ -474,6 +503,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         .filter((url) => url !== "")
                                         .join(",")}
                                     IncludeInUrl={selectedNodeParamsKey}
+                                    updateDataFlag={updateDataFlag}
+                                    setUpdateDataFlag={setUpdateDataFlag}
                                     // tableHeight={200}
                                     // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {
@@ -486,10 +517,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     refresh={refresh}
                                     pageType={pageType}
                                     historyId={historyId}
-                                    onSourseType={(sourseType) => {
-                                        setSourseType(sourseType)
-                                        refreshTree()
-                                    }}
+                                    onQueryParams={onQueryParams}
                                 />
                             </div>
                         )}
