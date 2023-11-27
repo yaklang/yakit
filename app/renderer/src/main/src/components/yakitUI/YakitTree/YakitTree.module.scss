@@ -23,6 +23,7 @@
         border-radius: 4px;
         border: 1px solid #eaecf3;
         color: #85899e;
+        margin-top: 6px;
         svg {
             height: 10px;
             width: 10px;
@@ -52,6 +53,10 @@
             .ant-spin-dot {
                 margin: auto;
             }
+        }
+
+        .ant-tree .ant-tree-treenode {
+            align-items: center;
         }
 
         .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
