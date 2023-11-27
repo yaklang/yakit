@@ -165,17 +165,12 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         getWebTreeData("website:///", {sourseType})
     }, []) // 网站树
 
-    useEffect(() => {
-        console.log("searchWebTreeData", searchWebTreeData)
-    }, [searchWebTreeData])
-
     const getWebTreeData = (yakurl: string, extra: any) => {
         setTreeLoading(true)
 
         const filter = extra.sourseType.length ? `?filter=${extra.sourseType}` : ""
         loadFromYakURLRaw(yakurl + filter, (res) => {
             setTreeLoading(false)
-            setSelectedKeys([])
 
             // 判断是否是搜索树
             if (getSearchTreeFlag()) {
@@ -298,6 +293,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setSearchTreeFlag(false)
         setHoveredKeys("")
         setExpandedKeys([])
+        setSelectedKeys([])
+        setSelectedNodes([])
         getWebTreeData("website:///", {sourseType})
     })
 
@@ -312,6 +309,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setHoveredKeys(jumpTreeKey)
             setSearchValue(host)
             setSearchTreeFlag(true)
+            setSelectedKeys([])
             getWebTreeData("website://" + host, {sourseType})
         }
     })
@@ -403,11 +401,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         loadData={onLoadWebTreeData}
                                         searchValue={searchValue}
                                         onSearch={(value) => {
-                                            setSearchValue(value)
                                             const flag = value === "/" ? false : !!value
                                             setSearchTreeFlag(flag)
                                             setHoveredKeys("")
                                             setExpandedKeys([])
+                                            if (value === "" || searchValue !== value) {
+                                                setSelectedNodes([])
+                                                setSelectedKeys([])
+                                            }
+                                            setSearchValue(value)
                                             getWebTreeData("website://" + `${value ? value : "/"}`, {sourseType})
                                         }}
                                         refreshTree={refreshTree}
