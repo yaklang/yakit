@@ -289,6 +289,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 刷新网站树
     const refreshTree = useMemoizedFn(() => {
+        setOnlyShowFirstNode(true)
+        setSecondNodeVisible(false)
         setSearchValue("")
         setSearchTreeFlag(false)
         setHoveredKeys("")
@@ -405,9 +407,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             setSearchTreeFlag(flag)
                                             setHoveredKeys("")
                                             setExpandedKeys([])
-                                            if (value === "" || searchValue !== value) {
+                                            if (value === "" || (searchValue !== value && searchValue !== "")) {
                                                 setSelectedNodes([])
                                                 setSelectedKeys([])
+                                            }
+                                            if (value === "") {
+                                                setOnlyShowFirstNode(true)
+                                                setSecondNodeVisible(false)
                                             }
                                             setSearchValue(value)
                                             getWebTreeData("website://" + `${value ? value : "/"}`, {sourseType})

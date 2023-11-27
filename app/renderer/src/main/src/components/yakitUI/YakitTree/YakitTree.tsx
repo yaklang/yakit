@@ -48,9 +48,6 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
 
     useDebounceEffect(
         () => {
-            // 不清楚原因 props.searchValue 监听不到
-            setSearchValue(props.searchValue || "")
-
             if (props.expandedKeys) {
                 // 展开指定节点
                 setExpandedKeys(props.expandedKeys)
@@ -100,6 +97,9 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
      * 搜索树
      */
     const [searchValue, setSearchValue] = useState("")
+    useEffect(() => {
+        setSearchValue(props.searchValue || "")
+    }, [props.searchValue])
     const onSearchChange = useMemoizedFn((e: {target: {value: string}}) => {
         const value = e.target.value
         setSearchValue(value)
