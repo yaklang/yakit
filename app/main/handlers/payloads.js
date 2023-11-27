@@ -1,22 +1,6 @@
 const {ipcMain} = require("electron")
 
 module.exports = (win, getClient) => {
-    // const handlerHelper = require("./handleStreamWithContext")
-
-    // const streamPayloadMap = new Map()
-    // ipcMain.handle("cancel-SavePayload", handlerHelper.cancelHandler(streamPayloadMap))
-    // ipcMain.handle("SavePayloadStream", (e, params, token) => {
-    //     let stream = getClient().SavePayloadStream(params)
-    //     handlerHelper.registerHandler(win, stream, streamPayloadMap, token)
-    // })
-
-    // const streamPayloadFileMap = new Map()
-    // ipcMain.handle("cancel-SavePayloadFile", handlerHelper.cancelHandler(streamPayloadFileMap))
-    // ipcMain.handle("SavePayloadToFileStream", (e, params, token) => {
-    //     let stream = getClient().SavePayloadToFileStream(params)
-    //     handlerHelper.registerHandler(win, stream, streamPayloadFileMap, token)
-    // })
-
     const asyncQueryPayload = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryPayload(params, (err, data) => {
@@ -28,6 +12,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    // 获取table列表
     ipcMain.handle("QueryPayload", async (e, params) => {
         return await asyncQueryPayload(params)
     })
@@ -43,6 +28,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    // 用于导出
     ipcMain.handle("GetAllPayloadFromFile", async (e, params) => {
         return await asyncGetAllPayloadFromFile(params)
     })
@@ -58,6 +44,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    // 更新顺序数组
     ipcMain.handle("UpdateAllPayloadGroup", async (e, params) => {
         return await asyncUpdateAllPayloadGroup(params)
     })
@@ -73,8 +60,25 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    // 重命名Payload
     ipcMain.handle("RenamePayloadGroup", async (e, params) => {
         return await asyncRenamePayloadGroup(params)
+    })
+
+    const asyncCreatePayloadFolder = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CreatePayloadFolder(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 新建文件夹
+    ipcMain.handle("CreatePayloadFolder", async (e, params) => {
+        return await asyncCreatePayloadFolder(params)
     })
 
     const asyncDeletePayloadByFolder = (params) => {
@@ -88,6 +92,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    // 删除文件夹
     ipcMain.handle("DeletePayloadByFolder", async (e, params) => {
         return await asyncDeletePayloadByFolder(params)
     })
@@ -103,6 +108,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    // 删除Payload
     ipcMain.handle("DeletePayloadByGroup", async (e, params) => {
         return await asyncDeletePayloadByGroup(params)
     })
@@ -129,71 +135,22 @@ module.exports = (win, getClient) => {
 
     const handlerHelper = require("./handleStreamWithContext")
 
-    const streamSavePayloadStreamMap = new Map()
-    ipcMain.handle("cancel-SavePayloadStream", handlerHelper.cancelHandler(streamSavePayloadStreamMap))
+    // 数据库存储
+    const streamPayloadMap = new Map()
+    ipcMain.handle("cancel-SavePayload", handlerHelper.cancelHandler(streamPayloadMap))
     ipcMain.handle("SavePayloadStream", (e, params, token) => {
         let stream = getClient().SavePayloadStream(params)
-        handlerHelper.registerHandler(win, stream, streamSavePayloadStreamMap, token)
+        handlerHelper.registerHandler(win, stream, streamPayloadMap, token)
     })
 
-    const streamSavePayloadToFileStreamMap = new Map()
-    ipcMain.handle("cancel-SavePayloadToFileStream", handlerHelper.cancelHandler(streamSavePayloadStreamMap))
-    ipcMain.handle("SavePayloadStreamToFile", (e, params, token) => {
+    // 文件存储
+    const streamPayloadFileMap = new Map()
+    ipcMain.handle("cancel-SavePayloadFile", handlerHelper.cancelHandler(streamPayloadFileMap))
+    ipcMain.handle("SavePayloadToFileStream", (e, params, token) => {
         let stream = getClient().SavePayloadToFileStream(params)
-        handlerHelper.registerHandler(win, stream, streamSavePayloadStreamMap, token)
+        handlerHelper.registerHandler(win, stream, streamPayloadFileMap, token)
     })
 
-    // message UpdatePayloadFolderRequest{
-    //     string Folder = 1;
-    //     string OldFolder = 2;
-    //   }
-    // 将名字为OldFolder的文件夹改名为Folder
-    const asyncUpdatePayloadFolder = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().UpdatePayloadFolder(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    ipcMain.handle("UpdatePayloadFolder", async (e, params) => {
-        return await asyncUpdatePayloadFolder(params)
-    })
-
-    // message PayloadGroup {
-    //     string Group = 1; group名字
-    //     bool IsFile = 2;  是否是文件
-    //     string Folder = 3;所在文件夹，没有文件夹的时候为"
-    //   }
-
-    // message UpdatePayloadGroupRequest{
-    //     string GroupName = 1;
-    //     PayloadGroup Data = 2;
-    //   }
-    // 填写完整的数据，后段将会直接储存
-    const asyncUpdatePayloadGroup = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().UpdatePayloadGroup(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    ipcMain.handle("UpdatePayloadGroup", async (e, params) => {
-        return await asyncUpdatePayloadGroup(params)
-    })
-
-    // message UpdatePayloadRequest {
-    //     string Id = 1; // modify payload id
-    //     Payload Data = 2; // modify to this payload
-    //   }
-    // data填写完整的数据，后端会直接吧data保存进去
     const asyncUpdatePayload = (params) => {
         return new Promise((resolve, reject) => {
             getClient().UpdatePayload(params, (err, data) => {
@@ -205,18 +162,14 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    // 备份到其他字典/修改table项
     ipcMain.handle("UpdatePayload", async (e, params) => {
         return await asyncUpdatePayload(params)
     })
 
-    // message CopyPayloadRequest {
-    //     string id = 1;  // payload id
-    //     PayloadGroup group = 2; // target group
-    //   }
-    // copy this payload to target group
-    const asyncCopyPayload = (params) => {
+    const asyncBackUpOrCopyPayloads = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().CopyPayload(params, (err, data) => {
+            getClient().BackUpOrCopyPayloads(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -225,15 +178,11 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    ipcMain.handle("CopyPayload", async (e, params) => {
-        return await asyncCopyPayload(params)
+    // 移动/复制到其他字典
+    ipcMain.handle("BackUpOrCopyPayloads", async (e, params) => {
+        return await asyncBackUpOrCopyPayloads(params)
     })
 
-    // message GetAllPayloadGroupResponse {
-    //     repeated PayloadFolder Folder = 1; // 文件夹 只有一级  里头是PayloadGroup[]
-    //     repeated PayloadGroup Groups = 2;  // 没有文件夹的所有的包，认为他们的文件夹为""
-    //   }
-    // asyncGetAllPayloadGroup wrapper
     const asyncGetAllPayloadGroup = (params) => {
         return new Promise((resolve, reject) => {
             getClient().GetAllPayloadGroup(params, (err, data) => {
@@ -245,14 +194,11 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    // 获取Payload列表
     ipcMain.handle("GetAllPayloadGroup", async (e, params) => {
         return await asyncGetAllPayloadGroup(params)
     })
 
-    // message GetAllPayloadRequest {
-    //     string Group = 1;
-    //     string Folder = 2;
-    //   }
     const asyncGetAllPayload = (params) => {
         return new Promise((resolve, reject) => {
             getClient().GetAllPayload(params, (err, data) => {
@@ -264,6 +210,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
+    // 用于导出
     ipcMain.handle("GetAllPayload", async (e, params) => {
         return await asyncGetAllPayload(params)
     })
