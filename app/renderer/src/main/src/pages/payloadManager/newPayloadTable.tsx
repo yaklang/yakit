@@ -102,8 +102,8 @@ const EditableCell: React.FC<EditableCellProps> = ({
 
 interface PayloadAddEditFormProps {
     onClose: () => void
-    record?: Payload
-    onUpdatePayload?: (updatePayload: UpdatePayloadProps) => Promise<unknown>
+    record: Payload
+    onUpdatePayload: (updatePayload: UpdatePayloadProps) => Promise<unknown>
 }
 
 interface EditParamsProps {
@@ -129,15 +129,11 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
     }, [])
 
     const onFinish = useMemoizedFn(async () => {
-        // 编辑
-        if (record && onUpdatePayload) {
+        if (editParams.Content.length > 0) {
             const result = await onUpdatePayload({Id: record.Id, Data: {...record, ...editParams}})
             if (result) {
                 onClose()
             }
-        }
-        // 新增
-        else {
         }
     })
 
@@ -228,8 +224,10 @@ export interface DeletePayloadProps {
 }
 
 export interface NewPayloadTableProps {
-    deletePayloadArr?: number[]
-    setDeletePayloadArr?: (v: number[]) => void
+    onCopyToOtherPayload?: (v:number) => void
+    onMoveToOtherPayload?: (v:number) => void
+    selectPayloadArr?: number[]
+    setSelectPayloadArr?: (v: number[]) => void
     onDeletePayload?: (v: DeletePayloadProps) => void
     onQueryPayload: (page?: number, limit?: number) => void
     pagination?: PaginationSchema
@@ -240,8 +238,10 @@ export interface NewPayloadTableProps {
 }
 export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     const {
-        deletePayloadArr,
-        setDeletePayloadArr,
+        onCopyToOtherPayload,
+        onMoveToOtherPayload,
+        selectPayloadArr,
+        setSelectPayloadArr,
         onDeletePayload,
         onQueryPayload,
         pagination,
@@ -262,7 +262,9 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             setSortStatus(v)
             setParams({...params, Pagination: {...params.Pagination, Order: v, OrderBy: "hit_count"}})
         }
-        onQueryPayload()
+        setTimeout(() => {
+            onQueryPayload()
+        }, 100)
     })
 
     const defaultColumns: (ColumnTypes[number] & {editable?: boolean; dataIndex: string})[] = [
@@ -277,15 +279,15 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 const {Id} = record as Payload
                 return (
                     <div className={styles["order"]}>
-                        {deletePayloadArr && (
+                        {selectPayloadArr && (
                             <YakitCheckbox
-                                checked={deletePayloadArr.includes(Id)}
+                                checked={selectPayloadArr.includes(Id)}
                                 onChange={(e) => {
                                     if (e.target.checked) {
-                                        setDeletePayloadArr && setDeletePayloadArr([...deletePayloadArr, Id])
+                                        setSelectPayloadArr && setSelectPayloadArr([...selectPayloadArr, Id])
                                     } else {
-                                        const newDeletePayloadArr = deletePayloadArr.filter((item) => item !== Id)
-                                        setDeletePayloadArr && setDeletePayloadArr([...newDeletePayloadArr])
+                                        const newDeletePayloadArr = selectPayloadArr.filter((item) => item !== Id)
+                                        setSelectPayloadArr && setSelectPayloadArr([...newDeletePayloadArr])
                                     }
                                 }}
                             />
@@ -390,7 +392,8 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 .invoke("UpdatePayload", updatePayload)
                 .then(() => {
                     onQueryPayload(pagination?.Page, pagination?.Limit)
-                    success("修改成功")
+                    console.log("updatePayload", updatePayload)
+                    success(`修改成功`)
                     resolve(true)
                 })
                 .catch((e: any) => {
@@ -401,10 +404,9 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     })
 
     const handleSave = (row: Payload, newRow: Payload) => {
-        console.log("555", row, newRow)
         setEditingKey(undefined)
         // 此处默认修改成功 优化交互闪烁(因此如若修改失败则会闪回)
-        if (response?.Data) {
+        if (response?.Data && newRow.Content.length !== 0) {
             const newData = response?.Data.map((item) => {
                 if (item.Id === row.Id) {
                     return newRow
@@ -416,8 +418,11 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             setResponse(response)
         }
         // 真正的更改与更新数据
-        if (row.Content !== newRow.Content) {
+        if (row.Content !== newRow.Content && newRow.Content.length !== 0) {
             onUpdatePayload({Id: row.Id, Data: {...newRow}})
+        }
+        if (newRow.Content.length === 0) {
+            warn("字典内容不可为空")
         }
     }
 
@@ -463,46 +468,10 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                         setEditingKey(record.Id)
                         return
                     case "copy":
-                        const m = showYakitModal({
-                            title: "备份到其他字典",
-                            width: 400,
-                            type: "white",
-                            closable: false,
-                            content: (
-                                <div style={{padding: 20}}>
-                                    <YakitSelect value={"b"} onSelect={(val) => {}}>
-                                        <YakitSelect value='B'>B</YakitSelect>
-                                        <YakitSelect value='K'>K</YakitSelect>
-                                        <YakitSelect value='M'>M</YakitSelect>
-                                    </YakitSelect>
-                                </div>
-                            ),
-                            onCancel: () => {
-                                m.destroy()
-                            },
-                            onOk: () => {}
-                        })
+                        onCopyToOtherPayload && onCopyToOtherPayload(record.Id)
                         return
                     case "move":
-                        const y = showYakitModal({
-                            title: "移动到其他字典",
-                            width: 400,
-                            type: "white",
-                            closable: false,
-                            content: (
-                                <div style={{padding: 20}}>
-                                    <YakitSelect value={"b"} onSelect={(val) => {}}>
-                                        <YakitSelect value='B'>B</YakitSelect>
-                                        <YakitSelect value='K'>K</YakitSelect>
-                                        <YakitSelect value='M'>M</YakitSelect>
-                                    </YakitSelect>
-                                </div>
-                            ),
-                            onCancel: () => {
-                                y.destroy()
-                            },
-                            onOk: () => {}
-                        })
+                        onMoveToOtherPayload && onMoveToOtherPayload(record.Id)
                         return
                     case "delete":
                         onDeletePayload && onDeletePayload({Id: record.Id})
