@@ -828,25 +828,26 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 切换了网站树
     useDebounceEffect(
         () => {
-            setParams({
-                ...params,
-                SearchURL: props.searchURL,
-                IncludeInUrl: props.IncludeInUrl
-            })
-            setScrollToIndex(0)
-            setCurrentIndex(undefined)
-            setSelected(undefined)
-            setSelectedRowKeys([])
-            setSelectedRows([])
-            setIsAllSelect(false)
-            if (props.updateDataFlag) {
-                console.log("11111111111")
-                setTimeout(() => {
-                    updateData()
-                }, 50)
+            if (pageType === "History") {
+                setParams({
+                    ...params,
+                    SearchURL: props.searchURL,
+                    IncludeInUrl: props.IncludeInUrl
+                })
+                setScrollToIndex(0)
+                setCurrentIndex(undefined)
+                setSelected(undefined)
+                setSelectedRowKeys([])
+                setSelectedRows([])
+                setIsAllSelect(false)
+                if (props.updateDataFlag) {
+                    setTimeout(() => {
+                        updateData()
+                    }, 50)
+                }
             }
         },
-        [props.searchURL, props.IncludeInUrl, props.updateDataFlag],
+        [props.searchURL, props.IncludeInUrl, props.updateDataFlag, pageType],
         {wait: 300}
     )
 
@@ -1059,12 +1060,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [queryParams, setQueryParams] = useState<string>(JSON.stringify(params))
     useDebounceEffect(
         () => {
-            if (!props.updateDataFlag) {
-                console.log('222222222222');
+            if (pageType === "History" && !props.updateDataFlag) {
                 props.onQueryParams && props.onQueryParams(queryParams)
             }
         },
-        [queryParams, props.updateDataFlag],
+        [queryParams, props.updateDataFlag, pageType],
         {
             wait: 500
         }
