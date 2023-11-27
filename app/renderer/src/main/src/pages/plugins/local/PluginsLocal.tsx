@@ -875,7 +875,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             <YakitHint
                 visible={removeCheckVisible}
                 title='是否要删除插件'
-                content='确认删除插件后，插件将会放在回收站'
+                content='确认删除后，插件将彻底删除'
                 onOk={onPluginRemoveCheckOk}
                 onCancel={() => setRemoveCheckVisible(false)}
                 footerExtra={
