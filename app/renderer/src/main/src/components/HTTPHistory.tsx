@@ -168,7 +168,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value as any)}`)
             .join("&")
         console.log("filter", queryString)
-        return ""
         return queryString
     }
 
