@@ -354,9 +354,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 agentConfigModalVisible={agentConfigModalVisible}
                 onCloseModal={() => setAgentConfigModalVisible(false)}
                 generateURL={(url) => {
-                    form.setFieldsValue({ downstreamProxy: url })
+                    form.setFieldsValue({downstreamProxy: url})
                 }}
-
             ></AgentConfigModal>
             <React.Suspense fallback={<div>loading...</div>}>
                 <MITMFormAdvancedConfiguration
@@ -416,14 +415,12 @@ const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
 
     const handleReqParams = () => {
         const copyParams = structuredClone(params)
-        const address = copyParams.Address
+        const address = copyParams.Address?.split(":") || []
         delete copyParams.Address
-        // TODO 地址填写格式待确认
-
         return {
             ...copyParams,
-            Host: address,
-            Port: address
+            Host: address[0] || "",
+            Port: address[1] || ""
         }
     }
 
@@ -466,11 +463,7 @@ const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
                     style={{height: "100%"}}
                     onValuesChange={onValuesChange}
                 >
-                    <Form.Item
-                        label='协议'
-                        name='Scheme'
-                        style={{marginBottom: 4}}
-                    >
+                    <Form.Item label='协议' name='Scheme' style={{marginBottom: 4}}>
                         <YakitSelect
                             options={["http", "socks5"].map((item) => ({
                                 value: item,
@@ -483,9 +476,16 @@ const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
                         label='地址'
                         name='Address'
                         style={{marginBottom: 4}}
-                        rules={[{required: true, message: "请输入地址"}]}
+                        rules={[
+                            {required: true, message: "请输入地址"},
+                            {
+                                pattern:
+                                    /^((([a-z\d]([a-z\d-]*[a-z\d])*)\.)*[a-z]([a-z\d-]*[a-z\d])?|(?:\d{1,3}\.){3}\d{1,3}):\d+$/,
+                                message: "输入地址格式不正确"
+                            }
+                        ]}
                     >
-                        <YakitInput placeholder='请输入地址' />
+                        <YakitInput placeholder='例如：127.0.0.1:7890' />
                     </Form.Item>
                     <Form.Item
                         label='用户名'
