@@ -1071,6 +1071,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "offset" | "update") => {
+        query = query.StatusCode ? {...query, StatusCode: query.StatusCode.join(",")} : query
+
         setQueryParams(JSON.stringify(query))
         if (isGrpcRef.current) return
         isGrpcRef.current = true

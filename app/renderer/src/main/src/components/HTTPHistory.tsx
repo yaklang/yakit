@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
-import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
+import {HTTPFlow, HTTPFlowTable, YakQueryHTTPFlowResponse} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
 import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
@@ -164,15 +164,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }
 
     const handleFilterParams = () => {
-        const queryString = Object.entries(JSON.parse(queryParamsRef.current))
-            .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value as any)}`)
-            .join("&")
-        console.log("filter", queryString)
-        return queryString
+        console.log("queryParamsRef", queryParamsRef.current)
+
+        return queryParamsRef.current
     }
 
     const getWebTreeData = (yakurl: string) => {
-        const filter = `?filter=${handleFilterParams()}`
+        const filter = `?params=${handleFilterParams()}`
         setLoading(true)
 
         loadFromYakURLRaw(yakurl + filter, (res) => {
@@ -245,7 +243,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             }
             const obj = {
                 ...data.Url,
-                Query: [{Key: "filter", Value: handleFilterParams()}]
+                Query: [{Key: "params", Value: handleFilterParams()}]
             }
 
             requestYakURLList(
@@ -361,7 +359,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 点击Select选中树
     const onSelectedKeys = useMemoizedFn((selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-        // console.log("selectedNodes", selectedKeys, selectedNodes)
+        console.log("selectedNodes", selectedNodes)
         setSelectedKeys(selectedKeys)
         setSelectedNodes(selectedNodes)
         setOnlyShowFirstNode(true)
@@ -377,9 +375,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             if (urlItem && urlItem.Value) {
                 try {
                     const url = new URL(urlItem.Value)
-                    const arr1 = url.pathname.split("/").filter((item) => item)
-                    const arr2 = node.data?.Path.split("/").filter((item) => item) || []
-                    setSelectedNodeParamsKey(arr1.length ? arr1 : arr2)
+                    console.log("url.pathname", url)
+                    const selectedParam = url.pathname ? url.pathname : node.data?.Path || '';
+                    setSelectedNodeParamsKey([selectedParam])
                 } catch (_) {
                     setSelectedNodeParamsKey([])
                     return
@@ -486,16 +484,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     searchURL={selectedNodes
                                         .map((node: TreeNode) => {
                                             const urlItem = node.data?.Extra.find((item) => item.Key === "url")
-                                            if (urlItem && urlItem.Value) {
-                                                try {
-                                                    const url = new URL(urlItem.Value)
-                                                    return url.origin
-                                                } catch (_) {
-                                                    return ""
-                                                }
-                                            } else {
-                                                return ""
-                                            }
+                                            return urlItem ? urlItem.Value : ""
                                         })
                                         .filter((url) => url !== "")
                                         .join(",")}
