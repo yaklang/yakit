@@ -232,7 +232,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             form.validateFields().then((formValue) => {
                 const params: AdvancedConfigurationFromValue = {
                     ...formValue,
-                    certs
+                    certs,
+                    etcHosts
                 }
                 setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(certs))
                 setRemoteValue(MITMConsts.MITMDefaultPreferGMTLS, `${params.preferGMTLS}`)
