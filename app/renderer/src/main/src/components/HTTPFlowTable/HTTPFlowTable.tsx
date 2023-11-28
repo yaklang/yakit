@@ -433,10 +433,9 @@ export interface HTTPFlowTableProp {
     // 此控件显示的页面
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
-    IncludeInUrl?: string[]
-    updateDataFlag?: boolean
-    onQueryParams?: (queryParams: string) => void
-    setUpdateDataFlag?: (flag: boolean) => void
+    IncludeInUrl?: string
+    searchTreeFlag?: boolean
+    onQueryParams?: (queryParams: string, execFlag?: boolean) => void
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -825,27 +824,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         updateData()
     }, [refresh])
 
-    // 切换了网站树
-    useDebounceEffect(
-        () => {
-            if (pageType === "History") {
-                setParams({
-                    ...params,
-                    SearchURL: props.searchURL,
-                    IncludeInUrl: props.IncludeInUrl
-                })
-                setScrollToIndex(0)
-                setCurrentIndex(undefined)
-                setSelected(undefined)
-                setSelectedRowKeys([])
-                setSelectedRows([])
-                setIsAllSelect(false)
-            }
-        },
-        [props.searchURL, props.IncludeInUrl, pageType],
-        {wait: 300}
-    )
-
     const onScrollToByClickEvent = useMemoizedFn((v) => {
         try {
             const obj: {historyId: string; id: string} = JSON.parse(v)
@@ -1052,28 +1030,54 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {wait: 500}
     ).run
 
-    const [queryParams, setQueryParams] = useState<string>(JSON.stringify(params))
-    useDebounceEffect(
+    /**
+     * 网站树部分
+     */
+    useUpdateEffect(() => {
+        if (pageType === "History") {
+            setParams({
+                ...params,
+                SearchURL: props.searchURL,
+                IncludeInUrl: props.IncludeInUrl ? [props.IncludeInUrl] : [""]
+            })
+            setScrollToIndex(0)
+            setCurrentIndex(undefined)
+            setSelected(undefined)
+            setSelectedRowKeys([])
+            setSelectedRows([])
+            setIsAllSelect(false)
+            setTimeout(() => {
+                updateData()
+            }, 10)
+        }
+    }, [props.searchURL, props.IncludeInUrl, pageType])
+    const [queryParams, setQueryParams] = useState<string>("")
+    useEffect(
         () => {
-            if (pageType === "History") {
-                if (props.updateDataFlag) {
-                    updateData()
-                } else {
-                    props.onQueryParams && props.onQueryParams(queryParams)
-                }
+            if (pageType === "History" && queryParams !== "") {
+                console.log(123, queryParams);
+                props.onQueryParams && props.onQueryParams(queryParams)
             }
         },
-        [queryParams, props.updateDataFlag, pageType],
-        {
-            wait: 500
-        }
+        [queryParams, pageType]
     )
+    const updateQueryParams = (query) => {
+        const copyQuery = structuredClone(query)
+        // 此处删除与树相关得参数 由于queryParams参数需要带到网站树中去查询 是不需要searchURL与IncludeInUrl得 不然会造成死循环
+        delete copyQuery.SearchURL
+        delete copyQuery.IncludeInUrl
+        delete copyQuery.Pagination
+        delete copyQuery.AfterId
+        delete copyQuery.BeforeId
+        copyQuery.Color = copyQuery.Color ? copyQuery.Color : [[]]
+        copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : ""
+        setQueryParams(JSON.stringify(copyQuery))
+    }
 
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "offset" | "update") => {
+        updateQueryParams(query)
         query = query.StatusCode ? {...query, StatusCode: query.StatusCode.join(",")} : query
-
-        setQueryParams(JSON.stringify(query))
         if (isGrpcRef.current) return
         isGrpcRef.current = true
         // 查询数据
@@ -2439,7 +2443,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ...(props.params || {SourceType: "mitm"}),
             SourceType: props.params?.SourceType || "mitm",
             ExcludeId: params.ExcludeId,
-            ExcludeInUrl: params.ExcludeInUrl
+            ExcludeInUrl: params.ExcludeInUrl,
+            SearchURL: "",
+            IncludeInUrl: []
         }
         setParams(newParams)
         setIsReset(!isReset)
@@ -2447,7 +2453,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setContentTypeQuery("")
         setColor([])
         setCheckBodyLength(false)
-        props.setUpdateDataFlag && props.setUpdateDataFlag(false)
+        props.onQueryParams && props.onQueryParams(queryParams, true)
         setTimeout(() => {
             updateData()
         }, 100)
