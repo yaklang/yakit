@@ -620,4 +620,11 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetSpaceEngineStatus", async (e, params) => {
         return await asyncGetSpaceEngineStatus(params)
     })
+
+    const streamFetchPortAssetFromSpaceEngineMap = new Map();
+    ipcMain.handle("cancel-FetchPortAssetFromSpaceEngine", handlerHelper.cancelHandler(streamFetchPortAssetFromSpaceEngineMap));
+    ipcMain.handle("FetchPortAssetFromSpaceEngine", (e, params, token) => {
+        let stream = getClient().FetchPortAssetFromSpaceEngine(params);
+        handlerHelper.registerHandler(win, stream, streamFetchPortAssetFromSpaceEngineMap, token)
+    })
 }
