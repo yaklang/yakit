@@ -31,7 +31,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
     const {pluginId} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [lineLoading, setLineLoading] = useState<boolean>(false)
-    const [hasMore, setHasMore] = useState<boolean>(true)
+    const [hasMore, setHasMore] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     const [currentId, setCurrentId] = useState<number>(0)
     const [width, setWidth] = useState(0)
@@ -50,7 +50,7 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
     const [inViewport = true] = useInViewport(journalListRef)
 
     useEffect(() => {
-        if (inViewport) {
+        if (pluginId > 0 && inViewport) {
             getJournalList(1)
         }
     }, [inViewport])
@@ -80,7 +80,6 @@ export const YakitPluginOnlineJournal: React.FC<YakitPluginOnlineJournalProps> =
                 if (!res.data) {
                     res.data = []
                 }
-                console.log("apply/update/plugin", payload, res)
                 const data = payload.page === 1 ? res.data : resJournal.data.concat(res.data)
                 const isMore = res.data.length < resJournal.pagemeta.limit || data.length === res.pagemeta.total
                 setHasMore(!isMore)

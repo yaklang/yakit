@@ -499,7 +499,13 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                     {!visible && (
                         <div className={styles["header-body-filter"]}>
                             <Tooltip title='展开筛选' placement='topLeft' overlayClassName='plugins-tooltip'>
-                                <OutlineOpenIcon className={styles["panel-header-icon"]} onClick={onExpend} />
+                                <YakitButton
+                                    type='text2'
+                                    onClick={onExpend}
+                                    icon={
+                                        <OutlineOpenIcon className={styles["panel-header-icon"]} onClick={onExpend} />
+                                    }
+                                ></YakitButton>
                             </Tooltip>
                         </div>
                     )}

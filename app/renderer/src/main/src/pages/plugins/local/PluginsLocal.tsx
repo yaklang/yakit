@@ -607,32 +607,39 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**详情中调用删除操作 */
     const onRemovePluginDetailSingle = useMemoizedFn((data) => {
-        onRemovePluginSingleBase(data).then(() => {
-            if (response.Data.length === 1) {
-                // 如果删除是最后一个，就回到列表中得空页面
-                setPlugin(undefined)
-            } else {
-                const index = response.Data.findIndex((ele) => ele.ScriptName === data.ScriptName)
-                if (index === -1) return
-                if (index === Number(response.Total) - 1) {
-                    // 选中得item为最后一个，删除后选中倒数第二个
-                    setPlugin({
-                        ...response.Data[index - 1]
-                    })
+        setRemoveLoading(true)
+        onRemovePluginSingleBase(data)
+            .then(() => {
+                if (response.Data.length === 1) {
+                    // 如果删除是最后一个，就回到列表中得空页面
+                    setPlugin(undefined)
                 } else {
-                    //选择下一个
-                    setPlugin({
-                        ...response.Data[index + 1]
-                    })
+                    const index = response.Data.findIndex((ele) => ele.ScriptName === data.ScriptName)
+                    if (index === -1) return
+                    if (index === Number(response.Total) - 1) {
+                        // 选中得item为最后一个，删除后选中倒数第二个
+                        setPlugin({
+                            ...response.Data[index - 1]
+                        })
+                    } else {
+                        //选择下一个
+                        setPlugin({
+                            ...response.Data[index + 1]
+                        })
+                    }
                 }
-            }
-            dispatch({
-                type: "remove",
-                payload: {
-                    itemList: [data]
-                }
+                dispatch({
+                    type: "remove",
+                    payload: {
+                        itemList: [data]
+                    }
+                })
             })
-        })
+            .finally(() =>
+                setTimeout(() => {
+                    setRemoveLoading(false)
+                }, 200)
+            )
     })
     /** 详情搜索事件 */
     const onDetailSearch = useMemoizedFn((detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {
@@ -706,7 +713,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     onDetailsBatchSingle={onDetailsBatchSingle}
                     currentIndex={showPluginIndex.current}
                     setCurrentIndex={setShowPluginIndex}
-                    // removeLoading={removeLoading}
+                    removeLoading={removeLoading}
                     onJumpToLocalPluginDetailByUUID={onJumpToLocalPluginDetailByUUID}
                     uploadLoading={uploadLoading}
                     privateDomain={privateDomain}
@@ -934,7 +941,7 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
     return (
         <div className={styles["local-extra-operate-wrapper"]}>
             {removeLoading ? (
-                <YakitButton type='text2' icon={<LoadingOutlined />} />
+                <LoadingOutlined className={styles["loading-icon"]} />
             ) : (
                 <Tooltip title='删除' destroyTooltipOnHide={true}>
                     <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
