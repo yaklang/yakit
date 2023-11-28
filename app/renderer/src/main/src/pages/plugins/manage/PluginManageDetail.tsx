@@ -67,7 +67,9 @@ export interface DetailRefProps {
 
 interface PluginManageDetailProps {
     ref?: ForwardedRef<any>
-    /** 列表加载状态 */
+    /** 列表初始加载状态 */
+    spinLoading: boolean
+    /** 列表更多加载状态 */
     listLoading: boolean
     /** 所有数据 */
     response: YakitPluginListOnlineResponse
@@ -103,6 +105,7 @@ interface PluginManageDetailProps {
 export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
     forwardRef((props, ref) => {
         const {
+            spinLoading,
             listLoading,
             response,
             dispatch,
@@ -141,6 +144,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     console.log("res", res, {uuid: info.uuid, list_type: "check"})
                     if (res) {
                         setPlugin({...res})
+                        setOldContent("")
                         // 源码
                         setContent(res.content)
                         if (+res.status !== 0) return
@@ -207,6 +211,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
         }, [info])
 
+        // 详情页面的loading状态
         const [loading, setLoading] = useState<boolean>(false)
 
         const [allCheck, setAllcheck] = useState<boolean>(defaultAllCheck)
@@ -517,6 +522,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         return (
             <PluginDetails<YakitPluginOnlineDetail>
                 title='插件管理'
+                spinLoading={spinLoading}
                 search={searchs}
                 setSearch={setSearchs}
                 onSearch={onSearch}
@@ -581,7 +587,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     page: response.pagemeta.page,
                     hasMore: response.pagemeta.total !== response.data.length,
                     loading: listLoading,
-                    defItemHeight: 46
+                    defItemHeight: 46,
+                    isRef: spinLoading
                 }}
                 onBack={onPluginBack}
             >

@@ -755,7 +755,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 editor && insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
             }
         }
-        
+
         // 编辑器点击显示的菜单
         const fizzSelectWidget = {
             isOpen: false,
@@ -918,13 +918,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         // 关闭点击的菜单
         const closeFizzSelectWidget = () => {
             fizzSelectWidget.isOpen = false
-            fizzSelectTimeoutId.current&&clearTimeout(fizzSelectTimeoutId.current)
+            fizzSelectTimeoutId.current && clearTimeout(fizzSelectTimeoutId.current)
             editor.removeContentWidget(fizzSelectWidget)
         }
         // 关闭选中的菜单
         const closeFizzRangeWidget = () => {
             fizzRangeWidget.isOpen = false
-            fizzRangeTimeoutId.current&&clearTimeout(fizzRangeTimeoutId.current)
+            fizzRangeTimeoutId.current && clearTimeout(fizzRangeTimeoutId.current)
             editor.removeContentWidget(fizzRangeWidget)
         }
 
@@ -1188,7 +1188,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         bracketPairColorization: {
                             enabled: true,
                             independentColorPoolPerBracketType: true
-                        }
+                        },
+                        fixedOverflowWidgets: true
                     }}
                 />
             </div>

@@ -119,6 +119,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 获取插件列表数据
     const fetchList = useDebounceFn(
         useMemoizedFn((reset?: boolean) => {
+            // 从详情页返回不进行搜索
+            if (isDetailBack.current) {
+                isDetailBack.current = false
+                return
+            }
+
             if (latestLoadingRef.current) return
             if (reset) {
                 isLoadingRef.current = true
@@ -256,8 +262,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     })
     const onModifyAuthor = useMemoizedFn(() => {
         setShowModifyAuthor(false)
-        setAllcheck(false)
-        setSelectList([])
+        onCheck(false)
         fetchList(true)
     })
 
@@ -299,7 +304,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             setDownloadLoading(true)
             apiDownloadPluginCheck(downloadRequest)
                 .then(() => {
-                    fetchList(true)
+                    onCheck(false)
                 })
                 .finally(() => {
                     setTimeout(() => {
@@ -433,6 +438,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     setSearchs({...delSearch})
                     setFilters({...delFilter})
                     onClearSelecteds()
+                    // 以前详情页的逻辑
                     if (!!plugin) setPlugin(undefined)
                 })
             }
@@ -549,9 +555,16 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
     // 详情页-相关回调逻辑
     const detailRef = useRef<DetailRefProps>(null)
+    // 是否从详情页返回的
+    const isDetailBack = useRef<boolean>(false)
     /** 返回事件 */
     const onBack = useMemoizedFn((data: BackInfoProps) => {
+        isDetailBack.current = true
         setPlugin(undefined)
+        setAllcheck(data.allCheck)
+        setSelectList(data.selectList)
+        setSearchs(data.search)
+        setFilters(data.filter)
     })
     /** 搜索事件 */
     const onDetailSearch = useMemoizedFn((detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {
@@ -574,6 +587,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             {!!plugin && (
                 <PluginManageDetail
                     ref={detailRef}
+                    spinLoading={isLoadingRef.current && loading}
                     listLoading={loading}
                     response={response}
                     dispatch={dispatch}
