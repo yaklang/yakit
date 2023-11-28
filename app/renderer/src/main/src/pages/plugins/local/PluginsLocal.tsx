@@ -359,7 +359,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**全选 */
     const onCheck = useMemoizedFn((value: boolean) => {
-        if (value) setSelectList([])
+        setSelectList([])
         setAllCheck(value)
     })
 
@@ -582,7 +582,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         })
     })
     /**导出插件 */
-    const onExport = useMemoizedFn((Ids: number[]) => {
+    const onExport = useMemoizedFn((Ids: number[], callback?: () => void) => {
         showYakitModal({
             title: "导出插件配置",
             width: "40%",
@@ -591,7 +591,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 <div style={{padding: 24}}>
                     <OutputPluginForm YakScriptIds={Ids} isSelectAll={allCheck} />
                 </div>
-            )
+            ),
+            modalAfterClose: () => {
+                if (callback) callback()
+                onCheck(false)
+            }
         })
     })
     const checkList = useMemo(() => {
@@ -677,7 +681,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     }}
                 />
             ),
-            footer: null
+            footer: null,
+            modalAfterClose: () => {
+                onCheck(false)
+            }
         })
     })
     const onDetailsBatchUpload = useMemoizedFn((names) => {

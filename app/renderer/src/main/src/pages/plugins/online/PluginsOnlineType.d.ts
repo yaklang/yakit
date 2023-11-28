@@ -60,7 +60,7 @@ export interface PluginsOnlineDetailProps {
     defaultFilter: PluginFilterParams
     dispatch: React.Dispatch<OnlinePluginAppAction>
     /**详情的下载 */
-    onBatchDownload: (newParams: OnlineBackInfoProps) => void
+    onBatchDownload: (newParams: OnlineBackInfoProps, callback: () => void) => void
     /**下载loading */
     downloadLoading: boolean
     /** 搜索功能回调 */
