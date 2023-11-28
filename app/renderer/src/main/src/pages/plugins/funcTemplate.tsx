@@ -22,6 +22,7 @@ import {
 } from "./funcTemplateType"
 import {
     useControllableValue,
+    useDebounceFn,
     useGetState,
     useInViewport,
     useMemoizedFn,
@@ -267,7 +268,6 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
         })
     })
     const onValueChange = useMemoizedFn((e) => {
-        const {value} = e.target
         if (search.type === "keyword") {
             const keywordSearch: PluginSearchParams = {
                 ...search,
@@ -276,10 +276,6 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
             setSearch({
                 ...keywordSearch
             })
-            // 清空输入框后搜索
-            // if (!value && value !== search.keyword) {
-            //     onsearch(keywordSearch)
-            // }
         } else {
             const userNameSearch: PluginSearchParams = {
                 ...search,
@@ -288,14 +284,14 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
             setSearch({
                 ...userNameSearch
             })
-            // if (!value && value !== search.userName) {
-            //     onsearch(userNameSearch)
-            // }
         }
     })
-    const onSearch = useMemoizedFn(() => {
-        onsearch(search)
-    })
+    const onSearch = useDebounceFn(
+        useMemoizedFn(() => {
+            onsearch(search)
+        }),
+        {wait: 0}
+    ).run
     const searchValue = useMemo(() => {
         if (search.type === "keyword") {
             return search.keyword
@@ -1140,7 +1136,13 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                             </div>
                             <div className={styles["contribute-body"]}>
                                 {contributes.arr.map((item, index) => {
-                                    return <img key={`${item}-${index}`} src={item||UnLogin} className={styles["img-style"]} />
+                                    return (
+                                        <img
+                                            key={`${item}-${index}`}
+                                            src={item || UnLogin}
+                                            className={styles["img-style"]}
+                                        />
+                                    )
                                 })}
                                 {contributes.length > 0 && (
                                     <div className={styles["more-style"]}>{`+${contributes.length}`}</div>
@@ -1483,6 +1485,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
             ...value
         })
         onFilter(value)
+        setVisible(false)
         setIsActive(false)
     })
     /** 显示激活状态判断 */
@@ -1502,15 +1505,19 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
         <YakitPopover
             overlayClassName={styles["filter-popover-btn"]}
             placement='bottomLeft'
+            trigger={["click"]}
             visible={visible}
-            onVisibleChange={(value) => setVisible(value)}
+            onVisibleChange={(value) => {
+                setVisible(value)
+                if (!value) onFinish(form.getFieldsValue())
+            }}
             content={
                 <div className={styles["filter-popover-btn-wrapper"]}>
                     <Form form={form} layout='vertical' onFinish={onFinish}>
                         {filterList.map((item) => {
                             return (
                                 <Form.Item key={item.groupKey} name={item.groupKey} label={item.groupName}>
-                                    <YakitSelect labelInValue size='small' mode='multiple' allowClear={true}>
+                                    <YakitSelect labelInValue mode='multiple' allowClear={true}>
                                         {item.data.map((el) => (
                                             <YakitSelect.Option key={el.value} value={el.value}>
                                                 {el.label}
@@ -1522,11 +1529,11 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
                         })}
 
                         <div className={styles["form-btns"]}>
-                            <YakitButton type='primary' htmlType='submit' size='small'>
-                                搜索
-                            </YakitButton>
-                            <YakitButton size='small' onClick={onReset}>
+                            <YakitButton type='text' onClick={onReset}>
                                 重置搜索
+                            </YakitButton>
+                            <YakitButton type='primary' htmlType='submit'>
+                                搜索
                             </YakitButton>
                         </div>
                     </Form>

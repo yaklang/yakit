@@ -87,6 +87,7 @@
     :global {
         .ant-popover-inner {
             border-radius: 4px;
+            box-shadow: 0px 8px 16px 0px rgba(133, 137, 158, 0.1);
         }
         .ant-popover-inner-content {
             padding: 0;
@@ -102,6 +103,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    border: 1px solid #eaecf3;
+    border-radius: 4px;
     .list-wrapper {
         width: 100%;
         display: flex;
@@ -147,7 +150,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            border: 1px solid #eaecf3;
+            border-top: 1px solid #eaecf3;
             background: #f8f8f8;
             cursor: pointer;
             border-radius: 0px 0px 4px 4px;
@@ -192,11 +195,12 @@
 // -------------------- FuncFilterPopover ↓↓↓ --------------------
 .func-filter-popover {
     border-radius: 4px;
-
     border: 1px solid var(--yakit-border-color);
-    box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
-
     padding: 0 4px;
+
+    &:global(.ant-dropdown) {
+        box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
+    }
 }
 // -------------------- AuthorIcon & ApplicantIcon ↓↓↓ --------------------
 .author-icon-wrapper {
@@ -959,7 +963,7 @@
 }
 .filter-popover-btn-wrapper {
     width: 320px;
-    padding: 8px;
+    padding: 12px;
     .form-btns {
         display: flex;
         justify-content: right;
