@@ -72,7 +72,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     onClick={(e) => e.preventDefault()}
                     icon={<SaveIcon />}
                 >
-                    导入协作资源
+                    导入资源
                 </YakitButton>
             </YakitPopover>
             <YakitButton

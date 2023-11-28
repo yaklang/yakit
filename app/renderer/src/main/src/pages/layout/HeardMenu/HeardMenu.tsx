@@ -66,6 +66,7 @@ import {
 
 import classNames from "classnames"
 import style from "./HeardMenu.module.scss"
+import {ExtraMenu} from "../publicMenu/ExtraMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -633,44 +634,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
     })
 
-    // 导入协作资源-菜单相关逻辑
-    const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
-    const importMenuSelect = useMemoizedFn((type: string) => {
-        switch (type) {
-            case "import-plugin":
-                onImportPlugin()
-                setImportMenuShow(false)
-                return
-            case "import-share":
-                onImportShare()
-                setImportMenuShow(false)
-                return
-
-            default:
-                return
-        }
-    })
-    const importMenu = useMemo(
-        () => (
-            <YakitMenu
-                width={142}
-                selectedKeys={[]}
-                data={[
-                    {
-                        key: "import-plugin",
-                        label: "导入插件"
-                    },
-                    {
-                        key: "import-share",
-                        label: "导入分享数据"
-                    }
-                ]}
-                onClick={({key}) => importMenuSelect(key)}
-            />
-        ),
-        []
-    )
-
     return (
         <div className={style["heard-menu-body"]}>
             <div
@@ -725,40 +688,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 <div className={classNames(style["heard-menu-right"])}>
                     {!isEnpriTraceAgent() && (
                         <>
-                            <YakitPopover
-                                overlayClassName={style["import-resource-menu-popover"]}
-                                overlayStyle={{paddingTop: 4}}
-                                placement={"bottom"}
-                                trigger={"click"}
-                                content={importMenu}
-                                visible={importMenuShow}
-                                onVisibleChange={(visible) => setImportMenuShow(visible)}
-                            >
-                                <YakitButton
-                                    type='text'
-                                    className={style["heard-menu-theme"]}
-                                    onClick={(e) => e.stopPropagation()}
-                                    icon={<SaveIcon />}
-                                >
-                                    导入协作资源
-                                </YakitButton>
-                            </YakitPopover>
-                            <YakitButton
-                                type='secondary2'
-                                className={style["heard-menu-grey"]}
-                                onClick={() => onRouteMenuSelect({route: YakitRoute.PayloadManager})}
-                                icon={<MenuPayloadIcon />}
-                            >
-                                Payload
-                            </YakitButton>
-                            <YakitButton
-                                type='secondary2'
-                                className={classNames(style["heard-menu-grey"], style["heard-menu-yak-run"])}
-                                onClick={() => onRouteMenuSelect({route: YakitRoute.YakScript})}
-                                icon={<MenuYakRunnerIcon />}
-                            >
-                                Yak Runner
-                            </YakitButton>
+                            <ExtraMenu onMenuSelect={onRouteMenuSelect} />
                             <Dropdown
                                 overlayClassName={style["customize-drop-menu"]}
                                 overlay={
