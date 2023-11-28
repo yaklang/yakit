@@ -9,6 +9,15 @@ export interface SpaceEngineStartParams {
     ScanBeforeSave: boolean
 }
 
+export interface SpaceEngineStatus {
+    Type: "zoomeye" | "fofa" | "hunter" | "shodan" | "",
+    Status: string
+    Info: string
+    Raw: Uint8Array
+    Used: number
+    Remain: number
+}
+
 export const getDefaultSpaceEngineStartParams = (): SpaceEngineStartParams => {
     return {Type: "", Filter: "", MaxPage: 10, MaxRecord: 100, PageSize: 10, ScanBeforeSave: false}
 }

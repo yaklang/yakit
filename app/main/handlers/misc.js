@@ -604,4 +604,20 @@ module.exports = (win, getClient) => {
         stream = getClient().DuplexConnection(params);
         handlerHelper.registerHandler(win, stream, streamDuplexConnectionMap, token)
     })
+
+    // asyncGetSpaceEngineStatus wrapper
+    const asyncGetSpaceEngineStatus = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetSpaceEngineStatus(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetSpaceEngineStatus", async (e, params) => {
+        return await asyncGetSpaceEngineStatus(params)
+    })
 }

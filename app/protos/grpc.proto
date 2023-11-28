@@ -582,6 +582,8 @@ message FetchPortAssetFromSpaceEngineRequest {
   // page limit
   int64 PageSize = 5;
   bool ScanBeforeSave = 6;
+  string Proxy = 7;
+  string Concurrent = 8;
 }
 
 message DeleteHybridScanTaskRequest {
@@ -964,6 +966,16 @@ message GlobalNetworkConfig {
 
   // 第三方APIKey获取
   repeated ThirdPartyApplicationConfig AppConfigs = 12;
+
+  // http auth info
+  repeated AuthInfo AuthInfos = 13;
+}
+
+message AuthInfo {
+  string AuthUsername = 1;
+  string AuthPassword = 2;
+  string AuthType = 3;
+  string Host = 4;
 }
 
 message ThirdPartyApplicationConfig {
