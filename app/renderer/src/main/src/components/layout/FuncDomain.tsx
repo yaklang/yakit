@@ -73,6 +73,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
+import {onImportPlugin} from "@/pages/fuzzer/components/ShareImport"
 
 const {ipcRenderer} = window.require("electron")
 const {Dragger} = Upload
@@ -1049,15 +1050,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 setIsDiffUpdate(true)
                 return
             case "external":
-                showModal({
-                    title: "更新插件源",
-                    width: 800,
-                    content: (
-                        <div style={{width: 780}}>
-                            <LoadYakitPluginForm onFinished={() => info("更新进程执行完毕")} />
-                        </div>
-                    )
-                })
+                onImportPlugin()
                 return
             case "store":
                 if (dynamicStatus.isDynamicStatus) {
