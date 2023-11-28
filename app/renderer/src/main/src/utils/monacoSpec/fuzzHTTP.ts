@@ -3,8 +3,6 @@ import {editor, languages, Position} from "monaco-editor";
 import {CancellationToken} from "typescript";
 import "./spaceengine";
 
-type CompletionItemType = languages.CompletionItem;
-
 // https://microsoft.github.io/monaco-editor/playground.html#extending-language-services-custom-languages
 monaco.languages.register({id: "http"})
 // Register a completion item provider for the new language

@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {YakEditor} from "@/utils/editors";
-import {Alert, Form} from "antd";
+import {Alert, Form, Space} from "antd";
 import {getDefaultSpaceEngineStartParams, SpaceEngineStartParams, SpaceEngineStatus} from "@/models/SpaceEngine";
 import {isRegisteredLanguage} from "@/utils/monacoSpec/spaceengine";
 import {DemoItemSwitch} from "@/demoComponents/itemSwitch/ItemSwitch";
@@ -13,6 +13,12 @@ import {debugYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
 import {AutoSpin} from "@/components/AutoSpin";
 import {Uint8ArrayToString} from "@/utils/str";
+import {randomString} from "@/utils/randomUtil";
+import {failed, info} from "@/utils/notification";
+import {ExecResult} from "@/pages/invoker/schema";
+import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream";
+import {useMemoizedFn} from "ahooks";
+import {PluginResultUI} from "@/pages/yakitStore/viewers/base";
 
 export interface SpaceEngineOperatorProp {
 
@@ -32,7 +38,17 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
     })
     const [statusLoading, setStatusLoading] = useState(false);
     const [statusFailed, setStatusFailed] = useState("");
+    const [loading, setLoading] = useState(false);
     const noEngine = params.Type === "";
+    const [token, setToken] = useState(randomString(50));
+    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
+        "FetchPortAssetFromSpaceEngine",
+        "",
+        token,
+        () => {
+            setTimeout(() => setLoading(false), 300)
+        }
+    )
 
     useEffect(() => {
         if (params.Type === "") {
@@ -61,6 +77,10 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
         }
     }, [params.Type])
 
+    const cancel = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-FetchPortAssetFromSpaceEngine", token)
+    })
+
     return <AutoCard
         style={{backgroundColor: "#fff"}}
         bodyStyle={{overflow: "hidden", padding: 0}}
@@ -79,15 +99,22 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
                     setValue={Type => setParams({...params, Type})} value={params.Type}
                 />} size={"small"}
                 bodyStyle={{paddingLeft: 6, paddingRight: 4, paddingTop: 4, paddingBottom: 4}}
-                extra={<>
-                    <YakitButton>执行</YakitButton>
-                </>}
+                extra={<Space>
+                    <YakitButton disabled={loading} onClick={() => {
+                        ipcRenderer.invoke("FetchPortAssetFromSpaceEngine", params, token).then(() => {
+                            setLoading(true)
+                        })
+                    }}>执行</YakitButton>
+                    <YakitButton danger={true} disabled={!loading} onClick={() => {
+                        cancel()
+                    }}>停止</YakitButton>
+                </Space>}
             >
                 {noEngine ? <Alert
                     type={"warning"} description={"请先设置空间引擎"}
                     style={{marginBottom: 8}}
                 /> : <Alert
-                    type={statusFailed === "" ? "success": "error"} description={<div>
+                    type={statusFailed === "" ? "success" : "error"} description={<div>
                     {statusFailed}
                     {status.Info}
                     {status.Used > 0 && <YakitTag>已用额度: {status.Used}</YakitTag>}
@@ -115,8 +142,18 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
             </AutoCard>}
             firstMinSize={`350px`}
             firstRatio={"350px"}
-            secondNode={<div>
-                OP2
+            secondNode={<div style={{width: "100%", height: "100%"}}>
+                <PluginResultUI
+                    results={infoState.messageState}
+                    statusCards={infoState.statusState}
+                    risks={infoState.riskState}
+                    featureType={infoState.featureTypeState}
+                    progress={infoState.processState}
+                    feature={infoState.featureMessageState}
+                    loading={loading} consoleHeight={"100%"}
+                    onXtermRef={(ref) => setXtermRef(ref)}
+                    cardStyleType={1}
+                />
             </div>}
         />
     </AutoCard>
