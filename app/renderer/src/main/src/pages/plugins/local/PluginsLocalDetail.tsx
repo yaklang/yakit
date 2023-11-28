@@ -65,7 +65,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         onDetailsBatchSingle,
         currentIndex,
         setCurrentIndex,
-        // removeLoading,
+        removeLoading,
         onJumpToLocalPluginDetailByUUID,
         uploadLoading,
         privateDomain
@@ -124,7 +124,9 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const onExport = useMemoizedFn(() => {
         if (!plugin) return
-        onDetailExport([plugin.Id])
+        onDetailExport([plugin.Id], () => {
+            onCheck(false)
+        })
     })
     /** 新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {
@@ -182,7 +184,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     /**全选 */
     const onCheck = useMemoizedFn((value: boolean) => {
-        if (value) setSelectList([])
+        setSelectList([])
         setAllCheck(value)
     })
     const checkList = useMemo(() => {
@@ -323,7 +325,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                             <YakitButton
                                 type='text2'
                                 disabled={allCheck || selectList.length === 0}
-                                icon={<OutlineExportIcon />}
+                                icon={<OutlineClouduploadIcon />}
                                 onClick={onBatchUpload}
                             />
                         </Tooltip>
@@ -417,7 +419,14 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     tags={plugin.Tags}
                                     extraNode={
                                         <div className={styles["plugin-info-extra-header"]}>
-                                            <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
+                                            {removeLoading ? (
+                                                <LoadingOutlined className={styles["loading-icon"]} />
+                                            ) : (
+                                                <YakitButton
+                                                    type='text2'
+                                                    icon={<OutlineTrashIcon onClick={onRemove} />}
+                                                />
+                                            )}
                                             <div className='divider-style' />
                                             <YakitButton
                                                 type='text2'

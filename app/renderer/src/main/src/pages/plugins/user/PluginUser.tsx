@@ -668,6 +668,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             setDownloadLoading(true)
             apiDownloadPluginMine(downloadParams).finally(() =>
                 setTimeout(() => {
+                    onCheck(false)
                     setDownloadLoading(false)
                 }, 200)
             )
@@ -803,7 +804,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
 
         /**全选 */
         const onCheck = useMemoizedFn((value: boolean) => {
-            if (value) setSelectList([])
+            setSelectList([])
             setAllCheck(value)
             setIsSelectUserNum(value)
         })

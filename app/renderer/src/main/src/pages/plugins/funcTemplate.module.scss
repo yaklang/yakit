@@ -241,13 +241,13 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 36px;
+        height: 24px;
         padding-left: 2px;
         .header-body {
             display: flex;
             align-items: center;
             gap: 16px;
-            padding-bottom: 8px;
+            // padding-bottom: 8px;
             .header-body-filter {
                 display: flex;
                 justify-content: space-between;
@@ -917,6 +917,10 @@
     }
     .plugin-loading {
         @extend %operate-base;
+
+        svg {
+            color: var(--yakit-primary-5);
+        }
         &:hover {
             background-color: initial;
         }
@@ -944,6 +948,16 @@
     gap: 8px;
     path {
         stroke-width: 1.5;
+    }
+    .plugin-loading {
+        @extend %operate-base;
+
+        svg {
+            color: var(--yakit-primary-5);
+        }
+        &:hover {
+            background-color: initial;
+        }
     }
 }
 // -------------------- FilterPopoverBtn ↓↓↓ --------------------

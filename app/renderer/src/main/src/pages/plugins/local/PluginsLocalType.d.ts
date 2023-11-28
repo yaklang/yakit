@@ -40,7 +40,7 @@ export interface PluginsLocalDetailProps {
     /**详情的下载 */
     onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
     /**详情的导出 */
-    onDetailExport: (info: YakitPluginOnlineDetail) => void
+    onDetailExport: (info: YakitPluginOnlineDetail, callback?: () => void) => void
     /** 搜索功能回调 */
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
     /** 详情的批量删除回调 */
@@ -55,7 +55,7 @@ export interface PluginsLocalDetailProps {
     currentIndex: number
     setCurrentIndex: (index: number) => void
     /**删除的loading */
-    // removeLoading: boolean
+    removeLoading: boolean
     /**传线上的UUID,传入本地详情进行使用 */
     onJumpToLocalPluginDetailByUUID: () => void
     /**上传的loading */

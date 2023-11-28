@@ -10,7 +10,9 @@ import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import { YakitRoute } from "@/routes/newRoute"
+import {YakitRoute} from "@/routes/newRoute"
+import {ImportLocalPlugin} from "@/pages/mitm/MITMPage"
+import emiter from "@/utils/eventBus/eventBus"
 
 const layout = {
     labelCol: {span: 5},
@@ -40,19 +42,24 @@ export function onImportShare() {
 }
 export function onImportPlugin() {
     const m = showYakitModal({
-        title: "导入插件ID",
-        width: 800,
+        title: null,
         footer: null,
+        mask: false,
+        width: 680,
         content: (
-            <div style={{width: 780, padding: 24}}>
-                <LoadYakitPluginForm
-                    onlyId={true}
-                    onFinished={() => {
-                        info("更新进程执行完毕")
-                        m.destroy()
+            <>
+                <ImportLocalPlugin
+                    visible={true}
+                    setVisible={(v) => {
+                        if (!v) {
+                            m.destroy()
+                            setTimeout(() => {
+                                emiter.emit("onRefLocalPluginList", "")
+                            }, 200)
+                        }
                     }}
                 />
-            </div>
+            </>
         )
     })
 }

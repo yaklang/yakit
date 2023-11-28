@@ -428,7 +428,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         onDownload(downloadParams)
     })
     /**下载 */
-    const onDownload = useMemoizedFn((downloadArgument: DownloadArgumentProps) => {
+    const onDownload = useMemoizedFn((downloadArgument: DownloadArgumentProps, callback?: () => void) => {
         const {filtersArgument, searchArgument, selectListArgument, selectNumArgument, allCheckArgument} =
             downloadArgument
         if (selectNumArgument === 0) {
@@ -447,11 +447,13 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 }
             }
             setDownloadLoading(true)
-            apiDownloadPluginOnline(downloadParams).finally(() =>
+            apiDownloadPluginOnline(downloadParams).finally(() => {
+                if (callback) callback()
                 setTimeout(() => {
+                    onCheck(false)
                     setDownloadLoading(false)
                 }, 200)
-            )
+            })
         }
     })
 
@@ -479,7 +481,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     })
     /**全选 */
     const onCheck = useMemoizedFn((value: boolean) => {
-        if (value) setSelectList([])
+        setSelectList([])
         setAllCheck(value)
     })
 
@@ -542,7 +544,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             })) || []
         )
     }, [filters.plugin_type])
-    const onBatchDownload = useMemoizedFn((newParams: OnlineBackInfoProps) => {
+    const onBatchDownload = useMemoizedFn((newParams: OnlineBackInfoProps, callback: () => void) => {
         const batchDownloadParams: DownloadArgumentProps = {
             allCheckArgument: newParams.allCheck,
             filtersArgument: newParams.filter,
@@ -550,7 +552,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             selectListArgument: newParams.selectList,
             selectNumArgument: newParams.selectNum
         }
-        onDownload(batchDownloadParams)
+        onDownload(batchDownloadParams, callback)
     })
     /** 详情搜索事件 */
     const onDetailSearch = useMemoizedFn((detailSearch: PluginSearchParams, detailFilter: PluginFilterParams) => {

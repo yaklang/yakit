@@ -135,7 +135,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     })
     /**全选 */
     const onCheck = useMemoizedFn((value: boolean) => {
-        if (value) setSelectList([])
+        setSelectList([])
         setAllCheck(value)
     })
     const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
@@ -144,7 +144,9 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
     })
     const onDownload = useMemoizedFn(() => {
         const params: OnlineBackInfoProps = {allCheck, selectList, search, filter: filters, selectNum}
-        onBatchDownload(params)
+        onBatchDownload(params, () => {
+            onCheck(false)
+        })
     })
     const onFilter = useMemoizedFn((value: PluginFilterParams) => {
         setFilters(value)
@@ -174,7 +176,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                     <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='online' />
                     <div style={{height: 12}} className='divider-style'></div>
                     {downloadLoading ? (
-                        <YakitButton type='text2' icon={<LoadingOutlined />} />
+                        <LoadingOutlined className='loading-icon' />
                     ) : (
                         <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
                             <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} onClick={onDownload} />
@@ -276,7 +278,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                                 type={plugin.type}
                             />
                             <div className={styles["details-editor-wrapper"]}>
-                                <YakitEditor type={"yak"} value={plugin.content} readOnly={true}/>
+                                <YakitEditor type={"yak"} value={plugin.content} readOnly={true} />
                             </div>
                         </div>
                     </TabPane>
