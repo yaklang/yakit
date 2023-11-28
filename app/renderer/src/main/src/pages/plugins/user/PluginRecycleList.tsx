@@ -153,7 +153,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
         })
         /**全选 */
         const onCheck = useMemoizedFn((value: boolean) => {
-            if (value) setSelectList([])
+            setSelectList([])
             setAllCheck(value)
             setIsSelectRecycleNum(value)
         })

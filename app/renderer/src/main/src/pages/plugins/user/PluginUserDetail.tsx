@@ -18,6 +18,7 @@ import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJour
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {onlineUseToLocalDetail} from "../utils"
+import {LoadingOutlined} from "@ant-design/icons"
 
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
@@ -170,7 +171,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
         })
         /**全选 */
         const onCheck = useMemoizedFn((value: boolean) => {
-            if (value) setSelectList([])
+            setSelectList([])
             setAllCheck(value)
         })
         const onPluginClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
@@ -225,13 +226,17 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
                         <div className={"details-filter-extra-wrapper"}>
                             <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='user' />
                             <div style={{height: 12}} className='divider-style'></div>
-                            <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
-                                <YakitButton
-                                    type='text2'
-                                    icon={<OutlineClouddownloadIcon />}
-                                    onClick={onBatchDownload}
-                                />
-                            </Tooltip>
+                            {downloadLoading ? (
+                                <LoadingOutlined className='loading-icon' />
+                            ) : (
+                                <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
+                                    <YakitButton
+                                        type='text2'
+                                        icon={<OutlineClouddownloadIcon />}
+                                        onClick={onBatchDownload}
+                                    />
+                                </Tooltip>
+                            )}
                             {/* <div style={{height: 12}} className='divider-style'></div>
                         <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
                             <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onBatchRemove} />
@@ -285,8 +290,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
                     search={search}
                     setSearch={setSearch}
                     onSearch={onSearch}
-                    // spinLoading={spinLoading || removeLoading || downloadLoading}
-                    spinLoading={spinLoading || downloadLoading}
+                    spinLoading={spinLoading}
                 >
                     <div className={styles["details-content-wrapper"]}>
                         <Tabs tabPosition='right' className='plugins-tabs'>

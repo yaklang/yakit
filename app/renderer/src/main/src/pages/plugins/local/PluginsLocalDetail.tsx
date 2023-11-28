@@ -124,7 +124,9 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const onExport = useMemoizedFn(() => {
         if (!plugin) return
-        onDetailExport([plugin.Id])
+        onDetailExport([plugin.Id], () => {
+            onCheck(false)
+        })
     })
     /** 新建插件 */
     const onNewAddPlugin = useMemoizedFn(() => {
@@ -182,7 +184,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     /**全选 */
     const onCheck = useMemoizedFn((value: boolean) => {
-        if (value) setSelectList([])
+        setSelectList([])
         setAllCheck(value)
     })
     const checkList = useMemo(() => {
@@ -323,7 +325,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                             <YakitButton
                                 type='text2'
                                 disabled={allCheck || selectList.length === 0}
-                                icon={<OutlineExportIcon />}
+                                icon={<OutlineClouduploadIcon />}
                                 onClick={onBatchUpload}
                             />
                         </Tooltip>
