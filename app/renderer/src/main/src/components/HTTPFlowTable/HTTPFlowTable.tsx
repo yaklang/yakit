@@ -840,14 +840,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 setSelectedRowKeys([])
                 setSelectedRows([])
                 setIsAllSelect(false)
-                if (props.updateDataFlag) {
-                    setTimeout(() => {
-                        updateData()
-                    }, 50)
-                }
             }
         },
-        [props.searchURL, props.IncludeInUrl, props.updateDataFlag, pageType],
+        [props.searchURL, props.IncludeInUrl, pageType],
         {wait: 300}
     )
 
@@ -1060,8 +1055,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [queryParams, setQueryParams] = useState<string>(JSON.stringify(params))
     useDebounceEffect(
         () => {
-            if (pageType === "History" && !props.updateDataFlag) {
-                props.onQueryParams && props.onQueryParams(queryParams)
+            if (pageType === "History") {
+                if (props.updateDataFlag) {
+                    updateData()
+                } else {
+                    props.onQueryParams && props.onQueryParams(queryParams)
+                }
             }
         },
         [queryParams, props.updateDataFlag, pageType],

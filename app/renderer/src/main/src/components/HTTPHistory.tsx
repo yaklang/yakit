@@ -300,7 +300,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         if (value === "" || (searchValue !== value && searchValue !== "")) {
             setSelectedNodes([])
             setSelectedKeys([])
-            setUpdateDataFlag(true)
+            setUpdateDataFlag(false)
         }
         if (value === "") {
             setOnlyShowFirstNode(true)
@@ -320,7 +320,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     ).run
     const onQueryParams = useMemoizedFn((queryParams) => {
         queryParamsRef.current = queryParams
-        setUpdateDataFlag(false)
         debounceRefreshTree()
     })
 
@@ -330,6 +329,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setSecondNodeVisible(false)
         setSearchValue("")
         setSearchTreeFlag(false)
+        setUpdateDataFlag(false)
         setHoveredKeys("")
         setExpandedKeys([])
         setSelectedKeys([])
@@ -449,10 +449,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         loadData={onLoadWebTreeData}
                                         searchValue={searchValue}
                                         onSearch={onSearchTree}
-                                        refreshTree={() => {
-                                            setUpdateDataFlag(true)
-                                            refreshTree()
-                                        }}
+                                        refreshTree={refreshTree}
                                         expandedKeys={expandedKeys}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
