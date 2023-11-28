@@ -244,6 +244,7 @@ service Yak {
   rpc StaticAnalyzeError(StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
   rpc YaklangCompileAndFormat(YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
 
+  rpc YaklangLanguageSuggestion(YaklangLanguageSuggestionRequest) returns (YaklangLanguageSuggestionResponse);
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
 
   // 端口扫描的封装
@@ -583,7 +584,7 @@ message FetchPortAssetFromSpaceEngineRequest {
   int64 PageSize = 5;
   bool ScanBeforeSave = 6;
   string Proxy = 7;
-  string Concurrent = 8;
+  int64 Concurrent = 8;
 }
 
 message DeleteHybridScanTaskRequest {
@@ -972,21 +973,21 @@ message GlobalNetworkConfig {
 }
 
 message AuthInfo {
-  string AuthUsername = 1;
-  string AuthPassword = 2;
-  string AuthType = 3;
-  string Host = 4;
-}
+    string AuthUsername = 1;
+    string AuthPassword = 2;
+    string AuthType = 3;
+    string Host = 4;
+  }
 
 message ThirdPartyApplicationConfig {
-  // zoomeye / hunter / shodan / fofa / github / token
-  string Type = 1;
-  string APIKey = 2;
-  string UserIdentifier = 3;
-  string UserSecret = 4;
-  string Namespace = 5;
-  string Domain = 6;
-  string WebhookURL = 7;
+    // zoomeye / hunter / shodan / fofa / github / token
+    string Type = 1;
+    string APIKey = 2;
+    string UserIdentifier = 3;
+    string UserSecret = 4;
+    string Namespace = 5;
+    string Domain = 6;
+    string WebhookURL = 7;
 }
 
 message DiagnoseNetworkRequest {
@@ -1734,17 +1735,27 @@ message ExecPacketScanRequest {
   string Proxy = 11;
 }
 
-message Position {
-  int64 Line = 1;
-  int64 Column = 2;
+message Range {
+  string Code = 1;
+  int64 StartLine = 2;
+  int64 StartColumn = 3;
+  int64 EndLine = 4;
+  int64 EndColumn = 5;
 }
 
 message YaklangInspectInformationRequest {
-  string YakScriptType = 1;
-  string YakScriptCode = 2;
-  Position StartPos = 3;
-  Position EndPos = 4;
+    string YakScriptType = 1;
+    string YakScriptCode = 2; 
+    Range Range = 3;
 }
+
+message YaklangLanguageSuggestionRequest {
+    string InspectType = 1;// completion(补全) / hover(提示) / signature(签名)
+    string YakScriptType = 2;
+    string YakScriptCode = 3; 
+    Range Range = 4;
+}
+
 
 // message RiskInfo {
 //   string Type = 1;
@@ -1756,7 +1767,7 @@ message YaklangInspectInformationRequest {
 
 message YaklangInformationKV {
   string Key = 1;
-  bytes Value = 2;
+  bytes Value = 2; 
   repeated YaklangInformationKV Extern = 3;
 }
 
@@ -1765,9 +1776,12 @@ message YaklangInformation {
   repeated YaklangInformationKV Data = 2;
 }
 
+message YaklangLanguageSuggestionResponse {
+    repeated SuggestionDescription SuggestionMessage = 1;
+}
+
 message YaklangInspectInformationResponse {
-  repeated SuggestionDescription SuggestionMessage = 1;
-  repeated YaklangInformation Information = 2;
+  repeated YaklangInformation Information = 1;
 }
 
 message StaticAnalyzeErrorRequest {
@@ -3103,9 +3117,8 @@ message SuggestionDescription {
   string Description = 2;
   string InsertText = 3;
   bool JustAppend = 4;
-
-  // 展示定义的内容，如果没有的话，一般展示 InsertText 就行
-  string DefinitionVerbose = 5;
+  string DefinitionVerbose = 5; // 展示定义的内容，如果没有的话，一般展示 InsertText 就行
+  string Kind = 6; // 补全类型, Method = 0, Function = 1, Constructor = 2, Field = 3, Variable = 4, Class = 5, Struct = 6, Interface = 7, Module = 8, Property = 9, Event = 10, Operator = 11, Unit = 12, Value = 13, Constant = 14, Enum = 15, EnumMember = 16, Keyword = 17, Text = 18, Color = 19, File = 20, Reference = 21, Customcolor = 22, Folder = 23, TypeParameter = 24, User = 25, Issue = 26, Snippet = 27
 }
 
 message MethodSuggestion {

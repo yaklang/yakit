@@ -1,7 +1,40 @@
-import {editor, IRange, languages, Position} from "monaco-editor";
-import {CancellationToken} from "typescript";
-import {removeRepeatedParams} from "@/pages/invoker/YakScriptParamsSetter";
-import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams";
+import { editor, IRange, languages, Position } from "monaco-editor";
+import { CancellationToken } from "typescript";
+import { removeRepeatedParams } from "@/pages/invoker/YakScriptParamsSetter";
+import { YakExecutorParam } from "@/pages/invoker/YakExecutorParams";
+import { monaco } from "react-monaco-editor";
+import { log } from "console";
+
+const { ipcRenderer } = window.require("electron");
+
+
+export interface Range {
+    Code: string
+    StartLine: number
+    StartColumn: number
+    EndLine: number
+    EndColumn: number
+}
+
+export interface SuggestionDescription {
+    Label: string
+    Description: string
+    InsertText: string
+    JustAppend: boolean
+    DefinitionVerbose: string
+    Kind: string
+}
+export interface YaklangLanguageSuggestionRequest {
+    InspectType: "completion" | "hover" | "signature"
+    YakScriptType: "yak" | "mitm" | "port-scan" | "codec"
+    YakScriptCode: string
+    Range: Range
+}
+
+
+export interface YaklangLanguageSuggestionResponse {
+    SuggestionMessage: SuggestionDescription[]
+}
 
 export interface CompletionSchema {
     libName: string
@@ -33,110 +66,112 @@ export interface CompletionTotal {
 }
 
 
+
+
 let globalSuggestions: languages.CompletionItem[] = [];
-let completions: CompletionTotal = {libCompletions: [], fieldsCompletions: [], libNames: [], libToFieldCompletions: {}};
+let completions: CompletionTotal = { libCompletions: [], fieldsCompletions: [], libNames: [], libToFieldCompletions: {} };
 let maxLibLength = 1;
 
 export const extraSuggestions: languages.CompletionItem[] = [
-        {
-            kind: languages.CompletionItemKind.Snippet,
-            label: "fn closure",
-            insertText: "fn{\n" +
-                "    defer fn{\n" +
-                "        err := recover()\n" +
-                "        if err != nil {\n" +
-                "            log.error(`recover from panic: %v`, err)\n" +
-                "        }\n" +
-                "    }\n" +
-                "    ${1}\n" +
-                "}",
-            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: "Snippets For Try-Catch-Finally"
-        } as languages.CompletionItem,
-        {
-            kind: languages.CompletionItemKind.Snippet,
-            label: "try-catch-finally",
-            insertText: "try {\n" +
-                "    ${1}\n" +
-                "} catch err {\n" +
-                "    ${2}\n" +
-                "} finally {\n" +
-                "    ${3}\n" +
-                "}",
-            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: "Snippets For Try-Catch-Finally"
-        } as languages.CompletionItem,
-        {
-            kind: languages.CompletionItemKind.Snippet,
-            label: "try-catch",
-            insertText: "try {\n" +
-                "    ${1}\n" +
-                "} catch err {\n" +
-                "    ${2}\n" +
-                "}${3}",
-            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: "Snippets For Try-Catch"
-        } as languages.CompletionItem,
-        {
-            kind: languages.CompletionItemKind.Snippet,
-            label: "err",
-            insertText: "if ${1:err} != nil { die(${1:err}) }",
-            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: "Snippets for input err quickly",
-        } as languages.CompletionItem,
-        {
-            kind: languages.CompletionItemKind.Snippet,
-            label: "aes-cbc-pkcs7(pkcs) encrypt",
-            insertText: "data = \"${1:your-data}\"\n" +
-                "data = codec.PKCS7Padding([]byte(data))\n" +
-                "\n" +
-                "key, _ = codec.DecodeBase64(\"${2:key-base64}\")\n" +
-                "// key = codec.PKCS5Padding(key, 16)\n" +
-                "key = codec.PKCS7Padding(key)\n" +
-                "\n" +
-                "// 设置 iv\n" +
-                "// 如果不好设置 base64 的话，可以设置 iv = []byte(\"your-iv\")\n" +
-                "iv, _ = codec.DecodeBase64(\"${3:iv-base64}\")\n" +
-                "// iv = codec.PKCS5Padding(iv, 16)\n" +
-                "iv = codec.PKCS7Padding(iv)\n" +
-                "\n" +
-                "// 开始调用加密函数\n" +
-                "encryptData, err = codec.AESCBCEncrypt(key, data, iv)\n" +
-                "base64Encrypted = codec.EncodeBase64(encryptData) # 例如 UMIKHDaF72Kh/zIFnAH2Pw==\n" +
-                "hexEncrypted = codec.EncodeToHex(encryptData) # 例如 50c20a1c3685ef62a1ff32059c01f63f\n" +
-                "base64urlEncrypted = codec.EscapeQueryUrl(base64Encrypted) # 例如 UMIKHDaF72Kh%2FzIFnAH2Pw%3D%3D\n" +
-                "\n",
-            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: "AES CBC PKCS7(PKCS5)",
-        } as languages.CompletionItem,
-        {
-            kind: languages.CompletionItemKind.Snippet,
-            label: "aes-ecb-pkcs7 encrypt",
-            insertText: "# 需要加密的原文\ndata = \"this is data\"\n" +
-                "# 用到的 AES KEY，如果是 base64 编码可用这个解码，不是的话，可直接使用 key = []byte(`your-aes-key...`)\nkey, err = codec.DecodeBase64(\"${1}\")\nkey = codec.PKCS7Padding(key)\n" +
-                "# PKCS7Padding(data) / PKCS5Padding(data, 16/*block size*/)\ndata = codec.PKCS7Padding([]byte(data))\n\n" +
-                "# 使用 AES ECB 加密内容，如果解密失败，可以查看 err 中错误原因\nencryptData, err = codec.AESECBEncrypt(key, data, nil)\n" +
-                "base64Encrypted = codec.EncodeBase64(encryptData) # 例如 UMIKHDaF72Kh/zIFnAH2Pw==\n" +
-                "hexEncrypted = codec.EncodeToHex(encryptData) # 例如 50c20a1c3685ef62a1ff32059c01f63f\n" +
-                "base64urlEncrypted = codec.EscapeQueryUrl(base64Encrypted) # 例如 UMIKHDaF72Kh%2FzIFnAH2Pw%3D%3D\n",
-            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: "AES ECB PKCS7",
-        } as languages.CompletionItem,
-        {
-            kind: languages.CompletionItemKind.Snippet,
-            label: "aes-ecb-pkcs5 encrypt",
-            insertText: "# 需要加密的原文\ndata = \"this is data\"\n" +
-                "# 用到的 AES KEY，如果是 base64 编码可用这个解码，不是的话，可直接使用 key = []byte(`your-aes-key...`)\nkey, err = codec.DecodeBase64(\"${1}\")\nkey = codec.PKCS5Padding(key, 16)\n" +
-                "# PKCS7Padding(data) / PKCS5Padding(data, 16/*block size*/)\ndata = codec.PKCS5Padding([]byte(data), 16)\n\n" +
-                "# 使用 AES ECB 加密内容，如果解密失败，可以查看 err 中错误原因\nencryptData, err = codec.AESECBEncrypt(key, data, nil)\n" +
-                "base64Encrypted = codec.EncodeBase64(encryptData) # 例如 UMIKHDaF72Kh/zIFnAH2Pw==\n" +
-                "hexEncrypted = codec.EncodeToHex(encryptData) # 例如 50c20a1c3685ef62a1ff32059c01f63f\n" +
-                "base64urlEncrypted = codec.EscapeQueryUrl(base64Encrypted) # 例如 UMIKHDaF72Kh%2FzIFnAH2Pw%3D%3D\n",
-            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            documentation: "AES ECB PKCS5",
-        } as languages.CompletionItem,
-    ]
-;
+    {
+        kind: languages.CompletionItemKind.Snippet,
+        label: "fn closure",
+        insertText: "fn{\n" +
+            "    defer fn{\n" +
+            "        err := recover()\n" +
+            "        if err != nil {\n" +
+            "            log.error(`recover from panic: %v`, err)\n" +
+            "        }\n" +
+            "    }\n" +
+            "    ${1}\n" +
+            "}",
+        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        documentation: "Snippets For Try-Catch-Finally"
+    } as languages.CompletionItem,
+    {
+        kind: languages.CompletionItemKind.Snippet,
+        label: "try-catch-finally",
+        insertText: "try {\n" +
+            "    ${1}\n" +
+            "} catch err {\n" +
+            "    ${2}\n" +
+            "} finally {\n" +
+            "    ${3}\n" +
+            "}",
+        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        documentation: "Snippets For Try-Catch-Finally"
+    } as languages.CompletionItem,
+    {
+        kind: languages.CompletionItemKind.Snippet,
+        label: "try-catch",
+        insertText: "try {\n" +
+            "    ${1}\n" +
+            "} catch err {\n" +
+            "    ${2}\n" +
+            "}${3}",
+        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        documentation: "Snippets For Try-Catch"
+    } as languages.CompletionItem,
+    {
+        kind: languages.CompletionItemKind.Snippet,
+        label: "err",
+        insertText: "if ${1:err} != nil { die(${1:err}) }",
+        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        documentation: "Snippets for input err quickly",
+    } as languages.CompletionItem,
+    {
+        kind: languages.CompletionItemKind.Snippet,
+        label: "aes-cbc-pkcs7(pkcs) encrypt",
+        insertText: "data = \"${1:your-data}\"\n" +
+            "data = codec.PKCS7Padding([]byte(data))\n" +
+            "\n" +
+            "key, _ = codec.DecodeBase64(\"${2:key-base64}\")\n" +
+            "// key = codec.PKCS5Padding(key, 16)\n" +
+            "key = codec.PKCS7Padding(key)\n" +
+            "\n" +
+            "// 设置 iv\n" +
+            "// 如果不好设置 base64 的话，可以设置 iv = []byte(\"your-iv\")\n" +
+            "iv, _ = codec.DecodeBase64(\"${3:iv-base64}\")\n" +
+            "// iv = codec.PKCS5Padding(iv, 16)\n" +
+            "iv = codec.PKCS7Padding(iv)\n" +
+            "\n" +
+            "// 开始调用加密函数\n" +
+            "encryptData, err = codec.AESCBCEncrypt(key, data, iv)\n" +
+            "base64Encrypted = codec.EncodeBase64(encryptData) # 例如 UMIKHDaF72Kh/zIFnAH2Pw==\n" +
+            "hexEncrypted = codec.EncodeToHex(encryptData) # 例如 50c20a1c3685ef62a1ff32059c01f63f\n" +
+            "base64urlEncrypted = codec.EscapeQueryUrl(base64Encrypted) # 例如 UMIKHDaF72Kh%2FzIFnAH2Pw%3D%3D\n" +
+            "\n",
+        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        documentation: "AES CBC PKCS7(PKCS5)",
+    } as languages.CompletionItem,
+    {
+        kind: languages.CompletionItemKind.Snippet,
+        label: "aes-ecb-pkcs7 encrypt",
+        insertText: "# 需要加密的原文\ndata = \"this is data\"\n" +
+            "# 用到的 AES KEY，如果是 base64 编码可用这个解码，不是的话，可直接使用 key = []byte(`your-aes-key...`)\nkey, err = codec.DecodeBase64(\"${1}\")\nkey = codec.PKCS7Padding(key)\n" +
+            "# PKCS7Padding(data) / PKCS5Padding(data, 16/*block size*/)\ndata = codec.PKCS7Padding([]byte(data))\n\n" +
+            "# 使用 AES ECB 加密内容，如果解密失败，可以查看 err 中错误原因\nencryptData, err = codec.AESECBEncrypt(key, data, nil)\n" +
+            "base64Encrypted = codec.EncodeBase64(encryptData) # 例如 UMIKHDaF72Kh/zIFnAH2Pw==\n" +
+            "hexEncrypted = codec.EncodeToHex(encryptData) # 例如 50c20a1c3685ef62a1ff32059c01f63f\n" +
+            "base64urlEncrypted = codec.EscapeQueryUrl(base64Encrypted) # 例如 UMIKHDaF72Kh%2FzIFnAH2Pw%3D%3D\n",
+        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        documentation: "AES ECB PKCS7",
+    } as languages.CompletionItem,
+    {
+        kind: languages.CompletionItemKind.Snippet,
+        label: "aes-ecb-pkcs5 encrypt",
+        insertText: "# 需要加密的原文\ndata = \"this is data\"\n" +
+            "# 用到的 AES KEY，如果是 base64 编码可用这个解码，不是的话，可直接使用 key = []byte(`your-aes-key...`)\nkey, err = codec.DecodeBase64(\"${1}\")\nkey = codec.PKCS5Padding(key, 16)\n" +
+            "# PKCS7Padding(data) / PKCS5Padding(data, 16/*block size*/)\ndata = codec.PKCS5Padding([]byte(data), 16)\n\n" +
+            "# 使用 AES ECB 加密内容，如果解密失败，可以查看 err 中错误原因\nencryptData, err = codec.AESECBEncrypt(key, data, nil)\n" +
+            "base64Encrypted = codec.EncodeBase64(encryptData) # 例如 UMIKHDaF72Kh/zIFnAH2Pw==\n" +
+            "hexEncrypted = codec.EncodeToHex(encryptData) # 例如 50c20a1c3685ef62a1ff32059c01f63f\n" +
+            "base64urlEncrypted = codec.EscapeQueryUrl(base64Encrypted) # 例如 UMIKHDaF72Kh%2FzIFnAH2Pw%3D%3D\n",
+        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        documentation: "AES ECB PKCS5",
+    } as languages.CompletionItem,
+]
+    ;
 
 export interface MethodSuggestion {
     Verbose: string
@@ -151,6 +186,8 @@ message SuggestionDescription {
   string Description = 2;
   string InsertText = 3;
   bool JustAppend = 4;
+  string DefinitionVerbose = 5; // 展示定义的内容，如果没有的话，一般展示 InsertText 就行
+  string Kind = 6; // 补全类型
 }
     * */
     Suggestions: MethodSuggestionItem[]
@@ -162,9 +199,16 @@ interface MethodSuggestionItem {
     InsertText: string
     JustAppend: boolean
     DefinitionVerbose: string
+    Kind: string
 }
 
 let YaklangBuildInMethodCompletion: MethodSuggestion[] = [];
+
+
+export function getCompletionItemKindByName(name: string): languages.CompletionItemKind {
+    const itemKind = languages.CompletionItemKind[name as keyof typeof languages.CompletionItemKind];
+    return itemKind !== undefined ? itemKind : languages.CompletionItemKind.Snippet;
+}
 
 export const setYaklangBuildInMethodCompletion = (methods: MethodSuggestion[]) => {
     YaklangBuildInMethodCompletion = methods;
@@ -309,15 +353,15 @@ const loadMethodFromCaller = (caller: string, prefix: string, range: IRange): la
 
 export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, position: Position, context: languages.CompletionContext, token: CancellationToken): { suggestions: any[] } => {
     if (position === undefined) {
-        return {suggestions: []}
+        return { suggestions: [] }
     }
-    const {column, lineNumber} = position;
+    const { column, lineNumber } = position;
     if (column === undefined || lineNumber === undefined) {
-        return {suggestions: []};
+        return { suggestions: [] };
     }
 
     if ((position?.column || 0) <= 0) {
-        return {suggestions: []};
+        return { suggestions: [] };
     }
     const beforeCursor = position.column - 1;
     const line = model.getLineContent(position.lineNumber).substring(0, beforeCursor);
@@ -380,7 +424,7 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
                         range: replaceRange,
                     }
                 }),
-                    ...getDefaultCompletionsWithRange(replaceRange)
+                ...getDefaultCompletionsWithRange(replaceRange)
                 ].filter(i => {
                     return `${i.label}`.includes(lastWord)
                 })
@@ -425,7 +469,7 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
                                     }
                                     e.structNameShort = `${e.structNameShort}/${comp.structNameShort}`
                                 } else {
-                                    methodMerged.set(k, {...comp})
+                                    methodMerged.set(k, { ...comp })
                                 }
                             } else {
                                 const k = `${comp.fieldName}: ${comp.fieldTypeVerbose}`;
@@ -436,7 +480,7 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
                                     }
                                     e.structNameShort = `${e.structNameShort}/${comp.structNameShort}`
                                 } else {
-                                    fieldMerged.set(k, {...comp})
+                                    fieldMerged.set(k, { ...comp })
                                 }
                             }
                         })
@@ -468,7 +512,7 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
                 });
 
                 suggestions = [...suggestions, ...loadMethodFromCaller(lastWord, line, insertRange)]
-                return {suggestions: removeRepeatedSuggestions(suggestions)}
+                return { suggestions: removeRepeatedSuggestions(suggestions) }
             } catch (e) {
                 console.info(e)
             }
@@ -479,4 +523,98 @@ export const yaklangCompletionHandlerProvider = (model: editor.ITextModel, posit
     return {
         suggestions: [],
     } as any;
+}
+
+
+export const newYaklangCompletionHandlerProvider = (model: editor.ITextModel, position: Position, context: languages.CompletionContext, token: CancellationToken): Promise<{ incomplete: boolean, suggestions: languages.CompletionItem[] }> => {
+    return new Promise(async (resolve, reject) => {
+        if (position === undefined) {
+            resolve({ incomplete: false, suggestions: [] });
+            return
+        }
+        const { column, lineNumber } = position;
+        if (column === undefined || lineNumber === undefined) {
+            resolve({ incomplete: false, suggestions: [] });
+            return
+        }
+
+        if ((position?.column || 0) <= 0) {
+            resolve({ incomplete: false, suggestions: [] });
+            return
+        }
+        const iWord = getWordWithPointAtPosition(model, position);
+
+
+        await ipcRenderer.invoke("YaklangLanguageSuggestion", {
+            InspectType: "completion",
+            YakScriptType: "yak",
+            YakScriptCode: model.getValue(),
+            Range: {
+                Code: iWord.word,
+                StartLine: position.lineNumber,
+                EndLine: position.lineNumber,
+                StartColumn: iWord.startColumn,
+                EndColumn: iWord.endColumn,
+            } as Range,
+        } as YaklangLanguageSuggestionRequest).then((r: YaklangLanguageSuggestionResponse) => {
+            if (r.SuggestionMessage.length > 0) {
+                let range = {
+                    startLineNumber: position.lineNumber,
+                    endLineNumber: position.lineNumber,
+                    startColumn: iWord.startColumn,
+                    endColumn: iWord.endColumn,
+                }
+                // 修复最后的range
+                if (iWord.word.endsWith(".")) {
+                    range.startColumn = position.column;
+                    range.endColumn = position.column;
+                } else if (iWord.word.indexOf(".") > 0) {
+                    const index = iWord.word.lastIndexOf(".");
+                    range.startColumn = range.startColumn + index + 1;
+                }
+
+                resolve({
+                    incomplete: false,
+                    suggestions: r.SuggestionMessage.map(i => {
+                        return {
+                            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                            insertText: i.InsertText,
+                            kind: getCompletionItemKindByName(i.Kind),
+                            label: i.Label,
+                            detail: i.DefinitionVerbose,
+                            documentation: {value: i.Description, isTrusted: true},
+                            range: range,
+                        } as languages.CompletionItem
+                    })
+                });
+            }
+            resolve({ incomplete: false, suggestions: [] });
+        })
+    })
+}
+
+// 获取光标所在的单词，如果光标前面是 . 的话，还会尝试往前找一个单词
+// 例如: a.b.c.d 光标在 d 的位置，会返回 c.d
+export const getWordWithPointAtPosition = (model: monaco.editor.ITextModel, position: monaco.Position): editor.IWordAtPosition => {
+    let iWord = model.getWordAtPosition(position);
+    if (iWord === null) {
+        iWord = { word: "", startColumn: position.column, endColumn: position.column };
+    }
+    let word = iWord.word;
+    let lastChar = model.getValueInRange({
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: iWord.startColumn - 1,
+        endColumn: iWord.startColumn,
+    });
+    if (lastChar === ".") {
+        // 尝试往前找一个单词
+        let lastWord = model.getWordAtPosition(new monaco.Position(position.lineNumber, iWord.startColumn - 2));
+        if (lastWord !== null) {
+            iWord = { word: lastWord.word + "." + word, startColumn: lastWord.startColumn, endColumn: iWord.endColumn };
+        }
+    }
+
+
+    return iWord;
 }

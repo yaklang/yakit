@@ -14,6 +14,10 @@ monaco.editor.defineTheme("kurior", {
             "token": "globals"
         },
         {
+            "foreground": "#c4652f",
+            "token": "libFunction",
+        },
+        {
             "foreground": "#ff0000", "background": "#cc7c22",
             "token": "fuzz.tag.inner", fontStyle: "bold underline",
         },
