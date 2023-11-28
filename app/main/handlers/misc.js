@@ -605,6 +605,21 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamDuplexConnectionMap, token)
     })
 
+    const asyncInspectYaklangInformation = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().YaklangInspectInformation(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("YaklangInspectInformation", async (e, params) => {
+        return await asyncInspectYaklangInformation(params)
+    })
+
     // asyncGetSpaceEngineStatus wrapper
     const asyncGetSpaceEngineStatus = (params) => {
         return new Promise((resolve, reject) => {
@@ -626,5 +641,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("FetchPortAssetFromSpaceEngine", (e, params, token) => {
         let stream = getClient().FetchPortAssetFromSpaceEngine(params);
         handlerHelper.registerHandler(win, stream, streamFetchPortAssetFromSpaceEngineMap, token)
+    })
+
+    const asyncYaklangLanguageSuggestion = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().YaklangLanguageSuggestion(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("YaklangLanguageSuggestion", async (e, params) => {
+        return await asyncYaklangLanguageSuggestion(params)
     })
 }
