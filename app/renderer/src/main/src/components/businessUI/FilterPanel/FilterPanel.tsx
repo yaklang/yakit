@@ -58,7 +58,11 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                 <div className={styles["panel-header"]}>
                     <span className={styles["header-title"]}>高级筛选</span>
                     <Tooltip title='收起筛选' placement='top' overlayClassName='plugins-tooltip'>
-                        <OutlineCloseIcon className={styles["panel-header-icon"]} onClick={onClose} />
+                        <YakitButton
+                            type='text2'
+                            onClick={onClose}
+                            icon={<OutlineCloseIcon className={styles["panel-header-icon"]} />}
+                        ></YakitButton>
                     </Tooltip>
                 </div>
                 <div className={styles["panel-content"]}>

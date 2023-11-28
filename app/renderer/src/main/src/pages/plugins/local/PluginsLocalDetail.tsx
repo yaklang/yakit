@@ -65,7 +65,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         onDetailsBatchSingle,
         currentIndex,
         setCurrentIndex,
-        // removeLoading,
+        removeLoading,
         onJumpToLocalPluginDetailByUUID,
         uploadLoading,
         privateDomain
@@ -417,7 +417,14 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     tags={plugin.Tags}
                                     extraNode={
                                         <div className={styles["plugin-info-extra-header"]}>
-                                            <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
+                                            {removeLoading ? (
+                                                <LoadingOutlined className={styles["loading-icon"]} />
+                                            ) : (
+                                                <YakitButton
+                                                    type='text2'
+                                                    icon={<OutlineTrashIcon onClick={onRemove} />}
+                                                />
+                                            )}
                                             <div className='divider-style' />
                                             <YakitButton
                                                 type='text2'
