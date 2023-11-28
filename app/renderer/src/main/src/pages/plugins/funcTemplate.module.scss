@@ -949,6 +949,16 @@
     path {
         stroke-width: 1.5;
     }
+    .plugin-loading {
+        @extend %operate-base;
+
+        svg {
+            color: var(--yakit-primary-5);
+        }
+        &:hover {
+            background-color: initial;
+        }
+    }
 }
 // -------------------- FilterPopoverBtn ↓↓↓ --------------------
 .filter-popover-btn {

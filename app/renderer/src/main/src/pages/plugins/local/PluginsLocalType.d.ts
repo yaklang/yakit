@@ -40,7 +40,7 @@ export interface PluginsLocalDetailProps {
     /**详情的下载 */
     onRemovePluginDetailSingleBefore: (info: YakitPluginOnlineDetail) => void
     /**详情的导出 */
-    onDetailExport: (info: YakitPluginOnlineDetail) => void
+    onDetailExport: (info: YakitPluginOnlineDetail, callback?: () => void) => void
     /** 搜索功能回调 */
     onDetailSearch: (searchs: PluginSearchParams, filters: PluginFilterParams) => void
     /** 详情的批量删除回调 */

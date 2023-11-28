@@ -334,6 +334,15 @@
     path {
         stroke-width: 1.5;
     }
+    .loading-icon {
+        width: 26px;
+        text-align: center;
+        color: var(--yakit-primary-5);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 }
 
 // --------------------
