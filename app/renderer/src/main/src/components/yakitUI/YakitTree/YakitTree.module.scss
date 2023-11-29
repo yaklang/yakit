@@ -71,6 +71,10 @@
 
         .ant-tree .ant-tree-node-content-wrapper:hover {
             background-color: #f0f1f3;
+            color: #000;
+            svg {
+                color: #85899e;
+            }
         }
 
         .ant-tree-iconEle {
