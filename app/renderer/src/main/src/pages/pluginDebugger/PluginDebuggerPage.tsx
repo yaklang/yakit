@@ -308,6 +308,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
             {key: "loadLocalPlugin", label: "加载本地插件"}
         ])
         useEffect(() => {
+            if(!scriptName)return
             ipcRenderer
                 .invoke("GetYakScriptByName", {Name: scriptName})
                 .then((i: YakScript) => {
