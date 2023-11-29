@@ -422,6 +422,7 @@ export const PluginLocalUploadSingle: React.FC<PluginLocalUploadSingleProps> = R
     const taskTokenRef = useRef(randomString(40))
 
     const {onStart} = usePluginUploadHooks({
+        isSingle:true,
         taskToken: taskTokenRef.current,
         onUploadData: () => {},
         onUploadSuccess: () => {

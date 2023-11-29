@@ -4,6 +4,8 @@ import {useEffect, useRef} from "react"
 const {ipcRenderer} = window.require("electron")
 
 interface PluginUploadHooks {
+    /**是否单个上传 */
+    isSingle?: boolean
     taskToken: string
     onUploadData: (data: SaveYakScriptToOnlineResponse) => void
     onUploadEnd: () => void
@@ -21,7 +23,7 @@ export interface SaveYakScriptToOnlineResponse {
     MessageType: string
 }
 export default function usePluginUploadHooks(props: PluginUploadHooks) {
-    const {taskToken, onUploadData, onUploadSuccess, onUploadEnd, onUploadError} = props
+    const {isSingle, taskToken, onUploadData, onUploadSuccess, onUploadEnd, onUploadError} = props
     const messageListRef = useRef<SaveYakScriptToOnlineResponse[]>([])
     const pluginNameListRef = useRef<string[]>([])
     useEffect(() => {
@@ -43,7 +45,7 @@ export default function usePluginUploadHooks(props: PluginUploadHooks) {
                 yakitNotify("success", "上传成功")
             } else {
                 // 单个上传的时候，需要提示
-                if (pluginNameListRef.current.length === 1) {
+                if (isSingle && pluginNameListRef.current.length === 1) {
                     const message = messageListRef.current
                         .filter((ele) => ele.MessageType === "error")
                         .map((ele) => ele.Message)
