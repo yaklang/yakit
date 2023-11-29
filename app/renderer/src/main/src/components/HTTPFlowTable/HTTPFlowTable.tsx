@@ -1187,9 +1187,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         getDataByGrpc(query, "bottom")
     })
 
-    useUpdateEffect(() => {
-        console.log(123, params);
-    }, [params])
     // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
     const updateData = useMemoizedFn(() => {
         if (boxHeightRef.current) {
