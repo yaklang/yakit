@@ -65,6 +65,38 @@ export interface CompletionTotal {
     libToFieldCompletions: { [index: string]: FieldsCompletion[] }
 }
 
+const getSortTextByKindAndLabel = (kind: string, label: string): string => {
+    let sortText = "";
+    switch (getCompletionItemKindByName(kind)) {
+        case languages.CompletionItemKind.Variable:
+            sortText = "0";
+            break;
+        case languages.CompletionItemKind.Field:
+            sortText = "1";
+            break;
+        case languages.CompletionItemKind.Function:
+            sortText = "2";
+            break;
+        case languages.CompletionItemKind.Method:
+            sortText = "3";
+            break;
+        case languages.CompletionItemKind.Module:
+            sortText = "4";
+            break;
+        case languages.CompletionItemKind.Constant:
+            sortText = "5";
+            break;
+        case languages.CompletionItemKind.Keyword:
+            sortText = "6";
+            break;
+        default:
+            sortText = "7";
+            break;
+    }
+    sortText += label;
+    return sortText;
+}
+
 
 
 
@@ -573,19 +605,22 @@ export const newYaklangCompletionHandlerProvider = (model: editor.ITextModel, po
                     range.startColumn = range.startColumn + index + 1;
                 }
 
+                let suggestions = r.SuggestionMessage.map(i => {
+                    return {
+                        insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        insertText: i.InsertText,
+                        kind: getCompletionItemKindByName(i.Kind),
+                        label: i.Label,
+                        detail: i.DefinitionVerbose,
+                        documentation: { value: i.Description, isTrusted: true },
+                        range: range,
+                        sortText: getSortTextByKindAndLabel(i.Kind, i.Label),
+                    } as languages.CompletionItem
+                })
+
                 resolve({
                     incomplete: false,
-                    suggestions: r.SuggestionMessage.map(i => {
-                        return {
-                            insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                            insertText: i.InsertText,
-                            kind: getCompletionItemKindByName(i.Kind),
-                            label: i.Label,
-                            detail: i.DefinitionVerbose,
-                            documentation: {value: i.Description, isTrusted: true},
-                            range: range,
-                        } as languages.CompletionItem
-                    })
+                    suggestions: suggestions,
                 });
             }
             resolve({ incomplete: false, suggestions: [] });
