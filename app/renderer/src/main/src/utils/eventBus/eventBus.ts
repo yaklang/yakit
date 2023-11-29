@@ -6,6 +6,7 @@ import {EditorEventProps} from "./events/editor"
 import {HistoryEventProps} from "./events/history"
 import {PluginsEventProps} from "./events/plugins"
 import {MainOperatorEventProps} from "./events/main"
+import {PayLoadEventProps} from "./events/payload";
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -38,7 +39,8 @@ type Events = [
     EditorEventProps,
     HistoryEventProps,
     PluginsEventProps,
-    MainOperatorEventProps
+    MainOperatorEventProps,
+    PayLoadEventProps
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

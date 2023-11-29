@@ -103,6 +103,7 @@ import {useFuzzerSequence} from "@/store/fuzzerSequence"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import { ReadOnlyNewPayload } from "../payloadManager/newPayload"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -273,19 +274,37 @@ export interface FuzzerRequestProps {
 }
 
 export const showDictsAndSelect = (res: (i: string) => any) => {
-    const m = showModal({
-        title: "选择想要插入的字典",
+    // const m = showModal({
+    //     title: "选择想要插入的字典",
+    //     width: 1200,
+    //     content: (
+    //         <div style={{width: 1100, height: 500, overflow: "hidden"}}>
+    //             <PayloadManagerPage
+    //                 readOnly={true}
+    //                 selectorHandle={(e) => {
+    //                     res(e)
+    //                     m.destroy()
+    //                 }}
+    //             />
+    //         </div>
+    //     )
+    // })
+    const y = showYakitModal({
+        title: null,
+        footer: null,
         width: 1200,
+        type: "white",
+        closable: false,
         content: (
-            <div style={{width: 1100, height: 500, overflow: "hidden"}}>
-                <PayloadManagerPage
-                    readOnly={true}
-                    selectorHandle={(e) => {
-                        res(e)
-                        m.destroy()
-                    }}
-                />
-            </div>
+            <ReadOnlyNewPayload
+                selectorHandle={(e) => {
+                    res(e)
+                    y.destroy()
+                }}
+                onClose={() => {
+                    y.destroy()
+                }}
+            />
         )
     })
 }

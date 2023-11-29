@@ -17,9 +17,9 @@ module.exports = (win, getClient) => {
         return await asyncQueryPayload(params)
     })
 
-    const asyncGetAllPayloadFromFile = (params) => {
+    const asyncQueryPayloadFromFile = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().GetAllPayloadFromFile(params, (err, data) => {
+            getClient().QueryPayloadFromFile(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -28,9 +28,10 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    // 用于导出
-    ipcMain.handle("GetAllPayloadFromFile", async (e, params) => {
-        return await asyncGetAllPayloadFromFile(params)
+
+    // 获取编辑器内容
+    ipcMain.handle("QueryPayloadFromFile", async (e, params) => {
+        return await asyncQueryPayloadFromFile(params)
     })
 
     const asyncUpdateAllPayloadGroup = (params) => {
@@ -151,6 +152,14 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamPayloadFileMap, token)
     })
 
+    // 用于导出
+    const streamPayloadFromFileMap = new Map()
+    ipcMain.handle("cancel-GetAllPayloadFromFile", handlerHelper.cancelHandler(streamPayloadFromFileMap))
+    ipcMain.handle("GetAllPayloadFromFile", async (e, params) => {
+        let stream = getClient().GetAllPayloadFromFile(params)
+        handlerHelper.registerHandler(win, stream, streamPayloadFromFileMap, token)
+    })
+
     const asyncUpdatePayload = (params) => {
         return new Promise((resolve, reject) => {
             getClient().UpdatePayload(params, (err, data) => {
@@ -197,6 +206,22 @@ module.exports = (win, getClient) => {
     // 获取Payload列表
     ipcMain.handle("GetAllPayloadGroup", async (e, params) => {
         return await asyncGetAllPayloadGroup(params)
+    })
+
+    const asyncUpdatePayloadToFile = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().UpdatePayloadToFile(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 更新文件内容
+    ipcMain.handle("UpdatePayloadToFile", async (e, params) => {
+        return await asyncUpdatePayloadToFile(params)
     })
 
     const asyncGetAllPayload = (params) => {
