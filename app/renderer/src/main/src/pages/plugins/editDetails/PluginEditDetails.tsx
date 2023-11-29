@@ -611,7 +611,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         modifyInfo.current = convertLocalToRemoteInfo(isModify, {info: info, modify: obj})
 
         if (info && modifyInfo.current.script_name !== info?.ScriptName) {
-            yakitNotify("error", "提交修改功能请勿改动插件名称")
+            yakitNotify("error", "提交请勿修改插件名")
             setTimeout(() => {
                 setModifyLoading(false)
             }, 200)
@@ -1322,7 +1322,12 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
     return (
         <YakitModal
             title='源码'
-            subTitle='可在此定义插件输入原理，并编写输出 UI'
+            subTitle={
+                <div className={styles["plugin-editor-modal-subtitle"]}>
+                    <span>可在此定义插件输入原理，并编写输出 UI</span>
+                    <span>按 Esc 即可退出全屏</span>
+                </div>
+            }
             type='white'
             width='80%'
             centered={true}
@@ -1369,7 +1374,12 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
     return (
         <YakitModal
             title='源码'
-            subTitle='可在此定义插件输入原理，并编写输出 UI'
+            subTitle={
+                <div className={styles["plugin-editor-modal-subtitle"]}>
+                    <span>可在此定义插件输入原理，并编写输出 UI</span>
+                    <span>按 Esc 即可退出全屏</span>
+                </div>
+            }
             type='white'
             width='80%'
             centered={true}

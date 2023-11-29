@@ -399,6 +399,11 @@
 }
 
 // 源码放大版编辑器
+.plugin-editor-modal-subtitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 .plugin-editor-modal-close-icon {
     svg {
         width: 16px;

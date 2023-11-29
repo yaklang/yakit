@@ -899,8 +899,7 @@ export const PublicCommonPlugins: PublicRouteMenuProps[] = [
             "网站信息获取",
             "主域名提取",
             "杀软匹配tasklist /svc",
-            "按行去重",
-            "api提取"
+            "按行去重"
         ].map((item) => {
             return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
         })
@@ -1139,7 +1138,7 @@ export const InvalidFirstMenuItem = ""
  * @description 该菜单数据为开发者迭代版本所产生的已消失的页面菜单项
  * @description 每个菜单项由 '|' 字符进行分割
  */
-export const InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|"
+export const InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|api提取|"
 /**
  * @name private版专家模式菜单配置数据
  * @description 修改只对专家模式有效，别的模式需取对应模式数据进行修改

@@ -684,7 +684,6 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                         <YakitSelect
                             wrapperClassName={styles["multiple-modify-select"]}
                             mode='tags'
-                            maxTagCount={5}
                             allowClear
                             size='large'
                             onChange={(value: string[]) => onTagChange(value)}
