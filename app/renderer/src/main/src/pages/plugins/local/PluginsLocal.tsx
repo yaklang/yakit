@@ -179,6 +179,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             apiQueryYakScriptByYakScriptName({
                 pluginName: pluginInfo.pluginName
             }).then((item: YakScript) => {
+                const newItem = {...item, isLocalPlugin: privateDomain !== item.OnlineBaseUrl}
                 // 本地列表是按更新时间排序的，如果当前列表没有该数据，刷新类别，数据会在第一页第一个
                 const index = response.Data.findIndex((ele) => ele.ScriptName === item.ScriptName)
                 if (index === -1) {
@@ -187,13 +188,13 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     dispatch({
                         type: "update",
                         payload: {
-                            item
+                            item: {...newItem}
                         }
                     })
                 }
                 if (plugin) {
                     setShowPluginIndex(index)
-                    setPlugin({...item})
+                    setPlugin({...newItem})
                 }
             })
         } catch (error) {}
@@ -238,10 +239,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             ipcRenderer
                 .invoke("GetYakScriptByName", {Name: uploadPluginRef.current.ScriptName})
                 .then((i: YakScript) => {
+                    const newItem = {...i, isLocalPlugin: privateDomain !== i.OnlineBaseUrl}
                     dispatch({
                         type: "update",
                         payload: {
-                            item: i
+                            item: {...newItem}
                         }
                     })
                 })
@@ -252,6 +254,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }
     })
     const {onStart: onStartUploadPlugin} = usePluginUploadHooks({
+        isSingle: true,
         taskToken: taskTokenRef.current,
         onUploadData: () => {},
         onUploadSuccess: onUploadSuccess,

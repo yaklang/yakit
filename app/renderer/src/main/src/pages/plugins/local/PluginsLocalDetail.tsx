@@ -15,12 +15,11 @@ import {Tabs, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakScript} from "@/pages/invoker/schema"
-import {useStore} from "@/store"
 import {FilterPopoverBtn, FuncFilterPopover} from "../funcTemplate"
 import {YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {cloneDeep} from "bizcharts/lib/utils"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
-import {PluginLocalDetailBackProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
+import {PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
 import {yakitNotify} from "@/utils/notification"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {executeYakScriptByParams} from "@/pages/invoker/YakScriptCreator"
@@ -33,7 +32,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
-import {SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
+import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
@@ -87,8 +86,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
         if (allCheck) return response.Total
         else return selectList.length
     }, [allCheck, selectList])
-
-    const userInfo = useStore((s) => s.userInfo)
 
     useEffect(() => {
         if (info) {
