@@ -304,21 +304,23 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         queryParamsRef.current = queryParams
-
         // 表格点击重置查询条件时 且选中了树节点时
         if (execFlag && selectedNodeParamsKey) {
             refreshTree()
             return
         }
 
+        /**
+         * 注：搜索树&非搜索树刷新重置条件不一致
+         */
+
         // 非搜索树&选中树节点 切换表格筛选条件无需刷新树
         if (!searchTreeFlag && !selectedNodeParamsKey) {
             refreshTree()
             return
         }
-
-        // 搜索树时 切换表格筛选条件无需刷新树
-        if (searchTreeFlag && !selectedNodeParamsKey) {
+        // 搜索树时&选中树节点 切换表格筛选条件无需刷新树
+        if (searchTreeFlag && !selectedKeys.length) {
             setHoveredKeys("")
             setExpandedKeys([])
             getWebTreeData("website://" + searchValue)
