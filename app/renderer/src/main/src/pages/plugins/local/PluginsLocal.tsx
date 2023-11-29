@@ -141,8 +141,6 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     useEffect(() => {
         getInitTotal()
         getPluginRemoveCheck()
-    }, [userInfo.isLogin, inViewport])
-    useEffect(() => {
         getPluginGroupListLocal()
     }, [userInfo.isLogin, inViewport])
     // userInfo.isLogin, filters发生变化的时候触发；初始请求数据在 getPrivateDomainAndRefList
