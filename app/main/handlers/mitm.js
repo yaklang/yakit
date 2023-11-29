@@ -439,4 +439,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitm-get-filter", async (e, params) => {
         return await asyncGetMITMFilter(params)
     })
+    // 代理劫持
+    const asyncGenerateURL = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateURL(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("mitm-agent-hijacking-config", async (e, params) => {
+        return await asyncGenerateURL(params)
+    })
 }
