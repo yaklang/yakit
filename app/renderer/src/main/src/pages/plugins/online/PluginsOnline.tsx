@@ -277,15 +277,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     }, [userInfo.isLogin])
     useEffect(() => {
         getInitTotal()
+        getPluginGroupList()
     }, [inViewport])
     // 请求数据
     useEffect(() => {
         fetchList(true)
     }, [refresh, filters, otherSearch])
-
-    useEffect(() => {
-        getPluginGroupList()
-    }, [inViewport])
 
     useEffect(() => {
         emiter.on("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)

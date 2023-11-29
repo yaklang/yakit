@@ -64,7 +64,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                 getInitTotal()
                 getPluginRemoveCheck()
             }
-        }, [isLogin, inViewport, refresh])
+        }, [isLogin, inViewport])
         // 页面初始化的首次列表请求
         useEffect(() => {
             if (isLogin) {

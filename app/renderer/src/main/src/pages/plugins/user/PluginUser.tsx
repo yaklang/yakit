@@ -508,7 +508,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 getInitTotal()
                 getPluginRemoveCheck()
             }
-        }, [isLogin, inViewport, refresh])
+        }, [isLogin, inViewport])
         useEffect(() => {
             if (isLogin) {
                 fetchList(true)
