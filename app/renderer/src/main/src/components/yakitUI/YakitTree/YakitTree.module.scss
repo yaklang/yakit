@@ -58,6 +58,7 @@
 
         .ant-tree .ant-tree-treenode {
             align-items: center;
+            width: 100%;
         }
 
         .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
@@ -69,7 +70,7 @@
         }
 
         .ant-tree .ant-tree-node-content-wrapper:hover {
-            background-color: var(--yakit-primary-2);
+            background-color: #f0f1f3;
         }
 
         .ant-tree-iconEle {
@@ -78,6 +79,7 @@
 
         .ant-tree-node-content-wrapper {
             display: flex;
+            width: 100%;
         }
 
         .ant-tree-title {
