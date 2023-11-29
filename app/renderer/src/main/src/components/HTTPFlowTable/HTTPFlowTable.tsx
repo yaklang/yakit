@@ -1054,6 +1054,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     useEffect(
         () => {
             if (pageType === "History" && queryParams !== "" && inViewport) {
+                console.log(123, queryParams);
                 props.onQueryParams && props.onQueryParams(queryParams)
             }
         },
@@ -1267,10 +1268,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             BeforeBodyLength: params.BeforeBodyLength
                 ? onConvertBodySizeByUnit(params.BeforeBodyLength, getBodyLengthUnit())
                 : undefined,
-            SourceType: props.params?.SourceType || "mitm",
             AfterId: maxIdRef.current,
             Pagination: {...paginationProps}
         }
+
+        if (props.params?.SourceType) {
+            query.SourceType = props.params?.SourceType
+        }
+        
         if (pageType === "MITM" && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
             updateMITMPageQuery(query, "offset")
             return
