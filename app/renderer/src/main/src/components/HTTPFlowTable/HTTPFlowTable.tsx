@@ -1053,11 +1053,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [queryParams, setQueryParams] = useState<string>("")
     useEffect(
         () => {
-            if (pageType === "History" && queryParams !== "") {
+            if (pageType === "History" && queryParams !== "" && inViewport) {
                 props.onQueryParams && props.onQueryParams(queryParams)
             }
         },
-        [queryParams, pageType]
+        [queryParams, pageType, inViewport]
     )
     const updateQueryParams = (query) => {
         const copyQuery = structuredClone(query)

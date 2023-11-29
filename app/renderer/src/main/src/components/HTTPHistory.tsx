@@ -506,6 +506,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     pageType={pageType}
                                     historyId={historyId}
                                     onQueryParams={onQueryParams}
+                                    inViewport={inViewport}
                                 />
                             </div>
                         )}
