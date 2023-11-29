@@ -434,7 +434,6 @@ export interface HTTPFlowTableProp {
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
     IncludeInUrl?: string
-    searchTreeFlag?: boolean
     onQueryParams?: (queryParams: string, execFlag?: boolean) => void
 }
 
@@ -1055,7 +1054,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     useEffect(
         () => {
             if (pageType === "History" && queryParams !== "") {
-                console.log(123, queryParams);
                 props.onQueryParams && props.onQueryParams(queryParams)
             }
         },
@@ -2453,7 +2451,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setContentTypeQuery("")
         setColor([])
         setCheckBodyLength(false)
-        props.onQueryParams && props.onQueryParams(queryParams, true)
+        if (pageType === "History") {
+            props.onQueryParams && props.onQueryParams(queryParams, true)
+        }
         setTimeout(() => {
             updateData()
         }, 100)

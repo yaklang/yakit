@@ -491,7 +491,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         .filter((url) => url !== "")
                                         .join(",")}
                                     IncludeInUrl={selectedNodeParamsKey}
-                                    searchTreeFlag={searchTreeFlag}
                                     // tableHeight={200}
                                     // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {
