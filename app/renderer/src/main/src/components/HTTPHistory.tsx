@@ -153,9 +153,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
         const iconsEle = {
-            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
-            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
-            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
+            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon'/>,
+            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon'/>,
+            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon'/>
         }
         return iconsEle[treeNodeType] || <></>
     }
@@ -171,9 +171,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setTimeout(() => {
             const filter = `?params=${handleFilterParams()}`
             getSearchTreeFlag() ? setSearchWebTreeData([]) : setWebTreeData([])
-            const query = getSearchTreeFlag() ? `&query=${1}` : ""
-            console.log("query", query)
-            loadFromYakURLRaw(yakurl + filter + query, (res) => {
+            const search = getSearchTreeFlag() ? `&search=${1}` : ""
+            console.log("search", search)
+            loadFromYakURLRaw(yakurl + filter + search, (res) => {
                 setTreeLoading(false)
                 // 判断是否是搜索树
                 if (getSearchTreeFlag()) {
@@ -200,9 +200,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 icon: ({expanded}) => {
                     if (item.ResourceType === "dir") {
                         return expanded ? (
-                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                            <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
                         ) : (
-                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                            <SolidFolderaddIcon className='yakitTreeNode-icon'/>
                         )
                     }
                     return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
@@ -260,9 +260,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             icon: ({expanded}) => {
                                 if (i.ResourceType === "dir") {
                                     return expanded ? (
-                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
                                     ) : (
-                                        <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                                        <SolidFolderaddIcon className='yakitTreeNode-icon'/>
                                     )
                                 }
                                 return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
@@ -412,7 +412,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             className={classNames(styles["hTTPHistory-tab-item"], {
                                                 [styles["hTTPHistory-tab-item-active"]]: curTabKey === item.key,
                                                 [styles["hTTPHistory-tab-item-unshowCont"]]:
-                                                    curTabKey === item.key && !item.contShow
+                                                curTabKey === item.key && !item.contShow
                                             })}
                                             key={item.key}
                                             onClick={() => {
@@ -470,8 +470,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     params={
                                         props?.websocket
                                             ? ({
-                                                  OnlyWebsocket: true
-                                              } as YakQueryHTTPFlowRequest)
+                                                OnlyWebsocket: true
+                                            } as YakQueryHTTPFlowRequest)
                                             : undefined
                                     }
                                     searchURL={selectedNodes
