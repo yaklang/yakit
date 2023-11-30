@@ -1038,7 +1038,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams({
                 ...params,
                 SearchURL: props.searchURL,
-                IncludeInUrl: props.IncludeInUrl ? props.IncludeInUrl.split("§") : [""]
+                IncludeInUrl: props.IncludeInUrl ? [props.IncludeInUrl] : [""]
             })
             setScrollToIndex(0)
             setCurrentIndex(undefined)

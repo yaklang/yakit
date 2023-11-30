@@ -374,12 +374,11 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             if (urlItem && urlItem.Value) {
                 try {
                     const url = new URL(urlItem.Value)
-                    // 获取 URL 的路径
-                    const path = url.pathname ? url.pathname : node.data?.Path || "";
+
                     // 获取 URL 的查询字符串（不包括 '?'）
                     const query = url.search.substring(1);
-                    // 如果存在查询参数，则将它们与路径使用§拼接，使用一个url中不会出现的特殊字符
-                    const selectedParam = query ? `${path}§${query}` : '';
+                    // 如果存在查询参数
+                    const selectedParam = query ? `${query}` : '';
                     setSelectedNodePath(selectedParam)
                 } catch (_) {
                     setSelectedNodePath("")
