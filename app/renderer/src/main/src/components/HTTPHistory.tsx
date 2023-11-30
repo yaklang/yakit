@@ -302,7 +302,14 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         queryParamsRef.current = queryParams
         if (selectedNodes.length) {
             if (execFlag) {
-                refreshTree()
+                if (searchTreeFlag) {
+                    setSelectedKeys([])
+                    setSelectedNodes([])
+                    setExpandedKeys([])
+                    getTreeData("website://" + searchValue)
+                } else {
+                    refreshTree()
+                }
             }
         } else {
             if (searchTreeFlag) {
