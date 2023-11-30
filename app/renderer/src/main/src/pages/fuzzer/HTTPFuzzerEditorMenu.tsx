@@ -13,7 +13,6 @@ import {
     IconSolidCodeIcon,
     IconSolidSparklesIcon,
     IconSolidTagIcon,
-    SolidTerminalIcon,
     IconOutlinePencilAltIcon,
     TrashIcon
 } from "@/assets/newIcon"
@@ -24,6 +23,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
+import { SolidTerminalIcon } from "@/assets/icon/solid"
 const {ipcRenderer} = window.require("electron")
 
 export interface CountDirectionProps {
