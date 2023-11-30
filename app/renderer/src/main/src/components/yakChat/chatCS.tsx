@@ -34,7 +34,6 @@ import {
     QuestionMarkCircleIcon,
     RemoveIcon,
     SolidThumbDownIcon,
-    SolidThumbUpIcon,
     StopIcon,
     ThumbDownIcon,
     ThumbUpIcon,
@@ -65,6 +64,7 @@ import {useStore} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {OutlineInformationcircleIcon, OutlinePaperairplaneIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {SolidThumbupIcon} from "@/assets/icon/solid"
 
 import moment from "moment"
 import classNames from "classnames"
@@ -1300,7 +1300,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                     }}
                                 >
                                     {info.likeType === "good" ? (
-                                        <SolidThumbUpIcon className={styles["actived-icon"]} />
+                                        <SolidThumbupIcon className={styles["actived-icon"]} />
                                     ) : (
                                         <ThumbUpIcon />
                                     )}
