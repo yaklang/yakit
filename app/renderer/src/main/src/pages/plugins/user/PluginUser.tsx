@@ -364,7 +364,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         setRemoveLoading={setRemoveLoading}
                         currentIndex={showUserPluginIndex.current}
                         setCurrentIndex={setShowUserPluginIndex}
-                        onRecalculationUserDetail={pluginUserDetailRef.current.onRecalculation}
+                        onRecalculationUserDetail={pluginUserDetailRef.current?.onRecalculation}
                     />
                 </div>
                 <div

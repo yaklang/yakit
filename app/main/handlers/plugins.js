@@ -1,6 +1,6 @@
-const { ipcMain } = require("electron")
+const {ipcMain} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
-const { USER_INFO } = require("../state")
+const {USER_INFO} = require("../state")
 
 module.exports = (win, getClient) => {
     // get plugins risk list
@@ -47,7 +47,7 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    ipcMain.handle("SaveLocalPlugin", async (e, params) => {
+    ipcMain.handle("SaveNewYakScript", async (e, params) => {
         return await asyncSaveLocalPlugin(params)
     })
 
@@ -55,7 +55,7 @@ module.exports = (win, getClient) => {
     const streamSaveYakScriptToOnline = new Map()
     ipcMain.handle("cancel-SaveYakScriptToOnline", handlerHelper.cancelHandler(streamSaveYakScriptToOnline))
     ipcMain.handle("SaveYakScriptToOnline", async (e, params, token) => {
-        params.Token = USER_INFO.token || ''
+        params.Token = USER_INFO.token || ""
         let stream = getClient().SaveYakScriptToOnline(params)
         handlerHelper.registerHandler(win, stream, streamSaveYakScriptToOnline, token)
     })

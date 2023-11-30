@@ -598,7 +598,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
                             <YakitSelect
                                 wrapperClassName={styles["modify-select"]}
                                 size='large'
-                                placeholder='请选择或输入 CWE 编号...'
+                                placeholder='请选择或输入CWE编号，例如:1120，如都不满足可自行输入类型'
                                 showSearch={true}
                                 filterOption={false}
                                 allowClear={true}
