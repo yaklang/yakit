@@ -151,7 +151,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
         })
         /** 单项副标题组件 */
         const optExtra = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            return data.is_private ? <SolidPrivatepluginIcon /> : statusTag[`${data.status}`]
+            return data.is_private ? <SolidPrivatepluginIcon className='icon-svg-16' /> : statusTag[`${data.status}`]
         })
         /** 单项勾选|取消勾选 */
         const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
