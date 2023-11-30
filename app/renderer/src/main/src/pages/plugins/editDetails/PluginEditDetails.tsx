@@ -13,7 +13,6 @@ import {
     OutlineIdentificationIcon,
     OutlinePaperairplaneIcon,
     OutlineSmviewgridaddIcon,
-    OutlineStorageIcon,
     OutlineViewgridIcon
 } from "@/assets/icon/outline"
 import {
@@ -54,6 +53,7 @@ import {YakScriptRunner} from "@/pages/invoker/ExecYakScript"
 import {YakScriptParamsSetter} from "@/pages/invoker/YakScriptParamsSetter"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
+import {SolidStoreIcon} from "@/assets/icon/solid"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
@@ -1085,7 +1085,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
                         <FuncBtn
                             maxWidth={1100}
-                            icon={<OutlineStorageIcon />}
+                            icon={<SolidStoreIcon />}
                             size='large'
                             name={"保存"}
                             loading={saveLoading}

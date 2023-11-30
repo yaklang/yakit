@@ -361,6 +361,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
 
         useEffect(() => {
             if (data) {
+                form.resetFields()
                 form.setFieldsValue({...data})
                 setBugInfo(data.RiskDetail ? {...data.RiskDetail} : undefined)
                 if (data?.RiskDetail && data.RiskDetail.RiskType) {
