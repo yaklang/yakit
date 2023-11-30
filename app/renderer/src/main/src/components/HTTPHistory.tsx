@@ -134,7 +134,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [searchValue, setSearchValue] = useState<string>("")
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
-    const [hoveredKeys, setHoveredKeys, getHoveredKeys] = useGetState<TreeKey>("") // 定位树节点key
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string>("") // 这里只能是字符串（解决不必要渲染问题） 传到HttpFlowTable里面去变数组
     const queryParamsRef = useRef<string>("")
@@ -154,15 +153,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
         const iconsEle = {
-            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon'/>,
-            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon'/>,
-            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon'/>
+            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
+            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
+            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
         }
         return iconsEle[treeNodeType] || <></>
     }
 
     const handleFilterParams = () => {
-        console.log("queryParamsRef", queryParamsRef.current)
+        // console.log("queryParamsRef", queryParamsRef.current)
         return queryParamsRef.current
     }
 
@@ -173,7 +172,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         const query = getSearchTreeFlag() ? `&query=${1}` : ""
         console.log("query", query)
         loadFromYakURLRaw(yakurl + filter + query, (res) => {
-            console.log("exec tree")
             setTreeLoading(false)
             // 判断是否是搜索树
             if (getSearchTreeFlag()) {
@@ -192,20 +190,16 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         return arr.map((item: YakURLResource, index: number) => {
             const id = item.VerboseName
             return {
-                title: (
-                    <span style={{backgroundColor: getHoveredKeys() === id ? "var(--yakit-primary-2)" : undefined}}>
-                        {item.VerboseName}
-                    </span>
-                ),
+                title: item.VerboseName,
                 key: id,
                 isLeaf: !item.HaveChildrenNodes,
                 data: item,
                 icon: ({expanded}) => {
                     if (item.ResourceType === "dir") {
                         return expanded ? (
-                            <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
+                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
                         ) : (
-                            <SolidFolderaddIcon className='yakitTreeNode-icon'/>
+                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
                         )
                     }
                     return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
@@ -235,8 +229,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 树子节点异步加载组装树
     const onLoadWebTreeData = ({key, children, data}: any) => {
-        console.log("onLoadWebTreeData", key)
-        console.log("data", data)
         return new Promise<void>((resolve, reject) => {
             if (data === undefined) {
                 reject("node.data is empty")
@@ -247,36 +239,27 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 Query: [{Key: "params", Value: handleFilterParams()}]
             }
             if (key.startsWith("https://")) {
-                obj.Query.push({ Key: "schema", Value: "https" });
-            }else if (key.startsWith("http://")) {
-                obj.Query.push({ Key: "schema", Value: "http" });
+                obj.Query.push({Key: "schema", Value: "https"})
+            } else if (key.startsWith("http://")) {
+                obj.Query.push({Key: "schema", Value: "http"})
             }
 
-            console.log("obj", obj)
             requestYakURLList(
                 obj,
                 (rsp) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
                         const id = key + "/" + i.ResourceName
                         return {
-                            title: (
-                                <span
-                                    style={{
-                                        backgroundColor: getHoveredKeys() === id ? "var(--yakit-primary-2)" : undefined
-                                    }}
-                                >
-                                    {i.VerboseName}
-                                </span>
-                            ),
+                            title: i.VerboseName,
                             key: id,
                             isLeaf: !i.HaveChildrenNodes,
                             data: i,
                             icon: ({expanded}) => {
                                 if (i.ResourceType === "dir") {
                                     return expanded ? (
-                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
+                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
                                     ) : (
-                                        <SolidFolderaddIcon className='yakitTreeNode-icon'/>
+                                        <SolidFolderaddIcon className='yakitTreeNode-icon' />
                                     )
                                 }
                                 return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
@@ -300,7 +283,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const onSearchTree = useMemoizedFn((value: string) => {
         const flag = value === "/" ? false : !!value
         setSearchTreeFlag(flag)
-        setHoveredKeys("")
         setExpandedKeys([])
         setSelectedKeys([])
         if (value === "") {
@@ -333,7 +315,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         }
         // 搜索树时&选中树节点 切换表格筛选条件无需刷新树
         if (searchTreeFlag && !selectedKeys.length) {
-            setHoveredKeys("")
             setExpandedKeys([])
             getWebTreeData("website://" + searchValue)
             return
@@ -346,7 +327,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setSecondNodeVisible(false)
         setSearchValue("")
         setSearchTreeFlag(false)
-        setHoveredKeys("")
         setExpandedKeys([])
         setSelectedKeys([])
         setSelectedNodes([])
@@ -357,15 +337,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const onJumpWebTree = useMemoizedFn((value) => {
         if (inViewport && curTabKey === "web-tree") {
             const val = JSON.parse(value) // HTTPFlowDetailRequestAndResponse组件发送传过来的数据
-            const path = val.path // 需要展开得节点数组
-            const host = val.host // TODO 可能得换，后端需要把模糊搜索改掉
-            const jumpTreeKey = path[path.length - 1] // 定位节点得key
-            setExpandedKeys(path)
-            setHoveredKeys(jumpTreeKey)
-            setSearchValue(host)
+            const host = val.host
             setSearchTreeFlag(true)
             setSelectedKeys([])
-            getWebTreeData("website://" + host)
+            setSearchValue(host)
+            setTimeout(() => {
+                getWebTreeData("website://" + host)
+            }, 50)
         }
     })
     useEffect(() => {
@@ -377,7 +355,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 点击Select选中树
     const onSelectedKeys = useMemoizedFn((selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-        console.log("selectedNodes", selectedNodes)
+        // console.log("selectedNodes", selectedNodes)
         setSelectedKeys(selectedKeys)
         setSelectedNodes(selectedNodes)
         setOnlyShowFirstNode(true)
@@ -435,7 +413,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             className={classNames(styles["hTTPHistory-tab-item"], {
                                                 [styles["hTTPHistory-tab-item-active"]]: curTabKey === item.key,
                                                 [styles["hTTPHistory-tab-item-unshowCont"]]:
-                                                curTabKey === item.key && !item.contShow
+                                                    curTabKey === item.key && !item.contShow
                                             })}
                                             key={item.key}
                                             onClick={() => {
@@ -465,6 +443,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         onSearch={onSearchTree}
                                         refreshTree={refreshTree}
                                         expandedKeys={expandedKeys}
+                                        autoExpandParent={true}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
                                         onSelectedKeys={onSelectedKeys}
@@ -493,8 +472,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     params={
                                         props?.websocket
                                             ? ({
-                                                OnlyWebsocket: true
-                                            } as YakQueryHTTPFlowRequest)
+                                                  OnlyWebsocket: true
+                                              } as YakQueryHTTPFlowRequest)
                                             : undefined
                                     }
                                     searchURL={selectedNodes

@@ -954,17 +954,16 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         if (flow?.Url) {
             try {
                 let url = new URL(flow.Url)
-                let path: string[] = url.pathname.split("/").filter((item) => item)
-                // TODO 后端搜索树得返回完整得上一级 不然搜索无法跳转
-                path.unshift(url.origin)
+                // let path: string[] = url.pathname.split("/").filter((item) => item)
+                // path.unshift(url.origin)
 
-                let str = ""
-                let arr: string[] = []
-                for (let i = 0; i < path.length; i++) {
-                    str += (i !== 0 ? "/" : "") + path[i]
-                    arr.push(str)
-                }
-                emiter.emit("onJumpWebTree", JSON.stringify({path: path, host: url.host}))
+                // let str = ""
+                // let arr: string[] = []
+                // for (let i = 0; i < path.length; i++) {
+                //     str += (i !== 0 ? "/" : "") + path[i]
+                //     arr.push(str)
+                // }
+                emiter.emit("onJumpWebTree", JSON.stringify({host: url.host}))
             } catch (error) {
                 return ""
             }

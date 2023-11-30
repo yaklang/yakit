@@ -42,7 +42,6 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
     const {showLine = true, showIcon = true, showSearch = true, searchPlaceholder = "请输入关键词搜索"} = props
 
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>() // 树节点展开key
-    const [autoExpandParent, setAutoExpandParent] = useState<boolean>() // 是否自动展开父节点
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>() // select - 节点
     const [checkedKeys, setCheckedKeys] = useState<TreeKey[]>() // check - 节点
 
@@ -76,7 +75,6 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
      */
     const onExpand = (expandedKeys: TreeKey[]) => {
         setExpandedKeys(expandedKeys)
-        setAutoExpandParent(false)
         props.onExpandedKeys && props.onExpandedKeys(expandedKeys)
     }
 
@@ -106,7 +104,6 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
     })
     const onSearch = useMemoizedFn((value) => {
         props.onSearch && props.onSearch(value)
-        setAutoExpandParent(true)
     })
 
     /**
@@ -172,7 +169,6 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
                                     <OutlinePlusIcon className={styles["switcher-icon"]} />
                                 )
                             }}
-                            autoExpandParent={autoExpandParent}
                             onExpand={onExpand}
                             expandedKeys={expandedKeys}
                             selectedKeys={selectedKeys}
