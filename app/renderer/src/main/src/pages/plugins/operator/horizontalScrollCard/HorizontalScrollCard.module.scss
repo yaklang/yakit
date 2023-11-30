@@ -1,0 +1,201 @@
+@use "sass:color";
+
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+%direction-btn {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    background-color: #fff;
+    border-radius: 50%;
+    border: 1px solid var(--yakit-border-color);
+    @extend %display-flex-center;
+    justify-content: center;
+    cursor: pointer;
+    svg {
+        width: 12px;
+        height: 12px;
+        color: var(--yakit-body-text-color);
+    }
+}
+
+$CardStatusColor: (
+    purple: (
+        bgColor: rgba(136, 99, 247, 0.1),
+        borderColor: rgba(136, 99, 247, 0.2)
+    ),
+    bluePurple: (
+        bgColor: rgba(218, 95, 221, 0.1),
+        borderColor: rgba(218, 95, 221, 0.2)
+    ),
+    blue: (
+        bgColor: rgba(74, 148, 248, 0.1),
+        borderColor: rgba(74, 148, 248, 0.2)
+    ),
+    lakeBlue: (
+        bgColor: rgba(41, 188, 208, 0.1),
+        borderColor: rgba(41, 188, 208, 0.2)
+    ),
+    cyan: (
+        bgColor: rgba(53, 216, 238, 0.1),
+        borderColor: rgba(53, 216, 238, 0.2)
+    ),
+    green: (
+        bgColor: rgba(86, 201, 145, 0.1),
+        borderColor: rgba(86, 201, 145, 0.2)
+    ),
+    red: (
+        bgColor: rgba(244, 115, 107, 0.1),
+        borderColor: rgba(244, 115, 107, 0.2)
+    ),
+    orange: (
+        bgColor: rgba(255, 182, 96, 0.1),
+        borderColor: rgba(255, 182, 96, 0.2)
+    ),
+    yellow: (
+        bgColor: rgba(255, 213, 131, 0.1),
+        borderColor: rgba(255, 213, 131, 0.2)
+    )
+);
+$keyColor: map-keys($CardStatusColor);
+@for $c from 1 through length($keyColor) {
+    $name: nth($keyColor, $c);
+    $currentColor: map-get($CardStatusColor, $name);
+    .card-item-bg-#{"" + $name} {
+        background-color: map-get($currentColor, "bgColor");
+    }
+    .card-item-border-left-#{"" + $name} {
+        border-left: 2px solid map-get($currentColor, "borderColor");
+    }
+}
+.text-error {
+    color: var(--yakit-danger-5) !important;
+}
+.text-success {
+    color: var(--yakit-success-5) !important;
+}
+.horizontal-scroll-card {
+    @extend %display-column-center;
+    gap: 8px;
+
+    ::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+    &-heard {
+        @extend %display-flex-center;
+        gap: 4px;
+        &-title {
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px; /* 133.333% */
+        }
+        &-total {
+            display: flex;
+            padding: 2px 6px;
+            align-items: flex-start;
+            gap: 10px;
+            border-radius: 8px;
+            background: var(--yakit-background-color);
+            color: var(--yakit-body-text-color);
+            font-size: 10px;
+            line-height: 12px; /* 120% */
+        }
+    }
+    &-list-wrapper {
+        position: relative;
+        @extend %display-flex-center;
+    }
+    &-list {
+        display: flex;
+        align-items: stretch;
+        gap: 12px;
+        overflow: auto;
+        scroll-behavior: smooth;
+
+        &-direction-left {
+            @extend %direction-btn;
+            position: absolute;
+            left: 0;
+        }
+
+        &-direction-right {
+            @extend %direction-btn;
+            position: absolute;
+            right: 0;
+        }
+
+        &-item-info-multiple {
+            @extend %display-column-center;
+            flex-shrink: 0;
+            border-radius: 4px;
+            height: 88px;
+            padding: 12px 16px;
+            &-tag {
+                @extend %display-flex-center;
+                gap: 2px;
+                color: var(--yakit-header-color);
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px; /* 142.857% */
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    color: var(--yakit-helper-text-color);
+                }
+            }
+            &-infos {
+                @extend %display-flex-center;
+                gap: 20px;
+                margin-top: 4px;
+                height: 44px;
+                &-item {
+                    @extend %display-column-center;
+                    gap: 4px;
+                    &-data {
+                        color: var(--yakit-header-color);
+                        font-size: 16px;
+                        font-weight: 600;
+                        line-height: 24px; /* 150% */
+                    }
+                    &-id {
+                        color: var(--yakit-body-text-color);
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px; /* 133.333% */
+                    }
+                }
+            }
+        }
+        &-item-info-single {
+            @extend %display-column-center;
+            justify-content: space-between;
+            border-radius: 4px;
+            padding: 12px 16px;
+            flex: 1 0 fit-content;
+            min-width: 96px;
+            min-height: 68px;
+
+            &-data {
+                color: var(--yakit-header-color);
+                font-size: 16px;
+                font-weight: 600;
+                line-height: 24px; /* 150% */
+            }
+            &-id {
+                color: var(--yakit-body-text-color);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px; /* 133.333% */
+            }
+        }
+    }
+}
