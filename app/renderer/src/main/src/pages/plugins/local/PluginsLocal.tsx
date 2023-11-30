@@ -703,8 +703,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
         setShowFilter(v)
     })
-    /**初始数据为空的时候,刷新按钮,刷新列表和初始total */
-    const onRefListAndTotal = useMemoizedFn(() => {
+    /**初始数据为空的时候,刷新按钮,刷新列表和初始total,以及分组数据 */
+    const onRefListAndTotalAndGroup = useMemoizedFn(() => {
         getInitTotal()
         fetchList(true)
         getPluginGroupListLocal()
@@ -894,7 +894,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                     <YakitButton
                                         type='outline1'
                                         icon={<OutlineRefreshIcon />}
-                                        onClick={onRefListAndTotal}
+                                        onClick={onRefListAndTotalAndGroup}
                                     >
                                         刷新
                                     </YakitButton>

@@ -20,13 +20,15 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {PluginGV} from "../builtInData"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {OutlineRefreshIcon} from "@/assets/icon/outline"
 
 import "../plugins.scss"
 import styles from "./PluginRecycleList.module.scss"
 
 export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
     forwardRef((props, ref) => {
-        const {refresh, inViewport, isLogin, setIsSelectRecycleNum, onRefreshUserList} = props
+        const {refresh, inViewport, isLogin, setIsSelectRecycleNum, onRefreshUserList, setInitTotalRecycle} = props
         /** 是否为加载更多 */
         const [loading, setLoading] = useState<boolean>(false)
         const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
@@ -88,6 +90,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                 limit: 1
             }).then((res) => {
                 setInitTotal(+res.pagemeta.total)
+                setInitTotalRecycle(+res.pagemeta.total)
             })
         })
 
@@ -304,6 +307,11 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                 } catch (error) {}
             })
         )
+        /**初始数据为空的时候,刷新按钮,刷新列表和初始total */
+        const onRefListAndTotalAndGroup = useMemoizedFn(() => {
+            getInitTotal()
+            fetchList(true)
+        })
         return (
             <YakitSpin spinning={loading && isLoadingRef.current}>
                 <div className={styles["plugins-list-wrapper"]}>
@@ -378,7 +386,18 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                                 isShowSearchResultEmpty={+response.pagemeta.total === 0}
                             />
                         ) : (
-                            <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
+                            <div className={styles["plugin-recycle-empty"]}>
+                                <YakitEmpty title='暂无数据' />
+                                <div className={styles["plugin-recycle-buttons"]}>
+                                    <YakitButton
+                                        type='outline1'
+                                        icon={<OutlineRefreshIcon />}
+                                        onClick={onRefListAndTotalAndGroup}
+                                    >
+                                        刷新
+                                    </YakitButton>
+                                </div>
+                            </div>
                         )}
                     </PluginsList>
                 </div>
