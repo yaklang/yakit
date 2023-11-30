@@ -32,6 +32,8 @@ export interface PluginUserListProps {
     setRemoveLoading: (b: boolean) => void
     /**刷新详情数据 */
     onRecalculationUserDetail: () => void
+    /**设置初始total */
+    setInitTotalUser: (index: number) => void
 }
 
 export interface PluginRecycleListProps {
@@ -44,6 +46,8 @@ export interface PluginRecycleListProps {
     setIsSelectRecycleNum: (b: boolean) => void
     setSearchValue: (s: PluginSearchParams) => void
     onRefreshUserList: () => void
+    /**设置初始total */
+    setInitTotalRecycle: (index: number) => void
 }
 
 export interface OnlineUserExtraOperateProps {

@@ -17,6 +17,7 @@ import {
     OutlineLockclosedIcon,
     OutlineLockopenIcon,
     OutlinePlusIcon,
+    OutlineRefreshIcon,
     OutlineShareIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
@@ -112,6 +113,9 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
 
     const [downloadLoading, setDownloadLoading] = useState<boolean>(false) // 我的插件批量下载
     const [removeLoading, setRemoveLoading] = useState<boolean>(false) // 我的插件批量删除
+
+    const [initTotalUser, setInitTotalUser] = useState<number>(0) //我的插件total总数,不带任何条件
+    const [initTotalRecycle, setInitTotalRecycle] = useState<number>(0) //回收站total总数,不带任何条件
 
     // 当前展示的插件序列
     const showUserPluginIndex = useRef<number>(0)
@@ -296,6 +300,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                                         name={isSelectUserNum ? "下载" : "一键下载"}
                                         onClick={onDownload}
                                         loading={downloadLoading}
+                                        disabled={initTotalUser === 0}
                                     />
                                     <FuncBtn
                                         maxWidth={1050}
@@ -305,6 +310,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                                         name={isSelectUserNum ? "删除" : "清空"}
                                         onClick={onRemove}
                                         loading={removeLoading}
+                                        disabled={initTotalUser === 0}
                                     />
                                     <FuncBtn
                                         maxWidth={1050}
@@ -323,6 +329,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                                         size='large'
                                         name={isSelectRecycleNum ? "删除" : "清空"}
                                         onClick={onRecycleRemove}
+                                        disabled={initTotalRecycle === 0}
                                     />
                                     <FuncBtn
                                         maxWidth={1050}
@@ -330,6 +337,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                                         size='large'
                                         name='还原'
                                         onClick={onRecycleReduction}
+                                        disabled={initTotalRecycle === 0}
                                     />
                                 </>
                             )}
@@ -365,6 +373,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         currentIndex={showUserPluginIndex.current}
                         setCurrentIndex={setShowUserPluginIndex}
                         onRecalculationUserDetail={pluginUserDetailRef.current?.onRecalculation}
+                        setInitTotalUser={setInitTotalUser}
                     />
                 </div>
                 <div
@@ -382,6 +391,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         setSearchValue={setSearch}
                         setIsSelectRecycleNum={setIsSelectRecycleNum}
                         onRefreshUserList={onRefreshUserList}
+                        setInitTotalRecycle={setInitTotalRecycle}
                     />
                 </div>
             </PluginsLayout>
@@ -416,7 +426,8 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             currentIndex,
             setCurrentIndex,
             setRemoveLoading,
-            onRecalculationUserDetail
+            onRecalculationUserDetail,
+            setInitTotalUser
         } = props
         /** 是否为加载更多 */
         const [loading, setLoading] = useState<boolean>(false)
@@ -507,6 +518,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             if (isLogin) {
                 getInitTotal()
                 getPluginRemoveCheck()
+                getPluginGroupList()
             }
         }, [isLogin, inViewport])
         useEffect(() => {
@@ -514,11 +526,6 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 fetchList(true)
             }
         }, [isLogin, refresh, filters])
-        useEffect(() => {
-            if (isLogin) {
-                getPluginGroupList()
-            }
-        }, [isLogin, inViewport])
         useEffect(() => {
             setIsSelectUserNum(selectList.length > 0 || allCheck)
         }, [selectList.length, allCheck])
@@ -545,6 +552,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 limit: 1
             }).then((res) => {
                 setInitTotal(+res.pagemeta.total)
+                setInitTotalUser(+res.pagemeta.total)
             })
         })
 
@@ -840,6 +848,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             setRemoteValue(PluginGV.OwnerFilterCloseStatus, `${!!showFilter}`)
             setShowFilter(v)
         })
+        /**初始数据为空的时候,刷新按钮,刷新列表和初始total,分组数据 */
+        const onRefListAndTotalAndGroup = useMemoizedFn(() => {
+            getInitTotal()
+            fetchList(true)
+            getPluginGroupList()
+        })
         return (
             <>
                 <PluginsContainer
@@ -928,6 +942,13 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                                 <div className={styles["plugin-user-buttons"]}>
                                     <YakitButton type='outline1' icon={<OutlinePlusIcon />} onClick={onAddPlugin}>
                                         新建插件
+                                    </YakitButton>
+                                    <YakitButton
+                                        type='outline1'
+                                        icon={<OutlineRefreshIcon />}
+                                        onClick={onRefListAndTotalAndGroup}
+                                    >
+                                        刷新
                                     </YakitButton>
                                 </div>
                             </div>

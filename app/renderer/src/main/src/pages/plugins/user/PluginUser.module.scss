@@ -35,7 +35,9 @@
 }
 
 .plugin-user-empty {
-    margin-top: 48px;
+    height: 100%;
+    overflow: auto;
+    padding-top: 10%;
     .plugin-user-buttons {
         display: flex;
         gap: 8px;
