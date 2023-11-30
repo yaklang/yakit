@@ -54,7 +54,6 @@ import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {AdminUpOnlineBatch} from "@/pages/yakitStore/YakitStorePage"
 import {addToTab} from "@/pages/MainTabs"
 import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
 import {ExclamationCircleOutlined, InboxOutlined, LoadingOutlined} from "@ant-design/icons"
@@ -327,7 +326,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 if (isEnpriTraceAgent()) {
                     return [
                         {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                        {key: "upload-plugin", title: "同步插件"},
                         {key: "hole-collect", title: "漏洞汇总"},
                         {key: "role-admin", title: "角色管理"},
                         {key: "account-admin", title: "用户管理"},
@@ -338,7 +336,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 }
                 let cacheMenu = [
                     {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                    {key: "upload-plugin", title: "同步插件"},
                     {key: "upload-data", title: "上传数据"},
                     {key: "dynamic-control", title: "发起远程"},
                     {key: "control-admin", title: "远程管理"},
@@ -622,19 +619,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             }
                                             if (key === "plugin-aduit") {
                                                 onOpenPage({route: YakitRoute.Plugin_Audit})
-                                            }
-                                            if (key === "upload-plugin") {
-                                                const m = showModal({
-                                                    title: "同步本地插件",
-                                                    maskClosable: false,
-                                                    content: (
-                                                        <AdminUpOnlineBatch
-                                                            userInfo={userInfo}
-                                                            onClose={() => m.destroy()}
-                                                        />
-                                                    )
-                                                })
-                                                return m
                                             }
                                             if (key === "hole-collect") {
                                                 onOpenPage({route: YakitRoute.HoleCollectPage})
