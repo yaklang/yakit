@@ -165,24 +165,27 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         return queryParamsRef.current
     }
 
-    const getWebTreeData = (yakurl: string) => {
-        const filter = `?params=${handleFilterParams()}`
+    const getTreeData = (yakurl: string) => {
+        // 由于这里会有闭包 50毫秒后再掉接口
         setTreeLoading(true)
-        getSearchTreeFlag() ? setSearchWebTreeData([]) : setWebTreeData([])
-        const query = getSearchTreeFlag() ? `&query=${1}` : ""
-        console.log("query", query)
-        loadFromYakURLRaw(yakurl + filter + query, (res) => {
-            setTreeLoading(false)
-            // 判断是否是搜索树
-            if (getSearchTreeFlag()) {
-                setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
-            } else {
-                setWebTreeData(assembleFirstTreeNode(res.Resources))
-            }
-        }).catch((error) => {
-            setTreeLoading(false)
-            yakitFailed(`加载失败: ${error}`)
-        })
+        setTimeout(() => {
+            const filter = `?params=${handleFilterParams()}`
+            getSearchTreeFlag() ? setSearchWebTreeData([]) : setWebTreeData([])
+            const query = getSearchTreeFlag() ? `&query=${1}` : ""
+            console.log("query", query)
+            loadFromYakURLRaw(yakurl + filter + query, (res) => {
+                setTreeLoading(false)
+                // 判断是否是搜索树
+                if (getSearchTreeFlag()) {
+                    setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
+                } else {
+                    setWebTreeData(assembleFirstTreeNode(res.Resources))
+                }
+            }).catch((error) => {
+                setTreeLoading(false)
+                yakitFailed(`加载失败: ${error}`)
+            })
+        }, 50)
     }
 
     // 树节点第一层组装树
@@ -291,9 +294,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setSecondNodeVisible(false)
         }
         setSearchValue(value)
-        setTimeout(() => {
-            getWebTreeData("website://" + `${value ? value : "/"}`)
-        }, 50)
+        getTreeData("website://" + `${value ? value : "/"}`)
     })
 
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
@@ -316,7 +317,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         // 搜索树时&选中树节点 切换表格筛选条件无需刷新树
         if (searchTreeFlag && !selectedKeys.length) {
             setExpandedKeys([])
-            getWebTreeData("website://" + searchValue)
+            getTreeData("website://" + searchValue)
             return
         }
     })
@@ -330,7 +331,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setExpandedKeys([])
         setSelectedKeys([])
         setSelectedNodes([])
-        getWebTreeData("website:///")
+        getTreeData("website:///")
     })
 
     // 跳转网站树指定节点
@@ -341,9 +342,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setSearchTreeFlag(true)
             setSelectedKeys([])
             setSearchValue(host)
-            setTimeout(() => {
-                getWebTreeData("website://" + host)
-            }, 50)
+            getTreeData("website://" + host)
         }
     })
     useEffect(() => {
