@@ -154,9 +154,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
         const iconsEle = {
-            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
-            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
-            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
+            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon'/>,
+            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon'/>,
+            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon'/>
         }
         return iconsEle[treeNodeType] || <></>
     }
@@ -170,7 +170,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         const filter = `?params=${handleFilterParams()}`
         setTreeLoading(true)
         getSearchTreeFlag() ? setSearchWebTreeData([]) : setWebTreeData([])
-        loadFromYakURLRaw(yakurl + filter, (res) => {
+        const query = getSearchTreeFlag() ? `&query=${1}` : ""
+        console.log("query", query)
+        loadFromYakURLRaw(yakurl + filter + query, (res) => {
             console.log("exec tree")
             setTreeLoading(false)
             // 判断是否是搜索树
@@ -188,7 +190,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     // 树节点第一层组装树
     const assembleFirstTreeNode = (arr) => {
         return arr.map((item: YakURLResource, index: number) => {
-            const id = getSearchTreeFlag() ? item.ResourceName : item.VerboseName
+            const id = item.VerboseName
             return {
                 title: (
                     <span style={{backgroundColor: getHoveredKeys() === id ? "var(--yakit-primary-2)" : undefined}}>
@@ -201,9 +203,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 icon: ({expanded}) => {
                     if (item.ResourceType === "dir") {
                         return expanded ? (
-                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                            <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
                         ) : (
-                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                            <SolidFolderaddIcon className='yakitTreeNode-icon'/>
                         )
                     }
                     return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
@@ -233,6 +235,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 树子节点异步加载组装树
     const onLoadWebTreeData = ({key, children, data}: any) => {
+        console.log("onLoadWebTreeData", key)
+        console.log("data", data)
         return new Promise<void>((resolve, reject) => {
             if (data === undefined) {
                 reject("node.data is empty")
@@ -242,7 +246,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 ...data.Url,
                 Query: [{Key: "params", Value: handleFilterParams()}]
             }
+            if (key.startsWith("https://")) {
+                obj.Query.push({ Key: "schema", Value: "https" });
+            }else if (key.startsWith("http://")) {
+                obj.Query.push({ Key: "schema", Value: "http" });
+            }
 
+            console.log("obj", obj)
             requestYakURLList(
                 obj,
                 (rsp) => {
@@ -264,9 +274,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             icon: ({expanded}) => {
                                 if (i.ResourceType === "dir") {
                                     return expanded ? (
-                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
                                     ) : (
-                                        <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                                        <SolidFolderaddIcon className='yakitTreeNode-icon'/>
                                     )
                                 }
                                 return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
@@ -299,7 +309,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setSecondNodeVisible(false)
         }
         setSearchValue(value)
-        getWebTreeData("website://" + `${value ? value : "/"}`)
+        setTimeout(() => {
+            getWebTreeData("website://" + `${value ? value : "/"}`)
+        }, 50)
     })
 
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
@@ -423,7 +435,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             className={classNames(styles["hTTPHistory-tab-item"], {
                                                 [styles["hTTPHistory-tab-item-active"]]: curTabKey === item.key,
                                                 [styles["hTTPHistory-tab-item-unshowCont"]]:
-                                                    curTabKey === item.key && !item.contShow
+                                                curTabKey === item.key && !item.contShow
                                             })}
                                             key={item.key}
                                             onClick={() => {
@@ -481,8 +493,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     params={
                                         props?.websocket
                                             ? ({
-                                                  OnlyWebsocket: true
-                                              } as YakQueryHTTPFlowRequest)
+                                                OnlyWebsocket: true
+                                            } as YakQueryHTTPFlowRequest)
                                             : undefined
                                     }
                                     searchURL={selectedNodes
