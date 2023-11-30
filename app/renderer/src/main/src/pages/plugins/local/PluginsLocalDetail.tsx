@@ -291,9 +291,9 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     const optExtra = useMemoizedFn((data: YakScript) => {
         if (privateDomain !== data.OnlineBaseUrl) return <></>
         if (data.OnlineIsPrivate) {
-            return <SolidPrivatepluginIcon />
+            return <SolidPrivatepluginIcon className='icon-svg-16' />
         } else {
-            return <SolidCloudpluginIcon />
+            return <SolidCloudpluginIcon className='icon-svg-16' />
         }
     })
     const isShowUpload: boolean = useMemo(() => {
