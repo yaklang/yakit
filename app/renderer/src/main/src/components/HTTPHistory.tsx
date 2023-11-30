@@ -169,11 +169,16 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         // 由于这里会有闭包 30毫秒后再掉接口
         setTreeLoading(true)
         setTimeout(() => {
-            const filter = `?params=${handleFilterParams()}`
-            getSearchTreeFlag() ? setSearchWebTreeData([]) : setWebTreeData([])
-            const search = getSearchTreeFlag() ? `&search=${1}` : ""
-            console.log("search", search)
-            loadFromYakURLRaw(yakurl + filter + search, (res) => {
+            let search = ""
+            if (getSearchTreeFlag()) {
+                setSearchWebTreeData([])
+                search = `&search=${1}`
+                console.log("search", search)
+            } else {
+                setWebTreeData([])
+            }
+            
+            loadFromYakURLRaw(yakurl + `?params=${handleFilterParams()}` + search, (res) => {
                 // 判断是否是搜索树
                 if (getSearchTreeFlag()) {
                     setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
