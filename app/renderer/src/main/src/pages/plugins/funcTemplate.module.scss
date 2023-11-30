@@ -366,6 +366,7 @@
     }
 
     .list-body {
+        padding-top: 8px;
         width: 100%;
         flex: 1 0 0;
         overflow: hidden;
@@ -540,7 +541,7 @@
         .item-wrapper {
             width: 50%;
             overflow: hidden;
-            padding: 8px;
+            padding: 0 8px 16px 8px;
         }
         @media screen and (min-width: 1156px) and (max-width: 1480px) {
             .item-wrapper {

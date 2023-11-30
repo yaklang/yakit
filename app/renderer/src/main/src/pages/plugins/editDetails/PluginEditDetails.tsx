@@ -427,7 +427,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             console.log("local-api", request)
             if (!saveLoading) setSaveLoading(true)
             ipcRenderer
-                .invoke("SaveLocalPlugin", request)
+                .invoke("SaveNewYakScript", request)
                 .then((data: YakScript) => {
                     yakitNotify("success", "创建 / 保存 插件成功")
                     setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
