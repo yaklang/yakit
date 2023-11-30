@@ -300,26 +300,17 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         queryParamsRef.current = queryParams
-        // 表格点击重置查询条件时 且选中了树节点时
-        if (execFlag && selectedKeys.length) {
-            refreshTree()
-            return
-        }
-
-        /**
-         * 注：搜索树&非搜索树刷新重置条件不一致
-         */
-
-        // 非搜索树&选中树节点 切换表格筛选条件无需刷新树
-        if (!searchTreeFlag && !selectedKeys.length) {
-            refreshTree()
-            return
-        }
-        // 搜索树时&选中树节点 切换表格筛选条件无需刷新树
-        if (searchTreeFlag && !selectedKeys.length) {
-            setExpandedKeys([])
-            getTreeData("website://" + searchValue)
-            return
+        if (selectedNodes.length) {
+            if (execFlag) {
+                refreshTree()
+            }
+        } else {
+            if (searchTreeFlag) {
+                setExpandedKeys([])
+                getTreeData("website://" + searchValue)
+            } else {
+                refreshTree()
+            }
         }
     })
 
@@ -374,11 +365,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             if (urlItem && urlItem.Value) {
                 try {
                     const url = new URL(urlItem.Value)
-
                     // 获取 URL 的查询字符串（不包括 '?'）
-                    const query = url.search.substring(1);
+                    const query = url.search.substring(1)
                     // 如果存在查询参数
-                    const selectedParam = query ? `${query}` : '';
+                    const selectedParam = query ? `${query}` : ""
                     setSelectedNodePath(selectedParam)
                 } catch (_) {
                     setSelectedNodePath("")
@@ -485,16 +475,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     }
                                     searchURL={selectedNodes
                                         .map((node: TreeNode) => {
-                                            const urlItem = node.data?.Extra.find((item) => item.Key === "url");
-
+                                            const urlItem = node.data?.Extra.find((item) => item.Key === "url")
                                             if (urlItem && urlItem.Value) {
                                                 // 解析 URL
-                                                const url = new URL(urlItem.Value);
+                                                const url = new URL(urlItem.Value)
                                                 // 返回不包含查询参数的完整 URL
-                                                return url.origin + url.pathname;
+                                                return url.origin + url.pathname
                                             } else {
                                                 // 如果没有找到相应的项或者项没有 Value 属性
-                                                return "";
+                                                return ""
                                             }
                                         })
                                         .filter((url) => url !== "")
