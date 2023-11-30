@@ -198,7 +198,6 @@ module.exports = (win, getClient) => {
         const {name, savePath, content} = params
         // 替换为你想要存储文件的文件夹和文件名
         const filePath = path.join(savePath, `${name}.txt`)
-        console.log("filePath---", filePath)
         // 创建文件并向其中追加内容
         fs.appendFile(filePath, `${content}\r\n`, (err) => {
             if (err) {
