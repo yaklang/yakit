@@ -1109,11 +1109,16 @@ export const LocalPluginExecutor: React.FC<LocalPluginExecutorProps> = React.mem
                                         onClick={(e) => {
                                             // setMonitorEdit && setMonitorEdit(true)
                                             // setIsEdit(true)
-                                            if (script?.IsCorePlugin) {
+                                            if (!script) return
+                                            if (script.IsCorePlugin) {
                                                 yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
                                                 return
                                             }
-                                            if (script?.Id && +script.Id) {
+                                            if (script.Type === "packet-hack") {
+                                                yakitNotify("error", "该类型已下架，不可编辑")
+                                                return
+                                            }
+                                            if (script.Id && +script.Id) {
                                                 emiter.emit(
                                                     "openPage",
                                                     JSON.stringify({
