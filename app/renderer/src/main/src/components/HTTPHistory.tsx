@@ -321,6 +321,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         } else {
             if (searchTreeFlag) {
                 setExpandedKeys([])
+                setSelectedNodes([])
                 getTreeData("website://" + searchValue)
             } else {
                 refreshTree()
