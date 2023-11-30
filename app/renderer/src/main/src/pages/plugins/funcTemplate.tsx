@@ -44,7 +44,7 @@ import {
     OutlineViewlistIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {SolidCheckIcon, SolidExclamationIcon} from "@/assets/icon/solid"
+import {SolidCheckIcon, SolidExclamationIcon, SolidThumbupIcon} from "@/assets/icon/solid"
 import {
     SolidOfficialpluginIcon,
     SolidYakitPluginIcon,
@@ -66,7 +66,6 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {PluginTestErrorIcon, PluginsGridCheckIcon} from "./icon"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
-import {SolidThumbUpIcon} from "@/assets/newIcon"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
 import {yakitNotify} from "@/utils/notification"
 import {
@@ -634,7 +633,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
             image={SearchResultEmpty}
             imageStyle={{width: 274, height: 180, marginBottom: 24}}
             title='搜索结果“空”'
-            style={{marginTop: 80}}
+            style={{paddingTop: "10%"}}
             className={styles["empty-list"]}
         />
     ) : (
@@ -1356,7 +1355,7 @@ export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props
                     })}
                     onClick={onLikeClick}
                 >
-                    {likeProps.active ? <SolidThumbUpIcon /> : <OutlineThumbupIcon />}
+                    {likeProps.active ? <SolidThumbupIcon /> : <OutlineThumbupIcon />}
                     <span>{likeProps.likeNumber}</span>
                 </div>
             )}

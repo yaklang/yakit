@@ -10,8 +10,9 @@
     align-items: center;
     gap: 16px;
     flex: 1;
-    overflow: hidden;
-    padding-top: 144px;
+    overflow: auto;
+    padding-top: 10%;
+    padding-bottom: 24px;
     .refresh-button {
         width: fit-content;
     }

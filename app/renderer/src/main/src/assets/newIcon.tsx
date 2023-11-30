@@ -734,27 +734,6 @@ export const TerminalIcon = (props: Partial<IconProps>) => {
     return <Icon component={Terminal} {...props} />
 }
 
-const SolidTerminal = () => (
-    <svg width='18' height='18' viewBox='0 0 18 18' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <g id='Icon/Solid/terminal'>
-            <path
-                id='Icon'
-                fillRule='evenodd'
-                clipRule='evenodd'
-                d='M1.8 4.5002C1.8 3.50608 2.60589 2.7002 3.6 2.7002H14.4C15.3941 2.7002 16.2 3.50608 16.2 4.5002V13.5002C16.2 14.4943 15.3941 15.3002 14.4 15.3002H3.6C2.60589 15.3002 1.8 14.4943 1.8 13.5002V4.5002ZM4.76361 5.6638C5.11508 5.31233 5.68493 5.31233 6.0364 5.6638L8.7364 8.3638C9.08787 8.71527 9.08787 9.28512 8.7364 9.63659L6.0364 12.3366C5.68493 12.6881 5.11508 12.6881 4.76361 12.3366C4.41214 11.9851 4.41214 11.4153 4.76361 11.0638L6.82721 9.0002L4.76361 6.93659C4.41214 6.58512 4.41214 6.01527 4.76361 5.6638ZM9.9 10.8002C9.40295 10.8002 9 11.2031 9 11.7002C9 12.1973 9.40295 12.6002 9.9 12.6002H12.6C13.0971 12.6002 13.5 12.1973 13.5 11.7002C13.5 11.2031 13.0971 10.8002 12.6 10.8002H9.9Z'
-                fill='white'
-            />
-        </g>
-    </svg>
-)
-
-/**
- * @description: solid terminal 代码
- */
-export const SolidTerminalIcon = (props: Partial<IconProps>) => {
-    return <Icon component={SolidTerminal} {...props} />
-}
-
 const Cube = () => (
     <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -1987,25 +1966,6 @@ export const ArrowDownIcon = (props: Partial<IconProps>) => {
     return <Icon component={ArrowDown} {...props} />
 }
 
-const SolidThumbUp = () => (
-    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <path
-            d='M2 10.5C2 9.67157 2.67157 9 3.5 9C4.32843 9 5 9.67157 5 10.5V16.5C5 17.3284 4.32843 18 3.5 18C2.67157 18 2 17.3284 2 16.5V10.5Z'
-            fill='currentColor'
-        />
-        <path
-            d='M6 10.3333V15.7639C6 16.5215 6.428 17.214 7.10557 17.5528L7.15542 17.5777C7.71084 17.8554 8.32329 18 8.94427 18H14.3604C15.3138 18 16.1346 17.3271 16.3216 16.3922L17.5216 10.3922C17.7691 9.15465 16.8225 8 15.5604 8H12V4C12 2.89543 11.1046 2 10 2C9.44772 2 9 2.44772 9 3V3.66667C9 4.53215 8.71929 5.37428 8.2 6.06667L6.8 7.93333C6.28071 8.62572 6 9.46785 6 10.3333Z'
-            fill='currentColor'
-        />
-    </svg>
-)
-/**
- * @description  solid-thumb-up
- */
-export const SolidThumbUpIcon = (props: Partial<IconProps>) => {
-    return <Icon component={SolidThumbUp} {...props} />
-}
-
 const SolidThumbDown = () => (
     <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
@@ -2086,8 +2046,8 @@ const OutlinePlus = () => (
     </svg>
 )
 /*
-* @description  Outline/plus
-*/
+ * @description  Outline/plus
+ */
 export const OutlinePlusIcon = (props: Partial<IconProps>) => {
-   return <Icon component={OutlinePlus} {...props} />
+    return <Icon component={OutlinePlus} {...props} />
 }

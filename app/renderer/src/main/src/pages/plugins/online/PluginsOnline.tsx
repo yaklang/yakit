@@ -17,6 +17,7 @@ import {
     OutlineCalendarIcon,
     OutlineClouddownloadIcon,
     OutlineClouduploadIcon,
+    OutlineRefreshIcon,
     OutlineSearchIcon,
     OutlineSwitchverticalIcon,
     OutlineXIcon
@@ -572,6 +573,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setRemoteValue(PluginGV.StoreFilterCloseStatus, `${!!showFilter}`)
         setShowFilter(v)
     })
+    /**初始数据为空的时候,刷新按钮,刷新列表和初始total,以及分组数据 */
+    const onRefListAndTotalAndGroup = useMemoizedFn(() => {
+        getInitTotal()
+        fetchList(true)
+        getPluginGroupList()
+    })
     return (
         <>
             {!!plugin && (
@@ -622,6 +629,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                 name={selectNum > 0 ? "下载" : "一键下载"}
                                 onClick={onDownloadBefore}
                                 loading={downloadLoading}
+                                disabled={initTotal === 0}
                             />
                             <FuncBtn
                                 maxWidth={1050}
@@ -839,8 +847,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                     title='暂无数据'
                                     description={isCommunityEdition() ? "" : "可将本地所有插件一键上传"}
                                 />
-                                {userInfo.role === "admin" && (
-                                    <div className={styles["plugin-online-buttons"]}>
+                                <div className={styles["plugin-online-buttons"]}>
+                                    {userInfo.role === "admin" && (
                                         <YakitButton
                                             type='outline1'
                                             icon={<OutlineClouduploadIcon />}
@@ -848,8 +856,15 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                         >
                                             一键上传
                                         </YakitButton>
-                                    </div>
-                                )}
+                                    )}
+                                    <YakitButton
+                                        type='outline1'
+                                        icon={<OutlineRefreshIcon />}
+                                        onClick={onRefListAndTotalAndGroup}
+                                    >
+                                        刷新
+                                    </YakitButton>
+                                </div>
                             </div>
                         )}
                     </PluginsList>
@@ -1015,6 +1030,7 @@ const YakitCombinationSearchCircle: React.FC<YakitCombinationSearchCircleProps> 
                 options={funcSearchType}
                 value={search.type}
                 onSelect={onSelect}
+                size='large'
             />
             <div className={styles["yakit-combination-search-circle-line"]} />
             <YakitInput

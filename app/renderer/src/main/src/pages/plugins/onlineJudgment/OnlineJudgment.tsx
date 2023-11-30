@@ -190,7 +190,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                     props.children
                 ) : (
                     <YakitSpin spinning={loading}>
-                        <div className={styles["online-network"]}>{errorNode}</div>
+                        <div className={styles["online-network"]}>{errorNode}</div> 
                     </YakitSpin>
                 )}
 

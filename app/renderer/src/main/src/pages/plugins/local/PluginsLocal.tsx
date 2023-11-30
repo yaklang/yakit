@@ -21,7 +21,13 @@ import {
     ListLayoutOpt
 } from "../funcTemplate"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
-import {OutlineClouduploadIcon, OutlineExportIcon, OutlinePlusIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {
+    OutlineClouduploadIcon,
+    OutlineExportIcon,
+    OutlinePlusIcon,
+    OutlineRefreshIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useStore} from "@/store"
@@ -396,8 +402,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const optExtraNode = useMemoizedFn((data: YakScript) => {
         return (
             <LocalExtraOperate
-                isLocalPlugin={!!data.isLocalPlugin}
-                isCorePlugin={!!data.IsCorePlugin}
+                data={data}
                 isOwn={userInfo.user_id === +data.UserId || +data.UserId === 0}
                 onRemovePlugin={() => onRemovePluginBefore(data)}
                 onExportPlugin={() => onExportPlugin(data)}
@@ -698,6 +703,12 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
         setShowFilter(v)
     })
+    /**初始数据为空的时候,刷新按钮,刷新列表和初始total,以及分组数据 */
+    const onRefListAndTotalAndGroup = useMemoizedFn(() => {
+        getInitTotal()
+        fetchList(true)
+        getPluginGroupListLocal()
+    })
     return (
         <>
             {!!plugin && (
@@ -880,6 +891,13 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                     <YakitButton type='outline1' icon={<OutlinePlusIcon />} onClick={onNewAddPlugin}>
                                         新建插件
                                     </YakitButton>
+                                    <YakitButton
+                                        type='outline1'
+                                        icon={<OutlineRefreshIcon />}
+                                        onClick={onRefListAndTotalAndGroup}
+                                    >
+                                        刷新
+                                    </YakitButton>
                                 </div>
                             </div>
                         )}
@@ -904,7 +922,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 })
 
 export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((props) => {
-    const {isLocalPlugin, isCorePlugin, isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
+    const {data, isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const onRemove = useMemoizedFn(async (e) => {
@@ -923,8 +941,12 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
     })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
-        if (isCorePlugin) {
+        if (data.IsCorePlugin) {
             yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
+            return
+        }
+        if (data.Type === "packet-hack") {
+            yakitNotify("error", "该类型已下架，不可编辑")
             return
         }
         onEditPlugin()
@@ -941,11 +963,11 @@ export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((p
         }, 200)
     })
     const isShowUpload = useMemo(() => {
-        if (isCorePlugin) return false
+        if (!!data.IsCorePlugin) return false
         // if (isLocalPlugin) return true
 
-        return isLocalPlugin
-    }, [isLocalPlugin, isCorePlugin, isOwn])
+        return !!data.isLocalPlugin
+    }, [data.isLocalPlugin, data.IsCorePlugin, isOwn])
     return (
         <div className={styles["local-extra-operate-wrapper"]}>
             {removeLoading ? (
