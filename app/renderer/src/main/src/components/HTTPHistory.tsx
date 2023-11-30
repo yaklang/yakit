@@ -166,7 +166,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }
 
     const getTreeData = (yakurl: string) => {
-        // 由于这里会有闭包 50毫秒后再掉接口
+        // 由于这里会有闭包 30毫秒后再掉接口
         setTreeLoading(true)
         setTimeout(() => {
             const filter = `?params=${handleFilterParams()}`
@@ -174,18 +174,20 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const search = getSearchTreeFlag() ? `&search=${1}` : ""
             console.log("search", search)
             loadFromYakURLRaw(yakurl + filter + search, (res) => {
-                setTreeLoading(false)
                 // 判断是否是搜索树
                 if (getSearchTreeFlag()) {
                     setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
                 } else {
                     setWebTreeData(assembleFirstTreeNode(res.Resources))
                 }
+                setTimeout(() => {
+                    setTreeLoading(false)
+                }, 30)
             }).catch((error) => {
                 setTreeLoading(false)
                 yakitFailed(`加载失败: ${error}`)
             })
-        }, 50)
+        }, 30)
     }
 
     // 树节点第一层组装树
