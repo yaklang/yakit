@@ -300,7 +300,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         queryParamsRef.current = queryParams
-        if (selectedNodes.length) {
+        if (selectedKeys.length) {
             if (execFlag) {
                 if (searchTreeFlag) {
                     setSelectedKeys([])
