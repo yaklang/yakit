@@ -134,11 +134,16 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
-        if (plugin?.IsCorePlugin) {
+        if (!plugin) return
+        if (plugin.IsCorePlugin) {
             yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
             return
         }
-        if (plugin?.Id && +plugin.Id) {
+        if (plugin.Type === "packet-hack") {
+            yakitNotify("error", "该类型已下架，不可编辑")
+            return
+        }
+        if (plugin.Id && +plugin.Id) {
             emiter.emit(
                 "openPage",
                 JSON.stringify({

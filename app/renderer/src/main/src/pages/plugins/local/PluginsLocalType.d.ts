@@ -1,4 +1,4 @@
-import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
+import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {LocalPluginAppAction} from "../pluginReducer"
 import {API} from "@/services/swagger/resposeType"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
@@ -6,10 +6,7 @@ import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 export interface PluginsLocalProps {}
 
 export interface LocalExtraOperateProps {
-    /**是否为本地插件 */
-    isLocalPlugin: boolean
-    /**是否为内置插件 */
-    isCorePlugin: boolean
+    data: YakScript
     /**是否是自己的插件 */
     isOwn: boolean
     /**删除插件 */
