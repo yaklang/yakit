@@ -187,7 +187,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 }
                 setTimeout(() => {
                     setTreeLoading(false)
-                }, 30)
+                }, 50)
             }).catch((error) => {
                 setTreeLoading(false)
                 yakitFailed(`加载失败: ${error}`)
