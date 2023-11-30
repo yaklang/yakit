@@ -443,7 +443,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         onSearch={onSearchTree}
                                         refreshTree={refreshTree}
                                         expandedKeys={expandedKeys}
-                                        autoExpandParent={true}
                                         onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                                         selectedKeys={selectedKeys}
                                         onSelectedKeys={onSelectedKeys}
