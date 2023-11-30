@@ -289,7 +289,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         setSearchTreeFlag(flag)
         setExpandedKeys([])
         setSelectedKeys([])
-        if (val === "") {
+        if (val === "" && selectedNodes.length) {
             setSelectedNodes([])
             setOnlyShowFirstNode(true)
             setSecondNodeVisible(false)
