@@ -136,7 +136,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
     const [selectedNodePath, setSelectedNodePath] = useState<string>("") // 这里只能是字符串（解决不必要渲染问题） 传到HttpFlowTable里面去变数组
-    const [selectedNodeQueryKey, setSelectedNodeQueryKey] = useState<string>("") // 这里只能是字符串（解决不必要渲染问题） 传到HttpFlowTable里面去变数组
     const queryParamsRef = useRef<string>("")
 
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
@@ -302,7 +301,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         queryParamsRef.current = queryParams
         // 表格点击重置查询条件时 且选中了树节点时
-        if (execFlag && selectedNodeQueryKey) {
+        if (execFlag && selectedNodes.length) {
             refreshTree()
             return
         }
@@ -312,7 +311,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
          */
 
         // 非搜索树&选中树节点 切换表格筛选条件无需刷新树
-        if (!searchTreeFlag && !selectedNodeQueryKey) {
+        if (!searchTreeFlag && !selectedNodes.length) {
             refreshTree()
             return
         }
@@ -380,17 +379,17 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     // 获取 URL 的查询字符串（不包括 '?'）
                     const query = url.search.substring(1);
                     // 如果存在查询参数，则将它们与路径使用§拼接，使用一个url中不会出现的特殊字符
-                    const selectedParam = query ? `${path}§${query}` : path;
-                    setSelectedNodeQueryKey(selectedParam)
+                    const selectedParam = query ? `${path}§${query}` : '';
+                    setSelectedNodePath(selectedParam)
                 } catch (_) {
-                    setSelectedNodeQueryKey("")
+                    setSelectedNodePath("")
                     return
                 }
             } else {
-                setSelectedNodeQueryKey("")
+                setSelectedNodePath("")
             }
         } else {
-            setSelectedNodeQueryKey("")
+            setSelectedNodePath("")
         }
     }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行
 
@@ -501,7 +500,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         })
                                         .filter((url) => url !== "")
                                         .join(",")}
-                                    IncludeInUrl={selectedNodeQueryKey}
+                                    IncludeInUrl={selectedNodePath}
                                     // tableHeight={200}
                                     // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {
