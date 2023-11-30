@@ -153,9 +153,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
         const iconsEle = {
-            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon'/>,
-            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon'/>,
-            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon'/>
+            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
+            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
+            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
         }
         return iconsEle[treeNodeType] || <></>
     }
@@ -200,9 +200,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 icon: ({expanded}) => {
                     if (item.ResourceType === "dir") {
                         return expanded ? (
-                            <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
+                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
                         ) : (
-                            <SolidFolderaddIcon className='yakitTreeNode-icon'/>
+                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
                         )
                     }
                     return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
@@ -260,9 +260,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                             icon: ({expanded}) => {
                                 if (i.ResourceType === "dir") {
                                     return expanded ? (
-                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
+                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
                                     ) : (
-                                        <SolidFolderaddIcon className='yakitTreeNode-icon'/>
+                                        <SolidFolderaddIcon className='yakitTreeNode-icon' />
                                     )
                                 }
                                 return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
@@ -325,8 +325,11 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 刷新网站树
     const refreshTree = useMemoizedFn(() => {
-        setOnlyShowFirstNode(true)
-        setSecondNodeVisible(false)
+        // 当表格查询参数带搜索条件时
+        if (selectedNodes.length) {
+            setOnlyShowFirstNode(true)
+            setSecondNodeVisible(false)
+        }
         setSearchValue("")
         setSearchTreeFlag(false)
         setExpandedKeys([])
@@ -413,7 +416,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             className={classNames(styles["hTTPHistory-tab-item"], {
                                                 [styles["hTTPHistory-tab-item-active"]]: curTabKey === item.key,
                                                 [styles["hTTPHistory-tab-item-unshowCont"]]:
-                                                curTabKey === item.key && !item.contShow
+                                                    curTabKey === item.key && !item.contShow
                                             })}
                                             key={item.key}
                                             onClick={() => {
@@ -471,8 +474,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     params={
                                         props?.websocket
                                             ? ({
-                                                OnlyWebsocket: true
-                                            } as YakQueryHTTPFlowRequest)
+                                                  OnlyWebsocket: true
+                                              } as YakQueryHTTPFlowRequest)
                                             : undefined
                                     }
                                     searchURL={selectedNodes
