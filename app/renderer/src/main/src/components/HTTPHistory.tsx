@@ -449,7 +449,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         treeLoading={treeLoading}
                                         height={treeWrapHeight - 30}
                                         multiple={false}
-                                        searchPlaceholder='请输入域名或URL进行搜索'
+                                        searchPlaceholder='请输入域名进行搜索，例baidu.com'
                                         treeData={searchTreeFlag ? searchWebTreeData : webTreeData}
                                         loadData={onLoadWebTreeData}
                                         searchValue={searchValue}
