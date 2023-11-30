@@ -21,7 +21,13 @@ import {
     ListLayoutOpt
 } from "../funcTemplate"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
-import {OutlineClouduploadIcon, OutlineExportIcon, OutlinePlusIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {
+    OutlineClouduploadIcon,
+    OutlineExportIcon,
+    OutlinePlusIcon,
+    OutlineRefreshIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import {OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useStore} from "@/store"
@@ -697,6 +703,12 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
         setShowFilter(v)
     })
+    /**初始数据为空的时候,刷新按钮,刷新列表和初始total */
+    const onRefListAndTotal = useMemoizedFn(() => {
+        getInitTotal()
+        fetchList(true)
+        getPluginGroupListLocal()
+    })
     return (
         <>
             {!!plugin && (
@@ -878,6 +890,13 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                 <div className={styles["plugin-local-buttons"]}>
                                     <YakitButton type='outline1' icon={<OutlinePlusIcon />} onClick={onNewAddPlugin}>
                                         新建插件
+                                    </YakitButton>
+                                    <YakitButton
+                                        type='outline1'
+                                        icon={<OutlineRefreshIcon />}
+                                        onClick={onRefListAndTotal}
+                                    >
+                                        刷新
                                     </YakitButton>
                                 </div>
                             </div>
