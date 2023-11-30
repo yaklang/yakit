@@ -301,7 +301,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         queryParamsRef.current = queryParams
         // 表格点击重置查询条件时 且选中了树节点时
-        if (execFlag && selectedNodes.length) {
+        if (execFlag && selectedKeys.length) {
             refreshTree()
             return
         }
@@ -311,7 +311,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
          */
 
         // 非搜索树&选中树节点 切换表格筛选条件无需刷新树
-        if (!searchTreeFlag && !selectedNodes.length) {
+        if (!searchTreeFlag && !selectedKeys.length) {
             refreshTree()
             return
         }
