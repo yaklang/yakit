@@ -135,7 +135,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
-    const [selectedNodeParamsKey, setSelectedNodeParamsKey] = useState<string>("") // 这里只能是字符串（解决不必要渲染问题） 传到HttpFlowTable里面去变数组
+    const [selectedNodePath, setSelectedNodePath] = useState<string>("") // 这里只能是字符串（解决不必要渲染问题） 传到HttpFlowTable里面去变数组
+    const [selectedNodeQueryKey, setSelectedNodeQueryKey] = useState<string>("") // 这里只能是字符串（解决不必要渲染问题） 传到HttpFlowTable里面去变数组
     const queryParamsRef = useRef<string>("")
 
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
@@ -301,7 +302,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         queryParamsRef.current = queryParams
         // 表格点击重置查询条件时 且选中了树节点时
-        if (execFlag && selectedNodeParamsKey) {
+        if (execFlag && selectedNodeQueryKey) {
             refreshTree()
             return
         }
@@ -311,7 +312,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
          */
 
         // 非搜索树&选中树节点 切换表格筛选条件无需刷新树
-        if (!searchTreeFlag && !selectedNodeParamsKey) {
+        if (!searchTreeFlag && !selectedNodeQueryKey) {
             refreshTree()
             return
         }
@@ -369,21 +370,27 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         // 假设 selectedNodes 的第一个节点是您想要设置的节点
         const node = selectedNodes[0]
         if (node) {
+            console.log("node", node)
             const urlItem = node.data?.Extra.find((item) => item.Key === "url")
             if (urlItem && urlItem.Value) {
                 try {
                     const url = new URL(urlItem.Value)
-                    const selectedParam = url.pathname ? url.pathname : node.data?.Path || ""
-                    setSelectedNodeParamsKey(selectedParam)
+                    // 获取 URL 的路径
+                    const path = url.pathname ? url.pathname : node.data?.Path || "";
+                    // 获取 URL 的查询字符串（不包括 '?'）
+                    const query = url.search.substring(1);
+                    // 如果存在查询参数，则将它们与路径使用§拼接，使用一个url中不会出现的特殊字符
+                    const selectedParam = query ? `${path}§${query}` : path;
+                    setSelectedNodeQueryKey(selectedParam)
                 } catch (_) {
-                    setSelectedNodeParamsKey("")
+                    setSelectedNodeQueryKey("")
                     return
                 }
             } else {
-                setSelectedNodeParamsKey("")
+                setSelectedNodeQueryKey("")
             }
         } else {
-            setSelectedNodeParamsKey("")
+            setSelectedNodeQueryKey("")
         }
     }, [selectedNodes]) // 只有当 selectedNodes 改变时才运行
 
@@ -480,12 +487,21 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     }
                                     searchURL={selectedNodes
                                         .map((node: TreeNode) => {
-                                            const urlItem = node.data?.Extra.find((item) => item.Key === "url")
-                                            return urlItem ? urlItem.Value : ""
+                                            const urlItem = node.data?.Extra.find((item) => item.Key === "url");
+
+                                            if (urlItem && urlItem.Value) {
+                                                // 解析 URL
+                                                const url = new URL(urlItem.Value);
+                                                // 返回不包含查询参数的完整 URL
+                                                return url.origin + url.pathname;
+                                            } else {
+                                                // 如果没有找到相应的项或者项没有 Value 属性
+                                                return "";
+                                            }
                                         })
                                         .filter((url) => url !== "")
                                         .join(",")}
-                                    IncludeInUrl={selectedNodeParamsKey}
+                                    IncludeInUrl={selectedNodeQueryKey}
                                     // tableHeight={200}
                                     // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {
