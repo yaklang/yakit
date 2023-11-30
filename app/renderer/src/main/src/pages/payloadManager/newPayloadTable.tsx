@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useRef, useState} from "react"
+import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import {} from "@ant-design/icons"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -224,8 +224,8 @@ export interface DeletePayloadProps {
 }
 
 export interface NewPayloadTableProps {
-    onCopyToOtherPayload?: (v:number) => void
-    onMoveToOtherPayload?: (v:number) => void
+    onCopyToOtherPayload?: (v: number) => void
+    onMoveToOtherPayload?: (v: number) => void
     selectPayloadArr?: number[]
     setSelectPayloadArr?: (v: number[]) => void
     onDeletePayload?: (v: DeletePayloadProps) => void
@@ -235,6 +235,7 @@ export interface NewPayloadTableProps {
     setParams: (v: QueryPayloadParams) => void
     response: QueryGeneralResponse<Payload> | undefined
     setResponse: (v: QueryGeneralResponse<Payload>) => void
+    onlyInsert?: boolean
 }
 export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     const {
@@ -248,7 +249,8 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         params,
         response,
         setResponse,
-        setParams
+        setParams,
+        onlyInsert
     } = props
     const [editingKey, setEditingKey] = useState<number>()
 
@@ -386,6 +388,84 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         }
     ]
 
+    const InsertColumns: ColumnTypes[number][] = [
+        {
+            title: "序号",
+            dataIndex: "index",
+            width: 88,
+            render: (text, record, index) => {
+                const limit = pagination?.Limit || params.Pagination.Limit
+                const page = (pagination?.Page || params.Pagination.Page) - 1
+                const order: number = limit * page + index + 1
+                const {Id} = record as Payload
+                return (
+                    <div className={styles["order"]}>
+                        {!onlyInsert && selectPayloadArr && (
+                            <YakitCheckbox
+                                checked={selectPayloadArr.includes(Id)}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        setSelectPayloadArr && setSelectPayloadArr([...selectPayloadArr, Id])
+                                    } else {
+                                        const newDeletePayloadArr = selectPayloadArr.filter((item) => item !== Id)
+                                        setSelectPayloadArr && setSelectPayloadArr([...newDeletePayloadArr])
+                                    }
+                                }}
+                            />
+                        )}
+                        <div className={styles["basic"]}>{order < 10 ? `0${order}` : `${order}`}</div>
+                    </div>
+                )
+            }
+        },
+        {
+            title: "字典内容",
+            dataIndex: "Content",
+            render: (text) => <div className={styles["basic"]}>{text}</div>
+        },
+        {
+            title: () => <Tooltip title={"新增命中次数字段，命中次数越高，在爆破时优先级也会越高"}>命中次数</Tooltip>,
+            dataIndex: "HitCount",
+            width: 102,
+            filterIcon: (filtered) => (
+                <OutlineSelectorIcon
+                    className={classNames(styles["selector-icon"], {
+                        [styles["active-selector-icon"]]: sortStatus !== undefined
+                    })}
+                />
+            ),
+            filterDropdown: ({setSelectedKeys, selectedKeys, confirm, clearFilters}) => (
+                <div className={styles["filter-box"]}>
+                    <div
+                        className={classNames(styles["filter-item"], {
+                            [styles["active-filter-item"]]: sortStatus === "asc",
+                            [styles["hover-filter-item"]]: sortStatus !== "asc"
+                        })}
+                        onClick={() => handleSort("asc")}
+                    >
+                        <div className={styles["icon"]}>
+                            <OutlineArrowupIcon />
+                        </div>
+                        <div className={styles["content"]}>升序</div>
+                    </div>
+                    <div
+                        className={classNames(styles["filter-item"], {
+                            [styles["active-filter-item"]]: sortStatus === "desc",
+                            [styles["hover-filter-item"]]: sortStatus !== "desc"
+                        })}
+                        onClick={() => handleSort("desc")}
+                    >
+                        <div className={styles["icon"]}>
+                            <OutlineArrowdownIcon />
+                        </div>
+                        <div className={styles["content"]}>降序</div>
+                    </div>
+                </div>
+            ),
+            render: (text) => <div className={styles["basic"]}>{text}</div>
+        }
+    ]
+
     const onUpdatePayload = useMemoizedFn((updatePayload: UpdatePayloadProps) => {
         return new Promise((resolve, reject) => {
             ipcRenderer
@@ -426,6 +506,8 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         }
     }
 
+    const isEditing = (record: Payload) => record.Id === editingKey
+
     const columns = defaultColumns.map((col) => {
         if (!col.editable) {
             return col
@@ -441,8 +523,6 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             })
         }
     })
-
-    const isEditing = (record: Payload) => record.Id === editingKey
 
     const handleRowClick = (record, index) => {
         console.log("Single click:", record, index)
@@ -501,7 +581,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 rowClassName={() => "editable-row"}
                 bordered
                 dataSource={response?.Data}
-                columns={columns as ColumnTypes}
+                columns={onlyInsert ? InsertColumns : (columns as ColumnTypes)}
                 onRow={getRowProps}
                 pagination={{
                     showQuickJumper: true,

@@ -1,3 +1,31 @@
+.new-payload-only-insert {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    .payload-list-box {
+        max-height: 760px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        .new-payload-list {
+            flex: 1;
+            overflow: hidden;
+            gap: 0px;
+            .header {
+                border-radius: 4px 4px 0px 0px;
+                .title-box {
+                    .title {
+                        font-size: 14px;
+                        font-weight: 600;
+                    }
+                }
+            }
+            .drag-list {
+                padding: 8px 12px;
+            }
+        }
+    }
+}
 .new-payload {
     display: flex;
     flex-direction: row;
@@ -6,6 +34,32 @@
     .payload-list-box {
         width: 420px;
         height: 100%;
+        .payload-list-bottom {
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0px 0px 4px 4px;
+            border-top: 1px solid #eaecf3;
+            background: #f8f8f8;
+            .show {
+                display: flex;
+                flex-direction: row;
+                gap: 4px;
+                align-items: center;
+                .text {
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                    color: #31343f;
+                }
+            }
+            .option {
+                display: flex;
+                flex-direction: row;
+                gap: 8px;
+            }
+        }
     }
     @media screen and (max-width: 1100px) {
         .payload-list-box {
@@ -14,7 +68,6 @@
     }
     .no-data {
         flex: 1;
-        height: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -39,6 +92,10 @@
                     font-style: normal;
                     font-weight: 600;
                     line-height: 24px;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    max-width: 180px;
                 }
                 .sun-title {
                     color: #b4bbca;
@@ -153,6 +210,20 @@
             padding: 0px 12px;
             height: 100%;
         }
+    }
+    /* 隐藏滚动条 */
+    .content::-webkit-scrollbar {
+        width: 0;
+    }
+
+    /* 隐藏滚动条轨道 */
+    .content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    /* 隐藏滚动条滑块 */
+    .content::-webkit-scrollbar-thumb {
+        background-color: transparent;
     }
 }
 
@@ -507,6 +578,52 @@
         }
     }
 }
+.folder-active {
+    border-radius: 4px;
+    background: #f28b44;
+    color: #ffffff;
+    border: 1px solid transparent;
+    .extra {
+        .folder-count {
+            display: block;
+        }
+        .extra-icon {
+            display: none;
+        }
+    }
+}
+.folder-no-active {
+    .is-fold-icon {
+        color: #85899e;
+    }
+    .folder-icon {
+        color: #ffb660;
+    }
+    .folder-name {
+        color: #31343f;
+    }
+    .extra {
+        .file-count {
+            color: var(--yakit-tag-color-grey);
+        }
+        .extra-icon {
+            background-color: rgba(242, 139, 68, 0.06);
+            color: var(--yakit-primary-6);
+        }
+    }
+    &:hover {
+        background-color: var(--yakit-background-color);
+        border-radius: 4px;
+        .extra-hover {
+            .file-count {
+                display: none;
+            }
+            .extra-icon {
+                display: block;
+            }
+        }
+    }
+}
 .folder-menu {
     background-color: var(--yakit-background-color);
     border-radius: 4px;
@@ -538,7 +655,6 @@
         gap: 4px;
         align-items: center;
         .is-fold-icon {
-            color: #85899e;
             svg {
                 height: 12px;
                 width: 12px;
@@ -546,14 +662,12 @@
         }
         .folder-icon {
             display: flex;
-            color: #ffb660;
             svg {
                 width: 16px;
                 height: 16px;
             }
         }
         .folder-name {
-            color: #31343f;
             font-size: 12px;
             font-style: normal;
             font-weight: 400;
@@ -562,7 +676,6 @@
     }
     .extra {
         .file-count {
-            color: var(--yakit-tag-color-grey);
             font-size: 12px;
             font-style: normal;
             font-weight: 400;
@@ -573,8 +686,7 @@
             height: 24px;
             width: 24px;
             padding: 4px;
-            background-color: rgba(242, 139, 68, 0.06);
-            color: var(--yakit-primary-6);
+
             border-radius: 4px;
             svg {
                 width: 16px;
@@ -585,18 +697,6 @@
     .extra-hover {
         .extra-icon {
             display: none;
-        }
-    }
-    &:hover {
-        background-color: var(--yakit-background-color);
-        border-radius: 4px;
-        .extra-hover {
-            .file-count {
-                display: none;
-            }
-            .extra-icon {
-                display: block;
-            }
         }
     }
 }
@@ -717,6 +817,35 @@
                 justify-content: right;
                 gap: 8px;
             }
+        }
+    }
+}
+.select-folder-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .select-folder {
+        margin-bottom: 4px;
+        text-align: center;
+        .icon {
+            height: 64px;
+            svg {
+                height: 64px;
+                width: 64px;
+            }
+        }
+        .title {
+            color: #31343f;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 20px;
+        }
+        .sub-title {
+            color: #b4bbca;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
         }
     }
 }
