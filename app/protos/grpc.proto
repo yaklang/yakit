@@ -254,6 +254,10 @@ service Yak {
   rpc GetAllPayloadFromFile(GetAllPayloadRequest) returns (stream GetAllPayloadFromFileResponse); // get payload by [group/folder] from file
   //  create folder
   rpc CreatePayloadFolder(NameRequest) returns (Empty);
+  // 去重
+  rpc RemoveDuplicatePayloads(NameRequest) returns (stream SavePayloadProgress);
+  // 转换为数据库保存
+  rpc CoverPayloadGroupToDatabase(NameRequest) returns (stream SavePayloadProgress);
 
 
   // 自动生成补全

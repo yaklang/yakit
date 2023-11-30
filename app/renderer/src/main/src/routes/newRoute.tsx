@@ -2,7 +2,6 @@ import React, {ReactNode, Suspense} from "react"
 import {YakExecutor} from "../pages/invoker/YakExecutor"
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
 import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors"
-import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager"
 import {PortScanPage} from "../pages/portscan/PortScanPage"
 import {PluginOperator} from "../pages/yakitStore/PluginOperator"
 import {failed} from "../utils/notification"
@@ -339,8 +338,10 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.HTTPFuzzer,
     YakitRoute.WebsiteTree,
     YakitRoute.DB_Ports,
+    YakitRoute.DB_HTTPHistory,
     YakitRoute.Beta_DebugPlugin,
     YakitRoute.DB_HTTPHistory,
+    YakitRoute.PayloadManager
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -432,8 +433,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            // return <NewHome />
-            return <NewPayload />
+            return <NewHome />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -507,7 +507,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.YakScript:
             return <YakExecutor />
         case YakitRoute.PayloadManager:
-            return <PayloadManagerPage />
+            return <NewPayload />
         case YakitRoute.AccountAdminPage:
             return <AccountAdminPage />
         case YakitRoute.RoleAdminPage:

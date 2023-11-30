@@ -104,3 +104,47 @@ const Property = () => (
 export const PropertyIcon = (props: Partial<IconProps>) => {
     return <Icon component={Property} {...props} />
 }
+
+const PropertyNoAdd = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64' fill='none'>
+        <path
+            d='M32.552 13.8853L29.1707 10.504C28.4213 9.75467 27.404 9.33334 26.3427 9.33334H6.66667C5.19333 9.33334 4 10.5267 4 12V52C4 53.4733 5.19333 54.6667 6.66667 54.6667H57.3333C58.8067 54.6667 60 53.4733 60 52V17.3333C60 15.86 58.8067 14.6667 57.3333 14.6667H34.4373C33.7307 14.6667 33.052 14.3853 32.552 13.8853Z'
+            fill='url(#paint0_linear_17512_272923)'
+        />
+        <path
+            d='M28.7813 19.2187L33.1387 14.8613C33.2627 14.7373 33.432 14.6667 33.6093 14.6667H57.3333C58.8067 14.6667 60 15.86 60 17.3333V52C60 53.4733 58.8067 54.6667 57.3333 54.6667H6.66667C5.19333 54.6667 4 53.4733 4 52V20.6667C4 20.2987 4.29867 20 4.66667 20H26.896C27.6027 20 28.2813 19.7187 28.7813 19.2187Z'
+            fill='url(#paint1_linear_17512_272923)'
+        />
+        <defs>
+            <linearGradient
+                id='paint0_linear_17512_272923'
+                x1='32'
+                y1='8.944'
+                x2='32'
+                y2='19.9693'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stopColor='#EBA600' />
+                <stop offset='1' stopColor='#C28200' />
+            </linearGradient>
+            <linearGradient
+                id='paint1_linear_17512_272923'
+                x1='32'
+                y1='14.472'
+                x2='32'
+                y2='54.644'
+                gradientUnits='userSpaceOnUse'
+            >
+                <stop stop-color='#FFD869' />
+                <stop offset='1' stop-color='#FEC52B' />
+            </linearGradient>
+        </defs>
+    </svg>
+)
+
+/**
+ * @description  Frame 314/icon/Property 24
+ */
+export const PropertyNoAddIcon = (props: Partial<IconProps>) => {
+    return <Icon component={PropertyNoAdd} {...props} />
+}
