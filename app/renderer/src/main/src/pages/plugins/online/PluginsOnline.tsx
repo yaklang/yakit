@@ -1030,6 +1030,7 @@ const YakitCombinationSearchCircle: React.FC<YakitCombinationSearchCircleProps> 
                 options={funcSearchType}
                 value={search.type}
                 onSelect={onSelect}
+                size='large'
             />
             <div className={styles["yakit-combination-search-circle-line"]} />
             <YakitInput
