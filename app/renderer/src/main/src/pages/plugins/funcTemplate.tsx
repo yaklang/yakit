@@ -634,7 +634,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
             image={SearchResultEmpty}
             imageStyle={{width: 274, height: 180, marginBottom: 24}}
             title='搜索结果“空”'
-            style={{marginTop: 80}}
+            style={{paddingTop:'10%'}}
             className={styles["empty-list"]}
         />
     ) : (

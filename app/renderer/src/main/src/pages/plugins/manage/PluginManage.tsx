@@ -16,6 +16,7 @@ import {
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
     OutlinePencilaltIcon,
+    OutlineRefreshIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {useDebounceFn, useGetState, useInViewport, useLatest, useLockFn, useMemoizedFn, useUpdateEffect} from "ahooks"
@@ -51,6 +52,7 @@ import {showModal} from "@/utils/showModal"
 import {SolidChevrondownIcon} from "@/assets/icon/solid"
 import {AddPluginGroup, RemovePluginGroup} from "@/pages/yakitStore/store/PluginStore"
 import {useStore} from "@/store"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
@@ -591,7 +593,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         activeDetailData.current = {...data}
         onShowDelPlugin()
     })
-
+    /**初始数据为空的时候,刷新按钮,刷新列表和初始total,以及分组数据 */
+    const onRefListAndTotalAndGroup = useMemoizedFn(() => {
+        getInitTotal()
+        fetchList(true)
+        fetchPluginFilters()
+    })
     return (
         <div ref={layoutRef} className={styles["plugin-manage-layout"]}>
             {!!plugin && (
@@ -668,6 +675,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 loading={downloadLoading}
                                 name={selectNum > 0 ? "下载" : "一键下载"}
                                 onClick={() => onBatchDownload()}
+                                disabled={initTotal===0}
                             />
                             <FuncBtn
                                 maxWidth={1150}
@@ -676,6 +684,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 size='large'
                                 name={selectNum > 0 ? "删除" : "清空"}
                                 onClick={onShowDelPlugin}
+                                disabled={initTotal===0}
                             />
                         </div>
                     </div>
@@ -763,7 +772,19 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 isShowSearchResultEmpty={+response.pagemeta.total === 0}
                             />
                         ) : (
-                            <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
+                            <div className={styles["plugin-manage-empty"]}>
+                                <YakitEmpty title='暂无数据' />
+
+                                <div className={styles["plugin-manage-buttons"]}>
+                                    <YakitButton
+                                        type='outline1'
+                                        icon={<OutlineRefreshIcon />}
+                                        onClick={onRefListAndTotalAndGroup}
+                                    >
+                                        刷新
+                                    </YakitButton>
+                                </div>
+                            </div>
                         )}
                     </PluginsList>
                 </PluginsContainer>
