@@ -284,17 +284,18 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 搜索树
     const onSearchTree = useMemoizedFn((value: string) => {
-        const flag = value === "/" ? false : !!value
+        const val = value.trim()
+        const flag = val === "/" ? false : !!val.trim()
         setSearchTreeFlag(flag)
         setExpandedKeys([])
         setSelectedKeys([])
-        if (value === "") {
+        if (val === "") {
             setSelectedNodes([])
             setOnlyShowFirstNode(true)
             setSecondNodeVisible(false)
         }
-        setSearchValue(value)
-        getTreeData("website://" + `${value ? value : "/"}`)
+        setSearchValue(val)
+        getTreeData("website://" + `${val ? val : "/"}`)
     })
 
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
