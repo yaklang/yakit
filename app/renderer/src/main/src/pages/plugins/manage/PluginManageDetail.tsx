@@ -13,6 +13,7 @@ import {
     OutlineClouddownloadIcon,
     OutlineCursorclickIcon,
     OutlineLightbulbIcon,
+    OutlinePencilIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -23,7 +24,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginFilterParams, PluginInfoRefProps, PluginSearchParams, PluginSettingRefProps} from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
 import {ApplicantIcon, AuthorImg, FilterPopoverBtn, FuncBtn} from "../funcTemplate"
-import {IconOutlinePencilAltIcon} from "@/assets/newIcon"
 import {
     PluginBaseParamProps,
     PluginDataProps,
@@ -613,7 +613,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                             <YakitButton
                                                                 loading={statusLoading}
                                                                 type='text2'
-                                                                icon={<IconOutlinePencilAltIcon />}
+                                                                icon={<OutlinePencilIcon />}
                                                                 onClick={() => {
                                                                     if (+plugin.status === 1) onOpenReason()
                                                                     else onPass()

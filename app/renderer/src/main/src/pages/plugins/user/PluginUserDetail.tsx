@@ -12,13 +12,13 @@ import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
 import {PluginUserDetailProps, UserBackInfoProps} from "./PluginUserType"
-import {PrivatePluginIcon} from "@/assets/newIcon"
 import {useStore} from "@/store"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {onlineUseToLocalDetail} from "../utils"
 import {LoadingOutlined} from "@ant-design/icons"
+import {SolidPrivatepluginIcon} from "@/assets/icon/colors"
 
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
@@ -151,7 +151,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
         })
         /** 单项副标题组件 */
         const optExtra = useMemoizedFn((data: YakitPluginOnlineDetail) => {
-            return data.is_private ? <PrivatePluginIcon /> : statusTag[`${data.status}`]
+            return data.is_private ? <SolidPrivatepluginIcon /> : statusTag[`${data.status}`]
         })
         /** 单项勾选|取消勾选 */
         const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {

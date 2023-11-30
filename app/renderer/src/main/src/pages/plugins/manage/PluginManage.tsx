@@ -522,8 +522,18 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 icon={<OutlineDotshorizontalIcon />}
                 menu={{
                     data: [
-                        {key: "del", label: "删除"},
-                        {key: "download", label: "下载"}
+                        {
+                            key: "download",
+                            label: "下载",
+                            itemIcon: <OutlineClouddownloadIcon />
+                        },
+                        {type: "divider"},
+                        {
+                            key: "del",
+                            label: "删除",
+                            type: "danger",
+                            itemIcon: <OutlineTrashIcon />
+                        }
                     ],
                     className: styles["func-filter-dropdown-menu"],
                     onClick: ({key}) => {
@@ -705,7 +715,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                             data={data}
                                             checked={check}
                                             onCheck={optCheck}
-                                            title={info.index + data.script_name}
+                                            title={data.script_name}
                                             type={data.type}
                                             tags={data.tags}
                                             help={data.help || ""}
@@ -798,7 +808,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [list, setList] = useState<API.UserList[]>([])
     const [value, setValue] = useState<number>()
-    const {run} = useDebounceFn(
+    const onsearch = useDebounceFn(
         (value?: string) => {
             if (!value) {
                 setList([])
@@ -825,7 +835,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
         {
             wait: 500
         }
-    )
+    ).run
 
     const [submitLoading, setSubmitLoading] = useState<boolean>(false)
     const [status, setStatus] = useState<"" | "error">("")
@@ -892,13 +902,14 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
                     validateStatus={status}
                 >
                     <YakitSelect
-                        placeholder='请选择...'
+                        placeholder='请输入用户名进行搜索'
+                        showArrow={false}
                         showSearch={true}
                         filterOption={false}
-                        notFoundContent={loading ? <YakitSpin spinning={true} size='small' /> : "暂无数据"}
+                        notFoundContent={loading ? <YakitSpin spinning={true} size='small' /> : ""}
                         allowClear={true}
                         value={value}
-                        onSearch={run}
+                        onSearch={onsearch}
                         onChange={(value, option: any) => {
                             setValue(value)
                             if (value) setStatus("")
