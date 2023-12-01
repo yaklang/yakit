@@ -425,6 +425,7 @@ const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
     }
 
     const onOKFun = useMemoizedFn(async () => {
+        await form.validateFields()
         try {
             const res: GenerateURLResponse = await ipcRenderer.invoke("mitm-agent-hijacking-config", handleReqParams())
             generateURL(res.URL)
