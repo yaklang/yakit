@@ -807,13 +807,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const ref = useHotkeys("ctrl+r, enter", (e) => {
         const selected = getSelected()
         if (selected) {
-            ipcRenderer.invoke("send-to-tab", {
-                type: "fuzzer",
-                data: {
-                    isHttps: selected?.IsHTTPS,
-                    request: new Buffer(selected.Request).toString()
-                }
-            })
+            onSendToTab(selected)
         }
     })
 
@@ -3285,15 +3279,15 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
     )
 })
 
-// 发送web fuzzerconst
+// 发送web fuzzer const
 export const onSendToTab = (rowData) => {
     ipcRenderer.invoke("send-to-tab", {
         type: "fuzzer",
         data: {
             isHttps: rowData.IsHTTPS,
-            request: new Buffer(rowData.Request).toString("utf8")
+            request: rowData.InvalidForUTF8Request? rowData.SafeHTTPRequest!:new Buffer(rowData.Request).toString("utf8")
         }
-    })
+    })    
 }
 
 // 标注颜色

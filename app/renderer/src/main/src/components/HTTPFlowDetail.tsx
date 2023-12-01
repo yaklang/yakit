@@ -886,14 +886,19 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
     useUpdateEffect(() => {
-        setOriginResValue(flowRequest || new Uint8Array())
+        setOriginResValue(fetchSsafeHTTPRequest() || new Uint8Array())
     }, [flowRequestLoad])
 
+    // 获取request内容
+    const fetchSsafeHTTPRequest = useMemoizedFn(() => {
+        return (flow && (flow.InvalidForUTF8Request? new Buffer(flow.SafeHTTPRequest!):flow.Request)) || new Uint8Array()
+    })
+    
     useEffect(() => {
         // 复原数据
         setResType("current")
         setRspType("current")
-        setOriginResValue(flow?.Request || new Uint8Array())
+        setOriginResValue(fetchSsafeHTTPRequest())
         setOriginRspValue(flow?.Response || new Uint8Array())
         // 编辑器滚轮回到顶部
         reqEditor?.setScrollTop(0)
@@ -914,7 +919,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         if (resType === "request") {
             setOriginResValue(beforeResValue)
         } else {
-            setOriginResValue(flow?.Request || new Uint8Array())
+            setOriginResValue(fetchSsafeHTTPRequest() || new Uint8Array())
         }
     }, [resType, flow?.Request])
     useEffect(() => {
