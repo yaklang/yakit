@@ -109,11 +109,15 @@ export const apiFetchOnlineList: (query: PluginsQueryProps) => Promise<YakitPlug
                     resolve(res)
                 })
                 .catch((err) => {
-                    yakitNotify("error", "获取插件商店列表失败:" + err)
+                    if (err !== "token过期") {
+                        yakitNotify("error", "获取插件商店列表失败:" + err)
+                    }
                     reject(err)
                 })
         } catch (error) {
-            yakitNotify("error", "获取插件商店列表失败:" + error)
+            if (error !== "token过期") {
+                yakitNotify("error", "获取插件商店列表失败:" + error)
+            }
             reject(error)
         }
     })
@@ -230,11 +234,15 @@ export const apiFetchGroupStatisticsOnline: (query?: API.PluginsSearchRequest) =
                     resolve(res)
                 })
                 .catch((err) => {
-                    yakitNotify("error", "获取插件商店统计数据失败:" + err)
+                    if (err !== "token过期") {
+                        yakitNotify("error", "获取插件商店统计数据失败:" + err)
+                    }
                     reject(err)
                 })
         } catch (error) {
-            yakitNotify("error", "获取插件商店统计数据失败:" + error)
+            if (error !== "token过期") {
+                yakitNotify("error", "获取插件商店统计数据失败:" + error)
+            }
             reject(error)
         }
     })
