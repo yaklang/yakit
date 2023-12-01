@@ -178,11 +178,11 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
             setCurrentIndex(index)
             setPlugin({...data})
         })
-        const onFilter = useMemoizedFn((value: PluginFilterParams) => {
+        const onFilter = useMemoizedFn(async (value: PluginFilterParams) => {
             setSpinLoading(true)
             try {
                 setFilters(value)
-                onDetailSearch(search, value)
+                await onDetailSearch(search, value)
                 setAllCheck(false)
                 setSelectList([])
             } catch (error) {}
