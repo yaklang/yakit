@@ -700,7 +700,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         onUploadPlugin(plugin)
     })
     const onSetShowFilter = useMemoizedFn((v) => {
-        setRemoteValue(PluginGV.LocalFilterCloseStatus, `${!!showFilter}`)
+        setRemoteValue(PluginGV.LocalFilterCloseStatus, `${v}`)
         setShowFilter(v)
     })
     /**初始数据为空的时候,刷新按钮,刷新列表和初始total,以及分组数据 */

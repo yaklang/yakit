@@ -570,7 +570,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         setVisibleUploadAll(true)
     })
     const onSetShowFilter = useMemoizedFn((v) => {
-        setRemoteValue(PluginGV.StoreFilterCloseStatus, `${!!showFilter}`)
+        setRemoteValue(PluginGV.StoreFilterCloseStatus, `${v}`)
         setShowFilter(v)
     })
     /**初始数据为空的时候,刷新按钮,刷新列表和初始total,以及分组数据 */

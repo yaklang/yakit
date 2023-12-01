@@ -846,7 +846,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
             }
         )
         const onSetShowFilter = useMemoizedFn((v) => {
-            setRemoteValue(PluginGV.OwnerFilterCloseStatus, `${!!showFilter}`)
+            setRemoteValue(PluginGV.OwnerFilterCloseStatus, `${v}`)
             setShowFilter(v)
         })
         /**初始数据为空的时候,刷新按钮,刷新列表和初始total,分组数据 */

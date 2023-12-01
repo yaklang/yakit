@@ -95,7 +95,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         })
     }, [])
     const onSetShowFilter = useMemoizedFn((v) => {
-        setRemoteValue(PluginGV.AuditFilterCloseStatus, `${!!showFilter}`)
+        setRemoteValue(PluginGV.AuditFilterCloseStatus, `${v}`)
         setShowFilter(v)
     })
 
