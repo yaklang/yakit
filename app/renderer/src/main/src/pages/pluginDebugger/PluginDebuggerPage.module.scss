@@ -224,7 +224,7 @@
             .plugin-local-left {
                 display: flex;
                 align-items: center;
-                flex: 1;
+                width: 100%;
                 padding-left: 2px;
 
                 gap: 8px;
@@ -236,8 +236,7 @@
                     .plugin-local-info-left {
                         display: flex;
                         align-items: center;
-                        flex: 1;
-
+                        width: calc(100% - 72px);
                         cursor: pointer;
                         .plugin-local-headImg {
                             width: 28px;

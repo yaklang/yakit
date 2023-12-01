@@ -21,14 +21,15 @@ import {
     PlusIcon,
     TrashIcon,
     ArrowLeftIcon,
-    PrivatePluginIcon,
-    OfficialPluginIcon,
     QuestionMarkCircleIcon,
     TerminalIcon,
     PencilAltIcon,
-    ShieldExclamationIcon,
-    CloudPluginIcon
+    ShieldExclamationIcon
 } from "@/assets/newIcon"
+import {
+    SolidCloudpluginIcon,
+    SolidOfficialpluginIcon, SolidPrivatepluginIcon
+} from "@/assets/icon/colors"
 import classNames from "classnames"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {Avatar, Input, Modal, Tooltip} from "antd"
@@ -1351,21 +1352,21 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
         if (plugin.OnlineOfficial) {
             return (
                 <Tooltip title='官方插件'>
-                    <OfficialPluginIcon className={style["plugin-local-icon"]} />
+                    <SolidOfficialpluginIcon className={style["plugin-local-icon"]} />
                 </Tooltip>
             )
         }
         if (plugin.OnlineIsPrivate) {
             return (
                 <Tooltip title='私有插件'>
-                    <PrivatePluginIcon className={style["plugin-local-icon"]} />
+                    <SolidPrivatepluginIcon className={style["plugin-local-icon"]} />
                 </Tooltip>
             )
         }
         if (plugin.UUID) {
             return (
                 <Tooltip title='云端插件'>
-                    <CloudPluginIcon className={style["plugin-local-icon"]} />
+                    <SolidCloudpluginIcon className={style["plugin-local-icon"]} />
                 </Tooltip>
             )
         }
