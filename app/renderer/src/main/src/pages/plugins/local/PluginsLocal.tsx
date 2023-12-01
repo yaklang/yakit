@@ -848,7 +848,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                                         />
                                     )
                                 }}
-                                gridHeight={210}
+                                gridHeight={226}
                                 listNode={(info: {index: number; data: YakScript}) => {
                                     const {index, data} = info
                                     const check = allCheck || checkList.includes(data.ScriptName)

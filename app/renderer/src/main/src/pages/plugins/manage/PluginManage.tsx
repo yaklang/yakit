@@ -740,7 +740,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         />
                                     )
                                 }}
-                                gridHeight={210}
+                                gridHeight={226}
                                 listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
                                     const {index, data} = info
                                     const check = allCheck || selectUUIDs.includes(data.uuid)

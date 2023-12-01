@@ -821,7 +821,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                                         />
                                     )
                                 }}
-                                gridHeight={210}
+                                gridHeight={226}
                                 listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
                                     const {index, data} = info
                                     const check = allCheck || selectList.includes(data.uuid)

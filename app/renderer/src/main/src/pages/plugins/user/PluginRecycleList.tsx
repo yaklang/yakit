@@ -355,7 +355,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                                         />
                                     )
                                 }}
-                                gridHeight={210}
+                                gridHeight={226}
                                 listNode={(info: {index: number; data: YakitPluginOnlineDetail}) => {
                                     const {index, data} = info
                                     const check = allCheck || selectList.includes(data.uuid)
