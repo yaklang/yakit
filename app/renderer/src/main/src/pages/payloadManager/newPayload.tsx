@@ -1922,7 +1922,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     const onDeletePayload = useMemoizedFn(() => {
         ipcRenderer
             .invoke("DeletePayloadByGroup", {
-                Name: file.name
+                Group: file.name
             })
             .then(() => {
                 success("删除成功")
