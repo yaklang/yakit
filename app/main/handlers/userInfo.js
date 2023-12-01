@@ -63,6 +63,9 @@ module.exports = (win, getClient) => {
                 resizable: true,
                 parent: win,
                 minimizable: false,
+                maximizable: false,
+                fullscreen: false,
+                fullscreenable: false,
                 webPreferences: {
                     nodeIntegration: true
                 }
