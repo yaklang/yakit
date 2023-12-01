@@ -273,6 +273,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         value={userPluginType}
                         onChange={onSwitchUserPluginType}
                         options={mePluginTypeList}
+                        style={{marginRight:16}}
                     />
                 }
                 hidden={!!plugin}

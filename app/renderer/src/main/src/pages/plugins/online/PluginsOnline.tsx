@@ -608,17 +608,27 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
                 </div>
             )}
             <PluginsLayout
-                title={isShowRoll ? <></> : "插件商店"}
+                title={
+                    <div
+                        className={classNames(styles["plugin-heard-title"], {
+                            [styles["plugin-heard-title-hidden"]]: isShowRoll
+                        })}
+                    >
+                        插件商店
+                    </div>
+                }
                 hidden={!!plugin}
                 subTitle={<TypeSelect active={pluginTypeSelect} list={DefaultTypeList} setActive={onSetActive} />}
                 extraHeader={
                     <div className='extra-header-wrapper'>
-                        {!isShowRoll && (
-                            <>
-                                <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
-                                <div className='divider-style'></div>
-                            </>
-                        )}
+                        <div
+                            className={classNames(styles["extra-header-search-wrapper"], {
+                                [styles["extra-header-search-wrapper-hidden"]]: isShowRoll
+                            })}
+                        >
+                            <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
+                            <div className='divider-style'></div>
+                        </div>
 
                         <div className='btn-group-wrapper'>
                             <FuncBtn
