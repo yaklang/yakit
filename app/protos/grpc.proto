@@ -239,7 +239,7 @@ service Yak {
   // delete by [id/group/folder]
   rpc DeletePayloadByFolder(NameRequest) returns (Empty);
   rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
-  rpc DeletePayload(DeletePayloadByIdRequest) returns (Empty); 
+  rpc DeletePayload(DeletePayloadRequest) returns (Empty); 
   // save payload to database
   rpc SavePayload(SavePayloadRequest) returns (Empty);
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
@@ -3231,7 +3231,7 @@ message PayloadGroupNode {
 }
 
 message GetAllPayloadGroupResponse {
-  repeated string Group = 1;
+  repeated string Groups = 1;
   repeated PayloadGroupNode Nodes = 2;
 }
 message UpdateAllPayloadGroupRequest{
@@ -3241,9 +3241,9 @@ message UpdateAllPayloadGroupRequest{
 message SavePayloadRequest {
   bool IsFile = 1;
   string Group = 2;
-  string Folder = 3;
-  string Content = 4;
-  repeated string FileName = 5;
+  string Content = 3;
+  repeated string FileName = 4;
+  string Folder = 5;
 }
 
 
@@ -3274,7 +3274,7 @@ message DeletePayloadByGroupRequest {
   string Group = 1;
 }
 
-message DeletePayloadByIdRequest {
+message DeletePayloadRequest {
   int64 Id = 1;
   repeated int64 Ids = 2;
 }
