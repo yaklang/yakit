@@ -1,10 +1,10 @@
-import {monaco} from "react-monaco-editor";
-import {editor, languages, Position} from "monaco-editor";
-import {CancellationToken} from "typescript";
+import { monaco } from "react-monaco-editor";
+import { editor, languages, Position } from "monaco-editor";
+import { CancellationToken } from "typescript";
 import "./spaceengine";
 
 // https://microsoft.github.io/monaco-editor/playground.html#extending-language-services-custom-languages
-monaco.languages.register({id: "http"})
+monaco.languages.register({ id: "http" })
 // Register a completion item provider for the new language
 monaco.languages.registerCompletionItemProvider('http', {
     triggerCharacters: ["{"],
@@ -324,18 +324,20 @@ monaco.languages.registerCompletionItemProvider('http', {
                 }
             }
         }
-        return {suggestions: suggestions,};
+        return { suggestions: suggestions, };
     }
 } as any);
+
 
 monaco.languages.setMonarchTokensProvider("http", {
     brackets: [],
     defaultToken: "",
     ignoreCase: true,
-    includeLF: false,
+    includeLF: true,
     start: "",
     tokenPostfix: "",
     unicode: false,
+    escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
     tokenizer: {
         root: [
             // 基础 Fuzz 标签解析
@@ -343,28 +345,24 @@ monaco.languages.setMonarchTokensProvider("http", {
 
             // http method
             [/(GET|POST|OPTIONS|DELETE|PUT)/g, "http.method"],
+            // http protocol
+            [/HTTP\/[0-9.]+/, "http.protocol"],
 
             // http path
             // [/((application)|(text)|(\*)|(\w+?))\/[\w*+.]+?/g, "http.header.mime"],
             ["/(((http)|(https):)?\/\/[^\s]+?)/", "http.url"],
             // [/\/[^\s^?^\/]+/, "http.path"],
-            [/\?/, "http.get.query", "@get_query"],
-
-            [/((Content-Length)|(Host)|(Content-Type)|(Origin)|(Referer)): /g, "http.header.danger"],
-            [/(Cookie|Authorization|X-Forward|Real|User-Agent|Protection|CSP):/g, "http.header.danger"],
-            [/(Sec-[^:]+?):/g, "http.header.warning"],
-            [/(Accept[^:]*?):/g, "http.header.info"],
-            // [/[*]\/[*]/g, "http.header.mime"],
-            // [/([A-Za-z][A-Za-z0-9\-]*?):\s*([^\r^\n]+)\n/g, "keyword"],
-            // [/"/, "string", "@string_double"],
-            // [/'/, "string", "@string_single"],
+            [/\?/, "http.query", "@query"],
+            [/^\n$/, 'body.delimiter', '@body'],
+            [/(Cookie)(:)/g, ["http.header.danger", {token: "delimiter", next: "@http_cookie"}]],
+            [/(Content-Length|Host|Content-Type|Origin|Referer)(:)(.+)/g, ["http.header.danger", "delimiter", "http.header.value"]],
+            [/(Authorization|X-Forward|Real|User-Agent|Protection|CSP)(:)(.+)/g, ["http.header.danger", "delimiter", "http.header.value"]],
+            [/(Sec-[^:]+?)(:)(.+)/g, ["http.header.warning", "delimiter", "http.header.value"]],
+            [/([^:]*?)(:)(.+)/g, ["http.header.info", "delimiter", "http.header.value"]],
             [/(html|div|src|\<\/?title\>|<alert>)/i, "keyword"],
             [/(\<script\>|<alert>|<prompt>|<svg )/i, "keyword"],
 
-            // [/[^\s; &=\/]{,20}=/, "bold-keyword"],
-            [/(secret)|(access)|(password)|(verify)|(login)/i, "bold-keyword"]
-            // [/[^\s]+?\=[^\s]+?/i, "keyword"],
-            // [/`/, "string", "@string_backtick"]
+            [/(secret)|(access)|(password)|(verify)|(login)/i, "bold-keyword"],
         ],
         fuzz_tag: [
             [/{{/, "fuzz.tag.inner", "@fuzz_tag_second"],
@@ -391,35 +389,66 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             [/./, "bold-keyword"]
         ],
-        get_query: [
-            [/\s/, "delimiter", "@pop"],
+        query: [
+            [/ /, "delimiter", "@pop"],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/&/g, 'delimiter'],
-            // [/([^=^&^?^\s]+)=([^=^&^?^\s]+)?/g, 'http.get.query.params'],
-            [/([^=^&^?^\s]+)=/g, 'http.get.query.params'],
+            [/[^=&?\s]+/, "http.query.params", "@http_query_params"],
             [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
         ],
-        // cookie: [
-        //     [/\n/, "delimiter", "@pop"],
-        //     [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-        //     [/[;=]/, 'delimiter'],
-        //     [/[^\s^=^;]+?=/, "http.cookie.name"],
-        //     // [/=[^\s^=^;]+/, "http.cookie.value"],
-        // ],
+        http_query_params: [
+            [/\s/, { token: "delimiter", next: "@popall" }],
+            [/&/, 'delimiter', "@pop"],
+            [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+            [/\=/, "http.query.equal"],
+            [/[^=&?\s]+/, "http.query.values"],
+            [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
+        ],
+        http_cookie: [
+            [/\n/, "delimiter", "@pop"],
+            [/\s/, "delimiter"],
+            [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+            [/[^=;\s]+/, "http.query.params", "@http_cookie_params"],
+            [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
+        ],
+        http_cookie_params: [
+            [/\n/, "delimiter", "@popall"],
+            [/[\s|;]/, "delimiter", "@pop"],
+            [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+            [/\=/, "http.query.equal"],
+            [/[^=;?\s]+/, "http.query.values"],
+            [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
+        ],
         string_double: [
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             [/[^\\"]+/, "string.value"],
-            // [/@escapes/, "string.escape"],
+            [/@escapes/, "string.escape"],
             [/\\./, "string.escape.invalid"],
-            [/"/, "string", "@pop"]
+            [/"/, "string", "@body_json"],
         ],
-        string_single: [
+        body: [
+            [/(\d+)(:)/, [{token: "number", next: "@body_json"}, "delimiter"]],
+            [/"/, 'string', '@string_double'],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/[^\\']+/, "string.value"],
-            // [/@escapes/, "string.escape"],
-            [/\\./, "string.escape.invalid"],
-            [/'/, "string", "@pop"]
+            [/-{2,}.*/, "body.boundary", "@body_form"],
+            [/\w+/, "http.query.params", "@http_query_params"],
+            [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
         ],
+        body_json: [
+            [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+            [/(:\s*)/, "delimiter"],
+            [/(\d+)/, "number"],
+            [/"/, 'string', '@string_double'],
+        ],
+        body_form: [
+            [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+            [/^\n$/, "body.delimiter", "@body_data"],
+            [/([^:]*?)(:)(.+)/g, ["http.header.info", "delimiter", "http.header.value"]],
+        ],
+        body_data: [
+            [/(-{2,}[a-zA-z0-9]+--)/, [{token: "body.boundary.end", next: "@end"}]],
+            [/(-{2,}[a-zA-z0-9]+)/, [{token: "body.boundary", next: "@pop"}]],
+        ],
+        end: [],
     }
 })
 
