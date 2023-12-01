@@ -238,17 +238,18 @@ service Yak {
   rpc QueryPayloadFromFile(QueryPayloadFromFileRequest) returns (QueryPayloadFromFileResponse);  
   // delete by [id/group/folder]
   rpc DeletePayloadByFolder(NameRequest) returns (Empty);
-  rpc DeletePayloadByGroup(NameRequest) returns (Empty);
+  rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
   rpc DeletePayload(DeletePayloadByIdRequest) returns (Empty); 
   // save payload to database
-  rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress); // TODO
-  rpc SavePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress); // 两次stream //TODO
+  rpc SavePayload(SavePayloadRequest) returns (Empty);
+  rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
+  rpc SavePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress); // 两次stream
   // update group/folder/payload
   rpc RenamePayloadFolder(RenameRequest) returns (Empty);
   rpc RenamePayloadGroup(RenameRequest) returns (Empty); // rename 
   rpc UpdatePayload(UpdatePayloadRequest) returns (Empty); // edit
   rpc UpdatePayloadToFile(UpdatePayloadToFileRequest) returns (Empty);
-  rpc BackUpOrCopyPayloads(BackUpOrCopyPayloadsRequest) returns (Empty);
+  rpc BackUpOrCopyPayloads(BackUpOrCopyPayloadsRequest) returns (Empty); 
   // Folder and Group
   // get and update all group with order
   rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
@@ -1844,13 +1845,19 @@ message StaticAnalyzeErrorResult {
 message StaticAnalyzeErrorResponse {
   repeated StaticAnalyzeErrorResult Result = 1;
 }
-
 message SavePayloadProgress {
-  double Progress = 1;
-  string Speed =2;// 速度
-  string CostDurationVerbose =3;// 耗时
-  string RestDurationVerbose  =4;// 剩余时间
-  string Message = 8;
+  double Progress = 1; // 进度
+
+  int64 HandledBytes = 2;          // old
+  string HandledBytesVerbose = 3;          // old
+  int64 TotalBytes = 4;          // old
+  string TotalBytesVerbose = 5;          // old
+  double CostDuration = 6;          // old
+
+  string CostDurationVerbose = 7; // 耗时
+  string Speed = 8;// 速度
+  string RestDurationVerbose  =9;// 剩余时间
+  string Message = 10;
 }
 
 message DeletePluginByUserIDRequest {
@@ -3226,7 +3233,8 @@ message PayloadGroupNode {
 }
 
 message GetAllPayloadGroupResponse {
-  repeated PayloadGroupNode Nodes = 1;
+  repeated string Group = 1;
+  repeated PayloadGroupNode Nodes = 2;
 }
 message UpdateAllPayloadGroupRequest{
   repeated PayloadGroupNode Nodes = 1;
@@ -3240,15 +3248,17 @@ message SavePayloadRequest {
   repeated string FileName = 5;
 }
 
-message UpdatePayloadFolderRequest{
-  string Folder = 1;
-  string OldFolder = 2;
-}
 
 message UpdatePayloadRequest {
-  int64 Id = 1;
-  Payload Data = 2;
+  // old 
+  string Group = 1;   // old
+  string OldGroup = 2; // old
+
+  // new, please use this 
+  int64 Id = 3;
+  Payload Data = 4;
 }
+
 message UpdatePayloadToFileRequest {
   string GroupName = 1;
   string Content = 2;
@@ -3264,10 +3274,6 @@ message BackUpOrCopyPayloadsRequest {
 
 message DeletePayloadByGroupRequest {
   string Group = 1;
-}
-
-message DeletePayloadByFolderRequest {
-  string Folder = 1;
 }
 
 message DeletePayloadByIdRequest {
