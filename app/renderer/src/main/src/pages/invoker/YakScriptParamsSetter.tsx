@@ -1,5 +1,4 @@
 import React, {useEffect, useRef, useState} from "react";
-import {YakScriptParam} from "./schema";
 import {
     Button,
     Card,
@@ -24,11 +23,13 @@ import {ContentUploadInput} from "../../components/functionTemplate/ContentUploa
 import {failed, info} from "../../utils/notification";
 import {ItemSelects} from "../../components/baseTemplate/FormItemUtil";
 import {getRemoteValue, setRemoteValue} from "@/utils/kv";
+import { YakParamProps } from "../plugins/pluginsType";
 
 const {Title} = Typography;
 
+const {ipcRenderer} = window.require("electron")
 export interface YakScriptParamsSetterProps {
-    Params: YakScriptParam[]
+    Params: YakParamProps[]
     onParamsConfirm: (params: YakExecutorParam[]) => any
     onCanceled?: () => any
     onClearData?: () => any
@@ -41,6 +42,8 @@ export interface YakScriptParamsSetterProps {
     styleSize?: "big" | "small"
     loading?: boolean
     ScriptName?: string
+    /**插件类型 */
+    Type?: string
 }
 
 const YAKIT_PLUGIN_DEBUG_PARAMS = "YAKIT_PLUGIN_DEBUG_PARAMS"
@@ -79,14 +82,14 @@ export const removeRepeatedParams = (params: YakExecutorParam[]): YakExecutorPar
 export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (props) => {
     // 新参数组件标记数组
     const newParamCom: string[] = ["upload-path", "select"]
-    const [propsOriginParams, setPropsOriginParams] = useState<YakScriptParam[]>(props.Params);
-    const [originParams, setOriginParams] = useState<YakScriptParam[]>(props.Params || []);
+    const [propsOriginParams, setPropsOriginParams] = useState<YakParamProps[]>(props.Params);
+    const [originParams, setOriginParams] = useState<YakParamProps[]>(props.Params || []);
     const [groupStates, setGroupStates] = useState<{ group: string, hidden: boolean }[]>([]);
 
     // 参数组数据流
     const [extraGroup, setExtraGroup] = useState<string[]>([])
-    const [requiredParams, setRequiredParams] = useState<YakScriptParam[]>([])
-    const groupToParams = useRef<Map<string, YakScriptParam[]>>(new Map<string, YakScriptParam[]>())
+    const [requiredParams, setRequiredParams] = useState<YakParamProps[]>([])
+    const groupToParams = useRef<Map<string, YakParamProps[]>>(new Map<string, YakParamProps[]>())
 
     // 控制局部组件的加载状态
     const [templateLoading, setTemplateLoading] = useState<boolean>(false)
@@ -134,7 +137,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     }, [props.Params, props.saveDebugParams])
 
     useEffect(() => {
-        const groupToParam = new Map<string, YakScriptParam[]>();
+        const groupToParam = new Map<string, YakParamProps[]>();
         const extraGroup: string[] = [];
         for (let item of originParams) {
             const group = item.Required ? "required" : (item.Group || "default");
@@ -142,21 +145,21 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                 extraGroup.push(group)
             }
 
-            let params: YakScriptParam[] | undefined = groupToParam.get(group)
+            let params: YakParamProps[] | undefined = groupToParam.get(group)
             if (params === undefined) {
                 groupToParam.set(group, [])
                 params = groupToParam.get(group)
             }
             if (params) params.push(item)
         }
-        const requiredParam: YakScriptParam[] = groupToParam.get("required") || [];
+        const requiredParam: YakParamProps[] = groupToParam.get("required") || [];
 
         groupToParams.current = groupToParam
         setRequiredParams(requiredParam)
         setExtraGroup(extraGroup)
     }, [originParams])
 
-    const yakScriptParamToNode = (i: YakScriptParam, required: boolean, key: string, disabled: boolean, formItemStyle?: React.CSSProperties) => {
+    const yakScriptParamToNode = (i: YakParamProps, required: boolean, key: string, disabled: boolean, formItemStyle?: React.CSSProperties) => {
         let index = 0
         for (let id in originParams) {
             if (originParams[id].Field === i.Field) {
@@ -205,7 +208,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     }
 
     const yakScriptParamToNewNode = (
-        i: YakScriptParam,
+        i: YakParamProps,
         required: boolean,
         key: string,
         disabled: boolean,
@@ -371,7 +374,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                         allowClear: true,
                         data: extraSetting.data || [],
                         optText: "key",
-                        value: (`${i.Value}` || "").split(",").filter(i => !!i),
+                        value: i.Value ? (`${i.Value}` || "").split(",").filter(i => !!i) : [],
                         setValue: (value) => {
                             originParams[index].Value = value
                             setOriginParams([...originParams])
@@ -396,6 +399,15 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
     };
 
     const submit = () => {
+        /**点击启动任务跳转去插件调试的类型 */
+        const toEditPagePluginType: string[] = ["mitm", "port-scan", "nuclei"]
+        if (toEditPagePluginType.includes(props.Type || "")) {
+            ipcRenderer.invoke("send-to-tab", {
+                type: "**debug-plugin",
+                data: {scriptName: props.ScriptName}
+            })
+            return
+        }
         if (props.onClearData) props.onClearData()
 
         let params = originParams.filter(i => {
@@ -457,7 +469,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                     {/*    </Space>*/}
                     {/*</Title>*/}
                     {!isGroupHidden(extraGroup[0] || "default", !defaultExpand) && <>
-                        {(groupToParams.current.get(extraGroup[0] || "default") || []).map((i: YakScriptParam, index) => {
+                        {(groupToParams.current.get(extraGroup[0] || "default") || []).map((i: YakParamProps, index) => {
                             if (newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, false, `defaultParamsGroup-${index}`, !!props.loading)
                             else return yakScriptParamToNode(i, false, `defaultParamsGroup-${index}`, !!props.loading)
                         })}
@@ -481,7 +493,7 @@ export const YakScriptParamsSetter: React.FC<YakScriptParamsSetterProps> = (prop
                                 </Space>
                             </Title>
                             {!isGroupHidden(i, !defaultExpand) && <>
-                                {(groupToParams.current.get(i) || []).map((i: YakScriptParam, index) => {
+                                {(groupToParams.current.get(i) || []).map((i: YakParamProps, index) => {
                                     if (newParamCom.includes(i.TypeVerbose)) return yakScriptParamToNewNode(i, false, `paramsGroup-${index}`, !!props.loading)
                                     else return yakScriptParamToNode(i, false, `paramsGroup-${index}`, !!props.loading)
                                 })}

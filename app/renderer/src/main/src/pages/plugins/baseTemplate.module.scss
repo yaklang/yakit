@@ -1,0 +1,652 @@
+// -------------------- PluginsLayout ↓↓↓ --------------------
+.plugins-layout {
+    width: 100%;
+    height: 100%;
+    // overflow: hidden;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+.plugins-hidden {
+    display: none;
+}
+.plugins-layout-header {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    border-bottom: 1px solid #eaecf3;
+    .header-body {
+        flex: 1 0 0;
+        min-width: 424px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        // gap: 16px;
+        .title-style {
+            color: #31343f;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 24px;
+            margin-right: 16px;
+        }
+        .subtitle-wrapper {
+            flex: 1 0 0;
+            overflow: hidden;
+        }
+    }
+}
+.plugins-layout-container {
+    flex: 1 0 0;
+    width: 100%;
+    overflow: hidden;
+}
+// -------------------- PluginsContainer ↓↓↓ --------------------
+.plugins-container-wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    .container-body {
+        flex: 1 0 0;
+        height: 100%;
+        overflow: hidden;
+        padding: 12px 16px 12px 10px;
+    }
+    .container-filter-wrapper {
+        width: 224px;
+        opacity: 1;
+        flex-shrink: 0;
+        border-right: 1px solid #eaecf3;
+        transition:
+            width 0.2s ease,
+            opacity 0.2s ease;
+    }
+    .container-filter-wrapper-hidden {
+        width: 0;
+        opacity: 0;
+    }
+}
+// -------------------- PluginDetails ↓↓↓ --------------------
+.plugin-details-wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    .filter-wrapper {
+        width: 33.33333%;
+        max-width: 432px;
+        height: 100%;
+        border-right: 1px solid #eaecf3;
+        padding: 12px 4px 0 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 360px;
+        .filter-header {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            // gap: 16px;
+            padding: 0 8px;
+            .header-search {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 16px;
+                .title-style {
+                    color: #31343f;
+                    font-size: 12px;
+                    font-weight: 600;
+                    line-height: 16px;
+                }
+            }
+            .filter-body {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                .display-show {
+                    display: flex;
+                    .all-check {
+                        margin-right: 16px;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        color: #31343f;
+                        font-size: 12px;
+                        line-height: 16px;
+                    }
+                    .count-num {
+                        color: var(--color-gray-text-02, #b4bbca);
+                        font-size: 12px;
+                        line-height: 16px;
+                        .num-style {
+                            color: #f28b44;
+                        }
+                    }
+                    .divider-style {
+                        margin: 2px 8px;
+                        width: 1px;
+                        height: 12px;
+                        background-color: #eaecf3;
+                    }
+                }
+            }
+        }
+        .filter-list {
+            width: 100%;
+            flex: 1 0 0;
+            overflow: hidden;
+        }
+    }
+    .filter-hidden-wrapper {
+        display: none;
+    }
+
+    .details-wrapper {
+        flex: 1 0 0;
+        min-width: 556px;
+        height: 100%;
+        padding-right: 16px;
+        padding-top: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        .details-header {
+            padding: 0px 0px 4px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eaecf3;
+            .header-title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+                .subtitle-style {
+                    color: #b4bbca;
+                    font-size: 10px;
+                    font-weight: 400;
+                }
+            }
+            .header-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                .divider-style {
+                    width: 1px;
+                    height: 12px;
+                    background-color: #eaecf3;
+                }
+            }
+        }
+        .details-body {
+            width: 100%;
+            flex: 1 0 0;
+            overflow: hidden;
+        }
+    }
+}
+// -------------------- PluginDetailHeader ↓↓↓ --------------------
+.plugin-detail-header-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    .header-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .header-info {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            .info-title {
+                height: 24px;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #31343f;
+                font-size: 16px;
+                font-weight: 600;
+                line-height: 24px;
+                .title-style {
+                    flex: 1;
+                    overflow: hidden;
+                }
+                .subtitle-wrapper {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    .help-icon {
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                            color: #b4bbca;
+                        }
+                    }
+                }
+            }
+            .info-tags {
+                flex: 1;
+                min-width: 20px;
+                overflow: hidden;
+                display: inline-flex;
+                align-items: center;
+            }
+        }
+    }
+    .author-wrapper {
+        overflow: hidden;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+
+        .divider-style {
+            width: 1px;
+            height: 12px;
+            background-color: #eaecf3;
+            margin-left: 16px;
+            margin-right: 16px;
+        }
+        .text-style {
+            color: #31343f;
+            font-size: 12px;
+            line-height: 16px;
+        }
+        .left-wrapper {
+            overflow: hidden;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .author-wrapper {
+            min-width: 103px;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            .name-wrapper {
+                flex: 1;
+                overflow: hidden;
+            }
+        }
+        .id-wrapper {
+            min-width: 85px;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .text-wrapper {
+                flex: 1;
+                overflow: hidden;
+            }
+            .copy-icon-style {
+                margin-left: 0;
+            }
+        }
+        .constant-wrapper {
+            flex-grow: 1;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+    }
+}
+// -------------------- PluginModifyInfo ↓↓↓ --------------------
+.plugin-modify-info-wrapper {
+    .modify-input {
+        :global {
+            .ant-input[disabled] {
+                background-color: transparent;
+                border-color: transparent;
+            }
+            .ant-input-prefix {
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    color: #31343f;
+                }
+            }
+        }
+    }
+    .modify-select {
+        height: 11px;
+        :global {
+            .ant-select-selector {
+                padding-left: 30px !important;
+            }
+            .ant-select-selection-overflow-item {
+                margin-top: 1px !important;
+            }
+            .ant-select-selection-search-input {
+                margin-left: 18px !important;
+            }
+        }
+    }
+    .multiple-modify-select {
+        height: 11px;
+        :global {
+            .ant-select-selector {
+                padding-left: 30px !important;
+            }
+            .ant-select-selection-overflow-item {
+                margin-top: 1px !important;
+            }
+        }
+    }
+    .modify-select-icon {
+        position: absolute;
+        top: 2px;
+        left: 0;
+        width: 37px;
+        height: 32px;
+        padding-left: 12px;
+        padding-right: 8px;
+        display: flex;
+        align-items: center;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #31343f;
+        }
+    }
+    .modify-bug-type {
+        margin-bottom: 16px;
+        padding: 16px 12px;
+        display: flex;
+        gap: 8px;
+        border-radius: 8px;
+        background: #f8f8f8;
+        .bug-icon {
+            svg {
+                width: 24px;
+                height: 24px;
+                color: #8863f7;
+            }
+        }
+        .bug-info {
+            flex: 1 0 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 16px;
+            .info-title {
+                height: 20px;
+                color: #31343f;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+            }
+            .info-content {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                .header-style {
+                    color: #85899e;
+                    font-size: 14px;
+                    font-weight: 600;
+                    line-height: 20px;
+                }
+                .content-style {
+                    color: #85899e;
+                    font-size: 12px;
+                    line-height: 16px;
+                }
+            }
+        }
+    }
+}
+// -------------------- PluginModifySetting ↓↓↓ --------------------
+.plugin-modify-setting-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .setting-params {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        .setting-params-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .header-title {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                .title-style {
+                    color: #31343f;
+                    font-size: 14px;
+                }
+                .sub-title-style {
+                    color: #b4bbca;
+                    font-size: 12px;
+                }
+            }
+        }
+        .setting-params-add {
+            width: 100%;
+        }
+    }
+
+    .setting-switch {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        .switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #31343f;
+            font-size: 14px;
+            line-height: 20px;
+        }
+    }
+}
+// -------------------- PluginAddParamModal ↓↓↓ --------------------
+.plugin-add-param-form {
+    width: 100%;
+    max-height: 80vh;
+    padding: 24px;
+    overflow: hidden auto;
+}
+// -------------------- PluginParamList ↓↓↓ --------------------
+.plugin-param-list-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    border: 1px solid #eaecf3;
+
+    .type-style {
+        width: 96px;
+    }
+    .name-style {
+        flex: 1;
+        overflow: hidden;
+    }
+    .default-style {
+        flex: 1;
+        overflow: hidden;
+    }
+    .required-style {
+        width: 72px;
+    }
+    .op-style {
+        width: 56px;
+    }
+    .list-header {
+        padding: 8px 8px 8px 32px;
+        display: flex;
+        gap: 8px;
+        background: #f8f8f8;
+        .header-title {
+            height: 16px;
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+        }
+    }
+    .list-opt {
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-top: 1px solid #eaecf3;
+        .drag-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: #ccd2de;
+            }
+        }
+        .text-style {
+            color: #75757e;
+            font-size: 14px;
+            line-height: 20px;
+        }
+        .op-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    }
+    .list-drag-opt {
+        border: 1px solid #eaecf3;
+        border-radius: 4px;
+    }
+}
+.plugin-param-list-hidden {
+    display: none;
+}
+// -------------------- PluginEditorDiff ↓↓↓ --------------------
+.plugin-edtior-diff-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    .edit-diff-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 20px;
+        color: var(--color-gray-text-04, #31343f);
+        font-size: 14px;
+        line-height: 20px;
+    }
+    .edit-diff-header {
+        padding: 6px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .header-body {
+            line-height: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .body-title {
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 500;
+            }
+            .body-sub-title {
+                color: #b4bbca;
+                font-size: 10px;
+            }
+        }
+        .header-right-body {
+            justify-content: right;
+        }
+    }
+    .edit-diff-wrapper {
+        margin-top: 4px;
+        width: 100%;
+        height: 560px;
+        overflow: hidden;
+        border-radius: 4px;
+        border: 1px solid #eaecf3;
+    }
+    .edit-new-wrapper {
+        margin-top: 4px;
+        width: 100%;
+        height: 560px;
+        max-height: 560px;
+        border-radius: 4px;
+        border: 1px solid #eaecf3;
+    }
+}
+// -------------------- 插件审核状态展示tag ↓↓↓ --------------------
+.audit-status-tag {
+    white-space: nowrap;
+    padding: 3px 6px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    svg {
+        width: 12px;
+        height: 12px;
+    }
+}
+.audit-status-tag-failed {
+    background: #f0f1f3;
+    color: #ccd2de;
+}
+.audit-status-tag-pending {
+    background: rgba(255, 182, 96, 0.2);
+    color: #ffb660;
+}
+.audit-status-tag-passed {
+    background: rgba(86, 201, 145, 0.2);
+    color: #56c991;
+}
+
+// -----------------------
+
+.contributes-item-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    .img-style {
+        width: 24px;
+        height: 24px;
+        border-radius: 20px;
+        border: 1px solid #f8f8f8;
+        margin-right: 4px;
+    }
+}
+.contributes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 120px;
+}
+.contributes-popover {
+    :global {
+        .ant-popover-inner-content {
+            padding: 8px;
+        }
+    }
+}

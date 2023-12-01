@@ -1,5 +1,5 @@
-const {ipcMain} = require("electron")
-const {USER_INFO} = require("../state")
+const { ipcMain } = require("electron")
+const { USER_INFO } = require("../state")
 const handlerHelper = require("./handleStreamWithContext")
 
 module.exports = (win, getClient) => {
@@ -40,7 +40,7 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
-                if (params.OnlineID&&params.UUID) win.webContents.send("ref-plugin-operator", {pluginOnlineId: params.OnlineID,pluginUUID:params.UUID})
+                if (params.OnlineID && params.UUID) win.webContents.send("ref-plugin-operator", { pluginOnlineId: params.OnlineID, pluginUUID: params.UUID })
                 resolve(data)
             })
         })
@@ -80,6 +80,49 @@ module.exports = (win, getClient) => {
         delete newParams.isAddToken
         let stream = getClient().DownloadOnlinePluginAll(newParams)
         handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginAll, token)
+    })
+
+    const asyncDownloadOnlinePluginBatch = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginBatch(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 新版-下载插件
+    ipcMain.handle("DownloadOnlinePluginBatch", async (e, params) => {
+        params.Token = USER_INFO.token
+        return await asyncDownloadOnlinePluginBatch(params)
+    })
+
+    // 新版-下载所有插件 全部添加
+    const streamDownloadOnlinePluginsAll = new Map()
+    ipcMain.handle("cancel-DownloadOnlinePlugins", handlerHelper.cancelHandler(streamDownloadOnlinePluginsAll))
+    ipcMain.handle("DownloadOnlinePlugins", async (e, params, token) => {
+        params.Token = USER_INFO.token
+        let stream = getClient().DownloadOnlinePlugins(params)
+        handlerHelper.registerHandler(win, stream, streamDownloadOnlinePluginsAll, token)
+    })
+
+    const asyncDownloadOnlinePluginByPluginName = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DownloadOnlinePluginByPluginName(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 新版-根据插件名称下载插件
+    ipcMain.handle("DownloadOnlinePluginByPluginName", async (e, params) => {
+        params.Token = USER_INFO.token
+        return await asyncDownloadOnlinePluginByPluginName(params)
     })
 
     const asyncDeletePluginByUserID = (params) => {
@@ -143,7 +186,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryYakScriptLocalAndUser", async (e, params) => {
         return await asyncQueryYakScriptLocalAndUser(params)
     })
- 
+
     const asyncQueryYakScriptByOnlineGroup = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryYakScriptByOnlineGroup(params, (err, data) => {
@@ -185,7 +228,7 @@ module.exports = (win, getClient) => {
                 }
                 resolve(data)
             })
-        }) 
+        })
     }
     // 统计
     ipcMain.handle("GetYakScriptTagsAndType", async (e, params) => {
@@ -207,10 +250,5 @@ module.exports = (win, getClient) => {
     // 删除本地插件,带条件
     ipcMain.handle("DeleteLocalPluginsByWhere", async (e, params) => {
         return await asyncDeleteLocalPluginsByWhere(params)
-    })
-
-    // 参数携带
-    ipcMain.on("yakit-store-params", (event, arg) => {
-        win.webContents.send("get-yakit-store-params", arg)
     })
 }

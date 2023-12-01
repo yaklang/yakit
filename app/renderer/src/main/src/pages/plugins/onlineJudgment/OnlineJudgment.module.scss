@@ -1,0 +1,19 @@
+
+.online-spin {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.online-network {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    overflow: auto;
+    padding-top: 10%;
+    padding-bottom: 24px;
+    .refresh-button {
+        width: fit-content;
+    }
+}

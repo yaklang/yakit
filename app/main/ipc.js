@@ -26,7 +26,7 @@ let _client
 const options = {
     "grpc.max_receive_message_length": 1024 * 1024 * 1000,
     "grpc.max_send_message_length": 1024 * 1024 * 1000,
-    "grpc.enable_http_proxy": 0,
+    "grpc.enable_http_proxy": 0
 }
 
 function newClient() {
@@ -86,18 +86,18 @@ function testRemoteClient(params, callback) {
     const yak = !caPem
         ? new Yak(`${host}:${port}`, grpc.credentials.createInsecure(), options)
         : new Yak(
-            `${host}:${port}`,
-            // grpc.credentials.createInsecure(),
-            grpc.credentials.combineChannelCredentials(
-                grpc.credentials.createSsl(Buffer.from(caPem, "latin1"), null, null, {
-                    checkServerIdentity: (hostname, cert) => {
-                        return undefined
-                    }
-                }),
-                creds
-            ),
-            options
-        )
+              `${host}:${port}`,
+              // grpc.credentials.createInsecure(),
+              grpc.credentials.combineChannelCredentials(
+                  grpc.credentials.createSsl(Buffer.from(caPem, "latin1"), null, null, {
+                      checkServerIdentity: (hostname, cert) => {
+                          return undefined
+                      }
+                  }),
+                  creds
+              ),
+              options
+          )
 
     yak.Echo({text: "hello yak? are u ok?"}, callback)
 }
@@ -108,7 +108,7 @@ module.exports = {
         require("./handlers/yakLocal").clearing()
     },
     registerIPC: (win) => {
-        ipcMain.handle("relaunch", ()=>{
+        ipcMain.handle("relaunch", () => {
             app.relaunch({})
             app.exit(0)
         })
@@ -135,7 +135,7 @@ module.exports = {
         ipcMain.handle("Echo", async (e, params) => {
             return await asyncEcho(params)
         })
-        
+
         /** 获取 yaklang引擎 配置参数 */
         ipcMain.handle("fetch-yaklang-engine-addr", () => {
             return {
@@ -163,7 +163,7 @@ module.exports = {
                 global.password = password
             },
             getClient,
-            newClient,
+            newClient
         )
         /** 远程控制 */
         require("./handlers/dynamicControl")(win, getClient)
@@ -258,5 +258,8 @@ module.exports = {
         uiOp.forEach((item) => {
             require(path.join(__dirname, `./uiOperate/${item}`))(win, getClient)
         })
+
+        // new plugins store
+        require("./handlers/plugins")(win, getClient)
     }
 }

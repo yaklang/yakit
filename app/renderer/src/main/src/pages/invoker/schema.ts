@@ -1,3 +1,5 @@
+import {QueryYakScriptRiskDetailByCWEResponse, YakParamProps} from "../plugins/pluginsType"
+
 export interface ExecHistoryRecord {
     Script: string
     ScriptId: string
@@ -44,41 +46,18 @@ export const genDefaultPagination = (limit?: number, page?: number) => {
     } as PaginationSchema
 }
 
-/*
-* message YakScript {
-  int64 Id = 1;
-  string Content = 2;
-  string Type = 3;
-  repeated YakScriptParam Params = 4;
-  int64 CreatedAt = 5;
-  string ScriptName = 6;
-  string Help = 7;
-}
-*
-* message YakScriptParam {
-  string Field = 1;
-  string DefaultValue = 2;
-
-  // int/number/integer/float/str/bool
-  string TypeVerbose = 3;
-
-  string FieldVerbose = 4;
-
-  string Help = 5;
-}
-* */
-export interface YakScriptParam {
-    Field: string
-    DefaultValue: string
-    TypeVerbose: string
-    FieldVerbose: string
-    Help: string
-    Value?: string | any
-    Required?: boolean
-    Group?: string
-    ExtraSetting?: string
-    BuildInParam?: boolean
-}
+// export interface YakScriptParam {
+//     Field: string
+//     DefaultValue: string
+//     TypeVerbose: string
+//     FieldVerbose: string
+//     Help: string
+//     Value?: string | any
+//     Required?: boolean
+//     Group?: string
+//     ExtraSetting?: string
+//     BuildInParam?: boolean
+// }
 
 export interface YakScriptHooks {
     HookName: string
@@ -95,7 +74,7 @@ export interface YakScript {
     Id: number
     Content: string
     Type: string
-    Params: YakScriptParam[]
+    Params: YakParamProps[]
     CreatedAt: number
     ScriptName: string
     Help: string
@@ -121,6 +100,19 @@ export interface YakScript {
     BaseOnlineId?: number
     OnlineOfficial?: boolean
     OnlineGroup?: string
+    IsCorePlugin?: boolean
+    UpdatedAt?: number
+    RiskType?: string
+    RiskDetail?: QueryYakScriptRiskDetailByCWEResponse
+    RiskAnnotation?: string
+    CollaboratorInfo?: Collaborator[]
+    /**前端判断使用，该插件是否为本地插件，OnlineBaseUrl与当前最新的私有域不一样则为本地插件 */
+    isLocalPlugin?: boolean
+}
+
+export interface Collaborator {
+    HeadImg: string
+    UserName: string
 }
 
 export type QueryYakScriptsResponse = QueryGeneralResponse<YakScript>
@@ -142,6 +134,7 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
 
     // 展示信息中，插件商店的顺序和本地顺序不应该一样
     IgnoreGeneralModuleOrder?: boolean
+    UUID?: string
 }
 
 /*
@@ -160,7 +153,17 @@ export interface ExecResult {
     Raw: Uint8Array
     IsMessage: boolean
     Message: Uint8Array
-    Id?: number,
+    Id?: number
     Progress: number
     RuntimeID?: string
+}
+
+export interface TagsAndType {
+    Value: string
+    Total: number
+}
+
+export interface GetYakScriptTagsAndTypeResponse {
+    Type: TagsAndType[]
+    Tag: TagsAndType[]
 }

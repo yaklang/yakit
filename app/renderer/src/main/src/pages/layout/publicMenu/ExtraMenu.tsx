@@ -1,13 +1,13 @@
 import React, {useMemo, useState} from "react"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {SaveIcon} from "@/assets/newIcon"
-import {ExtraMenuCodecIcon, MenuPayloadIcon, MenuYakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitRoute} from "@/routes/newRoute"
 import {onImportPlugin, onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {useMemoizedFn} from "ahooks"
 import {RouteToPageProps} from "./PublicMenu"
+import { OutlineSaveIcon } from "@/assets/icon/outline"
+import { SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon } from "@/assets/icon/solid"
 
 import styles from "./ExtraMenu.module.scss"
 
@@ -70,9 +70,9 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     type='text'
                     style={{fontWeight: 500}}
                     onClick={(e) => e.preventDefault()}
-                    icon={<SaveIcon />}
+                    icon={<OutlineSaveIcon />}
                 >
-                    导入协作资源
+                    导入资源
                 </YakitButton>
             </YakitPopover>
             <YakitButton
@@ -80,7 +80,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 onClick={() => {
                     onMenuSelect({route: YakitRoute.Codec})
                 }}
-                icon={<ExtraMenuCodecIcon />}
+                icon={<SolidCodecIcon />}
             >
                 Codec
             </YakitButton>
@@ -89,7 +89,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 onClick={() => {
                     onMenuSelect({route: YakitRoute.PayloadManager})
                 }}
-                icon={<MenuPayloadIcon />}
+                icon={<SolidPayloadIcon/>}
             >
                 Payload
             </YakitButton>
@@ -98,7 +98,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 onClick={() => {
                     onMenuSelect({route: YakitRoute.YakScript})
                 }}
-                icon={<MenuYakRunnerIcon />}
+                icon={<SolidTerminalIcon />}
             >
                 Yak Runner
             </YakitButton>

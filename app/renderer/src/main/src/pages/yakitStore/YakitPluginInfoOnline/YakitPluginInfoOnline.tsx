@@ -4,21 +4,7 @@ import React, {useState, useEffect, memo, Suspense} from "react"
 import {useStore} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {failed, success, warn} from "../../../utils/notification"
-import {
-    PageHeader,
-    Space,
-    Tooltip,
-    Button,
-    Empty,
-    Tag,
-    Tabs,
-    Upload,
-    Input,
-    List,
-    Modal,
-    Spin,
-    Image,
-} from "antd"
+import {PageHeader, Space, Tooltip, Button, Empty, Tag, Tabs, Upload, Input, List, Modal, Spin, Image} from "antd"
 import {
     StarOutlined,
     StarFilled,
@@ -43,8 +29,8 @@ import {GetYakScriptByOnlineIDRequest} from "../YakitStorePage"
 import {GetReleaseEdition, isEnterpriseEdition} from "@/utils/envfile"
 import Login from "@/pages/Login"
 import {fail} from "assert"
-import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 const EditOnlinePluginDetails = React.lazy(() => import("./EditOnlinePluginDetails"))
 
@@ -269,7 +255,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
     })
 
     /** 删除功能逻辑 */
-    const [delPluginShow,setDelPluginShow]=useState<boolean>(false)
+    const [delPluginShow, setDelPluginShow] = useState<boolean>(false)
 
     if (!plugin) {
         return (
@@ -281,11 +267,11 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
         )
     }
     const tags: string[] = plugin.tags ? JSON.parse(plugin.tags) : []
-    const isShowAdmin = (isAdmin || userInfo.showStatusSearch) && !plugin.is_private
+    const isShowAdmin = (isAdmin || userInfo.checkPlugin) && !plugin.is_private
     // 是否为企业版
     const isEnterprise = isEnterpriseEdition()
     return (
-        <div className={`plugin-info`} id='plugin-info-scroll'>
+        <div className={`plugin-info`}>
             <Spin spinning={loading} style={{height: "100%"}}>
                 {/* PageHeader */}
                 <PageHeader
@@ -373,11 +359,15 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         {isEnterprise ? (
                             <div className='plugin-info-examine'>
                                 {(isAdmin || userInfo.user_id === plugin.user_id || plugin.checkPlugin) && (
-                                        <Button type='primary' danger onClick={() => {
-                                            if(!delPluginShow) setDelPluginShow(true)
-                                        }}>
-                                            删除
-                                        </Button>
+                                    <Button
+                                        type='primary'
+                                        danger
+                                        onClick={() => {
+                                            if (!delPluginShow) setDelPluginShow(true)
+                                        }}
+                                    >
+                                        删除
+                                    </Button>
                                 )}
                                 {(isAdmin || plugin.checkPlugin) && (
                                     <>
@@ -396,15 +386,21 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                             <div className='plugin-info-examine'>
                                 {(isAdmin || userInfo.user_id === plugin.user_id) && (
                                     <>
-                                        <Button type='primary' danger onClick={(e) => {
-                                            if(!delPluginShow) setDelPluginShow(true)
-                                        }}>
+                                        <Button
+                                            type='primary'
+                                            danger
+                                            onClick={(e) => {
+                                                if (!delPluginShow) setDelPluginShow(true)
+                                            }}
+                                        >
                                             删除
                                         </Button>
                                         {/* base_plugin_id存在时则为复制云端插件 不允许更改 私密/公开 */}
-                                        {!plugin?.base_plugin_id && <Button type='primary' onClick={() => setIsEdit(true)}>
-                                            修改
-                                        </Button>}
+                                        {!plugin?.base_plugin_id && (
+                                            <Button type='primary' onClick={() => setIsEdit(true)}>
+                                                修改
+                                            </Button>
+                                        )}
                                     </>
                                 )}
                                 {isAdmin && !user && (
@@ -434,7 +430,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                             handleCancel={() => setIsEdit(false)}
                         />
                     </Suspense>
-                    <Tabs className="no-theme-tabs" activeKey={tabKey} onChange={(e) => setTabKey(e)}>
+                    <Tabs className='no-theme-tabs' activeKey={tabKey} onChange={(e) => setTabKey(e)}>
                         <TabPane tab='源码' key='1'>
                             <YakEditor type={"yak"} value={plugin.content} readOnly={true} />
                         </TabPane>
@@ -443,28 +439,23 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                         </TabPane>
                     </Tabs>
                 </div>
-                    <YakitHint
-                        visible={delPluginShow}
-                        title="删除插件"
-                        content="是否需要彻底删除插件"
-                        okButtonText='放入回收站'
-                        cancelButtonText='删除'
-                        cancelButtonProps={{
-                            style: plugin?.user_id === userInfo.user_id ? undefined : {display: "none"}
-                        }}
-                        footerExtra={
-                            <YakitButton
-                                size='max'
-                                type='outline2'
-                                onClick={() => setDelPluginShow(false)
-                                }
-                            >
-                                取消
-                            </YakitButton>
-                        }
-                        onOk={() => onRemove(false)}
-                        onCancel={() => onRemove(true)}
-                    />
+                <YakitHint
+                    visible={delPluginShow}
+                    title='删除插件'
+                    content='是否需要彻底删除插件'
+                    okButtonText='放入回收站'
+                    cancelButtonText='删除'
+                    cancelButtonProps={{
+                        style: plugin?.user_id === userInfo.user_id ? undefined : {display: "none"}
+                    }}
+                    footerExtra={
+                        <YakitButton size='max' type='outline2' onClick={() => setDelPluginShow(false)}>
+                            取消
+                        </YakitButton>
+                    }
+                    onOk={() => onRemove(false)}
+                    onCancel={() => onRemove(true)}
+                />
             </Spin>
         </div>
     )
@@ -486,7 +477,7 @@ interface CommentStarsProps {
     operation: string
 }
 
-const PluginComment: React.FC<PluginCommentProps> = (props) => {
+export const PluginComment: React.FC<PluginCommentProps> = (props) => {
     const {plugin, isLogin} = props
     const [commentLoading, setCommentLoading] = useState<boolean>(false)
     const [commentText, setCommentText] = useState<string>("")
@@ -742,9 +733,11 @@ const PluginComment: React.FC<PluginCommentProps> = (props) => {
                     </div>
                 }
                 endMessage={
-                    (commentResponses?.pagemeta?.total || 0) > 0 && <div className='row-cneter'>暂无更多数据</div>
+                    (commentResponses?.pagemeta?.total || 0) > 0 && (
+                        <div className='row-cneter no-more-text'>暂无更多数据</div>
+                    )
                 }
-                scrollableTarget='plugin-info-scroll'
+                scrollableTarget='online-plugin-info-scroll'
             >
                 <List
                     dataSource={commentResponses.data || []}
@@ -1166,7 +1159,7 @@ const PluginCommentChildModal = (props: PluginCommentChildModalProps) => {
                         }
                         endMessage={
                             (commentChildResponses?.pagemeta?.total || 0) > 0 && (
-                                <div className='row-cneter'>暂无更多数据</div>
+                                <div className='row-cneter no-more-text'>暂无更多数据</div>
                             )
                         }
                         scrollableTarget='scroll-able-div'

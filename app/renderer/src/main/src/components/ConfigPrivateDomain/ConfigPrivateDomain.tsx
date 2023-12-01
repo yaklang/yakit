@@ -15,6 +15,7 @@ import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {InformationCircleIcon} from "@/assets/newIcon"
 import {RemoteGV} from "@/yakitGV"
 import {YakitRoute} from "@/routes/newRoute"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -59,7 +60,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     const {userInfo, setStoreUserInfo} = useStore()
 
     const syncLoginOut = async () => {
-        await loginOut(userInfo)
+        try {
+            await loginOut(userInfo)
+        } catch (error) {}
     }
     // 企业登录
     const loginUser = useMemoizedFn(() => {
@@ -88,7 +91,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         role: res.role,
                         user_id: res.user_id,
                         token: res.token,
-                        showStatusSearch: res?.showStatusSearch || false
+                        checkPlugin: res?.checkPlugin || false
                     }
                     setStoreUserInfo(user)
                     if (data?.next) {
@@ -131,8 +134,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 ...values
             })
             .then((data) => {
-                ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
-
                 addHttpHistoryList(values.BaseUrl)
                 if (values.Proxy) {
                     addProxyList(values.Proxy)
@@ -145,6 +146,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     onCloseTab()
                     onClose && onClose()
                 }
+                ipcRenderer.send("edit-baseUrl", {baseUrl: values.BaseUrl})
                 if (v?.pwd) {
                     // 加密
                     ipcRenderer
@@ -167,6 +169,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     useEffect(() => {
         ipcRenderer.on("edit-baseUrl-status", (e, res: any) => {
             enterpriseLogin && loginUser()
+            emiter.emit("onSwitchPrivateDomain", "") // 修改私有域成功后发送的信号
         })
         return () => {
             ipcRenderer.removeAllListeners("edit-baseUrl-status")

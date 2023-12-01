@@ -7,7 +7,11 @@
     color: var(--yakit-body-text-color);
     display: inline-flex;
     align-items: center;
-    font-size: 11px;
+    font-size: 12px;
+
+    path {
+        stroke-width: 1.5;
+    }
 
     :global {
         .ant-tag-close-icon {
@@ -15,7 +19,15 @@
             display: inline-flex;
             align-items: center;
             color: var(--yakit-body-text-color);
-
+            width: 12px;
+            height: 12px;
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+            .anticon {
+                height: 12px;
+            }
             &:hover {
                 color: var(--yakit-primary-5);
             }
@@ -27,6 +39,7 @@
     height: 16px;
     border-radius: 2px;
     padding: 0px 6px;
+    font-size: 11px;
 }
 
 .yakit-tag-large {
@@ -55,48 +68,72 @@
     background: rgba(246, 84, 74, 0.08);
     border: 1px solid rgba(244, 115, 107, 0.3);
     color: #f4736b;
+    svg {
+        color: #f4736b;
+    }
 }
 
 .yakit-tag-info {
     background: rgba(242, 139, 68, 0.06);
     border: 1px solid rgba(242, 139, 68, 0.3);
     color: #f28b44;
+    svg {
+        color: #f28b44;
+    }
 }
 
 .yakit-tag-success {
     background: rgba(86, 201, 145, 0.1);
     border: 1px solid rgba(86, 201, 145, 0.3);
     color: #56c991;
+    svg {
+        color: #56c991;
+    }
 }
 
 .yakit-tag-warning {
     background: rgba(255, 182, 96, 0.1);
     border: 1px solid rgba(255, 182, 96, 0.3);
     color: #ffb660;
+    svg {
+        color: #ffb660;
+    }
 }
 
 .yakit-tag-purple {
     background: rgba(136, 99, 247, 0.1);
     border: 1px solid rgba(136, 99, 247, 0.3);
     color: #8863f7;
+    svg {
+        color: #8863f7;
+    }
 }
 
 .yakit-tag-blue {
     background: rgba(74, 148, 248, 0.1);
     border: 1px solid rgba(74, 148, 248, 0.3);
     color: #4a94f8;
+    svg {
+        color: #4a94f8;
+    }
 }
 
 .yakit-tag-cyan {
     background: rgba(53, 216, 238, 0.1);
     border: 1px solid rgba(53, 216, 238, 0.3);
     color: #35d8ee;
+    svg {
+        color: #35d8ee;
+    }
 }
 
 .yakit-tag-bluePurple {
     background: rgba(218, 95, 221, 0.1);
     border: 1px solid rgba(218, 95, 221, 0.3);
     color: #da5fdd;
+    svg {
+        color: #da5fdd;
+    }
 }
 
 .yakit-tag-white {

@@ -11,8 +11,14 @@ module.exports = (win, getClient) => {
                 return
             case "full":
                 let isMax = win.isFullScreen()
-                if (isMax) win.setFullScreen(false)
-                else win.setFullScreen(true)
+                if (isMax) {
+                    win.setFullScreen(false)
+                    if (win.isMaximized()) {
+                        setTimeout(() => {
+                            win.unmaximize()
+                        }, 10)
+                    }
+                } else win.setFullScreen(true)
                 return
             case "max":
                 if (win.isMaximized()) win.unmaximize()
@@ -39,6 +45,14 @@ module.exports = (win, getClient) => {
     /** 窗口退出全屏 */
     win.on("leave-full-screen", () => {
         win.webContents.send("callback-win-leave-full")
+    })
+    /** 窗口当前是否为全屏状态 */
+    ipcMain.handle("is-full-screen", () => {
+        win.webContents.send("callback-is-full-screen", win.isFullScreen())
+    })
+    /** 窗口当前是否为最大化 */
+    ipcMain.handle("is-maximize-screen", () => {
+        win.webContents.send("callback-is-maximize-screen", win.isMaximized())
     })
 
     /** 打开/关闭 devtool */

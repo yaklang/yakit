@@ -108,8 +108,7 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
                     // Value:p.value||'',
                     Required: p.required || false,
                     Group: p.group || '',
-                    ExtraSetting: p.extra_setting || '',
-                    BuildInParam: p.buildIn_param || false,
+                    ExtraSetting: p.extra_setting || ''
                 })) || [],
                 CreatedAt: 0,
                 ScriptName: modifiedItem.script_name || '',
@@ -155,6 +154,7 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
             content: modifiedCode,
             merge_plugin,
         }
+        console.log('log-modify-api,api:merge/apply,method:post',JSON.stringify(mergePlugin))
         setLoading(true)
         NetWorkApi<API.MergePluginRequest, API.ActionSucceeded>({
             method: "post",

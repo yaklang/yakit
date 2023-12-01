@@ -450,6 +450,11 @@
     &:global(.ant-btn .anticon) {
         display: flex;
     }
+    svg {
+        path {
+            stroke-width: 1.5;
+        }
+    }
 }
 
 .yakit-button-primary {

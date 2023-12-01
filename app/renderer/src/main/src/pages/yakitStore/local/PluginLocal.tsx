@@ -40,7 +40,7 @@ import {
     DownOutlined,
     CloudUploadOutlined
 } from "@ant-design/icons"
-import {UserInfoProps, useStore, YakitStoreParams} from "@/store"
+import {UserInfoProps, useStore} from "@/store"
 import {useCreation, useGetState, useMemoizedFn, useDebounce, useSize} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -69,6 +69,9 @@ import {showModal} from "@/utils/showModal"
 import {formatDate} from "@/utils/timeUtil"
 import {PluginOperator, OutputPluginForm} from "../PluginOperator"
 import {DownloadOnlinePluginProps} from "../YakitPluginInfoOnline/YakitPluginInfoOnline"
+import emiter from "@/utils/eventBus/eventBus"
+import { YakitRoute } from "@/routes/newRoute"
+import { PluginGV } from "@/pages/plugins/builtInData"
 
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import "../YakitStorePage.scss"
@@ -144,7 +147,7 @@ const queryTitle = {
     status: "审核状态",
     group: "插件分组"
 }
-
+/**@deprecated 暂时没有使用，已废弃 */
 export const PluginLocal: React.FC<PluginLocalProp> = (props) => {
     const [script, setScript] = useState<YakScript>()
     const [loading, setLoading] = useState(false)
@@ -168,20 +171,15 @@ export const PluginLocal: React.FC<PluginLocalProp> = (props) => {
     const [isEdit, setMonitorEdit] = useState<boolean>(false)
     // 全局登录状态
     const {userInfo} = useStore()
-    // 插件仓库参数及页面状态
-    const {storeParams, setYakitStoreParams} = YakitStoreParams()
 
-    const [publicKeyword, setPublicKeyword] = useState<string>(storeParams.keywords)
+    const [publicKeyword, setPublicKeyword] = useState<string>('')
 
     const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
     // 统计查询
     const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
     const [statisticsQueryOnline, setStatisticsQueryOnline, getStatisticsQueryOnline] =
         useGetState<SearchPluginOnlineRequest>({
-            ...defQueryOnline,
-            keywords: storeParams.keywords,
-            plugin_type: storeParams.plugin_type,
-            time_search: storeParams.time_search
+            ...defQueryOnline
         })
     const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
     // 统计数据
@@ -562,7 +560,7 @@ export const PluginLocal: React.FC<PluginLocalProp> = (props) => {
                                             queryName === "status" &&
                                             plugSource === "online" &&
                                             !boolAdmin &&
-                                            userInfo.showStatusSearch !== true
+                                            userInfo.checkPlugin !== true
                                         if (isCommunityEdition() && (UserIsPrivate || OnlineAdmin)) return <></>
                                         if (isEnterpriseEdition() && (UserIsPrivate || OnlineStatusSearch)) return <></>
 
@@ -815,10 +813,7 @@ const YakModule: React.FC<YakModuleProp> = (props) => {
         onSelectAllLocal(false)
     })
     const onAdd = useMemoizedFn(() => {
-        ipcRenderer.invoke("send-to-tab", {
-            type: "add-yakit-script",
-            data: {}
-        })
+        emiter.emit("openPage", JSON.stringify({route: YakitRoute.AddYakitScript}))
     })
     const onImport = useMemoizedFn(() => {
         let m = showModal({
@@ -1614,7 +1609,7 @@ const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         // 动态加载设置项
         settingRender
     } = props
-    const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_COMMON_DATA`
+    const FILTER_CACHE_LIST_DATA = PluginGV.Fetch_Local_Plugin_Group
     const [form] = Form.useForm()
     const layout = {
         labelCol: {span: 5},

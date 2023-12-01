@@ -31,4 +31,8 @@
 .no-more-text {
     font-size: 12px;
     color: var(--yakit-helper-text-color);
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

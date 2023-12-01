@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Badge, Modal, Tooltip, Form, Input, Button, Avatar, Upload, Spin, Progress} from "antd"
+import {Badge, Modal, Tooltip, Avatar, Upload, Spin, Progress, Form} from "antd"
 import {
     BellSvgIcon,
     RiskStateSvgIcon,
@@ -29,9 +29,9 @@ import {loginOut} from "@/utils/login"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
 import SelectUpload from "@/pages/SelectUpload"
-import {QueryGeneralResponse, YakScript} from "@/pages/invoker/schema"
+import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
-import {RiskDetails, RiskTable} from "@/pages/risks/RiskTable"
+import {RiskDetails} from "@/pages/risks/RiskTable"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps} from "../yakitUI/YakitMenu/YakitMenu"
@@ -54,15 +54,10 @@ import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {AdminUpOnlineBatch} from "@/pages/yakitStore/YakitStorePage"
 import {addToTab} from "@/pages/MainTabs"
 import {DatabaseUpdateModal} from "@/pages/cve/CVETable"
 import {ExclamationCircleOutlined, InboxOutlined, LoadingOutlined} from "@ant-design/icons"
-
 import {DynamicControl, SelectControlType, ControlMyself, ControlOther} from "../../pages/dynamicControl/DynamicControl"
-import classNames from "classnames"
-import styles from "./funcDomain.module.scss"
-import yakitImg from "../../assets/yakit.jpg"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {MacKeyborad, WinKeyborad} from "../yakitUI/YakitEditor/editorUtils"
 import {ScrecorderModal} from "@/pages/screenRecorder/ScrecorderModal"
@@ -72,6 +67,13 @@ import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 import {RcFile} from "antd/lib/upload"
 import {useRunNodeStore} from "@/store/runNode"
 import {Uint8ArrayToString} from "@/utils/str"
+import emiter from "@/utils/eventBus/eventBus"
+
+import classNames from "classnames"
+import styles from "./funcDomain.module.scss"
+import yakitImg from "../../assets/yakit.jpg"
+import {onImportPlugin} from "@/pages/fuzzer/components/ShareImport"
+
 const {ipcRenderer} = window.require("electron")
 const {Dragger} = Upload
 
@@ -298,6 +300,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         if (userInfo.role === "admin" && userInfo.platform !== "company") {
             setUserMenu([
                 // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
+                {key: "plugin-aduit", title: "插件管理"},
                 {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
             ])
         }
@@ -306,7 +309,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             setUserMenu([
                 {key: "trust-list", title: "用户管理"},
                 {key: "license-admin", title: "License管理"},
-                {key: "plugIn-admin", title: "插件权限"},
+                {key: "plugin-aduit", title: "插件管理"},
                 {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
             ])
         }
@@ -323,17 +326,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 if (isEnpriTraceAgent()) {
                     return [
                         {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                        {key: "upload-plugin", title: "同步插件"},
                         {key: "hole-collect", title: "漏洞汇总"},
                         {key: "role-admin", title: "角色管理"},
                         {key: "account-admin", title: "用户管理"},
                         {key: "set-password", title: "修改密码"},
+                        {key: "plugin-aduit", title: "插件管理"},
                         {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
                     ]
                 }
                 let cacheMenu = [
                     {key: "user-info", title: "用户信息", render: () => SetUserInfoModule()},
-                    {key: "upload-plugin", title: "同步插件"},
                     {key: "upload-data", title: "上传数据"},
                     {key: "dynamic-control", title: "发起远程"},
                     {key: "control-admin", title: "远程管理"},
@@ -342,6 +344,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     {key: "account-admin", title: "用户管理"},
                     {key: "set-password", title: "修改密码"},
                     {key: "upload-yakit-ee", title: "上传安装包"},
+                    {key: "plugin-aduit", title: "插件管理"},
                     {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
                 ]
                 // 远程中时不显示发起远程 显示退出远程
@@ -364,8 +367,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "dynamic-control", title: "发起远程"},
                 {key: "close-dynamic-control", title: "退出远程"},
                 {key: "set-password", title: "修改密码"},
+                {key: "plugin-aduit", title: "插件管理"},
                 {key: "sign-out", title: "退出登录"}
             ]
+            if(!userInfo.checkPlugin){
+                cacheMenu = cacheMenu.filter((item) => item.key !== "plugin-aduit")
+            }
             if (isEnpriTraceAgent()) {
                 cacheMenu = cacheMenu.filter((item) => item.key !== "upload-data")
             }
@@ -381,12 +388,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         } else {
             setUserMenu([{key: "sign-out", title: "退出登录"}])
         }
-    }, [userInfo.role, userInfo.companyHeadImg, dynamicConnect])
+    }, [userInfo.role, userInfo.checkPlugin, userInfo.companyHeadImg, dynamicConnect])
 
-    /** 通知软件打开管理页面 */
-    const openMenu = (info: RouteToPageProps) => {
-        ipcRenderer.invoke("open-route-page", info)
-    }
+    /** 渲染端通信-打开一个指定页面 */
+    const onOpenPage = useMemoizedFn((info: RouteToPageProps) => {
+        emiter.emit("menuOpenPage", JSON.stringify(info))
+    })
 
     const {screenRecorderInfo, setRecording} = useScreenRecorder()
     useEffect(() => {
@@ -579,7 +586,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 }
                                             }
                                             if (key === "trust-list") {
-                                                openMenu({route: YakitRoute.TrustListPage})
+                                                onOpenPage({route: YakitRoute.TrustListPage})
                                             }
                                             if (key === "set-password") {
                                                 setPasswordClose(true)
@@ -602,35 +609,22 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 })
                                             }
                                             if (key === "role-admin") {
-                                                openMenu({route: YakitRoute.RoleAdminPage})
+                                                onOpenPage({route: YakitRoute.RoleAdminPage})
                                             }
                                             if (key === "account-admin") {
-                                                openMenu({route: YakitRoute.AccountAdminPage})
+                                                onOpenPage({route: YakitRoute.AccountAdminPage})
                                             }
                                             if (key === "license-admin") {
-                                                openMenu({route: YakitRoute.LicenseAdminPage})
+                                                onOpenPage({route: YakitRoute.LicenseAdminPage})
                                             }
-                                            if (key === "plugIn-admin") {
-                                                openMenu({route: YakitRoute.PlugInAdminPage})
-                                            }
-                                            if (key === "upload-plugin") {
-                                                const m = showModal({
-                                                    title: "同步本地插件",
-                                                    maskClosable: false,
-                                                    content: (
-                                                        <AdminUpOnlineBatch
-                                                            userInfo={userInfo}
-                                                            onClose={() => m.destroy()}
-                                                        />
-                                                    )
-                                                })
-                                                return m
+                                            if (key === "plugin-aduit") {
+                                                onOpenPage({route: YakitRoute.Plugin_Audit})
                                             }
                                             if (key === "hole-collect") {
-                                                openMenu({route: YakitRoute.HoleCollectPage})
+                                                onOpenPage({route: YakitRoute.HoleCollectPage})
                                             }
                                             if (key === "control-admin") {
-                                                openMenu({route: YakitRoute.ControlAdminPage})
+                                                onOpenPage({route: YakitRoute.ControlAdminPage})
                                             }
                                             if (key === "dynamic-control") {
                                                 setDynamicControlModal(true)
@@ -1040,15 +1034,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 setIsDiffUpdate(true)
                 return
             case "external":
-                showModal({
-                    title: "更新插件源",
-                    width: 800,
-                    content: (
-                        <div style={{width: 780}}>
-                            <LoadYakitPluginForm onFinished={() => info("更新进程执行完毕")} />
-                        </div>
-                    )
-                })
+                onImportPlugin()
                 return
             case "store":
                 if (dynamicStatus.isDynamicStatus) {

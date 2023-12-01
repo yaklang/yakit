@@ -7,6 +7,7 @@ import {HTML5Backend} from "react-dnd-html5-backend"
 import {DndProvider} from "react-dnd"
 import "./yakitUI.scss"
 import "./theme/yakit.scss"
+import "./yakitLib.scss"
 import "./assets/global.scss"
 
 ReactDOM.render(

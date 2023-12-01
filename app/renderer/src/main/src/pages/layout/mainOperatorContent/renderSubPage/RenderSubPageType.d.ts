@@ -1,3 +1,5 @@
+import { ComponentParams } from "@/routes/newRoute"
+
 /**
  * @description 页面渲染
  * @property routeKey 路由key

@@ -1,6 +1,5 @@
 import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {YakitRoute} from "@/routes/newRoute"
-import {create} from "zustand"
 import {subscribeWithSelector, persist, StorageValue} from "zustand/middleware"
 import debounce from "lodash/debounce"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/pages/fuzzer/HTTPFuzzerPage"
@@ -14,7 +13,7 @@ import {createWithEqualityFn} from "zustand/traditional"
  * @description 页面暂存数据
  * @property {PageNodeItemProps[]} pageNodeList 页面的一些信息
  * @property {string} routeKey 路由
- * @property {boolean} singleNode 是否为单开页面
+ * @property {boolean} singleNode 是否为单开页面,单开页面的逻辑暂时没有写
  */
 export interface PageProps {
     pageList: PageNodeItemProps[]
@@ -35,15 +34,21 @@ export interface PageNodeItemProps {
     // pageChildrenList: PageNodeItemProps[]
 }
 
-/** 页面保存的数据,目前只加了webFuzzer */
+/** 页面保存的数据*/
 interface PageParamsInfoProps {
+    /** YakitRoute.HTTPFuzzer webFuzzer页面缓存数据 */
     webFuzzerPageInfo?: WebFuzzerPageInfoProps
+    pluginInfoEditor?: {source: YakitRoute}
+    /** YakitRoute.Plugin_Local 本地插件页面缓存数据 */
+    pluginLocalPageInfo?: {uuid: string}
+    /**YakitRoute.Plugin_Store 插件商店页面 */
+    pluginOnlinePageInfo?: {keyword: string; plugin_type: string}
 }
 
 export interface WebFuzzerPageInfoProps {
     pageId: string
     advancedConfigValue: AdvancedConfigValueProps
-    request: string 
+    request: string
 }
 
 interface PageInfoStoreProps {
@@ -93,7 +98,7 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                 pages: new Map(),
                 selectGroupId: new Map(),
                 setPagesData: (key, values) => {
-                    const newVal = new Map().set(key, values)
+                    const newVal = new Map(get().pages).set(key, values)
                     set({
                         ...get(),
                         pages: newVal
@@ -271,7 +276,8 @@ try {
      *  @description 打开软化后这个订阅会一直存在，直到关闭软件;后续再看看优化方法
      */
     const unFuzzerCacheData = usePageInfo.subscribe(
-        (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+        // (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+        (state) => state.pages.get("httpFuzzer") || [], // 因为循环引用导致开发环境热加载YakitRoute.HTTPFuzzer为undefined
         (selectedState, previousSelectedState) => {
             saveFuzzerCache(selectedState)
         }

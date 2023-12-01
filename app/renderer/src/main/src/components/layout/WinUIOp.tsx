@@ -1,12 +1,10 @@
 import React, {useEffect, useState} from "react"
 import {WinUIOpCloseSvgIcon, WinUIOpMaxSvgIcon, WinUIOpMinSvgIcon, WinUIOpRestoreSvgIcon} from "./icons"
 import {useMemoizedFn} from "ahooks"
+import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
+import {useRunNodeStore} from "@/store/runNode"
 
 import styles from "./uiOperate.module.scss"
-import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
-import { useRunNodeStore } from "@/store/runNode"
-import { yakitFailed } from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -20,6 +18,11 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
     })
 
     useEffect(() => {
+        ipcRenderer.invoke("is-maximize-screen")
+        ipcRenderer.on("callback-is-maximize-screen", (_, value: boolean) => {
+            setIsMax(value)
+        })
+
         ipcRenderer.on("callback-win-maximize", async (e: any) => setIsMax(true))
         ipcRenderer.on("callback-win-unmaximize", async (e: any) => setIsMax(false))
 

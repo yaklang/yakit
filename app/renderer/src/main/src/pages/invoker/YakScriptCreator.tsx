@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Button, Checkbox, Form, Input, List, Popconfirm, Row, Space, Tag, Tooltip, Radio, Modal} from "antd"
 import {InputItem, ManyMultiSelectForString, ManySelectOne, SelectOne, SwitchItem} from "../../utils/inputUtil"
-import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript, YakScriptParam} from "./schema"
+import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "./schema"
 import {YakCodeEditor, YakEditor} from "../../utils/editors"
 import {PlusOutlined, QuestionCircleOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
 import {showDrawer, showModal} from "../../utils/showModal"
@@ -30,6 +30,7 @@ import {SearchPluginDetailRequest} from "../yakitStore/YakitPluginInfoOnline/Yak
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import { YakitRoute } from "@/routes/newRoute"
 import { addTag, removeTag } from "../customizeMenu/utils"
+import { YakParamProps } from "../plugins/pluginsType"
 
 export const BUILDIN_PARAM_NAME_YAKIT_PLUGIN_NAMES = "__yakit_plugin_names__"
 
@@ -74,7 +75,7 @@ export const getPluginTypeVerbose = (t: "yak" | "mitm" | "port-scan" | "nuclei" 
 
 const {ipcRenderer} = window.require("electron")
 
-const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) => {
+export const executeYakScriptByParams = (data: YakScript, saveDebugParams?: boolean) => {
     const yakScriptParams: YakScript = cloneDeep(data)
     const exec = (extraParams?: YakExecutorParam[]) => {
         if (yakScriptParams.Params.length <= 0) {
@@ -211,7 +212,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             removeSubscribeClose(YakitRoute.AddYakitScript)
             return
         }
-        setSubscribeClose(YakitRoute.AddYakitScript, {
+        setSubscribeClose(YakitRoute.AddYakitScript, {"close":{
             title: "插件未保存",
             content: "是否要保存该插件?",
             confirmLoading: saveLoading,
@@ -222,7 +223,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             onCancel: () => {
                 onCloseTab()
             }
-        })
+        }})
         return () => {
             removeSubscribeClose(YakitRoute.AddYakitScript)
         }
@@ -259,14 +260,14 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             TypeVerbose: "string",
                             Required: true,
                             DefaultValue: ""
-                        } as YakScriptParam,
+                        } as YakParamProps,
                         {
                             Field: "ports",
                             FieldVerbose: "端口",
                             TypeVerbose: "string",
                             Required: false,
                             DefaultValue: "80"
-                        } as YakScriptParam
+                        } as YakParamProps
                     ]
                 })
                 return
@@ -280,14 +281,14 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                             DefaultValue: "",
                             TypeVerbose: "http-packet",
                             Required: true
-                        } as YakScriptParam,
+                        } as YakParamProps,
                         {
                             Field: "response",
                             DefaultValue: "",
                             TypeVerbose: "http-packet",
                             Required: false
-                        } as YakScriptParam,
-                        {Field: "isHttps", DefaultValue: "", TypeVerbose: "bool"} as YakScriptParam
+                        } as YakParamProps,
+                        {Field: "isHttps", DefaultValue: "", TypeVerbose: "bool"} as YakParamProps
                     ]
                 })
                 return
@@ -886,12 +887,12 @@ export const YakScriptFormContent: React.FC<YakScriptFormContentProps> = (props)
 }
 
 export interface CreateYakScriptParamFormProp {
-    modifiedParam?: YakScriptParam
-    onCreated: (params: YakScriptParam) => any
+    modifiedParam?: YakParamProps
+    onCreated: (params: YakParamProps) => any
 }
 
 export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = (props) => {
-    const [params, setParams] = useState<YakScriptParam>(
+    const [params, setParams] = useState<YakParamProps>(
         props.modifiedParam || {
             DefaultValue: "",
             Field: "",
@@ -938,7 +939,7 @@ export const CreateYakScriptParamForm: React.FC<CreateYakScriptParamFormProp> = 
     // 提交参数信息的转换
     const convert = useMemoizedFn(() => {
         const type = params.TypeVerbose
-        const setting: YakScriptParam = cloneDeep(params)
+        const setting: YakParamProps = cloneDeep(params)
         const extra = cloneDeep(extraSetting)
         const extraStr = JSON.stringify(extraSetting)
 

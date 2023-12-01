@@ -35,7 +35,6 @@ import AccountAdminPage from "@/pages/loginOperationMenu/AccountAdminPage"
 import RoleAdminPage from "@/pages/loginOperationMenu/RoleAdminPage"
 import {HoleCollectPage} from "@/pages/loginOperationMenu/HoleCollectPage"
 import LicenseAdminPage from "@/pages/loginOperationMenu/LicenseAdminPage"
-import PlugInAdminPage from "@/pages/loginOperationMenu/PlugInAdminPage"
 import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
@@ -104,9 +103,6 @@ import {
     PrivateSolidWebsiteTreeIcon,
     PrivateSolidWebsocketFuzzerIcon
 } from "./privateIcon"
-import {PluginStore} from "@/pages/yakitStore/store/PluginStore"
-import {PluginOwner} from "@/pages/yakitStore/owner/PluginOwner"
-import {PluginLocal} from "@/pages/yakitStore/local/PluginLocal"
 import {ControlAdminPage} from "@/pages/dynamicControl/DynamicControl"
 import {PluginDebuggerPage} from "@/pages/pluginDebugger/PluginDebuggerPage"
 import {DebugMonacoEditorPage} from "@/pages/debugMonaco/DebugMonacoEditorPage"
@@ -117,9 +113,19 @@ import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
-import { FuzzerParamItem, AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import { HTTPResponseExtractor } from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
-import { ConfigNetworkPage } from "@/components/configNetwork/ConfigNetworkPage"
+import {
+    FuzzerParamItem,
+    AdvancedConfigValueProps
+} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
+import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
+import {PluginEditDetails} from "@/pages/plugins/editDetails/PluginEditDetails"
+import {PluginManage} from "@/pages/plugins/manage/PluginManage"
+import {PluginsLocal} from "@/pages/plugins/local/PluginsLocal"
+import {PluginUser} from "@/pages/plugins/user/PluginUser"
+import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
+import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
+import {isCommunityEdition} from "@/utils/envfile"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -182,6 +188,8 @@ export enum YakitRoute {
     PacketScanPage = "packet-scan-page",
     // 新建插件页面
     AddYakitScript = "add-yakit-script",
+    // 编辑插件页面
+    ModifyYakitScript = "modify-yakit-script",
     // 插件日志-单条详情页面
     YakitPluginJournalDetails = "yakit-plugin-journal-details",
     // 我的插件回收站页面
@@ -203,7 +211,9 @@ export enum YakitRoute {
     // 配置全局
     Beta_ConfigNetwork = "beta-config-network",
     //新版codec
-    Beta_Codec = "beta-codec"
+    Beta_Codec = "beta-codec",
+    // 插件管理
+    Plugin_Audit = "plugin-audit"
 }
 /**
  * @description 页面路由对应的页面信息
@@ -271,6 +281,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "batch-executor-recover": {label: "继续任务：批量执行插件"},
     "packet-scan-page": {label: "数据包扫描"},
     "add-yakit-script": {label: "新建插件"},
+    "modify-yakit-script": {label: "编辑插件"},
     "yakit-plugin-journal-details": {label: "插件修改详情"},
     "online-plugin-recycle-bin": {label: "线上插件回收站"},
     simpleDetect: {label: "安全检测"},
@@ -280,8 +291,9 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-debug-monaco-editor": {label: "插件编辑器"},
     "beta-vulinbox-manager": {label: "Vulinbox 管理器"},
     "beta-diagnose-network": {label: "网络异常诊断"},
-    "beta-config-network": { label: "全局网络配置" },
-    "beta-codec": {label: "新版codec"}
+    "beta-config-network": {label: "全局网络配置"},
+    "beta-codec": {label: "新版codec"},
+    "plugin-audit": {label: "插件管理"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -310,8 +322,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.HoleCollectPage,
     YakitRoute.LicenseAdminPage,
     YakitRoute.TrustListPage,
-    YakitRoute.PlugInAdminPage,
     YakitRoute.AddYakitScript,
+    YakitRoute.ModifyYakitScript,
     YakitRoute.OnlinePluginRecycleBin,
     YakitRoute.DB_ChaosMaker,
     YakitRoute.ScreenRecorderPage,
@@ -319,7 +331,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_VulinboxManager,
     YakitRoute.Beta_DiagnoseNetwork,
     YakitRoute.Beta_ConfigNetwork,
-    YakitRoute.Beta_Codec
+    YakitRoute.Beta_Codec,
+    YakitRoute.Plugin_Audit
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -340,9 +353,16 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DB_Ports,
     YakitRoute.Beta_DebugPlugin,
     YakitRoute.DB_HTTPHistory,
+    YakitRoute.Plugin_Audit,
+    YakitRoute.AddYakitScript,
+    YakitRoute.ModifyYakitScript
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
+/** 一级tab固定展示tab  */
+export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
+/** 用户退出登录后，需自动关闭的页面 */
+export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit]
 
 export interface ComponentParams {
     // Route.HTTPFuzzer 参数
@@ -357,9 +377,9 @@ export interface ComponentParams {
     /**@param groupId HTTPFuzzer必须要有的，其他页面可以不用 */
     groupId?: string
     /**@name webFuzzer变量参数 */
-    params?:FuzzerParamItem[]
+    params?: FuzzerParamItem[]
     /**@name webFuzzer提取器参数 */
-    extractors?:HTTPResponseExtractor[]
+    extractors?: HTTPResponseExtractor[]
 
     // Route.Mod_ScanPort 参数
     scanportParams?: string
@@ -400,9 +420,12 @@ export interface ComponentParams {
     // 插件调试
     generateYamlTemplate?: boolean
     YamlContent?: string
+    scriptName?: string
     // 新建插件
     moduleType?: string
     content?: string
+    // 编辑插件
+    editPluginId?: number
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -458,7 +481,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Codec:
             return <CodecPage />
         case YakitRoute.DataCompare:
-            return <DataCompare leftData={params?.leftData} rightData={params?.rightData}/>
+            return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
         case YakitRoute.Mod_ScanPort:
             return <PortScanPage sendTarget={params?.scanportParams} />
         case YakitRoute.PoC:
@@ -469,11 +492,20 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Mod_Brute:
             return <BrutePage sendTarget={params?.bruteParams} />
         case YakitRoute.Plugin_Store:
-            return <PluginStore />
+            // 社区版的插件商店不用判断登录,企业版/简易版的插件商店登录后才可查看
+            return (
+                <OnlineJudgment isJudgingLogin={!isCommunityEdition()}>
+                    <PluginsOnline />
+                </OnlineJudgment>
+            )
         case YakitRoute.Plugin_Owner:
-            return <PluginOwner />
+            return (
+                <OnlineJudgment isJudgingLogin={true}>
+                    <PluginUser />
+                </OnlineJudgment>
+            )
         case YakitRoute.Plugin_Local:
-            return <PluginLocal />
+            return <PluginsLocal />
         case YakitRoute.BatchExecutorPage:
             return <BatchExecutorPageEx />
         case YakitRoute.DNSLog:
@@ -516,8 +548,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <LicenseAdminPage />
         case YakitRoute.TrustListPage:
             return <TrustListPage />
-        case YakitRoute.PlugInAdminPage:
-            return <PlugInAdminPage />
         case YakitRoute.ControlAdminPage:
             return <ControlAdminPage />
         case YakitRoute.BatchExecutorRecover:
@@ -537,7 +567,10 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 />
             )
         case YakitRoute.AddYakitScript:
-            return <AddYakitScript moduleType={params.moduleType} content={params.content} />
+            // return <AddYakitScript moduleType={params.moduleType} content={params.content} />
+            return <PluginEditDetails />
+        case YakitRoute.ModifyYakitScript:
+            return <PluginEditDetails id={params?.editPluginId} />
         case YakitRoute.YakitPluginJournalDetails:
             return <YakitPluginJournalDetails YakitPluginJournalDetailsId={params?.YakScriptJournalDetailsId || 0} />
         case YakitRoute.OnlinePluginRecycleBin:
@@ -557,7 +590,13 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DB_ChaosMaker:
             return <ChaosMakerPage />
         case YakitRoute.Beta_DebugPlugin:
-            return <PluginDebuggerPage generateYamlTemplate={params.generateYamlTemplate} YamlContent={params.YamlContent}/>
+            return (
+                <PluginDebuggerPage
+                    generateYamlTemplate={!!params?.generateYamlTemplate}
+                    YamlContent={params?.YamlContent || ""}
+                    scriptName={params?.scriptName || ""}
+                />
+            )
         case YakitRoute.Beta_DebugMonacoEditor:
             return <DebugMonacoEditorPage />
         case YakitRoute.Beta_VulinboxManager:
@@ -565,9 +604,15 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Beta_DiagnoseNetwork:
             return <DiagnoseNetworkPage />
         case YakitRoute.Beta_ConfigNetwork:
-            return <ConfigNetworkPage />    
+            return <ConfigNetworkPage />
         case YakitRoute.Beta_Codec:
             return <NewCodecPage />
+        case YakitRoute.Plugin_Audit:
+            return (
+                <OnlineJudgment isJudgingLogin={true}>
+                    <PluginManage />
+                </OnlineJudgment>
+            )
         default:
             return <div />
     }
@@ -854,8 +899,7 @@ export const PublicCommonPlugins: PublicRouteMenuProps[] = [
             "网站信息获取",
             "主域名提取",
             "杀软匹配tasklist /svc",
-            "按行去重",
-            "api提取"
+            "按行去重"
         ].map((item) => {
             return {page: YakitRoute.Plugin_OP, label: item, yakScripName: item}
         })
@@ -1094,7 +1138,7 @@ export const InvalidFirstMenuItem = ""
  * @description 该菜单数据为开发者迭代版本所产生的已消失的页面菜单项
  * @description 每个菜单项由 '|' 字符进行分割
  */
-export const InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|"
+export const InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|api提取|"
 /**
  * @name private版专家模式菜单配置数据
  * @description 修改只对专家模式有效，别的模式需取对应模式数据进行修改

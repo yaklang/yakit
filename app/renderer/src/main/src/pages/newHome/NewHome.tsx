@@ -3,7 +3,7 @@ import {Row, Col} from "antd"
 import {ArrowRightOutlined} from "@ant-design/icons"
 import {genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {NetWorkApi} from "@/services/fetch"
-import {useStore, YakitStoreParams} from "@/store"
+import {useStore} from "@/store"
 import {API} from "@/services/swagger/resposeType"
 import {useGetState, useMemoizedFn, useSize, useInViewport} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
@@ -38,7 +38,7 @@ import {
 } from "@/routes/privateIcon"
 import {RouteToPageProps} from "../layout/publicMenu/PublicMenu"
 import {DownloadOnlinePluginByScriptNamesResponse} from "../layout/publicMenu/utils"
-
+import emiter from "@/utils/eventBus/eventBus"
 import styles from "./newHome.module.scss"
 import classNames from "classnames"
 
@@ -449,7 +449,6 @@ interface countAddObjProps {
 interface PlugInShopNewIncreProps {}
 const PlugInShop: React.FC<PlugInShopProps> = (props) => {
     const {setOpenPage, inViewport, setEchartsError} = props
-    const {storeParams, setYakitStoreParams} = YakitStoreParams()
     const [countAddObj, setCountAddObj] = useState<countAddObjProps>()
     const [hotArr, setHotArr] = useState<string[]>([])
     const [hotError, setHotError] = useState<boolean>(false)
@@ -524,17 +523,12 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                 // failed("失败：" + err)
             })
     }
-
+    /**
+     * 首页点击今日新增、本周新增不做筛选，只是跳转,点击类型需要筛选
+     * @description 带参数的页面跳转
+     */
     const goStoreRoute = (params) => {
-        // 插件商店页面是否渲染
-        if (storeParams.isShowYakitStorePage) {
-            // 动态更新插件仓库搜索条件
-            ipcRenderer.send("yakit-store-params", params)
-        } else {
-            // 插件仓库初始进入参数
-            setYakitStoreParams({...storeParams, ...params})
-        }
-        setOpenPage({route: YakitRoute.Plugin_Store})
+        emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Store, params: {...params}}))
     }
 
     const selectIconShow = (v: string) => {
@@ -543,7 +537,10 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
         else if (v === "<") return <ReduceCountIcon style={{paddingLeft: 4}} />
         else return <></>
     }
-
+    /**切换至插件商店页面，不带参数 */
+    const openStoreRoute = useMemoizedFn(() => {
+        setOpenPage({route: YakitRoute.Plugin_Store})
+    })
     return (
         <div className={styles["plug-in-shop"]}>
             <div className={styles["show-top-box"]}>
@@ -563,7 +560,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                                         [styles["reduce-border-left"]]: countAddObj?.day_incre === "<"
                                     })}
                                     style={{cursor: "pointer"}}
-                                    onClick={() => goStoreRoute({time_search: "day"})}
+                                    onClick={() => openStoreRoute()}
                                 >
                                     <div className={styles["add-title"]}>今日新增数</div>
                                     <div className={styles["add-content"]}>
@@ -585,7 +582,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                                         [styles["reduce-border-left"]]: countAddObj?.week_incre === "<"
                                     })}
                                     style={{cursor: "pointer"}}
-                                    onClick={() => goStoreRoute({time_search: "week"})}
+                                    onClick={() => openStoreRoute()}
                                 >
                                     <div className={styles["add-title"]}>本周新增数</div>
                                     <div className={styles["add-content"]}>
@@ -635,7 +632,7 @@ const PlugInShop: React.FC<PlugInShopProps> = (props) => {
                                     <div
                                         key={item}
                                         className={styles["label-item"]}
-                                        onClick={() => goStoreRoute({keywords: item})}
+                                        onClick={() => goStoreRoute({keyword: item})}
                                     >
                                         {item}
                                     </div>

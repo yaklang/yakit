@@ -1,6 +1,6 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Alert, Avatar, Button, Form, Layout, Modal, Space, Tabs, Upload} from "antd"
-import {CameraOutlined, CloseOutlined, ExclamationCircleOutlined} from "@ant-design/icons"
+import {Alert, Avatar, Button, Layout, Modal, Space, Upload} from "antd"
+import {CameraOutlined} from "@ant-design/icons"
 import {failed, info, success, yakitNotify} from "../utils/notification"
 import {showModal} from "../utils/showModal"
 import {
@@ -10,35 +10,19 @@ import {
     setYaklangCompletions
 } from "../utils/monacoSpec/yakCompletionSchema"
 import {setUpYaklangMonaco} from "../utils/monacoSpec/yakEditor"
-import {randomString} from "../utils/randomUtil"
-import MDEditor from "@uiw/react-md-editor"
-import {QueryYakScriptsResponse} from "./invoker/schema"
-import {useGetState, useMemoizedFn, usePrevious, useUpdateEffect} from "ahooks"
-import ReactDOM from "react-dom"
-import debounce from "lodash/debounce"
+import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AutoSpin} from "../components/AutoSpin"
-import {BugInfoProps, BugList, CustomBugList} from "./invoker/batch/YakBatchExecutors"
-import {DropdownMenu} from "@/components/baseTemplate/DropdownMenu"
-import {addToTab, MainTabs} from "./MainTabs"
+import {addToTab} from "./MainTabs"
 import Login from "./Login"
 import SetPassword from "./SetPassword"
 import {UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
-import {UnfinishedBatchTask, UnfinishedSimpleDetectBatchTask} from "./invoker/batch/UnfinishedBatchTaskList"
 import {refreshToken} from "@/utils/login"
-import {
-    getLocalValue,
-    getRemoteProjectValue,
-    getRemoteValue,
-    setLocalValue,
-    setRemoteProjectValue,
-    setRemoteValue
-} from "@/utils/kv"
+import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {
     globalUserLogin,
-    isEnterpriseEdition,
     isCommunityEdition,
     isEnpriTrace,
     isEnpriTraceAgent,
@@ -51,37 +35,20 @@ import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
 import {ControlOperation} from "@/pages/dynamicControl/DynamicControl"
 import {YakitHintModal} from "@/components/yakitUI/YakitHint/YakitHintModal"
-import {DownloadAllPlugin} from "@/pages/simpleDetect/SimpleDetect"
-import {useSubscribeClose, YakitSecondaryConfirmProps} from "@/store/tabSubscribe"
-import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {RemoveIcon} from "@/assets/newIcon"
 import {useScreenRecorder} from "@/store/screenRecorder"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import PublicMenu, {RouteToPageProps} from "./layout/publicMenu/PublicMenu"
-import {
-    NoPaddingRoute,
-    NoScrollRoutes,
-    RouteToPage,
-    SingletonPageRoute,
-    YakitRoute,
-    YakitRouteToPageInfo
-} from "@/routes/newRoute"
-import {keyToRouteInfo, routeConvertKey} from "./layout/publicMenu/utils"
+import {YakitRoute} from "@/routes/newRoute"
 import {YakChatCS} from "@/components/yakChat/chatCS"
 import yakitCattle from "../assets/yakitCattle.png"
+import {MainOperatorContent} from "./layout/mainOperatorContent/MainOperatorContent"
+import {MultipleNodeInfo} from "./layout/mainOperatorContent/MainOperatorContentType"
+import {WaterMark} from "@ant-design/pro-layout"
+import emiter from "@/utils/eventBus/eventBus"
 
 import "./main.scss"
 import "./GlobalClass.scss"
-import {
-    MainOperatorContent,
-    getInitActiveTabKey,
-    getInitPageCache
-} from "./layout/mainOperatorContent/MainOperatorContent"
-import {MultipleNodeInfo} from "./layout/mainOperatorContent/MainOperatorContentType"
-import {WaterMark} from "@ant-design/pro-layout"
+
 const {ipcRenderer} = window.require("electron")
-const {Content} = Layout
 
 export const defaultUserInfo: UserInfoProps = {
     isLogin: false,
@@ -97,7 +64,7 @@ export const defaultUserInfo: UserInfoProps = {
     role: null,
     user_id: null,
     token: "",
-    showStatusSearch: false
+    checkPlugin: false
 }
 
 export interface MainProp {
@@ -282,13 +249,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     // 登录框状态
     const [loginshow, setLoginShow, getLoginShow] = useGetState<boolean>(false)
 
-    /** ---------- 操作系统 start ---------- */
-    // 系统类型
-    const [system, setSystem] = useState<string>("")
-    useEffect(() => {
-        ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
-    }, [])
-    /** ---------- 操作系统 end ---------- */
     /** ---------- 远程控制 start ---------- */
     // 远程控制浮层
     const [controlShow, setControlShow] = useState<boolean>(false)
@@ -382,36 +342,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     }, [])
 
     /** ---------- 登录状态变化的逻辑 end ---------- */
-    /** ---------- 其余逻辑 start ---------- */
-    // 线上最新消息提示
-    // useEffect(() => {
-    //     ipcRenderer.invoke("query-latest-notification").then((e: string) => {
-    //         if (e) {
-    //             success(
-    //                 <>
-    //                     <Space direction={"vertical"}>
-    //                         <span>来自于 yaklang.io 的通知</span>
-    //                         <Button
-    //                             type={"link"}
-    //                             onClick={() => {
-    //                                 showModal({
-    //                                     title: "Notification",
-    //                                     content: (
-    //                                         <>
-    //                                             <MDEditor.Markdown source={e} />
-    //                                         </>
-    //                                     )
-    //                                 })
-    //                             }}
-    //                         >
-    //                             点击查看
-    //                         </Button>
-    //                     </Space>
-    //                 </>
-    //             )
-    //         }
-    //     })
-    // }, [])
     // 刷新登录状态的token
     useEffect(() => {
         ipcRenderer.on("refresh-token", (e, res: any) => {
@@ -537,7 +467,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     /** 通知软件打开页面 */
     const openMenu = (info: RouteToPageProps) => {
-        ipcRenderer.invoke("open-route-page", info)
+        emiter.emit("menuOpenPage", JSON.stringify(info))
     }
 
     const waterMarkStr = (): string => {
@@ -673,151 +603,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                     directionBaseConsole={directionBaseConsole}
                                 />
                             )}
-                            {/* <Content
-                            style={{
-                                margin: 0,
-                                backgroundColor: "#fff",
-                                overflow: "auto",
-                                flex: 1
-                                // marginTop: 0
-                            }}
-                        >
-                            <Layout style={{height: "100%", overflow: "hidden"}}>
-                                <Content
-                                    style={{
-                                        overflow: "hidden",
-                                        backgroundColor: "#fff",
-                                        height: "100%",
-                                        display: "flex",
-                                        flexFlow: "column",
-                                        marginLeft: 0
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            padding: 0,
-                                            overflow: "hidden",
-                                            flex: "1",
-                                            display: "flex",
-                                            flexFlow: "column"
-                                        }}
-                                    >
-                                        {pageCache.length > 0 ? (
-                                            <Tabs
-                                                style={{display: "flex", flex: "1"}}
-                                                className='main-content-tabs yakit-layout-tabs'
-                                                activeKey={currentTabKey}
-                                                onChange={setCurrentTabKey}
-                                                size={"small"}
-                                                type={"editable-card"}
-                                                renderTabBar={(props, TabBarDefault) => {
-                                                    return bars(props, TabBarDefault)
-                                                }}
-                                                hideAdd={true}
-                                                onTabClick={(key, e) => {
-                                                    const divExisted = document.getElementById("yakit-cursor-menu")
-                                                    if (divExisted) {
-                                                        const div: HTMLDivElement = divExisted as HTMLDivElement
-                                                        const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                                                        if (unmountResult && div.parentNode) {
-                                                            div.parentNode.removeChild(div)
-                                                        }
-                                                    }
-                                                }}
-                                            >
-                                                {pageCache.map((i) => {
-                                                    const key = routeConvertKey(i.route, i.pluginName)
-                                                    const onlyPage: OnlyPageCache = {
-                                                        route: i.route,
-                                                        menuName: i.menuName,
-                                                        pluginId: i.pluginId,
-                                                        pluginName: i.pluginName
-                                                    }
-
-                                                    return (
-                                                        <Tabs.TabPane
-                                                            forceRender={true}
-                                                            key={key}
-                                                            tab={i.verbose}
-                                                            closeIcon={
-                                                                <Space>
-                                                                    {i.verbose !== "首页" && (
-                                                                        <CloseOutlined
-                                                                            className='main-container-cion'
-                                                                            onClick={() => onBeforeRemovePage(onlyPage)}
-                                                                        />
-                                                                    )}
-                                                                </Space>
-                                                            }
-                                                        >
-                                                            <div
-                                                                style={{
-                                                                    overflowY: NoScrollRoutes.includes(i.route)
-                                                                        ? "hidden"
-                                                                        : "auto",
-                                                                    overflowX: "hidden",
-                                                                    height: "100%",
-                                                                    maxHeight: "100%",
-                                                                    padding:
-                                                                        !i.singleNode ||
-                                                                        NoPaddingRoute.includes(i.route)
-                                                                            ? 0
-                                                                            : "8px 16px 13px 16px"
-                                                                }}
-                                                                className={`main-operator-first-menu-page-content-${i.route}`}
-                                                            >
-                                                                {i.singleNode ? (
-                                                                    i.singleNode
-                                                                ) : (
-                                                                    <MainTabs
-                                                                        currentTabKey={currentTabKey}
-                                                                        tabType={i.route}
-                                                                        pages={i.multipleNode}
-                                                                        currentKey={i.multipleCurrentKey || ""}
-                                                                        isShowAdd={!i.hideAdd}
-                                                                        setCurrentKey={(key) => {
-                                                                            setMultipleCurrentKey(key, onlyPage)
-                                                                        }}
-                                                                        removePage={(key) => {
-                                                                            removeMultipleNodePage(key, onlyPage)
-                                                                        }}
-                                                                        removeOtherPage={(key) => {
-                                                                            removeOtherMultipleNodePage(key, onlyPage)
-                                                                        }}
-                                                                        onAddTab={() =>
-                                                                            openMultipleMenuPage({
-                                                                                route: i.route,
-                                                                                pluginId: i.pluginId,
-                                                                                pluginName: i.pluginName
-                                                                            })
-                                                                        }
-                                                                        updateCacheVerbose={(id, value) =>
-                                                                            updateCacheVerboseMultipleNodePage(
-                                                                                id,
-                                                                                onlyPage,
-                                                                                value
-                                                                            )
-                                                                        }
-                                                                    />
-                                                                )}
-                                                            </div>
-                                                        </Tabs.TabPane>
-                                                    )
-                                                })}
-                                            </Tabs>
-                                        ) : (
-                                            <></>
-                                        )}
-                                        {isShowBaseConsole && (
-                                            <BaseConsole
-                                                setIsShowBaseConsole={setIsShowBaseConsole}
-                                                directionBaseConsole={directionBaseConsole}
-                                            />
-                                        )}
-                                    </div>
-                                </Content>
-                            </Layout>
-                        </Content> */}
                         </div>
                     </AutoSpin>
 

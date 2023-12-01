@@ -162,6 +162,10 @@ service Yak {
   rpc QueryYakScriptLocalAll(Empty) returns (QueryYakScriptLocalAndUserResponse);
   rpc QueryYakScriptByNames(QueryYakScriptByNamesRequest) returns (QueryYakScriptByNamesResponse);
   rpc QueryYakScriptByIsCore(QueryYakScriptByIsCoreRequest) returns (QueryYakScriptByIsCoreResponse);
+  rpc QueryYakScriptRiskDetailByCWE(QueryYakScriptRiskDetailByCWERequest) returns (QueryYakScriptRiskDetailByCWEResponse);
+  rpc YakScriptRiskTypeList(Empty) returns (YakScriptRiskTypeListResponse);
+  rpc SaveNewYakScript(SaveNewYakScriptRequest) returns (YakScript);
+  rpc SaveYakScriptToOnline(SaveYakScriptToOnlineRequest) returns (stream SaveYakScriptToOnlineResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -417,6 +421,11 @@ service Yak {
   rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
   rpc DeleteLocalPluginsByWhere(DeleteLocalPluginsByWhereRequest) returns (Empty);
   rpc DownloadOnlinePluginByScriptNames(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
+  // NewOnline 插件下载
+  rpc DownloadOnlinePlugins(DownloadOnlinePluginsRequest) returns(stream DownloadOnlinePluginProgress);
+  rpc DownloadOnlinePluginBatch(DownloadOnlinePluginsRequest) returns (Empty);
+  rpc DownloadOnlinePluginByPluginName(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
+
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
 
@@ -1832,6 +1841,8 @@ message DeleteLocalPluginsByWhereRequest {
   string Type = 2;
   int64  UserId = 3;
   string UserName = 4;
+  repeated int64 Ids = 5;
+  string Tags = 6;
 }
 
 message DownloadOnlinePluginProgress {
@@ -1864,6 +1875,22 @@ message DownloadOnlinePluginByIdsRequest {
   repeated int64 OnlineIDs = 1;
   string Token = 2;
   repeated string UUID = 3;
+}
+
+message DownloadOnlinePluginsRequest {
+    string Token = 1;
+    repeated bool IsPrivate = 2;
+    string  Keywords = 3;
+    repeated string PluginType = 4;
+    repeated string  Tags = 5;
+    string   UserName = 6;
+    int64  UserId = 7;
+    string TimeSearch = 8;
+    repeated string Group = 9;
+    string   ListType = 10;
+    repeated int64 Status = 11;
+    repeated string UUID = 12;
+    repeated string ScriptName = 13;
 }
 
 message DownloadOnlinePluginByScriptNamesRequest {
@@ -2027,6 +2054,26 @@ message QueryYakScriptByNamesResponse {
 
 message QueryYakScriptByIsCoreResponse {
   repeated YakScript Data = 1;
+}
+
+message QueryYakScriptRiskDetailByCWERequest {
+  string CWEId = 1;
+}
+
+message QueryYakScriptRiskDetailByCWEResponse {
+  string CWEId = 1;
+  string RiskType = 2;
+  string Description = 3;
+  string CWESolution = 4;
+}
+
+message YakScriptRiskTypeListResponse {
+  repeated RiskTypeLists Data = 1;
+}
+
+message RiskTypeLists {
+  string RiskType = 1;
+  string CWEId = 2;
 }
 
 message ExtractDataToFileRequest {
@@ -3209,6 +3256,7 @@ message QueryYakScriptRequest {
 
   bool IgnoreGeneralModuleOrder = 15;
   repeated string Family = 16;
+  string UUID = 17;
 }
 
 message QueryYakScriptResponse {
@@ -3265,6 +3313,58 @@ message YakScript {
   bool OnlineOfficial = 28;
   string OnlineGroup = 29;
   bool IsCorePlugin = 30;
+  int64 UpdatedAt = 31;
+  string RiskType = 32;
+  QueryYakScriptRiskDetailByCWEResponse RiskDetail = 33;
+  string RiskAnnotation = 34;
+  // 协作者
+  repeated Collaborator CollaboratorInfo = 35;
+}
+
+message Collaborator {
+  string HeadImg = 1;
+  string UserName = 2;
+}
+
+message SaveNewYakScriptRequest {
+  string Content = 1;
+  string Type = 2;
+  repeated YakScriptParam Params = 3;
+  string ScriptName = 4;
+  string Help = 5;
+  string Level = 6;
+  string Tags = 7;
+  bool IsHistory = 8;
+  bool IsIgnore = 9;
+  bool IsGeneralModule = 10;
+  string GeneralModuleVerbose = 11;
+  string GeneralModuleKey = 12;
+  string FromGit = 13;
+  bool EnablePluginSelector = 14;
+  string PluginSelectorTypes = 15;
+  bool IsCorePlugin = 16;
+  string RiskType = 17;
+  QueryYakScriptRiskDetailByCWEResponse RiskDetail = 18;
+  string RiskAnnotation = 19;
+  int64 Id = 20;
+}
+
+message SaveYakScriptToOnlineRequest {
+  repeated string ScriptNames = 1;
+  string Token = 2;
+  bool IsPrivate = 3;
+  bool All = 4;
+}
+
+message SaveYakScriptToOnlineResponse {
+  // 进度
+  double Progress = 1;
+  string Message = 2;
+  string MessageType = 3;
+}
+
+message ToOnlineResult {
+  string ScriptName = 1;
 }
 
 message GetYakScriptTagsAndTypeResponse {

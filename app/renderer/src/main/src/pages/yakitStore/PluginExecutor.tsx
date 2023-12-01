@@ -16,15 +16,16 @@ export interface PluginExecutorProp {
     extraNode?: React.ReactNode
     subTitle?: React.ReactNode
 
-    settingShow?: boolean
-    settingNode?: React.ReactNode
+    // settingShow?: boolean
+    // settingNode?: React.ReactNode
     extraYakExecutorParams?: YakExecutorParam[]
 }
 
 const { ipcRenderer } = window.require("electron")
 
 export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
-    const { script, settingShow, settingNode } = props
+    // const { script, settingShow, settingNode } = props
+    const {script} = props
 
     const [token, setToken] = useState(randomString(40))
     const [loading, setLoading] = useState(false)
@@ -53,16 +54,16 @@ export const PluginExecutor: React.FC<PluginExecutorProp> = (props) => {
             )
         }, 300)
     })
-
+    
     return (
         <div className='plugin-executor'>
             <PageHeader
                 title={script.ScriptName}
-                style={{ marginBottom: 0, paddingBottom: 0 }}
+                style={{marginBottom: 0, paddingBottom: 0}}
                 subTitle={props.subTitle}
                 extra={props.extraNode}
             >
-                {!!settingShow && settingNode}
+                {/* {!!settingShow && settingNode} */}
                 <YakScriptParamsSetter
                     {...script}
                     loading={loading}

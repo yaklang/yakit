@@ -3,8 +3,8 @@ import {MacUIOpCloseSvgIcon, MacUIOpMaxSvgIcon, MacUIOpMinSvgIcon, MacUIOpRestor
 import {useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import styles from "./uiOperate.module.scss"
-import { YakitHint } from "../yakitUI/YakitHint/YakitHint"
-import { useRunNodeStore } from "@/store/runNode"
+import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
+import {useRunNodeStore} from "@/store/runNode"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -19,6 +19,9 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
     })
 
     useEffect(() => {
+        ipcRenderer.invoke("is-full-screen")
+        ipcRenderer.on("callback-is-full-screen", (_, value: boolean) => setIsMax(value))
+
         ipcRenderer.on("callback-win-enter-full", async (e: any) => setIsMax(true))
         ipcRenderer.on("callback-win-leave-full", async (e: any) => setIsMax(false))
 
@@ -62,7 +65,6 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                             <div className={classNames(styles["btn-icon"], styles["close-bg-color"])}></div>
                         </div>
                     )}
-                    
                 </div>
                 <div className={styles["op-btn"]} onClick={(e) => operate("min")}>
                     {show ? (

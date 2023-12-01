@@ -1,0 +1,355 @@
+// -------------------- 审核状态图标颜色 ↓↓↓ --------------------
+.aduit-status-flag-color {
+    color: #ffb660;
+}
+.aduit-status-badge-check-color {
+    color: #56c991;
+}
+.aduit-status-ban-color {
+    color: #b4bbca;
+}
+// -------------------- tabs组件样式 ↓↓↓ --------------------
+.plugins-tabs {
+    width: 100%;
+    height: 100%;
+    .ant-tabs-content-holder {
+        border-right: 0;
+    }
+    .ant-tabs-ink-bar {
+        display: none;
+    }
+    & > .ant-tabs-nav {
+        width: 22px;
+        min-width: unset;
+        .ant-tabs-nav-wrap {
+            width: 22px;
+            border-left: 1px solid #eaecf3;
+        }
+        .ant-tabs-tab {
+            width: 21px;
+            display: flex;
+            padding: 8px 4px;
+            flex-direction: column;
+            border-radius: 0px 4px 4px 0px;
+            border-top: 1px solid #eaecf3;
+            border-right: 1px solid #eaecf3;
+            border-bottom: 1px solid #eaecf3;
+            background: #f0f1f3;
+            .ant-tabs-tab-btn {
+                width: 12px;
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 14px;
+                writing-mode: vertical-rl;
+                text-shadow: unset;
+            }
+        }
+        .ant-tabs-tab + .ant-tabs-tab {
+            margin-top: 4px;
+        }
+        .ant-tabs-tab.ant-tabs-tab-active {
+            border-top: 1px solid #f28b44;
+            border-right: 1px solid #f28b44;
+            border-bottom: 1px solid #f28b44;
+            background: #f28b44;
+            .ant-tabs-tab-btn {
+                color: #ffffff;
+            }
+        }
+        .ant-tabs-tab.ant-tabs-tab-disabled {
+            .ant-tabs-tab-btn {
+                color: #ccd2de;
+            }
+        }
+    }
+    .ant-tabs-content-holder {
+        flex: 1;
+        overflow: hidden;
+        margin-right: 0;
+        .ant-tabs-content {
+            width: 100%;
+            height: 100%;
+        }
+    }
+    & > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
+        padding-right: 0;
+    }
+}
+// -------------------- tooltip组件样式 ↓↓↓ --------------------
+.plugins-tooltip {
+    .ant-tooltip-inner {
+        display: flex;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: 1px solid #f8f8f8;
+        background: rgba(49, 52, 63, 0.9);
+        border-bottom-width: 0px;
+
+        color: #fff;
+        text-align: center;
+        font-size: 12px;
+        line-height: 16px;
+        cursor: text;
+    }
+}
+.plugins-tooltip.ant-tooltip-placement-top {
+    padding-bottom: 4px;
+    .ant-tooltip-arrow {
+        bottom: 1px;
+    }
+}
+.plugins-tooltip.ant-tooltip-placement-topLeft {
+    padding-bottom: 4px;
+    .ant-tooltip-arrow {
+        bottom: 1px;
+        left: 1px;
+    }
+}
+.plugins-tooltip.ant-tooltip-placement-topRight {
+    padding-bottom: 4px;
+    .ant-tooltip-arrow {
+        right: 1px;
+        bottom: 1px;
+    }
+}
+.plugins-tooltip.ant-tooltip-placement-bottom {
+    padding-top: 4px;
+    .ant-tooltip-arrow {
+        top: 1px;
+    }
+}
+.plugins-tooltip.ant-tooltip-placement-bottomLeft {
+    padding-top: 4px;
+    .ant-tooltip-arrow {
+        top: 1px;
+        left: 1px;
+    }
+}
+.plugins-tooltip.ant-tooltip-placement-bottomRight {
+    padding-top: 4px;
+    .ant-tooltip-arrow {
+        right: 1px;
+        top: 1px;
+    }
+}
+// -------------------- form组件样式 ↓↓↓ --------------------
+.plugins-form {
+    width: 100%;
+
+    .plugins-item-required {
+        margin: 0 4px;
+        padding-top: 4px;
+        color: #f4736b;
+        font-size: 14px;
+        line-height: 14px;
+    }
+
+    .ant-row.ant-form-item {
+        gap: 2px;
+        .ant-form-item-label {
+            padding-bottom: 0;
+        }
+        .ant-form-item-label > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
+            display: none;
+        }
+    }
+}
+// -------------------- radio组件样式 ↓↓↓ --------------------
+.plugins-radio-wrapper {
+    .ant-radio:hover .ant-radio-inner {
+        border-color: #f28b44;
+    }
+    .ant-radio-checked .ant-radio-inner {
+        border-color: #f28b44;
+    }
+    .ant-radio-checked::after {
+        border-color: #f28b44;
+    }
+    .ant-radio-inner::after {
+        background-color: #f28b44;
+    }
+    .ant-radio-input:focus + .ant-radio-inner {
+        box-shadow: 0 0 0 3px rgb(242 139 68 / 12%);
+    }
+    .ant-radio.ant-radio-disabled .ant-radio-inner {
+        background-color: #f0f1f3;
+        border-color: #eaecf3;
+    }
+    .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner {
+        border-color: #ccd2de;
+        background-color: transparent;
+    }
+    .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner:after {
+        background-color: #ccd2de;
+    }
+}
+// -------------------- anchor组件样式 ↓↓↓ --------------------
+.plugins-anchor {
+    &.ant-anchor-wrapper {
+        margin-left: 0;
+        padding-left: 0;
+        overflow: hidden;
+    }
+
+    .ant-anchor {
+        display: flex;
+        .ant-anchor-link {
+            padding: 0;
+        }
+        .ant-anchor-ink {
+            display: none;
+        }
+    }
+}
+
+// -------------------- 列表上方的header右侧样式 --------------------
+.divider-style {
+    width: 1px;
+    height: 16px;
+    background-color: #eaecf3;
+}
+
+.extra-header-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .divider-style {
+        width: 1px;
+        height: 16px;
+        background-color: #eaecf3;
+    }
+
+    .btn-group-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+}
+// --------------------
+
+// -------------------- 详情中列表item样式 --------------------
+
+.plugin-details-opt-wrapper {
+    .plugin-details-item-wrapper {
+        width: 100%;
+        height: 46px;
+        padding-left: 6px;
+        padding-right: 8px;
+        display: flex;
+        align-items: center;
+        border-radius: 4px;
+        border: 1px solid transparent;
+        &:hover {
+            background-color: #f0f1f3;
+            .plugin-details-item {
+                border-color: transparent;
+            }
+        }
+        .plugin-details-item {
+            flex: 1 0 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-top: 1px solid #eaecf3;
+            border-bottom: 1px solid transparent;
+            .plugin-details-item-info {
+                flex: 1 0 0;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding-left: 2px;
+                &-text-style {
+                    flex: 1 0 0;
+                    overflow: hidden;
+                    color: #31343f;
+                    font-size: 12px;
+                    line-height: 16px;
+                }
+            }
+            .plugin-details-item-show {
+                width: 131px;
+                display: flex;
+                justify-content: right;
+                align-items: center;
+                gap: 8px;
+                &-icon-style {
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                        color: #b4bbca;
+                    }
+                }
+            }
+        }
+        .plugin-details-item-active {
+            border-color: transparent;
+        }
+    }
+    .plugin-details-item-wrapper-active {
+        border-color: #fbc6a1;
+        background: rgba(242, 139, 68, 0.06);
+    }
+}
+.plugin-details-opt-wrapper:hover + .plugin-details-opt-wrapper {
+    .plugin-details-item {
+        border-color: transparent;
+    }
+}
+.plugin-details-opt-wrapper:has(.plugin-details-item-wrapper-active) + .plugin-details-opt-wrapper {
+    .plugin-details-item {
+        border-color: transparent;
+    }
+}
+// 详情-插件列表单项-源码弹窗
+.terminal-popover {
+    width: 429px;
+    padding-bottom: 4px;
+    padding-top: 4px;
+
+    .ant-popover-inner-content {
+        height: 40vh;
+        padding: 4px;
+    }
+
+    .ant-popover-inner {
+        border-radius: 4px;
+    }
+
+    .ant-popover-arrow {
+        left: 0;
+    }
+}
+// --------------------
+
+// -------------------- 详情-插件列表-过滤条件
+.details-filter-extra-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    path {
+        stroke-width: 1.5;
+    }
+    .loading-icon {
+        width: 26px;
+        text-align: center;
+        color: var(--yakit-primary-5);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+// --------------------
+
+.icon-svg-16 {
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}

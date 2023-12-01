@@ -3,10 +3,11 @@ import React, {useState} from "react"
 import {CopyComponentsProps, YakitTagProps} from "./YakitTagType"
 import styles from "./YakitTag.module.scss"
 import classNames from "classnames"
-import {DocumentDuplicateSvgIcon, RemoveIcon} from "@/assets/newIcon"
+import {DocumentDuplicateSvgIcon} from "@/assets/newIcon"
 import {useMemoizedFn} from "ahooks"
 import {CheckOutlined, LoadingOutlined} from "@ant-design/icons"
 import {success} from "@/utils/notification"
+import {OutlineXIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -37,7 +38,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                 (enableCopy && (
                     <CopyComponents copyText={copyText || ""} onAfterCopy={onAfterCopy} iconColor={iconColor} />
                 )) ||
-                props.closeIcon || <RemoveIcon />
+                props.closeIcon || <OutlineXIcon />
             }
             closable={props.closable || enableCopy}
             className={classNames(
@@ -89,7 +90,7 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
     })
     return (
         <div className={classNames(styles["yakit-copy"], className || "")} onClick={onCopy}>
-            {(loading && <LoadingOutlined />) || (
+            {(loading && <LoadingOutlined style={{color: "var(--yakit-primary-5)"}} />) || (
                 <>
                     {(isShowSure && <CheckOutlined style={{color: "var(--yakit-success-5)"}} />) || (
                         <DocumentDuplicateSvgIcon style={{color: iconColor || "var(--yakit-primary-5)"}} />

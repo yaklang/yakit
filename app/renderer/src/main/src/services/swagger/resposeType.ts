@@ -27,7 +27,6 @@ export declare namespace API {
     required?: boolean;
     group?: string;
     extra_setting?: string;
-    buildIn_param?: boolean;
   }
   export interface YakitPluginListResponse extends Paging {
     data: YakitPluginDetail[];
@@ -123,10 +122,13 @@ export declare namespace API {
     user_id: number;
     uid?: string;
     /**
-     * 是否显示审核状态筛选
+     * 判断是否首次登录
      */
-    showStatusSearch?: boolean;
     loginTime?: number;
+    /**
+     * 企业版用户是否有审核权限
+     */
+    checkPlugin: boolean;
   }
   export interface UserAuthorityRequest {
     userIds: number[];
@@ -175,6 +177,14 @@ export declare namespace API {
     confirm_pwd?: string;
     head_img?: string;
   }
+  export interface UpPluginsUserRequest {
+    uuid: string[];
+    user_id: number;
+  }
+  export interface UpPluginsPrivateRequest {
+    uuid: string;
+    is_private: boolean;
+  }
   export interface UpPluginRecycleRequest {
     ids?: number[];
     keywords?: string;
@@ -214,7 +224,6 @@ export declare namespace API {
     tags?: string[];
     script_name: string;
     published_at?: number;
-    default_open: boolean;
     enable_plugin_selector?: boolean;
     plugin_selector_types?: string;
     is_general_module?: boolean;
@@ -347,6 +356,10 @@ export declare namespace API {
     head_img: string;
     from_platform: string;
   }
+  export interface PostInstallPackageResponse {
+    filepath: string;
+    packagePath: string;
+  }
   export interface PluginTypeListResponse {
     data: PluginTypeList[];
   }
@@ -360,6 +373,353 @@ export declare namespace API {
   export interface PluginTopSearch {
     member: string;
     score: number;
+  }
+  export interface PluginsWhereListRequest
+    extends PluginsWhere,
+      PluginsWhereList {}
+  export interface PluginsWhereList {
+    token?: string;
+  }
+  export interface PluginsWhereDownloadRequest
+    extends PluginsWhere,
+      PluginsWhereDownload {}
+  export interface PluginsWhereDownload {
+    /**
+     * 勾选删除
+     */
+    uuid?: string[];
+    page?: number;
+    limit?: number;
+    token?: string;
+  }
+  export interface PluginsWhereDeleteRequest
+    extends PluginsWhere,
+      PluginsWhereDelete {}
+  export interface PluginsWhereDelete {
+    /**
+     * 删除原因
+     */
+    description?: string;
+    /**
+     * 勾选删除
+     */
+    uuid?: string[];
+  }
+  export interface PluginsWhere {
+    /** 这个其实是一个boolean类型的数组，
+     * 但是后端没法表达boolean数组，
+     * 所以每次更新时，需要将后端的转换定义名改成《boolean》 
+     */
+    is_private?: boolean[];
+    keywords?: string;
+    plugin_type?: string[];
+    tags?: string[];
+    user_name?: string;
+    user_id?: number;
+    /**
+     * 默认 为所有时间, 当天 day, 本周 week, 本月 month, 年 year
+     */
+    time_search?: string;
+    group?: string[];
+    /**
+     * 默认首页 mine 个人, recycle 回收站 check 审核页面
+     */
+    listType?: string;
+    /**
+     * 审核状态,0待审核，1通过审核，2审核不通过
+     */
+    status?: number[];
+    /**
+     * 根据插件名批量搜索
+     */
+    script_name?: string[];
+  }
+  export interface PluginsWhereIsPrivate {}
+  export interface PluginsSearchResponse {
+    data: PluginsSearch[];
+  }
+  export interface PluginsSearchRequest {
+    /**
+     * 默认首页 mine 个人, recycle 回收站 check 审核页面
+     */
+    listType?: string;
+    token?: string;
+  }
+  export interface PluginsSearchData {
+    value: string;
+    count: number;
+    label: string;
+  }
+  export interface PluginsSearch {
+    groupKey: string;
+    groupName: string;
+    sort: number;
+    data: PluginsSearchData[];
+  }
+  export interface PluginsRiskDetail {
+    cweId: string;
+    /**
+     * 漏洞类型
+     */
+    riskType: string;
+    /**
+     * 漏洞描述
+     */
+    description: string;
+    /**
+     * 修复建议
+     */
+    solution: string;
+  }
+  export interface PluginsResponse {
+    id: number;
+    uuid: string;
+  }
+  export interface PluginsRequest {
+    type?: string;
+    content?: string;
+    params?: YakitPluginParam[];
+    help?: string;
+    tags?: string[];
+    script_name: string;
+    enable_plugin_selector?: boolean;
+    plugin_selector_types?: string;
+    is_general_module?: boolean;
+    download_total?: number;
+    is_private?: boolean;
+    group?: string;
+    riskType?: string;
+    riskDetail?: PluginsRequestRiskDetail;
+    /**
+     * 补充说明
+     */
+    annotation?: string;
+    isCorePlugin?: boolean;
+  }
+  export interface PluginsRequestRiskDetail {
+    cweId?: string;
+    /**
+     * 漏洞类型
+     */
+    riskType?: string;
+    /**
+     * 漏洞描述
+     */
+    description?: string;
+    /**
+     * 修复建议
+     */
+    solution?: string;
+  }
+  export interface PluginsRecycleRequest extends PluginsWhere, PluginsRecycle {}
+  export interface PluginsRecycle {
+    /**
+     * 勾选删除
+     */
+    uuid?: string[];
+    /**
+     * 必传, true 彻底删除, false还原
+     */
+    dumpType: string;
+  }
+  export interface PluginsListResponse extends Paging {
+    data: PluginsDetail[];
+  }
+  export interface PluginsEditRequest extends PluginsRequest, PluginsEdit {}
+  export interface PluginsEdit {
+    /**
+     * 为空时默认走新建 不为空时默认走修改
+     */
+    uuid?: string;
+    /**
+     * 修改必传描述(我这没写成必传是因为新增和修改是一个按钮)
+     */
+    logDescription?: string;
+  }
+  export interface PluginsDetail extends GormBaseModel {
+    type: string;
+    script_name: string;
+    tags: string;
+    content: string;
+    params?: YakitPluginParam[];
+    authors: string;
+    user_id?: number;
+    head_img: string;
+    /**
+     * 插件发布的时间
+     */
+    published_at: number;
+    /**
+     * 下载次数
+     */
+    downloaded_total: number;
+    /**
+     * 获得推荐的次数
+     */
+    stars: number;
+    /**
+     * 审核状态
+     */
+    status: number;
+    official: boolean;
+    /**
+     * 当前用户是否已点赞
+     */
+    is_stars: boolean;
+    help?: string;
+    enable_plugin_selector?: boolean;
+    plugin_selector_types?: string;
+    is_general_module?: boolean;
+    comment_num: number;
+    contributors?: string;
+    uuid: string;
+    is_private: boolean;
+    /**
+     * 复制源插件
+     */
+    base_plugin_id?: number;
+    /**
+     * 复制源插件名
+     */
+    base_script_name?: string;
+    group?: string;
+    riskType?: string;
+    riskDetail?: PluginsDetailRiskDetail;
+    /**
+     * 补充说明
+     */
+    risk_annotation?: string;
+    /**
+     * 是否为内置插件
+     */
+    isCorePlugin?: boolean;
+    /**
+     * 协作者
+     */
+    collaborator?: CollaboratorInfo[];
+  }
+  export interface PluginsDetailRiskDetail {
+    cweId: string;
+    /**
+     * 漏洞类型
+     */
+    riskType: string;
+    /**
+     * 漏洞描述
+     */
+    description: string;
+    /**
+     * 修复建议
+     */
+    solution: string;
+  }
+  export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
+  export interface PluginsAuditDetailResponse
+    extends PluginsDetail,
+      PluginsAuditDetail {}
+  export interface PluginsAuditDetailRequest {
+    uuid: string;
+    /**
+     * 请求页面 默认(check) 审核详情页 log 日志详情页
+     */
+    list_type?: string;
+    /**
+     * 日志页跳转到详情页必传
+     */
+    up_log_id?: number;
+  }
+  export interface PluginsAuditDetail {
+    /**
+     * 修改人
+     */
+    apply_user_name?: string;
+    /**
+     * 修改人
+     */
+    apply_user_id?: number;
+    /**
+     * 描述
+     */
+    logDescription?: string;
+    apply_user_head_img?: string;
+    /**
+     * 处理状态 0 待处理  1合并  2拒绝
+     */
+    merge_status?: number;
+    /**
+     * 日志id
+     */
+    up_log_id?: number;
+    merge_before_plugins?: PluginsAuditDetailMergeBeforePlugins;
+  }
+  export interface PluginsAuditDetailMergeBeforePlugins {
+    type?: string;
+    script_name?: string;
+    tags?: string;
+    content?: string;
+    params?: YakitPluginParam[];
+    /**
+     * 审核状态
+     */
+    status?: number;
+    official?: boolean;
+    help?: string;
+    enable_plugin_selector?: boolean;
+    plugin_selector_types?: string;
+    is_general_module?: boolean;
+    uuid?: string;
+    is_private?: boolean;
+    stars?: number;
+    download_total?: number;
+    group?: string;
+    riskType?: string;
+    riskDetail?: PluginsAuditDetailMergeBeforePluginsRiskDetail;
+    /**
+     * 补充说明
+     */
+    risk_annotation?: string;
+    /**
+     * 是否为内置插件
+     */
+    isCorePlugin?: boolean;
+  }
+  export interface PluginsAuditDetailMergeBeforePluginsRiskDetail {
+    cweId: string;
+    /**
+     * 漏洞类型
+     */
+    riskType: string;
+    /**
+     * 漏洞描述
+     */
+    description: string;
+    /**
+     * 修复建议
+     */
+    solution: string;
+  }
+  export interface PluginsAudit {
+    pageType?: string;
+    /**
+     * 审核 'true' 通过 'false' 不通过
+     */
+    status: string;
+    /**
+     * 必传
+     */
+    uuid: string;
+    /**
+     * 不通过时必传
+     */
+    logDescription?: string;
+    /**
+     * 默认不传为管理审核页面， 'log' 为日志审核页面
+     */
+    listType?: string;
+    /**
+     * 有对比的审核页 必传此id
+     */
+    upPluginLogId?: number;
   }
   export interface PluginIncreResponse {
     day_incre_num: number;
@@ -535,6 +895,15 @@ export declare namespace API {
     root_id?: number;
     message?: string;
   }
+  export interface NavigationBarsResponse {
+    data: NavigationBarsListResponse[];
+  }
+  export interface NavigationBarsListResponse {
+    card: string;
+    link?: string;
+    otherLink?: string;
+    sort?: number;
+  }
   export interface MergePluginRequest {
     /**
      * 申请列表id
@@ -551,6 +920,9 @@ export declare namespace API {
     enable_plugin_selector?: boolean;
     plugin_selector_types?: string;
     is_general_module?: boolean;
+  }
+  export interface IsExtractCodeResponse {
+    is_extract_code: boolean;
   }
   export interface GormBaseModel {
     id: number;
@@ -648,6 +1020,13 @@ export declare namespace API {
     keywords?: string;
     is_recycle?: boolean;
   }
+  export interface CopyPluginsRequest extends PluginsRequest, CopyPlugins {}
+  export interface CopyPlugins {
+    /**
+     * 复制插件id
+     */
+    base_plugin_id: number;
+  }
   export interface CompanyLicenseConfigResponse extends Paging {
     data: CompanyLicenseConfigList[];
   }
@@ -681,6 +1060,11 @@ export declare namespace API {
     by_head_img: string;
     reply_num: number;
     is_stars?: boolean;
+  }
+  export interface CollaboratorInfo {
+    user_id: number;
+    head_img: string;
+    user_name: string;
   }
   export interface ApplyPluginResponse {
     type?: string;

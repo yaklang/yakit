@@ -1,7 +1,7 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {failed, info} from "@/utils/notification"
+import {failed, info, yakitNotify} from "@/utils/notification"
 import style from "../MITMPage.module.scss"
 import ReactResizeDetector from "react-resize-detector"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -31,13 +31,16 @@ import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitC
 import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
 import {YakScript} from "@/pages/invoker/schema"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {ImportLocalPlugin, AddPluginGroup} from "../MITMPage"
+import {ImportLocalPlugin, AddLocalPluginGroup} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
 import {getReleaseEditionName} from "@/utils/envfile"
+import {DownloadOnlinePluginsRequest} from "@/pages/plugins/utils"
+import emiter from "@/utils/eventBus/eventBus"
+import {PluginGV} from "@/pages/plugins/builtInData"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -79,7 +82,7 @@ export interface YakFilterRemoteObj {
     value: string[]
 }
 
-const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_COMMON_DATA`
+export const FILTER_CACHE_LIST_DATA = PluginGV.Fetch_Local_Plugin_Group
 export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((props) => {
     const {
         status,
@@ -266,7 +269,9 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     )
 })
 
-interface YakitGetOnlinePluginProps {
+export interface YakitGetOnlinePluginProps {
+    /**@name 'online'默认首页 mine 个人, recycle 回收站 check 审核页面" */
+    listType?: "online" | "mine" | "recycle" | "check"
     visible: boolean
     setVisible: (b: boolean) => void
 }
@@ -276,7 +281,7 @@ interface YakitGetOnlinePluginProps {
  * 2、PluginDebuggerPage
  */
 export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
-    const {visible, setVisible} = props
+    const {listType = "online", visible, setVisible} = props
     const taskToken = useMemo(() => randomString(40), [])
     const [percent, setPercent] = useState<number>(0)
     useEffect(() => {
@@ -292,9 +297,13 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
                 setPercent(0)
                 setVisible(false)
                 ipcRenderer.invoke("change-main-menu")
+                onRefLocalPluginList()
             }, 200)
         })
-        ipcRenderer.on(`${taskToken}-error`, (_, e) => {})
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+            onRefLocalPluginList()
+            yakitNotify("error", "下载失败:" + e)
+        })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
             ipcRenderer.removeAllListeners(`${taskToken}-error`)
@@ -303,20 +312,25 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     }, [taskToken])
     useEffect(() => {
         if (visible) {
-            const addParams: DownloadOnlinePluginByTokenRequest = {isAddToken: true, BindMe: false}
+            const addParams: DownloadOnlinePluginsRequest = {ListType: listType === "online" ? "" : listType}
             ipcRenderer
-                .invoke("DownloadOnlinePluginAll", addParams, taskToken)
+                .invoke("DownloadOnlinePlugins", addParams, taskToken)
                 .then(() => {})
                 .catch((e) => {
-                    failed(`添加失败:${e}`)
+                    failed(`下载失败:${e}`)
                 })
         }
     }, [visible])
     const StopAllPlugin = () => {
         ipcRenderer.invoke("cancel-DownloadOnlinePluginAll", taskToken).catch((e) => {
-            failed(`停止添加失败:${e}`)
+            failed(`停止下载:${e}`)
+            onRefLocalPluginList()
         })
     }
+    /**下载插件后需要更新 本地插件列表 */
+    const onRefLocalPluginList = useMemoizedFn(() => {
+        emiter.emit("onRefLocalPluginList", "")
+    })
     return (
         <YakitHint
             visible={visible}
@@ -460,7 +474,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
         isShowAddBtn = true,
         isShowDelIcon = true
     } = props
-    
+
     const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
     /**
@@ -489,40 +503,6 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
         setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
         setPlugGroup([...newArr])
         setSelectGroup(selectGroup.filter((item) => item.name !== deleteItem.name))
-    })
-    /**
-     * @description 保存插件组
-     */
-    const onSavePluginGroup = useMemoizedFn((value: YakFilterRemoteObj) => {
-        getRemoteValue(FILTER_CACHE_LIST_DATA)
-            .then((data: string) => {
-                let obj = {
-                    name: value.name,
-                    value: checkList
-                }
-                if (!!data) {
-                    const cacheData: YakFilterRemoteObj[] = JSON.parse(data)
-                    const index: number = cacheData.findIndex((item) => item.name === value.name)
-                    // 本地中存在插件组名称
-                    if (index >= 0) {
-                        cacheData[index].value = Array.from(new Set([...cacheData[index].value, ...checkList]))
-                        setPlugGroup([...cacheData])
-                        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(cacheData))
-                    } else {
-                        const newArr = [...cacheData, obj]
-                        setPlugGroup(newArr)
-                        setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify(newArr))
-                    }
-                } else {
-                    setPlugGroup([obj])
-                    setRemoteValue(FILTER_CACHE_LIST_DATA, JSON.stringify([obj]))
-                }
-                setAddGroupVisible(false)
-                info("添加插件组成功")
-            })
-            .catch((err) => {
-                failed("获取插件组失败:" + err)
-            })
     })
     return (
         <div className={classNames(style["mitm-plugin-group"], wrapperClassName)}>
@@ -568,12 +548,11 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
                     <PlusCircleIcon className={style["plus-circle"]} />
                 </YakitButton>
             )}
-            <AddPluginGroup
-                pugGroup={pugGroup}
+            <AddLocalPluginGroup
                 visible={addGroupVisible}
                 setVisible={setAddGroupVisible}
                 checkList={checkList}
-                onOk={onSavePluginGroup}
+                onOk={setPlugGroup}
             />
         </div>
     )

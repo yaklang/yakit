@@ -33,7 +33,7 @@ import {
     PoweroffOutlined,
     DownOutlined
 } from "@ant-design/icons"
-import {UserInfoProps, useStore, YakitStoreParams} from "@/store"
+import {UserInfoProps, useStore} from "@/store"
 import {useGetState, useMemoizedFn, useDebounceEffect, useDebounce, useSize} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -53,6 +53,7 @@ import {showModal} from "@/utils/showModal"
 import {formatDate} from "@/utils/timeUtil"
 import {PluginOperator} from "../PluginOperator"
 import {DownloadOnlinePluginProps} from "../YakitPluginInfoOnline/YakitPluginInfoOnline"
+import {PluginGV} from "@/pages/plugins/builtInData"
 
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss"
 import "../YakitStorePage.scss"
@@ -128,7 +129,7 @@ const queryTitle = {
     status: "审核状态",
     group: "插件分组"
 }
-
+/**@deprecated 暂时没有使用，已废弃 */
 export const PluginOwner: React.FC<PluginOwnerProp> = (props) => {
     const [script, setScript] = useState<YakScript>()
     const [loading, setLoading] = useState(false)
@@ -152,20 +153,15 @@ export const PluginOwner: React.FC<PluginOwnerProp> = (props) => {
     const [isEdit, setMonitorEdit] = useState<boolean>(false)
     // 全局登录状态
     const {userInfo} = useStore()
-    // 插件仓库参数及页面状态
-    const {storeParams, setYakitStoreParams} = YakitStoreParams()
 
-    const [publicKeyword, setPublicKeyword] = useState<string>(storeParams.keywords)
+    const [publicKeyword, setPublicKeyword] = useState<string>("")
 
     const [statisticsLoading, setStatisticsLoading] = useState<boolean>(false)
     // 统计查询
     const [statisticsQueryLocal, setStatisticsQueryLocal] = useState<QueryYakScriptRequest>(defQueryLocal)
     const [statisticsQueryOnline, setStatisticsQueryOnline, getStatisticsQueryOnline] =
         useGetState<SearchPluginOnlineRequest>({
-            ...defQueryOnline,
-            keywords: storeParams.keywords,
-            plugin_type: storeParams.plugin_type,
-            time_search: storeParams.time_search
+            ...defQueryOnline
         })
     const [statisticsQueryUser, setStatisticsQueryUser] = useState<SearchPluginOnlineRequest>(defQueryOnline)
     // 统计数据
@@ -593,7 +589,7 @@ export const PluginOwner: React.FC<PluginOwnerProp> = (props) => {
                                             queryName === "status" &&
                                             plugSource === "online" &&
                                             !boolAdmin &&
-                                            userInfo.showStatusSearch !== true
+                                            userInfo.checkPlugin !== true
                                         if (isCommunityEdition() && (UserIsPrivate || OnlineAdmin)) return null
                                         if (isEnterpriseEdition() && (UserIsPrivate || OnlineStatusSearch)) return null
 
@@ -833,7 +829,7 @@ const YakFilterModuleList: React.FC<YakFilterModuleList> = (props) => {
         // 动态加载设置项
         settingRender
     } = props
-    const FILTER_CACHE_LIST_DATA = `FILTER_CACHE_LIST_COMMON_DATA`
+    const FILTER_CACHE_LIST_DATA = PluginGV.Fetch_Local_Plugin_Group
     const [form] = Form.useForm()
     const layout = {
         labelCol: {span: 5},
@@ -1914,7 +1910,7 @@ const PluginItemOnline: React.FC<PluginListOptProps> = (props) => {
     // 全局登录状态
     const {userInfo} = useStore()
     const isShowAdmin =
-        (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.showStatusSearch && !bind_me)
+        (isAdmin && !bind_me) || (bind_me && !info.is_private) || (userInfo.checkPlugin && !bind_me)
     const tagsString = (tags && tags.length > 0 && tags.join(",")) || ""
     return (
         <div className={`plugin-item ${currentId === info.id && "plugin-item-active"}`} onClick={() => onClick(info)}>
@@ -2117,7 +2113,7 @@ const QueryComponentOnline: React.FC<QueryComponentOnlineProps> = (props) => {
                         </Select>
                     </Form.Item>
                 )}
-                {((!user && isAdmin) || (user && isShowStatus) || (!user && userInfo.showStatusSearch)) && (
+                {((!user && isAdmin) || (user && isShowStatus) || (!user && userInfo.checkPlugin)) && (
                     <Form.Item name='status' label='审核状态'>
                         <Select size='small' getPopupContainer={() => refTest.current}>
                             <Option value='all'>全部</Option>

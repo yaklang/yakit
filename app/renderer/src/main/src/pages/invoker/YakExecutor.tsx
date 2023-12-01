@@ -757,7 +757,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                     {isInteractive ? "常规编辑" : "交互式编辑"}
                                                 </Button>
 
-                                                <Button
+                                                {/* <Button
                                                     style={{height: 25}}
                                                     type={"link"}
                                                     size={"small"}
@@ -797,7 +797,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                     }}
                                                 >
                                                     Yak脚本模板
-                                                </Button>
+                                                </Button> */}
                                                 <Button
                                                     icon={
                                                         fullScreen ? (

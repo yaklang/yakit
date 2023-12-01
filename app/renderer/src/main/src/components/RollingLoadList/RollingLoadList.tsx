@@ -4,7 +4,7 @@ import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList
 import {LoadingOutlined} from "@ant-design/icons"
 import "./RollingLoadList.scss"
 
-interface RollingLoadListProps<T> {
+export interface RollingLoadListProps<T> {
     rowKey?: string
     data: T[]
     loadMoreData: () => void
@@ -105,6 +105,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
     })
     useDebounceEffect(
         () => {
+            if (!hasMore) return
             if (!containerRef || !wrapperRef) return
             // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
             const containerHeight = containerRef.current?.clientHeight
@@ -113,7 +114,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
                 loadMoreData()
             }
         },
-        [wrapperRef.current?.clientHeight, isRef],
+        [wrapperRef.current?.clientHeight, isRef, hasMore],
         {wait: 200}
     )
     useEffect(() => {
@@ -132,8 +133,10 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
             isFirstNumberRoll.current = false
         } else {
             if (!numberRoll) return
-            // 初次不执行
-            scrollTo(numberRoll)
+            // 初次不执行; 必须加上延时,不然元素可能还没有加载
+            setTimeout(() => {
+                scrollTo(numberRoll)
+            }, 100)
         }
     })
 
