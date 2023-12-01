@@ -296,3 +296,30 @@
 .upload-all-btns {
     justify-content: flex-end;
 }
+
+.plugin-heard-title {
+    word-break: keep-all;
+    width: 50px;
+    opacity: 1;
+    transition: all 0.3s ease;
+    margin-right: 16px;
+}
+.plugin-heard-title-hidden {
+    width: 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    margin-right: 0;
+}
+
+.extra-header-search-wrapper {
+    @extend %display-row-center;
+    gap: 16px;
+    opacity: 1;
+    transition: all 0.3s ease;
+    width: 274px;
+}
+
+.extra-header-search-wrapper-hidden {
+    opacity: 0;
+    width: 0;
+}
