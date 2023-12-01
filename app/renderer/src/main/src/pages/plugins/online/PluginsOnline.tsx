@@ -272,9 +272,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         })
     }, [])
     useUpdateEffect(() => {
-        if (isCommunityEdition()) return
-        // 企业版切换需要刷新插件商店商店列表+统计
-        if (userInfo.isLogin) onSwitchPrivateDomainRefOnlinePluginInit()
+        // 需要刷新插件商店商店列表+统计
+        onSwitchPrivateDomainRefOnlinePluginInit()
     }, [userInfo.isLogin])
     useEffect(() => {
         getInitTotal()
@@ -299,11 +298,12 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             onRefOnlinePluginListByQuery()
         }
     }, [pluginOnlinePageData])
-    /**切换私有域，刷新初始化的total和列表数据 */
+    /**切换私有域，刷新初始化的total和列表数据,回到列表页 */
     const onSwitchPrivateDomainRefOnlinePluginInit = useMemoizedFn(() => {
         fetchList(true)
         getPluginGroupList()
         getInitTotal()
+        setPlugin(undefined)
     })
     /**
      * @description 刷新搜索条件,目前触发地方(首页-插件热点触发的插件商店搜索条件过滤)

@@ -893,10 +893,11 @@ export const apiGetYakScriptByOnlineID: (query: GetYakScriptByOnlineIDRequest) =
                     resolve(newScript)
                 })
                 .catch((e) => {
-                    yakitNotify("error", "查询本地插件错误" + e)
+                    yakitNotify("error", "查询本地插件错误:" + e)
+                    reject(e)
                 })
         } catch (error) {
-            yakitNotify("error", "操作失败：" + error)
+            yakitNotify("error", "查询本地插件错误:" + error)
             reject(error)
         }
     })
