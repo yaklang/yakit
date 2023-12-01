@@ -425,6 +425,7 @@ const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
     }
 
     const onOKFun = useMemoizedFn(async () => {
+        await form.validateFields()
         try {
             const res: GenerateURLResponse = await ipcRenderer.invoke("mitm-agent-hijacking-config", handleReqParams())
             generateURL(res.URL)
@@ -497,11 +498,11 @@ const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
                     </Form.Item>
                     <Form.Item
                         label='密码'
-                        name='Password'
+                        name="Password"
                         style={{marginBottom: 4}}
                         rules={[{required: true, message: "请输入密码"}]}
                     >
-                        <YakitInput.Password placeholder='请输入密码' />
+                        <YakitInput placeholder='请输入密码' />
                     </Form.Item>
                 </Form>
             </div>
