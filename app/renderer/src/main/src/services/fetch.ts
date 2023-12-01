@@ -61,6 +61,7 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
             break
         case 401:
             tokenOverdue(res)
+            reject(message)
             break
         default:
             reject(message)
