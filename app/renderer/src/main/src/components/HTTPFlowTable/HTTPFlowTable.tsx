@@ -408,7 +408,7 @@ export const onExpandHTTPFlow = (flow: HTTPFlow | undefined, onClosed?: () => an
 
     return (
         <div style={{width: "100%"}}>
-            <HTTPFlowDetail id={flow.Id} onClose={onClosed}/>
+            <HTTPFlowDetail id={flow.Id} onClose={onClosed} />
         </div>
     )
 }
@@ -433,7 +433,7 @@ export interface HTTPFlowTableProp {
     // 此控件显示的页面
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
-    IncludeInUrl?: string
+    includeInUrl?: string | string[]
     onQueryParams?: (queryParams: string, execFlag?: boolean) => void
 }
 
@@ -825,7 +825,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const onScrollToByClickEvent = useMemoizedFn((v) => {
         try {
-            const obj: { historyId: string; id: string } = JSON.parse(v)
+            const obj: {historyId: string; id: string} = JSON.parse(v)
             if (historyId === obj.historyId) {
                 let scrollToIndex: number | undefined = undefined
                 data.some((item, index) => {
@@ -838,8 +838,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setScrollToIndex(scrollToIndex)
                 }
             }
-        } catch (error) {
-        }
+        } catch (error) {}
     })
     useEffect(() => {
         emiter.on("onScrollToByClick", onScrollToByClickEvent)
@@ -1038,7 +1037,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams({
                 ...params,
                 SearchURL: props.searchURL,
-                IncludeInUrl: props.IncludeInUrl ? [props.IncludeInUrl] : [""]
+                IncludeInUrl: props.includeInUrl
+                    ? Array.isArray(props.includeInUrl)
+                        ? props.includeInUrl
+                        : [props.includeInUrl]
+                    : [""]
             })
             setScrollToIndex(0)
             setCurrentIndex(undefined)
@@ -1050,17 +1053,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 updateData()
             }, 10)
         }
-    }, [props.searchURL, props.IncludeInUrl, pageType])
+    }, [props.searchURL, props.includeInUrl, pageType])
     const [queryParams, setQueryParams] = useState<string>("")
-    useEffect(
-        () => {
-            if (pageType === "History" && queryParams !== "" && inViewport) {
-                console.log(123, queryParams);
-                props.onQueryParams && props.onQueryParams(queryParams)
-            }
-        },
-        [queryParams, pageType, inViewport]
-    )
+    useEffect(() => {
+        if (pageType === "History" && queryParams !== "" && inViewport) {
+            props.onQueryParams && props.onQueryParams(queryParams)
+        }
+    }, [queryParams, pageType, inViewport])
     const updateQueryParams = (query) => {
         const copyQuery = structuredClone(query)
         // 此处删除与树相关得参数 由于queryParams参数需要带到网站树中去查询 是不需要searchURL与IncludeInUrl得 不然会造成死循环
@@ -1081,7 +1080,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (isGrpcRef.current) return
         isGrpcRef.current = true
         // 查询数据
-        console.log("query", query)
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1565,9 +1563,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 render: (text) => {
                     return text
                         ? `${text}`
-                            .split("|")
-                            .filter((i) => !i.startsWith("YAKIT_COLOR_"))
-                            .join(", ")
+                              .split("|")
+                              .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                              .join(", ")
                         : ""
                 },
                 filterProps: {
@@ -1576,7 +1574,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <SearchIcon/>,
+                    filterIcon: <SearchIcon />,
                     filters: tags
                 }
             },
@@ -1592,7 +1590,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 minWidth: 140,
                 beforeIconExtra: (
                     <div className={classNames(style["body-length-checkbox"])}>
-                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)}/>
+                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
                         <span className={style["tip"]}>大于0</span>
                     </div>
                 ),
@@ -1649,7 +1647,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 <div
                                     className={classNames({
                                         [style["body-length-text-red"]]:
-                                        rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
+                                            rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
                                     })}
                                 >
                                     {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
@@ -1715,7 +1713,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <SearchIcon/>,
+                    filterIcon: <SearchIcon />,
                     filters: contentType
                 }
             },
@@ -1882,7 +1880,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const onDeleteToUpdateEvent = useMemoizedFn((v: string) => {
-        const {sourcePage}: { sourcePage?: HTTPHistorySourcePageType } = JSON.parse(v)
+        const {sourcePage}: {sourcePage?: HTTPHistorySourcePageType} = JSON.parse(v)
         if (
             sourcePage &&
             pageType &&
@@ -2068,7 +2066,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     .finally(() => setTimeout(() => setLoading(false), 100))
             } else {
                 const Ids: number[] = list.map((item) => parseInt(item.Id + ""))
-                ipcRenderer.invoke("GetHTTPFlowByIds", {Ids}).then((rsp: { Data: HTTPFlow[] }) => {
+                ipcRenderer.invoke("GetHTTPFlowByIds", {Ids}).then((rsp: {Data: HTTPFlow[]}) => {
                     initExcelData(resolve, rsp.Data, {
                         Data: rsp.Data,
                         Total: rsp.Data.length,
@@ -2095,10 +2093,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "数据包扫描",
             label: "数据包扫描",
             number: 10,
-            onClickSingle: () => {
-            },
-            onClickBatch: () => {
-            },
+            onClickSingle: () => {},
+            onClickBatch: () => {},
             children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
                 key: ele.title,
                 label: ele.title
@@ -2127,7 +2123,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "下载 Response Body",
             label: "下载 Response Body",
             onClickSingle: (v) => {
-                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: { Raw: Uint8Array }) => {
+                ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
                     saveABSFileToOpen(`response-body.txt`, bytes.Raw)
                 })
             }
@@ -2153,8 +2149,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "复制为 Yak PoC 模版",
             label: "复制为 Yak PoC 模版",
-            onClickSingle: () => {
-            },
+            onClickSingle: () => {},
             children: [
                 {
                     key: "数据包 PoC 模版",
@@ -2170,10 +2165,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "标注颜色",
             label: "标注颜色",
             number: 20,
-            onClickSingle: () => {
-            },
-            onClickBatch: () => {
-            },
+            onClickSingle: () => {},
+            onClickBatch: () => {},
             children: availableColors.map((i) => {
                 return {
                     key: i.title,
@@ -2193,8 +2186,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "发送到对比器",
             label: "发送到对比器",
-            onClickSingle: () => {
-            },
+            onClickSingle: () => {},
             children: [
                 {
                     key: "发送到对比器左侧",
@@ -2211,8 +2203,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "屏蔽",
             label: "屏蔽",
-            onClickSingle: () => {
-            },
+            onClickSingle: () => {},
             children: [
                 {
                     key: "屏蔽该记录",
@@ -2231,10 +2222,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "删除",
             label: "删除",
-            onClickSingle: () => {
-            },
-            onClickBatch: () => {
-            },
+            onClickSingle: () => {},
+            onClickBatch: () => {},
             all: true,
             children: [
                 {
@@ -2493,7 +2482,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         const m = showYakitModal({
             title: "导入分享数据",
-            content: <ShareModal module={YakitRoute.DB_HTTPHistory} shareContent={JSON.stringify(ids)}/>,
+            content: <ShareModal module={YakitRoute.DB_HTTPHistory} shareContent={JSON.stringify(ids)} />,
             onCancel: () => {
                 m.destroy()
                 setSelectedRowKeys([])
@@ -2602,7 +2591,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 <div className={style["http-history-table-flex"]}>
                                     {shieldData?.data.length > 0 && (
                                         <div style={{marginRight: 16}}>
-                                            <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter}/>
+                                            <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} />
                                         </div>
                                     )}
                                     <div className={style["http-history-table-total"]}>
@@ -2612,7 +2601,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 {total}
                                             </span>
                                         </div>
-                                        <Divider type='vertical'/>
+                                        <Divider type='vertical' />
                                         <div className={style["http-history-table-total-item"]}>
                                             <span className={style["http-history-table-total-item-text"]}>
                                                 Selected
@@ -2637,10 +2626,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             {isFilter && (
                                                 <YakitTag color={"success"}>
                                                     已配置
-                                                    <CheckedSvgIcon style={{marginLeft: 8}}/>
+                                                    <CheckedSvgIcon style={{marginLeft: 8}} />
                                                 </YakitTag>
                                             )}
-                                            <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
+                                            <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}} />
                                             <div className={classNames(style["http-history-table-right-item"])}>
                                                 {size?.width && size?.width > 1060 && (
                                                     <div className={style["http-history-table-right-label"]}>
@@ -2669,7 +2658,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     )}
                                     {size?.width && size?.width < 1000 ? (
                                         <YakitPopover trigger='click' placement='bottomRight' content={searchNode}>
-                                            <YakitButton icon={<SearchIcon/>} type='outline2'/>
+                                            <YakitButton icon={<SearchIcon />} type='outline2' />
                                         </YakitPopover>
                                     ) : (
                                         <YakitInput.Search
@@ -2720,7 +2709,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                         style={{padding: 4}}
                                                         onClick={() => setIsShowColor(true)}
                                                     >
-                                                        <ColorSwatchIcon/>
+                                                        <ColorSwatchIcon />
                                                     </YakitButton>
                                                 </YakitPopover>
                                             </div>
@@ -2735,7 +2724,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                             }}
                                                         >
                                                             批量操作
-                                                            <ChevronDownIcon style={{color: "#85899E"}}/>
+                                                            <ChevronDownIcon style={{color: "#85899E"}} />
                                                         </YakitButton>
                                                     )) || (
                                                         <YakitPopover
@@ -2846,7 +2835,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                                 }}
                                                             >
                                                                 批量操作
-                                                                <ChevronDownIcon/>
+                                                                <ChevronDownIcon />
                                                             </YakitButton>
                                                         </YakitPopover>
                                                     )}
@@ -2928,7 +2917,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             >
                                                 <YakitButton
                                                     type='text2'
-                                                    icon={<RefreshIcon/>}
+                                                    icon={<RefreshIcon />}
                                                     onClick={(e) => e.stopPropagation()}
                                                 />
                                             </Badge>
@@ -2962,8 +2951,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         page: pagination.Page,
                         limit: pagination.Limit,
                         total,
-                        onChange: (page, limit) => {
-                        }
+                        onChange: (page, limit) => {}
                     }}
                     onChange={onTableChange}
                     onSetCurrentRow={onSetCurrentRow}
@@ -3019,7 +3007,7 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
                                         className={classNames(style["tag-del-style"])}
                                         onClick={() => cancleFilter(item)}
                                     >
-                                        <RemoveIcon/>
+                                        <RemoveIcon />
                                     </div>
                                 </div>
                             ))}
@@ -3030,7 +3018,7 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
                     <div className={style["http-history-table-left-shield"]}>
                         <span className='content-ellipsis'>已屏蔽条件</span>
                         <span className={style["http-history-table-left-number"]}>{shieldData?.data.length}</span>
-                        <StatusOfflineIcon className={style["http-history-table-left-shield-icon"]}/>
+                        <StatusOfflineIcon className={style["http-history-table-left-shield-icon"]} />
                     </div>
                 </YakitPopover>
             )}
@@ -3076,12 +3064,12 @@ const ColorSearch = React.memo((props: ColorSearchProps) => {
                             key={ele.color}
                         >
                             <div className={style["http-history-table-color-item-render"]}>{ele.render}</div>
-                            {checked && <CheckIcon className={style["check-icon"]}/>}
+                            {checked && <CheckIcon className={style["check-icon"]} />}
                         </div>
                     )
                 })}
             </div>
-            <FooterBottom className={style["color-select-footer"]} onReset={onReset} onSure={onSure}/>
+            <FooterBottom className={style["color-select-footer"]} onReset={onReset} onSure={onSure} />
         </div>
     )
 })
@@ -3265,13 +3253,13 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
                                         <span className={style["select-item-text"]}>{item.data.label}</span>
-                                        {checked && <CheckIcon className={style["check-icon"]}/>}
+                                        {checked && <CheckIcon className={style["check-icon"]} />}
                                     </div>
                                 )
                             })) || <div className={style["no-data"]}>暂无数据</div>}
                     </div>
                 </div>
-                <FooterBottom onReset={onReset} onSure={onSure}/>
+                <FooterBottom onReset={onReset} onSure={onSure} />
             </div>
         </div>
     )
