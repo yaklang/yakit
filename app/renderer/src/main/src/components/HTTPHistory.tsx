@@ -161,7 +161,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }
 
     const handleFilterParams = () => {
-        // console.log("queryParamsRef", queryParamsRef.current)
         return queryParamsRef.current
     }
 
@@ -363,7 +362,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 点击Select选中树
     const onSelectedKeys = useMemoizedFn((selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
-        // console.log("selectedNodes", selectedNodes)
         setSelectedKeys(selectedKeys)
         setSelectedNodes(selectedNodes)
         setOnlyShowFirstNode(true)

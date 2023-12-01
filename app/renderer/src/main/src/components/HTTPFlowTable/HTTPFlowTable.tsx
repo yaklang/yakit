@@ -1068,7 +1068,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         delete copyQuery.Pagination
         delete copyQuery.AfterId
         delete copyQuery.BeforeId
-        copyQuery.Color = copyQuery.Color ? copyQuery.Color : [[]]
+        copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
         copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : ""
         setQueryParams(JSON.stringify(copyQuery))
     }
@@ -1261,7 +1261,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const query = {
             ...params,
             Tags: params.Tags,
-            Color: color ? [color] : undefined,
+            Color: color ? color : undefined,
             AfterBodyLength: params.AfterBodyLength
                 ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
                 : undefined,
