@@ -338,7 +338,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     return (
         <>
-            <div className={style["mitm-page"]} ref={mitmPageRef}>
+            <div className={style["mitm-page"]} ref={mitmPageRef} style={status==="idle"?{padding: "0px 16px"}:{padding:"8px 16px 13px"}}>
                 {onRenderMITM()}
             </div>
             <MITMRule status={status} visible={visible && !!inViewport} setVisible={setVisible} />
@@ -688,7 +688,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     style={{display: isFullScreenSecondNode ? "none" : ""}}
                 >
                     {onRenderFirstNode()}
-                    <div className={style["mitm-server-start-pre-line"]} />
                 </div>
             )}
             lineStyle={{display: isFullScreenSecondNode || isFullScreenFirstNode ? "none" : ""}}

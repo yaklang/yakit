@@ -26,11 +26,22 @@
     }
 }
 .table-container-border {
-    border-bottom: 1px solid var(--yakit-border-color) !important;
+    border-bottom: transparent !important;
 }
 
 .body-length-text-red {
     color: var(--yakit-danger-5);
+}
+
+.http-fuzzer-page-table{
+    :global {
+       .ant-card-bordered{
+            border-left: transparent;
+            border-right: transparent;
+            border-top: transparent;
+        } 
+    }
+    
 }
 
 .unit-select {

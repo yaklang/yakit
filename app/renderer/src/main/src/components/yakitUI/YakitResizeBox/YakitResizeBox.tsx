@@ -165,7 +165,7 @@ export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
                 body.removeEventListener("mouseup", mouseUp)
             }
         }
-    }, [])
+    }, [min,max])
 
     return (
         <div
