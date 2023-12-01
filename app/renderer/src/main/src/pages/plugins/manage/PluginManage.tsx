@@ -155,7 +155,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         }
                     })
 
-                    const dataLength = response.data.concat(res.data)
+                    const dataLength = +res.pagemeta.page === 1 ? res.data : response.data.concat(res.data)
                     const isMore = res.data.length < res.pagemeta.limit || dataLength.length >= res.pagemeta.total
                     setHasMore(!isMore)
 
@@ -675,7 +675,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 loading={downloadLoading}
                                 name={selectNum > 0 ? "下载" : "一键下载"}
                                 onClick={() => onBatchDownload()}
-                                disabled={initTotal===0}
+                                disabled={initTotal === 0}
                             />
                             <FuncBtn
                                 maxWidth={1150}
@@ -684,7 +684,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 size='large'
                                 name={selectNum > 0 ? "删除" : "清空"}
                                 onClick={onShowDelPlugin}
-                                disabled={initTotal===0}
+                                disabled={initTotal === 0}
                             />
                         </div>
                     </div>

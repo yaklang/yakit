@@ -273,7 +273,7 @@ export const PluginUser: React.FC<PluginUserProps> = React.memo((props) => {
                         value={userPluginType}
                         onChange={onSwitchUserPluginType}
                         options={mePluginTypeList}
-                        style={{marginRight:16}}
+                        style={{marginRight: 16}}
                     />
                 }
                 hidden={!!plugin}
@@ -577,7 +577,7 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
                 const query: PluginsQueryProps = convertPluginsRequestParams(queryFilters, querySearch, params)
                 try {
                     const res = await apiFetchMineList(query)
-                    const length = res.data.length + response.data.length
+                    const length = +res.pagemeta.page === 1 ? res.data.length : res.data.length + response.data.length
                     setHasMore(length < +res.pagemeta.total)
                     if (!res.data) res.data = []
                     dispatch({

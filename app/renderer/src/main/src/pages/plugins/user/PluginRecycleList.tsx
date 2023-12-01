@@ -113,7 +113,7 @@ export const PluginRecycleList: React.FC<PluginRecycleListProps> = React.memo(
                 const query: PluginsQueryProps = convertPluginsRequestParams({}, search, params)
                 try {
                     const res = await apiFetchRecycleList(query)
-                    const length = res.data.length + response.data.length
+                    const length = +res.pagemeta.page === 1 ? res.data.length : res.data.length + response.data.length
                     setHasMore(length < +res.pagemeta.total)
                     if (!res.data) res.data = []
                     dispatch({

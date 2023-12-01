@@ -375,7 +375,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             try {
                 const res = await apiFetchOnlineList(query)
                 if (!res.data) res.data = []
-                const length = res.data.length + response.data.length
+                const length = +res.pagemeta.page === 1 ? res.data.length : res.data.length + response.data.length
                 setHasMore(length < +res.pagemeta.total)
                 dispatch({
                     type: "add",

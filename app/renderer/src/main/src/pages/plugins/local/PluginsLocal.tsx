@@ -321,7 +321,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             try {
                 const res = await apiQueryYakScript(query)
                 if (!res.Data) res.Data = []
-                const length = res.Data.length + response.Data.length
+                const length = +res.Pagination.Page === 1 ? res.Data.length : res.Data.length + response.Data.length
                 setHasMore(length < +res.Total)
                 const newData = res.Data.filter(
                     (ele) => ele.ScriptName !== externalIncomingPluginsRef.current?.ScriptName
