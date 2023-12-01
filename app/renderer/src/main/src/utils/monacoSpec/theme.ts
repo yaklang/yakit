@@ -39,29 +39,19 @@ monaco.editor.defineTheme("kurior", {
             "token": "http.header.danger", fontStyle: "bold",
         },
         {
-            "foreground": "#d26900",
+            "foreground": "#0080ff",
             "token": "http.header.warning", fontStyle: "bold",
         },
         {
-            "foreground": "#038027",
-            "token": "http.header.info", fontStyle: "bold",
+            "foreground": "#0080ff",
+            "token": "http.header.info", 
         },
-        {"token": "http.method", fontStyle: "bold", foreground: "#00099a"},
-        {"token": "bold-keyword", fontStyle: "bold", foreground: "#8f18ff"},
+        {"token": "http.method", fontStyle: "bold", foreground: "#d56161"},
+        {"token": "http.protocol", fontStyle: "bold", foreground: "#038027"},
+        {"token": "bold-keyword", fontStyle: "bold"},
         {"token": "http.path", fontStyle: "bold", foreground: "#01949a"},
-        {"token": "http.get.query.params", fontStyle: "bold", foreground: "#930d97"},
-        {
-            "foreground": "#078500",
-            "token": "http.cookie.name", fontStyle: "bold",
-        },
-        {
-            "foreground": "#b5890a",
-            "token": "http.header.mime", fontStyle: "bold",
-        },
-        {
-            "foreground": "#808184",
-            "token": "http.cookie.value",
-        },
+        {"token": "http.query.params", fontStyle: "bold", foreground: "#d26900"},
+        {"token": "http.query.values", fontStyle: "bold", foreground: "#930d97"},
         {
             "foreground": "#808184",
             "token": "string.value", fontStyle: "bold",
