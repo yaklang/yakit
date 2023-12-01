@@ -23,9 +23,10 @@
         border-radius: 4px;
         border: 1px solid #eaecf3;
         color: #85899e;
+        margin-top: 6px;
         svg {
-            height: 12px;
-            width: 12px;
+            height: 10px;
+            width: 10px;
             margin: 2px;
         }
     }
@@ -45,6 +46,7 @@
 
         .ant-tree-list-scrollbar-thumb {
             background: #c1c1c1 !important;
+            width: 8px !important;
         }
 
         .ant-spin-spinning {
@@ -52,6 +54,11 @@
             .ant-spin-dot {
                 margin: auto;
             }
+        }
+
+        .ant-tree .ant-tree-treenode {
+            align-items: center;
+            width: 100%;
         }
 
         .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
@@ -63,7 +70,11 @@
         }
 
         .ant-tree .ant-tree-node-content-wrapper:hover {
-            background-color: var(--yakit-primary-2);
+            background-color: #f0f1f3;
+            color: #000;
+            svg {
+                color: #85899e;
+            }
         }
 
         .ant-tree-iconEle {
@@ -72,6 +83,7 @@
 
         .ant-tree-node-content-wrapper {
             display: flex;
+            width: 100%;
         }
 
         .ant-tree-title {

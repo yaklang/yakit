@@ -957,17 +957,21 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 跳转指定网站树节点
     const handleJumpWebTree = useMemoizedFn(() => {
         if (flow?.Url) {
-            let url = new URL(flow.Url)
-            let path: string[] = url.pathname.split("/").filter((item) => item)
-            path.unshift(url.origin)
+            try {
+                let url = new URL(flow.Url)
+                // let path: string[] = url.pathname.split("/").filter((item) => item)
+                // path.unshift(url.origin)
 
-            let str = ""
-            let arr: string[] = []
-            for (let i = 0; i < path.length; i++) {
-                str += (i !== 0 ? "/" : "") + path[i]
-                arr.push(str)
+                // let str = ""
+                // let arr: string[] = []
+                // for (let i = 0; i < path.length; i++) {
+                //     str += (i !== 0 ? "/" : "") + path[i]
+                //     arr.push(str)
+                // }
+                emiter.emit("onJumpWebTree", JSON.stringify({host: url.host}))
+            } catch (error) {
+                return ""
             }
-            emiter.emit("onJumpWebTree", JSON.stringify({path: arr}))
         }
     })
 
@@ -1022,7 +1026,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 </YakitTag>
                             )
                             // history页面
-                            if (pageType === "History" && false) {
+                            if (pageType === "History") {
                                 titleEle.push(
                                     <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
                                 )
