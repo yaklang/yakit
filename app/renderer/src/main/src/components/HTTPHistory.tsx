@@ -40,7 +40,6 @@ export interface HTTPHistoryProp extends HTTPPacketFuzzable {
 }
 
 type tabKeys = "web-tree"
-type TreeNodeType = "dir" | "file" | "query" | "path"
 
 interface HTTPHistoryTabsItem {
     key: tabKeys

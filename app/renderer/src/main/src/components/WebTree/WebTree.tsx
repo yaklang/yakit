@@ -1,6 +1,7 @@
-import React, {useEffect, useImperativeHandle, useState} from "react"
-import YakitTree, {TreeKey, TreeNode} from "../yakitUI/YakitTree/YakitTree"
-import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
+import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
+import YakitTree, {TreeKey} from "../yakitUI/YakitTree/YakitTree"
+import type {DataNode} from "antd/es/tree"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {
     OutlineDocumentIcon,
     OutlineFolderremoveIcon,
@@ -11,8 +12,16 @@ import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {SolidFolderaddIcon} from "@/assets/icon/solid"
+import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {RefreshIcon} from "@/assets/newIcon"
+import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import styles from "./WebTree.module.scss"
 
 type TreeNodeType = "dir" | "file" | "query" | "path"
+interface TreeNode extends DataNode {
+    data?: YakURLResource // 树节点其他额外数据
+}
 
 interface WebTreeProp {
     ref?: React.Ref<any>
@@ -33,7 +42,7 @@ interface WebTreeProp {
 export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     const {
         height,
-        searchPlaceholder,
+        searchPlaceholder = "请输入关键词搜索",
         treeQueryparams,
         refreshTreeFlag = false,
         onSelectNodes,
@@ -283,21 +292,58 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         onSelectKeys && onSelectKeys(selectedKeys)
     }, [selectedKeys])
 
+    /**
+     * 计算树头部高度
+     */
+    const treeTopWrapRef = useRef<any>()
+    const [treeTopWrapHeight, setTreeTopWrapHeight] = useState<number>(0)
+    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+        entries.forEach((entry) => {
+            const target = entry.target
+            setTreeTopWrapHeight(target.getBoundingClientRect().height)
+        })
+    })
+    useEffect(() => {
+        if (treeTopWrapRef.current) {
+            resizeObserver.observe(treeTopWrapRef.current)
+        }
+    }, [treeTopWrapRef.current])
+
+    // 搜索框
+    const onSearchChange = useMemoizedFn((e: {target: {value: string}}) => {
+        const value = e.target.value
+        setSearchValue(value)
+    })
+
     return (
-        <YakitTree
-            treeLoading={treeLoading}
-            height={height}
-            multiple={false}
-            searchPlaceholder={searchPlaceholder}
-            treeData={searchTreeFlag ? searchWebTreeData : webTreeData}
-            loadData={onLoadWebTreeData}
-            searchValue={searchValue}
-            onSearch={onSearchTree}
-            refreshTree={refreshTree}
-            expandedKeys={expandedKeys}
-            onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
-            selectedKeys={selectedKeys}
-            onSelectedKeys={onSelectedKeys}
-        ></YakitTree>
+        <div className={styles.webTree}>
+            <div className={styles["tree-top-wrap"]} ref={treeTopWrapRef}>
+                <YakitInput.Search
+                    style={{marginBottom: 15, width: "calc(100% - 40px)"}}
+                    placeholder={searchPlaceholder}
+                    allowClear
+                    onChange={onSearchChange}
+                    onSearch={onSearchTree}
+                    value={searchValue}
+                />
+                <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshTree} style={{marginBottom: 15}} />
+            </div>
+            <div className={styles["tree-wrap"]}>
+                {treeLoading ? (
+                    <YakitSpin />
+                ) : (
+                    <YakitTree
+                        height={height !== undefined ? height - treeTopWrapHeight : undefined}
+                        multiple={false}
+                        treeData={searchTreeFlag ? searchWebTreeData : webTreeData}
+                        loadData={onLoadWebTreeData}
+                        expandedKeys={expandedKeys}
+                        onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
+                        selectedKeys={selectedKeys}
+                        onSelectedKeys={onSelectedKeys}
+                    ></YakitTree>
+                )}
+            </div>
+        </div>
     )
 })
