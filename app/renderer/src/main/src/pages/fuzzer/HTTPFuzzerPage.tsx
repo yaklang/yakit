@@ -65,7 +65,7 @@ import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorTy
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {WebFuzzerResponseExtractor} from "@/utils/extractor"
 import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
-import {FuzzerParamItem, AdvancedConfigValueProps, KVPair} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {FuzzerParamItem, AdvancedConfigValueProps, KVPair, FuzzTagMode} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
     ExtractorValueProps,
@@ -232,7 +232,7 @@ export interface FuzzerRequestProps {
     Params: FuzzerParamItem[]
     Concurrent: number
     IsHTTPS: boolean
-    ForceFuzz: boolean
+    FuzzTagMode: FuzzTagMode
     Proxy: string
     PerRequestTimeoutSeconds: number
     ActualAddr: string
@@ -317,7 +317,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
     const fuzzerRequests: FuzzerRequestProps = {
         // Request: request,
         RequestRaw: new Uint8Array(), // StringToUint8Array(request, "utf8"),
-        ForceFuzz: !!value.forceFuzz,
+        FuzzTagMode: value.fuzzTagMode,
         IsHTTPS: value.isHttps,
         IsGmTLS: value.isGmTLS,
         Concurrent: value.concurrent,
@@ -455,7 +455,7 @@ export interface SelectOptionProps {
 
 export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     // 请求包配置
-    forceFuzz: true,
+    fuzzTagMode: "standard",
     isHttps: false,
     isGmTLS: false,
     noFixContentLength: false,
@@ -1212,7 +1212,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const newValue: AdvancedConfigValueProps = {
             ...val,
             hitColor: val.hitColor || "red",
-            forceFuzz: val.forceFuzz === undefined ? true : val.forceFuzz,
+            fuzzTagMode: val.fuzzTagMode === undefined ? "standard" : val.fuzzTagMode,
             minDelaySeconds: val.minDelaySeconds ? Number(val.minDelaySeconds) : 0,
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
             repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0

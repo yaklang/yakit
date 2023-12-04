@@ -37,7 +37,7 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         actualHost: value.ActualAddr,
         proxy: value.Proxy.split(","),
         noSystemProxy: value.NoSystemProxy,
-        forceFuzz: value.ForceFuzz,
+        fuzzTagMode: value.FuzzTagMode,
         noFixContentLength: value.NoFixContentLength,
         timeout: value.PerRequestTimeoutSeconds,
         repeatTimes: value.RepeatTimes,

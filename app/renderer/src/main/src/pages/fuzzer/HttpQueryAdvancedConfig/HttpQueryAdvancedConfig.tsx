@@ -73,6 +73,21 @@ const variableModeOptions = [
     }
 ]
 
+const fuzzTagModeOptions = [
+    {
+        value: "close",
+        label: "关闭"
+    },
+    {
+        value: "standard",
+        label: "标准"
+    },
+    {
+        value: "legacy",
+        label: "兼容"
+    }
+]
+
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
     const {
         advancedConfigValue,
@@ -103,7 +118,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [inViewport = true] = useInViewport(queryRef)
 
     // 是否通过仅匹配打开的弹窗
-    const [isOpenByMacth,setOpenByMacth] = useState<boolean>(false)
+    const [isOpenByMacth, setOpenByMacth] = useState<boolean>(false)
 
     const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
     const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
@@ -252,8 +267,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     })
 
-    const onOpenMatchingAndExtractionCardEvent = useMemoizedFn((pageId:string)=>{
-        if(pageId===id){
+    const onOpenMatchingAndExtractionCardEvent = useMemoizedFn((pageId: string) => {
+        if (pageId === id) {
             onAddMatchingAndExtractionCard("matchers")
             setOpenByMacth(true)
         }
@@ -265,7 +280,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             emiter.off("onOpenMatchingAndExtractionCard", onOpenMatchingAndExtractionCardEvent)
         }
     }, [])
-    
+
     const onRemoveMatcher = useMemoizedFn((i) => {
         const v = form.getFieldsValue()
         onSetValue({
@@ -330,7 +345,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         return width
     }
     const onClose = useMemoizedFn(() => {
-        if(isOpenByMacth){
+        if (isOpenByMacth) {
             setOpenByMacth(false)
         }
         setVisibleDrawer(false)
@@ -345,10 +360,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             matchers: matcher.matchersList || [],
             extractors: extractor.extractorList || []
         })
-        if(isOpenByMacth){
-            setTimeout(()=>{
+        if (isOpenByMacth) {
+            setTimeout(() => {
                 matchSubmitFun()
-            },500)
+            }, 500)
         }
     })
     return (
@@ -424,7 +439,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
-                                        forceFuzz: true,
+                                        fuzzTagMode: "standard",
                                         isHttps: false,
                                         noFixContentLength: false,
                                         actualHost: "",
@@ -457,10 +472,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     </Tooltip>
                                 </span>
                             }
-                            name='forceFuzz'
-                            valuePropName='checked'
+                            name='fuzzTagMode'
                         >
-                            <YakitSwitch />
+                            <YakitRadioButtons buttonStyle='solid' options={fuzzTagModeOptions} size={"small"} />
                         </Form.Item>
 
                         <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
