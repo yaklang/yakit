@@ -440,6 +440,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     e.stopPropagation()
                                     const restValue = {
                                         fuzzTagMode: "standard",
+                                        fuzzTagSyncIndex: false,
                                         isHttps: false,
                                         noFixContentLength: false,
                                         actualHost: "",
@@ -475,6 +476,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             name='fuzzTagMode'
                         >
                             <YakitRadioButtons buttonStyle='solid' options={fuzzTagModeOptions} size={"small"} />
+                        </Form.Item>
+
+                        <Form.Item label='强制同步渲染' name='fuzzTagSyncIndex' valuePropName='checked'>
+                            <YakitSwitch />
                         </Form.Item>
 
                         <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>

@@ -7,6 +7,7 @@ export type FuzzTagMode = "close" | "standard" | "legacy"
 export interface AdvancedConfigValueProps {
     // 请求包配置
     fuzzTagMode: FuzzTagMode
+    fuzzTagSyncIndex: boolean
     isHttps: boolean
     isGmTLS: boolean
     /**@name 不修复长度 */

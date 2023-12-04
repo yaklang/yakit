@@ -99,8 +99,6 @@ import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps} from "@/store/pageInfo"
 import {CopyableField} from "@/utils/inputUtil"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
-import {useFuzzerSequence} from "@/store/fuzzerSequence"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
 
@@ -233,6 +231,7 @@ export interface FuzzerRequestProps {
     Concurrent: number
     IsHTTPS: boolean
     FuzzTagMode: FuzzTagMode
+    FuzzTagSyncIndex: boolean
     Proxy: string
     PerRequestTimeoutSeconds: number
     ActualAddr: string
@@ -318,6 +317,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         // Request: request,
         RequestRaw: new Uint8Array(), // StringToUint8Array(request, "utf8"),
         FuzzTagMode: value.fuzzTagMode,
+        FuzzTagSyncIndex: value.fuzzTagSyncIndex,
         IsHTTPS: value.isHttps,
         IsGmTLS: value.isGmTLS,
         Concurrent: value.concurrent,
@@ -456,6 +456,7 @@ export interface SelectOptionProps {
 export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     // 请求包配置
     fuzzTagMode: "standard",
+    fuzzTagSyncIndex: false,
     isHttps: false,
     isGmTLS: false,
     noFixContentLength: false,
@@ -1213,6 +1214,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             ...val,
             hitColor: val.hitColor || "red",
             fuzzTagMode: val.fuzzTagMode === undefined ? "standard" : val.fuzzTagMode,
+            fuzzTagSyncIndex: !!val.fuzzTagSyncIndex,
             minDelaySeconds: val.minDelaySeconds ? Number(val.minDelaySeconds) : 0,
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
             repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0
