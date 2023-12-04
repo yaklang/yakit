@@ -2600,7 +2600,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                     <div className={styles["title"]}>{group}</div>
                     <div className={styles["sun-title"]}>
                         {showContentType === "editor" && payloadFileData?.IsBigFile ? (
-                            <YakitTag color='danger'>超大响应</YakitTag>
+                            <YakitTag color='danger'>超大字典</YakitTag>
                         ) : (
                             `可以通过 fuzz 模块 {{x(字典名)}} 来渲染`
                         )}
