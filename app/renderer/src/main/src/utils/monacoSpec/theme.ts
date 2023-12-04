@@ -51,6 +51,8 @@ monaco.editor.defineTheme("kurior", {
         {"token": "bold-keyword", fontStyle: "bold"},
         {"token": "http.path", fontStyle: "bold", foreground: "#01949a"},
         {"token": "http.query.params", fontStyle: "bold", foreground: "#d26900"},
+        {"token": "http.query.index", fontStyle: "bold", foreground: "#a67eb7"},
+        {"token": "http.query.index.values", fontStyle: "bold", foreground: "#f57a00"},
         {"token": "http.query.values", fontStyle: "bold", foreground: "#930d97"},
         {
             "foreground": "#808184",
