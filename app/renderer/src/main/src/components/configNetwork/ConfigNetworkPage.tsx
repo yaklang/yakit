@@ -1,10 +1,10 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {AutoCard} from "@/components/AutoCard"
 import {ManyMultiSelectForString, SelectOne, SwitchItem} from "@/utils/inputUtil"
-import {Divider, Form, Popconfirm, Space, Upload} from "antd"
+import {Divider, Form, Modal, Popconfirm, Space, Upload} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {yakitInfo, warn, failed, yakitNotify} from "@/utils/notification"
+import {yakitInfo, warn, failed, yakitNotify, success} from "@/utils/notification"
 import {AutoSpin} from "@/components/AutoSpin"
 import update from "immutability-helper"
 import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
@@ -27,7 +27,8 @@ import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps} from "../TableVirtualResize/TableVirtualResizeType"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
-
+import {v4 as uuidv4} from "uuid"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 export interface ConfigNetworkPageProp {}
 
 export interface AuthInfo {
@@ -35,6 +36,7 @@ export interface AuthInfo {
     AuthPassword: string
     AuthType: string
     Host: string
+    Forbidden: boolean
 }
 
 export interface GlobalNetworkConfig {
@@ -128,7 +130,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         isShowLoading.current = false
         // setParams(defaultParams)
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
-            console.log("GetGlobalNetworkConfig", rsp)
+            // console.log("GetGlobalNetworkConfig", rsp)
             const {ClientCertificates} = rsp
             if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0 && format === 1) {
                 let newArr = ClientCertificates.map((item, index) => {
@@ -191,15 +193,20 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         return false
     })
 
-    const ipcSubmit = useMemoizedFn((params: GlobalNetworkConfig) => {
+    const ipcSubmit = useMemoizedFn((params: GlobalNetworkConfig, isNtml?: boolean) => {
+        // console.log("SetGlobalNetworkConfig", params)
         ipcRenderer.invoke("SetGlobalNetworkConfig", params).then(() => {
             yakitInfo("更新配置成功")
             update()
+            if (isNtml) setVisible(false)
         })
     })
 
-    const submit = useMemoizedFn((e) => {
-        e.preventDefault()
+    const onNtmlSave = useMemoizedFn(() => {
+        submit(true)
+    })
+
+    const submit = useMemoizedFn((isNtml?: boolean) => {
         if (format === 1) {
             // if (!(Array.isArray(certificateParams)&&certificateParams.length>0)) {
             //     warn("请添加证书")
@@ -228,7 +235,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 ...params,
                 ClientCertificates: ClientCertificates.length > 0 ? ClientCertificates : undefined
             }
-            ipcSubmit(newParams)
+            ipcSubmit(newParams, isNtml)
         }
         if (format === 2) {
             cerFormRef.current.validateFields().then((values) => {
@@ -244,7 +251,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     ...params,
                     ClientCertificates: [{...obj, Pkcs12Bytes: new Uint8Array(), Pkcs12Password: new Uint8Array()}]
                 }
-                ipcSubmit(newParams)
+                ipcSubmit(newParams, isNtml)
             })
         }
     })
@@ -381,7 +388,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 size={"small"}
                                 labelCol={{span: 5}}
                                 wrapperCol={{span: 14}}
-                                onSubmitCapture={(e) => submit(e)}
+                                onSubmitCapture={() => submit()}
                             >
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     DNS 配置
@@ -563,7 +570,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     <div className={styles["form-rule-body"]}>
                                         <div className={styles["form-rule"]} onClick={() => setVisible(true)}>
                                             <div className={styles["form-rule-text"]}>
-                                                现有配置 {params.AuthInfos.length} 条
+                                                现有配置 {params.AuthInfos.filter((item)=>!item.Forbidden).length} 条
                                             </div>
                                             <div className={styles["form-rule-icon"]}>
                                                 <CogIcon />
@@ -653,12 +660,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     </AutoSpin>
                 </AutoCard>
             </div>
-            <NTMLConfig
+            {visible&&<NTMLConfig
                 visible={visible && !!inViewport}
                 setVisible={setVisible}
                 params={params}
                 setParams={setParams}
-            />
+                onNtmlSave={onNtmlSave}
+            />}
         </>
     )
 }
@@ -669,25 +677,83 @@ interface NTMLConfigProps {
     getContainer?: HTMLElement | (() => HTMLElement) | false
     params: GlobalNetworkConfig
     setParams: (v: GlobalNetworkConfig) => void
+    onNtmlSave: () => void
+}
+
+interface DataProps extends AuthInfo {
+    id: string
+    Disabled:boolean
 }
 
 export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
-    const {visible, setVisible, getContainer, params, setParams} = props
-    const [data, setData] = useState([])
+    const {visible, setVisible, getContainer, params, setParams, onNtmlSave} = props
+    const [data, setData] = useState<DataProps[]>([])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
-    const [currentItem, setCurrentItem] = useState()
-    const [createModal, setCreateModal] = useState<boolean>(false)
+    const [currentItem, setCurrentItem] = useState<DataProps>()
+    const [modalStatus, setModalStatus] = useState<boolean>(false)
+    const [isEdit,setIsEdit] = useState<boolean>(false)
+    // initData 初始数据 用于校验数据是否改变
+    const initData = useRef<DataProps[]>([])
+
+    useEffect(() => {
+        const newData = params.AuthInfos.map((item) => ({id: uuidv4(),Disabled:item.Forbidden, ...item}))
+        initData.current = newData
+        setData(newData)
+    }, [params.AuthInfos])
+
+    const onOk = useMemoizedFn(() => {
+        const AuthInfos = data.map((item) => ({
+            AuthUsername: item.AuthPassword,
+            AuthPassword: item.AuthPassword,
+            AuthType: item.AuthType,
+            Host: item.Host,
+            Forbidden:item.Forbidden
+        }))
+        
+        setParams({...params, AuthInfos})
+        setTimeout(() => {
+            onNtmlSave()
+        }, 200)
+    })
 
     const onClose = useMemoizedFn(() => {
-        setVisible(false)
+        if (JSON.stringify(initData.current) !== JSON.stringify(data)) {
+            Modal.confirm({
+                title: "温馨提示",
+                icon: <ExclamationCircleOutlined />,
+                content: "请问是否要保存NTML配置并关闭弹框？",
+                okText: "保存",
+                cancelText: "不保存",
+                closable: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className='modal-remove-icon'
+                    >
+                        <RemoveIcon />
+                    </div>
+                ),
+                onOk: () => {
+                    onOk()
+                },
+                onCancel: () => {
+                    setVisible(false)
+                },
+                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                okButtonProps: {size: "small", className: "modal-ok-button"}
+            })
+        } else {
+            setVisible(false)
+        }
     })
 
     const onCreateAuthInfo = useMemoizedFn(() => {
-        setCreateModal(true)
+        setModalStatus(true)
     })
-
-    const onSaveAuthInfo = useMemoizedFn(() => {})
 
     const onSetCurrentRow = useDebounceFn(
         (rowDate) => {
@@ -696,13 +762,47 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         {wait: 200}
     ).run
 
+    const onRemove = useMemoizedFn((rowDate: DataProps) => {
+        const newData = data.filter((item)=>item.id!==rowDate.id)
+        setData(newData)
+    })
+
+    const onBan = useMemoizedFn((rowDate: DataProps) => {
+        const newData: DataProps[] = data.map((item: DataProps) => {
+            if (item.id === rowDate.id) {
+                if (!rowDate.Disabled && rowDate.id === currentItem?.id) {
+                    setCurrentItem(undefined)
+                }
+                item = {
+                    ...rowDate,
+                    Disabled: !rowDate.Disabled,
+                    Forbidden:!rowDate.Disabled,
+                }
+            }
+            return item
+        })
+        setData(newData)
+    })
+
+    const onOpenAddOrEdit = useMemoizedFn((rowDate?: DataProps) => {
+        setModalStatus(true)
+        setIsEdit(true)
+        setCurrentItem(rowDate)
+    })
+
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
             {
                 title: "执行顺序",
                 dataKey: "Index",
                 fixed: "left",
-                width: 130
+                width: 130,
+                render:(text: any, record: any, index: any)=><>{index+1}</>
+            },
+            {
+                title: "Host",
+                dataKey: "Host",
+                width: 150
             },
             {
                 title: "用户名",
@@ -712,7 +812,8 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
             {
                 title: "密码",
                 dataKey: "AuthPassword",
-                width: 150
+                width: 150,
+                render:()=><>***</>
             },
             {
                 title: "认证类型",
@@ -731,7 +832,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                                 className={styles["icon-trash"]}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    // onRemove(record)
+                                    onRemove(record)
                                 }}
                             />
                             <PencilAltIcon
@@ -740,7 +841,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                                 })}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    // onOpenAddOrEdit(record)
+                                    onOpenAddOrEdit(record)
                                 }}
                             />
                             <BanIcon
@@ -749,7 +850,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                                 })}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    // onBan(record)
+                                    onBan(record)
                                 }}
                             />
                         </div>
@@ -775,6 +876,25 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         //     const newRules = prevRules.map((item, index) => ({...item, Index: index + 1}))
         //     return [...newRules]
         // })
+    })
+
+    const onSubmit = useMemoizedFn((v: DataProps) => {
+        if(isEdit){
+            const newData = data.map((item)=>{
+                if(item.id===v.id){
+                    return v
+                }
+                return item
+            })
+            setData(newData)
+            success("编辑成功")
+        }
+        else{
+            success("新增成功")
+            setData([v, ...data])
+        }
+        setModalStatus(false)
+        setIsEdit(false)
     })
     return (
         <>
@@ -807,7 +927,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                         >
                             新增
                         </YakitButton>
-                        <YakitButton type='primary' className={styles["button-save"]} onClick={() => onSaveAuthInfo()}>
+                        <YakitButton type='primary' className={styles["button-save"]} onClick={() => onOk()}>
                             保存
                         </YakitButton>
                         <div onClick={() => onClose()} className={styles["icon-remove"]}>
@@ -821,7 +941,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                         isRefresh={isRefresh}
                         titleHeight={42}
                         isShowTitle={false}
-                        renderKey='Id'
+                        renderKey='id'
                         data={data}
                         // rowSelection={{
                         //     isAll: isAllSelect,
@@ -847,38 +967,107 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                     />
                 </div>
             </YakitDrawer>
-            {createModal && <CreateNTMLConfigModal createModal={createModal} onClose={() => setCreateModal(false)} />}
+            {modalStatus && (
+                <NTMLConfigModal
+                    modalStatus={modalStatus}
+                    onSubmit={onSubmit}
+                    onClose={() => {
+                        setModalStatus(false)
+                        setIsEdit(false)
+                    }}
+                    isEdit={isEdit}
+                    currentItem={currentItem}
+                />
+            )}
         </>
     )
 }
-interface CreateNTMLConfigModalProps {
+interface NTMLConfigModalProps {
     onClose: () => void
-    createModal: boolean
+    modalStatus: boolean
+    onSubmit: (v: DataProps) => void
+    isEdit: boolean
+    currentItem?:DataProps
 }
 
-export const CreateNTMLConfigModal: React.FC<CreateNTMLConfigModalProps> = (props) => {
-    const {onClose, createModal} = props
+export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
+    const {onClose, modalStatus, onSubmit,isEdit,currentItem} = props
     const [form] = Form.useForm()
-    const onOk = useMemoizedFn(() => {})
+
+    useEffect(()=>{
+        if(isEdit&&currentItem){
+            const {Host,AuthUsername,AuthPassword,AuthType} = currentItem
+            form.setFieldsValue({
+                Host,AuthUsername,AuthPassword,AuthType
+            })
+        }
+    },[])
+
+    const onOk = useMemoizedFn(() => {
+        form.validateFields().then((value: AuthInfo) => {
+            if(isEdit&&currentItem){
+                onSubmit({
+                    ...currentItem,
+                    ...value
+                })
+            }
+            else{
+                 onSubmit({
+                id: uuidv4(),
+                Disabled:false,
+                ...value
+            })
+            }
+           
+        })
+    })
+    // 判断是否为IP地址 或 域名
+    const judgeUrl = () => [
+        {
+            validator: (_, value: string) => {
+                // 正则表达式匹配IPv4地址
+                const ipv4Regex =
+                    /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}$/
+                // 正则表达式匹配域名（支持通配符域名）
+                const domainRegex = /^(\*\.|\*\*\.)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}$/
+                // 正则表达式匹配CIDR表示的IPv4地址范围
+                const cidrRegex = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}\/([0-2]?[0-9]|3[0-2])$/
+                if (ipv4Regex.test(value) || domainRegex.test(value) || cidrRegex.test(value)) {
+                    return Promise.resolve()
+                } else {
+                    return Promise.reject("请输入符合要求的Host")
+                }
+            }
+        }
+    ]
     return (
         <YakitModal
-            title={"新增"}
-            visible={createModal}
+            title={isEdit?"编辑":"新增"}
+            visible={modalStatus}
             onCancel={() => onClose()}
             closable
             okType='primary'
             width={480}
             onOk={() => onOk()}
         >
-            <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
-                <Form.Item label='用户名' name='AuthUsername'>
-                    <YakitInput />
+            <Form
+                style={{padding: "24px 16px"}}
+                form={form}
+                labelCol={{span: 5}}
+                wrapperCol={{span: 16}}
+                className={styles["modal-from"]}
+            >
+                <Form.Item label='Host' name='Host' rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}>
+                    <YakitInput placeholder='请输入...' />
                 </Form.Item>
-                <Form.Item label='密码' name='AuthPassword'>
-                    <YakitInput />
+                <Form.Item label='用户名' name='AuthUsername' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitInput placeholder='请输入...' />
                 </Form.Item>
-                <Form.Item label='认证类型' name='AuthType'>
-                    <YakitSelect value={"B"} onSelect={(val) => {}}>
+                <Form.Item label='密码' name='AuthPassword' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitInput placeholder='请输入...' />
+                </Form.Item>
+                <Form.Item label='认证类型' name='AuthType' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitSelect value={"B"} onSelect={(val) => {}} placeholder='请选择...'>
                         <YakitSelect value='ntlm'>ntlm</YakitSelect>
                         <YakitSelect value='any'>any</YakitSelect>
                         <YakitSelect value='basic'>basic</YakitSelect>
