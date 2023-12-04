@@ -467,6 +467,7 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/([^:]*?)(:)(.+)/g, ["http.header.info", "delimiter", "http.header.value"]],
         ],
         body_data: [
+            [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             [/(-{2,}[a-zA-z0-9]+--)/, [{ token: "body.boundary.end", next: "@end" }]],
             [/(-{2,}[a-zA-z0-9]+)/, [{ token: "body.boundary", next: "@pop" }]],
         ],
