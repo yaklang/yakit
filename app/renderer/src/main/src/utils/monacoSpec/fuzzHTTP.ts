@@ -354,8 +354,9 @@ monaco.languages.setMonarchTokensProvider("http", {
             // [/\/[^\s^?^\/]+/, "http.path"],
             [/\?/, "http.query", "@query"],
             [/^\n$/, 'body.delimiter', '@body'],
-            [/(Cookie)(:)/g, ["http.header.danger", {token: "delimiter", next: "@http_cookie"}]],
-            [/(Content-Length|Host|Content-Type|Origin|Referer)(:)(.+)/g, ["http.header.danger", "delimiter", "http.header.value"]],
+            [/(Cookie)(:)/g, ["http.header.danger", { token: "delimiter", next: "@http_cookie" }]],
+            [/(Content-Type)(:)/g, ["http.header.danger", { token: "delimiter", next: "@content_type" }]],
+            [/(Content-Length|Host|Origin|Referer)(:)(.+)/g, ["http.header.danger", "delimiter", "http.header.value"]],
             [/(Authorization|X-Forward|Real|User-Agent|Protection|CSP)(:)(.+)/g, ["http.header.danger", "delimiter", "http.header.value"]],
             [/(Sec-[^:]+?)(:)(.+)/g, ["http.header.warning", "delimiter", "http.header.value"]],
             [/([^:]*?)(:)(.+)/g, ["http.header.info", "delimiter", "http.header.value"]],
@@ -389,6 +390,21 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             [/./, "bold-keyword"]
         ],
+        content_type: [
+            [/\s+$/, "delimiter", "@pop"],
+            [/\s+/, "delimiter"],
+            [/multipart\/form-data.*/, "http.header.mime.form", "@pop"],
+            [/.+/, {
+                cases:
+                {
+                    "application\/xml\\s*": { token: "http.header.mime.xml", next: "@pop" },
+                    "application\/json\\s*": { token: "http.header.mime.json", next: "@pop" },
+                    "application\/x-www-form-urlencoded\\s*": { token: "http.header.mime.urlencoded", next: "@pop" },
+                    // "multipart\/form-data":  "http.header.mime.form",
+                    "@default": { token: "http.header.mime.default", next: "@pop" },
+                },
+            }],
+        ],
         query: [
             [/ /, "delimiter", "@pop"],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
@@ -396,13 +412,13 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
         ],
         http_query_params: [
-            [/&/, 'delimiter',"@pop"],
-            [/(\[)(\w+)(\])/, ["http.query.index", "http.query.index.values","http.query.index"]],
+            [/&/, 'delimiter', "@pop"],
+            [/(\[)(\w+)(\])/, ["http.query.index", "http.query.index.values", "http.query.index"]],
             [/\=/, "http.query.equal", "http_query_params_values"],
         ],
-        http_query_params_values: [ 
+        http_query_params_values: [
             [/\s/, { token: "delimiter", next: "@popall" }],
-            [/&/, {token: 'delimiter', next: "@pop", goBack: 1}],
+            [/&/, { token: 'delimiter', next: "@pop", goBack: 1 }],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             [/[^=&?\s]+/, "http.query.values"],
             [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
@@ -430,8 +446,8 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/"/, "string", "@body_json"],
         ],
         body: [
-            [/(\d+)(:)/, [{token: "number", next: "@body_json"}, "delimiter"]],
-            [/(\d+\.\d*)(:)/, [{token: "number", next: "@body_json"}, "delimiter"]],
+            [/(\d+)(:)/, [{ token: "number", next: "@body_json" }, "delimiter"]],
+            [/(\d+\.\d*)(:)/, [{ token: "number", next: "@body_json" }, "delimiter"]],
             [/"/, 'string', '@string_double'],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             [/-{2,}.*/, "body.boundary", "@body_form"],
@@ -451,8 +467,8 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/([^:]*?)(:)(.+)/g, ["http.header.info", "delimiter", "http.header.value"]],
         ],
         body_data: [
-            [/(-{2,}[a-zA-z0-9]+--)/, [{token: "body.boundary.end", next: "@end"}]],
-            [/(-{2,}[a-zA-z0-9]+)/, [{token: "body.boundary", next: "@pop"}]],
+            [/(-{2,}[a-zA-z0-9]+--)/, [{ token: "body.boundary.end", next: "@end" }]],
+            [/(-{2,}[a-zA-z0-9]+)/, [{ token: "body.boundary", next: "@pop" }]],
         ],
         end: [],
     }
