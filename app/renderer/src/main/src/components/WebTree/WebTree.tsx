@@ -1,7 +1,7 @@
 import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
 import YakitTree, {TreeKey} from "../yakitUI/YakitTree/YakitTree"
 import type {DataNode} from "antd/es/tree"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {
     OutlineDocumentIcon,
     OutlineFolderremoveIcon,
@@ -25,7 +25,6 @@ export interface TreeNode extends DataNode {
 
 interface WebTreeProp {
     ref?: React.Ref<any>
-    treeInViewport?: boolean // 树是否在当前页面
     height: number // 树高度 用于虚拟滚动
     searchPlaceholder?: string // 搜索框提示文案
     treeQueryparams: string // 树查询参数是一个json字符串
@@ -58,6 +57,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
+    const webTreeRef = useRef<any>()
+    const [inViewport] = useInViewport(webTreeRef)
 
     useImperativeHandle(ref, () => ({
         onJumpWebTree
@@ -235,7 +236,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 refreshTree()
             }
         }
-    }, [treeQueryparams, refreshTreeFlag])
+    }, [treeQueryparams, refreshTreeFlag, inViewport])
 
     // 刷新网站树
     const refreshTree = useMemoizedFn(() => {
@@ -316,7 +317,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     })
 
     return (
-        <div className={styles.webTree}>
+        <div className={styles.webTree} ref={webTreeRef}>
             <div className={styles["tree-top-wrap"]} ref={treeTopWrapRef}>
                 <YakitInput.Search
                     style={{marginBottom: 15, width: "calc(100% - 40px)"}}
