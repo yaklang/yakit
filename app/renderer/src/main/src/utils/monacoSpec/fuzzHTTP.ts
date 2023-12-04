@@ -392,14 +392,18 @@ monaco.languages.setMonarchTokensProvider("http", {
         query: [
             [/ /, "delimiter", "@pop"],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/[^=&?\s]+/, "http.query.params", "@http_query_params"],
+            [/[^=&?\[\]\s]+/, "http.query.params", "@http_query_params"],
             [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
         ],
         http_query_params: [
+            [/&/, 'delimiter',"@pop"],
+            [/(\[)(\w+)(\])/, ["http.query.index", "http.query.index.values","http.query.index"]],
+            [/\=/, "http.query.equal", "http_query_params_values"],
+        ],
+        http_query_params_values: [ 
             [/\s/, { token: "delimiter", next: "@popall" }],
-            [/&/, 'delimiter', "@pop"],
+            [/&/, {token: 'delimiter', next: "@pop", goBack: 1}],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/\=/, "http.query.equal"],
             [/[^=&?\s]+/, "http.query.values"],
             [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
         ],
@@ -427,6 +431,7 @@ monaco.languages.setMonarchTokensProvider("http", {
         ],
         body: [
             [/(\d+)(:)/, [{token: "number", next: "@body_json"}, "delimiter"]],
+            [/(\d+\.\d*)(:)/, [{token: "number", next: "@body_json"}, "delimiter"]],
             [/"/, 'string', '@string_double'],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             [/-{2,}.*/, "body.boundary", "@body_form"],
@@ -437,6 +442,7 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             [/(:\s*)/, "delimiter"],
             [/(\d+)/, "number"],
+            [/(\d+\.\d*)/, "number"],
             [/"/, 'string', '@string_double'],
         ],
         body_form: [
