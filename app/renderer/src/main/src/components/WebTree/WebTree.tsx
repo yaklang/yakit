@@ -19,7 +19,7 @@ import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import styles from "./WebTree.module.scss"
 
 type TreeNodeType = "dir" | "file" | "query" | "path"
-interface TreeNode extends DataNode {
+export interface TreeNode extends DataNode {
     data?: YakURLResource // 树节点其他额外数据
 }
 

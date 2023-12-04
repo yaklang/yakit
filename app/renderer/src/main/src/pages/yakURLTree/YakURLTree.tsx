@@ -9,7 +9,7 @@ import {YakURLResource} from "@/pages/yakURLTree/data";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {InputItem} from "@/utils/inputUtil";
-import { TreeNode } from "@/components/yakitUI/YakitTree/YakitTree";
+import { TreeNode } from "@/components/WebTree/WebTree";
 
 export interface YakURLTreeProp {
 
