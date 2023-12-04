@@ -1,26 +1,12 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useState} from "react"
 import {Tree} from "antd"
-import type {DataNode, TreeProps} from "antd/es/tree"
+import type {DataNode as TreeNode, TreeProps} from "antd/es/tree"
 import {OutlineMinusIcon, OutlinePlusIcon} from "@/assets/icon/outline"
-import {YakitInput} from "../YakitInput/YakitInput"
-import {useDebounceEffect, useMemoizedFn} from "ahooks"
-import styles from "./YakitTree.module.scss"
+import {useDebounceEffect} from "ahooks"
 import {YakitEmpty} from "../YakitEmpty/YakitEmpty"
-import {YakitButton} from "../YakitButton/YakitButton"
-import {RefreshIcon} from "@/assets/newIcon"
-import {YakitSpin} from "../YakitSpin/YakitSpin"
-import {YakURLResource} from "@/pages/yakURLTree/data"
+import styles from "./YakitTree.module.scss"
 
 export type TreeKey = string | number
-
-export interface TreeNode extends DataNode {
-    data?: YakURLResource // 树节点其他额外数据
-}
-
-/**
- * 目前基本上只封装了样式
- */
-
 interface YakitTreeProps extends TreeProps {
     showIcon?: boolean // 是否展示treeNode节点前的icon 默认 -> 展示
     treeLoading?: boolean // 树加载loading
@@ -33,13 +19,13 @@ interface YakitTreeProps extends TreeProps {
     onCheckedKeys?: (checkedKeys: TreeKey[], checkedNodes: TreeNode[]) => void
     showSearch?: boolean // 是否显示搜索框 默认 -> 显示
     searchPlaceholder?: string // 搜索框placeholder 默认 -> 请输入关键词搜索
-    searchValue?: string // 搜索内容
-    onSearch?: (searchValue: string) => void // 点击搜索icon Or 关闭icon回调
-    refreshTree?: () => void // 刷新树
 }
 
-const YakitTree: React.FC<YakitTreeProps> = (props) => {
-    const {showLine = true, showIcon = true, showSearch = true, searchPlaceholder = "请输入关键词搜索"} = props
+/**
+ * 目前基本上只封装了样式
+ */
+const YakitTree: React.FC<YakitTreeProps> = React.memo((props) => {
+    const {showLine = true, showIcon = true} = props
 
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>() // 树节点展开key
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>() // select - 节点
@@ -62,7 +48,7 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
                 setCheckedKeys(props.checkedKeys)
             }
         },
-        [props.treeData, props.expandedKeys, props.selectedKeys, props.checkedKeys, props.searchValue],
+        [props.treeData, props.expandedKeys, props.selectedKeys, props.checkedKeys],
         {
             wait: 100,
             leading: true,
@@ -92,21 +78,6 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
     }
 
     /**
-     * 搜索树
-     */
-    const [searchValue, setSearchValue] = useState("")
-    useEffect(() => {
-        setSearchValue(props.searchValue || "")
-    }, [props.searchValue])
-    const onSearchChange = useMemoizedFn((e: {target: {value: string}}) => {
-        const value = e.target.value
-        setSearchValue(value)
-    })
-    const onSearch = useMemoizedFn((value) => {
-        props.onSearch && props.onSearch(value)
-    })
-
-    /**
      * check - 选中树 TODO：未处理复选框是否关联返回的勾选结果不一样
      */
     const onTreeCheck = (checkedKeys, info) => {
@@ -114,76 +85,32 @@ const YakitTree: React.FC<YakitTreeProps> = (props) => {
         props.onCheckedKeys && props.onCheckedKeys(checkedKeys, info.checkedNodes)
     }
 
-    /**
-     * 计算树头部高度
-     */
-    const treeTopWrapRef = useRef<any>()
-    const [treeTopWrapHeight, setTreeTopWrapHeight] = useState<number>(0)
-    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-        entries.forEach((entry) => {
-            const target = entry.target
-            setTreeTopWrapHeight(target.getBoundingClientRect().height)
-        })
-    })
-    useEffect(() => {
-        if (treeTopWrapRef.current) {
-            resizeObserver.observe(treeTopWrapRef.current)
-        }
-    }, [treeTopWrapRef.current])
-
     return (
         <div className={styles.yakitTree}>
-            <div className={styles["tree-top-wrap"]} ref={treeTopWrapRef}>
-                {showSearch && (
-                    <YakitInput.Search
-                        style={{marginBottom: 15, width: "calc(100% - 40px)"}}
-                        placeholder={searchPlaceholder}
-                        allowClear
-                        onChange={onSearchChange}
-                        onSearch={onSearch}
-                        value={searchValue}
-                    />
-                )}
-                {props.refreshTree && (
-                    <YakitButton
-                        type='text2'
-                        icon={<RefreshIcon />}
-                        onClick={props.refreshTree}
-                        style={{marginBottom: 15}}
-                    />
-                )}
-            </div>
-            {props.treeLoading ? (
-                <YakitSpin />
+            {props.treeData.length ? (
+                <Tree
+                    {...props}
+                    showLine={showLine ? {showLeafIcon: false} : false}
+                    showIcon={showIcon}
+                    switcherIcon={(p: {expanded: boolean}) => {
+                        return p.expanded ? (
+                            <OutlineMinusIcon className={styles["switcher-icon"]} />
+                        ) : (
+                            <OutlinePlusIcon className={styles["switcher-icon"]} />
+                        )
+                    }}
+                    onExpand={onExpand}
+                    expandedKeys={expandedKeys}
+                    selectedKeys={selectedKeys}
+                    onSelect={onTreeSelect}
+                    checkedKeys={checkedKeys}
+                    onCheck={onTreeCheck}
+                ></Tree>
             ) : (
-                <div className={styles["tree-wrap"]}>
-                    {props.treeData.length ? (
-                        <Tree
-                            {...props}
-                            showLine={showLine ? {showLeafIcon: false} : false}
-                            showIcon={showIcon}
-                            switcherIcon={(p: {expanded: boolean}) => {
-                                return p.expanded ? (
-                                    <OutlineMinusIcon className={styles["switcher-icon"]} />
-                                ) : (
-                                    <OutlinePlusIcon className={styles["switcher-icon"]} />
-                                )
-                            }}
-                            onExpand={onExpand}
-                            expandedKeys={expandedKeys}
-                            selectedKeys={selectedKeys}
-                            onSelect={onTreeSelect}
-                            checkedKeys={checkedKeys}
-                            onCheck={onTreeCheck}
-                            height={props.height ? props.height - treeTopWrapHeight : props.height}
-                        ></Tree>
-                    ) : (
-                        <YakitEmpty />
-                    )}
-                </div>
+                <YakitEmpty />
             )}
         </div>
     )
-}
+})
 
 export default YakitTree
