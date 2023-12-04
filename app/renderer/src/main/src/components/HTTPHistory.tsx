@@ -1,8 +1,8 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
-import {HTTPFlow, HTTPFlowTable, YakQueryHTTPFlowResponse} from "./HTTPFlowTable/HTTPFlowTable"
+import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
-import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
@@ -10,19 +10,8 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
 import styles from "./HTTPHistory.module.scss"
 import classNames from "classnames"
-import YakitTree, {TreeKey, TreeNode} from "./yakitUI/YakitTree/YakitTree"
-import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
-import {yakitFailed} from "@/utils/notification"
-import {YakURLResource} from "@/pages/yakURLTree/data"
 import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
-import {
-    OutlineDocumentIcon,
-    OutlineFolderremoveIcon,
-    OutlineLink2Icon,
-    OutlineVariableIcon
-} from "@/assets/icon/outline"
-import {SolidFolderaddIcon} from "@/assets/icon/solid"
 import {WebTree} from "./WebTree/WebTree"
 
 export interface HTTPPacketFuzzable {
