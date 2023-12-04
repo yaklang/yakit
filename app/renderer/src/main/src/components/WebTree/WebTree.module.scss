@@ -1,0 +1,33 @@
+.webTree {
+    display: flex;
+    flex-direction: column;
+    .tree-top-wrap {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .tree-wrap {
+        flex: 1;
+    }
+
+    :global {
+        .yakitTreeNode-icon {
+            color: #85899e;
+            margin-top: 4px;
+            svg {
+                height: 16px;
+                width: 16px;
+                path {
+                    stroke-width: 1.5;
+                }
+            }
+        }
+
+        .ant-spin-spinning {
+            margin-top: 20px;
+            .ant-spin-dot {
+                margin: auto;
+            }
+        }
+    }
+}
