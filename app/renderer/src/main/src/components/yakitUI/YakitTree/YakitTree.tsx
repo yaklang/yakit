@@ -17,8 +17,6 @@ interface YakitTreeProps extends TreeProps {
     onSelectedKeys?: (selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => void
     checkedKeys?: TreeKey[]
     onCheckedKeys?: (checkedKeys: TreeKey[], checkedNodes: TreeNode[]) => void
-    showSearch?: boolean // 是否显示搜索框 默认 -> 显示
-    searchPlaceholder?: string // 搜索框placeholder 默认 -> 请输入关键词搜索
 }
 
 /**
