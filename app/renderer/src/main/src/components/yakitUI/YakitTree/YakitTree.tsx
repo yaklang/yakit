@@ -9,7 +9,6 @@ import styles from "./YakitTree.module.scss"
 export type TreeKey = string | number
 interface YakitTreeProps extends TreeProps {
     showIcon?: boolean // 是否展示treeNode节点前的icon 默认 -> 展示
-    treeLoading?: boolean // 树加载loading
     treeData: TreeNode[] // 需要满足 DataNode类型的数组
     expandedKeys?: TreeKey[] // 展开节点的key结合 若设置selectedKeys或checkedKeys需要自动展开节点的话，需要手动找到父节点的key去组装expandedKeys传进来才能实现自动展开功能。autoExpandParent主要是针对手动点击触发的自动展开
     onExpandedKeys?: (expandedKeys: TreeKey[]) => void // 若传了expandedKeys -> onExpandedKeys必传（需改变传过来的expandedKeys）
