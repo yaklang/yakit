@@ -710,7 +710,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             if (Object.keys(pluginTypeToName).includes(type || "")) {
                 const allContent = model.getValue()
                 ipcRenderer
-                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), type: type || ""})
+                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), type: type})
                     .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)

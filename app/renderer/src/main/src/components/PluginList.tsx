@@ -102,7 +102,7 @@ const YakScriptCheckbox: React.FC<YakScriptCheckboxProp> = React.memo((props) =>
                                 content: (
                                     <div style={{height: 400}}>
                                         <YakitEditor
-                                            type={info.Type === "nuclei" ? "yaml" : "yak"}
+                                            type={info.Type === "nuclei" ? "yaml" : info.Type}
                                             readOnly={true}
                                             value={info.Content}
                                         />

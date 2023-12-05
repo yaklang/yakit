@@ -247,7 +247,7 @@ const showYakScriptCode = (name: string) => {
             width: "60%",
             content: (
                 <div style={{height: 400}}>
-                    <YakEditor type={i.Type === "nuclei" ? "yaml" : "yak"} readOnly={true} value={i.Content} />
+                    <YakEditor type={i.Type === "nuclei" ? "yaml" : i.Type} readOnly={true} value={i.Content} />
                 </div>
             )
         })
