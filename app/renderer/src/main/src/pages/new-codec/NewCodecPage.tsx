@@ -494,7 +494,7 @@ const CustomWork = (props: workProps) => {
                             <div className="top" style={{height: 600}}>
                                 <YakCodeEditor
                                     noTitle={true}
-                                    language={type === "nuclei" ? "yaml" : type}
+                                    language={"yak"}
                                     originValue={Buffer.from(customScript, "utf8")}
                                     hideSearch={true}
                                     onChange={i => {
