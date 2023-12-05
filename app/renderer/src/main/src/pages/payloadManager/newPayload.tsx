@@ -58,6 +58,9 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakEditor} from "@/utils/editors"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {YakitRoute} from "@/routes/newRoute"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -99,19 +102,19 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />
-                        <div className={styles["progress-title"]}>进度 {streamData.Progress * 100}%</div>
+                        <div className={styles["progress-title"]}>进度 {Math.round(streamData.Progress * 100)}%</div>
                     </div>
                     {showDownloadDetail && (
                         <div className={styles["download-info-wrapper"]}>
-                            <div>剩余时间 : {streamData.Progress === 1 ? "0s" : streamData.RestDurationVerbose}</div>
+                            {/* <div>剩余时间 : {streamData.Progress === 1 ? "0s" : streamData.RestDurationVerbose}</div>
                             <div className={styles["divider-wrapper"]}>
                                 <div className={styles["divider-style"]}></div>
-                            </div>
+                            </div> */}
                             <div>耗时 : {streamData.CostDurationVerbose}</div>
-                            <div className={styles["divider-wrapper"]}>
+                            {/* <div className={styles["divider-wrapper"]}>
                                 <div className={styles["divider-style"]}></div>
                             </div>
-                            <div>下载速度 : {streamData.Speed}M/s</div>
+                            <div>下载速度 : {streamData.Speed}M/s</div> */}
                         </div>
                     )}
                     <div className={styles["log-info"]}>
@@ -489,6 +492,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
 // ]
 
 const getItemStyle = (isDragging, draggableStyle) => {
+    // console.log("getItemStyle",draggableStyle.transform);
     let transform: string = draggableStyle["transform"] || ""
     if (isDragging) {
         const index = transform.indexOf(",")
@@ -1414,7 +1418,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
     const [inputName, setInputName] = useState<string>(folder.name)
-
+    // delete
+    const [deleteVisible, setDeleteVisible] = useState<boolean>(false)
     const getAllFolderName = useMemoizedFn(() => {
         return data.filter((item) => item.type === "Folder").map((item) => item.name)
     })
@@ -1506,6 +1511,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             .then(() => {
                 success("删除成功")
                 onDeleteFolderById(folder.id)
+                setDeleteVisible(false)
             })
             .catch((e: any) => {
                 failed(`删除失败：${e}`)
@@ -1641,7 +1647,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                 setEditInput(true)
                                                 break
                                             case "delete":
-                                                onDeleteFolder()
+                                                setDeleteVisible(true)
                                                 break
                                             default:
                                                 break
@@ -1761,6 +1767,68 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                     )}
                 </>
             )}
+            {deleteVisible && (
+                <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeleteFolder} />
+            )}
+        </>
+    )
+}
+
+interface DeleteConfirmProps {
+    visible: boolean
+    setVisible: (v: boolean) => void
+    onFinish: () => void
+}
+
+// 删除确认弹窗
+export const DeleteConfirm: React.FC<DeleteConfirmProps> = (props) => {
+    const {visible, setVisible, onFinish} = props
+    const [check, setCheck] = useState<boolean>(false)
+    const [showConfirm, setShowConfirm] = useState<boolean>(false)
+    const NewPayloadDeleteConfirm = "NewPayloadDeleteConfirm"
+    useEffect(() => {
+        getRemoteValue(NewPayloadDeleteConfirm).then((res) => {
+            if (!res) {
+                setShowConfirm(true)
+                return
+            }
+            try {
+                const obj = JSON.parse(res)
+                console.log("obj", obj)
+
+                if (!obj.check) {
+                    setShowConfirm(true)
+                } else {
+                    onFinish()
+                }
+            } catch (error) {}
+        })
+    }, [])
+
+    const onCheck = useMemoizedFn((v: boolean) => {
+        setCheck(v)
+        setRemoteValue(NewPayloadDeleteConfirm, JSON.stringify({check: v}))
+    })
+
+    return (
+        <>
+            {/* 删除确认弹框 */}
+            <YakitHint
+                visible={showConfirm && visible}
+                title='是否要删除'
+                content='确认删除后将会彻底删除'
+                footerExtra={
+                    <YakitCheckbox value={check} onChange={(e) => onCheck(e.target.checked)}>
+                        下次不再提醒
+                    </YakitCheckbox>
+                }
+                onOk={() => {
+                    onFinish()
+                }}
+                onCancel={() => {
+                    setVisible(false)
+                }}
+            />
         </>
     )
 }
@@ -1816,6 +1884,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         Speed: "0"
     })
     const logInfoRef = useRef<string[]>([])
+
+    // delete
+    const [deleteVisible, setDeleteVisible] = useState<boolean>(false)
 
     // 根据Id修改文件名
     const setFileById = useMemoizedFn((id: string, newName: string) => {
@@ -1930,6 +2001,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             .then(() => {
                 success("删除成功")
                 onDeletePayloadById(file.id)
+                setDeleteVisible(false)
             })
             .catch((e: any) => {
                 failed(`删除失败：${e}`)
@@ -2203,7 +2275,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                 onGroupToDatabase()
                                                 break
                                             case "delete":
-                                                onDeletePayload()
+                                                setDeleteVisible(true)
                                                 break
                                             default:
                                                 break
@@ -2228,7 +2300,16 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     </div>
                 </div>
             )}
-            <YakitModal visible={visible} title={null} footer={null} width={520} type='white' closable={false}>
+            <YakitModal
+                centered
+                getContainer={document.getElementById("new-payload") || document.body}
+                visible={visible}
+                title={null}
+                footer={null}
+                width={520}
+                type='white'
+                closable={false}
+            >
                 <UploadStatusInfo
                     title={"转为数据库存储中，请耐心等待..."}
                     streamData={streamData}
@@ -2244,7 +2325,12 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     autoClose={true}
                 />
             </YakitModal>
-            {exportVisible&&<ExportToTxtByFile group={file.name} folder={folder||""} setExportVisible={setExportVisible}/>}
+            {deleteVisible && (
+                <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeletePayload} />
+            )}
+            {exportVisible && (
+                <ExportToTxtByFile group={file.name} folder={folder || ""} setExportVisible={setExportVisible} />
+            )}
         </>
     )
 }
@@ -2342,7 +2428,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
     const [response, setResponse] = useState<QueryGeneralResponse<Payload>>()
     const pagination: PaginationSchema | undefined = response?.Pagination
     const [loading, setLoading] = useState<boolean>(false)
-    
+
     const [exportVisible, setExportVisible] = useState<boolean>(false)
     // 去重token
     const [token, setToken] = useState(randomString(20))
@@ -2535,7 +2621,6 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                 failed(`UpdatePayloadToFile failed:${e}`)
             })
     })
-
 
     // show
     const [streamData, setStreamData] = useState<SavePayloadProgress>({
@@ -2738,7 +2823,11 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                 [styles["extra-hidden"]]: isEditMonaco
                             })}
                         >
-                            <YakitButton type='outline2' icon={<OutlineExportIcon />} onClick={()=>setExportVisible(true)}>
+                            <YakitButton
+                                type='outline2'
+                                icon={<OutlineExportIcon />}
+                                onClick={() => setExportVisible(true)}
+                            >
                                 导出
                             </YakitButton>
                             {payloadFileData?.IsBigFile === false && (
@@ -2800,7 +2889,16 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                     </div>
                 )}
             </div>
-            <YakitModal visible={visible} title={null} footer={null} width={520} type='white' closable={false}>
+            <YakitModal
+                centered
+                getContainer={document.getElementById("new-payload") || document.body}
+                visible={visible}
+                title={null}
+                footer={null}
+                width={520}
+                type='white'
+                closable={false}
+            >
                 <UploadStatusInfo
                     title={"自动去重中，请耐心等待..."}
                     streamData={streamData}
@@ -2816,18 +2914,17 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                     autoClose={true}
                 />
             </YakitModal>
-
-            {exportVisible&&<ExportToTxtByFile group={group} folder={folder} setExportVisible={setExportVisible}/>}
+            {exportVisible && <ExportToTxtByFile group={group} folder={folder} setExportVisible={setExportVisible} />}
         </div>
     )
 }
-interface ExportToTxtByFileProps{
-    group:string
-    folder:string
-    setExportVisible:(v:boolean)=>void
+interface ExportToTxtByFileProps {
+    group: string
+    folder: string
+    setExportVisible: (v: boolean) => void
 }
 export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
-    const {group,folder,setExportVisible} = props
+    const {group, folder, setExportVisible} = props
     // 导出token
     const [exportToken, setExportToken] = useState(randomString(20))
     // export-show
@@ -2843,11 +2940,11 @@ export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
     // 导出时间戳
     const exportTimeRef = useRef<number>()
     // 是否显示modal
-    const [showModal,setShowModal] = useState<boolean>(false)
+    const [showModal, setShowModal] = useState<boolean>(false)
 
-    useEffect(()=>{
+    useEffect(() => {
         onExportFileFun()
-    },[])
+    }, [])
 
     // 导出任务
     const onExportFileFun = useMemoizedFn(() => {
@@ -2870,8 +2967,7 @@ export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
                         exportToken
                     )
                     setShowModal(true)
-                }
-                else{
+                } else {
                     setExportVisible(false)
                 }
             })
@@ -2881,12 +2977,19 @@ export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
         ipcRenderer.invoke("cancel-GetAllPayloadFromFile", exportToken)
     })
 
+    const onExportStreamData = useThrottleFn(
+        (data) => {
+            setExportStreamData({...exportStreamData, Progress: data.Progress})
+        },
+        {wait: 500}
+    ).run
+
     // 监听导出任务
     useEffect(() => {
         ipcRenderer.on(`${exportToken}-data`, async (e: any, data: GetAllPayloadFromFileResponse) => {
             if (data) {
                 try {
-                    setExportStreamData({...exportStreamData, Progress: data.Progress})
+                    onExportStreamData(data)
                     console.log("导出任务", data, Uint8ArrayToString(data.Data))
                     ipcRenderer.invoke("ExportTxtFromPlayloadFile", {
                         name: `${group}-${exportTimeRef.current}`,
@@ -2912,23 +3015,32 @@ export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
             ipcRenderer.removeAllListeners(`${exportToken}-end`)
         }
     }, [group])
-    return(
-        <YakitModal visible={showModal} title={null} footer={null} width={520} type='white' closable={false}>
-                <UploadStatusInfo
-                    title={"导出中，请耐心等待..."}
-                    streamData={exportStreamData}
-                    cancelRun={() => {
-                        cancelExportFile()
-                        setExportVisible(false)
-                    }}
-                    onClose={() => {
-                        setExportVisible(false)
-                    }}
-                    logInfo={[]}
-                    showDownloadDetail={false}
-                    autoClose={true}
-                />
-            </YakitModal>  
+    return (
+        <YakitModal
+            centered
+            getContainer={document.getElementById("new-payload") || document.body}
+            visible={showModal}
+            title={null}
+            footer={null}
+            width={520}
+            type='white'
+            closable={false}
+        >
+            <UploadStatusInfo
+                title={"导出中，请耐心等待..."}
+                streamData={exportStreamData}
+                cancelRun={() => {
+                    cancelExportFile()
+                    setExportVisible(false)
+                }}
+                onClose={() => {
+                    setExportVisible(false)
+                }}
+                logInfo={[]}
+                showDownloadDetail={false}
+                autoClose={true}
+            />
+        </YakitModal>
     )
 }
 
@@ -2980,7 +3092,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     }, [])
 
     return (
-        <div className={styles["new-payload"]}>
+        <div className={styles["new-payload"]} id='new-payload'>
             {!isExpand && (
                 <div className={styles["payload-list-box"]}>
                     <NewPayloadList

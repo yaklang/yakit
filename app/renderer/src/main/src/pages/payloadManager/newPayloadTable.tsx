@@ -354,15 +354,12 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             render: (_, record: Payload) => {
                 return (
                     <div className={styles["table-operation"]}>
-                        <YakitPopconfirm
-                            title='确认删除?'
-                            placement='left'
-                            onConfirm={() => {
+                        <OutlineTrashIcon
+                            className={styles["delete"]}
+                            onClick={() => {
                                 onDeletePayload && onDeletePayload({Id: record.Id})
                             }}
-                        >
-                            <OutlineTrashIcon className={styles["delete"]} />
-                        </YakitPopconfirm>
+                        />
                         <Divider type='vertical' style={{top: 1, height: 12, margin: "0px 12px"}} />
                         <OutlinePencilaltIcon
                             className={styles["edit"]}

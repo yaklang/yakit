@@ -30,6 +30,15 @@
     display: flex;
     flex-direction: row;
     height: 100%;
+    position: relative;
+    :global {
+        .ant-modal-mask{
+            position: absolute;
+        }
+        .ant-modal-wrap{
+            position: absolute;
+        }
+    }
 
     .payload-list-box {
         width: 420px;
