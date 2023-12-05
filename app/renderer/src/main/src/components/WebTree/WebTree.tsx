@@ -194,7 +194,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             }
 
             requestYakURLList(
-                obj,
+                {url: obj},
                 (rsp) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
                         const id = key + "/" + i.ResourceName

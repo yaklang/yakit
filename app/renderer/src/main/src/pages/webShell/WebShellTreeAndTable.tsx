@@ -1,4 +1,4 @@
-import {TreeNode, YakURLTree, YakURLTreeProp} from "@/pages/yakURLTree/YakURLTree";
+import {YakURLTree, YakURLTreeProp} from "@/pages/yakURLTree/YakURLTree";
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {ResizeBox} from "@/components/ResizeBox";
 import cveStyles from "@/pages/cve/CVETable.module.scss";
@@ -30,6 +30,7 @@ import {requestYakURLList} from "@/pages/yakURLTree/netif";
 import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {yakitFailed} from "@/utils/notification";
 import {goBack} from "@/pages/webShell/FileManager";
+import { TreeNode } from "@/components/WebTree/WebTree";
 
 interface WebShellURLTreeAndTableProp {
     Id: string
@@ -210,7 +211,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                     });
 
                     console.log("content: ", contentRef.current)  // 使用 ref 的值
-                    requestYakURLList(newYakUrl, "PUT", Buffer.from(contentRef.current)).then((r) => {
+                    requestYakURLList({ url: newYakUrl, method: "PUT", body: Buffer.from(contentRef.current) }).then((r) => {
                         console.log(r);
                         edit.destroy();
                     }).catch((e) => {
@@ -243,7 +244,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             }
         });
 
-        requestYakURLList(newYakUrl, undefined, undefined).then(
+        requestYakURLList({ url: newYakUrl }).then(
             (rsp) => {
                 // const newContent = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.ValueBytes || '';
                 // const contentStr = Buffer.from(newContent).toString()
@@ -306,30 +307,30 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             firstRatio={'20%'}
             firstNode={
                 <YakURLTree
-                    raw={currentPath}
-                    goBackTree={goBackTree}
-                    onDataChange={
-                        (newData) => {
-                            // 在这里，你可以访问新的 `data` 的值
-                            // setTreeData(newData)
-                            console.log("WebShellURLTreeAndTable", newData)
-                            setData(newData)
-                            setTotal(newData.length)
-                            setLoading(false)
-                        }
-                    }
-                    onNodeSelect={
-                        (node) => {
-                            console.log("setSelectedNode ", node)
-                            setSelectedNode(node)
-                        }
-                    }
-                    onCurrentPath={
-                        (path) => {
-                            console.log("onCurrentPath ", path)
-                            setCurrentPath(path)
-                        }
-                    }
+                    // raw={currentPath}
+                    // goBackTree={goBackTree}
+                    // onDataChange={
+                    //     (newData) => {
+                    //         // 在这里，你可以访问新的 `data` 的值
+                    //         // setTreeData(newData)
+                    //         console.log("WebShellURLTreeAndTable", newData)
+                    //         setData(newData)
+                    //         setTotal(newData.length)
+                    //         setLoading(false)
+                    //     }
+                    // }
+                    // onNodeSelect={
+                    //     (node) => {
+                    //         console.log("setSelectedNode ", node)
+                    //         setSelectedNode(node)
+                    //     }
+                    // }
+                    // onCurrentPath={
+                    //     (path) => {
+                    //         console.log("onCurrentPath ", path)
+                    //         setCurrentPath(path)
+                    //     }
+                    // }
                 />
             }
             secondNodeStyle={{height: "100%"}}

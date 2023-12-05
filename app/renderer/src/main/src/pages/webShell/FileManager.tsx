@@ -3,9 +3,9 @@ import {yakitFailed} from "@/utils/notification";
 import {requestYakURLList} from "@/pages/yakURLTree/netif";
 import {showModal} from "@/utils/showModal";
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
-import {TreeNode} from "@/pages/yakURLTree/YakURLTree";
 import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {Divider} from "antd";
+import { TreeNode } from "@/components/WebTree/WebTree";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -19,7 +19,7 @@ const {ipcRenderer} = window.require("electron");
 //     });
 //     setLoading(true);  // 开始请求前，设置加载状态为 true
 //
-//     requestYakURLList(url, undefined, undefined).then(
+//     requestYakURLList({url}).then(
 //         (rsp) => {
 //             content = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.Value || '';
 //             // 找到回显的结果，并将其值赋给 'content'
@@ -44,7 +44,7 @@ const {ipcRenderer} = window.require("electron");
 //                 ),
 //                 onOk: () => {
 //                     console.log("content: ", content)
-//                     requestYakURLList(url, "PUT", Buffer.from(content)).then((r) => {
+//                     requestYakURLList({ url, method: "PUT" }, Buffer.from(content)).then((r) => {
 //                         console.log(r);
 //                         edit.destroy();
 //                     }).catch((e) => {
@@ -84,7 +84,7 @@ const {ipcRenderer} = window.require("electron");
 //     //             </div>
 //     //         ),
 //     //         onOk: () => {
-//     //             requestYakURLList(url, "PUT", Buffer.from(content)).then((r) => {
+//     //             requestYakURLList({ url, method: "PUT" }, "PUT", Buffer.from(content)).then((r) => {
 //     //                 console.log(r);
 //     //                 edit.destroy();
 //     //             }).catch((e) => {
@@ -110,7 +110,7 @@ export const goBack = (url: YakURL, setLoading: (value: boolean) => void, setGoB
     url.Path = url.Path + "../"
     setLoading(true);  // 开始请求前，设置加载状态为 true
 
-    requestYakURLList(url, undefined, undefined, rsp => {
+    requestYakURLList({url}, rsp => {
         const resources = rsp.Resources;
         let indexCounter = 0; // 设置索引计数器
         const files: TreeNode[] = resources
@@ -146,7 +146,7 @@ export const updateFile = (url: YakURL, setLoading: (value: boolean) => void) =>
     });
     setLoading(true);  // 开始请求前，设置加载状态为 true
 
-    requestYakURLList(url, undefined, undefined, rsp => {
+    requestYakURLList({url}, rsp => {
         const content = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.Value || '';
         // 找到回显的结果，并将其值赋给 'content'
         console.log(content)
