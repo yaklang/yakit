@@ -136,10 +136,11 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     // 跳转网站树指定节点
     const onJumpWebTree = useMemoizedFn((value) => {
-        if (inViewport && curTabKey === "web-tree" && webTreeRef.current) {
+        if (inViewport && webTreeRef.current) {
             const val = JSON.parse(value)
             const host = val.host
             webTreeRef.current.onJumpWebTree(host)
+            handleTabClick({ key: "web-tree", label: "网站树", contShow: false })
         }
     })
     useEffect(() => {
