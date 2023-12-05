@@ -144,9 +144,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         }
     })
     useEffect(() => {
-        emiter.on("onJumpWebTree", onJumpWebTree)
+        emiter.on("onHistoryJumpWebTree", onJumpWebTree)
         return () => {
-            emiter.off("onJumpWebTree", onJumpWebTree)
+            emiter.off("onHistoryJumpWebTree", onJumpWebTree)
         }
     }, [])
 

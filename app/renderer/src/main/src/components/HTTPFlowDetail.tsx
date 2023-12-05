@@ -968,7 +968,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 //     str += (i !== 0 ? "/" : "") + path[i]
                 //     arr.push(str)
                 // }
-                emiter.emit("onJumpWebTree", JSON.stringify({host: url.host}))
+                emiter.emit("onHistoryJumpWebTree", JSON.stringify({host: url.host}))
             } catch (error) {
                 return ""
             }
