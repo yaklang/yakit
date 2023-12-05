@@ -53,6 +53,7 @@ import {monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
 import {onInsertYakFuzzer, showDictsAndSelect} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
+import { pluginTypeToName } from "@/pages/plugins/builtInData"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -706,17 +707,19 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     /** Yak语言 代码错误检查并显示提示标记 */
     const yakSyntaxChecking = useDebounceFn(
         useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
-            const allContent = model.getValue()
-            ipcRenderer
-                .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
-                .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
-                    if (e && e.Result.length > 0) {
-                        const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
-                        monaco.editor.setModelMarkers(model, "owner", markers)
-                    } else {
-                        monaco.editor.setModelMarkers(model, "owner", [])
-                    }
-                })
+            if (Object.keys(pluginTypeToName).includes(type || "")) {
+                const allContent = model.getValue()
+                ipcRenderer
+                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), type: type || ""})
+                    .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
+                        if (e && e.Result.length > 0) {
+                            const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
+                            monaco.editor.setModelMarkers(model, "owner", markers)
+                        } else {
+                            monaco.editor.setModelMarkers(model, "owner", [])
+                        }
+                    })
+            }
         }),
         {wait: 300}
     )
@@ -1158,7 +1161,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             endLineNumber: 0
                         })
 
-                        if (editor && type === "yak") {
+                        if (editor) {
                             /** Yak语言 代码错误检查 */
                             const model = editor.getModel()
                             if (model) {
