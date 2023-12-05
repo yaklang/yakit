@@ -763,11 +763,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             }}
                             selectType='folder'
                             showUploadList={false}
-                            setFileName={(val) => {
+                            onChange={(val) => {
                                 setLocalPath(val)
                                 form.setFieldsValue({localPath: val})
                             }}
-                            fileName={localPath}
+                            value={localPath}
                         />
                     </>
                 )
@@ -782,11 +782,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             }}
                             selectType='folder'
                             showUploadList={false}
-                            setFileName={(val) => {
+                            onChange={(val) => {
                                 setLocalNucleiPath(val)
                                 form.setFieldsValue({localNucleiPath: val})
                             }}
-                            fileName={localNucleiPath}
+                            value={localNucleiPath}
                         />
                     </>
                 )
