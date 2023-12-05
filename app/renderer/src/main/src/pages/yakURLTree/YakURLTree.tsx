@@ -30,10 +30,10 @@ export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
             loadFromYakURLRaw(yakurl, rsp => {
                 setData(rsp.Resources.map((i, index) => ({
                     title: i.VerboseName,
-                key: `${index}`,
+                    key: `${index}`,
                     data: i,
                     isLeaf: !i.HaveChildrenNodes,
-            })))
+                })))
             }).catch(e => {
                 yakitFailed(`加载失败: ${e}`)
                 setData([])
@@ -86,10 +86,10 @@ export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
                                 return
                             }
 
-                            requestYakURLList(originData.Url, rsp => {
-                        const newNodes: TreeNode[] = rsp.Resources.map((i, index) => ({
+                            requestYakURLList({ url: originData.Url }, rsp => {
+                                const newNodes: TreeNode[] = rsp.Resources.map((i, index) => ({
                                     title: i.VerboseName,
-                                        key: `${node.key}-${index}`,
+                                    key: `${node.key}-${index}`,
                                     data: i,
                                     isLeaf: !i.HaveChildrenNodes,
                                 }));

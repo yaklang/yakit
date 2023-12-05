@@ -7,7 +7,7 @@ const {ipcRenderer} = window.require("electron");
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
 
 
-export const requestYakURLList = (url: YakURL, method?: HttpMethod, body?: Uint8Array, onResponse?: (response: RequestYakURLResponse) => any, onError?: (e) => any) => {
+export const requestYakURLList = ({url, method, body}: {url: YakURL, method?: HttpMethod, body?: Uint8Array}, onResponse?: (response: RequestYakURLResponse) => any, onError?: (e) => any) => {
     if (!method) method = "GET"
     url.Query = url.Query || []
     return ipcRenderer.invoke("RequestYakURL", {
