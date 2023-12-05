@@ -436,7 +436,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     {key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符"}
                 ])
             }
-            if (type === "yak") {
+            if (Object.keys(pluginTypeToName).includes(type || "")) {
                 rightContextMenu.current = rightContextMenu.current.concat([
                     {type: "divider"},
                     {key: "yak-formatter", label: "Yak 代码格式化"}

@@ -455,7 +455,7 @@ const DefaultWork = (props: workProps) => {
 }
 //自定义临时插件work
 const CustomWork = (props: workProps) => {
-    const {verbose, index, isDragging} = props
+    const {verbose, index, isDragging, type} = props
     const [visibleSubWork, setvisibleSubWork] = useState(false)
     const ctx = useContext(CodecCtx)
     const {workFlow, setWorkFlow} = ctx!
@@ -494,7 +494,7 @@ const CustomWork = (props: workProps) => {
                             <div className="top" style={{height: 600}}>
                                 <YakCodeEditor
                                     noTitle={true}
-                                    language={"yak"}
+                                    language={type === "nuclei" ? "yaml" : type}
                                     originValue={Buffer.from(customScript, "utf8")}
                                     hideSearch={true}
                                     onChange={i => {

@@ -117,7 +117,7 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
                             showModal({
                                 title: "插件源码", content: <>
                                     <div style={{height: 500}}>
-                                        <YakEditor type={"yak"} readOnly={true} value={props.script.Content}/>
+                                        <YakEditor type={props.script.Type === "nuclei" ? "yaml" : props.script.Type} readOnly={true} value={props.script.Content}/>
                                     </div>
                                 </>, width: "60%",
                             })

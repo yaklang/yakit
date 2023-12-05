@@ -203,7 +203,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             applyContentLength()
         }
 
-        if (props.type === "yak") {
+        if (Object.keys(pluginTypeToName).includes(props.type || "")) {
             editor.addAction({
                 contextMenuGroupId: "yaklang",
                 id: YAK_FORMATTER_COMMAND_ID,

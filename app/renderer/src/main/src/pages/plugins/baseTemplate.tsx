@@ -1333,7 +1333,7 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
 
 /** @name 插件源码 */
 export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) => {
-    const {isDiff, newCode, oldCode = "", setCode} = props
+    const {isDiff, newCode, oldCode = "", setCode, language} = props
 
     // 更新对比器内容
     const [update, setUpdate] = useState<boolean>(false)
@@ -1384,14 +1384,14 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
                                 rightDefaultCode={newCode}
                                 setRightCode={setCode}
                                 triggerUpdate={update}
-                                language='yak'
+                                language={language}
                             />
                         </div>
                     )}
                 </>
             ) : (
                 <div className={styles["edit-new-wrapper"]}>
-                    <YakitEditor type='yak' value={newCode} setValue={setCode} />
+                    <YakitEditor type={language} value={newCode} setValue={setCode} />
                 </div>
             )}
 
@@ -1482,7 +1482,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
                     <YakitPopover
                         placement='topRight'
                         overlayClassName={"terminal-popover"}
-                        content={<YakEditor type={"yak"} value={content} readOnly={true} />}
+                        content={<YakEditor type={pluginType === "nuclei" ? "yaml" : pluginType} value={content} readOnly={true} />}
                     >
                         <OutlineTerminalIcon className={"plugin-details-item-show-icon-style"} />
                     </YakitPopover>

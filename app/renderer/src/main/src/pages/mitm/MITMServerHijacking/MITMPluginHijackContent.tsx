@@ -399,7 +399,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                         Content: e.toString("utf8")
                                     })
                                 }
-                                language={"yak"}
+                                language={script.Type === "nuclei" ? "yaml" : script.Type}
                                 extraEditorProps={
                                     {
                                         noMiniMap: true,
