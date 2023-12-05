@@ -369,6 +369,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                                     width: 448,
                                     type: "white",
                                     footer: null,
+                                    maskClosable: false,
                                     content: (
                                         <PayloadAddEditForm
                                             record={record}
