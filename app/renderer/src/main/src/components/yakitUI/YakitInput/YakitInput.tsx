@@ -13,13 +13,6 @@ import {useMemoizedFn} from "ahooks"
 import {ResizerIcon} from "@/assets/newIcon"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 
-/**
- * 更新说明
- * 1.增加环境变量加载主题色
- * 2.增加颜色变量
- * 3.增加搜索组件，两种样式中的一种，另外一种未完成
- * 4.增加文本域
- */
 
 /**
  * @description: 输入
