@@ -1397,6 +1397,7 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
 
             <PluginEditorModal visible={codeModal} setVisible={onModifyCode} code={newCode} />
             <PluginDiffEditorModal
+                language={language}
                 oldCode={oldCode}
                 newCode={newCode}
                 visible={diffCodeModal}
