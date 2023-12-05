@@ -570,7 +570,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     <div className={styles["form-rule-body"]}>
                                         <div className={styles["form-rule"]} onClick={() => setVisible(true)}>
                                             <div className={styles["form-rule-text"]}>
-                                                现有配置 {params.AuthInfos.filter((item)=>!item.Forbidden).length} 条
+                                                现有配置 {params.AuthInfos.filter((item) => !item.Forbidden).length} 条
                                             </div>
                                             <div className={styles["form-rule-icon"]}>
                                                 <CogIcon />
@@ -660,13 +660,15 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     </AutoSpin>
                 </AutoCard>
             </div>
-            {visible&&<NTMLConfig
-                visible={visible && !!inViewport}
-                setVisible={setVisible}
-                params={params}
-                setParams={setParams}
-                onNtmlSave={onNtmlSave}
-            />}
+            {visible && (
+                <NTMLConfig
+                    visible={visible && !!inViewport}
+                    setVisible={setVisible}
+                    params={params}
+                    setParams={setParams}
+                    onNtmlSave={onNtmlSave}
+                />
+            )}
         </>
     )
 }
@@ -682,7 +684,7 @@ interface NTMLConfigProps {
 
 interface DataProps extends AuthInfo {
     id: string
-    Disabled:boolean
+    Disabled: boolean
 }
 
 export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
@@ -692,12 +694,12 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [currentItem, setCurrentItem] = useState<DataProps>()
     const [modalStatus, setModalStatus] = useState<boolean>(false)
-    const [isEdit,setIsEdit] = useState<boolean>(false)
+    const [isEdit, setIsEdit] = useState<boolean>(false)
     // initData 初始数据 用于校验数据是否改变
     const initData = useRef<DataProps[]>([])
 
     useEffect(() => {
-        const newData = params.AuthInfos.map((item) => ({id: uuidv4(),Disabled:item.Forbidden, ...item}))
+        const newData = params.AuthInfos.map((item) => ({id: uuidv4(), Disabled: item.Forbidden, ...item}))
         initData.current = newData
         setData(newData)
     }, [params.AuthInfos])
@@ -708,9 +710,9 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
             AuthPassword: item.AuthPassword,
             AuthType: item.AuthType,
             Host: item.Host,
-            Forbidden:item.Forbidden
+            Forbidden: item.Forbidden
         }))
-        
+
         setParams({...params, AuthInfos})
         setTimeout(() => {
             onNtmlSave()
@@ -763,7 +765,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
     ).run
 
     const onRemove = useMemoizedFn((rowDate: DataProps) => {
-        const newData = data.filter((item)=>item.id!==rowDate.id)
+        const newData = data.filter((item) => item.id !== rowDate.id)
         setData(newData)
     })
 
@@ -776,7 +778,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                 item = {
                     ...rowDate,
                     Disabled: !rowDate.Disabled,
-                    Forbidden:!rowDate.Disabled,
+                    Forbidden: !rowDate.Disabled
                 }
             }
             return item
@@ -797,7 +799,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                 dataKey: "Index",
                 fixed: "left",
                 width: 130,
-                render:(text: any, record: any, index: any)=><>{index+1}</>
+                render: (text: any, record: any, index: any) => <>{index + 1}</>
             },
             {
                 title: "Host",
@@ -813,7 +815,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                 title: "密码",
                 dataKey: "AuthPassword",
                 width: 150,
-                render:()=><>***</>
+                render: () => <>***</>
             },
             {
                 title: "认证类型",
@@ -879,17 +881,16 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
     })
 
     const onSubmit = useMemoizedFn((v: DataProps) => {
-        if(isEdit){
-            const newData = data.map((item)=>{
-                if(item.id===v.id){
+        if (isEdit) {
+            const newData = data.map((item) => {
+                if (item.id === v.id) {
                     return v
                 }
                 return item
             })
             setData(newData)
             success("编辑成功")
-        }
-        else{
+        } else {
             success("新增成功")
             setData([v, ...data])
         }
@@ -987,38 +988,39 @@ interface NTMLConfigModalProps {
     modalStatus: boolean
     onSubmit: (v: DataProps) => void
     isEdit: boolean
-    currentItem?:DataProps
+    currentItem?: DataProps
 }
 
 export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
-    const {onClose, modalStatus, onSubmit,isEdit,currentItem} = props
+    const {onClose, modalStatus, onSubmit, isEdit, currentItem} = props
     const [form] = Form.useForm()
 
-    useEffect(()=>{
-        if(isEdit&&currentItem){
-            const {Host,AuthUsername,AuthPassword,AuthType} = currentItem
+    useEffect(() => {
+        if (isEdit && currentItem) {
+            const {Host, AuthUsername, AuthPassword, AuthType} = currentItem
             form.setFieldsValue({
-                Host,AuthUsername,AuthPassword,AuthType
+                Host,
+                AuthUsername,
+                AuthPassword,
+                AuthType
             })
         }
-    },[])
+    }, [])
 
     const onOk = useMemoizedFn(() => {
         form.validateFields().then((value: AuthInfo) => {
-            if(isEdit&&currentItem){
+            if (isEdit && currentItem) {
                 onSubmit({
                     ...currentItem,
                     ...value
                 })
+            } else {
+                onSubmit({
+                    id: uuidv4(),
+                    Disabled: false,
+                    ...value
+                })
             }
-            else{
-                 onSubmit({
-                id: uuidv4(),
-                Disabled:false,
-                ...value
-            })
-            }
-           
         })
     })
     // 判断是否为IP地址 或 域名
@@ -1026,13 +1028,12 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
         {
             validator: (_, value: string) => {
                 // 正则表达式匹配IPv4地址
-                const ipv4Regex =
-                    /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}$/
+                const ipv4RegexWithPort = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}(:\d+)?$/
                 // 正则表达式匹配域名（支持通配符域名）
                 const domainRegex = /^(\*\.|\*\*\.)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}$/
-                // 正则表达式匹配CIDR表示的IPv4地址范围
-                const cidrRegex = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}\/([0-2]?[0-9]|3[0-2])$/
-                if (ipv4Regex.test(value) || domainRegex.test(value) || cidrRegex.test(value)) {
+                // 匹配 CIDR 表示的 IPv4 地址范围（包含端口号）
+                const cidrRegexWithPort = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}\/([0-2]?[0-9]|3[0-2])(:\d+)?$/
+                if (ipv4RegexWithPort.test(value) || domainRegex.test(value) || cidrRegexWithPort.test(value)) {
                     return Promise.resolve()
                 } else {
                     return Promise.reject("请输入符合要求的Host")
@@ -1042,7 +1043,8 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
     ]
     return (
         <YakitModal
-            title={isEdit?"编辑":"新增"}
+            maskClosable={false}
+            title={isEdit ? "编辑" : "新增"}
             visible={modalStatus}
             onCancel={() => onClose()}
             closable
