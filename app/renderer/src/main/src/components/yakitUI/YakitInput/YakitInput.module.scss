@@ -420,6 +420,7 @@
 // ========================== textArea ==========================
 .yakit-textArea-wrapper {
     width: 100%;
+    position: relative;
 
     :global {
         .ant-input {
@@ -440,6 +441,15 @@
             font-size: 14px;
             color: var(--yakit-helper-text-color);
         }
+    }
+    .resizer-icon {
+        position: absolute;
+        bottom: 6px;
+        right: 2px;
+        color: var(--yakit-body-text-color);
+        z-index: 0;
+        pointer-events: none;
+        background: #fff;
     }
 }
 
