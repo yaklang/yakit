@@ -876,8 +876,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             setMenuDataString(val)
                             setRefreshTrigger(!refreshTrigger)
                         }}
-                        setFileName={setFileName}
-                        fileName={fileName}
+                        onChange={setFileName}
+                        value={fileName}
                     />
                     <Form.Item label='配置 JSON'>
                         <div style={{height: 400}}>
