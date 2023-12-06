@@ -11,17 +11,6 @@
         display: flex;
         flex: 1;
         flex-direction: column;
-        .plugin-info-extra-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            path {
-                stroke-width: 1.5;
-            }
-            .loading-icon {
-                color: var(--yakit-primary-5);
-            }
-        }
     }
     .plugin-log-wrapper {
         padding: 0 12px 12px 12px;
@@ -36,6 +25,18 @@
             align-items: center;
             padding-top: 10%;
         }
+    }
+}
+
+.plugin-info-extra-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    path {
+        stroke-width: 1.5;
+    }
+    .loading-icon {
+        color: var(--yakit-primary-5);
     }
 }
 

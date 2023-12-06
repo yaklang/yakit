@@ -105,7 +105,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             case "textarea":
                 return (
                     <YakitInput.TextArea
-                        placeholder='请输入绝对路径'
+                        placeholder='路径支持手动输入,输入多个请用逗号分隔'
                         value={fileName || name}
                         {...textareaProps}
                         onChange={(e) => {
@@ -151,7 +151,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             default:
                 return (
                     <YakitInput
-                        placeholder='请输入绝对路径'
+                        placeholder='路径支持手动输入,输入多个请用逗号分隔'
                         size={size}
                         value={fileName || name}
                         {...InputProps}
