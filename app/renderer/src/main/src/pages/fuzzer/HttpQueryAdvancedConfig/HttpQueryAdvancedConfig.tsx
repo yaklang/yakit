@@ -468,7 +468,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             label={
                                 <span className={styles["advanced-config-form-label"]}>
                                     渲染 Fuzz
-                                    <Tooltip title='关闭之后，所有的 Fuzz 标签将会失效' overlayStyle={{width: 150}}>
+                                    <Tooltip title='兼容模式支持嵌套使用时内层大括号省略 {{base64(url(www.example.com))}}，但标准模式不可省略，关闭后Fuzztag将失效。' overlayStyle={{width: 150}}>
                                         <InformationCircleIcon className={styles["info-icon"]} />
                                     </Tooltip>
                                 </span>
