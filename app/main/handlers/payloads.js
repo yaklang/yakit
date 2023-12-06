@@ -176,6 +176,12 @@ module.exports = (win, getClient) => {
         let stream = getClient().GetAllPayloadFromFile(params)
         handlerHelper.registerHandler(win, stream, streamPayloadFromFileMap, token)
     })
+    const streamAllPayloadMap = new Map()
+    ipcMain.handle("cancel-GetAllPayload", handlerHelper.cancelHandler(streamAllPayloadMap))
+    ipcMain.handle("GetAllPayload", async (e, params, token) => {
+        let stream = getClient().GetAllPayload(params)
+        handlerHelper.registerHandler(win, stream, streamAllPayloadMap, token)
+    })
 
     // 用于去重
     const streamRemoveDuplicateMap = new Map()
@@ -255,21 +261,5 @@ module.exports = (win, getClient) => {
     // 更新文件内容
     ipcMain.handle("UpdatePayloadToFile", async (e, params) => {
         return await asyncUpdatePayloadToFile(params)
-    })
-
-    const asyncGetAllPayload = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().GetAllPayload(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    // 用于导出
-    ipcMain.handle("GetAllPayload", async (e, params) => {
-        return await asyncGetAllPayload(params)
     })
 }

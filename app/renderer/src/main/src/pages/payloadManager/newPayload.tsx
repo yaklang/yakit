@@ -2934,14 +2934,15 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
             })
             .then((data: any) => {
                 if (data.filePaths.length) {
-                    let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
-                    exportPathRef.current = absolutePath
+                    let absolutePath:string = data.filePaths[0].replace(/\\/g, "\\")
+                    let currentPath:string  = `${absolutePath}\\${group}.${isFile?"txt":'csv'}`
+                    exportPathRef.current = currentPath
                     ipcRenderer.invoke(
                         isFile ? "GetAllPayloadFromFile" : "GetAllPayload",
                         {
                             Group: group,
                             Folder: folder,
-                            savePath: absolutePath
+                            savePath: currentPath
                         },
                         exportToken
                     )
@@ -2953,7 +2954,7 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
     })
     // 取消导出任务
     const cancelExportFile = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-GetAllPayloadFromFile", exportToken)
+        ipcRenderer.invoke(isFile ? "cancel-GetAllPayloadFromFile":"cancel-GetAllPayload", exportToken)
     })
 
     const onExportStreamData = useThrottleFn(
@@ -2982,12 +2983,12 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
             exportPathRef.current && openABSFileLocated(exportPathRef.current)
         })
         return () => {
-            ipcRenderer.invoke("cancel-GetAllPayloadFromFile", exportToken)
+            ipcRenderer.invoke(isFile ? "cancel-GetAllPayloadFromFile":"cancel-GetAllPayload", exportToken)
             ipcRenderer.removeAllListeners(`${exportToken}-data`)
             ipcRenderer.removeAllListeners(`${exportToken}-error`)
             ipcRenderer.removeAllListeners(`${exportToken}-end`)
         }
-    }, [group])
+    }, [])
     return (
         <YakitModal
             centered
@@ -3006,12 +3007,8 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
                     cancelExportFile()
                     setExportVisible(false)
                 }}
-                onClose={() => {
-                    setExportVisible(false)
-                }}
                 logInfo={[]}
                 showDownloadDetail={false}
-                autoClose={true}
             />
         </YakitModal>
     )
