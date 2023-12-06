@@ -627,6 +627,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 {route: YakitRoute.Beta_WebShellOpt},
                 {
                     pageParams: {
+                        id: Id,
                         webshellInfo: res,
                     },
                     hideAdd: true
