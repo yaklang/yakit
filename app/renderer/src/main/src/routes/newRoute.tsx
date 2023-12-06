@@ -112,7 +112,6 @@ import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
-import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps
@@ -357,7 +356,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DB_HTTPHistory,
     YakitRoute.Plugin_Audit,
     YakitRoute.AddYakitScript,
-    YakitRoute.ModifyYakitScript
+    YakitRoute.ModifyYakitScript,
     YakitRoute.PayloadManager
 ]
 /** 无滚动条的页面路由 */
