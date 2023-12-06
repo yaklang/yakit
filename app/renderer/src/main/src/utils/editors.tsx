@@ -318,7 +318,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             const type = props.type || ""
             if (Object.keys(pluginTypeToName).includes(type)) {
                 ipcRenderer
-                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), type})
+                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type})
                     .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
