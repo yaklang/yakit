@@ -588,35 +588,6 @@ const nodesToDataFun = (nodes: PayloadGroupNodeProps[]) => {
     })
 }
 
-// 导出CSV
-const onExportCsvFun = (obj: {Group: string; Folder: string}, codePath: string, name: string) => {
-    ipcRenderer
-        .invoke("GetAllPayload", obj)
-        .then((res: {Data: Payload[]}) => {
-            const data = res?.Data.map((ele) => ele.Content + "," + ele.HitCount).join("\r\n")
-            const time = new Date().valueOf()
-            const path = `${codePath}${codePath ? "/" : ""}${name}-${time}.csv`
-            ipcRenderer.invoke("show-save-dialog", path).then((res) => {
-                if (res.canceled) return
-                const name = res.name
-                ipcRenderer
-                    .invoke("write-file", {
-                        route: res.filePath,
-                        data: "Content,HitCount\r\n" + data
-                    })
-                    .then(() => {
-                        success(`【${name}】下载成功`)
-                    })
-                    .catch((e) => {
-                        failed(`【${name}】下载失败:` + e)
-                    })
-            })
-        })
-        .catch((e: any) => {
-            failed(`导出失败：${e}`)
-        })
-}
-
 interface DataItem {
     type: "File" | "Folder" | "DataBase"
     name: string
@@ -1875,6 +1846,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     const [visible, setVisible] = useState<boolean>(false)
 
     const [exportVisible, setExportVisible] = useState<boolean>(false)
+    const [exportType, setExportType] = useState<"all" | "file">()
     // show
     const [streamData, setStreamData] = useState<SavePayloadProgress>({
         Progress: 0,
@@ -2010,23 +1982,14 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
 
     // 导出Csv
     const onExportCsv = useMemoizedFn(() => {
-        const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
-        const selectData = findFoldersById(copyData, file.id)
-        if (selectData) {
-            let obj: {Group: string; Folder: string} = {
-                Folder: "",
-                Group: file.name
-            }
-            if (selectData.type === "Folder") {
-                obj.Folder = selectData.name
-            }
-            onExportCsvFun(obj, codePath, file.name)
-        }
+        setExportVisible(true)
+        setExportType("all")
     })
 
     // 文件导出
     const onExportTxt = useMemoizedFn(() => {
         setExportVisible(true)
+        setExportType("file")
     })
 
     // 转为数据库存储
@@ -2329,7 +2292,12 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 <DeleteConfirm visible={deleteVisible} setVisible={setDeleteVisible} onFinish={onDeletePayload} />
             )}
             {exportVisible && (
-                <ExportToTxtByFile group={file.name} folder={folder || ""} setExportVisible={setExportVisible} />
+                <ExportByGrpc
+                    group={file.name}
+                    folder={folder || ""}
+                    setExportVisible={setExportVisible}
+                    isFile={exportType === "file"}
+                />
             )}
         </>
     )
@@ -2409,7 +2377,6 @@ interface PayloadFileDataProps {
 
 interface GetAllPayloadFromFileResponse {
     Progress: number
-    Data: Uint8Array
 }
 
 export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
@@ -2430,6 +2397,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
 
     const [exportVisible, setExportVisible] = useState<boolean>(false)
+    const [exportType, setExportType] = useState<"all" | "file">()
     // 去重token
     const [token, setToken] = useState(randomString(20))
     const [visible, setVisible] = useState<boolean>(false)
@@ -2721,7 +2689,8 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                 type='outline2'
                                 icon={<OutlineExportIcon />}
                                 onClick={() => {
-                                    onExportCsvFun({Group: group, Folder: folder}, codePath, group)
+                                    setExportType("all")
+                                    setExportVisible(true)
                                 }}
                             >
                                 导出
@@ -2826,7 +2795,10 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                             <YakitButton
                                 type='outline2'
                                 icon={<OutlineExportIcon />}
-                                onClick={() => setExportVisible(true)}
+                                onClick={() => {
+                                    setExportType("file")
+                                    setExportVisible(true)
+                                }}
                             >
                                 导出
                             </YakitButton>
@@ -2914,17 +2886,26 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                     autoClose={true}
                 />
             </YakitModal>
-            {exportVisible && <ExportToTxtByFile group={group} folder={folder} setExportVisible={setExportVisible} />}
+            {exportVisible && (
+                <ExportByGrpc
+                    group={group}
+                    folder={folder}
+                    setExportVisible={setExportVisible}
+                    isFile={exportType === "file"}
+                />
+            )}
         </div>
     )
 }
-interface ExportToTxtByFileProps {
+
+interface ExportByGrpcProps {
     group: string
     folder: string
     setExportVisible: (v: boolean) => void
+    isFile?: boolean
 }
-export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
-    const {group, folder, setExportVisible} = props
+export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
+    const {group, folder, setExportVisible, isFile} = props
     // 导出token
     const [exportToken, setExportToken] = useState(randomString(20))
     // export-show
@@ -2937,8 +2918,6 @@ export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
     })
     // 导出路径
     const exportPathRef = useRef<string>()
-    // 导出时间戳
-    const exportTimeRef = useRef<number>()
     // 是否显示modal
     const [showModal, setShowModal] = useState<boolean>(false)
 
@@ -2957,12 +2936,12 @@ export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
                 if (data.filePaths.length) {
                     let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
                     exportPathRef.current = absolutePath
-                    exportTimeRef.current = Math.floor(new Date().getTime() / 1000)
                     ipcRenderer.invoke(
-                        "GetAllPayloadFromFile",
+                        isFile ? "GetAllPayloadFromFile" : "GetAllPayload",
                         {
                             Group: group,
-                            Folder: folder
+                            Folder: folder,
+                            savePath: absolutePath
                         },
                         exportToken
                     )
@@ -2990,12 +2969,6 @@ export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
             if (data) {
                 try {
                     onExportStreamData(data)
-                    console.log("导出任务", data, Uint8ArrayToString(data.Data))
-                    ipcRenderer.invoke("ExportTxtFromPlayloadFile", {
-                        name: `${group}-${exportTimeRef.current}`,
-                        savePath: exportPathRef.current,
-                        content: Uint8ArrayToString(data.Data)
-                    })
                 } catch (error) {}
             }
         })
@@ -3006,7 +2979,7 @@ export const ExportToTxtByFile: React.FC<ExportToTxtByFileProps> = (props) => {
             info("[ExportFile] finished")
             setShowModal(false)
             setExportVisible(false)
-            // exportPathRef.current&&openABSFileLocated(exportPathRef.current)
+            exportPathRef.current && openABSFileLocated(exportPathRef.current)
         })
         return () => {
             ipcRenderer.invoke("cancel-GetAllPayloadFromFile", exportToken)

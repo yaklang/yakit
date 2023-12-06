@@ -193,20 +193,6 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamGroupToDatabaseMap, token)
     })
 
-    // 导出txt
-    ipcMain.handle("ExportTxtFromPlayloadFile", async (e, params) => {
-        const {name, savePath, content} = params
-        // 替换为你想要存储文件的文件夹和文件名
-        const filePath = path.join(savePath, `${name}.txt`)
-        // 创建文件并向其中追加内容
-        fs.appendFile(filePath, `${content}\r\n`, (err) => {
-            if (err) {
-                console.error("Error creating file:", err)
-                return
-            }
-        })
-    })
-
     const asyncUpdatePayload = (params) => {
         return new Promise((resolve, reject) => {
             getClient().UpdatePayload(params, (err, data) => {
