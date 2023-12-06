@@ -95,8 +95,12 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         return ParamsToGroupByGroupName(paramsList)
     }, [plugin.Params])
     useEffect(() => {
-        initFormValue()
-    }, [plugin.Params])
+        if (plugin.Type === "yak" || plugin.Type === "lua") {
+            initFormValue()
+        } else {
+            form.resetFields()
+        }
+    }, [plugin.Params, plugin.ScriptName, plugin.Type])
     /**初始表单初始值 */
     const initFormValue = useMemoizedFn(() => {
         initRequiredFormValue()
@@ -138,11 +142,27 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             case "lua":
                 return <ExecuteEnterNodeByPluginParams paramsList={requiredParams} />
             case "codec":
-                return <></>
+                const codecItem: YakParamProps = {
+                    Field: "Input",
+                    FieldVerbose: "Input",
+                    Required: true,
+                    TypeVerbose: "string",
+                    DefaultValue: "",
+                    Help: "Input"
+                }
+                return <OutputFormComponentsByType item={codecItem} />
             case "mitm":
             case "port-scan":
             case "nuclei":
-                return <></>
+                const item: YakParamProps = {
+                    Field: "Input",
+                    FieldVerbose: "扫描目标",
+                    Required: true,
+                    TypeVerbose: "string",
+                    DefaultValue: "",
+                    Help: "Input"
+                }
+                return <OutputFormComponentsByType item={item} />
             default:
                 return <></>
         }
