@@ -115,6 +115,7 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                             setDefaultResponseSearch(affixSearch)
                         }}
                         successFuzzer={fuzzerData.successFuzzer}
+                        failedFuzzer={fuzzerData.failedFuzzer}
                         secondNodeSize={secondNodeSize}
                         query={query}
                         setQuery={(q) => setQuery({...q})}

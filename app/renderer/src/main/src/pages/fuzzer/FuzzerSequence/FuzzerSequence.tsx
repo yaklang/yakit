@@ -1553,6 +1553,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         setDefaultResponseSearch(affixSearch)
                     }}
                     successFuzzer={successFuzzer}
+                    failedFuzzer={failedFuzzer}
                     secondNodeSize={secondNodeSize}
                     query={query}
                     setQuery={(q) => setQuery({...q})}
