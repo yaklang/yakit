@@ -1446,6 +1446,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     setDefaultResponseSearch(affixSearch)
                 }}
                 successFuzzer={successFuzzer}
+                failedFuzzer={failedFuzzer}
                 secondNodeSize={secondNodeSize}
                 query={query}
                 setQuery={(q) => setQuery({...q})}
@@ -1455,11 +1456,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                 showSuccess={showSuccess}
                 retrySubmit={() => {
-                    retryRef.current = true
-                    setRedirectedResponse(undefined)
-                    sendFuzzerSettingInfo()
-                    onValidateHTTPFuzzer()
-                    getNewCurrentPage()
+                    if(failedFuzzer.length > 0){
+                        retryRef.current = true
+                        setRedirectedResponse(undefined)
+                        sendFuzzerSettingInfo()
+                        onValidateHTTPFuzzer()
+                        getNewCurrentPage()
+                    }
                 }}
                 isShowMatch = {!loading}
                 matchSubmit={()=>{
@@ -1861,6 +1864,7 @@ interface SecondNodeExtraProps {
     onSearchValueChange: (s: string) => void
     onSearch: () => void
     successFuzzer: FuzzerResponse[]
+    failedFuzzer: FuzzerResponse[]
     secondNodeSize?: Size
     query?: HTTPFuzzerPageTableQuery
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
@@ -1889,6 +1893,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         onSearchValueChange,
         onSearch,
         successFuzzer,
+        failedFuzzer,
         secondNodeSize,
         query,
         setQuery,
@@ -2360,6 +2365,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 onClick={() => {
                     retrySubmit && retrySubmit()
                 }}
+                disabled={failedFuzzer.length===0}
             >
                 一键重试
             </YakitButton>
