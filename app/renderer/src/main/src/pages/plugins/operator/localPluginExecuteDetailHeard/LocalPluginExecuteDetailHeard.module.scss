@@ -1,0 +1,41 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.plugin-execute-form-wrapper {
+    @extend %display-column-center;
+    padding-top: 24px;
+    :global {
+        .ant-form-item-label > label .ant-form-item-tooltip {
+            color: var(--yakit-helper-text-color);
+        }
+    }
+    .plugin-execute-form-item {
+        width: 100%;
+    }
+    .code-wrapper {
+        width: 100%;
+        height: 300px;
+        :global {
+            .ant-form-item-control-input {
+                height: 100%;
+            }
+            .ant-form-item-control-input-content {
+                height: 100%;
+            }
+        }
+    }
+    .code-error-wrapper {
+        :global {
+            .ant-card-bordered {
+                border: 1px solid #ff4d4f;
+                box-shadow: 0 0 0 2px rgb(255 77 79 / 20%);
+            }
+        }
+    }
+}
