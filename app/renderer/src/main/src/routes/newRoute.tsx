@@ -116,7 +116,6 @@ import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/Re
 import {WebShellViewer} from "@/pages/webShell/WebShellViewer";
 import {WebShellDetail} from "@/pages/webShell/models";
 import {WebShellDetailOpt} from "@/pages/webShell/WebShellDetailOpt";
-import { FuzzerParamItem, AdvancedConfigValueProps } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps
@@ -631,7 +630,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Beta_WebShellManager:
             return <WebShellViewer/>
         case YakitRoute.Beta_WebShellOpt:
-            return <WebShellDetailOpt id={params?.id} webshellInfo={params?.webshellInfo}/>
+            return <WebShellDetailOpt id={params?.id + ""} webshellInfo={params?.webshellInfo as WebShellDetail}/>
         default:
             return <div />
     }
