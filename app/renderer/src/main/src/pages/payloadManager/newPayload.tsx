@@ -1,6 +1,14 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Divider, Form, Input, Progress, Tooltip} from "antd"
-import {useDebounceEffect, useGetState, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useMemoizedFn,
+    useSize,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import styles from "./NewPayload.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -19,6 +27,7 @@ import {
     OutlinePaperclipIcon,
     OutlinePencilaltIcon,
     OutlinePlusIcon,
+    OutlineSparklesIcon,
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -34,8 +43,6 @@ import {
     SolidDotsverticalIcon,
     SolidDragsortIcon,
     SolidFolderopenIcon,
-    SolidPencilaltIcon,
-    SolidSparklesIcon,
     SolidStoreIcon,
     SolidXcircleIcon
 } from "@/assets/icon/solid"
@@ -61,6 +68,7 @@ import {YakitRoute} from "@/routes/newRoute"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -159,7 +167,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     const FileType = ["text/plain", "text/csv"]
     // 收集上传的数据
     const [dictionariesName, setDictionariesName] = useState<string>("")
-    const [uploadList, setUploadList] = useState<{path:string,name:string}[]>([])
+    const [uploadList, setUploadList] = useState<{path: string; name: string}[]>([])
 
     // token
     const [token, setToken] = useState(randomString(20))
@@ -186,7 +194,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             {
                 IsFile: true,
                 Content: "",
-                FileName: uploadList.map((item)=>item.path),
+                FileName: uploadList.map((item) => item.path),
                 Group: group || dictionariesName,
                 Folder: folder || ""
             },
@@ -204,7 +212,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             {
                 IsFile: true,
                 Content: "",
-                FileName: uploadList.map((item)=>item.path),
+                FileName: uploadList.map((item) => item.path),
                 Group: group || dictionariesName,
                 Folder: folder || ""
             },
@@ -229,7 +237,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                 try {
                     console.log("data---", data)
                     setStreamData(data)
-                    if(data.Message.length>0){
+                    if (data.Message.length > 0) {
                         logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
                     }
                 } catch (error) {}
@@ -299,6 +307,38 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             emiter.emit("refreshTableEvent")
         }
     })
+
+    const beforeUploadFun = useDebounceFn(
+        (fileList: any[]) => {
+            let arr: {
+                path: string
+                name: string
+            }[] = []
+            fileList.forEach((f) => {
+                if (!FileType.includes(f.type)) {
+                    failed(`${f.name}非txt、csv文件，请上传正确格式文件！`)
+                    return false
+                }
+                if (uploadList.map((item) => item.path).includes(f.path)) {
+                    warn("此文件已选择")
+                    return
+                }
+                let name = f.name.split(".")[0]
+                arr.push({
+                    path: f.path,
+                    name
+                })
+            })
+
+            if (dictionariesName.length === 0 && arr.length > 0) {
+                setDictionariesName(arr[0].name)
+            }
+            setUploadList([...uploadList, ...arr])
+        },
+        {
+            wait: 200
+        }
+    ).run
     return (
         <div className={styles["create-dictionaries"]}>
             {!streamData && (
@@ -355,23 +395,11 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                 className={styles["upload-dragger"]}
                                 accept={FileType.join(",")}
                                 // accept=".jpg, .jpeg, .png"
-                                multiple={false}
+                                multiple={true}
                                 maxCount={1}
                                 showUploadList={false}
-                                beforeUpload={(f: any) => {
-                                    if (!FileType.includes(f.type)) {
-                                        failed(`${f.name}非txt、csv文件，请上传正确格式文件！`)
-                                        return false
-                                    }
-                                    if (uploadList.map((item)=>item.path).includes(f.path)) {
-                                        warn("此文件已选择")
-                                        return
-                                    }
-                                    let name = f.name.split(".")[0]
-                                    if(dictionariesName.length===0){
-                                        setDictionariesName(name)
-                                    }
-                                    setUploadList([...uploadList, {path:f.path,name}])
+                                beforeUpload={(f: any, fileList: any) => {
+                                    beforeUploadFun(fileList)
                                     return false
                                 }}
                             >
@@ -399,9 +427,13 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                     <div
                                         className={styles["close-icon"]}
                                         onClick={() => {
-                                            const newUploadList = uploadList.filter((itemIn) => itemIn.path !== item.path)
-                                            if(item.name===dictionariesName){
-                                                setDictionariesName(newUploadList.length>0?newUploadList[0].name:"")
+                                            const newUploadList = uploadList.filter(
+                                                (itemIn) => itemIn.path !== item.path
+                                            )
+                                            if (item.name === dictionariesName) {
+                                                setDictionariesName(
+                                                    newUploadList.length > 0 ? newUploadList[0].name : ""
+                                                )
                                             }
                                             setUploadList(newUploadList)
                                         }}
@@ -1137,13 +1169,13 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                     switch (key) {
                                         case "createDictionaries":
                                             const m = showYakitModal({
-                                                getContainer:document.getElementById("new-payload") || document.body,
+                                                getContainer: document.getElementById("new-payload") || document.body,
                                                 title: null,
                                                 footer: null,
                                                 width: 520,
                                                 type: "white",
                                                 closable: false,
-                                                maskClosable:false,
+                                                maskClosable: false,
                                                 content: (
                                                     <CreateDictionaries
                                                         title='新建字典'
@@ -1610,13 +1642,17 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                             )
                                         },
                                         {
+                                            type: "divider"
+                                        },
+                                        {
                                             key: "delete",
                                             label: (
                                                 <div className={styles["extra-menu"]}>
                                                     <OutlineTrashIcon />
                                                     <div className={styles["menu-name"]}>删除</div>
                                                 </div>
-                                            )
+                                            ),
+                                            type: "danger"
                                         }
                                     ],
                                     onClick: ({key}) => {
@@ -1628,13 +1664,14 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                             case "addChildPayload":
                                                 // 注: 此处需注意文件夹
                                                 const m = showYakitModal({
-                                                    getContainer:document.getElementById("new-payload") || document.body,
+                                                    getContainer:
+                                                        document.getElementById("new-payload") || document.body,
                                                     title: null,
                                                     footer: null,
                                                     width: 520,
                                                     type: "white",
                                                     closable: false,
-                                                    maskClosable:false,
+                                                    maskClosable: false,
                                                     content: (
                                                         <CreateDictionaries
                                                             title='新建子集字典'
@@ -1660,7 +1697,6 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                     }
                                 }}
                                 dropdown={{
-                                    overlayClassName: styles["payload-list-menu"],
                                     trigger: ["click"],
                                     placement: "bottomRight",
                                     onVisibleChange: (v) => {
@@ -2051,7 +2087,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             if (data) {
                 try {
                     setStreamData(data)
-                    if(data.Message.length>0){
+                    if (data.Message.length > 0) {
                         logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
                     }
                 } catch (error) {}
@@ -2114,13 +2150,17 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                       )
                   },
                   {
+                      type: "divider"
+                  },
+                  {
                       key: "delete",
                       label: (
                           <div className={styles["extra-menu"]}>
                               <OutlineTrashIcon />
                               <div className={styles["menu-name"]}>删除</div>
                           </div>
-                      )
+                      ),
+                      type: "danger"
                   }
               ]
             : [
@@ -2161,13 +2201,17 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                       )
                   },
                   {
+                      type: "divider"
+                  },
+                  {
                       key: "delete",
                       label: (
                           <div className={styles["extra-menu"]}>
                               <OutlineTrashIcon />
                               <div className={styles["menu-name"]}>删除</div>
                           </div>
-                      )
+                      ),
+                      type: "danger"
                   }
               ]
     }, [])
@@ -2229,12 +2273,12 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className={styles["file-count"]} style={onlyInsert ? {display: "block"} : {}}>
-                            {file.number}
+                            {file.type==="DataBase"?file.number:""}
                         </div>
                         {!onlyInsert && (
                             <YakitDropdownMenu
                                 menu={{
-                                    data: fileMenuData,
+                                    data: fileMenuData as YakitMenuItemProps[],
                                     onClick: ({key}) => {
                                         setMenuOpen(false)
                                         switch (key) {
@@ -2243,13 +2287,14 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                 break
                                             case "importPayload":
                                                 const m = showYakitModal({
-                                                    getContainer:document.getElementById("new-payload") || document.body,
+                                                    getContainer:
+                                                        document.getElementById("new-payload") || document.body,
                                                     title: null,
                                                     footer: null,
                                                     width: 520,
                                                     type: "white",
                                                     closable: false,
-                                                    maskClosable:false,
+                                                    maskClosable: false,
                                                     content: (
                                                         <CreateDictionaries
                                                             title='扩充到护网专用工具'
@@ -2679,7 +2724,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             if (data) {
                 try {
                     setStreamData(data)
-                    if(data.Message.length>0){
+                    if (data.Message.length > 0) {
                         logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
                     }
                 } catch (error) {}
@@ -2796,13 +2841,13 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                             icon={<OutlinePlusIcon />}
                             onClick={() => {
                                 const m = showYakitModal({
-                                    getContainer:document.getElementById("new-payload") || document.body,
+                                    getContainer: document.getElementById("new-payload") || document.body,
                                     title: null,
                                     footer: null,
                                     width: 520,
                                     type: "white",
                                     closable: false,
-                                    maskClosable:false,
+                                    maskClosable: false,
                                     content: (
                                         <CreateDictionaries
                                             title='扩充到护网专用工具'
@@ -2865,7 +2910,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                 <>
                                     <YakitButton
                                         type='outline2'
-                                        icon={<SolidSparklesIcon />}
+                                        icon={<OutlineSparklesIcon />}
                                         onClick={onRemoveDuplicate}
                                     >
                                         自动去重
@@ -2874,7 +2919,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                         onClick={() => {
                                             setEditMonaco(true)
                                         }}
-                                        icon={<SolidPencilaltIcon />}
+                                        icon={<OutlinePencilaltIcon />}
                                     >
                                         编辑
                                     </YakitButton>
@@ -3233,7 +3278,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
             if (data) {
                 try {
                     setStreamData(data)
-                    if(data.Message.length>0){
+                    if (data.Message.length > 0) {
                         logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
                     }
                 } catch (error) {}
@@ -3282,13 +3327,13 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                                 icon={<OutlineAddPayloadIcon />}
                                 onClick={() => {
                                     const m = showYakitModal({
-                                        getContainer:document.getElementById("new-payload") || document.body,
+                                        getContainer: document.getElementById("new-payload") || document.body,
                                         title: null,
                                         footer: null,
                                         width: 520,
                                         type: "white",
                                         closable: false,
-                                        maskClosable:false,
+                                        maskClosable: false,
                                         content: (
                                             <CreateDictionaries
                                                 title='新建字典'
