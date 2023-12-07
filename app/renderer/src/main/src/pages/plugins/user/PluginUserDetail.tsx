@@ -2,7 +2,7 @@ import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useState} fr
 import {PluginDetailHeader, PluginDetails, PluginDetailsListItem, statusTag} from "../baseTemplate"
 import {OutlineClouddownloadIcon, OutlineCursorclickIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
-import {Tabs, Tooltip} from "antd"
+import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {FilterPopoverBtn, FuncBtn} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
@@ -19,13 +19,12 @@ import {YakitRoute} from "@/routes/newRoute"
 import {onlineUseToLocalDetail} from "../utils"
 import {LoadingOutlined} from "@ant-design/icons"
 import {SolidPrivatepluginIcon} from "@/assets/icon/colors"
+import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 
 import "../plugins.scss"
 import styles from "./PluginUserDetail.module.scss"
 
-const {ipcRenderer} = window.require("electron")
-
-const {TabPane} = Tabs
+const {TabPane} = PluginTabs
 
 export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
     forwardRef((props, ref) => {
@@ -299,7 +298,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
                     spinLoading={spinLoading}
                 >
                     <div className={styles["details-content-wrapper"]}>
-                        <Tabs tabPosition='right' className='plugins-tabs'>
+                        <PluginTabs tabPosition='right'>
                             <TabPane tab='源 码' key='code'>
                                 <div className={styles["plugin-info-wrapper"]}>
                                     <PluginDetailHeader
@@ -342,7 +341,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
                                     <YakitPluginOnlineJournal pluginId={plugin.id} />
                                 </div>
                             </TabPane>
-                        </Tabs>
+                        </PluginTabs>
                     </div>
                 </PluginDetails>
             </>
