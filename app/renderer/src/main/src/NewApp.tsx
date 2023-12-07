@@ -1,6 +1,6 @@
 import React, {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
-import {failed,warn} from "./utils/notification"
+import {failed, warn} from "./utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
 import {getCompletions} from "./utils/monacoSpec/yakCompletionSchema"
 import {showModal} from "./utils/showModal"
@@ -16,8 +16,10 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {LocalGV, RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
-import { coordinate } from "./pages/globalVariable"
-import { remoteOperation } from "./pages/dynamicControl/DynamicControl"
+import {coordinate} from "./pages/globalVariable"
+import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
+import {useTemporaryProjectStore} from "./store/temporaryProject"
+import {ProjectDescription} from "./pages/softwareSettings/ProjectManage"
 
 /** 快捷键目录 */
 const InterceptKeyword = [
@@ -56,7 +58,7 @@ const {ipcRenderer} = window.require("electron")
 interface OnlineProfileProps {
     BaseUrl: string
     Password?: string
-    IsCompany?:boolean
+    IsCompany?: boolean
 }
 
 function NewApp() {
@@ -235,15 +237,14 @@ function NewApp() {
     // 退出时 确保渲染进程各类事项已经处理完毕
     const {dynamicStatus} = yakitDynamicStatus()
     useEffect(() => {
-        ipcRenderer.on("close-windows-renderer", async(e, res: any) => {
+        ipcRenderer.on("close-windows-renderer", async (e, res: any) => {
             // 通知应用退出
-            if(dynamicStatus.isDynamicStatus){
+            if (dynamicStatus.isDynamicStatus) {
                 warn("远程控制关闭中...")
-                await remoteOperation(false,dynamicStatus)
-                ipcRenderer.invoke("app-exit") 
-            }
-            else{
-               ipcRenderer.invoke("app-exit") 
+                await remoteOperation(false, dynamicStatus)
+                ipcRenderer.invoke("app-exit")
+            } else {
+                ipcRenderer.invoke("app-exit")
             }
         })
         return () => {

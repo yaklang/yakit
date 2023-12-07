@@ -1,14 +1,19 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {MacUIOpCloseSvgIcon, MacUIOpMaxSvgIcon, MacUIOpMinSvgIcon, MacUIOpRestoreSvgIcon} from "./icons"
 import {useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import styles from "./uiOperate.module.scss"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {useRunNodeStore} from "@/store/runNode"
+import {useTemporaryProjectStore} from "@/store/temporaryProject"
+import {TemporaryProjectPop} from "./WinUIOp"
 
 const {ipcRenderer} = window.require("electron")
 
-export interface MacUIOpProp {}
+export interface MacUIOpProp {
+    currentProjectId: string // 当前项目id
+    pageChildrenShow: boolean
+}
 
 export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
     const [show, setShow] = useState<boolean>(false)
@@ -31,16 +36,35 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
         }
     }, [])
 
-    /**
-     * 运行节点
-     */
-    const {runNodeList} = useRunNodeStore()
+    const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
+    const {temporaryProjectId, temporaryProjectNoPromptFlag} = useTemporaryProjectStore()
+    const lastTemporaryProjectIdRef = useRef<string>("")
+    const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
+    const lastTemporaryProjectNoPromptRef = useRef<boolean>(false)
+    const temporaryProjectPopRef = useRef<any>(null)
+
+    useEffect(() => {
+        lastTemporaryProjectNoPromptRef.current = temporaryProjectNoPromptFlag
+    }, [temporaryProjectNoPromptFlag])
+
+    useEffect(() => {
+        lastTemporaryProjectIdRef.current = temporaryProjectId
+    }, [temporaryProjectId])
 
     const handleCloseSoft = () => {
         // 如果运行节点存在
         if (Array.from(runNodeList).length) {
             setCloseRunNodeItemVerifyVisible(true)
+            return
+        }
+        // 如果打开得是临时项目
+        if (
+            props.pageChildrenShow &&
+            lastTemporaryProjectIdRef.current === props.currentProjectId &&
+            !lastTemporaryProjectNoPromptRef.current
+        ) {
+            setCloseTemporaryProjectVisible(true)
             return
         }
         operate("close")
@@ -94,12 +118,28 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                     title='是否确认关闭节点'
                     content='关闭Yakit会默认关掉所有启用的节点'
                     onOk={() => {
-                        operate("close")
+                        clearRunNodeList()
+                        setCloseRunNodeItemVerifyVisible(false)
+                        handleCloseSoft()
                     }}
                     onCancel={() => {
                         setCloseRunNodeItemVerifyVisible(false)
                     }}
                 />
+                {/* 退出临时项目确认弹框 */}
+                {closeTemporaryProjectVisible && (
+                    <TemporaryProjectPop
+                        ref={temporaryProjectPopRef}
+                        onOk={() => {
+                            setCloseTemporaryProjectVisible(false)
+                            lastTemporaryProjectIdRef.current = ""
+                            handleCloseSoft()
+                        }}
+                        onCancel={() => {
+                            setCloseTemporaryProjectVisible(false)
+                        }}
+                    />
+                )}
             </div>
         </div>
     )

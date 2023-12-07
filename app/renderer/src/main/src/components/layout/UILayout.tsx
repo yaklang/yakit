@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useCreation, useDebounce, useGetState, useMemoizedFn} from "ahooks"
-import {Form, Input, Progress, Select, Spin, Tooltip} from "antd"
+import {Form, Input, Progress, Select, Spin} from "antd"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {MacUIOp} from "./MacUIOp"
@@ -14,7 +14,7 @@ import {
 } from "./icons"
 import {PerformanceDisplay, yakProcess} from "./PerformanceDisplay"
 import {FuncDomain, UpdateEnpriTraceInfoProps} from "./FuncDomain"
-import {WinUIOp} from "./WinUIOp"
+import {TemporaryProjectPop, WinUIOp} from "./WinUIOp"
 import {GlobalState} from "./GlobalState"
 import {YakitGlobalHost} from "./YakitGlobalHost"
 import {
@@ -24,7 +24,7 @@ import {
     YakitSystem,
     YaklangEngineMode
 } from "@/yakitGVDefine"
-import {failed, info, success,warn} from "@/utils/notification"
+import {failed, info, success, warn, yakitFailed} from "@/utils/notification"
 import {YakEditor} from "@/utils/editors"
 import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
 import {EngineModeVerbose, YakitLoading} from "../basics/YakitLoading"
@@ -37,7 +37,13 @@ import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/componen
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
 import {BaseMiniConsole} from "../baseConsole/BaseConsole"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isEnterpriseEdition} from "@/utils/envfile"
+import {
+    getReleaseEditionName,
+    isCommunityEdition,
+    isEnpriTrace,
+    isEnpriTraceAgent,
+    isEnterpriseEdition
+} from "@/utils/envfile"
 import {AllKillEngineConfirm} from "./AllKillEngineConfirm"
 import {SoftwareSettings} from "@/pages/softwareSettings/SoftwareSettings"
 import {HomeSvgIcon, PolygonIcon, StopIcon} from "@/assets/newIcon"
@@ -56,13 +62,16 @@ import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
 import {useScreenRecorder} from "@/store/screenRecorder"
-import { ResultObjProps, remoteOperation } from "@/pages/dynamicControl/DynamicControl"
+import {ResultObjProps, remoteOperation} from "@/pages/dynamicControl/DynamicControl"
 
 import {useStore, yakitDynamicStatus} from "@/store"
-import yakitEE from "@/assets/yakitEE.png";
-import yakitSE from "@/assets/yakitSE.png";
-import yakitCattle from "@/assets/yakitCattle.png";
-import { NetWorkApi } from "@/services/fetch"
+import yakitEE from "@/assets/yakitEE.png"
+import yakitSE from "@/assets/yakitSE.png"
+import yakitCattle from "@/assets/yakitCattle.png"
+import {NetWorkApi} from "@/services/fetch"
+import {useTemporaryProjectStore} from "@/store/temporaryProject"
+import {useRunNodeStore} from "@/store/runNode"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -103,7 +112,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [keepalive, setKeepalive] = useState<boolean>(false)
 
     /** 自动远程模式 */
-    const [runRemote,setRunRemote] = useState<boolean>(false)
+    const [runRemote, setRunRemote] = useState<boolean>(false)
 
     /** 内置引擎版本 */
     const [buildInEngineVersion, setBuildInEngineVersion] = useState("")
@@ -438,18 +447,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
-    const {dynamicStatus,setDynamicStatus} = yakitDynamicStatus()
+    const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
     const {userInfo} = useStore()
 
-    useEffect(()=>{
+    useEffect(() => {
         // 监听退出远程控制
         ipcRenderer.on("login-out-dynamic-control-callback", async (params) => {
-            if(dynamicStatus.isDynamicStatus){
+            if (dynamicStatus.isDynamicStatus) {
                 changeEngineMode("local")
-                setDynamicStatus({...dynamicStatus,isDynamicStatus:false})
-                await remoteOperation(false,dynamicStatus,userInfo)
+                setDynamicStatus({...dynamicStatus, isDynamicStatus: false})
+                await remoteOperation(false, dynamicStatus, userInfo)
                 // 是否退出登录
-                if(params?.loginOut){
+                if (params?.loginOut) {
                     ipcRenderer.invoke("ipc-sign-out")
                 }
             }
@@ -457,36 +466,36 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         return () => {
             ipcRenderer.removeAllListeners("login-out-dynamic-control-callback")
         }
-    },[dynamicStatus.isDynamicStatus])
+    }, [dynamicStatus.isDynamicStatus])
     /** yaklang远程控制-自动远程模式连接 */
-    const runControlRemote = useMemoizedFn((v:string,baseUrl:string)=>{
+    const runControlRemote = useMemoizedFn((v: string, baseUrl: string) => {
         try {
             const resultObj: ResultObjProps = JSON.parse(v)
-            console.log("runControlRemote",resultObj,baseUrl)
-        
-        // 缓存远程控制参数
-        setDynamicStatus({...dynamicStatus,baseUrl,...resultObj})
-        ipcRenderer
-        .invoke("Codec", {Type: "base64-decode", Text: resultObj.pubpem, Params: [], ScriptName: ""})
-        .then((res) => {
-            setYakitStatus("control-remote")
-            cacheYakitStatus.current = "control-remote"
-            setRunRemote(true)
-            setKeepalive(false)
-            setEngineLink(false)
+            console.log("runControlRemote", resultObj, baseUrl)
 
-            setCredential({
-                Host: resultObj.host,
-                IsTLS: true,
-                Password: resultObj.secret,
-                PemBytes: StringToUint8Array(res?.Result || ""),
-                Port: resultObj.port,
-                Mode: "remote"
-            })
-        })
-        .catch((err) => {
-            warn(`Base64 解码失败:${err}`)
-        })
+            // 缓存远程控制参数
+            setDynamicStatus({...dynamicStatus, baseUrl, ...resultObj})
+            ipcRenderer
+                .invoke("Codec", {Type: "base64-decode", Text: resultObj.pubpem, Params: [], ScriptName: ""})
+                .then((res) => {
+                    setYakitStatus("control-remote")
+                    cacheYakitStatus.current = "control-remote"
+                    setRunRemote(true)
+                    setKeepalive(false)
+                    setEngineLink(false)
+
+                    setCredential({
+                        Host: resultObj.host,
+                        IsTLS: true,
+                        Password: resultObj.secret,
+                        PemBytes: StringToUint8Array(res?.Result || ""),
+                        Port: resultObj.port,
+                        Mode: "remote"
+                    })
+                })
+                .catch((err) => {
+                    warn(`Base64 解码失败:${err}`)
+                })
         } catch (error) {
             warn(`解析失败:${error}`)
         }
@@ -530,7 +539,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** yaklang远程控制 - 自动连接远程模式引擎的内容 */
     const connectControlRemoteEngine = useMemoizedFn(() => {
         setRemoteConnectLoading(true)
-        ipcRenderer.invoke("engine-ready-link",true)
+        ipcRenderer.invoke("engine-ready-link", true)
         setTimeout(() => {
             setRemoteConnectLoading(false)
         }, 300)
@@ -583,23 +592,38 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         visible: false
     })
     const [projectModalLoading, setProjectModalLoading] = useState<boolean>(false)
-    const [ProjectName,setProjectName] = useState<string>()
-    const fetchCurrentProject = useMemoizedFn(() => {
-        ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => {
-            if(rsp&&rsp.ProjectName) setProjectName(rsp.ProjectName)
-            setCurrentProject(rsp || undefined)
-        })
-    })
+    const [ProjectName, setProjectName] = useState<string>()
 
-    const getAppTitleName:string = useMemo(()=>{
-        // 引擎未连接或便携版 显示默认title
-        if(!engineLink || isEnpriTraceAgent()) return getReleaseEditionName()
-        else {
-            return ProjectName?
-                ProjectName.length>10?`${ProjectName.slice(0,10)}...`:ProjectName
-                :getReleaseEditionName()
+    useEffect(() => {
+        const funCallBack = () => {
+            ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => {
+                setCurrentProject(rsp || undefined)
+            })
         }
-    },[ProjectName,engineLink])
+        emiter.on("onFeachGetCurrentProject", funCallBack)
+        return () => {
+            emiter.off("onFeachGetCurrentProject", funCallBack)
+        }
+    }, [])
+
+    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectNoPromptFlag} =
+        useTemporaryProjectStore()
+    const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
+    const temporaryProjectPopRef = useRef<any>(null)
+
+    const getAppTitleName: string = useMemo(() => {
+        // 引擎未连接或便携版 显示默认title
+        if (!engineLink || isEnpriTraceAgent()) return getReleaseEditionName()
+        else if (temporaryProjectId && temporaryProjectId === (currentProject?.Id ? currentProject?.Id + "" : "")) {
+            return "临时项目"
+        } else {
+            return ProjectName
+                ? ProjectName.length > 10
+                    ? `${ProjectName.slice(0, 10)}...`
+                    : ProjectName
+                : getReleaseEditionName()
+        }
+    }, [ProjectName, engineLink, temporaryProjectId, currentProject])
 
     /** funcDomain组件的回调事件 */
     const typeCallback = useMemoizedFn((type: YakitSettingCallbackType) => {
@@ -770,14 +794,29 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [yakitMode, setYakitMode] = useState<"soft" | "store" | "">("")
     const changeYakitMode = useMemoizedFn((type: "soft" | "store") => {
         if (type === "soft" && yakitMode !== "soft") {
-            setLinkDatabaseHint(true)
+            if (temporaryProjectId && !temporaryProjectNoPromptFlag) {
+                setCloseTemporaryProjectVisible(true)
+            } else {
+                setLinkDatabaseHint(true)
+            }
         }
     })
+
+    const onOkEnterProjectMag = () => {
+        handleKillAllRunNode()
+        setYakitMode("soft")
+        setLinkDatabase(true)
+        setProjectName("")
+    }
+
     /** 软件配置界面完成事件回调 */
     const softwareSettingFinish = useMemoizedFn(() => {
         setYakitMode("")
         setLinkDatabase(false)
-        fetchCurrentProject()
+        ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => {
+            if (rsp && rsp.ProjectName) setProjectName(rsp.ProjectName)
+            setCurrentProject(rsp || undefined)
+        })
     })
 
     /** MACOS 上双击放大窗口(不是最大化) */
@@ -807,18 +846,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         if (!getEngineLink()) {
             isEnpriTraceAgent()
                 ? setEngineLink(true)
-                : getRemoteValue(RemoteGV.LinkDatabase).then((id: number) => {
-                      if (id) {
-                          ipcRenderer.invoke("SetCurrentProject", {Id: +id})
-                          setLinkDatabase(false)
-                          setYakitMode("")
-                          fetchCurrentProject()
-                      } else {
-                          setLinkDatabase(true)
-                          setYakitMode("soft")
-                      }
+                : (() => {
+                      setLinkDatabase(true)
+                      setYakitMode("soft")
                       setTimeout(() => setEngineLink(true), 100)
-                  })
+                  })()
         }
 
         if (latestYakit) setLatestYakit("")
@@ -845,10 +877,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     setYakitStatus("error")
                 }
                 // 远程控制异常退出
-                if(dynamicStatus.isDynamicStatus){
-                    setDynamicStatus({...dynamicStatus,isDynamicStatus:false})
+                if (dynamicStatus.isDynamicStatus) {
+                    setDynamicStatus({...dynamicStatus, isDynamicStatus: false})
                     changeEngineMode("local")
-                    remoteOperation(false,dynamicStatus,userInfo)
+                    remoteOperation(false, dynamicStatus, userInfo)
                 }
             }
         } else {
@@ -857,10 +889,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 setYakitStatus("error")
             }
             // 远程控制异常退出
-            if(dynamicStatus.isDynamicStatus){
-                setDynamicStatus({...dynamicStatus,isDynamicStatus:false})
+            if (dynamicStatus.isDynamicStatus) {
+                setDynamicStatus({...dynamicStatus, isDynamicStatus: false})
                 changeEngineMode("local")
-                remoteOperation(false,dynamicStatus,userInfo)
+                remoteOperation(false, dynamicStatus, userInfo)
             }
         }
     })
@@ -960,7 +992,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                             ipcRenderer.invoke("cancel-StartScrecorder", screenRecorderInfo.token)
                         }}
                         type='primary'
-                        colors="danger"
+                        colors='danger'
                         className={styles["stop-screen-recorder"]}
                         size='large'
                     >
@@ -987,6 +1019,30 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setRemoteValue(RemoteGV.KnowChatCS, "true")
     })
 
+    // 处理全部运行节点删除
+    const {runNodeList, clearRunNodeList} = useRunNodeStore()
+    const handleKillAllRunNode = async () => {
+        let promises: (() => Promise<any>)[] = []
+        Array.from(runNodeList).forEach(([key, pid]) => {
+            promises.push(() => ipcRenderer.invoke("kill-run-node", {pid}))
+        })
+        try {
+            await Promise.all(promises.map((promiseFunc) => promiseFunc()))
+            clearRunNodeList()
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
+
+    // 判断是否显示页面children
+    const pageChildrenShow: boolean = useMemo(() => {
+        const flag = engineLink && !isJudgeLicense && !linkDatabase
+        if (!flag) {
+            setProjectName("")
+        }
+        return flag
+    }, [engineLink, isJudgeLicense, linkDatabase])
+
     return (
         <div className={styles["ui-layout-wrapper"]}>
             <div className={styles["ui-layout-container"]}>
@@ -1012,12 +1068,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 ></div>
 
                                 <div className={classNames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
-                                    {getAppTitleName}-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
+                                    <>
+                                        {getAppTitleName}-{`${EngineModeVerbose(engineMode || "local", dynamicStatus)}`}
+                                    </>
                                 </div>
 
                                 <div className={styles["header-left"]}>
                                     <div>
-                                        <MacUIOp />
+                                        <MacUIOp
+                                            currentProjectId={currentProject?.Id ? currentProject?.Id + "" : ""}
+                                            pageChildrenShow={pageChildrenShow}
+                                        />
                                     </div>
 
                                     {engineLink && (
@@ -1120,7 +1181,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 ></div>
 
                                 <div className={classNames(styles["yakit-header-title"])} onDoubleClick={maxScreen}>
-                                    {getAppTitleName}-{`${EngineModeVerbose(engineMode || "local",dynamicStatus)}`}
+                                    <>
+                                        {getAppTitleName}-{`${EngineModeVerbose(engineMode || "local", dynamicStatus)}`}
+                                    </>
                                 </div>
 
                                 <div className={styles["header-left"]}>
@@ -1215,7 +1278,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             <div className={styles["divider-wrapper"]}></div>
                                         </>
                                     )}
-                                    <WinUIOp />
+                                    <WinUIOp
+                                        currentProjectId={currentProject?.Id ? currentProject?.Id + "" : ""}
+                                        pageChildrenShow={pageChildrenShow}
+                                    />
                                 </div>
                             </div>
                         )}
@@ -1358,28 +1424,43 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 title='是否进入项目管理'
                 content='如果有正在进行中的任务，回到项目管理页则都会停止，确定回到项目管理页面吗?'
                 onOk={() => {
-                    setYakitMode("soft")
-                    setLinkDatabase(true)
+                    onOkEnterProjectMag()
                     setLinkDatabaseHint(false)
                 }}
                 onCancel={() => setLinkDatabaseHint(false)}
             />
 
+            {closeTemporaryProjectVisible && (
+                <TemporaryProjectPop
+                    ref={temporaryProjectPopRef}
+                    onOk={async () => {
+                        setTemporaryProjectNoPromptFlag(temporaryProjectPopRef.current.temporaryProjectNoPrompt)
+                        setCloseTemporaryProjectVisible(false)
+                        onOkEnterProjectMag()
+                    }}
+                    onCancel={() => {
+                        setCloseTemporaryProjectVisible(false)
+                    }}
+                />
+            )}
+
             {isCommunityEdition() && engineLink && !isJudgeLicense && !linkDatabase && showChatCS && (
                 <div className={styles["chat-cs-hint-wrapper"]}>
-                    <div  className={styles['hint-wrapper']}>
-                        <div className={styles['hint-modal-wrapper']}>
-                            <div className={styles['modal-content']}>
-                                <div className={styles['content-style']}>ChatCS</div>
-                                <div className={styles['subcontent-style']}>与安全有关的问题都可以问牛牛哦~</div>
+                    <div className={styles["hint-wrapper"]}>
+                        <div className={styles["hint-modal-wrapper"]}>
+                            <div className={styles["modal-content"]}>
+                                <div className={styles["content-style"]}>ChatCS</div>
+                                <div className={styles["subcontent-style"]}>与安全有关的问题都可以问牛牛哦~</div>
                             </div>
-                            <div className={styles['modal-btn']} onClick={onChatCS}>我知道了</div>
+                            <div className={styles["modal-btn"]} onClick={onChatCS}>
+                                我知道了
+                            </div>
                         </div>
-                        <div className={styles['hint-modal-arrow']}>
+                        <div className={styles["hint-modal-arrow"]}>
                             <PolygonIcon />
                         </div>
 
-                        <div className={styles['show-chat-icon-wrapper']}>
+                        <div className={styles["show-chat-icon-wrapper"]}>
                             <img src={yakitCattle} />
                         </div>
                     </div>
@@ -1501,16 +1582,16 @@ const RemoteYaklangEngine: React.FC<RemoteYaklangEngineProps> = React.memo((prop
                 <div className={styles["remote-yaklang-engine-body"]}>
                     <div className={styles["remote-title"]}>
                         {isCommunityEdition() && <YakitThemeSvgIcon style={{fontSize: 64}} />}
-                        {isEnpriTrace()&& 
+                        {isEnpriTrace() && (
                             <div className={styles["logo-img"]}>
-                                <img src={yakitEE} alt="暂无图片" />
+                                <img src={yakitEE} alt='暂无图片' />
                             </div>
-                        }
-                        {isEnpriTraceAgent()&& 
+                        )}
+                        {isEnpriTraceAgent() && (
                             <div className={styles["logo-img"]}>
-                                <img src={yakitSE} alt="暂无图片" />
+                                <img src={yakitSE} alt='暂无图片' />
                             </div>
-                        }
+                        )}
                         <div className={styles["title-style"]}>远程模式</div>
                         <div className={styles["remote-history"]}>
                             <div className={styles["select-title"]}>连接历史</div>
@@ -1827,7 +1908,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
     useEffect(() => {
         if (visible) {
             // 社区更新
-            if(isCommunityEdition()){
+            if (isCommunityEdition()) {
                 isBreakRef.current = true
                 setDownloadProgress(undefined)
                 ipcRenderer
@@ -1835,7 +1916,7 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                     .then((data: string) => {
                         let version = data
                         if (version.startsWith("v")) version = version.substr(1)
-    
+
                         ipcRenderer
                             .invoke("download-latest-yakit", version, isEnterpriseEdition())
                             .then(() => {
@@ -1868,57 +1949,56 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
                     })
             }
             // 企业版更新
-            else if(isEnpriTrace()){
+            else if (isEnpriTrace()) {
                 isBreakRef.current = true
                 ipcRenderer.invoke("update-enpritrace-info").then((info: UpdateEnpriTraceInfoProps) => {
                     const {version} = info
                     NetWorkApi<UpdateEnpriTraceInfoProps, any>({
-                    method: "get",
-                    url: "download/install/package",
-                    params: {version}
-                })
-                    .then((res:{from:string,ok:boolean}) => {
-                        const {from,ok} = res
-                        if(ok){
-                            getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
-                                if (!setting) return
-                                const value = JSON.parse(setting)
-                                const searchStr = "/yakit-projects";
-                                const startIndex = from.indexOf(searchStr) + searchStr.length;;
-                                const result = from.substring(startIndex);
-                                const url = value.BaseUrl.replace(/:\d+$/, '') + result
-                                ipcRenderer
-                                .invoke("download-enpriTrace-latest-yakit", url)
-                                .then(() => {
-                                    if (!isBreakRef.current) return
-                                    success("下载完毕")
-                                    if (!getDownloadProgress()?.size) return
-                                    setDownloadProgress({
-                                        time: {
-                                            elapsed: downloadProgress?.time.elapsed || 0,
-                                            remaining: 0
-                                        },
-                                        speed: 0,
-                                        percent: 100,
-                                        // @ts-ignore
-                                        size: getDownloadProgress().size
-                                    })
-                                    ipcRenderer.invoke("open-yakit-or-yaklang")
-                                    ipcRenderer.invoke("download-update-wait", "yakit")
-                                })
-                                .catch((e: any) => {
-                                    if (!isBreakRef.current) return
-                                    failed(`下载失败: ${e}`)
-                                })
-                                .finally(() => setVisible(false))
-                            })
-                        }
+                        method: "get",
+                        url: "download/install/package",
+                        params: {version}
                     })
-                    .catch((err) => {
-                        failed(`下载yakit安装包失败${err}`)
-                    })
+                        .then((res: {from: string; ok: boolean}) => {
+                            const {from, ok} = res
+                            if (ok) {
+                                getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+                                    if (!setting) return
+                                    const value = JSON.parse(setting)
+                                    const searchStr = "/yakit-projects"
+                                    const startIndex = from.indexOf(searchStr) + searchStr.length
+                                    const result = from.substring(startIndex)
+                                    const url = value.BaseUrl.replace(/:\d+$/, "") + result
+                                    ipcRenderer
+                                        .invoke("download-enpriTrace-latest-yakit", url)
+                                        .then(() => {
+                                            if (!isBreakRef.current) return
+                                            success("下载完毕")
+                                            if (!getDownloadProgress()?.size) return
+                                            setDownloadProgress({
+                                                time: {
+                                                    elapsed: downloadProgress?.time.elapsed || 0,
+                                                    remaining: 0
+                                                },
+                                                speed: 0,
+                                                percent: 100,
+                                                // @ts-ignore
+                                                size: getDownloadProgress().size
+                                            })
+                                            ipcRenderer.invoke("open-yakit-or-yaklang")
+                                            ipcRenderer.invoke("download-update-wait", "yakit")
+                                        })
+                                        .catch((e: any) => {
+                                            if (!isBreakRef.current) return
+                                            failed(`下载失败: ${e}`)
+                                        })
+                                        .finally(() => setVisible(false))
+                                })
+                            }
+                        })
+                        .catch((err) => {
+                            failed(`下载yakit安装包失败${err}`)
+                        })
                 })
-                
             }
 
             ipcRenderer.on("download-yakit-engine-progress", (e: any, state: DownloadingState) => {
@@ -1929,7 +2009,6 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
             return () => {
                 ipcRenderer.removeAllListeners("download-yakit-engine-progress")
             }
-            
         } else {
             isBreakRef.current = false
         }
@@ -1998,7 +2077,9 @@ const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) => {
 
                             <div className={styles["hint-right-wrapper"]}>
                                 <div className={styles["hint-right-download"]}>
-                                    <div className={styles["hint-right-title"]}>{getReleaseEditionName()} 软件下载中...</div>
+                                    <div className={styles["hint-right-title"]}>
+                                        {getReleaseEditionName()} 软件下载中...
+                                    </div>
                                     <div className={styles["download-progress"]}>
                                         <Progress
                                             strokeColor='#F28B44'

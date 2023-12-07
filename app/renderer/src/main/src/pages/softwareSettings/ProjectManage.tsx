@@ -1,8 +1,8 @@
 import React, {memo, ReactNode, useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useGetState, useMemoizedFn, useScroll, useVirtualList} from "ahooks"
+import {useDebounceEffect, useGetState, useMemoizedFn, useScroll, useUpdateEffect, useVirtualList} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryGeneralRequest} from "../invoker/schema"
-import {failed, info} from "@/utils/notification"
+import {failed, info, yakitFailed} from "@/utils/notification"
 import {
     ChevronDownIcon,
     ChevronRightIcon,
@@ -25,7 +25,8 @@ import {
     ProjectExportSvgIcon,
     ProjectFolderOpenSvgIcon,
     ProjectImportSvgIcon,
-    ProjectViewGridSvgIcon
+    ProjectViewGridSvgIcon,
+    TemporaryProjectSvgIcon
 } from "./icon"
 import ReactResizeDetector from "react-resize-detector"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -37,8 +38,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {randomString} from "@/utils/randomUtil"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {setRemoteValue} from "@/utils/kv"
-import {RemoteGV} from "@/yakitGV"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -46,6 +45,10 @@ import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightCont
 
 import classNames from "classnames"
 import styles from "./ProjectManage.module.scss"
+import {useTemporaryProjectStore} from "@/store/temporaryProject"
+import emiter from "@/utils/eventBus/eventBus"
+import { RemoteGV } from "@/yakitGV"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -55,7 +58,7 @@ export interface ProjectManageProp {
     onFinish: () => any
 }
 /** (新建|编辑)项目|文件夹参数 */
-interface ProjectParamsProps {
+export interface ProjectParamsProps {
     Id?: number
     ProjectName: string
     Description?: string
@@ -84,6 +87,7 @@ export interface ProjectDescription {
     ChildFolderId: number
     ChildFolderName: string
     Type: string
+    FileSize: string
 }
 export interface ProjectsResponse {
     Pagination: {Page: number; Limit: number}
@@ -146,7 +150,8 @@ const DefaultProjectInfo: ProjectDescription = {
     FolderName: "",
     ChildFolderId: 0,
     ChildFolderName: "",
-    Type: ""
+    Type: "",
+    FileSize: ""
 }
 
 const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
@@ -169,7 +174,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const [search, setSearch] = useState<{name: string; total: number}>({name: "", total: 0})
 
     const [latestProject, setLatestProject] = useState<ProjectDescription>()
-    const [defaultProject, setDefaultProject] = useState<ProjectDescription>()
 
     const [vlistHeigth, setVListHeight] = useState(600)
     const containerRef = useRef<any>(null)
@@ -229,7 +233,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             {
                 key: "ProjectName",
                 name: typeToName["all"],
-                width: "20%",
+                width: "10%",
                 headerRender: (index) => {
                     return (
                         <DropdownMenu
@@ -322,6 +326,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     )
                 }
             },
+            {key: "FileSize", name: "大小", width: "10%"},
             {
                 key: "CreatedAt",
                 name: timeToName["updated_at"],
@@ -478,11 +483,28 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         )
     })
 
-    useEffect(() => {
-        ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
-        ipcRenderer.invoke("GetDefaultProject").then((rsp: ProjectDescription) => setDefaultProject(rsp || undefined))
+    const handleTemporaryProject = async () => {
+        // 若临时项目存在 设置为默认项目
+        if (temporaryProjectId) {
+            await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+            setTemporaryProjectId("")
+            emiter.emit("onFeachGetCurrentProject")
+        }
+    }
 
-        update()
+    const getProjectInfo = async () => {
+        try {
+            await handleTemporaryProject()
+            const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProject")
+            setLatestProject(res2 || undefined)
+            update()
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
+
+    useEffect(() => {
+        getProjectInfo()
     }, [])
 
     const update = useMemoizedFn((page?: number) => {
@@ -535,63 +557,29 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         }
 
         setLoading(true)
-        if (defaultProject && latestProject && delId.Id === +latestProject?.Id) {
-            ipcRenderer
-                .invoke("SetCurrentProject", {
-                    Id: +defaultProject.Id
+        ipcRenderer
+            .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
+            .then((e) => {
+                emiter.emit("onFeachGetCurrentProject")
+                info("删除成功")
+                setData({
+                    ...getData(),
+                    Projects: getData().Projects.filter((item) => +item.Id !== +delId.Id),
+                    Total: getData().Total == 0 ? 0 : getData().Total - 1,
+                    ProjectToTal: getData().ProjectToTal == 0 ? 0 : getData().ProjectToTal - 1
                 })
-                .then((e) => {
-                    ipcRenderer
-                        .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
-                        .then((e) => {
-                            info("删除成功")
-                            setData({
-                                ...getData(),
-                                Projects: getData().Projects.filter((item) => +item.Id !== +delId.Id),
-                                Total: getData().Total == 0 ? 0 : getData().Total - 1
-                            })
-                            ipcRenderer
-                                .invoke("GetCurrentProject")
-                                .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
-                        })
-                        .catch((e) => {
-                            failed(`删除失败: ${e}`)
-                        })
-                        .finally(() => {
-                            setDelId({Id: -1, Type: "project"})
-                            setDelShow(false)
-                            setTimeout(() => setLoading(false), 300)
-                        })
-                })
-                .catch(() => {
-                    failed("删除失败，没有可以切换的默认数据库")
-                    setDelId({Id: -1, Type: "project"})
-                    setDelShow(false)
-                    setTimeout(() => setLoading(false), 300)
-                })
-        } else {
-            ipcRenderer
-                .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
-                .then((e) => {
-                    info("删除成功")
-                    setData({
-                        ...getData(),
-                        Projects: getData().Projects.filter((item) => +item.Id !== +delId.Id),
-                        Total: getData().Total == 0 ? 0 : getData().Total - 1
-                    })
-                    ipcRenderer
-                        .invoke("GetCurrentProject")
-                        .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
-                })
-                .catch((e) => {
-                    failed(`删除失败: ${e}`)
-                })
-                .finally(() => {
-                    setDelId({Id: -1, Type: "project"})
-                    setDelShow(false)
-                    setTimeout(() => setLoading(false), 300)
-                })
-        }
+                ipcRenderer
+                    .invoke("GetCurrentProject")
+                    .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
+            })
+            .catch((e) => {
+                failed(`删除失败: ${e}`)
+            })
+            .finally(() => {
+                setDelId({Id: -1, Type: "project"})
+                setDelShow(false)
+                setTimeout(() => setLoading(false), 300)
+            })
     })
 
     const operateFunc = useMemoizedFn((type: string, data?: ProjectDescription) => {
@@ -653,7 +641,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     .invoke("SetCurrentProject", {Id: data.Id})
                     .then((e) => {
                         info("已切换数据库")
-                        setRemoteValue(RemoteGV.LinkDatabase, `${data.Id}`)
                         onFinish()
                     })
                     .catch((e) => {
@@ -703,6 +690,29 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     }>({visible: false})
     const [modalLoading, setModalLoading] = useState<boolean>(false)
 
+    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+
+    // 创建临时项目
+    const creatTemporaryProject = useMemoizedFn(async () => {
+        try {
+            const res = await ipcRenderer.invoke("NewProject", {
+                Type: "project",
+                ProjectName: "[temporary]"
+            })
+            const newTemporaryId = res.Id + ""
+            console.log(123, newTemporaryId);
+            setTemporaryProjectId(newTemporaryId)
+            await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId})
+            info("切换临时项目成功")
+            onFinish()
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    })
+
+    const [inquireIntoProjectVisible, setInquireIntoProjectVisible] = useState<boolean>(false)
+    const [newProjectInfo, setNewProjectInfo] = useState<{Id: string; ProjectName: string}>({Id: "", ProjectName: ""})
+
     /** 弹窗确认事件的回调 */
     const onModalSubmit = useMemoizedFn(
         (type: string, value: ProjectFolderInfoProps | ExportProjectProps | ImportProjectProps) => {
@@ -720,11 +730,15 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         if (projectInfo.Id) newProject.Id = +projectInfo.Id
                         ipcRenderer
                             .invoke("NewProject", newProject)
-                            .then(() => {
+                            .then((res) => {
                                 info(projectInfo.Id ? "编辑项目成功" : "创建新项目成功")
                                 setModalInfo({visible: false})
                                 setParams({...params, Pagination: {...params.Pagination, Page: 1}})
-                                setTimeout(() => update(), 300)
+                                setNewProjectInfo(res)
+                                setTimeout(() => {
+                                    setInquireIntoProjectVisible(true)
+                                    update()
+                                }, 300)
                             })
                             .catch((e) => {
                                 failed(`${projectInfo.Id ? "编辑" : "创建新"}项目失败：${e}`)
@@ -741,11 +755,15 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 if (projectInfo.Id) newProject.Id = +projectInfo.Id
                                 ipcRenderer
                                     .invoke("NewProject", newProject)
-                                    .then(() => {
+                                    .then((res) => {
                                         info(projectInfo.Id ? "编辑项目成功" : "创建新项目成功")
                                         setModalInfo({visible: false})
                                         setParams({...params, Pagination: {...params.Pagination, Page: 1}})
-                                        setTimeout(() => update(), 300)
+                                        setNewProjectInfo(res)
+                                        setTimeout(() => {
+                                            setInquireIntoProjectVisible(true)
+                                            update()
+                                        }, 300)
                                     })
                                     .catch((e) => {
                                         failed(`${projectInfo.Id ? "编辑" : "创建新"}项目失败：${e}`)
@@ -985,80 +1003,93 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             </div>
 
                             {/* { engineMode !== "remote" && ( */}
-                                <div className={styles["icon-wrapper"]} onClick={(e) => e.stopPropagation()}>
-                                    <DropdownMenu
-                                        dropdown={{
-                                            placement: "bottomRight",
-                                            overlayClassName: styles["dropdown-menu-filter-wrapper"],
-                                            onVisibleChange: (open) => setHeaderShow(open)
-                                        }}
-                                        menu={{
-                                            data: [
-                                                {
-                                                    key: "export",
-                                                    label: "导出",
-                                                    itemIcon: (
-                                                        <ExportIcon className={styles["type-filter-icon-style"]} />
-                                                    ),
-                                                    children: [
-                                                        {key: "encryption", label: "加密导出"},
-                                                        {key: "plaintext", label: "明文导出"}
-                                                    ]
-                                                },
-                                                {
-                                                    key: "edit",
-                                                    label: "编辑",
-                                                    disabled: latestProject?.ProjectName === "[default]",
-                                                    itemIcon: (
-                                                        <PencilAltIcon
-                                                            className={
-                                                                latestProject?.ProjectName === "[default]"
-                                                                    ? styles["type-filter-icon-disabled-style"]
-                                                                    : styles["type-filter-icon-style"]
-                                                            }
-                                                        />
-                                                    )
-                                                },
-                                                {
-                                                    key: "copyPath",
-                                                    label: "复制路径",
-                                                    itemIcon: (
-                                                        <DocumentDuplicateSvgIcon
-                                                            className={styles["type-filter-icon-style"]}
-                                                        />
-                                                    )
-                                                },
-                                                {type: "divider"},
-                                                {
-                                                    key: "delete",
-                                                    label: "删除",
-                                                    disabled: latestProject?.ProjectName === "[default]",
-                                                    itemIcon: <TrashIcon className={styles["type-filter-icon-style"]} />
-                                                }
-                                            ],
-                                            className: styles["dropdown-menu-body"],
-                                            popupClassName: styles["dropdown-menu-filter-wrapper"],
-                                            onClick: ({key}) => {
-                                                setHeaderShow(false)
-                                                if (key === "delete") {
-                                                    if (latestProject) {
-                                                        setDelId({Id: +latestProject.Id, Type: latestProject.Type})
-                                                        setDelShow(true)
-                                                    }
-                                                } else operateFunc(key, latestProject)
+                            <div className={styles["icon-wrapper"]} onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenu
+                                    dropdown={{
+                                        placement: "bottomRight",
+                                        overlayClassName: styles["dropdown-menu-filter-wrapper"],
+                                        onVisibleChange: (open) => setHeaderShow(open)
+                                    }}
+                                    menu={{
+                                        data: [
+                                            {
+                                                key: "export",
+                                                label: "导出",
+                                                itemIcon: <ExportIcon className={styles["type-filter-icon-style"]} />,
+                                                children: [
+                                                    {key: "encryption", label: "加密导出"},
+                                                    {key: "plaintext", label: "明文导出"}
+                                                ]
+                                            },
+                                            {
+                                                key: "edit",
+                                                label: "编辑",
+                                                disabled: latestProject?.ProjectName === "[default]",
+                                                itemIcon: (
+                                                    <PencilAltIcon
+                                                        className={
+                                                            latestProject?.ProjectName === "[default]"
+                                                                ? styles["type-filter-icon-disabled-style"]
+                                                                : styles["type-filter-icon-style"]
+                                                        }
+                                                    />
+                                                )
+                                            },
+                                            {
+                                                key: "copyPath",
+                                                label: "复制路径",
+                                                itemIcon: (
+                                                    <DocumentDuplicateSvgIcon
+                                                        className={styles["type-filter-icon-style"]}
+                                                    />
+                                                )
+                                            },
+                                            {type: "divider"},
+                                            {
+                                                key: "delete",
+                                                label: "删除",
+                                                disabled: latestProject?.ProjectName === "[default]",
+                                                itemIcon: <TrashIcon className={styles["type-filter-icon-style"]} />
                                             }
-                                        }}
+                                        ],
+                                        className: styles["dropdown-menu-body"],
+                                        popupClassName: styles["dropdown-menu-filter-wrapper"],
+                                        onClick: ({key}) => {
+                                            setHeaderShow(false)
+                                            if (key === "delete") {
+                                                if (latestProject) {
+                                                    setDelId({Id: +latestProject.Id, Type: latestProject.Type})
+                                                    setDelShow(true)
+                                                }
+                                            } else operateFunc(key, latestProject)
+                                        }
+                                    }}
+                                >
+                                    <div
+                                        className={classNames(styles["icon-body"], {
+                                            [styles["icon-focus-body"]]: headerShow
+                                        })}
                                     >
-                                        <div
-                                            className={classNames(styles["icon-body"], {
-                                                [styles["icon-focus-body"]]: headerShow
-                                            })}
-                                        >
-                                            <DotsVerticalSvgIcon />
-                                        </div>
-                                    </DropdownMenu>
-                                </div>
+                                        <DotsVerticalSvgIcon />
+                                    </div>
+                                </DropdownMenu>
+                            </div>
                             {/* )} */}
+                        </div>
+                    </div>
+
+                    <div
+                        className={classNames(styles["btn-wrapper"], styles["new-temporary-project-wrapper"])}
+                        onClick={creatTemporaryProject}
+                    >
+                        <div className={styles["btn-body"]}>
+                            <div className={styles["body-title"]}>
+                                <TemporaryProjectSvgIcon className={styles["temporary-project-icon"]} />
+                                临时项目
+                            </div>
+                            <div className={styles["icon-style"]}>
+                                <PlusBoldSvgIcon />
+                            </div>
                         </div>
                     </div>
 
@@ -1093,20 +1124,20 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     </div>
 
                     {/* { engineMode !== "remote" && ( */}
-                        <div
-                            className={classNames(styles["btn-wrapper"], styles["import-wrapper"])}
-                            onClick={() => operateFunc("import")}
-                        >
-                            <div className={styles["btn-body"]}>
-                                <div className={styles["body-title"]}>
-                                    <DocumentDownloadSvgIcon />
-                                    导入
-                                </div>
-                                <div className={styles["icon-style"]}>
-                                    <ImportSvgIcon />
-                                </div>
+                    <div
+                        className={classNames(styles["btn-wrapper"], styles["import-wrapper"])}
+                        onClick={() => operateFunc("import")}
+                    >
+                        <div className={styles["btn-body"]}>
+                            <div className={styles["body-title"]}>
+                                <DocumentDownloadSvgIcon />
+                                导入
+                            </div>
+                            <div className={styles["icon-style"]}>
+                                <ImportSvgIcon />
                             </div>
                         </div>
+                    </div>
                     {/* )} */}
                 </div>
 
@@ -1274,9 +1305,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                         })}
                                                         onClick={(e) => {
                                                             if (!i.data.Type || i.data.Type === "project") {
-                                                                setTimeout(() => {
-                                                                    projectContextMenu(i.data)
-                                                                }, 100)
+                                                                operateFunc("setCurrent", i.data)
                                                             }
                                                             if (i.data.Type === "file") {
                                                                 operateFunc("openFile", i.data)
@@ -1316,9 +1345,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                             </div>
                                                         </div>
                                                         {/* { engineMode !== "remote" && ( */}
-                                                            <div style={{width: 120}} className={styles["opt-operate"]}>
-                                                                {projectOperate(i.data)}
-                                                            </div>
+                                                        <div style={{width: 120}} className={styles["opt-operate"]}>
+                                                            {projectOperate(i.data)}
+                                                        </div>
                                                         {/* )} */}
                                                     </div>
                                                 )
@@ -1369,6 +1398,35 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
                 onOk={() => delProjectFolder(false)}
                 onCancel={() => delProjectFolder(true)}
+            />
+
+            <YakitHint
+                visible={inquireIntoProjectVisible}
+                title='提示'
+                content={`是否需要进入新建项目${newProjectInfo?.ProjectName}`}
+                onOk={() => {
+                    setLoading(true)
+                    setInquireIntoProjectVisible(false)
+                    ipcRenderer
+                        .invoke("SetCurrentProject", {Id: newProjectInfo?.Id})
+                        .then((e) => {
+                            info("已切换数据库")
+                            setNewProjectInfo({Id: "", ProjectName: ""})
+                            onFinish()
+                        })
+                        .catch((e) => {
+                            failed("切换数据库失败：" + `${e}`)
+                        })
+                        .finally(() => {
+                            setTimeout(() => {
+                                setLoading(false)
+                            }, 500)
+                        })
+                }}
+                onCancel={() => {
+                    setNewProjectInfo({Id: "", ProjectName: ""})
+                    setInquireIntoProjectVisible(false)
+                }}
             />
         </div>
     )
@@ -1619,7 +1677,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                     }
                 }
             }
-            onModalSubmit(isFolder ? "isNewFolder" : "isNewProject", {...data})
+            const type = isFolder ? "isNewFolder" : "isNewProject"
+            onModalSubmit(type, {...data})
         }
         if (isExport) {
             if (!exportInfo.Id) {
