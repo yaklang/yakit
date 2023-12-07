@@ -171,15 +171,15 @@ module.exports = (win, getClient) => {
 
     // 用于导出
     const streamPayloadFromFileMap = new Map()
-    ipcMain.handle("cancel-GetAllPayloadFromFile", handlerHelper.cancelHandler(streamPayloadFromFileMap))
-    ipcMain.handle("GetAllPayloadFromFile", async (e, params, token) => {
-        let stream = getClient().GetAllPayloadFromFile(params)
+    ipcMain.handle("cancel-ExportAllPayloadFromFile", handlerHelper.cancelHandler(streamPayloadFromFileMap))
+    ipcMain.handle("ExportAllPayloadFromFile", async (e, params, token) => {
+        let stream = getClient().ExportAllPayloadFromFile(params)
         handlerHelper.registerHandler(win, stream, streamPayloadFromFileMap, token)
     })
     const streamAllPayloadMap = new Map()
-    ipcMain.handle("cancel-GetAllPayload", handlerHelper.cancelHandler(streamAllPayloadMap))
-    ipcMain.handle("GetAllPayload", async (e, params, token) => {
-        let stream = getClient().GetAllPayload(params)
+    ipcMain.handle("cancel-ExportAllPayload", handlerHelper.cancelHandler(streamAllPayloadMap))
+    ipcMain.handle("ExportAllPayload", async (e, params, token) => {
+        let stream = getClient().ExportAllPayload(params)
         handlerHelper.registerHandler(win, stream, streamAllPayloadMap, token)
     })
 
@@ -193,10 +193,18 @@ module.exports = (win, getClient) => {
 
     // 转换为数据库保存
     const streamGroupToDatabaseMap = new Map()
-    ipcMain.handle("cancel-CoverPayloadGroupToDatabase", handlerHelper.cancelHandler(streamGroupToDatabaseMap))
-    ipcMain.handle("CoverPayloadGroupToDatabase", async (e, params, token) => {
-        let stream = getClient().CoverPayloadGroupToDatabase(params)
+    ipcMain.handle("cancel-ConvertPayloadGroupToDatabase", handlerHelper.cancelHandler(streamGroupToDatabaseMap))
+    ipcMain.handle("ConvertPayloadGroupToDatabase", async (e, params, token) => {
+        let stream = getClient().ConvertPayloadGroupToDatabase(params)
         handlerHelper.registerHandler(win, stream, streamGroupToDatabaseMap, token)
+    })
+
+    // 迁移数据
+    const streamMigratePayloadsMap = new Map()
+    ipcMain.handle("cancel-MigratePayloads", handlerHelper.cancelHandler(streamMigratePayloadsMap))
+    ipcMain.handle("MigratePayloads", async (e, params, token) => {
+        let stream = getClient().MigratePayloads(params)
+        handlerHelper.registerHandler(win, stream, streamMigratePayloadsMap, token)
     })
 
     const asyncUpdatePayload = (params) => {
