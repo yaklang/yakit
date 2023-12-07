@@ -38,12 +38,7 @@
                 height: 16px;
             }
         }
-        .ant-collapse-ghost > .ant-collapse-item {
-            border-bottom: 1px solid var(--yakit-border-color);
-            &:last-child {
-                border-bottom: 0;
-            }
-        }
+
         .ant-form-item {
             margin-bottom: 12px;
         }
@@ -52,6 +47,31 @@
         }
     }
 }
+.yakit-panel {
+    :global {
+        .ant-collapse-header {
+            .ant-collapse-header-text {
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+        }
+
+        .ant-radio-button-wrapper {
+            padding: 0px 8px;
+        }
+    }
+}
 .yakit-collapse-grey-wrapper {
     background-color: var(--yakit-card-background-color);
+}
+.yakit-collapse-grey-divider {
+    :global {
+        .ant-collapse-ghost > .ant-collapse-item {
+            border-bottom: 1px solid var(--yakit-border-color);
+            &:last-child {
+                border-bottom: 0;
+            }
+        }
+    }
 }
