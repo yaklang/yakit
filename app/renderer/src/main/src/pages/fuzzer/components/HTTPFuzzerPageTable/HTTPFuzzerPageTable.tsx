@@ -679,7 +679,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
         })
         return (
-            <div style={{overflowY: "hidden", height: "100%"}}>
+            <div className={styles['http-fuzzer-page-table']} style={{overflowY: "hidden", height: "100%"}}>
                 <YakitResizeBox
                     isVer={true}
                     lineDirection='bottom'
