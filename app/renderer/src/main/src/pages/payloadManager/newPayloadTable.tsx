@@ -178,7 +178,7 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
                 </Form.Item>
                 <div className={styles["opt-btn"]}>
                     <YakitButton
-                        size="large"
+                        size='large'
                         onClick={() => {
                             onClose()
                         }}
@@ -186,7 +186,7 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
                     >
                         取消
                     </YakitButton>
-                    <YakitButton size="large" type='primary' htmlType={"submit"} onClick={onFinish}>
+                    <YakitButton size='large' type='primary' htmlType={"submit"} onClick={onFinish}>
                         保存
                     </YakitButton>
                 </div>
@@ -227,8 +227,8 @@ export interface DeletePayloadProps {
 export interface NewPayloadTableProps {
     onCopyToOtherPayload?: (v: number) => void
     onMoveToOtherPayload?: (v: number) => void
-    selectPayloadArr?: number[]
-    setSelectPayloadArr?: (v: number[]) => void
+    selectPayloadArr: number[]
+    setSelectPayloadArr: (v: number[]) => void
     onDeletePayload?: (v: DeletePayloadProps) => void
     onQueryPayload: (page?: number, limit?: number) => void
     pagination?: PaginationSchema
@@ -272,7 +272,26 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
 
     const defaultColumns: (ColumnTypes[number] & {editable?: boolean; dataIndex: string})[] = [
         {
-            title: "序号",
+            title: () => (
+                <div className={styles["order"]}>
+                    {(response?.Data || []).length > 0 && (
+                        <YakitCheckbox
+                            indeterminate={
+                                selectPayloadArr.length > 0 && selectPayloadArr.length !== response?.Data.length
+                            }
+                            checked={selectPayloadArr.length === response?.Data.length}
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    setSelectPayloadArr((response?.Data || []).map((item) => item.Id))
+                                } else {
+                                    setSelectPayloadArr([])
+                                }
+                            }}
+                        />
+                    )}
+                    序号
+                </div>
+            ),
             dataIndex: "index",
             width: 88,
             render: (text, record, index) => {
@@ -282,19 +301,18 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 const {Id} = record as Payload
                 return (
                     <div className={styles["order"]}>
-                        {selectPayloadArr && (
-                            <YakitCheckbox
-                                checked={selectPayloadArr.includes(Id)}
-                                onChange={(e) => {
-                                    if (e.target.checked) {
-                                        setSelectPayloadArr && setSelectPayloadArr([...selectPayloadArr, Id])
-                                    } else {
-                                        const newDeletePayloadArr = selectPayloadArr.filter((item) => item !== Id)
-                                        setSelectPayloadArr && setSelectPayloadArr([...newDeletePayloadArr])
-                                    }
-                                }}
-                            />
-                        )}
+                        <YakitCheckbox
+                            checked={selectPayloadArr.includes(Id)}
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    setSelectPayloadArr([...selectPayloadArr, Id])
+                                } else {
+                                    const newDeletePayloadArr = selectPayloadArr.filter((item) => item !== Id)
+                                    setSelectPayloadArr([...newDeletePayloadArr])
+                                }
+                            }}
+                        />
+
                         <div className={styles["basic"]}>{order < 10 ? `0${order}` : `${order}`}</div>
                     </div>
                 )
@@ -399,15 +417,15 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 const {Id} = record as Payload
                 return (
                     <div className={styles["order"]}>
-                        {!onlyInsert && selectPayloadArr && (
+                        {!onlyInsert && (
                             <YakitCheckbox
                                 checked={selectPayloadArr.includes(Id)}
                                 onChange={(e) => {
                                     if (e.target.checked) {
-                                        setSelectPayloadArr && setSelectPayloadArr([...selectPayloadArr, Id])
+                                        setSelectPayloadArr([...selectPayloadArr, Id])
                                     } else {
                                         const newDeletePayloadArr = selectPayloadArr.filter((item) => item !== Id)
-                                        setSelectPayloadArr && setSelectPayloadArr([...newDeletePayloadArr])
+                                        setSelectPayloadArr([...newDeletePayloadArr])
                                     }
                                 }}
                             />
@@ -590,6 +608,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                     showSizeChanger: true, // 是否显示切换每页条目数量的控件
                     showTotal: (i) => <span className={styles["show-total"]}>共{i}条记录</span>,
                     onChange: (page: number, limit?: number) => {
+                        setSelectPayloadArr([])
                         onQueryPayload(page, limit)
                     },
                     onShowSizeChange: (old, limit) => {

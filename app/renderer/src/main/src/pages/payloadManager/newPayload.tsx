@@ -159,7 +159,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     const FileType = ["text/plain", "text/csv"]
     // 收集上传的数据
     const [dictionariesName, setDictionariesName] = useState<string>("")
-    const [uploadList, setUploadList] = useState<string[]>([])
+    const [uploadList, setUploadList] = useState<{path:string,name:string}[]>([])
 
     // token
     const [token, setToken] = useState(randomString(20))
@@ -186,7 +186,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             {
                 IsFile: true,
                 Content: "",
-                FileName: uploadList,
+                FileName: uploadList.map((item)=>item.path),
                 Group: group || dictionariesName,
                 Folder: folder || ""
             },
@@ -204,7 +204,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             {
                 IsFile: true,
                 Content: "",
-                FileName: uploadList,
+                FileName: uploadList.map((item)=>item.path),
                 Group: group || dictionariesName,
                 Folder: folder || ""
             },
@@ -229,7 +229,9 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                 try {
                     console.log("data---", data)
                     setStreamData(data)
-                    logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    if(data.Message.length>0){
+                        logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    }
                 } catch (error) {}
             }
         })
@@ -361,11 +363,15 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                         failed(`${f.name}非txt、csv文件，请上传正确格式文件！`)
                                         return false
                                     }
-                                    if (uploadList.includes(f.path)) {
+                                    if (uploadList.map((item)=>item.path).includes(f.path)) {
                                         warn("此文件已选择")
                                         return
                                     }
-                                    setUploadList([...uploadList, f.path])
+                                    let name = f.name.split(".")[0]
+                                    if(dictionariesName.length===0){
+                                        setDictionariesName(name)
+                                    }
+                                    setUploadList([...uploadList, {path:f.path,name}])
                                     return false
                                 }}
                             >
@@ -389,11 +395,14 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                     <div className={styles["link-icon"]}>
                                         <OutlinePaperclipIcon />
                                     </div>
-                                    <div className={styles["text"]}>{item}</div>
+                                    <div className={styles["text"]}>{item.path}</div>
                                     <div
                                         className={styles["close-icon"]}
                                         onClick={() => {
-                                            const newUploadList = uploadList.filter((itemIn) => itemIn !== item)
+                                            const newUploadList = uploadList.filter((itemIn) => itemIn.path !== item.path)
+                                            if(item.name===dictionariesName){
+                                                setDictionariesName(newUploadList.length>0?newUploadList[0].name:"")
+                                            }
                                             setUploadList(newUploadList)
                                         }}
                                     >
@@ -521,7 +530,7 @@ const cloneItemStyle = (draggableStyle) => {
 // 根据Group获取此项
 const findItemByGroup = (items: DataItem[], group: string): DataItem | null => {
     for (const item of items) {
-        if (item.name === group && item.type!=="Folder") {
+        if (item.name === group && item.type !== "Folder") {
             return item
         } else if (item.type === "Folder" && item.node) {
             const foundInNode = findItemByGroup(item.node, group)
@@ -644,9 +653,8 @@ export interface NewPayloadListProps {
     // 以下为插入弹框所需要
     onClose?: () => void
     // 选中项
-    selectItem:string|undefined
-    setSelectItem:(v:string)=>void
-
+    selectItem: string | undefined
+    setSelectItem: (v: string) => void
 }
 
 export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
@@ -1129,11 +1137,13 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                     switch (key) {
                                         case "createDictionaries":
                                             const m = showYakitModal({
+                                                getContainer:document.getElementById("new-payload") || document.body,
                                                 title: null,
                                                 footer: null,
                                                 width: 520,
                                                 type: "white",
                                                 closable: false,
+                                                maskClosable:false,
                                                 content: (
                                                     <CreateDictionaries
                                                         title='新建字典'
@@ -1618,11 +1628,13 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                             case "addChildPayload":
                                                 // 注: 此处需注意文件夹
                                                 const m = showYakitModal({
+                                                    getContainer:document.getElementById("new-payload") || document.body,
                                                     title: null,
                                                     footer: null,
                                                     width: 520,
                                                     type: "white",
                                                     closable: false,
+                                                    maskClosable:false,
                                                     content: (
                                                         <CreateDictionaries
                                                             title='新建子集字典'
@@ -2039,7 +2051,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             if (data) {
                 try {
                     setStreamData(data)
-                    logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    if(data.Message.length>0){
+                        logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    }
                 } catch (error) {}
             }
         })
@@ -2229,11 +2243,13 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                 break
                                             case "importPayload":
                                                 const m = showYakitModal({
+                                                    getContainer:document.getElementById("new-payload") || document.body,
                                                     title: null,
                                                     footer: null,
                                                     width: 520,
                                                     type: "white",
                                                     closable: false,
+                                                    maskClosable:false,
                                                     content: (
                                                         <CreateDictionaries
                                                             title='扩充到护网专用工具'
@@ -2440,25 +2456,29 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
         onQueryPayload()
     })
 
-    useDebounceEffect(() => {
-        reset()
-        // 获取table数据
-        if (showContentType === "table") {
-            onQueryPayload()
+    useDebounceEffect(
+        () => {
+            reset()
+            // 获取table数据
+            if (showContentType === "table") {
+                onQueryPayload()
+            }
+            // 获取editor数据
+            else {
+                onQueryEditor(group, folder)
+            }
+        },
+        [group, folder, showContentType],
+        {
+            wait: 200
         }
-        // 获取editor数据
-        else {
-            onQueryEditor(group, folder)
-        }
-    }, [group, folder,showContentType],
-    {
-      wait: 200,
-    })
+    )
 
     const reset = useMemoizedFn(() => {
         setEditorValue("")
         setPayloadFileData(undefined)
         setResponse(undefined)
+        setSelectPayloadArr([])
     })
 
     const Expand = () => (
@@ -2474,11 +2494,11 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
 
     const onQueryEditor = useMemoizedFn((Group: string, Folder: string) => {
         setLoading(true)
-        console.log("获取Editor参数",{
+        console.log("获取Editor参数", {
             Group,
             Folder
-        });
-        
+        })
+
         ipcRenderer
             .invoke("QueryPayloadFromFile", {
                 Group,
@@ -2509,10 +2529,14 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
         console.log("参数---", obj)
         ipcRenderer
             .invoke("QueryPayload", obj)
-            .then((data) => {
+            .then((data: QueryGeneralResponse<Payload>) => {
                 console.log("获取table数据", data)
-
-                setResponse(data)
+                if (parseInt(data.Total + "") === 0) {
+                    // 通知刷新列表
+                    emiter.emit("refreshListEvent")
+                } else {
+                    setResponse(data)
+                }
             })
             .catch((e: any) => {
                 failed(`QueryPayload failed：${e}`)
@@ -2575,7 +2599,10 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             },
             onOk: async () => {
                 let result = await onCopyOrMoveFun(id, true)
-                if (result) m.destroy()
+                if (result) {
+                    setSelectPayloadArr([])
+                    m.destroy()
+                }
             }
         })
     })
@@ -2593,7 +2620,10 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             },
             onOk: async () => {
                 let result = await onCopyOrMoveFun(id)
-                if (result) y.destroy()
+                if (result) {
+                    setSelectPayloadArr([])
+                    y.destroy()
+                }
             }
         })
     })
@@ -2649,7 +2679,9 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             if (data) {
                 try {
                     setStreamData(data)
-                    logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    if(data.Message.length>0){
+                        logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    }
                 } catch (error) {}
             }
         })
@@ -2764,11 +2796,13 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                             icon={<OutlinePlusIcon />}
                             onClick={() => {
                                 const m = showYakitModal({
+                                    getContainer:document.getElementById("new-payload") || document.body,
                                     title: null,
                                     footer: null,
                                     width: 520,
                                     type: "white",
                                     closable: false,
+                                    maskClosable:false,
                                     content: (
                                         <CreateDictionaries
                                             title='扩充到护网专用工具'
@@ -3085,55 +3119,65 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                 let newData: DataItem[] = nodesToDataFun(res.Nodes)
                 setData(newData)
                 if (obj) {
+                    // 选中
                     const {Group, Folder} = obj
                     // 根据Id判断其是否为文件
                     const item = findItemByGroup(newData, Group)
-                    console.log("xxx-item",item);
-                    if(item){
+                    console.log("xxx-item", item)
+                    if (item) {
                         setGroup(Group)
                         setFolder(Folder)
-                        setContentType(item.type==="DataBase"?"table":"editor") 
+                        setContentType(item.type === "DataBase" ? "table" : "editor")
                         setSelectItem(item.id)
                     }
                 }
                 if (newData.length === 0) {
                     setExpand(true)
                 } else {
-                    if(queryGroupRef.current){
+                    if (queryGroupRef.current) {
+                        // 初次进入选中
                         queryGroupRef.current = false
-                        console.log("newData",newData);
-                        let obj:any = {}
+                        console.log("newData", newData)
+                        let obj: any = {}
                         // 遍历打开数组下的第一个文件
-                        newData.forEach((item)=>{
-                            if(item.type==="Folder"&&item.node){
-                                if(!obj?.Group){
+                        newData.forEach((item) => {
+                            if (item.type === "Folder" && item.node) {
+                                if (!obj?.Group) {
                                     obj.Folder = item.name
                                 }
-                                item.node.forEach((itemIn)=>{
-                                    if(!obj?.Group){
+                                item.node.forEach((itemIn) => {
+                                    if (!obj?.Group) {
                                         obj.Group = itemIn.name
-                                        obj.ContentType = itemIn.type==="DataBase"?"table":"editor"
+                                        obj.ContentType = itemIn.type === "DataBase" ? "table" : "editor"
                                         obj.Id = itemIn.id
                                     }
                                 })
-                            }
-                            else{
-                                if(item.type!=="Folder"&&!obj?.Group){
+                            } else {
+                                if (item.type !== "Folder" && !obj?.Group) {
                                     obj.Folder = ""
                                     obj.Group = item.name
-                                    obj.ContentType = item.type==="DataBase"?"table":"editor"
+                                    obj.ContentType = item.type === "DataBase" ? "table" : "editor"
                                     obj.Id = item.id
                                 }
                             }
                         })
-                        if(obj.Group){
+                        if (obj.Group) {
                             setGroup(obj.Group)
                             setFolder(obj.Folder)
-                            setContentType(obj.ContentType) 
+                            setContentType(obj.ContentType)
                             setSelectItem(obj.Id)
                         }
+                    } else {
+                        // 如若为obj不存在且当前group寻找不到 则让其重新选择
+                        if (!obj) {
+                            // 根据Id判断其是否为文件
+                            const item = findItemByGroup(newData, group)
+                            if (item === null) {
+                                reset()
+                            }
+                        }
+                        setExpand(false)
                     }
-                    setExpand(false)
                 }
             })
             .catch((e: any) => {
@@ -3164,6 +3208,13 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         })
     }, [])
 
+    const reset = useMemoizedFn(() => {
+        setContentType(undefined)
+        setSelectItem(undefined)
+        setGroup("")
+        setFolder("")
+    })
+
     // 迁移数据
     const initNewPayload = useMemoizedFn(() => {
         ipcRenderer.invoke("MigratePayloads", {}, token)
@@ -3182,7 +3233,9 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
             if (data) {
                 try {
                     setStreamData(data)
-                    logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    if(data.Message.length>0){
+                        logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                    }
                 } catch (error) {}
             }
         })
@@ -3191,6 +3244,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             info("[MigratePayloads] finished")
+            logInfoRef.current = []
             setRemoteValue(NewPayloadFirstEnter, JSON.stringify({import: true}))
             onQueryGroup()
         })
@@ -3228,11 +3282,13 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                                 icon={<OutlineAddPayloadIcon />}
                                 onClick={() => {
                                     const m = showYakitModal({
+                                        getContainer:document.getElementById("new-payload") || document.body,
                                         title: null,
                                         footer: null,
                                         width: 520,
                                         type: "white",
                                         closable: false,
+                                        maskClosable:false,
                                         content: (
                                             <CreateDictionaries
                                                 title='新建字典'
