@@ -443,8 +443,7 @@ interface VariableListProps {
     extra: (i: number) => React.ReactNode
     ref: React.Ref<any>
 }
-
-const VariableList: React.FC<VariableListProps> = React.forwardRef(({extra, field}, ref) => {
+export const VariableList: React.FC<VariableListProps> = React.forwardRef(({extra, field}, ref) => {
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
     useImperativeHandle(ref, () => ({
