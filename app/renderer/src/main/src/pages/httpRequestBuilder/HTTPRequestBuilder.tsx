@@ -14,7 +14,8 @@ import {yakitFailed} from "@/utils/notification"
 import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
 import styles from "./HTTPRequestBuilder.module.scss"
 import {PluginTypes} from "../pluginDebugger/PluginDebuggerPage"
-import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder";
+import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
+import {SetVariableItem} from "../fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
 
 const {YakitPanel} = YakitCollapse
 
@@ -443,8 +444,7 @@ interface VariableListProps {
     extra: (i: number) => React.ReactNode
     ref: React.Ref<any>
 }
-
-const VariableList: React.FC<VariableListProps> = React.forwardRef(({extra, field}, ref) => {
+export const VariableList: React.FC<VariableListProps> = React.forwardRef(({extra, field}, ref) => {
     const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
     useImperativeHandle(ref, () => ({
@@ -495,28 +495,5 @@ const VariableList: React.FC<VariableListProps> = React.forwardRef(({extra, fiel
                 )
             }}
         </Form.List>
-    )
-})
-
-interface SetVariableItemProps {
-    name: number
-}
-
-const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
-    const {name} = props
-
-    return (
-        <div className={styles["variable-item"]}>
-            <Form.Item name={[name, "Key"]} noStyle wrapperCol={{span: 24}}>
-                <input className={styles["variable-item-input"]} placeholder='变量名'/>
-            </Form.Item>
-
-            <div className={styles["variable-item-textarea-body"]}>
-                <Form.Item name={[name, "Value"]} noStyle wrapperCol={{span: 24}}>
-                    <AutoTextarea className={styles["variable-item-textarea"]} placeholder='变量值'/>
-                </Form.Item>
-                <ResizerIcon className={styles["resizer-icon"]}/>
-            </div>
-        </div>
     )
 })
