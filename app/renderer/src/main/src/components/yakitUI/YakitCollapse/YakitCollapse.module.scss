@@ -81,3 +81,13 @@
         }
     }
 }
+.yakit-collapse-grey-divider {
+    :global {
+        .ant-collapse-ghost > .ant-collapse-item {
+            border-bottom: 1px solid var(--yakit-border-color);
+            &:last-child {
+                border-bottom: 0;
+            }
+        }
+    }
+}
