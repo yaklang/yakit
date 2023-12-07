@@ -1,0 +1,264 @@
+.plugin-tabs {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    :global {
+        .ant-tabs {
+            width: 100%;
+            height: 100%;
+        }
+
+        // tabPosition = top
+        .ant-tabs-top {
+            & > .ant-tabs-nav {
+                height: 25px;
+                margin-bottom: 0;
+                &::before {
+                    border-bottom: 1px solid #eaecf3;
+                    z-index: 0;
+                }
+                .ant-tabs-ink-bar {
+                    display: none;
+                }
+
+                // 基础样式
+                .ant-tabs-tab {
+                    padding: 4px 8px;
+                    border-radius: 4px 4px 0px 0px;
+                    border-top: 1px solid #eaecf3;
+                    border-right: 1px solid #eaecf3;
+                    border-left: 1px solid #eaecf3;
+                    border-bottom: 0;
+                    background: #f0f1f3;
+                    .ant-tabs-tab-btn {
+                        color: #31343f;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                }
+                .ant-tabs-tab + .ant-tabs-tab {
+                    margin-left: 4px;
+                }
+                // 选中
+                .ant-tabs-tab.ant-tabs-tab-active {
+                    border-top: 1px solid #f28b44;
+                    border-right: 1px solid #f28b44;
+                    border-left: 1px solid #f28b44;
+                    background: #f28b44;
+                    .ant-tabs-tab-btn {
+                        color: #fff;
+                        text-shadow: unset;
+                    }
+                }
+                // 禁用
+                .ant-tabs-tab.ant-tabs-tab-disabled {
+                    background: #f8f8f8;
+                    .ant-tabs-tab-btn {
+                        color: #ccd2de;
+                    }
+                }
+            }
+        }
+        // tabPosition = bottom
+        .ant-tabs-bottom {
+            & > .ant-tabs-nav {
+                height: 25px;
+                margin-top: 0;
+                &::before {
+                    border-top: 1px solid #eaecf3;
+                    z-index: 0;
+                }
+                .ant-tabs-ink-bar {
+                    display: none;
+                }
+
+                // 基础样式
+                .ant-tabs-tab {
+                    padding: 4px 8px;
+                    border-radius: 0px 0px 4px 4px;
+                    border-bottom: 1px solid #eaecf3;
+                    border-right: 1px solid #eaecf3;
+                    border-left: 1px solid #eaecf3;
+                    border-top: 0;
+                    background: #f0f1f3;
+                    .ant-tabs-tab-btn {
+                        color: #31343f;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                }
+                .ant-tabs-tab + .ant-tabs-tab {
+                    margin-left: 4px;
+                }
+                // 选中
+                .ant-tabs-tab.ant-tabs-tab-active {
+                    border-bottom: 1px solid #f28b44;
+                    border-right: 1px solid #f28b44;
+                    border-left: 1px solid #f28b44;
+                    background: #f28b44;
+                    .ant-tabs-tab-btn {
+                        color: #fff;
+                        text-shadow: unset;
+                    }
+                }
+                // 禁用
+                .ant-tabs-tab.ant-tabs-tab-disabled {
+                    background: #f8f8f8;
+                    .ant-tabs-tab-btn {
+                        color: #ccd2de;
+                    }
+                }
+            }
+        }
+
+        // tabPosition = right
+        .ant-tabs-right {
+            & > .ant-tabs-nav {
+                width: 21px;
+                min-width: unset;
+                &::before {
+                    height: 100%;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    border-left: 1px solid #eaecf3;
+                    z-index: 0;
+                    content: "";
+                }
+                .ant-tabs-ink-bar {
+                    display: none;
+                }
+
+                // 基础样式
+                .ant-tabs-tab {
+                    width: 21px;
+                    padding: 8px 4px;
+                    border-radius: 0px 4px 4px 0px;
+                    border-top: 1px solid #eaecf3;
+                    border-right: 1px solid #eaecf3;
+                    border-bottom: 1px solid #eaecf3;
+                    border-left: 0;
+                    background: #f0f1f3;
+                    .ant-tabs-tab-btn {
+                        color: #31343f;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 14px;
+                        width: 12px;
+                        writing-mode: vertical-rl;
+                    }
+                }
+                .ant-tabs-tab + .ant-tabs-tab {
+                    margin-top: 4px;
+                }
+                // 选中
+                .ant-tabs-tab.ant-tabs-tab-active {
+                    border-top: 1px solid #f28b44;
+                    border-right: 1px solid #f28b44;
+                    border-bottom: 1px solid #f28b44;
+                    background: #f28b44;
+                    .ant-tabs-tab-btn {
+                        color: #fff;
+                        text-shadow: unset;
+                    }
+                }
+                // 禁用
+                .ant-tabs-tab.ant-tabs-tab-disabled {
+                    background: #f8f8f8;
+                    .ant-tabs-tab-btn {
+                        color: #ccd2de;
+                    }
+                }
+            }
+
+            & > .ant-tabs-content-holder {
+                border-right: 0;
+                margin-right: 0;
+                & > .ant-tabs-content > .ant-tabs-tabpane {
+                    padding-right: 0;
+                }
+            }
+        }
+        // tabPosition = left
+        .ant-tabs-left {
+            & > .ant-tabs-nav {
+                width: 21px;
+                min-width: unset;
+                &::before {
+                    height: 100%;
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    border-right: 1px solid #eaecf3;
+                    z-index: 0;
+                    content: "";
+                }
+                .ant-tabs-ink-bar {
+                    display: none;
+                }
+
+                // 基础样式
+                .ant-tabs-tab {
+                    width: 21px;
+                    padding: 8px 4px;
+                    border-radius: 4px 0px 0px 4px;
+                    border-top: 1px solid #eaecf3;
+                    border-left: 1px solid #eaecf3;
+                    border-bottom: 1px solid #eaecf3;
+                    border-right: 0;
+                    background: #f0f1f3;
+                    .ant-tabs-tab-btn {
+                        color: #31343f;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 14px;
+                        width: 12px;
+                        writing-mode: vertical-rl;
+                    }
+                }
+                .ant-tabs-tab + .ant-tabs-tab {
+                    margin-top: 4px;
+                }
+                // 选中
+                .ant-tabs-tab.ant-tabs-tab-active {
+                    border-top: 1px solid #f28b44;
+                    border-left: 1px solid #f28b44;
+                    border-bottom: 1px solid #f28b44;
+                    background: #f28b44;
+                    .ant-tabs-tab-btn {
+                        color: #fff;
+                        text-shadow: unset;
+                    }
+                }
+                // 禁用
+                .ant-tabs-tab.ant-tabs-tab-disabled {
+                    background: #f8f8f8;
+                    .ant-tabs-tab-btn {
+                        color: #ccd2de;
+                    }
+                }
+            }
+
+            & > .ant-tabs-content-holder {
+                border-left: 0;
+                margin-left: 0;
+                & > .ant-tabs-content > .ant-tabs-tabpane {
+                    padding-left: 0;
+                }
+            }
+        }
+
+        // body
+        .ant-tabs-content-holder {
+            flex: 1;
+            overflow: hidden;
+            .ant-tabs-content {
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+}
