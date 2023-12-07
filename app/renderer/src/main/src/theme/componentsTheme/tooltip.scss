@@ -1,0 +1,16 @@
+.ant-tooltip {
+    font-size: 12px;
+}
+
+.ant-tooltip-inner {
+    min-height: 24px;
+    padding: 2px 8px;
+    display: flex;
+    align-items: center;
+    word-break: break-all;
+}
+
+.ant-tooltip-arrow {
+    width: 16px;
+    height: 16px;
+}
