@@ -178,6 +178,7 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
                 </Form.Item>
                 <div className={styles["opt-btn"]}>
                     <YakitButton
+                        size="large"
                         onClick={() => {
                             onClose()
                         }}
@@ -185,7 +186,7 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
                     >
                         取消
                     </YakitButton>
-                    <YakitButton type='primary' htmlType={"submit"} onClick={onFinish}>
+                    <YakitButton size="large" type='primary' htmlType={"submit"} onClick={onFinish}>
                         保存
                     </YakitButton>
                 </div>

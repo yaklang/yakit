@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Divider, Form, Input, Progress, Tooltip} from "antd"
-import {useGetState, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useGetState, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect} from "ahooks"
 import styles from "./NewPayload.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -125,7 +125,7 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                         ))}
                     </div>
                     <div className={styles["download-btn"]}>
-                        <YakitButton loading={false} size='max' type='outline2' onClick={cancelRun}>
+                        <YakitButton loading={false} size='large' type='outline2' onClick={cancelRun}>
                             取消
                         </YakitButton>
                     </div>
@@ -138,7 +138,7 @@ interface CreateDictionariesProps {
     type: "dictionaries" | "payload"
     onClose: () => void
     title: string
-    onQueryGroup: () => void
+    onQueryGroup: (obj?: {Group: string; Folder: string}) => void
     folder?: string
     group?: string
 }
@@ -197,13 +197,6 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     // 文件存储
     const onSavePayloadToFile = useMemoizedFn(() => {
         setStoreType("database")
-        console.log("SavePayloadToFileStream", {
-            IsFile: true,
-            Content: "",
-            FileName: uploadList,
-            Group: group || dictionariesName,
-            Folder: folder || ""
-        })
 
         // 两次stream
         ipcRenderer.invoke(
@@ -290,7 +283,14 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     }, [])
 
     const cancelRun = useMemoizedFn(() => {
-        onQueryGroup()
+        if (isDictionaries) {
+            onQueryGroup({
+                Group: group || dictionariesName,
+                Folder: folder || ""
+            })
+        } else {
+            onQueryGroup()
+        }
         onClose()
         // 扩充时通知table刷新
         if (group || folder) {
@@ -407,6 +407,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                         {isDictionaries ? (
                             <>
                                 <YakitButton
+                                    size='large'
                                     disabled={isDisabled}
                                     type='outline1'
                                     icon={<SolidDatabaseIcon />}
@@ -415,6 +416,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                     数据库存储
                                 </YakitButton>
                                 <YakitButton
+                                    size='large'
                                     disabled={isDisabled}
                                     icon={<SolidDocumenttextIcon />}
                                     onClick={onSavePayloadToFile}
@@ -424,10 +426,10 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                             </>
                         ) : (
                             <>
-                                <YakitButton disabled={isDisabled} type='outline1'>
+                                <YakitButton size='large' disabled={isDisabled} type='outline1'>
                                     取消
                                 </YakitButton>
-                                <YakitButton disabled={isDisabled} onClick={onSavePayload}>
+                                <YakitButton size='large' disabled={isDisabled} onClick={onSavePayload}>
                                     导入
                                 </YakitButton>
                             </>
@@ -514,6 +516,21 @@ const cloneItemStyle = (draggableStyle) => {
         ...draggableStyle,
         transform
     }
+}
+
+// 根据Group获取此项
+const findItemByGroup = (items: DataItem[], group: string): DataItem | null => {
+    for (const item of items) {
+        if (item.name === group && item.type!=="Folder") {
+            return item
+        } else if (item.type === "Folder" && item.node) {
+            const foundInNode = findItemByGroup(item.node, group)
+            if (foundInNode) {
+                return foundInNode
+            }
+        }
+    }
+    return null
 }
 
 // 根据Id获取此项
@@ -616,7 +633,7 @@ const droppableGroup = "droppableGroup"
 export interface NewPayloadListProps {
     data: DataItem[]
     setData: (v: DataItem[]) => void
-    onQueryGroup: () => void
+    onQueryGroup: (obj?: {Group: string; Folder: string}) => void
     cacheNodesRef: any
     setGroup: (v: string) => void
     setFolder: (v: string) => void
@@ -626,6 +643,10 @@ export interface NewPayloadListProps {
     onlyInsert?: boolean
     // 以下为插入弹框所需要
     onClose?: () => void
+    // 选中项
+    selectItem:string|undefined
+    setSelectItem:(v:string)=>void
+
 }
 
 export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
@@ -639,9 +660,10 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         setContentType,
         codePath,
         onlyInsert,
-        onClose
+        onClose,
+        selectItem,
+        setSelectItem
     } = props
-    const [selectItem, setSelectItem] = useState<string>()
 
     const [dropType, setDropType] = useState<string>(droppable)
     const [subDropType, setSubDropType] = useState<string>(droppableGroup)
@@ -865,11 +887,11 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             if (result.combine) {
                 // 组外两个游离的文件合成组
                 if (source.droppableId === "droppable-payload" && combine.droppableId === "droppable-payload") {
-                    // mergingGroup(result)
+                    mergingGroup(result)
                 }
                 // 组内的文件拖拽到组外并和组外的文件夹合成组(组内向组外合并)
                 if (source.droppableId !== "droppable-payload" && combine.droppableId === "droppable-payload") {
-                    // mergeWithinAndOutsideGroup(result)
+                    mergeWithinAndOutsideGroup(result)
                 }
             }
             setIsCombineEnabled(true)
@@ -1365,7 +1387,7 @@ interface FolderComponentProps {
     // 文件夹不展开记录
     notExpandArr: string[]
     setNotExpandArr: (v: string[]) => void
-    onQueryGroup: () => void
+    onQueryGroup: (obj?: {Group: string; Folder: string}) => void
     setContentType: (v?: "editor" | "table") => void
     onlyInsert?: boolean
 }
@@ -1811,7 +1833,7 @@ interface FileComponentProps {
     setSelectItem: (id: string) => void
     data: DataItem[]
     setData: (v: DataItem[]) => void
-    onQueryGroup: () => void
+    onQueryGroup: (obj?: {Group: string; Folder: string}) => void
     // 是否为内层
     isInside?: boolean
     // 是否合并
@@ -1995,7 +2017,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     // 转为数据库存储
     const onGroupToDatabase = useMemoizedFn(() => {
         ipcRenderer.invoke(
-            "CoverPayloadGroupToDatabase",
+            "ConvertPayloadGroupToDatabase",
             {
                 Name: inputName
             },
@@ -2007,7 +2029,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
 
     // 取消转为数据库存储
     const cancelRemoveDuplicate = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-CoverPayloadGroupToDatabase", token)
+        ipcRenderer.invoke("cancel-ConvertPayloadGroupToDatabase", token)
     })
 
     // 监听转为数据库存储
@@ -2030,7 +2052,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             info("[ToDatabase] finished")
         })
         return () => {
-            ipcRenderer.invoke("cancel-CoverPayloadGroupToDatabase", token)
+            ipcRenderer.invoke("cancel-ConvertPayloadGroupToDatabase", token)
             ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
@@ -2418,7 +2440,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
         onQueryPayload()
     })
 
-    useEffect(() => {
+    useDebounceEffect(() => {
         reset()
         // 获取table数据
         if (showContentType === "table") {
@@ -2428,7 +2450,10 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
         else {
             onQueryEditor(group, folder)
         }
-    }, [group, folder])
+    }, [group, folder,showContentType],
+    {
+      wait: 200,
+    })
 
     const reset = useMemoizedFn(() => {
         setEditorValue("")
@@ -2449,11 +2474,11 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
 
     const onQueryEditor = useMemoizedFn((Group: string, Folder: string) => {
         setLoading(true)
-        console.log("7777", {
+        console.log("获取Editor参数",{
             Group,
             Folder
-        })
-
+        });
+        
         ipcRenderer
             .invoke("QueryPayloadFromFile", {
                 Group,
@@ -2934,15 +2959,15 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
             })
             .then((data: any) => {
                 if (data.filePaths.length) {
-                    let absolutePath:string = data.filePaths[0].replace(/\\/g, "\\")
-                    let currentPath:string  = `${absolutePath}\\${group}.${isFile?"txt":'csv'}`
+                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                    let currentPath: string = `${absolutePath}\\${group}.${isFile ? "txt" : "csv"}`
                     exportPathRef.current = currentPath
                     ipcRenderer.invoke(
-                        isFile ? "GetAllPayloadFromFile" : "GetAllPayload",
+                        isFile ? "ExportAllPayloadFromFile" : "ExportAllPayload",
                         {
                             Group: group,
                             Folder: folder,
-                            savePath: currentPath
+                            SavePath: currentPath
                         },
                         exportToken
                     )
@@ -2954,7 +2979,7 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
     })
     // 取消导出任务
     const cancelExportFile = useMemoizedFn(() => {
-        ipcRenderer.invoke(isFile ? "cancel-GetAllPayloadFromFile":"cancel-GetAllPayload", exportToken)
+        ipcRenderer.invoke(isFile ? "cancel-ExportAllPayloadFromFile" : "cancel-ExportAllPayload", exportToken)
     })
 
     const onExportStreamData = useThrottleFn(
@@ -2983,7 +3008,7 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
             exportPathRef.current && openABSFileLocated(exportPathRef.current)
         })
         return () => {
-            ipcRenderer.invoke(isFile ? "cancel-GetAllPayloadFromFile":"cancel-GetAllPayload", exportToken)
+            ipcRenderer.invoke(isFile ? "cancel-ExportAllPayloadFromFile" : "cancel-ExportAllPayload", exportToken)
             ipcRenderer.removeAllListeners(`${exportToken}-data`)
             ipcRenderer.removeAllListeners(`${exportToken}-error`)
             ipcRenderer.removeAllListeners(`${exportToken}-end`)
@@ -3021,16 +3046,37 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     const [showContentType, setContentType] = useState<"editor" | "table">()
 
     // table/editor 筛选条件
+    const [selectItem, setSelectItem] = useState<string>()
     const [group, setGroup] = useState<string>("")
     const [folder, setFolder] = useState<string>("")
 
     const [codePath, setCodePath] = useState<string>("")
 
     const [data, setData] = useState<DataItem[]>([])
+
+    // 第一次进入
+    const [isFirstEnter, setFirstEnter] = useState<boolean>(false)
+    const NewPayloadFirstEnter = "NewPayloadFirstEnter"
+    // 转为数据库存储token
+    const [token, setToken] = useState(randomString(20))
+    // 第一次导入进度
+    const [visible, setVisible] = useState<boolean>(false)
+    // show
+    const [streamData, setStreamData] = useState<SavePayloadProgress>({
+        Progress: 0,
+        Message: "",
+        CostDurationVerbose: "",
+        RestDurationVerbose: "",
+        Speed: "0"
+    })
+    const logInfoRef = useRef<string[]>([])
+    // 页面是否第一次请求
+    const queryGroupRef = useRef<boolean>(true)
+
     // 用于比较顺序是否改变
     const cacheNodesRef = useRef<PayloadGroupNodeProps[]>([])
 
-    const onQueryGroup = () => {
+    const onQueryGroup = (obj?: {Group: string; Folder: string}) => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
             .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
@@ -3038,8 +3084,56 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                 cacheNodesRef.current = res.Nodes
                 let newData: DataItem[] = nodesToDataFun(res.Nodes)
                 setData(newData)
+                if (obj) {
+                    const {Group, Folder} = obj
+                    // 根据Id判断其是否为文件
+                    const item = findItemByGroup(newData, Group)
+                    console.log("xxx-item",item);
+                    if(item){
+                        setGroup(Group)
+                        setFolder(Folder)
+                        setContentType(item.type==="DataBase"?"table":"editor") 
+                        setSelectItem(item.id)
+                    }
+                }
                 if (newData.length === 0) {
                     setExpand(true)
+                } else {
+                    if(queryGroupRef.current){
+                        queryGroupRef.current = false
+                        console.log("newData",newData);
+                        let obj:any = {}
+                        // 遍历打开数组下的第一个文件
+                        newData.forEach((item)=>{
+                            if(item.type==="Folder"&&item.node){
+                                if(!obj?.Group){
+                                    obj.Folder = item.name
+                                }
+                                item.node.forEach((itemIn)=>{
+                                    if(!obj?.Group){
+                                        obj.Group = itemIn.name
+                                        obj.ContentType = itemIn.type==="DataBase"?"table":"editor"
+                                        obj.Id = itemIn.id
+                                    }
+                                })
+                            }
+                            else{
+                                if(item.type!=="Folder"&&!obj?.Group){
+                                    obj.Folder = ""
+                                    obj.Group = item.name
+                                    obj.ContentType = item.type==="DataBase"?"table":"editor"
+                                    obj.Id = item.id
+                                }
+                            }
+                        })
+                        if(obj.Group){
+                            setGroup(obj.Group)
+                            setFolder(obj.Folder)
+                            setContentType(obj.ContentType) 
+                            setSelectItem(obj.Id)
+                        }
+                    }
+                    setExpand(false)
                 }
             })
             .catch((e: any) => {
@@ -3061,22 +3155,69 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         })
     }, [])
 
+    useEffect(() => {
+        // 页面初次进入时
+        getRemoteValue(NewPayloadFirstEnter).then((res) => {
+            if (!res) {
+                setFirstEnter(true)
+            }
+        })
+    }, [])
+
+    // 迁移数据
+    const initNewPayload = useMemoizedFn(() => {
+        ipcRenderer.invoke("MigratePayloads", {}, token)
+        setFirstEnter(false)
+        setVisible(true)
+    })
+
+    // 取消迁移数据
+    const cancelMigratePayloads = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-MigratePayloads", token)
+    })
+
+    // 监听迁移数据
+    useEffect(() => {
+        ipcRenderer.on(`${token}-data`, async (e: any, data: SavePayloadProgress) => {
+            if (data) {
+                try {
+                    setStreamData(data)
+                    logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
+                } catch (error) {}
+            }
+        })
+        ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
+            failed(`[MigratePayloads] error:  ${error}`)
+        })
+        ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
+            info("[MigratePayloads] finished")
+            setRemoteValue(NewPayloadFirstEnter, JSON.stringify({import: true}))
+            onQueryGroup()
+        })
+        return () => {
+            ipcRenderer.invoke("cancel-MigratePayloads", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    }, [])
+
     return (
         <div className={styles["new-payload"]} id='new-payload'>
-            {!isExpand && (
-                <div className={styles["payload-list-box"]}>
-                    <NewPayloadList
-                        data={data}
-                        setData={setData}
-                        cacheNodesRef={cacheNodesRef}
-                        onQueryGroup={onQueryGroup}
-                        setGroup={setGroup}
-                        setFolder={setFolder}
-                        setContentType={setContentType}
-                        codePath={codePath}
-                    />
-                </div>
-            )}
+            <div className={styles["payload-list-box"]} style={isExpand ? {width: 0, opacity: 0} : {}}>
+                <NewPayloadList
+                    data={data}
+                    setData={setData}
+                    cacheNodesRef={cacheNodesRef}
+                    onQueryGroup={onQueryGroup}
+                    setGroup={setGroup}
+                    setFolder={setFolder}
+                    setContentType={setContentType}
+                    codePath={codePath}
+                    selectItem={selectItem}
+                    setSelectItem={setSelectItem}
+                />
+            </div>
             {data.length === 0 ? (
                 <div className={styles["no-data"]}>
                     <YakitEmpty
@@ -3098,7 +3239,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                                                 type='dictionaries'
                                                 onQueryGroup={onQueryGroup}
                                                 onClose={() => {
-                                                    setExpand(false)
+                                                    setExpand(true)
                                                     m.destroy()
                                                 }}
                                             />
@@ -3129,6 +3270,43 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                     )}
                 </>
             )}
+            <YakitHint
+                visible={isFirstEnter}
+                title='迁移数据'
+                content='由于Payload功能进行重构，为不影响使用，需要点击确定将旧数据进行迁移，迁移数据不会造成任何数据丢失。'
+                footer={
+                    <div style={{marginTop: 24, textAlign: "right"}}>
+                        <YakitButton size='max' onClick={initNewPayload}>
+                            确定
+                        </YakitButton>
+                    </div>
+                }
+            />
+            <YakitModal
+                centered
+                getContainer={document.getElementById("new-payload") || document.body}
+                visible={visible}
+                title={null}
+                footer={null}
+                width={520}
+                type='white'
+                closable={false}
+            >
+                <UploadStatusInfo
+                    title={"迁移数据中，请耐心等待..."}
+                    streamData={streamData}
+                    cancelRun={() => {
+                        cancelMigratePayloads()
+                        setVisible(false)
+                    }}
+                    onClose={() => {
+                        setVisible(false)
+                    }}
+                    logInfo={logInfoRef.current}
+                    showDownloadDetail={false}
+                    autoClose={true}
+                />
+            </YakitModal>
         </div>
     )
 }
@@ -3143,6 +3321,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
     const [showContentType, setContentType] = useState<"editor" | "table">()
 
     // table/editor 筛选条件
+    const [selectItem, setSelectItem] = useState<string>()
     const [group, setGroup] = useState<string>("")
     const [folder, setFolder] = useState<string>("")
 
@@ -3193,6 +3372,8 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                     codePath={codePath}
                     onlyInsert={true}
                     onClose={onClose}
+                    selectItem={selectItem}
+                    setSelectItem={setSelectItem}
                 />
                 <div className={styles["payload-list-bottom"]}>
                     <div className={styles["show"]}>
