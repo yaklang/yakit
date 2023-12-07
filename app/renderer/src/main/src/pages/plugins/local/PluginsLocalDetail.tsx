@@ -11,7 +11,7 @@ import {
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
-import {Tabs, Tooltip} from "antd"
+import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakScript} from "@/pages/invoker/schema"
@@ -33,13 +33,14 @@ import {LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
+import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
-const {TabPane} = Tabs
+const {TabPane} = PluginTabs
 
 export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => {
     const {
@@ -391,7 +392,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 spinLoading={spinLoading}
             >
                 <div className={styles["details-content-wrapper"]}>
-                    <Tabs defaultActiveKey='execute' tabPosition='right' className='plugins-tabs'>
+                    <PluginTabs defaultActiveKey='execute' tabPosition='right'>
                         <TabPane tab='执行' key='execute'>
                             <div className={styles["plugin-execute-wrapper"]}>
                                 {executorShow ? (
@@ -522,7 +523,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         <TabPane tab='问题反馈' key='feedback' disabled={true}>
                             <div>问题反馈</div>
                         </TabPane>
-                    </Tabs>
+                    </PluginTabs>
                 </div>
             </PluginDetails>
         </>
