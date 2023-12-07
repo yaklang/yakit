@@ -14,7 +14,7 @@ const {Panel} = Collapse
  * @param {CSSProperties} wrapperStyle Collapse 装饰div的style
  */
 export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
-    const {type = "default",divider=true, wrapperClassName, wrapperStyle, ...restProps} = props
+    const {type = "default", divider = true, wrapperClassName, wrapperStyle, ...restProps} = props
 
     return (
         <div
@@ -22,7 +22,7 @@ export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
                 styles["yakit-collapse-default-wrapper"],
                 {
                     [styles["yakit-collapse-grey-wrapper"]]: type === "grey",
-                    [styles["yakit-collapse-grey-divider"]]: divider,
+                    [styles["yakit-collapse-grey-divider"]]: divider
                 },
                 wrapperClassName
             )}
@@ -39,12 +39,11 @@ export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
 
 /**
  * @description: 折叠面板
- * @augments  继承antd的 CollapseProps 默认属性
- * @param {string} wrapperClassName Collapse 装饰div的className
- * @param {CSSProperties} wrapperStyle Collapse 装饰div的style
+ * @augments  继承antd的CollapsePanelProps 默认属性
  */
 export const YakitPanel: React.FC<YakitPanelProps> = (props) => {
-    return <Panel {...props} className={styles["yakit-panel"]} />
+    const {className = "", ...restProps} = props
+    return <Panel {...restProps} className={classNames(styles["yakit-panel"], className)} />
 }
 
 export default Object.assign(YakitCollapse, {YakitPanel})
