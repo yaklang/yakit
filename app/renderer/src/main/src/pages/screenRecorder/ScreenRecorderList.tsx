@@ -766,12 +766,13 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     </>
                 )}
                 <Divider type='vertical' style={{margin: "0 16px"}} />
-                <YakitPopconfirm
-                    title={"删除录屏的同时会删除本地录屏文件"}
-                    onConfirm={() => onRemove()}
-                    className='button-text-danger'
-                >
-                    <TrashIcon className={styles["icon-trash"]} />
+                <YakitPopconfirm title={"删除录屏的同时会删除本地录屏文件"} onConfirm={() => onRemove()}>
+                    <YakitButton
+                        type='text'
+                        size={"small"}
+                        danger
+                        icon={<TrashIcon className={styles["icon-trash"]} />}
+                    />
                 </YakitPopconfirm>
             </div>
             <YakitModal
