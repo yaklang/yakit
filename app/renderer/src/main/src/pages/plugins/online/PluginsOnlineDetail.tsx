@@ -1,9 +1,8 @@
 import React, {useEffect, useMemo, useState} from "react"
 import {PluginDetailHeader, PluginDetails, PluginDetailsListItem} from "../baseTemplate"
-import {OutlineClouddownloadIcon, OutlineCursorclickIcon, OutlineFilterIcon} from "@/assets/icon/outline"
+import {OutlineClouddownloadIcon, OutlineCursorclickIcon} from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
-import {API} from "@/services/swagger/resposeType"
-import {Tabs, Tooltip} from "antd"
+import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {FilterPopoverBtn, FuncBtn, OnlineExtraOperate} from "../funcTemplate"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
@@ -11,7 +10,7 @@ import {yakitNotify} from "@/utils/notification"
 import {OnlineBackInfoProps, PluginsOnlineDetailProps, YakitPluginOnlineDetail} from "./PluginsOnlineType"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "bizcharts/lib/utils/cloneDeep"
-import {OnlinePluginAppAction, thousandthConversion} from "../pluginReducer"
+import {thousandthConversion} from "../pluginReducer"
 import {useStore} from "@/store"
 import {PluginComment} from "@/pages/yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
@@ -19,14 +18,14 @@ import {LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {onlineUseToLocalDetail} from "../utils"
+import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 
 import "../plugins.scss"
 import styles from "./PluginsOnlineDetail.module.scss"
-import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
-const {TabPane} = Tabs
+const {TabPane} = PluginTabs
 
 export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) => {
     const {
@@ -232,7 +231,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
             spinLoading={spinLoading}
         >
             <div className={styles["details-content-wrapper"]}>
-                <Tabs tabPosition='right' className='plugins-tabs'>
+                <PluginTabs tabPosition='right'>
                     <TabPane tab='源 码' key='code'>
                         <div className={styles["plugin-info-wrapper"]}>
                             <PluginDetailHeader
@@ -292,7 +291,7 @@ export const PluginsOnlineDetail: React.FC<PluginsOnlineDetailProps> = (props) =
                             <YakitPluginOnlineJournal pluginId={plugin.id} />
                         </div>
                     </TabPane>
-                </Tabs>
+                </PluginTabs>
             </div>
         </PluginDetails>
     )
