@@ -19,7 +19,7 @@ import {
 import {useGetState, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
-import {Tabs, Tooltip} from "antd"
+import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginFilterParams, PluginInfoRefProps, PluginSearchParams, PluginSettingRefProps} from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
@@ -38,11 +38,12 @@ import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
 import {convertRemoteToLocalParams, convertRemoteToRemoteInfo} from "../editDetails/utils"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 
-const {TabPane} = Tabs
+const {TabPane} = PluginTabs
 
 /** 详情页返回列表页 时的 关联数据 */
 export interface BackInfoProps {
@@ -593,7 +594,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 onBack={onPluginBack}
             >
                 <div className={styles["details-content-wrapper"]}>
-                    <Tabs tabPosition='right' className='plugins-tabs'>
+                    <PluginTabs tabPosition='right'>
                         <TabPane tab='源 码' key='code'>
                             <YakitSpin spinning={loading}>
                                 <div className={styles["plugin-info-wrapper"]}>
@@ -740,7 +741,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         <TabPane tab='日 志(监修中)' key='log' disabled={true}>
                             <div></div>
                         </TabPane>
-                    </Tabs>
+                    </PluginTabs>
                 </div>
 
                 <ReasonModal
