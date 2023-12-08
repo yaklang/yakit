@@ -1,6 +1,8 @@
 import {YakScript} from "@/pages/invoker/schema"
 import {ReactNode} from "react"
 import {YakParamProps} from "../../pluginsType"
+import {KVPair} from "@/models/kv"
+import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 
 export interface PluginExecuteDetailHeardProps {
     /**插件 */
@@ -28,4 +30,25 @@ export interface OutputFormComponentsByTypeProps {
 export interface FormExtraSettingProps {
     double: boolean
     data: {label: string; value: string}[]
+}
+
+export interface PluginExecuteProgressProps {
+    percent: number
+    name: string
+}
+
+export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {
+   
+}
+/**表单的key value类型 */
+export interface CustomPluginExecuteFormValue {
+    [string]: number | string | boolean | string[] | Buffer
+}
+
+export interface DebugPluginRequest {
+    Code: string
+    PluginType: string
+    Input: string
+    HTTPRequestTemplate: HTTPRequestBuilderParams
+    ExecParams:KVPair[]
 }
