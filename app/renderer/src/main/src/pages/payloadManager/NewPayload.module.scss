@@ -106,13 +106,28 @@
                     overflow: hidden;
                     max-width: 180px;
                 }
-                .sun-title {
+                .sub-title {
                     color: #b4bbca;
                     text-align: right;
                     font-size: 12px;
                     font-style: normal;
                     font-weight: 400;
                     line-height: 16px;
+                    .total-item {
+                        display: flex;
+                        align-items: center;
+
+                        .total-item-text {
+                            color: var(--yakit-helper-text-color);
+                            font-size: 12px;
+                            margin-right: 4px;
+                        }
+
+                        .total-item-number {
+                            color: var(--yakit-primary-5);
+                            font-size: 12px;
+                        }
+                    }
                 }
             }
             .extra {
