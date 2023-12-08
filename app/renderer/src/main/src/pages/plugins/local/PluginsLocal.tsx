@@ -547,11 +547,15 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**删除提示弹窗 */
     const onPluginRemoveCheckOk = useMemoizedFn(() => {
+        if (removePluginDetailRef.current) {
+            onRemovePluginDetailSingle(removePluginDetailRef.current)
+            return
+        }
         if (removePluginRef.current) {
             onRemovePluginSingle(removePluginRef.current)
-        } else {
-            onRemovePluginBatch()
+            return
         }
+        onRemovePluginBatch()
     })
     /**列表单个删除 */
     const onRemovePluginSingle = useMemoizedFn((data: YakScript) => {
