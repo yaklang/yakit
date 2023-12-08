@@ -3249,6 +3249,7 @@ message SavePayloadRequest {
   string Content = 3;
   repeated string FileName = 4;
   string Folder = 5;
+  bool IsNew = 6;
 }
 
 
