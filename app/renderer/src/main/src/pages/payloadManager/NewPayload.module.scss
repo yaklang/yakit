@@ -463,8 +463,23 @@
 }
 .file-outside {
     border: 1px solid transparent;
-    border-bottom: 1px solid #eaecf3;
     padding: 10px 8px;
+    position: relative;
+    &:hover {
+        border-bottom: 1px solid transparent;
+        &::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #f0f1f3;
+        }
+    }
+}
+.file-dragging {
+    border-bottom: 1px solid #eaecf3;
 }
 .file-active {
     border-radius: 4px;
@@ -672,6 +687,19 @@
 .folder-border {
     border: 1px solid transparent;
     border-bottom: 1px solid #eaecf3;
+    position: relative;
+    &:hover {
+        border-bottom: 1px solid transparent;
+        &::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #f0f1f3;
+        }
+    }
 }
 .folder {
     padding: 10px 8px;
