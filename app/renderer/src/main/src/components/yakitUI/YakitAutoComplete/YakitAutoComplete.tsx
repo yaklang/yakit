@@ -1,16 +1,15 @@
 import {AutoComplete} from "antd"
 import React, {useEffect, useImperativeHandle, useState} from "react"
-import {CacheDataHistoryProps, YakitAutoCompleteProps} from "./YakitAutoCompleteType"
+import {YakitAutoCompleteProps} from "./YakitAutoCompleteType"
 import styles from "./YakitAutoComplete.module.scss"
 import classNames from "classnames"
 import {useMemoizedFn} from "ahooks"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {yakitNotify} from "@/utils/notification"
+import {CacheDataHistoryProps, onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
 
-/**
- * 更新说明
- * 1.增加缓存记忆功能
- */
+export const defYakitAutoCompleteRef = {
+    onGetRemoteValues: () => {},
+    onSetRemoteValues: (s: string) => {}
+}
 
 /**
  * @description YakitAutoCompleteProps 的属性
@@ -20,7 +19,7 @@ import {yakitNotify} from "@/utils/notification"
  * @param {number} cacheHistoryListLength 缓存的历史记录list长度
  */
 export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forwardRef((props, ref) => {
-    const {size, className, cacheHistoryDataKey, cacheHistoryListLength = 10, ...restProps} = props
+    const {size, className, cacheHistoryDataKey, cacheHistoryListLength = 10, ref: forwardRef, ...restProps} = props
     const [show, setShow] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
     const [cacheHistoryData, setCacheHistoryData] = useState<CacheDataHistoryProps>({
@@ -46,69 +45,23 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     /**@description 缓存 cacheHistoryDataKey 对应的数据 */
     const onSetRemoteValues = useMemoizedFn((newValue: string) => {
         if (!cacheHistoryDataKey) return
-        const index = cacheHistoryData.options.findIndex((l) => l.value === newValue)
-        let cacheHistory: CacheDataHistoryProps = {
-            options: [],
-            defaultValue: ""
-        }
-        if (index === -1) {
-            const newHistoryList = newValue
-                ? [{value: newValue, label: newValue}, ...cacheHistoryData.options].filter(
-                      (_, index) => index < cacheHistoryListLength
-                  )
-                : cacheHistoryData.options
-            cacheHistory = {
-                options: newHistoryList,
-                defaultValue: newValue
-            }
-        } else {
-            cacheHistory = {
-                options: cacheHistoryData.options,
-                defaultValue: newValue
-            }
-        }
-        setRemoteValue(cacheHistoryDataKey, JSON.stringify(cacheHistory))
-            .then(() => {
-                onGetRemoteValues()
-            })
-            .catch((e) => {
-                yakitNotify("error", "YakitAutoComplete:保存数据出错" + e)
-            })
+        onSetRemoteValuesBase({cacheHistoryDataKey, newValue})
     })
     /**@description 获取 cacheHistoryDataKey 对应的数据 */
     const onGetRemoteValues = useMemoizedFn((init?: boolean) => {
         if (!cacheHistoryDataKey) return
         if (init) setLoading(true)
-        getRemoteValue(cacheHistoryDataKey)
-            .then((data) => {
-                try {
-                    if (!data) return
-                    const newData = JSON.parse(data)
-                    let cacheData: CacheDataHistoryProps = {
-                        options: [],
-                        defaultValue: ""
-                    }
-                    if (Object.prototype.toString.call(newData) === "[object Object]") {
-                        cacheData = newData.options
-                            ? newData
-                            : {
-                                  options: [],
-                                  defaultValue: ""
-                              }
-                    } else {
-                        // 兼容以前 key 保存的数据
-                        cacheData.defaultValue = newData
-                    }
-                    if (props.onChange) props.onChange(cacheData.defaultValue||'', cacheData.options||[])
-                    setCacheHistoryData({...cacheData})
-                } catch (error) {
-                    yakitNotify("error", "YakitAutoComplete:转换数据出错" + error)
-                }
+        onGetRemoteValuesBase(cacheHistoryDataKey)
+            .then((cacheData) => {
+                if (props.onChange)
+                    props.onChange(cacheData.defaultValue || "", cacheData.options || props.options || [])
+                setCacheHistoryData({...cacheData, options: cacheData.options || props.options || []})
             })
-            .catch((e) => {
-                yakitNotify("error", "YakitAutoComplete:获取数据出错" + e)
+            .finally(() => {
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
             })
-            .finally(() => setLoading(false))
     })
     return (
         <div

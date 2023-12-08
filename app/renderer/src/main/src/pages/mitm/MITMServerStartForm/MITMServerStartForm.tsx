@@ -4,7 +4,7 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, ExtraMITMServerProps, MITMResponse} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import styles from "./MITMServerStartForm.module.scss"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
@@ -23,6 +23,7 @@ import {inputHTTPFuzzerHostConfigItem} from "../../fuzzer//HTTPFuzzerHosts"
 import {RemoveIcon} from "@/assets/newIcon"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -68,7 +69,9 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
 
     const ruleButtonRef = useRef<any>()
     const advancedFormRef = useRef<any>()
-    const downstreamProxyRef = useRef<any>(null)
+    const downstreamProxyRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
 
     const [form] = Form.useForm()
     const enableGMTLS = useWatch<boolean>("enableGMTLS", form)
