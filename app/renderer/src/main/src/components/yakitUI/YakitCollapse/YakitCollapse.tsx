@@ -14,7 +14,7 @@ const {Panel} = Collapse
  * @param {CSSProperties} wrapperStyle Collapse 装饰div的style
  */
 export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
-    const {type = "default", divider = true, wrapperClassName, wrapperStyle, ...restProps} = props
+    const {type = "default", divider = true, wrapperClassName, wrapperStyle, expandIcon, ...restProps} = props
 
     return (
         <div
@@ -31,7 +31,9 @@ export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
             <Collapse
                 {...restProps}
                 ghost
-                expandIcon={(e) => (e.isActive ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />)}
+                expandIcon={
+                    expandIcon ? expandIcon : (e) => (e.isActive ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />)
+                }
             />
         </div>
     )
