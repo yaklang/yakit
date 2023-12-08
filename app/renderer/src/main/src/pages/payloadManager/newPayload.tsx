@@ -175,6 +175,8 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     // show
     const [streamData, setStreamData] = useState<SavePayloadProgress>()
     const logInfoRef = useRef<string[]>([])
+    // 提示重复，不关闭Modal
+    const messageWarnRef = useRef<boolean>(false)
 
     // 存储类型
     const [storeType, setStoreType] = useState<"database" | "file">()
@@ -244,9 +246,18 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             }
         })
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
+            if (error === `group[/${group || dictionariesName}] exist`) {
+                messageWarnRef.current = true
+                warn("字典名重复")
+                return
+            }
             failed(`[SavePayload] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
+            if (messageWarnRef.current) {
+                messageWarnRef.current = false
+                return
+            }
             info("[SavePayload] finished")
             logInfoRef.current = []
             cancelRun()
@@ -258,7 +269,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [])
+    }, [group, dictionariesName])
 
     // 监听文件存储任务
     useEffect(() => {
@@ -276,9 +287,18 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             }
         })
         ipcRenderer.on(`${fileToken}-error`, (e: any, error: any) => {
+            if (error === `group[/${group || dictionariesName}] exist`) {
+                messageWarnRef.current = true
+                warn("字典名重复")
+                return
+            }
             failed(`[SavePayloadFile] error:  ${error}`)
         })
         ipcRenderer.on(`${fileToken}-end`, (e: any, data: any) => {
+            if (messageWarnRef.current) {
+                messageWarnRef.current = false
+                return
+            }
             info("[SavePayloadFile] finished")
             logInfoRef.current = []
             cancelRun()
@@ -320,7 +340,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                     return false
                 }
                 if (uploadList.map((item) => item.path).includes(f.path)) {
-                    warn("此文件已选择")
+                    warn(`${f.path}已选择`)
                     return
                 }
                 let name = f.name.split(".")[0]
@@ -2273,7 +2293,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className={styles["file-count"]} style={onlyInsert ? {display: "block"} : {}}>
-                            {file.type==="DataBase"?file.number:""}
+                            {file.type === "DataBase" ? file.number : ""}
                         </div>
                         {!onlyInsert && (
                             <YakitDropdownMenu
@@ -2753,9 +2773,14 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             <div className={styles["header"]} ref={headerRef}>
                 <div className={styles["title-box"]}>
                     <div className={styles["title"]}>{group}</div>
-                    <div className={styles["sun-title"]}>
+                    <div className={styles["sub-title"]}>
                         {showContentType === "editor" && payloadFileData?.IsBigFile ? (
                             <YakitTag color='danger'>超大字典</YakitTag>
+                        ) : selectPayloadArr.length > 0 ? (
+                            <div className={styles["total-item"]}>
+                                <span className={styles["total-item-text"]}>Selected</span>
+                                <span className={styles["total-item-number"]}>{selectPayloadArr?.length}</span>
+                            </div>
                         ) : (
                             `可以通过 fuzz 模块 {{x(字典名)}} 来渲染`
                         )}
