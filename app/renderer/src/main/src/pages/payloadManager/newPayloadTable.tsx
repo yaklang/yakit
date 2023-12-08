@@ -274,7 +274,6 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     const [editingObj, setEditingObj] = useState<EditingObjProps>()
     // 单击边框
     const [selectObj, setSelectObj] = useState<EditingObjProps>()
-    const doubleClickRef = useRef<boolean>(false)
 
     const [sortStatus, setSortStatus] = useState<"desc" | "asc">()
 
@@ -523,7 +522,6 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     })
 
     const handleSave = (row: Payload, newRow: Payload) => {
-        doubleClickRef.current = false
         setEditingObj(undefined)
         // 此处默认修改成功 优化交互闪烁(因此如若修改失败则会闪回)
         if (response?.Data && newRow.Content.length !== 0 && judgeNum(newRow.HitCount)) {
@@ -577,7 +575,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 selected: isSelect(record, col.dataIndex),
                 handleSave,
                 onClick: () => handleRowClick(record, col),
-                onDoubleClick: () => handleRowDoubleClick(record, col),
+                // onDoubleClick: () => handleRowDoubleClick(record, col),
                 onContextMenu: (e) => {
                     e.preventDefault()
                     handleRowRightClick(record, col)
@@ -586,21 +584,23 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         }
     })
 
-    const handleRowClick = useDebounceFn(
-        (record, column) => {
-            if (!doubleClickRef.current) {
-                console.log("Single click:", record, column)
-                setSelectObj({Id: record.Id, dataIndex: column.dataIndex})
-            }
-        },
-        {
-            wait: 200
+    const callCountRef = useRef<number>(0)
+    const handleMethod = (record, column) => {
+        if (callCountRef.current === 1) {
+            console.log("Single click:", record, column)
+            setSelectObj({Id: record.Id, dataIndex: column.dataIndex})
+        } else if (callCountRef.current >= 2) {
+            console.log("Double click:", record, column)
+            handleRowDoubleClick(record, column)
         }
-    ).run
+        callCountRef.current = 0 // 重置计数器
+    }
+    const handleRowClick = (record, column) => {
+        callCountRef.current += 1
+        setTimeout(() => handleMethod(record, column), 200)
+    }
 
     const handleRowDoubleClick = (record, column) => {
-        console.log("Double click:", record, column)
-        doubleClickRef.current = true
         setSelectObj(undefined)
         setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
     }
