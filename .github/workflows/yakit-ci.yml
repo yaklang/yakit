@@ -379,6 +379,7 @@ jobs:
 
       - name: Upload Release Asset (MacOS)
         uses: actions/upload-release-asset@v1
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
@@ -389,6 +390,7 @@ jobs:
 
       - name: Upload Release Asset (MacOS-M1)
         uses: actions/upload-release-asset@v1
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
@@ -399,6 +401,7 @@ jobs:
 
       - name: Upload Release Asset (Linux)
         uses: actions/upload-release-asset@v1
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
