@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./newPayloadTable.module.scss"
@@ -30,6 +30,7 @@ const {ipcRenderer} = window.require("electron")
 interface EditableCellProps {
     editing: boolean
     editable: boolean
+    selected: boolean
     children: React.ReactNode
     dataIndex: keyof Payload
     record: Payload
@@ -39,6 +40,7 @@ interface EditableCellProps {
 const EditableCell: React.FC<EditableCellProps> = ({
     editing,
     editable,
+    selected,
     children,
     dataIndex,
     record,
@@ -49,7 +51,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
 
     useEffect(() => {
         if (editable && editing) {
-            setValue(record.Content)
+            setValue(record[dataIndex as string])
         }
     }, [])
 
@@ -61,21 +63,14 @@ const EditableCell: React.FC<EditableCellProps> = ({
         }
     }
 
-    // if (editable && editing) {
-    //     return (
-    //         <YakitInput
-    //             // style={cellHeightRef.current?{height:cellHeightRef.current}:{}}
-    //             value={value}
-    //             onChange={(e) => setValue(e.target.value)}
-    //             autoFocus
-    //             onPressEnter={save}
-    //             onBlur={save}
-    //         />
-    //     )
-    // }
-
     return (
-        <td {...restProps} style={{position: "relative"}}>
+        <td
+            {...restProps}
+            style={{position: "relative"}}
+            className={classNames({
+                [styles["td-active-border"]]: selected
+            })}
+        >
             {editable && editing && (
                 <div style={{position: "absolute", top: 0, left: 0, height: "100%", width: "100%", overflow: "hidden"}}>
                     <YakitInput.TextArea
@@ -100,6 +95,15 @@ const EditableCell: React.FC<EditableCellProps> = ({
     )
 }
 
+// 判断是否为大于等于0的数字
+const judgeNum = (num) => {
+    try {
+        let newNum: number = parseInt(num)
+        return typeof newNum === "number" && newNum >= 0
+    } catch (error) {
+        return false
+    }
+}
 interface PayloadAddEditFormProps {
     onClose: () => void
     record: Payload
@@ -129,11 +133,17 @@ export const PayloadAddEditForm: React.FC<PayloadAddEditFormProps> = (props) => 
     }, [])
 
     const onFinish = useMemoizedFn(async () => {
-        if (editParams.Content.length > 0) {
+        if (editParams.Content.length > 0 && judgeNum(editParams.HitCount)) {
             const result = await onUpdatePayload({Id: record.Id, Data: {...record, ...editParams}})
             if (result) {
                 onClose()
             }
+        }
+        if (editParams.Content.length === 0) {
+            warn("字典内容不可为空")
+        }
+        if (!judgeNum(editParams.HitCount)) {
+            warn("字典次数内容不合规")
         }
     })
 
@@ -224,6 +234,13 @@ export interface DeletePayloadProps {
     Ids?: number[]
 }
 
+export interface EditingObjProps {
+    // 操作的行id
+    Id: number
+    // 操作的列
+    dataIndex: string
+}
+
 export interface NewPayloadTableProps {
     onCopyToOtherPayload?: (v: number) => void
     onMoveToOtherPayload?: (v: number) => void
@@ -253,7 +270,11 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         setParams,
         onlyInsert
     } = props
-    const [editingKey, setEditingKey] = useState<number>()
+    // 编辑
+    const [editingObj, setEditingObj] = useState<EditingObjProps>()
+    // 单击边框
+    const [selectObj, setSelectObj] = useState<EditingObjProps>()
+    const doubleClickRef = useRef<boolean>(false)
 
     const [sortStatus, setSortStatus] = useState<"desc" | "asc">()
 
@@ -328,6 +349,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             title: () => <Tooltip title={"新增命中次数字段，命中次数越高，在爆破时优先级也会越高"}>命中次数</Tooltip>,
             dataIndex: "HitCount",
             width: 102,
+            editable: true,
             filterIcon: (filtered) => (
                 <OutlineSelectorIcon
                     className={classNames(styles["selector-icon"], {
@@ -501,9 +523,10 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     })
 
     const handleSave = (row: Payload, newRow: Payload) => {
-        setEditingKey(undefined)
+        doubleClickRef.current = false
+        setEditingObj(undefined)
         // 此处默认修改成功 优化交互闪烁(因此如若修改失败则会闪回)
-        if (response?.Data && newRow.Content.length !== 0) {
+        if (response?.Data && newRow.Content.length !== 0 && judgeNum(newRow.HitCount)) {
             const newData = response?.Data.map((item) => {
                 if (item.Id === row.Id) {
                     return newRow
@@ -515,19 +538,34 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             setResponse(response)
         }
         // 真正的更改与更新数据
-        if (row.Content !== newRow.Content && newRow.Content.length !== 0) {
+        if (
+            (row.Content !== newRow.Content || row.HitCount !== newRow.HitCount) &&
+            newRow.Content.length !== 0 &&
+            judgeNum(newRow.HitCount)
+        ) {
             onUpdatePayload({Id: row.Id, Data: {...newRow}})
         }
         if (newRow.Content.length === 0) {
             warn("字典内容不可为空")
         }
+        if (!judgeNum(newRow.HitCount)) {
+            warn("字典次数内容不合规")
+        }
     }
 
-    const isEditing = (record: Payload) => record.Id === editingKey
+    const isEditing = (record: Payload, dataIndex) =>
+        record.Id === editingObj?.Id && dataIndex === editingObj?.dataIndex
+
+    const isSelect = (record: Payload, dataIndex) => record.Id === selectObj?.Id && dataIndex === selectObj?.dataIndex
 
     const columns = defaultColumns.map((col) => {
         if (!col.editable) {
-            return col
+            return {
+                ...col,
+                onCell: (record: Payload) => ({
+                    onClick: () => setSelectObj(undefined)
+                })
+            }
         }
         return {
             ...col,
@@ -535,23 +573,40 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 record,
                 editable: col.editable,
                 dataIndex: col.dataIndex,
-                editing: isEditing(record),
-                handleSave
+                editing: isEditing(record, col.dataIndex),
+                selected: isSelect(record, col.dataIndex),
+                handleSave,
+                onClick: () => handleRowClick(record, col),
+                onDoubleClick: () => handleRowDoubleClick(record, col),
+                onContextMenu: (e) => {
+                    e.preventDefault()
+                    handleRowRightClick(record, col)
+                }
             })
         }
     })
 
-    const handleRowClick = (record, index) => {
-        console.log("Single click:", record, index)
+    const handleRowClick = useDebounceFn(
+        (record, column) => {
+            if (!doubleClickRef.current) {
+                console.log("Single click:", record, column)
+                setSelectObj({Id: record.Id, dataIndex: column.dataIndex})
+            }
+        },
+        {
+            wait: 200
+        }
+    ).run
+
+    const handleRowDoubleClick = (record, column) => {
+        console.log("Double click:", record, column)
+        doubleClickRef.current = true
+        setSelectObj(undefined)
+        setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
     }
 
-    const handleRowDoubleClick = (record, index) => {
-        console.log("Double click:", record, index)
-        setEditingKey(record.Id)
-    }
-
-    const handleRowRightClick = (record, index) => {
-        console.log("Right click:", record, index)
+    const handleRowRightClick = (record, column) => {
+        // console.log("Right click:", record, column)
         showByRightContext({
             data: [
                 {label: "编辑", key: "edit"},
@@ -562,7 +617,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             onClick: (e) => {
                 switch (e.key) {
                     case "edit":
-                        setEditingKey(record.Id)
+                        setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
                         return
                     case "copy":
                         onCopyToOtherPayload && onCopyToOtherPayload(record.Id)
@@ -578,15 +633,6 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         })
     }
 
-    const getRowProps = (record, index) => ({
-        // onClick: () => handleRowClick(record, index),
-        onDoubleClick: () => handleRowDoubleClick(record, index),
-        onContextMenu: (e) => {
-            e.preventDefault()
-            handleRowRightClick(record, index)
-        }
-    })
-
     return (
         <div className={styles["new-payload-table"]}>
             <Table
@@ -595,11 +641,9 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                         cell: (props) => <EditableCell {...props} />
                     }
                 }}
-                rowClassName={() => "editable-row"}
                 bordered
                 dataSource={response?.Data}
                 columns={onlyInsert ? InsertColumns : (columns as ColumnTypes)}
-                onRow={getRowProps}
                 pagination={{
                     showQuickJumper: true,
                     pageSize: pagination?.Limit || 10, // 每页显示的条目数量
