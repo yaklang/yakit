@@ -230,6 +230,14 @@
         .drag-list {
             padding: 0px 12px;
             height: 100%;
+            .to-end {
+                text-align: center;
+                color: var(--yakit-disable-text-color);
+                font-size: 11px;
+                line-height: 14px;
+                padding-top: 24px;
+                padding-bottom: 24px;
+            }
         }
     }
     /* 隐藏滚动条 */
@@ -300,6 +308,7 @@
                 .item {
                     display: flex;
                     flex-direction: row;
+                    align-items: center;
                     gap: 8px;
                     .dot {
                         display: flex;
@@ -720,6 +729,7 @@
         flex-direction: row;
         gap: 4px;
         align-items: center;
+        overflow: hidden;
         .is-fold-icon {
             svg {
                 height: 12px;
@@ -738,6 +748,8 @@
             font-style: normal;
             font-weight: 400;
             line-height: 16px;
+            flex: 1;
+            overflow: hidden;
         }
     }
     .extra {
