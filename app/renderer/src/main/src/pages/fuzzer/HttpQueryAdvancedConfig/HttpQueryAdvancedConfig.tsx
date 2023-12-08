@@ -439,7 +439,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
-                                        fuzzTagMode: "standard",
+                                        fuzzTagMode: "legacy",
                                         fuzzTagSyncIndex: false,
                                         isHttps: false,
                                         noFixContentLength: false,
