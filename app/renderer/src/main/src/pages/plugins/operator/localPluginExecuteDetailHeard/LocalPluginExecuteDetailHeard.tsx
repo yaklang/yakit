@@ -1,21 +1,25 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
+    DebugPluginRequest,
     ExecuteEnterNodeByPluginParamsProps,
     FormExtraSettingProps,
     OutputFormComponentsByTypeProps,
     PluginExecuteDetailHeardProps,
+    PluginExecuteExtraFormValue,
+    CustomPluginExecuteFormValue,
+    PluginExecuteProgressProps,
     YakExtraParamProps
 } from "./LocalPluginExecuteDetailHeardType"
 import {PluginDetailHeader} from "../../baseTemplate"
 import styles from "./LocalPluginExecuteDetailHeard.module.scss"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
-import {Form} from "antd"
+import {Form, Progress} from "antd"
 import {YakParamProps} from "../../pluginsType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {HTTPPacketEditor, YakCodeEditor} from "@/utils/editors"
+import {HTTPPacketEditor, NewHTTPPacketEditor, YakCodeEditor} from "@/utils/editors"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {failed} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -23,6 +27,12 @@ import {Uint8ArrayToString} from "@/utils/str"
 import classNames from "classnames"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
+import {OutlineChevrondownIcon} from "@/assets/icon/outline"
+import {HorizontalScrollCard} from "../horizontalScrollCard/HorizontalScrollCard"
+import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
+import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
+
+const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
 /**
  * @description 根据组名将参数分组
@@ -74,16 +84,78 @@ const getValueByType = (defaultValue, type: string): number | string | boolean |
             value = newVal.length > 0 ? newVal : undefined
             break
         default:
-            value = defaultValue
+            value = defaultValue ? defaultValue : undefined
             break
     }
     return value
+}
+
+/**
+ * @description 处理最后的执行参数
+ * @param {{[string]:any}} object
+ * @returns {YakExecutorParam[]}
+ */
+const getYakExecutorParam = (object) => {
+    let newValue: YakExecutorParam[] = []
+    Object.entries(object).forEach(([key, val]) => {
+        if (val instanceof Buffer) {
+            newValue = [
+                ...newValue,
+                {
+                    Key: key,
+                    Value: Uint8ArrayToString(val)
+                }
+            ]
+            return
+        }
+        newValue = [
+            ...newValue,
+            {
+                Key: key,
+                Value: val
+            }
+        ]
+    })
+    return newValue
+}
+
+const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
+    IsHttps: false,
+    IsRawHTTPRequest: false,
+    RawHTTPRequest: Buffer.from("", "utf-8"),
+    Method: "GET",
+    Path: [],
+    GetParams: [],
+    Headers: [],
+    Cookie: [],
+    Body: Buffer.from("", "utf-8"),
+    PostParams: [],
+    MultipartParams: [],
+    MultipartFileParams: []
 }
 
 /**插件执行头部 */
 export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardProps> = React.memo((props) => {
     const {plugin, extraNode} = props
     const [form] = Form.useForm()
+    /** 当前插件是否点击过开始执行 */
+    const [isClickExecute, setIsClickExecute] = useState<boolean>(false)
+    /**是否在执行中 */
+    const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    /**是否展开/收起 */
+    const [isExpend, setIsExpend] = useState<boolean>(false)
+    /**额外参数弹出框 */
+    const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
+    const [extraParamsValue, setExtraParamsValue] = useState<PluginExecuteExtraFormValue>({
+        ...defPluginExecuteFormValue
+    })
+    const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>()
+
+    const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
+
+    useEffect(() => {
+        setIsClickExecute(false)
+    }, [plugin.ScriptName])
 
     /**必填的参数,作为页面上主要显示 */
     const requiredParams: YakParamProps[] = useMemo(() => {
@@ -108,7 +180,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     })
     const initRequiredFormValue = useMemoizedFn(() => {
         // 必填参数
-        let initRequiredFormValue = {}
+        let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
         requiredParams.forEach((ele) => {
             const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
             initRequiredFormValue = {
@@ -120,22 +192,26 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     })
     const initExtraFormValue = useMemoizedFn(() => {
         // 额外参数
-        let initExtraFormValue = {}
+        let initExtraFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
         const extraParamsList = plugin.Params?.filter((ele) => !ele.Required) || []
         extraParamsList.forEach((ele) => {
-            let value
-            if (ele.TypeVerbose === "boolean") {
-                value = ele.DefaultValue === "true"
-            }
-            value = ele.DefaultValue
+            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
             initExtraFormValue = {
                 ...initExtraFormValue,
                 [ele.Field]: value
             }
         })
-        // console.log("initExtraFormValue", initExtraFormValue)
+        console.log("initExtraFormValue", initExtraFormValue)
+        switch (plugin.Type) {
+            case "yak":
+            case "lua":
+                setCustomExtraParamsValue({...initExtraFormValue})
+                break
+            default:
+                break
+        }
     })
-    /**yak/codec/lua根据后端返的生成;mitm/port-scan/nuclei前端固定*/
+    /**yak/lua 根据后端返的生成;codec/mitm/port-scan/nuclei前端固定*/
     const pluginParamsNodeByPluginType = (type: string) => {
         switch (type) {
             case "yak":
@@ -150,7 +226,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     DefaultValue: "",
                     Help: "Input"
                 }
-                return <OutputFormComponentsByType item={codecItem} />
+                return <OutputFormComponentsByType key='Input-Input' item={codecItem} />
             case "mitm":
             case "port-scan":
             case "nuclei":
@@ -162,21 +238,82 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     DefaultValue: "",
                     Help: "Input"
                 }
-                return <OutputFormComponentsByType item={item} />
+                return <OutputFormComponentsByType key='Input-扫描目标' item={item} />
             default:
                 return <></>
         }
     }
     /**开始执行 */
     const onStartExecute = useMemoizedFn((value) => {
-        let newValue = value
-        Object.entries(value).forEach(([key, val]) => {
-            if (val instanceof Buffer) {
-                newValue[key] = Uint8ArrayToString(val)
-            }
-        })
-        // console.log("newValue", newValue)
+        if (!isClickExecute) setIsClickExecute(true)
+        setIsExecuting(true)
+        let executeParams: DebugPluginRequest = {
+            Code: plugin.Content,
+            PluginType: plugin.Type,
+            Input: "",
+            HTTPRequestTemplate: extraParamsValue,
+            ExecParams: []
+        }
+        const yakExecutorParams: YakExecutorParam[] = getYakExecutorParam(value)
+        switch (plugin.Type) {
+            case "yak":
+            case "lua":
+                executeParams = {
+                    ...executeParams,
+                    ExecParams: yakExecutorParams
+                }
+                break
+            case "codec":
+            case "mitm":
+            case "port-scan":
+            case "nuclei":
+                const input = value["Input"]
+                executeParams = {
+                    ...executeParams,
+                    Input: input
+                }
+                break
+            default:
+                break
+        }
+        console.log("executeParams", executeParams)
     })
+    const onStopExecute = useMemoizedFn(() => {
+        setIsExecuting(false)
+    })
+    /**保存额外参数 */
+    const onSaveExtraParams = useMemoizedFn((v: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue) => {
+        switch (plugin.Type) {
+            case "yak":
+            case "lua":
+                setCustomExtraParamsValue({...v} as CustomPluginExecuteFormValue)
+                break
+            case "mitm":
+            case "port-scan":
+            case "nuclei":
+                setExtraParamsValue({...v} as PluginExecuteExtraFormValue)
+                break
+            default:
+                break
+        }
+        setExtraParamsVisible(false)
+    })
+    /**打开额外参数抽屉 */
+    const openExtraPropsDrawer = useMemoizedFn(() => {
+        setExtraParamsVisible(true)
+    })
+    const isShowExtraParamsButton = useMemo(() => {
+        switch (plugin.Type) {
+            case "codec":
+                return false
+            case "mitm":
+            case "port-scan":
+            case "nuclei":
+                return true
+            default:
+                return extraParamsGroup.length > 0
+        }
+    }, [extraParamsGroup.length, plugin.Type])
     return (
         <div>
             <PluginDetailHeader
@@ -184,8 +321,33 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 help={plugin.Help}
                 tags={plugin.Tags}
                 extraNode={
-                    <div>
-                        <>{extraNode}</>
+                    <div className={styles["plugin-head-executing-wrapper"]}>
+                        {isClickExecute ? (
+                            <div className={styles["plugin-head-executing"]}>
+                                {isExecuting && (
+                                    <>
+                                        <PluginExecuteProgress percent={60} name='Main' />
+                                        <YakitButton danger onClick={onStopExecute}>
+                                            停止
+                                        </YakitButton>
+                                    </>
+                                )}
+
+                                {isExpend ? (
+                                    <YakitButton type='text2' onClick={() => setIsExpend(false)}>
+                                        收起
+                                        <OutlineChevrondownIcon />
+                                    </YakitButton>
+                                ) : (
+                                    <YakitButton type='text2' onClick={() => setIsExpend(true)}>
+                                        展开
+                                        <OutlineChevrondownIcon />
+                                    </YakitButton>
+                                )}
+                            </div>
+                        ) : (
+                            <>{extraNode}</>
+                        )}
                     </div>
                 }
                 img={plugin.HeadImg || ""}
@@ -201,19 +363,51 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             <Form
                 form={form}
                 onFinish={onStartExecute}
-                className={styles["plugin-execute-form-wrapper"]}
+                className={classNames(styles["plugin-execute-form-wrapper"], {
+                    [styles["plugin-execute-form-wrapper-hidden"]]: isClickExecute && !isExpend
+                })}
                 labelCol={{span: 6}}
-                wrapperCol={{span: 12}} //这样设置是为什么让输入框居中
+                wrapperCol={{span: 12}} //这样设置是为了让输入框居中
                 validateMessages={{
                     /* eslint-disable no-template-curly-in-string */
                     required: "${label} 是必填字段"
                 }}
+                labelWrap={true}
             >
                 {pluginParamsNodeByPluginType(plugin.Type)}
-                <Form.Item colon={false} label={" "}>
-                    <YakitButton htmlType='submit'>开始执行</YakitButton>
+                <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                    <div className={styles["plugin-execute-form-operate"]}>
+                        {isExecuting ? (
+                            <YakitButton danger onClick={onStopExecute}>
+                                停止
+                            </YakitButton>
+                        ) : (
+                            <YakitButton className={styles["plugin-execute-form-operate-start"]} htmlType='submit'>
+                                开始执行
+                            </YakitButton>
+                        )}
+                        {isShowExtraParamsButton && (
+                            <YakitButton type='text' onClick={openExtraPropsDrawer}>
+                                额外参数
+                            </YakitButton>
+                        )}
+                    </div>
                 </Form.Item>
             </Form>
+            <div className={styles["plugin-execute-result-wrapper"]}>
+                <HorizontalScrollCard title={"Data Card"} />
+            </div>
+            <React.Suspense fallback={<div>loading...</div>}>
+                <PluginExecuteExtraParams
+                    ref={pluginExecuteExtraParamsRef}
+                    pluginType={plugin.Type}
+                    extraParamsValue={extraParamsValue}
+                    extraParamsGroup={extraParamsGroup}
+                    visible={extraParamsVisible}
+                    setVisible={setExtraParamsVisible}
+                    onSave={onSaveExtraParams}
+                />
+            </React.Suspense>
         </div>
     )
 })
@@ -221,7 +415,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
 /**执行的入口通过插件参数生成组件 */
 const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsProps> = React.memo((props) => {
     const {paramsList} = props
-    // console.log("paramsList", paramsList)
     const formContent = (item: YakParamProps) => {
         let extraSetting: FormExtraSettingProps | undefined = undefined
         try {
@@ -241,9 +434,7 @@ const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsPro
                             formItemProps={{
                                 name: item.Field,
                                 label: item.FieldVerbose || item.Field,
-                                labelCol: {span: 6},
-                                wrapperCol: {span: 12},
-                                required: item.Required
+                                rules: [{required: item.Required}]
                             }}
                             selectType='all'
                         />
@@ -257,15 +448,17 @@ const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsPro
     return (
         <>
             {paramsList.map((item) => (
-                <React.Fragment key={item.Field}>{formContent(item)}</React.Fragment>
+                <React.Fragment key={item.Field + item.FieldVerbose}>{formContent(item)}</React.Fragment>
             ))}
         </>
     )
 })
 
-const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
+/**执行表单单个项 */
+export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
     const {item, extraSetting} = props
     const [validateStatus, setValidateStatus] = useState<"success" | "error">("success")
+    const [code, setCode] = useState<Buffer>(Buffer.from(item.DefaultValue || "", "utf8"))
     const formProps = {
         rules: [{required: item.Required}],
         label: item.FieldVerbose || item.Field,
@@ -298,7 +491,7 @@ const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (p
         case "uint":
             return (
                 <Form.Item {...formProps}>
-                    <YakitInputNumber precision={0} min={1} />
+                    <YakitInputNumber precision={0} min={0} />
                 </Form.Item>
             )
         case "float":
@@ -336,35 +529,7 @@ const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (p
                         {required: item.Required},
                         {
                             validator: async (rule, value) => {
-                                if (value.length === 0) {
-                                    onValidateStatus("error")
-                                    return Promise.reject(`${formProps.label} 是必填字段`)
-                                }
-                                if (validateStatus === "error") onValidateStatus("success")
-                                return Promise.resolve()
-                            }
-                        }
-                    ]}
-                    valuePropName='originValue'
-                    className={classNames(formProps.className, styles["code-wrapper"])}
-                    initialValue={Buffer.from(item.DefaultValue || "", "utf8")}
-                >
-                    <HTTPPacketEditor
-                        noHeader={true}
-                        noHex={true}
-                        originValue={Buffer.from(item.DefaultValue || "", "utf8")}
-                    />
-                </Form.Item>
-            )
-        case "yak":
-            return (
-                <Form.Item
-                    {...formProps}
-                    rules={[
-                        {required: item.Required},
-                        {
-                            validator: async (rule, value) => {
-                                if (value.length === 0) {
+                                if (item.Required && value.length === 0) {
                                     onValidateStatus("error")
                                     return Promise.reject(`${formProps.label} 是必填字段`)
                                 }
@@ -377,9 +542,45 @@ const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (p
                     className={classNames(formProps.className, styles["code-wrapper"], {
                         [styles["code-error-wrapper"]]: validateStatus === "error"
                     })}
-                    initialValue={Buffer.from(item.DefaultValue || "", "utf8")}
+                    initialValue={code}
                 >
-                    <YakCodeEditor language={"yak"} originValue={Buffer.from(item.DefaultValue, "utf8")} />
+                    {/* <HTTPPacketEditor noHeader={true} noHex={true} originValue={code} /> */}
+                    <NewHTTPPacketEditor noHeader={true} noHex={true} originValue={code} />
+                </Form.Item>
+            )
+        case "yak":
+            return (
+                <Form.Item
+                    {...formProps}
+                    rules={[
+                        {required: item.Required},
+                        {
+                            validator: async (rule, value) => {
+                                if (item.Required && value.length === 0) {
+                                    onValidateStatus("error")
+                                    return Promise.reject(`${formProps.label} 是必填字段`)
+                                }
+                                if (validateStatus === "error") onValidateStatus("success")
+                                return Promise.resolve()
+                            }
+                        }
+                    ]}
+                    valuePropName='originValue'
+                    className={classNames(formProps.className, styles["code-wrapper"], {
+                        [styles["code-error-wrapper"]]: validateStatus === "error"
+                    })}
+                    initialValue={code}
+                >
+                    {/* <YakCodeEditor language={"yak"} originValue={code} /> */}
+                    <NewHTTPPacketEditor
+                        noHeader={true}
+                        noHex={true}
+                        language={"yak"}
+                        noPacketModifier={true}
+                        utf8={true}
+                        isResponse={true}
+                        originValue={code}
+                    />
                 </Form.Item>
             )
 
@@ -387,3 +588,18 @@ const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (p
             return <></>
     }
 }
+
+const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((props) => {
+    const {percent, name} = props
+    return (
+        <div className={styles["plugin-execute-progress-wrapper"]}>
+            <span className={styles["plugin-execute-progress-name"]}>{name}</span>
+            <Progress
+                strokeColor='#F28B44'
+                trailColor='#F0F2F5'
+                percent={percent}
+                format={(percent) => `${percent}%`}
+            />
+        </div>
+    )
+})
