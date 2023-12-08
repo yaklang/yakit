@@ -32,9 +32,11 @@ export interface YakitInputSearchProps extends Omit<SearchProps,"size">{
  * @description InternalTextAreaProps 的属性
  * @augments InternalTextAreaProps 继承antd的Input TextAreaProps 默认属性
  * @param {string} wrapperClassName
+ * @param {boolean} isShowResize 是否显示右下角的拖拽icon
  */
 export interface InternalTextAreaProps extends TextAreaProps {
     wrapperClassName?: string
+    isShowResize?:boolean
 }
 
 /**
