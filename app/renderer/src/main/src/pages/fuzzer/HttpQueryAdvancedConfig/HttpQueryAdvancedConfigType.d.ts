@@ -1,9 +1,13 @@
 import {MatchingAndExtraction} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 
 export type FilterMode = "drop" | "match" | "onlyMatch"
+
+export type FuzzTagMode = "close" | "standard" | "legacy"
+
 export interface AdvancedConfigValueProps {
     // 请求包配置
-    forceFuzz?: boolean
+    fuzzTagMode: FuzzTagMode
+    fuzzTagSyncIndex: boolean
     isHttps: boolean
     isGmTLS: boolean
     /**@name 不修复长度 */

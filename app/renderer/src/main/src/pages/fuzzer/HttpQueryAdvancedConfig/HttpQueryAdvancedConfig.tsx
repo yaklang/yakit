@@ -73,6 +73,21 @@ const variableModeOptions = [
     }
 ]
 
+const fuzzTagModeOptions = [
+    {
+        value: "close",
+        label: "关闭"
+    },
+    {
+        value: "standard",
+        label: "标准"
+    },
+    {
+        value: "legacy",
+        label: "兼容"
+    }
+]
+
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
     const {
         advancedConfigValue,
@@ -103,7 +118,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [inViewport = true] = useInViewport(queryRef)
 
     // 是否通过仅匹配打开的弹窗
-    const [isOpenByMacth,setOpenByMacth] = useState<boolean>(false)
+    const [isOpenByMacth, setOpenByMacth] = useState<boolean>(false)
 
     const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
     const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
@@ -252,8 +267,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         }
     })
 
-    const onOpenMatchingAndExtractionCardEvent = useMemoizedFn((pageId:string)=>{
-        if(pageId===id){
+    const onOpenMatchingAndExtractionCardEvent = useMemoizedFn((pageId: string) => {
+        if (pageId === id) {
             onAddMatchingAndExtractionCard("matchers")
             setOpenByMacth(true)
         }
@@ -265,7 +280,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             emiter.off("onOpenMatchingAndExtractionCard", onOpenMatchingAndExtractionCardEvent)
         }
     }, [])
-    
+
     const onRemoveMatcher = useMemoizedFn((i) => {
         const v = form.getFieldsValue()
         onSetValue({
@@ -330,7 +345,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         return width
     }
     const onClose = useMemoizedFn(() => {
-        if(isOpenByMacth){
+        if (isOpenByMacth) {
             setOpenByMacth(false)
         }
         setVisibleDrawer(false)
@@ -345,10 +360,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             matchers: matcher.matchersList || [],
             extractors: extractor.extractorList || []
         })
-        if(isOpenByMacth){
-            setTimeout(()=>{
+        if (isOpenByMacth) {
+            setTimeout(() => {
                 matchSubmitFun()
-            },500)
+            }, 500)
         }
     })
     return (
@@ -424,7 +439,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     const restValue = {
-                                        forceFuzz: true,
+                                        fuzzTagMode: "standard",
+                                        fuzzTagSyncIndex: false,
                                         isHttps: false,
                                         noFixContentLength: false,
                                         actualHost: "",
@@ -452,14 +468,17 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             label={
                                 <span className={styles["advanced-config-form-label"]}>
                                     渲染 Fuzz
-                                    <Tooltip title='关闭之后，所有的 Fuzz 标签将会失效' overlayStyle={{width: 150}}>
+                                    <Tooltip title='兼容模式支持嵌套使用时内层大括号省略 {{base64(url(www.example.com))}}，但标准模式不可省略，关闭后Fuzztag将失效。' overlayStyle={{width: 150}}>
                                         <InformationCircleIcon className={styles["info-icon"]} />
                                     </Tooltip>
                                 </span>
                             }
-                            name='forceFuzz'
-                            valuePropName='checked'
+                            name='fuzzTagMode'
                         >
+                            <YakitRadioButtons buttonStyle='solid' options={fuzzTagModeOptions} size={"small"} />
+                        </Form.Item>
+
+                        <Form.Item label='强制同步渲染' name='fuzzTagSyncIndex' valuePropName='checked'>
                             <YakitSwitch />
                         </Form.Item>
 
