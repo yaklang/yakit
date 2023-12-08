@@ -261,9 +261,12 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }
 
     // 点击Select选中树
-    const onSelectedKeys = useMemoizedFn((selectedKeys: TreeKey[], selectedNodes: TreeNode[]) => {
+    const onSelectedKeys = useMemoizedFn((selectedKeys: TreeKey[],
+        info: {
+            selectedNodes: TreeNode[]
+        }) => {
         setSelectedKeys(selectedKeys)
-        setSelectedNodes(selectedNodes)
+        setSelectedNodes(info.selectedNodes)
         resetTableAndEditorShow && resetTableAndEditorShow(true, false)
     })
 
@@ -339,9 +342,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         treeData={searchTreeFlag ? searchWebTreeData : webTreeData}
                         loadData={onLoadWebTreeData}
                         expandedKeys={expandedKeys}
-                        onExpandedKeys={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
+                        onExpand={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
                         selectedKeys={selectedKeys}
-                        onSelectedKeys={onSelectedKeys}
+                        onSelect={onSelectedKeys}
                     ></YakitTree>
                 )}
             </div>
