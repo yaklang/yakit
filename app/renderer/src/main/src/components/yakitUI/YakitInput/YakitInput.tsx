@@ -97,7 +97,7 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
 }
 
 const InternalTextArea: React.FC<InternalTextAreaProps> = (props) => {
-    const {wrapperClassName, style, ...restProps} = props
+    const {wrapperClassName, style, isShowResize = true, ...restProps} = props
     return (
         <div
             className={classNames(
@@ -111,7 +111,7 @@ const InternalTextArea: React.FC<InternalTextAreaProps> = (props) => {
         >
             <Input.TextArea {...restProps} spellCheck={false}
             />
-            <ResizerIcon className={styles["resizer-icon"]} />
+            {isShowResize && <ResizerIcon className={styles["resizer-icon"]} />}
         </div>
     )
 }
