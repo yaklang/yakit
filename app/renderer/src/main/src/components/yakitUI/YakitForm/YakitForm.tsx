@@ -239,7 +239,6 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             })
             .then((data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
-                console.log('data.filePaths',data.filePaths)
                 if (filesLength) {
                     const absolutePath: string[] = []
                     data.filePaths.forEach((p) => {
@@ -248,7 +247,6 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             absolutePath.push(path)
                         }
                     })
-                    console.log('absolutePath',absolutePath)
                     // 设置名字
                     if (setFileName) setFileName(absolutePath.join(","))
                 }

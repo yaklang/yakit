@@ -9,3 +9,8 @@
 .ant-form-item {
     margin-bottom: 16px;
 }
+.ant-form-item-control-input-content {
+    .ant-input-number {
+        width: 100%;
+    }
+}
