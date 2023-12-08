@@ -195,6 +195,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             "SavePayloadStream",
             {
                 IsFile: true,
+                IsNew: isDictionaries,
                 Content: "",
                 FileName: uploadList.map((item) => item.path),
                 Group: group || dictionariesName,
@@ -213,6 +214,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             "SavePayloadToFileStream",
             {
                 IsFile: true,
+                IsNew: true,
                 Content: "",
                 FileName: uploadList.map((item) => item.path),
                 Group: group || dictionariesName,
@@ -555,7 +557,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
 // ]
 
 const getItemStyle = (isDragging, draggableStyle) => {
-    console.log("getItemStyle", draggableStyle.transform)
+    // console.log("getItemStyle", draggableStyle.transform)
     let transform: string = draggableStyle["transform"] || ""
     if (isDragging) {
         const index = transform.indexOf(",")
@@ -2124,7 +2126,10 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         })
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
             logInfoRef.current = []
-            onQueryGroup()
+            onQueryGroup({
+                Group:file.name,
+                Folder:folder||"",
+            })
             info("[ToDatabase] finished")
         })
         return () => {
@@ -2475,9 +2480,8 @@ interface PayloadContentProps {
     showContentType: "editor" | "table"
     group: string
     folder: string
-    // 用于导出的参数
-    codePath?: string
     onlyInsert?: boolean
+    onClose?:()=>void
 }
 
 interface PayloadFileDataProps {
@@ -2490,7 +2494,7 @@ interface GetAllPayloadFromFileResponse {
 }
 
 export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
-    const {isExpand, setExpand, showContentType, group, folder, codePath = "", onlyInsert} = props
+    const {isExpand, setExpand, showContentType, group, folder, onlyInsert,onClose} = props
     const [isEditMonaco, setEditMonaco] = useState<boolean>(false)
     const [editorValue, setEditorValue] = useState<string>("")
     const [payloadFileData, setPayloadFileData] = useState<PayloadFileDataProps>()
@@ -2962,6 +2966,16 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                         </div>
                     </>
                 )}
+
+                {
+                    onlyInsert&&<div className={styles["extra"]}>
+                        <div className={styles['close-btn']} onClick={()=>{
+                        onClose&&onClose()
+                    }}>
+                        <OutlineXIcon />
+                    </div>
+                    </div>
+                }
             </div>
             <div className={styles["content"]}>
                 {showContentType === "editor" && (
@@ -3394,7 +3408,6 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                             showContentType={showContentType}
                             group={group}
                             folder={folder}
-                            codePath={codePath}
                         />
                     ) : (
                         <div className={styles["no-data"]}>
@@ -3543,13 +3556,17 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                     showContentType={showContentType}
                     group={group}
                     folder={folder}
-                    codePath={codePath}
                     onlyInsert={true}
+                    onClose={onClose}
                 />
             ) : (
-                <>
+                <div className={styles['no-data']}>
+                    <div className={styles['close-btn']} onClick={()=>{
+                        onClose()
+                    }}>
+                        <OutlineXIcon />
+                    </div>
                     {folder.length !== 0 ? (
-                        <div className={styles["select-folder-box"]}>
                             <div className={styles["select-folder"]}>
                                 <div className={styles["icon"]}>
                                     <PropertyNoAddIcon />
@@ -3557,13 +3574,10 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
                                 <div className={styles["title"]}>{selectInfo}</div>
                                 <div className={styles["sub-title"]}>支持插入文件进行Fuzz</div>
                             </div>
-                        </div>
                     ) : (
-                        <div className={styles["no-data"]}>
-                            <YakitEmpty title='请选择要插入的字典或文件夹' />
-                        </div>
+                        <YakitEmpty title='请选择要插入的字典或文件夹' /> 
                     )}
-                </>
+                </div>
             )}
         </div>
     )
