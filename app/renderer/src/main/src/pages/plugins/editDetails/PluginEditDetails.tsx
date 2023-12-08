@@ -1188,7 +1188,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                 </div>
                                 <div className={styles["editor-body"]}>
                                     <YakitEditor
-                                        type={typeParams.Type === "nuclei" ? "yaml" : "yak"}
+                                        type={typeParams.Type === "nuclei" ? "yaml" : typeParams.Type}
                                         value={code}
                                         setValue={setCode}
                                     />
@@ -1196,7 +1196,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                             </div>
                         </div>
                         <PluginEditorModal
-                            language={typeParams.Type === "nuclei" ? "yaml" : "yak"}
+                            language={typeParams.Type === "nuclei" ? "yaml" : typeParams.Type}
                             visible={codeModal}
                             setVisible={onModifyCode}
                             code={code}

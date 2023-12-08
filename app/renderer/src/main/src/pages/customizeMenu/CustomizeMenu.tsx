@@ -1389,7 +1389,7 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
             <YakitPopover
                 placement='topRight'
                 overlayClassName={style["terminal-popover"]}
-                content={<YakEditor type={"yak"} value={plugin.Content} readOnly={true} />}
+                content={<YakEditor type={plugin.Type === "nuclei" ? "yaml" : plugin.Type} value={plugin.Content} readOnly={true} />}
                 onVisibleChange={(v) => {
                     if (v && !plugin.Content) {
                         if (getScriptInfo) getScriptInfo(plugin)

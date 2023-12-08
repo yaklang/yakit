@@ -1796,6 +1796,7 @@ message YaklangInspectInformationResponse {
 
 message StaticAnalyzeErrorRequest {
   bytes Code = 1;
+  string PluginType = 2;
 }
 
 message YaklangCompileAndFormatRequest {

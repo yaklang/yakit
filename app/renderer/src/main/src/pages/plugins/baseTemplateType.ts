@@ -151,6 +151,7 @@ export interface PluginEditorDiffProps {
     newCode: string
     oldCode?: string
     setCode: (value: string) => any
+    language: string
 }
 
 /** ---------- 插件列表相关 start ---------- */

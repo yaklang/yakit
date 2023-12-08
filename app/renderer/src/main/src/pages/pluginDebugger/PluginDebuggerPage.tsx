@@ -231,7 +231,7 @@ export const PluginDebuggerPage: React.FC<PluginDebuggerPageProp> = ({generateYa
                             <div style={{display: tabActiveKey === "code" ? "block" : "none", height: '100%'}}>
                                 <NewHTTPPacketEditor
                                     key={refreshEditor}
-                                    language={pluginType === "nuclei" ? "yaml" : "yak"}
+                                    language={pluginType === "nuclei" ? "yaml" : pluginType}
                                     noHeader={true}
                                     originValue={StringToUint8Array(code)}
                                     onChange={(val) => setCode(Uint8ArrayToString(val))}

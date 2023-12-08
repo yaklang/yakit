@@ -51,6 +51,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {DataCompareModal} from "@/pages/compare/DataCompare"
 import emiter from "./eventBus/eventBus"
 import {v4 as uuidv4} from "uuid"
+import { pluginTypeToName } from "@/pages/plugins/builtInData"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -202,7 +203,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             applyContentLength()
         }
 
-        if (props.type === "yak") {
+        if (Object.keys(pluginTypeToName).includes(props.type || "")) {
             editor.addAction({
                 contextMenuGroupId: "yaklang",
                 id: YAK_FORMATTER_COMMAND_ID,
@@ -314,9 +315,10 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     const yakSyntaxChecking = useDebounceFn(
         useMemoizedFn((editor: IMonacoEditor, model: ITextModel) => {
             const allContent = model.getValue()
-            if (props.type === "yak") {
+            const type = props.type || ""
+            if (Object.keys(pluginTypeToName).includes(type)) {
                 ipcRenderer
-                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent)})
+                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type})
                     .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
@@ -388,7 +390,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                         endLineNumber: 0
                                     })
 
-                                    if (editor && props.type === "yak") {
+                                    if (editor) {
                                         const model = editor.getModel()
                                         if (model) {
                                             yakSyntaxChecking.run(editor, model)
