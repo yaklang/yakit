@@ -555,7 +555,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
 // ]
 
 const getItemStyle = (isDragging, draggableStyle) => {
-    // console.log("getItemStyle",draggableStyle.transform);
+    console.log("getItemStyle", draggableStyle.transform)
     let transform: string = draggableStyle["transform"] || ""
     if (isDragging) {
         const index = transform.indexOf(",")
@@ -1345,6 +1345,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                                                     setNotExpandArr={setNotExpandArr}
                                                                     onQueryGroup={onQueryGroup}
                                                                     setContentType={setContentType}
+                                                                    isDragging={snapshot.isDragging}
                                                                 />
                                                             ) : (
                                                                 // 渲染文件组件
@@ -1359,6 +1360,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                                                     codePath={codePath}
                                                                     onQueryGroup={onQueryGroup}
                                                                     setContentType={setContentType}
+                                                                    isDragging={snapshot.isDragging}
                                                                 />
                                                             )}
                                                         </div>
@@ -1393,8 +1395,6 @@ export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => 
             className={classNames(styles["file"], {
                 [styles["file-active"]]: file.id === selectItem,
                 [styles["file-no-active"]]: file.id !== selectItem,
-                [styles["file-menu"]]: menuOpen && file.id !== selectItem,
-                [styles["file-outside"]]: !isInside,
                 [styles["file-inside"]]: isInside
             })}
         >
@@ -1452,6 +1452,8 @@ interface FolderComponentProps {
     onQueryGroup: (obj?: {Group: string; Folder: string}) => void
     setContentType: (v?: "editor" | "table") => void
     onlyInsert?: boolean
+    // 是否拖拽中
+    isDragging?: boolean
 }
 export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     const {
@@ -1468,7 +1470,8 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
         setNotExpandArr,
         onQueryGroup,
         setContentType,
-        onlyInsert
+        onlyInsert,
+        isDragging
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
@@ -1600,7 +1603,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         [styles["folder-menu"]]: menuOpen,
                         [styles["folder-combine"]]: isCombine,
                         [styles["folder-no-combine"]]: !isCombine,
-                        [styles["folder-border"]]: !isCombine && !menuOpen
+                        [styles["folder-border"]]: !isCombine && !menuOpen && !isDragging
                     })}
                     onClick={() => {
                         if (onlyInsert) {
@@ -1911,6 +1914,8 @@ interface FileComponentProps {
     // 展示控制
     setContentType: (v?: "editor" | "table") => void
     onlyInsert?: boolean
+    // 是否拖拽中
+    isDragging?: boolean
 }
 
 export const FileComponent: React.FC<FileComponentProps> = (props) => {
@@ -1926,7 +1931,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         onQueryGroup,
         codePath = "",
         setContentType,
-        onlyInsert
+        onlyInsert,
+        isDragging
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
@@ -2197,7 +2203,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                       key: "exportTxt",
                       label: (
                           <div className={styles["extra-menu"]}>
-                              <OutlineImportIcon />
+                              <OutlineExportIcon />
                               <div className={styles["menu-name"]}>导出字典</div>
                           </div>
                       )
@@ -2263,7 +2269,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         [styles["file-menu"]]: menuOpen && file.id !== selectItem,
                         [styles["file-combine"]]: isCombine,
                         [styles["file-outside"]]: !isInside,
-                        [styles["file-inside"]]: isInside
+                        [styles["file-inside"]]: isInside,
+                        [styles["file-dragging"]]: !isInside && !isDragging
                     })}
                     onClick={() => {
                         setSelectItem(file.id)
@@ -2442,7 +2449,7 @@ export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
             .finally()
     }, [])
     return (
-        <div style={{padding: 20}}>
+        <div style={{padding: "20px 24px"}}>
             <YakitSelect
                 value={value}
                 onSelect={(val) => {
