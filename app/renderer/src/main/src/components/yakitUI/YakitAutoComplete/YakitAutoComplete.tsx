@@ -1,10 +1,10 @@
 import {AutoComplete} from "antd"
 import React, {useEffect, useImperativeHandle, useState} from "react"
-import {YakitAutoCompleteProps} from "./YakitAutoCompleteType"
+import {YakitAutoCompleteCacheDataHistoryProps, YakitAutoCompleteProps} from "./YakitAutoCompleteType"
 import styles from "./YakitAutoComplete.module.scss"
 import classNames from "classnames"
 import {useMemoizedFn} from "ahooks"
-import {CacheDataHistoryProps, onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
+import {onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
 
 export const defYakitAutoCompleteRef = {
     onGetRemoteValues: () => {},
@@ -22,7 +22,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     const {size, className, cacheHistoryDataKey, cacheHistoryListLength = 10, ref: forwardRef, ...restProps} = props
     const [show, setShow] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
-    const [cacheHistoryData, setCacheHistoryData] = useState<CacheDataHistoryProps>({
+    const [cacheHistoryData, setCacheHistoryData] = useState<YakitAutoCompleteCacheDataHistoryProps>({
         options: [],
         defaultValue: ""
     })
@@ -45,7 +45,9 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     /**@description 缓存 cacheHistoryDataKey 对应的数据 */
     const onSetRemoteValues = useMemoizedFn((newValue: string) => {
         if (!cacheHistoryDataKey) return
-        onSetRemoteValuesBase({cacheHistoryDataKey, newValue})
+        onSetRemoteValuesBase({cacheHistoryDataKey, newValue}).then(() => {
+            onGetRemoteValues()
+        })
     })
     /**@description 获取 cacheHistoryDataKey 对应的数据 */
     const onGetRemoteValues = useMemoizedFn((init?: boolean) => {
