@@ -11,15 +11,6 @@ import {ChevronDownIcon, ChevronUpIcon} from "@/assets/newIcon"
 const {Option} = Select
 
 /**
- * 更新说明
- * 1.增加环境变量加载主题色
- * 2.增加width 100%
- * 3.mode为tags和multiple样式问题
- * 4.更换颜色变量
- * 5.优化下拉后，Icon行为
- * */
-
-/**
  * @description: 下拉选择
  * @augments SwitchProps 继承antd的 SelectProps 默认属性
  * @param {string} wrapperClassName Switch装饰div的className
