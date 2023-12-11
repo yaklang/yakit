@@ -15,6 +15,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {pluginTypeToName} from "./builtInData"
 import {YakitRoute} from "@/routes/newRoute"
+import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
+import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -975,6 +977,81 @@ export const apiQueryYakScriptByYakScriptName: (query: QueryYakScriptByYakScript
                 })
         } catch (error) {
             yakitNotify("error", "查询本地插件错误" + error)
+            reject(error)
+        }
+    })
+}
+
+export interface DebugPluginRequest {
+    Code: string
+    PluginType: string
+    Input: string
+    HTTPRequestTemplate: HTTPRequestBuilderParams
+    ExecParams: KVPair[]
+}
+/**
+ * @description 本地插件详情执行方法
+ */
+export const apiDebugPlugin: (params: DebugPluginRequest, token: string) => Promise<null> = (params, token) => {
+    return new Promise((resolve, reject) => {
+        try {
+            let executeParams: DebugPluginRequest = {
+                ...params
+            }
+            switch (params.PluginType) {
+                case "yak":
+                case "lua":
+                    executeParams = {
+                        ...executeParams,
+                        Input: ""
+                    }
+                    break
+                case "codec":
+                case "mitm":
+                case "port-scan":
+                case "nuclei":
+                    executeParams = {
+                        ...executeParams,
+                        ExecParams: []
+                    }
+                    break
+                default:
+                    break
+            }
+            ipcRenderer
+                .invoke("DebugPlugin", executeParams, token)
+                .then(() => {
+                    yakitNotify("info", "启动任务成功")
+                    resolve(null)
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "本地插件执行出错:" + e)
+                    reject(e)
+                })
+        } catch (error) {
+            yakitNotify("error", "本地插件执行出错:" + error)
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @description 取消DebugPlugin
+ */
+export const apiCancelDebugPlugin: (token: string) => Promise<null> = (token) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke(`cancel-DebugPlugin`, token)
+                .then(() => {
+                    resolve(null)
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", "取消本地插件执行出错:" + e)
+                    reject(e)
+                })
+        } catch (error) {
+            yakitNotify("error", "取消本地插件执行出错:" + error)
             reject(error)
         }
     })

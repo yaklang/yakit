@@ -5,7 +5,6 @@ import {useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Divider, Form, FormInstance} from "antd"
 import {
-    DebugPluginRequest,
     FormExtraSettingProps,
     PluginExecuteExtraFormValue,
     CustomPluginExecuteFormValue,
@@ -37,7 +36,7 @@ const {YakitPanel} = YakitCollapse
 interface PluginExecuteExtraParamsProps {
     ref?: any
     pluginType: string
-    extraParamsValue: PluginExecuteExtraFormValue
+    extraParamsValue: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue
     extraParamsGroup: YakExtraParamProps[]
     visible: boolean
     setVisible: (b: boolean) => void
