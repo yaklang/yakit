@@ -1906,6 +1906,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         ipcRenderer
             .invoke("DeleteHTTPFlows", {DeleteAll: true})
             .then(() => {
+                if (pageType === "History") {
+                    props.onQueryParams && props.onQueryParams(queryParams, true)
+                }
                 updateData()
             })
             .catch((e: any) => {
