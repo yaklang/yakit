@@ -216,24 +216,26 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     })
 
     useEffect(() => {
-        if (selectedKeys.length) {
-            if (refreshTreeFlag) {
+        if (treeQueryparams) {
+            if (selectedKeys.length) {
+                if (refreshTreeFlag) {
+                    if (searchTreeFlag) {
+                        setSelectedKeys([])
+                        setSelectedNodes([])
+                        setExpandedKeys([])
+                        getTreeData("website://" + searchValue)
+                    } else {
+                        refreshTree()
+                    }
+                }
+            } else {
                 if (searchTreeFlag) {
-                    setSelectedKeys([])
-                    setSelectedNodes([])
                     setExpandedKeys([])
+                    setSelectedNodes([])
                     getTreeData("website://" + searchValue)
                 } else {
                     refreshTree()
                 }
-            }
-        } else {
-            if (searchTreeFlag) {
-                setExpandedKeys([])
-                setSelectedNodes([])
-                getTreeData("website://" + searchValue)
-            } else {
-                refreshTree()
             }
         }
     }, [treeQueryparams, refreshTreeFlag, inViewport])
