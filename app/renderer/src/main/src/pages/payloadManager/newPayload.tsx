@@ -312,7 +312,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             ipcRenderer.removeAllListeners(`${fileToken}-error`)
             ipcRenderer.removeAllListeners(`${fileToken}-end`)
         }
-    }, [])
+    }, [group, dictionariesName])
 
     const cancelRun = useMemoizedFn(() => {
         if (isDictionaries) {
