@@ -237,7 +237,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             ipcRenderer
                 .invoke("start-local-yaklang-engine", {
                     port: props.localPort,
-                    sudo: false
+                    sudo: false,
+                    isEnpriTraceAgent:isEnpriTraceAgent()
                 })
                 .then(() => {
                     outputToWelcomeConsole("手动引擎启动成功！")
@@ -345,7 +346,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         ipcRenderer
         .invoke("start-local-yaklang-engine", {
             port: props.localPort,
-            sudo: false
+            sudo: false,
+            isEnpriTraceAgent:isEnpriTraceAgent()
         })
         .then(() => {
             outputToWelcomeConsole("手动引擎启动成功！")
@@ -661,7 +663,8 @@ export const YakitControlLoading: React.FC<YakitControlLoadingProp> = (props) =>
         ipcRenderer
         .invoke("start-local-yaklang-engine", {
             port: localPort,
-            sudo: false
+            sudo: false,
+            isEnpriTraceAgent:isEnpriTraceAgent()
         })
         .then(() => {
             outputToWelcomeConsole("手动引擎启动成功！")

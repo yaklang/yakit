@@ -8,6 +8,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import { useStore, yakitDynamicStatus } from "@/store"
 import { remoteOperation } from "@/pages/dynamicControl/DynamicControl"
+import { isEnpriTraceAgent } from "@/utils/envfile"
 
 export interface YaklangEngineWatchDogCredential {
     Mode?: YaklangEngineMode
@@ -161,7 +162,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         ipcRenderer
                             .invoke("start-local-yaklang-engine", {
                                 port: props.credential.Port,
-                                sudo: isAdmin
+                                sudo: isAdmin,
+                                isEnpriTraceAgent:isEnpriTraceAgent()
                             })
                             .then(() => {
                                 outputToWelcomeConsole("引擎启动成功！")
