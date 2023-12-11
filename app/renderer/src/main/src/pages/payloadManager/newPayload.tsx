@@ -2610,12 +2610,9 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             .invoke("QueryPayload", obj)
             .then((data: QueryGeneralResponse<Payload>) => {
                 console.log("获取table数据", data)
-                if (parseInt(data.Total + "") === 0) {
-                    // 通知刷新列表
-                    emiter.emit("refreshListEvent")
-                } else {
-                    setResponse(data)
-                }
+                setResponse(data)
+                // 通知刷新列表
+                emiter.emit("refreshListEvent")
             })
             .catch((e: any) => {
                 failed(`QueryPayload failed：${e}`)
