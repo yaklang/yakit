@@ -1,6 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
-    DebugPluginRequest,
     ExecuteEnterNodeByPluginParamsProps,
     FormExtraSettingProps,
     OutputFormComponentsByTypeProps,
@@ -21,7 +20,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {HTTPPacketEditor, NewHTTPPacketEditor, YakCodeEditor} from "@/utils/editors"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {failed} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Uint8ArrayToString} from "@/utils/str"
 import classNames from "classnames"
@@ -31,6 +30,9 @@ import {OutlineChevrondownIcon} from "@/assets/icon/outline"
 import {HorizontalScrollCard} from "../horizontalScrollCard/HorizontalScrollCard"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
+import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream"
+import {randomString} from "@/utils/randomUtil"
+import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../../utils"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -52,7 +54,7 @@ const ParamsToGroupByGroupName = (arr: YakParamProps[]): YakExtraParamProps[] =>
         } else {
             for (var j = 0; j < paramsGroupList.length; j++) {
                 var dj = paramsGroupList[j]
-                if (dj.group === ai.Group) {
+                if (dj.group === (ai.Group || "default")) {
                     dj.data.push(ai)
                     break
                 }
@@ -149,13 +151,30 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const [extraParamsValue, setExtraParamsValue] = useState<PluginExecuteExtraFormValue>({
         ...defPluginExecuteFormValue
     })
-    const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>()
+    const [runtimeId, setRuntimeId] = useState<string>("")
+    const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>({})
 
     const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
+    const tokenRef = useRef<string>(randomString(40))
 
     useEffect(() => {
         setIsClickExecute(false)
     }, [plugin.ScriptName])
+
+    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
+        "debug-plugin",
+        "DebugPlugin",
+        tokenRef.current,
+        () => {
+            setTimeout(() => setIsExecuting(false), 300)
+        },
+        undefined,
+        undefined,
+        (rId) => {
+            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            setRuntimeId(rId)
+        }
+    )
 
     /**必填的参数,作为页面上主要显示 */
     const requiredParams: YakParamProps[] = useMemo(() => {
@@ -192,7 +211,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     })
     const initExtraFormValue = useMemoizedFn(() => {
         // 额外参数
-        let initExtraFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
+        let initExtraFormValue: CustomPluginExecuteFormValue = {}
         const extraParamsList = plugin.Params?.filter((ele) => !ele.Required) || []
         extraParamsList.forEach((ele) => {
             const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
@@ -201,7 +220,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 [ele.Field]: value
             }
         })
-        console.log("initExtraFormValue", initExtraFormValue)
         switch (plugin.Type) {
             case "yak":
             case "lua":
@@ -247,39 +265,22 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const onStartExecute = useMemoizedFn((value) => {
         if (!isClickExecute) setIsClickExecute(true)
         setIsExecuting(true)
+        const yakExecutorParams: YakExecutorParam[] = getYakExecutorParam({...value, ...customExtraParamsValue})
+        const input = value["Input"]
         let executeParams: DebugPluginRequest = {
             Code: plugin.Content,
             PluginType: plugin.Type,
-            Input: "",
+            Input: input,
             HTTPRequestTemplate: extraParamsValue,
-            ExecParams: []
+            ExecParams: yakExecutorParams
         }
-        const yakExecutorParams: YakExecutorParam[] = getYakExecutorParam(value)
-        switch (plugin.Type) {
-            case "yak":
-            case "lua":
-                executeParams = {
-                    ...executeParams,
-                    ExecParams: yakExecutorParams
-                }
-                break
-            case "codec":
-            case "mitm":
-            case "port-scan":
-            case "nuclei":
-                const input = value["Input"]
-                executeParams = {
-                    ...executeParams,
-                    Input: input
-                }
-                break
-            default:
-                break
-        }
-        console.log("executeParams", executeParams)
+        apiDebugPlugin(executeParams, tokenRef.current)
     })
+    /**取消执行 */
     const onStopExecute = useMemoizedFn(() => {
-        setIsExecuting(false)
+        apiCancelDebugPlugin(tokenRef.current).then(() => {
+            setIsExecuting(false)
+        })
     })
     /**保存额外参数 */
     const onSaveExtraParams = useMemoizedFn((v: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue) => {
@@ -302,6 +303,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const openExtraPropsDrawer = useMemoizedFn(() => {
         setExtraParamsVisible(true)
     })
+    const onClearExecuteResult = useMemoizedFn(() => {
+        reset()
+        yakitNotify("success", "执行结果清除成功")
+    })
     const isShowExtraParamsButton = useMemo(() => {
         switch (plugin.Type) {
             case "codec":
@@ -314,6 +319,19 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 return extraParamsGroup.length > 0
         }
     }, [extraParamsGroup.length, plugin.Type])
+    const executeExtraParams: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue = useMemo(() => {
+        switch (plugin.Type) {
+            case "yak":
+            case "lua":
+                return customExtraParamsValue
+            case "mitm":
+            case "port-scan":
+            case "nuclei":
+                return extraParamsValue
+            default:
+                return {}
+        }
+    }, [plugin.Type, extraParamsValue, customExtraParamsValue])
     return (
         <div>
             <PluginDetailHeader
@@ -324,13 +342,18 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     <div className={styles["plugin-head-executing-wrapper"]}>
                         {isClickExecute ? (
                             <div className={styles["plugin-head-executing"]}>
-                                {isExecuting && (
+                                {isExecuting ? (
                                     <>
                                         <PluginExecuteProgress percent={60} name='Main' />
+                                        <YakitButton type='text' onClick={onClearExecuteResult}>
+                                            清除执行结果
+                                        </YakitButton>
                                         <YakitButton danger onClick={onStopExecute}>
                                             停止
                                         </YakitButton>
                                     </>
+                                ) : (
+                                    <>{extraNode}</>
                                 )}
 
                                 {isExpend ? (
@@ -401,7 +424,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 <PluginExecuteExtraParams
                     ref={pluginExecuteExtraParamsRef}
                     pluginType={plugin.Type}
-                    extraParamsValue={extraParamsValue}
+                    extraParamsValue={executeExtraParams}
                     extraParamsGroup={extraParamsGroup}
                     visible={extraParamsVisible}
                     setVisible={setExtraParamsVisible}
