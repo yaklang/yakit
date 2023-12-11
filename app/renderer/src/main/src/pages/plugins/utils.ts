@@ -748,15 +748,15 @@ export const apiFetchGroupStatisticsLocal: () => Promise<API.PluginsSearchRespon
         }
     })
 }
-/** grpc接口 DeleteYakScript 请求参数 */
-export interface DeleteYakScriptRequestProps {
+/** apiDeleteYakScriptByIds 请求参数 */
+export interface DeleteYakScriptRequestByIdsProps {
     Ids: number[]
 }
 /**本地，批量删除插件 */
-export const apiDeleteYakScript: (query: DeleteYakScriptRequestProps) => Promise<null> = (query) => {
+export const apiDeleteYakScriptByIds: (query: DeleteYakScriptRequestByIdsProps) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            const newQuery: DeleteYakScriptRequestProps = {
+            const newQuery: DeleteYakScriptRequestByIdsProps = {
                 Ids: query.Ids.map((ele) => Number(ele)) || []
             }
             ipcRenderer
