@@ -44,11 +44,3 @@ export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {
 export interface CustomPluginExecuteFormValue {
     [string]: number | string | boolean | string[] | Buffer
 }
-
-export interface DebugPluginRequest {
-    Code: string
-    PluginType: string
-    Input: string
-    HTTPRequestTemplate: HTTPRequestBuilderParams
-    ExecParams:KVPair[]
-}
