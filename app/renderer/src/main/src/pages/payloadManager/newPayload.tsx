@@ -1397,7 +1397,8 @@ export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => 
             className={classNames(styles["file"], {
                 [styles["file-active"]]: file.id === selectItem,
                 [styles["file-no-active"]]: file.id !== selectItem,
-                [styles["file-inside"]]: isInside
+                [styles["file-inside"]]: isInside,
+                [styles["file-outside"]]: !isInside,
             })}
         >
             <div className={styles["file-header"]}>
