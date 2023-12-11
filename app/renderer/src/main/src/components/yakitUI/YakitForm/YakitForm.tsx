@@ -1,38 +1,70 @@
-import {Upload, Form, Spin} from "antd"
-import React, {ReactNode, useEffect, useState} from "react"
-import {YakitFormDraggerProps} from "./YakitFormType.d"
+import {Upload, Form, Spin, Divider} from "antd"
+import React, {ReactNode, useEffect, useMemo, useState} from "react"
+import {YakitDraggerProps, YakitFormDraggerProps} from "./YakitFormType.d"
 import styles from "./YakitForm.module.scss"
 import classNames from "classnames"
 import {YakitInput} from "../YakitInput/YakitInput"
 import {useMemoizedFn} from "ahooks"
-import {failed} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 
 const {Dragger} = Upload
 
 const {ipcRenderer} = window.require("electron")
 
+/**是否符合接受的文件类型 */
+const isAcceptEligible = (path: string, accept?: string) => {
+    const index = path.lastIndexOf(".")
+    const fileType = path.substring(index, path.length)
+    if (accept === ".*") {
+        return index === -1 ? false : true
+    }
+    return accept ? accept.split(",").includes(fileType) : true
+}
+
 /**
  * @description:YakitFormDragger  form表单的文件拖拽  文件夹不支持拖拽
- * @augments YakitFormDraggerProps 继承antd的 DraggerProps 默认属性
+ * @augments YakitFormDraggerProps 继承antd的 DraggerProps 默认属性 和 YakitDraggerProps
  */
 export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((props) => {
+    const {formItemProps = {}, size, formItemClassName, ...restProps} = props
+    return (
+        <Form.Item
+            {...formItemProps}
+            className={classNames(
+                styles["form-label-middle"],
+                {
+                    [styles["form-label-small"]]: size === "small",
+                    [styles["form-label-large"]]: size === "large"
+                },
+                formItemClassName
+            )}
+        >
+            <YakitDragger size={size} {...restProps} />
+        </Form.Item>
+    )
+})
+
+/**
+ * @description:YakitDragger  支持拖拽:文件/文件夹 文件路径只包括文件夹或者文件的第一级路径, 不包括文件夹下面的子文件路径数
+ * @augments YakitDraggerProps 继承antd的 DraggerProps 默认属性
+ */
+export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     const {
-        formItemProps = {},
-        InputProps = {},
         size,
+        InputProps = {},
         help,
-        fileName,
-        setFileName,
+        value: fileName,
+        onChange: setFileName,
         setContent,
-        formItemClassName,
         showDefHelp = true,
         selectType = "file",
         renderType = "input",
-        textareaProps = {}
+        textareaProps = {},
+        ...restProps
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>("")
-    const [fileNumber, setFileNumber] = useState<number>(0)
+    /**文件处理 */
     const getContent = useMemoizedFn((path: string, fileType: string) => {
         if (!path) {
             failed("请输入路径")
@@ -53,7 +85,7 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
         if (setFileName) {
             setFileName(path)
         }
-        if (setContent) {
+        if (selectType === "file" && setContent) {
             setUploadLoading(true)
             ipcRenderer
                 .invoke("fetch-file-content", path)
@@ -73,7 +105,7 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
             case "textarea":
                 return (
                     <YakitInput.TextArea
-                        placeholder='请输入绝对路径'
+                        placeholder='路径支持手动输入,输入多个请用逗号分隔'
                         value={fileName || name}
                         {...textareaProps}
                         onChange={(e) => {
@@ -119,7 +151,7 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
             default:
                 return (
                     <YakitInput
-                        placeholder='请输入绝对路径'
+                        placeholder='路径支持手动输入,输入多个请用逗号分隔'
                         size={size}
                         value={fileName || name}
                         {...InputProps}
@@ -187,69 +219,159 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
         ipcRenderer
             .invoke("openDialog", {
                 title: "请选择文件夹",
-                properties: ["openDirectory"]
+                properties: ["openDirectory", "multiSelections"]
             })
-            .then((data: any) => {
-                if (data.filePaths.length) {
-                    const absolutePath = data.filePaths[0].replace(/\\/g, "\\")
+            .then((data: {filePaths: string[]}) => {
+                const filesLength = data.filePaths.length
+                if (filesLength) {
+                    const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\")).join(",")
                     // 设置名字
                     if (setFileName) setFileName(absolutePath)
-                    // 获取该文件夹下的 文件路径数,只看一级
-                    ipcRenderer.invoke("get-folder-under-files", {
-                        folderPath: absolutePath
-                    })
                 }
             })
     })
-    useEffect(() => {
-        if (fileName) {
-            ipcRenderer.invoke("get-folder-under-files", {
-                folderPath: fileName
+    /**选择文件 */
+    const onUploadFile = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件",
+                properties: ["openFile", "multiSelections"]
             })
-        }
-        ipcRenderer.on(`send-folder-under-files`, onSetFileNumber)
-        return () => {
-            ipcRenderer.removeListener(`send-folder-under-files`, onSetFileNumber)
-        }
-    }, [])
-    const onSetFileNumber = useMemoizedFn((_, files: any) => {
-        setFileNumber(files.length)
+            .then((data: {filePaths: string[]}) => {
+                const filesLength = data.filePaths.length
+                if (filesLength) {
+                    const absolutePath: string[] = []
+                    data.filePaths.forEach((p) => {
+                        const path = p.replace(/\\/g, "\\")
+                        if (isAcceptEligible(path, props.accept || ".*")) {
+                            absolutePath.push(path)
+                        }
+                    })
+                    // 设置名字
+                    if (setFileName) setFileName(absolutePath.join(","))
+                }
+            })
     })
+    /**拖拽文件夹后的路径回显文本处理 */
+    const afterFolderDrop = useMemoizedFn((e) => {
+        const {files = []} = e.dataTransfer
+        let paths: string[] = []
+        let isNoFit: string[] = []
+        const filesLength = files.length
+        for (let index = 0; index < filesLength; index++) {
+            const element = files[index]
+            const path = element.path || ""
+            const number = path.lastIndexOf(".")
+            if (number !== -1) {
+                isNoFit.push(path)
+            } else {
+                paths.push(path)
+            }
+        }
+        if (isNoFit.length > 0) {
+            yakitNotify("error", "已自动过滤不符合条件的数据")
+        }
+        if (filesLength > isNoFit.length && setFileName) setFileName(paths.join(","))
+    })
+    /**拖拽文件后的处理 */
+    const afterFileDrop = useMemoizedFn((e) => {
+        const {files = []} = e.dataTransfer
+        let paths: string[] = []
+        let isNoFit: string[] = []
+        const filesLength = files.length
+        for (let index = 0; index < filesLength; index++) {
+            const element = files[index]
+            const path = element.path || ""
+            if (isAcceptEligible(path, props.accept || ".*")) {
+                paths.push(path)
+            } else {
+                isNoFit.push(path)
+            }
+        }
+        if (isNoFit.length > 0) {
+            yakitNotify("error", "已自动过滤不符合条件的数据")
+        }
+        if (filesLength > isNoFit.length && setFileName) setFileName(paths.join(","))
+    })
+    /**拖拽文件/文件夹的路径回显 */
+    const afterAllDrop = useMemoizedFn((e) => {
+        const {files = []} = e.dataTransfer
+        let paths: string[] = []
+        for (let index = 0; index < files.length; index++) {
+            const element = files[index]
+            const path = element.path || ""
+            paths.push(path)
+        }
+        if (setFileName) setFileName(paths.join(","))
+    })
+    const fileNumber = useMemo(() => {
+        let arr: string[] = []
+        try {
+            const path = fileName || name
+            arr = path ? path.split(",") : []
+        } catch (error) {
+            yakitNotify("error", "文件路径数识别错误,请以逗号进行分割")
+        }
+        return arr.length
+    }, [fileName, name])
     return (
-        <Form.Item
-            {...formItemProps}
-            className={classNames(
-                styles["form-label-middle"],
-                {
-                    [styles["form-label-small"]]: size === "small",
-                    [styles["form-label-large"]]: size === "large"
-                },
-                formItemClassName
-            )}
-        >
-            {(selectType === "file" && (
+        <>
+            {selectType === "file" && (
                 <Dragger
-                    {...props}
+                    {...restProps}
+                    showUploadList={false}
+                    directory={false}
+                    multiple={true}
                     className={classNames(styles["yakit-dragger"], props.className)}
-                    beforeUpload={(f: any) => {
-                        getContent(f?.path, f?.type)
+                    beforeUpload={() => {
                         return false
                     }}
+                    onDrop={afterFileDrop}
                 >
                     {renderContent(
-                        <span>
-                            可将文件拖入框内或点击此处
-                            <span className={styles["dragger-help-active"]}>上传文件</span>
-                        </span>
+                        <div className={styles["form-item-help"]}>
+                            <span>
+                                可将文件拖入框内或点击此处
+                                <span
+                                    className={styles["dragger-help-active"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onUploadFile()
+                                    }}
+                                >
+                                    上传文件
+                                </span>
+                            </span>
+                            <span>
+                                识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
+                            </span>
+                        </div>
                     )}
                 </Dragger>
-            )) || (
-                <>
+            )}
+
+            {selectType === "folder" && (
+                <Dragger
+                    {...restProps}
+                    showUploadList={false}
+                    directory
+                    className={classNames(styles["yakit-dragger"], props.className)}
+                    beforeUpload={() => {
+                        return false
+                    }}
+                    onDrop={afterFolderDrop}
+                >
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
                                 点击此处
-                                <span className={styles["dragger-help-active"]} onClick={() => onUploadFolder()}>
+                                <span
+                                    className={styles["dragger-help-active"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onUploadFolder()
+                                    }}
+                                >
                                     上传文件夹
                                 </span>
                             </span>
@@ -258,8 +380,49 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
                             </span>
                         </div>
                     )}
-                </>
+                </Dragger>
             )}
-        </Form.Item>
+            {selectType === "all" && (
+                <Dragger
+                    {...restProps}
+                    showUploadList={false}
+                    className={classNames(styles["yakit-dragger"], props.className)}
+                    beforeUpload={() => {
+                        return false
+                    }}
+                    onDrop={afterAllDrop}
+                >
+                    {renderContent(
+                        <div className={styles["form-item-help"]}>
+                            <span>
+                                点击此处
+                                <span
+                                    className={styles["dragger-help-active"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onUploadFile()
+                                    }}
+                                >
+                                    上传文件
+                                </span>
+                                <Divider type='vertical' />
+                                <span
+                                    className={styles["dragger-help-active"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onUploadFolder()
+                                    }}
+                                >
+                                    上传文件夹
+                                </span>
+                            </span>
+                            <span>
+                                识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
+                            </span>
+                        </div>
+                    )}
+                </Dragger>
+            )}
+        </>
     )
 })

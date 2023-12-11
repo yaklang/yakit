@@ -1,5 +1,6 @@
-import { AutoCompleteProps } from "antd"
-import { SizeType } from "antd/lib/config-provider/SizeContext"
+import {AutoCompleteProps} from "antd"
+import {SizeType} from "antd/lib/config-provider/SizeContext"
+import { CacheDataHistoryProps } from "../utils"
 
 /**
  * @description YakitAutoCompleteProps 的属性
@@ -12,14 +13,14 @@ export interface YakitAutoCompleteProps extends AutoCompleteProps {
     size?: "small" | "middle" | "large"
     cacheHistoryDataKey?: string
     cacheHistoryListLength?: number
-    ref?: any
+    ref?: React.ForwardedRef<YakitAutoCompleteRefProps>
 }
 
-export interface YakitOptionTypeProps {
-    value: string
-    label: string
+export interface YakitAutoCompleteRefProps {
+    onSetRemoteValues: (s: string) => void
+    onGetRemoteValues: () => void
 }
-export interface CacheDataHistoryProps {
-    options: YakitOptionTypeProps[]
-    defaultValue: string
+
+export interface YakitAutoCompleteCacheDataHistoryProps extends CacheDataHistoryProps{
+  
 }

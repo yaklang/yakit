@@ -108,7 +108,9 @@ export enum PluginGV {
     /** @name 我的页左侧筛选条件栏是否关闭 */
     OwnerFilterCloseStatus = "owner-filter-close-status",
     /** @name 本地页左侧筛选条件栏是否关闭 */
-    LocalFilterCloseStatus = "local-filter-close-status"
+    LocalFilterCloseStatus = "local-filter-close-status",
+    /**@name 本地插件执行模块,额外参数中,[请求路径]的缓存字段 */
+    LocalExecuteExtraPath = "local-execute-extra-path",
 }
 
 /** @name 审核状态对应展示名称 */
