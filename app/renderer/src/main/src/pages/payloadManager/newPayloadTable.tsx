@@ -591,18 +591,24 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             setSelectObj({Id: record.Id, dataIndex: column.dataIndex})
         } else if (callCountRef.current >= 2) {
             console.log("Double click:", record, column)
-            handleRowDoubleClick(record, column)
+            setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
         }
         callCountRef.current = 0 // 重置计数器
     }
     const handleRowClick = (record, column) => {
+        if(record.Id===editingObj?.Id&&column.dataIndex===editingObj?.dataIndex){
+            return
+        }
+        if(record.Id!==editingObj?.Id||column.dataIndex!==editingObj?.dataIndex){
+            setEditingObj(undefined)
+            setSelectObj(undefined)
+        }
         callCountRef.current += 1
         setTimeout(() => handleMethod(record, column), 200)
     }
 
     const handleRowDoubleClick = (record, column) => {
-        setSelectObj(undefined)
-        setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
+        
     }
 
     const handleRowRightClick = (record, column) => {
