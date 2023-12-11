@@ -1,4 +1,7 @@
 .plugin-execute-extra-params-drawer {
+    svg {
+        color: var(--yakit-helper-text-color);
+    }
     :global {
         .ant-drawer-body {
             padding: 16px 12px;
@@ -16,7 +19,7 @@
         .ant-collapse-header-text {
             width: 100%;
         }
-        .ant-form-item{
+        .ant-form-item {
             margin-bottom: 8px;
         }
     }
