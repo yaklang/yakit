@@ -26,8 +26,11 @@ export interface TreeNode extends DataNode {
 interface WebTreeProp {
     ref?: React.Ref<any>
     height: number // 树高度 用于虚拟滚动
+    searchVal?: string // 搜索树值
+    searchInputDisabled?: boolean
     searchPlaceholder?: string // 搜索框提示文案
-    treeQueryparams: string // 树查询参数是一个json字符串
+    treeExtraQueryparams: string // 树查询参数是一个json字符串
+    refreshTreeWithSearchVal?: boolean // 是否带搜索条件刷新树
     refreshTreeFlag?: boolean // 选中树节点后 表格参数改变导致树查询参数改变 是否需要刷新树 默认->不刷新
     onSelectNodes?: (selectedNodes: TreeNode[]) => void // 选中节点得nodes
     onSelectKeys?: (selectedKeys: TreeKey[]) => void // 选中节点得keys
@@ -41,8 +44,11 @@ interface WebTreeProp {
 export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     const {
         height,
+        searchVal = "",
+        searchInputDisabled = false,
+        refreshTreeWithSearchVal = false,
         searchPlaceholder = "请输入关键词搜索",
-        treeQueryparams,
+        treeExtraQueryparams,
         refreshTreeFlag = false,
         onSelectNodes,
         onSelectKeys,
@@ -52,8 +58,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     const [treeLoading, setTreeLoading] = useState<boolean>(true)
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
     const [searchWebTreeData, setSearchWebTreeData] = useState<TreeNode[]>([]) // 搜索框有值时得网站树
-    const [searchTreeFlag, setSearchTreeFlag, getSearchTreeFlag] = useGetState<boolean>(false) // 判断是否是搜索树
-    const [searchValue, setSearchValue] = useState<string>("")
+    const [searchTreeFlag, setSearchTreeFlag, getSearchTreeFlag] = useGetState<boolean>(!!searchVal.length) // 判断是否是搜索树
+    const [searchValue, setSearchValue] = useState<string>(searchVal)
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
     const [selectedNodes, setSelectedNodes] = useState<TreeNode[]>([]) // select树节点数据集合
@@ -74,7 +80,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }
 
     const handleFilterParams = () => {
-        return treeQueryparams
+        return treeExtraQueryparams
     }
 
     const getTreeData = (yakurl: string) => {
@@ -216,7 +222,11 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     })
 
     useEffect(() => {
-        if (treeQueryparams) {
+        searchVal && onSearchTree(searchVal)
+    }, [searchVal])
+
+    useEffect(() => {
+        if (treeExtraQueryparams) {
             if (selectedKeys.length) {
                 if (refreshTreeFlag) {
                     if (searchTreeFlag) {
@@ -238,7 +248,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 }
             }
         }
-    }, [treeQueryparams, refreshTreeFlag, inViewport])
+    }, [treeExtraQueryparams, refreshTreeFlag, inViewport])
 
     // 刷新网站树
     const refreshTree = useMemoizedFn(() => {
@@ -246,12 +256,14 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         if (selectedNodes.length) {
             resetTableAndEditorShow && resetTableAndEditorShow(true, false)
         }
-        setSearchValue("")
-        setSearchTreeFlag(false)
+        if (!refreshTreeWithSearchVal) {
+            setSearchValue("")
+            setSearchTreeFlag(false)
+        }
         setExpandedKeys([])
         setSelectedKeys([])
         setSelectedNodes([])
-        getTreeData("website:///")
+        getTreeData("website://" + `${refreshTreeWithSearchVal ? `${searchValue ? searchValue : "/"}` : "/"}`)
     })
 
     // 网站树跳转 -> 带到搜索框查询
@@ -263,14 +275,18 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }
 
     // 点击Select选中树
-    const onSelectedKeys = useMemoizedFn((selectedKeys: TreeKey[],
-        info: {
-            selectedNodes: TreeNode[]
-        }) => {
-        setSelectedKeys(selectedKeys)
-        setSelectedNodes(info.selectedNodes)
-        resetTableAndEditorShow && resetTableAndEditorShow(true, false)
-    })
+    const onSelectedKeys = useMemoizedFn(
+        (
+            selectedKeys: TreeKey[],
+            info: {
+                selectedNodes: TreeNode[]
+            }
+        ) => {
+            setSelectedKeys(selectedKeys)
+            setSelectedNodes(info.selectedNodes)
+            resetTableAndEditorShow && resetTableAndEditorShow(true, false)
+        }
+    )
 
     useEffect(() => {
         onSelectNodes && onSelectNodes(selectedNodes)
@@ -331,6 +347,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     onChange={onSearchChange}
                     onSearch={onSearchTree}
                     value={searchValue}
+                    disabled={searchInputDisabled}
                 />
                 <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshTree} style={{marginBottom: 15}} />
             </div>
