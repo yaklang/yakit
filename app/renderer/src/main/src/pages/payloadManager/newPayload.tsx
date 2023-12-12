@@ -247,7 +247,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             }
         })
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            if (error === `group[${folder || ""}/${group || dictionariesName}] exist`) {
+            if (error === `group[${group || dictionariesName}] exist`) {
                 messageWarnRef.current = true
                 warn("字典名重复")
                 return
@@ -288,7 +288,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             }
         })
         ipcRenderer.on(`${fileToken}-error`, (e: any, error: any) => {
-            if (error === `group[${folder || ""}/${group || dictionariesName}] exist`) {
+            if (error === `group[${group || dictionariesName}] exist`) {
                 messageWarnRef.current = true
                 warn("字典名重复")
                 return
