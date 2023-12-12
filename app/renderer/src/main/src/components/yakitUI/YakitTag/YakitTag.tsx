@@ -21,7 +21,7 @@ const {ipcRenderer} = window.require("electron")
  * @description: tag
  * @augments TagProps 继承antd的TagProps默认属性
  * @param {middle|large|small} size 默认middle 16 20 24
- * @param {"danger" | "info" | "success" | "warning" | "purple" | "blue" | "cyan" | "bluePurple"} color 颜色
+ * @param {"danger" | "info" | "success" | "warning"|"serious" |"yellow"| "purple" | "blue" | "cyan" | "bluePurple"} color 颜色
  * @param {boolean} disable
  * @param {boolean} enableCopy 是否可复制
  * @param {e} onAfterCopy 复制后的回调
@@ -50,6 +50,8 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
                     [styles["yakit-tag-info"]]: color === "info",
                     [styles["yakit-tag-success"]]: color === "success",
                     [styles["yakit-tag-warning"]]: color === "warning",
+                    [styles["yakit-tag-serious"]]: color === "serious",
+                    [styles["yakit-tag-yellow"]]: color === "yellow",
                     [styles["yakit-tag-purple"]]: color === "purple",
                     [styles["yakit-tag-blue"]]: color === "blue",
                     [styles["yakit-tag-cyan"]]: color === "cyan",
