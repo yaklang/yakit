@@ -18,20 +18,17 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {HTTPPacketEditor, NewHTTPPacketEditor, YakCodeEditor} from "@/utils/editors"
+import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {failed, yakitNotify} from "@/utils/notification"
+import {failed} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Uint8ArrayToString} from "@/utils/str"
 import classNames from "classnames"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {OutlineChevrondownIcon} from "@/assets/icon/outline"
-import {HorizontalScrollCard} from "../horizontalScrollCard/HorizontalScrollCard"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
-import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream"
-import {randomString} from "@/utils/randomUtil"
 import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../../utils"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
@@ -138,12 +135,11 @@ const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
 
 /**插件执行头部 */
 export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardProps> = React.memo((props) => {
-    const {plugin, extraNode} = props
+    const {token, plugin, extraNode, isExecuting, setIsExecuting, onClearExecuteResult} = props
     const [form] = Form.useForm()
     /** 当前插件是否点击过开始执行 */
     const [isClickExecute, setIsClickExecute] = useState<boolean>(false)
-    /**是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
+
     /**是否展开/收起 */
     const [isExpend, setIsExpend] = useState<boolean>(false)
     /**额外参数弹出框 */
@@ -151,30 +147,14 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const [extraParamsValue, setExtraParamsValue] = useState<PluginExecuteExtraFormValue>({
         ...defPluginExecuteFormValue
     })
-    const [runtimeId, setRuntimeId] = useState<string>("")
+
     const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>({})
 
     const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
-    const tokenRef = useRef<string>(randomString(40))
 
     useEffect(() => {
         setIsClickExecute(false)
     }, [plugin.ScriptName])
-
-    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
-        "debug-plugin",
-        "DebugPlugin",
-        tokenRef.current,
-        () => {
-            setTimeout(() => setIsExecuting(false), 300)
-        },
-        undefined,
-        undefined,
-        (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
-            setRuntimeId(rId)
-        }
-    )
 
     /**必填的参数,作为页面上主要显示 */
     const requiredParams: YakParamProps[] = useMemo(() => {
@@ -274,11 +254,11 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             HTTPRequestTemplate: extraParamsValue,
             ExecParams: yakExecutorParams
         }
-        apiDebugPlugin(executeParams, tokenRef.current)
+        apiDebugPlugin(executeParams, token)
     })
     /**取消执行 */
     const onStopExecute = useMemoizedFn(() => {
-        apiCancelDebugPlugin(tokenRef.current).then(() => {
+        apiCancelDebugPlugin(token).then(() => {
             setIsExecuting(false)
         })
     })
@@ -302,10 +282,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     /**打开额外参数抽屉 */
     const openExtraPropsDrawer = useMemoizedFn(() => {
         setExtraParamsVisible(true)
-    })
-    const onClearExecuteResult = useMemoizedFn(() => {
-        reset()
-        yakitNotify("success", "执行结果清除成功")
     })
     const isShowExtraParamsButton = useMemo(() => {
         switch (plugin.Type) {
@@ -333,7 +309,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         }
     }, [plugin.Type, extraParamsValue, customExtraParamsValue])
     return (
-        <div>
+        <>
             <PluginDetailHeader
                 pluginName={plugin.ScriptName}
                 help={plugin.Help}
@@ -417,9 +393,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     </div>
                 </Form.Item>
             </Form>
-            <div className={styles["plugin-execute-result-wrapper"]}>
-                <HorizontalScrollCard title={"Data Card"} />
-            </div>
             <React.Suspense fallback={<div>loading...</div>}>
                 <PluginExecuteExtraParams
                     ref={pluginExecuteExtraParamsRef}
@@ -431,7 +404,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     onSave={onSaveExtraParams}
                 />
             </React.Suspense>
-        </div>
+        </>
     )
 })
 
