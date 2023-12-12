@@ -100,6 +100,15 @@
     }
 }
 
+.yakit-tag-serious {
+    background: rgba(203, 35, 24, 0.2);
+    border: 1px solid #e99a95;
+    color: #cb2318;
+    svg {
+        color: #cb2318;
+    }
+}
+
 .yakit-tag-purple {
     background: rgba(136, 99, 247, 0.1);
     border: 1px solid rgba(136, 99, 247, 0.3);
@@ -133,6 +142,15 @@
     color: #da5fdd;
     svg {
         color: #da5fdd;
+    }
+}
+
+.yakit-tag-yellow {
+    background: rgba(255, 213, 131, 0.1);
+    border: 1px solid #ffe5c6;
+    color: #ffb660;
+    svg {
+        color: #ffb660;
     }
 }
 
