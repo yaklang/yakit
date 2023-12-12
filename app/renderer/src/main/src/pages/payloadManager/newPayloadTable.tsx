@@ -80,7 +80,8 @@ const EditableCell: React.FC<EditableCellProps> = ({
                             resize: "none",
                             fontSize: "12px",
                             padding: "7px 15px",
-                            lineHeight: "16px"
+                            lineHeight: "16px",
+                            borderRadius:0
                         }}
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
@@ -514,9 +515,14 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                     success(`修改成功`)
                     resolve(true)
                 })
-                .catch((e: any) => {
-                    failed("更新失败：" + e)
+                .catch((e: any) => {            
                     resolve(false)
+                    if(e.toString().includes("UNIQUE constraint failed: payloads.hash")){
+                        warn("已有相同字典内容，请修改后再保存")
+                        return
+                    }
+                    failed("更新失败：" + e)
+                    
                 })
         })
     })

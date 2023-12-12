@@ -416,9 +416,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                             <Dragger
                                 className={styles["upload-dragger"]}
                                 accept={FileType.join(",")}
-                                // accept=".jpg, .jpeg, .png"
                                 multiple={true}
-                                maxCount={1}
                                 showUploadList={false}
                                 beforeUpload={(f: any, fileList: any) => {
                                     beforeUploadFun(fileList)
@@ -489,7 +487,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                             </>
                         ) : (
                             <>
-                                <YakitButton size='large' disabled={isDisabled} type='outline1'>
+                                <YakitButton size='large' disabled={isDisabled} type='outline1' onClick={onClose}>
                                     取消
                                 </YakitButton>
                                 <YakitButton size='large' disabled={isDisabled} onClick={onSavePayload}>
@@ -1655,7 +1653,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                             key: "addChildPayload",
                                             label: (
                                                 <div className={styles["extra-menu"]}>
-                                                    <OutlineImportIcon />
+                                                    <OutlineAddPayloadIcon />
                                                     <div className={styles["menu-name"]}>新增子集字典</div>
                                                 </div>
                                             )
