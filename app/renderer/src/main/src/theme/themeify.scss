@@ -27,3 +27,8 @@ $color-list: (
 @function fetch-color($type, $color) {
     @return map-get(map-get($color-list, $type), $color);
 }
+
+// 设置一个带透明度的颜色
+@function color-alpha($color, $alpha) {
+    @return color-mix(in srgb, #{$color} $alpha, transparent);
+}
