@@ -566,7 +566,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     其他配置
                                 </Divider>
-                                <Form.Item label={"NTML配置"}>
+                                <Form.Item label={"HTTP认证全局配置"}>
                                     <div className={styles["form-rule-body"]}>
                                         <div className={styles["form-rule"]} onClick={() => setVisible(true)}>
                                             <div className={styles["form-rule-text"]}>
@@ -1069,8 +1069,8 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
                     <YakitInput placeholder='请输入...' />
                 </Form.Item>
                 <Form.Item label='认证类型' name='AuthType' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitSelect value={"B"} onSelect={(val) => {}} placeholder='请选择...'>
-                        <YakitSelect value='ntlm'>ntlm</YakitSelect>
+                    <YakitSelect placeholder='请选择...'>
+                        <YakitSelect value='ntml'>ntml</YakitSelect>
                         <YakitSelect value='any'>any</YakitSelect>
                         <YakitSelect value='basic'>basic</YakitSelect>
                         <YakitSelect value='digest'>digest</YakitSelect>
