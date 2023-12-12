@@ -77,64 +77,55 @@ export interface LabelDataProps {
     Label?: string
 }
 
+// 注：此处顺序为倒序
 export const defaultLabel: LabelDataProps[] = [
     {
-        DefaultDescription: "4位验证码",
-        Description: "4位验证码",
-        Label: "{{int(0000-9999|4)}}"
+        DefaultDescription: "反向正则（单个）",
+        Description: "反向正则（单个）",
+        Label: "{{regen:one([0-9a-f]{3})}}"
     },
     {
-        DefaultDescription: "6位验证码",
-        Description: "6位验证码",
-        Label: "{{int(000000-999999|6)}}"
+        DefaultDescription: "反向正则（全部）",
+        Description: "反向正则（全部）",
+        Label: "{{regen([0-9a-f]{3})}}"
     },
     {
-        DefaultDescription: "用户名爆破",
-        Description: "用户名爆破",
-        Label: "{{x(user_top10)}}"
+        DefaultDescription: "时间戳（秒）",
+        Description: "时间戳（秒）",
+        Label: "{{timestamp(seconds)}}"
     },
     {
-        DefaultDescription: "密码爆破",
-        Description: "密码爆破",
-        Label: "{{x(pass_top25)}}"
+        DefaultDescription: "验证码",
+        Description: "验证码",
+        Label: "{{int(0000-9999)}}"
     },
     {
-        DefaultDescription: "插入模糊测试字典标签",
-        Description: "插入模糊测试字典标签"
+        DefaultDescription: "随机数",
+        Description: "随机数",
+        Label: "{{randint(0,10)}}"
+    },
+    {
+        DefaultDescription: "随机字符串",
+        Description: "随机字符串",
+        Label: "{{randstr}}"
+    },
+    {
+        DefaultDescription: "整数范围",
+        Description: "整数范围",
+        Label: "{{int(1-10)}}"
+    },
+    {
+        DefaultDescription: "插入Payload",
+        Description: "插入Payload"
     },
     {
         DefaultDescription: "插入临时字典",
         Description: "插入临时字典"
     },
     {
-        DefaultDescription: "插入本地文件",
-        Description: "插入本地文件"
+        DefaultDescription: "插入文件",
+        Description: "插入文件"
     },
-    {
-        DefaultDescription: "重复发包",
-        Description: "重复发包",
-        Label: "{{repeat(3)}}"
-    },
-    {
-        DefaultDescription: "随机生成字符串数",
-        Description: "随机生成字符串数",
-        Label: "{{randstr(1,1010)}}"
-    },
-    {
-        DefaultDescription: "整数标签",
-        Description: "整数标签",
-        Label: "{{int(0,100)}}"
-    },
-    {
-        DefaultDescription: "时间戳",
-        Description: "时间戳",
-        Label: "{{timestamp(seconds)}}"
-    },
-    {
-        DefaultDescription: "空字符",
-        Description: "空字符",
-        Label: "{{null(2)}}"
-    }
 ]
 
 export const FUZZER_LABEL_LIST_NUMBER = "fuzzer-label-list-number"
