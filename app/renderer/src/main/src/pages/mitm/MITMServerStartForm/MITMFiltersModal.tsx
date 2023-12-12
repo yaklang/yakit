@@ -95,6 +95,12 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     })
     const onClearFilters = () => {
         filtersRef.current.clearFormValue()
+        if(_mitmFilter?.excludeMethod?.includes("CONNECT")){
+           filtersRef.current.setFormValue({
+                excludeMethod:["CONNECT"]
+           })
+        }
+        
     }
 
     // 判断对象内的属性是否为空
