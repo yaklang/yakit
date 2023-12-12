@@ -1,12 +1,4 @@
-%display-flex-center {
-    display: flex;
-    align-items: center;
-}
-%display-column-center {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
+@use '../../plugins.scss';
 .plugin-head-executing-wrapper {
     @extend %display-flex-center;
     justify-content: flex-end;
@@ -66,11 +58,6 @@
 }
 .plugin-execute-form-wrapper-hidden {
     display: none;
-}
-
-.plugin-execute-result-wrapper {
-    @extend %display-column-center;
-    gap: 12px;
 }
 
 .plugin-execute-progress-wrapper {
