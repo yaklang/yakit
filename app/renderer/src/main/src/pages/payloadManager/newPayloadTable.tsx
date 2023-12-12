@@ -628,6 +628,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             onClick: (e) => {
                 switch (e.key) {
                     case "edit":
+                        setSelectObj(undefined)
                         setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
                         return
                     case "copy":
