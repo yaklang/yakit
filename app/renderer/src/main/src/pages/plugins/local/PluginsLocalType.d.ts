@@ -91,3 +91,8 @@ export interface RemoveMenuModalContentProps {
 export interface PluginExecutorProps {
     script: YakScript
 }
+
+export interface LocalPluginExecuteProps{
+    plugin:YakScript
+    headExtraNode:ReactNode
+}

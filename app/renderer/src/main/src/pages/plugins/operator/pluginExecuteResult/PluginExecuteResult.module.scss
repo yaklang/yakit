@@ -1,0 +1,27 @@
+@use "../../plugins.scss";
+.plugin-execute-result {
+    @extend %display-column-center;
+    flex: 1;
+    overflow: hidden;
+    gap: 12px;
+    .plugin-execute-result-wrapper {
+        @extend %display-column-center;
+        gap: 12px;
+    }
+    .table-renderTitle {
+        @extend %display-flex-center;
+            justify-content: space-between;
+            padding: 14px 12px 10px;
+
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px; /* 133.333% */
+
+            border-left: 1px solid var(--yakit-border-color);
+            border-right: 1px solid var(--yakit-border-color);
+    }
+
+    .table-container {
+    }
+}
