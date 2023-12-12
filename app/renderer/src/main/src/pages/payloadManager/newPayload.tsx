@@ -239,7 +239,6 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
         ipcRenderer.on(`${token}-data`, async (e: any, data: SavePayloadProgress) => {
             if (data) {
                 try {
-                    console.log("data---", data)
                     setStreamData(data)
                     if (data.Message.length > 0) {
                         logInfoRef.current = [data.Message, ...logInfoRef.current].slice(0, 8)
@@ -248,7 +247,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             }
         })
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            if (error === `group[/${group || dictionariesName}] exist`) {
+            if (error === `group[${folder || ""}/${group || dictionariesName}] exist`) {
                 messageWarnRef.current = true
                 warn("字典名重复")
                 return
@@ -289,7 +288,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
             }
         })
         ipcRenderer.on(`${fileToken}-error`, (e: any, error: any) => {
-            if (error === `group[/${group || dictionariesName}] exist`) {
+            if (error === `group[${folder || ""}/${group || dictionariesName}] exist`) {
                 messageWarnRef.current = true
                 warn("字典名重复")
                 return
@@ -555,7 +554,6 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
 // ]
 
 const getItemStyle = (isDragging, draggableStyle) => {
-    // console.log("getItemStyle", draggableStyle.transform)
     let transform: string = draggableStyle["transform"] || ""
     if (isDragging) {
         const index = transform.indexOf(",")
@@ -802,7 +800,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         const isEqual: boolean = compareArrays(cacheNodesRef.current, newNodes)
         // 不相等时通知后端顺序变换
         if (!isEqual) {
-            console.log("UpdateAllPayloadGroup", newNodes)
             ipcRenderer
                 .invoke("UpdateAllPayloadGroup", {
                     Nodes: newNodes
@@ -941,7 +938,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     // 拖放结束时的回调函数
     const onDragEnd = useMemoizedFn((result) => {
         try {
-            console.log("result", result)
             const {source, destination, draggableId, type, combine} = result
             /** 合并组   ---------start--------- */
             if (result.combine) {
@@ -975,8 +971,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                     const newArray: DataItem[] = moveArrayElement(foldersArr.node, source.index, destination.index)
                     foldersArr.node = newArray
                     const newData = copyData.map((item) => {
-                        // console.log("item---",item);
-
                         if (item.id === foldersArr.id) {
                             return foldersArr
                         }
@@ -1009,7 +1003,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                     source.droppableId !== "droppable-payload" &&
                     destination.droppableId !== "droppable-payload"
                 ) {
-                    console.log("source---", source, destination)
                     const foldersItem = findFoldersById(copyData, source.droppableId)
                     const dropFoldersItem = findFoldersById(copyData, destination.droppableId)
                     if (foldersItem?.node && dropFoldersItem) {
@@ -1055,7 +1048,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
      */
     const onDragUpdate = useThrottleFn(
         (result) => {
-            console.log("result---xxx", result)
             const {index, droppableId} = result.source
             const {combine, destination, draggableId} = result
             // if (droppableId === "droppable-payload") {
@@ -1065,7 +1057,6 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             const moveNode = findItemById(data, draggableId)
             if (combine) {
                 // 检测到合并的情况
-                console.log("检测到合并的情况")
                 const ids = [combine.draggableId, draggableId]
                 // 如果拖拽的是文件夹 则不允许合并
                 const moveType = findItemById(data, draggableId)
@@ -1861,8 +1852,6 @@ export const DeleteConfirm: React.FC<DeleteConfirmProps> = (props) => {
             }
             try {
                 const obj = JSON.parse(res)
-                console.log("obj", obj)
-
                 if (!obj.check) {
                     setShowConfirm(true)
                 } else {
@@ -2056,7 +2045,6 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             } else {
                 const newData = copyData.filter((item) => item.id !== id)
                 setData(newData)
-                console.log("selectItem-id", selectItem, id)
 
                 if (selectItem === id) setContentType(undefined)
             }
@@ -2112,7 +2100,6 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     // 监听转为数据库存储
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e: any, data: SavePayloadProgress) => {
-            console.log("监听转为数据库存储", data)
             if (data) {
                 try {
                     setStreamData(data)
@@ -2571,11 +2558,6 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
 
     const onQueryEditor = useMemoizedFn((Group: string, Folder: string) => {
         setLoading(true)
-        console.log("获取Editor参数", {
-            Group,
-            Folder
-        })
-
         ipcRenderer
             .invoke("QueryPayloadFromFile", {
                 Group,
@@ -2585,7 +2567,6 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                 setPayloadFileData(data)
                 setEditorValue(Uint8ArrayToString(data.Data))
                 setLoading(false)
-                console.log("获取Editor数据", data)
             })
             .catch((e: any) => {
                 failed("编辑器数据获取失败")
@@ -2603,11 +2584,9 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                 Limit: limit || getParams().Pagination.Limit
             }
         }
-        console.log("参数---", obj)
         ipcRenderer
             .invoke("QueryPayload", obj)
             .then((data: QueryGeneralResponse<Payload>) => {
-                console.log("获取table数据", data)
                 setResponse(data)
                 // 通知刷新列表
                 emiter.emit("refreshListEvent")
@@ -2749,7 +2728,6 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
     // 监听去重任务
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e: any, data: SavePayloadProgress) => {
-            console.log("监听去重任务", data)
             if (data) {
                 try {
                     setStreamData(data)
@@ -2984,12 +2962,13 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                         <YakEditor
                             type='plaintext'
                             readOnly={!isEditMonaco}
-                            noLineNumber={true}
+                            // noLineNumber={true}
                             value={editorValue}
                             setValue={(content: string) => {
                                 setEditorValue(content)
                             }}
                             loading={loading}
+                            noWordWrap={true}
                         />
                     </div>
                 )}
@@ -3206,7 +3185,6 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         ipcRenderer
             .invoke("GetAllPayloadGroup")
             .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
-                console.log("Groups", res.Nodes)
                 cacheNodesRef.current = res.Nodes
                 let newData: DataItem[] = nodesToDataFun(res.Nodes)
                 setData(newData)
@@ -3215,7 +3193,6 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                     const {Group, Folder} = obj
                     // 根据Id判断其是否为文件
                     const item = findItemByGroup(newData, Group)
-                    console.log("xxx-item", item)
                     if (item) {
                         setGroup(Group)
                         setFolder(Folder)
@@ -3229,7 +3206,6 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                     if (queryGroupRef.current) {
                         // 初次进入选中
                         queryGroupRef.current = false
-                        console.log("newData", newData)
                         let obj: any = {}
                         // 遍历打开数组下的第一个文件
                         newData.forEach((item) => {
