@@ -365,7 +365,6 @@
         .upload-dragger-box {
             width: 100%;
             .upload-dragger {
-                border: none;
                 border-radius: 8px;
                 .upload-info {
                     display: flex;
@@ -395,6 +394,14 @@
                             line-height: 20px;
                         }
                     }
+                }
+                &:hover {
+                    border-color: #f28b44;
+                }
+            }
+            :global {
+                .ant-upload.ant-upload-drag.ant-upload-drag-hover:not(.ant-upload-disabled) {
+                    border-color: #f28b44;
                 }
             }
         }
