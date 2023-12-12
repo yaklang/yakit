@@ -77,53 +77,53 @@ export interface LabelDataProps {
     Label?: string
 }
 
-// 注：此处顺序为倒序
+// 注：此处顺序为倒序（新增DefaultDescription记得带-fixed，此处为标识固定项）
 export const defaultLabel: LabelDataProps[] = [
     {
-        DefaultDescription: "反向正则（单个）",
+        DefaultDescription: "反向正则（单个）-fixed",
         Description: "反向正则（单个）",
         Label: "{{regen:one([0-9a-f]{3})}}"
     },
     {
-        DefaultDescription: "反向正则（全部）",
+        DefaultDescription: "反向正则（全部）-fixed",
         Description: "反向正则（全部）",
         Label: "{{regen([0-9a-f]{3})}}"
     },
     {
-        DefaultDescription: "时间戳（秒）",
+        DefaultDescription: "时间戳（秒）-fixed",
         Description: "时间戳（秒）",
         Label: "{{timestamp(seconds)}}"
     },
     {
-        DefaultDescription: "验证码",
+        DefaultDescription: "验证码-fixed",
         Description: "验证码",
         Label: "{{int(0000-9999)}}"
     },
     {
-        DefaultDescription: "随机数",
+        DefaultDescription: "随机数-fixed",
         Description: "随机数",
         Label: "{{randint(0,10)}}"
     },
     {
-        DefaultDescription: "随机字符串",
+        DefaultDescription: "随机字符串-fixed",
         Description: "随机字符串",
         Label: "{{randstr}}"
     },
     {
-        DefaultDescription: "整数范围",
+        DefaultDescription: "整数范围-fixed",
         Description: "整数范围",
         Label: "{{int(1-10)}}"
     },
     {
-        DefaultDescription: "插入Payload",
+        DefaultDescription: "插入Payload-fixed",
         Description: "插入Payload"
     },
     {
-        DefaultDescription: "插入临时字典",
+        DefaultDescription: "插入临时字典-fixed",
         Description: "插入临时字典"
     },
     {
-        DefaultDescription: "插入文件",
+        DefaultDescription: "插入文件-fixed",
         Description: "插入文件"
     },
 ]
@@ -151,9 +151,9 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
     const [menuWidth, setMenuWidth] = useState<number>()
     // 菜单显示高度
     const [menuHeight, setMenuHeight] = useState<number>()
-    // 鼠标
+
     const getData = () => {
-        ipcRenderer.invoke("QueryFuzzerLabel", {}).then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
+        ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
             if (Array.isArray(Data) && Data.length > 0) {
                 setLabelData(Data)
@@ -449,7 +449,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                         </YakitButton>
                                                                     ) : (
                                                                         <>
-                                                                            <IconOutlinePencilAltIcon
+                                                                        {!item.DefaultDescription.endsWith("-fixed")&&<>
+                                                                        <IconOutlinePencilAltIcon
                                                                                 className={classNames(
                                                                                     styles["form-outlined"]
                                                                                 )}
@@ -468,6 +469,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                                     delLabel(item.Hash)
                                                                                 }}
                                                                             />
+                                                                        </>}
+                                                                            
                                                                         </>
                                                                     )}
                                                                 </div>

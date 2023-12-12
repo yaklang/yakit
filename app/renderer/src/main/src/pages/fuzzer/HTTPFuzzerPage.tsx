@@ -680,6 +680,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [props.shareContent])
 
+    // 保留数组中非重复数据
+    const filterNonUnique = arr => arr.filter(i => arr.indexOf(i) === arr.lastIndexOf(i))
     const isSaveFuzzerLabelFun = useMemoizedFn(()=>{        
         // 常用标签默认存储
         ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
@@ -690,6 +692,34 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 })
                 // 缓存标签数量 用于添加生成标签Description
                 setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabel.length}))
+            }
+            else{
+                // 获取缓存的固有标签
+                let oldFixedArr:string[] = []
+                // 获取最新的固有标签
+                let newFixedArr:string[] = defaultLabel.map((item)=>item.DefaultDescription)
+                Data.forEach((item)=>{
+                    if(item.DefaultDescription.endsWith("-fixed")){
+                        oldFixedArr.push(item.DefaultDescription)
+                    }
+                })
+                let arr:string[] = filterNonUnique([...oldFixedArr,...newFixedArr])
+                arr.forEach((item)=>{
+                    // 需要新添的项
+                    if(newFixedArr.includes(item)){
+                        ipcRenderer
+                        .invoke("SaveFuzzerLabel", {
+                            Data: defaultLabel.filter((itemIn)=>itemIn.DefaultDescription===item)
+                        })
+                    }
+                    // 需要删除的项
+                    else{
+                        ipcRenderer
+                        .invoke("DeleteFuzzerLabel", {
+                            Hash: Data.filter((itemIn)=>itemIn.DefaultDescription===item)[0].Hash
+                        })
+                    }
+                })
             }
         })
     })
