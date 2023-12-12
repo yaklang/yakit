@@ -71,6 +71,7 @@ import classNames from "classnames"
 import styles from "./chatCS.module.scss"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
+import { SolidYakitPluginGrayIcon, SolidYakitPluginIcon } from "@/assets/icon/colors"
 
 const TypeToContent: Record<string, string> = {
     cs_info: "安全知识",
@@ -1493,9 +1494,10 @@ interface PromptLabelProps {
     RedTeam_code: number
     BlueTeam_code: number
     Team_other: number
+    yak_memo: number
 }
 
-type PromptLabelItem = "Team_all" | "RedTeam_vuln" | "BlueTeam_com" | "RedTeam_code" | "BlueTeam_code" | "Team_other"
+type PromptLabelItem = "Team_all" | "RedTeam_vuln" | "BlueTeam_com" | "RedTeam_code" | "BlueTeam_code" | "yak_memo" | "Team_other"
 
 const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
     const {setShowPrompt, onSubmitPreset, onPromptSubmit} = props
@@ -1514,6 +1516,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
         "BlueTeam_com",
         "RedTeam_code",
         "BlueTeam_code",
+        "yak_memo",
         // "Team_other"
     ]
     useEffect(() => {
@@ -1545,6 +1548,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                         BlueTeam_com: 0,
                         RedTeam_code: 0,
                         BlueTeam_code: 0,
+                        yak_memo: 0,
                         Team_other: 0
                     }
                     Object.keys(obj).forEach((key) => {
@@ -1571,6 +1575,9 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                                 break
                             case "BlueTeam_code":
                                 label.BlueTeam_code += 1
+                                break
+                            case "yak_memo":
+                                label.yak_memo += 1
                                 break
                             default:
                                 label.Team_other += 1
@@ -1610,6 +1617,8 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                 return "代码生成"
             case "BlueTeam_code":
                 return "数据研判"
+            case "yak_memo":
+                return "Yak"
             default:
                 return "其他"
         }
@@ -1627,13 +1636,15 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                 return isActive ? <OutlineWebFuzzerActiveIcon /> : <OutlineWebFuzzerIcon />
             case "BlueTeam_code":
                 return isActive ? <OutlineChartPieActiveIcon /> : <OutlineChartPieIcon />
+            case "yak_memo":
+                return isActive ? <SolidYakitPluginIcon /> : <SolidYakitPluginGrayIcon />
             default:
                 return isActive ? <OutlineSparklesActiveIcon /> : <OutlineSparklesIcon />
         }
     })
 
     const isOther = useMemoizedFn((v: string) => {
-        return !["RedTeam_vuln", "BlueTeam_com", "RedTeam_code", "BlueTeam_code"].includes(v)
+        return !["RedTeam_vuln", "BlueTeam_com", "RedTeam_code", "BlueTeam_code","yak_memo"].includes(v)
     })
 
     const onPromptListByGroup = useMemoizedFn(() => {
