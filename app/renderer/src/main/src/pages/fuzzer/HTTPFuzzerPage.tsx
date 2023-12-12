@@ -680,7 +680,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [props.shareContent])
 
-    useEffect(() => {
+    const isSaveFuzzerLabelFun = useMemoizedFn(()=>{        
         // 常用标签默认存储
         ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
@@ -691,6 +691,22 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 // 缓存标签数量 用于添加生成标签Description
                 setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabel.length}))
             }
+        })
+    })
+
+    useEffect(() => {
+        // 此次重构不兼容之前数据 所以在第一次进入页面时清空
+        getRemoteValue("IS_DELETE_FUZZ_LABEL").then((remoteData) => {
+            if (!remoteData) {
+                ipcRenderer.invoke("DeleteFuzzerLabel", {}).then(()=>{
+                    isSaveFuzzerLabelFun()
+                }).catch((err)=>{
+                    failed(`清空老数据失败：${err}`)
+                })
+                setRemoteValue("IS_DELETE_FUZZ_LABEL", JSON.stringify({isDelete: false}))
+                return
+            }
+            isSaveFuzzerLabelFun()
         })
     }, [])
 

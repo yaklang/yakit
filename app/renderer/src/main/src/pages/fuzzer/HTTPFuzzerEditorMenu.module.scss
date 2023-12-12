@@ -127,7 +127,6 @@
                     font-weight: 500;
                     line-height: 16px;
                     color: #31343f;
-                    flex: 1;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -140,6 +139,7 @@
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                    flex: 1;
                 }
                 .sub-title-left {
                     margin-left: 2px;

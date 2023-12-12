@@ -747,9 +747,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         const insertLabelFun = (v: QueryFuzzerLabelResponseProps) => {
             if (v.Label) {
                 editor && editor.trigger("keyboard", "type", {text: v.Label})
-            } else if (v.DefaultDescription === "插入本地文件") {
+            } else if (v.DefaultDescription === "插入文件") {
                 editor && insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
-            } else if (v.DefaultDescription === "插入模糊测试字典标签") {
+            } else if (v.DefaultDescription === "插入Payload") {
                 editor &&
                     showDictsAndSelect((i) => {
                         monacoEditorWrite(editor, i, editor.getSelection())
