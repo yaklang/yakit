@@ -5,10 +5,15 @@ import {KVPair} from "@/models/kv"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 
 export interface PluginExecuteDetailHeardProps {
+    token: string
     /**插件 */
     plugin: YakScript
     /**头部右侧额外dom */
     extraNode: ReactNode
+    /**是否执行中 */
+    isExecuting: boolean
+    setIsExecuting: (b: boolean) => vid
+    onClearExecuteResult: () => void
 }
 
 export interface YakExtraParamProps {
@@ -37,9 +42,7 @@ export interface PluginExecuteProgressProps {
     name: string
 }
 
-export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {
-   
-}
+export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {}
 /**表单的key value类型 */
 export interface CustomPluginExecuteFormValue {
     [string]: number | string | boolean | string[] | Buffer
