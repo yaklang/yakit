@@ -427,7 +427,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
 interface CurrentHttpFlowProp {
     runtimeId: string
 }
-const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
+export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
     const [highlightSearch, setHighlightSearch] = useState("")
     const lasetIdRef = useRef<number>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
@@ -506,6 +506,7 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                 isVer={true}
                 lineStyle={{display: onlyShowFirstNode ? "none" : ""}}
                 firstNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined}}
+                secondNodeStyle={{display: onlyShowFirstNode ? "none" : ""}}
                 firstNode={
                     <HTTPFlowTable
                         noDeleteAll={true}
