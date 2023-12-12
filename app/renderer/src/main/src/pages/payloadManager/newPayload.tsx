@@ -1387,7 +1387,7 @@ export const FileComponentClone: React.FC<FileComponentCloneProps> = (props) => 
                 [styles["file-active"]]: file.id === selectItem,
                 [styles["file-no-active"]]: file.id !== selectItem,
                 [styles["file-inside"]]: isInside,
-                [styles["file-outside"]]: !isInside,
+                [styles["file-outside"]]: !isInside
             })}
         >
             <div className={styles["file-header"]}>
@@ -3065,18 +3065,24 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
             .then((data: any) => {
                 if (data.filePaths.length) {
                     let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    let currentPath: string = `${absolutePath}\\${group}.${isFile ? "txt" : "csv"}`
-                    exportPathRef.current = currentPath
-                    ipcRenderer.invoke(
-                        isFile ? "ExportAllPayloadFromFile" : "ExportAllPayload",
-                        {
-                            Group: group,
-                            Folder: folder,
-                            SavePath: currentPath
-                        },
-                        exportToken
-                    )
-                    setShowModal(true)
+                    ipcRenderer
+                        .invoke("pathJoin", {
+                            dir: absolutePath,
+                            file: `${group}.${isFile ? "txt" : "csv"}`
+                        })
+                        .then((currentPath: string) => {
+                            exportPathRef.current = currentPath
+                            ipcRenderer.invoke(
+                                isFile ? "ExportAllPayloadFromFile" : "ExportAllPayload",
+                                {
+                                    Group: group,
+                                    Folder: folder,
+                                    SavePath: currentPath
+                                },
+                                exportToken
+                            )
+                            setShowModal(true)
+                        })
                 } else {
                     setExportVisible(false)
                 }
