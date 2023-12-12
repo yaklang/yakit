@@ -510,19 +510,18 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             ipcRenderer
                 .invoke("UpdatePayload", updatePayload)
                 .then(() => {
-                    onQueryPayload(pagination?.Page, pagination?.Limit)
-                    console.log("updatePayload", updatePayload)
                     success(`修改成功`)
                     resolve(true)
                 })
-                .catch((e: any) => {            
+                .catch((e: any) => {        
                     resolve(false)
                     if(e.toString().includes("UNIQUE constraint failed: payloads.hash")){
                         warn("已有相同字典内容，请修改后再保存")
                         return
                     }
                     failed("更新失败：" + e)
-                    
+                }).finally(()=>{
+                    onQueryPayload(pagination?.Page, pagination?.Limit)
                 })
         })
     })
@@ -593,10 +592,10 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     const callCountRef = useRef<number>(0)
     const handleMethod = (record, column) => {
         if (callCountRef.current === 1) {
-            console.log("Single click:", record, column)
+            // console.log("Single click:", record, column)
             setSelectObj({Id: record.Id, dataIndex: column.dataIndex})
         } else if (callCountRef.current >= 2) {
-            console.log("Double click:", record, column)
+            // console.log("Double click:", record, column)
             setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
         }
         callCountRef.current = 0 // 重置计数器
