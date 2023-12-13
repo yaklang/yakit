@@ -211,7 +211,11 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                     });
 
                     console.log("content: ", contentRef.current)  // 使用 ref 的值
-                    requestYakURLList({ url: newYakUrl, method: "PUT", body: Buffer.from(contentRef.current) }).then((r) => {
+                    requestYakURLList({
+                        url: newYakUrl,
+                        method: "PUT",
+                        body: Buffer.from(contentRef.current)
+                    }).then((r) => {
                         console.log(r);
                         edit.destroy();
                     }).catch((e) => {
@@ -244,7 +248,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             }
         });
 
-        requestYakURLList({ url: newYakUrl }).then(
+        requestYakURLList({url: newYakUrl}).then(
             (rsp) => {
                 // const newContent = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.ValueBytes || '';
                 // const contentStr = Buffer.from(newContent).toString()
@@ -310,6 +314,11 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             firstRatio={'20%'}
             firstNode={
                 <WebTree
+                    onWebTreeData={(webTreeData) => {
+                        console.log("webTreeData", webTreeData)
+                        setSelectedNode(webTreeData)
+                        setLoading(false)
+                    }}
                     height={300}
                     ref={webTreeRef}
                     schema={"behinder"}
@@ -318,6 +327,10 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                     searchPlaceholder='请输入域名进行搜索，例baidu.com'
                     treeQueryparams={""}
                     refreshTreeFlag={refreshTreeFlag}
+                    onSelectNodes={(nodes) => {
+                        console.log()
+                        setSelectedNode(nodes)
+                    }}
                     // onGetUrl={(searchURL, includeInUrl) => {
                     //     setSearchURL(searchURL)
                     //     // setIncludeInUrl(includeInUrl)
