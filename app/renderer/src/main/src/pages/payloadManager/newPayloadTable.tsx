@@ -81,7 +81,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                             fontSize: "12px",
                             padding: "7px 15px",
                             lineHeight: "16px",
-                            borderRadius:0
+                            borderRadius: 0
                         }}
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
@@ -513,14 +513,15 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                     success(`修改成功`)
                     resolve(true)
                 })
-                .catch((e: any) => {        
+                .catch((e: any) => {
                     resolve(false)
-                    if(e.toString().includes("UNIQUE constraint failed: payloads.hash")){
+                    if (e.toString().includes("UNIQUE constraint failed: payloads.hash")) {
                         warn("已有相同字典内容，请修改后再保存")
                         return
                     }
                     failed("更新失败：" + e)
-                }).finally(()=>{
+                })
+                .finally(() => {
                     onQueryPayload(pagination?.Page, pagination?.Limit)
                 })
         })
@@ -601,10 +602,10 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         callCountRef.current = 0 // 重置计数器
     }
     const handleRowClick = (record, column) => {
-        if(record.Id===editingObj?.Id&&column.dataIndex===editingObj?.dataIndex){
+        if (record.Id === editingObj?.Id && column.dataIndex === editingObj?.dataIndex) {
             return
         }
-        if(record.Id!==editingObj?.Id||column.dataIndex!==editingObj?.dataIndex){
+        if (record.Id !== editingObj?.Id || column.dataIndex !== editingObj?.dataIndex) {
             setEditingObj(undefined)
             setSelectObj(undefined)
         }
@@ -612,9 +613,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         setTimeout(() => handleMethod(record, column), 200)
     }
 
-    const handleRowDoubleClick = (record, column) => {
-        
-    }
+    const handleRowDoubleClick = (record, column) => {}
 
     const handleRowRightClick = (record, column) => {
         // console.log("Right click:", record, column)
@@ -658,7 +657,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 columns={onlyInsert ? InsertColumns : (columns as ColumnTypes)}
                 pagination={{
                     showQuickJumper: true,
-                    current:parseInt(`${pagination?.Page||1}`) ,
+                    current: parseInt(`${pagination?.Page || 1}`),
                     pageSize: parseInt(`${pagination?.Limit || 10}`), // 每页显示的条目数量
                     total: response?.Total || 0,
                     pageSizeOptions: ["10", "20", "30", "40"], // 指定每页显示条目数量的选项

@@ -53,8 +53,7 @@ import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOper
 import {v4 as uuidv4} from "uuid"
 import {DeletePayloadProps, NewPayloadTable, Payload, QueryPayloadParams} from "./newPayloadTable"
 import {callCopyToClipboard} from "@/utils/basic"
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {ExecResult, PaginationSchema, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
+import { PaginationSchema, QueryGeneralResponse} from "../invoker/schema"
 import {randomString} from "@/utils/randomUtil"
 import _isEqual from "lodash/isEqual"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -69,6 +68,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -168,7 +168,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     // 收集上传的数据
     const [dictionariesName, setDictionariesName] = useState<string>("")
     const [uploadList, setUploadList] = useState<{path: string; name: string}[]>([])
-
+    const [editorValue,setEditorValue] = useState<string>("")
     // token
     const [token, setToken] = useState(randomString(20))
     const [fileToken, setFileToken] = useState(randomString(20))
@@ -178,15 +178,21 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     // 提示重复，不关闭Modal
     const messageWarnRef = useRef<boolean>(false)
 
+    // 上传文件/手动输入
+    const [uploadType,setUploadType] = useState<"dragger"|"editor">("dragger")
+
     // 存储类型
     const [storeType, setStoreType] = useState<"database" | "file">()
 
     const isDisabled = useMemo(() => {
-        if (isDictionaries) {
+        if (isDictionaries&&uploadType==="dragger") {
             return uploadList.length === 0 || dictionariesName.length === 0
         }
-        return uploadList.length === 0
-    }, [uploadList, dictionariesName, isDictionaries])
+        if(isDictionaries&&uploadType==="editor"){
+            return editorValue.length === 0 || dictionariesName.length === 0
+        }
+        return uploadType==="dragger"?uploadList.length === 0:editorValue.length === 0
+    }, [uploadList, dictionariesName, isDictionaries,uploadType,editorValue])
 
     // 数据库存储
     const onSavePayload = useMemoizedFn(() => {
@@ -194,9 +200,9 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
         ipcRenderer.invoke(
             "SavePayloadStream",
             {
-                IsFile: true,
+                IsFile: uploadType==="dragger",
                 IsNew: isDictionaries,
-                Content: "",
+                Content: editorValue,
                 FileName: uploadList.map((item) => item.path),
                 Group: group || dictionariesName,
                 Folder: folder || ""
@@ -213,9 +219,9 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
         ipcRenderer.invoke(
             "SavePayloadToFileStream",
             {
-                IsFile: true,
+                IsFile: uploadType==="dragger",
                 IsNew: true,
-                Content: "",
+                Content: editorValue,
                 FileName: uploadList.map((item) => item.path),
                 Group: group || dictionariesName,
                 Folder: folder || ""
@@ -411,7 +417,36 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                 </div>
                             </div>
                         )}
-                        <div className={styles["upload-dragger-box"]}>
+                        <div className={styles['card-box']}>
+                            <div className={styles['card-heard']}>
+                            <YakitRadioButtons
+                        value={uploadType}
+                        onChange={(e) => {
+                            if(e.target.value==="dragger"){
+                                setEditorValue("")
+                            }   
+                            if(e.target.value==="editor"){
+                                setUploadList([])
+                            }
+                            setUploadType(e.target.value)
+                        }}
+                        buttonStyle='solid'
+                        options={[
+                            {
+                                value: "dragger",
+                                label: "上传文件"
+                            },
+                            {
+                                value: "editor",
+                                label: "手动输入"
+                            },
+                        ]}
+                        // size={"small"}
+                    />
+                            </div>
+                            <>
+                            {uploadType==="dragger"?
+                           <div className={styles["upload-dragger-box"]}>
                             <Dragger
                                 className={styles["upload-dragger"]}
                                 // accept={FileType.join(",")} 
@@ -435,7 +470,20 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                     </div>
                                 </div>
                             </Dragger>
+                        </div> :<div className={styles['upload-editor-box']}>
+                        <YakEditor
+                            type='plaintext'
+                            value={editorValue}
+                            setValue={(content: string) => {
+                                setEditorValue(content)
+                            }}
+                            noWordWrap={true}
+                        />
                         </div>
+                        }
+                            </>
+                        </div>
+                        
                         <div className={styles["upload-list"]}>
                             {uploadList.map((item, index) => (
                                 <div className={styles["upload-list-item"]} key={index}>
