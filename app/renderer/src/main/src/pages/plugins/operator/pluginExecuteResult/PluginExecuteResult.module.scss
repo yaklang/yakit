@@ -45,7 +45,15 @@
     }
 }
 
-.plugin-execute-webSite-tree{
+.plugin-execute-http-flow {
     @extend %display-flex-center;
     align-items: flex-start;
+    flex: 1;
+    height: 100%;
+    .plugin-execute-web-tree {
+        @extend %display-column-center;
+        height: 100%;
+        padding: 12px;
+        border-left: 1px solid var(--yakit-border-color);
+    }
 }

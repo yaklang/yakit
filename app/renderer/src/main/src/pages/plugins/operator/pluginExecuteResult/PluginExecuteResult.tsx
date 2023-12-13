@@ -29,6 +29,8 @@ import {YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
 import {EngineConsole} from "@/components/baseConsole/BaseConsole"
 import {WebTree} from "@/components/WebTree/WebTree"
 import classNames from "classnames"
+import ReactResizeDetector from "react-resize-detector"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -41,14 +43,11 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 <HorizontalScrollCard title={"Data Card"} />
             </div>
             <PluginTabs defaultActiveKey='httpFlow'>
-                <TabPane tab='网站树结构' key='website-trees'>
-                    <PluginExecuteWebsiteTree />
-                </TabPane>
                 <TabPane tab='漏洞与风险' key='risk'>
                     <VulnerabilitiesRisksTable />
                 </TabPane>
                 <TabPane tab='HTTP 流量' key='httpFlow' style={{borderBottom: "1px solid var(--yakit-border-color)"}}>
-                    <CurrentHttpFlow runtimeId={runtimeId} />
+                    <PluginExecuteHttpFlow runtimeId={runtimeId} />
                 </TabPane>
                 <TabPane tab='基础插件信息 / 日志' key='log'>
                     <PluginExecuteLog loading={loading} messageList={infoState.messageState} />
@@ -60,27 +59,50 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         </div>
     )
 })
-const PluginExecuteWebsiteTree: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
+const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
+    const {runtimeId} = props
+    const [height, setHeight] = useState<number>(300) //表格所在div高度
+
     const webTreeRef = useRef<any>()
     return (
-        <PluginExecuteResultTabContent title='' className={styles["plugin-execute-webSite-tree"]}>
-            <WebTree
-                ref={webTreeRef}
-                height={0}
-                searchPlaceholder='请输入域名进行搜索,例baidu.com'
-                treeExtraQueryparams={""}
-                refreshTreeFlag={false}
-                onGetUrl={(searchURL, includeInUrl) => {
-                    // setSearchURL(searchURL)
-                    // setIncludeInUrl(includeInUrl)
-                }}
-                resetTableAndEditorShow={(table, editor) => {
-                    // setOnlyShowFirstNode(table)
-                    // setSecondNodeVisible(editor)
-                }}
-            ></WebTree>
-            <div>表格</div>
-        </PluginExecuteResultTabContent>
+        <div className={styles["plugin-execute-http-flow"]}>
+            <YakitResizeBox
+                lineDirection='right'
+                isShowDefaultLineStyle={false}
+                firstRatio={"20%"}
+                firstNode={
+                    <div className={styles["plugin-execute-web-tree"]}>
+                        <ReactResizeDetector
+                            onResize={(w, h) => {
+                                if (!w || !h) {
+                                    return
+                                }
+                                setHeight(h)
+                            }}
+                            handleHeight={true}
+                            refreshMode={"debounce"}
+                            refreshRate={50}
+                        />
+                        <WebTree
+                            ref={webTreeRef}
+                            height={height}
+                            searchPlaceholder='请输入域名进行搜索,例baidu.com'
+                            treeExtraQueryparams={" "}
+                            refreshTreeFlag={false}
+                            onGetUrl={(searchURL, includeInUrl) => {
+                                // setSearchURL(searchURL)
+                                // setIncludeInUrl(includeInUrl)
+                            }}
+                            resetTableAndEditorShow={(table, editor) => {
+                                // setOnlyShowFirstNode(table)
+                                // setSecondNodeVisible(editor)
+                            }}
+                        />
+                    </div>
+                }
+                secondNode={<CurrentHttpFlow runtimeId={runtimeId} />}
+            ></YakitResizeBox>
+        </div>
     )
 })
 /** 基础插件信息 / 日志 */
