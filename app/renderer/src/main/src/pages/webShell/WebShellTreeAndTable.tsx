@@ -26,11 +26,12 @@ import {showModal} from "@/utils/showModal";
 import {WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
 import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
-import {requestYakURLList} from "@/pages/yakURLTree/netif";
+import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif";
 import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {yakitFailed} from "@/utils/notification";
 import {goBack} from "@/pages/webShell/FileManager";
 import {TreeNode, WebTree} from "@/components/WebTree/WebTree";
+import { TreeKey } from "@/components/yakitUI/YakitTree/YakitTree";
 
 interface WebShellURLTreeAndTableProp {
     Id: string
@@ -47,6 +48,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [selected, setSelected] = useState<TreeNode>({} as TreeNode)
     const [selectedNode, setSelectedNode] = useState<TreeNode[]>([])
+    const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([])
     const [data, setData] = useState<TreeNode[]>([])
     // const [treeData, setTreeData] = useState<TreeNode[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -308,18 +310,30 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     const [refreshTreeFlag, setRefreshTreeFlag] = useState<boolean>(false)
     const [searchURL, setSearchURL] = useState<string>("")
 
+    useEffect(() => {
+        loadFromYakURLRaw("behinder" + ":///" + 'C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/' + "?" + 'mode=list&id=1', (res) => {
+            setSelectedNode(res.Resources.map((item: YakURLResource, index: number) => {
+                return {
+                    title: item.VerboseName,
+                    key: item.Path,
+                    isLeaf: !item.HaveChildrenNodes,
+                    data: item
+                }
+            }))
+            setLoading(false)
+        }).catch((error) => {
+            setLoading(false)
+            yakitFailed(`加载失败: ${error}`)
+        })
+    }, [])
+
     return (
         <ResizeBox
             freeze={true}
             firstRatio={'20%'}
             firstNode={
                 <WebTree
-                    onWebTreeData={(webTreeData) => {
-                        console.log("webTreeData", webTreeData)
-                        setSelectedNode(webTreeData)
-                        setLoading(false)
-                    }}
-                    height={300}
+                    height={800}
                     ref={webTreeRef}
                     schema={"behinder"}
                     filePath={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/"}
@@ -328,13 +342,25 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                     treeQueryparams={""}
                     refreshTreeFlag={refreshTreeFlag}
                     onSelectNodes={(nodes) => {
-                        console.log()
-                        setSelectedNode(nodes)
+                        setLoading(false)
+                        if (nodes.length) {
+                            const url = nodes[0]?.data?.Url as YakURL
+                            requestYakURLList({url}, (rsp) => {
+                                const newNodes: TreeNode[] = rsp.Resources.map((i) => {
+                                    return {
+                                        title: i.VerboseName,
+                                        key: i.Path,
+                                        isLeaf: !i.HaveChildrenNodes,
+                                        data: i
+                                    }
+                                })
+                                setSelectedNode(newNodes)
+                            })
+                        }
                     }}
-                    // onGetUrl={(searchURL, includeInUrl) => {
-                    //     setSearchURL(searchURL)
-                    //     // setIncludeInUrl(includeInUrl)
-                    // }}
+                    onSelectKeys={(selectedKeys) => {
+                        setSelectedKeys(selectedKeys)
+                    }}
                     // resetTableAndEditorShow={(table, editor) => {
                     //     // setOnlyShowFirstNode(table)
                     //     // setSecondNodeVisible(editor)
