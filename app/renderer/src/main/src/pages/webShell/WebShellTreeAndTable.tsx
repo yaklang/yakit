@@ -310,9 +310,11 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             firstRatio={'20%'}
             firstNode={
                 <WebTree
+                    height={300}
                     ref={webTreeRef}
                     schema={"behinder"}
-                    height={300}
+                    filePath={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/"}
+                    fileQuery={"mode=list&id=1"}
                     searchPlaceholder='请输入域名进行搜索，例baidu.com'
                     treeQueryparams={""}
                     refreshTreeFlag={refreshTreeFlag}
