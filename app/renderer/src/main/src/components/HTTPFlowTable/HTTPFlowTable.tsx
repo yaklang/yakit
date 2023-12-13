@@ -2050,34 +2050,100 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-            if (isAllSelect) {
-                ipcRenderer
-                    .invoke("QueryHTTPFlows", query)
-                    .then((rsp: YakQueryHTTPFlowResponse) => {
-                        const newData: HTTPFlow[] = getClassNameData(rsp?.Data || [])
-                        initExcelData(resolve, newData, rsp)
-                    })
-                    .catch((e: any) => {
-                        yakitNotify("error", `query HTTP Flow failed: ${e}`)
-                    })
-                    .finally(() => setTimeout(() => setLoading(false), 100))
-            } else {
-                const Ids: number[] = list.map((item) => parseInt(item.Id + ""))
-                ipcRenderer.invoke("GetHTTPFlowByIds", {Ids}).then((rsp: {Data: HTTPFlow[]}) => {
-                    initExcelData(resolve, rsp.Data, {
-                        Data: rsp.Data,
-                        Total: rsp.Data.length,
-                        Pagination: {
-                            Limit: "100000",
-                            Order: "",
-                            OrderBy: "",
-                            Page: "1"
-                        }
-                    })
+            const Ids: number[] = list.map((item) => parseInt(item.Id + ""))
+            // 这里的key值 不一定和表格的key对应的上
+            const arrList = [
+                {
+                    title: "序号",
+                    key: "id"
+                },
+                {
+                    title: "方法",
+                    key: "method"
+                },
+                {
+                    title: "状态码",
+                    key: "status_code"
+                },
+                {
+                    title: "URL",
+                    key: "url"
+                },
+                {
+                    title: "Title",
+                    key: "response"
+                },
+                {
+                    title: "Tags",
+                    key: "tags"
+                },
+                {
+                    title: "IP",
+                    key: "iP_address"
+                },
+                {
+                    title: "响应长度",
+                    key: "body_length"
+                },
+                {
+                    title: "参数",
+                    key: "get_params_total"
+                },
+                {
+                    title: "响应类型",
+                    key: "content_type"
+                },
+                {
+                    title: "请求时间",
+                    key: "updated_at"
+                },
+                {
+                    title: "请求大小",
+                    key: "request"
+                },
+                {
+                    title: "请求包",
+                    key: "request"
+                },
+                {
+                    title: "响应包",
+                    key: "response"
+                }
+            ]
+            const FieldName = arrList.filter((item) => exportTitle.includes(item.title)).map((item) => item.key)
+            ipcRenderer
+                .invoke("ExportHTTPFlows", {ExportWhere: query, Ids, FieldName})
+                .then((rsp: YakQueryHTTPFlowResponse) => {
+                    initExcelData(resolve, rsp.Data, rsp)
                 })
-            }
         })
     })
+    const onExcelExport = (list) => {
+        const titleValue = columns
+        .filter((item) => !["序号", "操作"].includes(item.title))
+        .map((item) => item.title)
+            const exportValue = [...titleValue, "请求包", "响应包"]
+            const m = showYakitModal({
+                title: "导出字段",
+                content: (
+                    <ExportSelect
+                        exportValue={exportValue}
+                        setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
+                        exportKey='MITM-HTTP-HISTORY-EXPORT-KEY'
+                        fileName='History'
+                        getData={(pagination) => getExcelData(pagination, list)}
+                    />
+                ),
+                onCancel: () => {
+                    m.destroy()
+                    setSelectedRowKeys([])
+                    setSelectedRows([])
+                },
+                width: 650,
+                footer: null
+            })
+    }
+
     const menuData = [
         {
             key: "发送到 Web Fuzzer",
@@ -2272,31 +2338,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "导出数据",
             label: "导出数据",
-            onClickBatch: (list, n) => {
-                const titleValue = columns
-                    .filter((item) => !["序号", "操作"].includes(item.title))
-                    .map((item) => item.title)
-                const exportValue = [...titleValue, "请求包", "响应包"]
-                const m = showYakitModal({
-                    title: "导出字段",
-                    content: (
-                        <ExportSelect
-                            exportValue={exportValue}
-                            setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
-                            exportKey='MITM-HTTP-HISTORY-EXPORT-KEY'
-                            fileName='History'
-                            getData={(pagination) => getExcelData(pagination, list)}
-                        />
-                    ),
-                    onCancel: () => {
-                        m.destroy()
-                        setSelectedRowKeys([])
-                        setSelectedRows([])
-                    },
-                    width: 650,
-                    footer: null
-                })
-            }
+            onClickSingle: (v) => onExcelExport([v]),
+            onClickBatch: (list, n) => onExcelExport(list)
         }
     ]
     const onRowContextMenu = (rowData: HTTPFlow, _, event: React.MouseEvent) => {
@@ -3322,9 +3365,11 @@ export const onSendToTab = (rowData) => {
         type: "fuzzer",
         data: {
             isHttps: rowData.IsHTTPS,
-            request: rowData.InvalidForUTF8Request? rowData.SafeHTTPRequest!:new Buffer(rowData.Request).toString("utf8")
+            request: rowData.InvalidForUTF8Request
+                ? rowData.SafeHTTPRequest!
+                : new Buffer(rowData.Request).toString("utf8")
         }
-    })    
+    })
 }
 
 // 标注颜色
