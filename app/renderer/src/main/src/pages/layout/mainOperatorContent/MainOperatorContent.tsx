@@ -548,11 +548,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 if (targetCache?.pageParamsInfo && targetCache.pageParamsInfo?.pluginInfoEditor) {
                     next = targetCache.pageParamsInfo.pluginInfoEditor?.source
                 }
-
                 removeMenuPage({route: route, menuName: ""}, next ? {route: next, menuName: ""} : undefined)
                 break
-
             default:
+                removeMenuPage({route: route, menuName: ""})
                 break
         }
     })
