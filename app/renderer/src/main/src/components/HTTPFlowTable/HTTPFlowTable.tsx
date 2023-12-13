@@ -435,6 +435,7 @@ export interface HTTPFlowTableProp {
     searchURL?: string
     includeInUrl?: string | string[]
     onQueryParams?: (queryParams: string, execFlag?: boolean) => void
+    titleHeight?:number
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -729,7 +730,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         refresh,
         onlyShowSearch = false,
         pageType,
-        historyId
+        historyId,
+        titleHeight=38
     } = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
@@ -2591,7 +2593,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setCurrentIndex={setCurrentIndex}
                     scrollToIndex={scrollToIndex}
                     query={params}
-                    titleHeight={38}
+                    titleHeight={titleHeight}
                     renderTitle={
                         <div
                             className={style["http-history-table-title"]}
