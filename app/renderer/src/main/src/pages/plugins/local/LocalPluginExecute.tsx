@@ -43,7 +43,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                 onClearExecuteResult={onClearExecuteResult}
                 setIsExecuting={setIsExecuting}
             />
-            <PluginExecuteResult infoState={infoState} runtimeId={runtimeId} />
+            <PluginExecuteResult infoState={infoState} runtimeId={runtimeId} loading={isExecuting}/>
         </>
     )
 })
