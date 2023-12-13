@@ -34,8 +34,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
-
-import {LocalPluginExecuteDetailHeard} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {LocalPluginExecute} from "./LocalPluginExecute"
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
 
@@ -542,10 +541,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     //     updateGroups={() => {}}
                                     //     patternMenu='expert'
                                     // />
-                                    <LocalPluginExecuteDetailHeard
-                                        plugin={plugin}
-                                        extraNode={pluginExecuteDetailExtraHeard}
-                                    />
+                                    <LocalPluginExecute plugin={plugin} headExtraNode={pluginExecuteDetailExtraHeard} />
                                 ) : (
                                     <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />
                                 )}
@@ -569,7 +565,11 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     type={plugin.Type}
                                 />
                                 <div className={styles["details-editor-wrapper"]}>
-                                    <YakitEditor type={plugin.Type === "nuclei" ? "yaml" : plugin.Type} value={plugin.Content} readOnly={true} />
+                                    <YakitEditor
+                                        type={plugin.Type === "nuclei" ? "yaml" : plugin.Type}
+                                        value={plugin.Content}
+                                        readOnly={true}
+                                    />
                                 </div>
                             </div>
                         </TabPane>

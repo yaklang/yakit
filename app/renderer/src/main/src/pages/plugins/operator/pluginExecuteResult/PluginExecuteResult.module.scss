@@ -1,0 +1,59 @@
+@use "../../plugins.scss";
+.plugin-execute-result {
+    @extend %display-column-center;
+    flex: 1;
+    overflow: hidden;
+    gap: 12px;
+    .plugin-execute-result-wrapper {
+        @extend %display-column-center;
+        gap: 12px;
+    }
+    .table-renderTitle {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        padding: 14px 12px 10px;
+
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px; /* 133.333% */
+
+        border-left: 1px solid var(--yakit-border-color);
+        border-right: 1px solid var(--yakit-border-color);
+    }
+
+    .table-container {
+    }
+}
+
+.plugin-execute-result-tab-content {
+    height: 100%;
+    border: 1px solid var(--yakit-border-color);
+    border-top: 0;
+    color: var(--yakit-header-color);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px; /* 133.333% */
+    .plugin-execute-result-tab-content-head {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        padding: 14px 12px 10px;
+        border-bottom: 1px solid var(--yakit-border-color);
+    }
+    .plugin-execute-result-tab-content-body {
+        padding: 12px;
+    }
+}
+
+.plugin-execute-http-flow {
+    @extend %display-flex-center;
+    align-items: flex-start;
+    flex: 1;
+    height: 100%;
+    .plugin-execute-web-tree {
+        @extend %display-column-center;
+        height: 100%;
+        padding: 12px;
+        border-left: 1px solid var(--yakit-border-color);
+    }
+}
