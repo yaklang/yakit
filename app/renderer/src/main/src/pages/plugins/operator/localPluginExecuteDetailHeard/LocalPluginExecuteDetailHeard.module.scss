@@ -1,4 +1,4 @@
-@use '../../plugins.scss';
+@use "../../plugins.scss";
 .plugin-head-executing-wrapper {
     @extend %display-flex-center;
     justify-content: flex-end;
@@ -76,13 +76,15 @@
         font-size: 12px;
         font-weight: 400;
         line-height: 16px; /* 133.333% */
-        min-width: 80px;
         max-width: 80px;
-        text-align: end;
-
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        word-break: break-all;
+        flex: 1;
+        display: flex;
     }
+}
+
+.plugin-head-executing-progress {
+    @extend %display-flex-center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-top: 12px;
 }

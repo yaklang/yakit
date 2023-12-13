@@ -3,6 +3,7 @@ import {ReactNode} from "react"
 import {YakParamProps} from "../../pluginsType"
 import {KVPair} from "@/models/kv"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
 export interface PluginExecuteDetailHeardProps {
     token: string
@@ -13,7 +14,13 @@ export interface PluginExecuteDetailHeardProps {
     /**是否执行中 */
     isExecuting: boolean
     setIsExecuting: (b: boolean) => vid
-    onClearExecuteResult: () => void
+    debugPluginStreamEvent: {
+        start: () => vid
+        stop: () => vid
+        cancel: () => vid
+        reset: () => vid
+    }
+    progressList: StreamResult.Progress[]
 }
 
 export interface YakExtraParamProps {
