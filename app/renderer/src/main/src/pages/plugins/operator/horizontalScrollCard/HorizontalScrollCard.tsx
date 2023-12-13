@@ -11,86 +11,6 @@ import classNames from "classnames"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon, OutlineHashtagIcon} from "@/assets/icon/outline"
 import {useLongPress, useThrottleFn} from "ahooks"
 
-let testData: StatusCardListProps[] = [
-    {
-        id: "1",
-        tag: "成功次数",
-        info: [{Data: "1", Id: "IDID", Timestamp: 111}]
-    },
-    {
-        id: "2",
-        tag: "mysql",
-        info: [
-            {Id: "成功次数:mysql", Data: "1", Timestamp: 222, Tags: "mysql"},
-            {Id: "失败次数:mysql", Data: "2", Timestamp: 333, Tags: "mysql"},
-            {Id: "总尝试次数:mysql", Data: "3", Timestamp: 444, Tags: "mysql"}
-        ]
-    },
-
-    {
-        id: "3",
-        tag: "ID",
-        info: [{Data: "1", Id: "tttttttttttt", Timestamp: 55555}]
-    },
-    {
-        id: "4",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 666, Tags: "SYN扫描失败"}]
-    },
-    {
-        id: "5",
-        tag: "mysql",
-        info: [
-            {Id: "成功次数:mysql", Data: "1", Timestamp: 777, Tags: "mysql"},
-            {Id: "失败次数:mysql", Data: "2", Timestamp: 888, Tags: "mysql"},
-            {Id: "总尝试次数:mysql", Data: "3", Timestamp: 999, Tags: "mysql"}
-        ]
-    },
-    {
-        id: "6",
-        tag: "mysql",
-        info: [
-            {Id: "成功次数:mysql", Data: "1", Timestamp: 101010, Tags: "mysql"},
-            {Id: "失败次数:mysql", Data: "2", Timestamp: 111111, Tags: "mysql"},
-            {Id: "总尝试次数:mysql", Data: "3", Timestamp: 121212, Tags: "mysql"}
-        ]
-    },
-    {
-        id: "7",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 141414, Tags: "SYN扫描失败"}]
-    },
-    {
-        id: "8",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 151515, Tags: "SYN扫描失败"}]
-    },
-    {
-        id: "9",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 161616, Tags: "SYN扫描失败"}]
-    },
-    {
-        id: "10",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 171717, Tags: "SYN扫描失败"}]
-    }
-]
-
-const getData = (): StatusCardListProps[] => {
-    const data: StatusCardListProps[] = []
-    const length = testData.length
-    for (let index = 0; index < 100; index++) {
-        const random = Math.floor(Math.random() * length)
-        const item = {
-            ...testData[random],
-            id: `${index}`
-        }
-        data.push(item)
-    }
-    return data
-}
-
 const getTextColor = (id: string) => {
     switch (true) {
         case id.includes("success"):
@@ -125,7 +45,7 @@ const getBgColor = (id: string) => {
 }
 
 export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.memo((props) => {
-    const {title, data = [...getData()]} = props
+    const {title, data = []} = props
     const [scroll, setScroll] = useState<HorizontalScrollCardScrollProps>({
         scrollLeft: 0,
         scrollRight: 1 //初始值要大于1

@@ -36,11 +36,11 @@ const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
-    const {infoState, runtimeId, loading} = props
+    const {streamInfo, runtimeId, loading} = props
     return (
         <div className={styles["plugin-execute-result"]}>
             <div className={styles["plugin-execute-result-wrapper"]}>
-                <HorizontalScrollCard title={"Data Card"} />
+                <HorizontalScrollCard title={"Data Card"} data={streamInfo.cardState} />
             </div>
             <PluginTabs defaultActiveKey='httpFlow'>
                 <TabPane tab='漏洞与风险' key='risk'>
@@ -50,7 +50,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                     <PluginExecuteHttpFlow runtimeId={runtimeId} />
                 </TabPane>
                 <TabPane tab='基础插件信息 / 日志' key='log'>
-                    <PluginExecuteLog loading={loading} messageList={infoState.messageState} />
+                    <PluginExecuteLog loading={loading} messageList={streamInfo.logState} />
                 </TabPane>
                 <TabPane tab='Console' key='console'>
                     <EngineConsole isMini={true} />
