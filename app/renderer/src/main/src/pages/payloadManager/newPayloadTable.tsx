@@ -658,7 +658,8 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                 columns={onlyInsert ? InsertColumns : (columns as ColumnTypes)}
                 pagination={{
                     showQuickJumper: true,
-                    pageSize: pagination?.Limit || 10, // 每页显示的条目数量
+                    current:parseInt(`${pagination?.Page||1}`) ,
+                    pageSize: parseInt(`${pagination?.Limit || 10}`), // 每页显示的条目数量
                     total: response?.Total || 0,
                     pageSizeOptions: ["10", "20", "30", "40"], // 指定每页显示条目数量的选项
                     showSizeChanger: true, // 是否显示切换每页条目数量的控件

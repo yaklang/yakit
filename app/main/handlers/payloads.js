@@ -270,4 +270,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("UpdatePayloadToFile", async (e, params) => {
         return await asyncUpdatePayloadToFile(params)
     })
+
+    const asyncYakVersionAtLeast = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().YakVersionAtLeast(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 校验版本
+    ipcMain.handle("YakVersionAtLeast", async (e, params) => {
+        return await asyncYakVersionAtLeast(params)
+    })
 }

@@ -190,7 +190,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
 
     // 数据库存储
     const onSavePayload = useMemoizedFn(() => {
-        setStoreType("database")
+        setStoreType("database")                                     
         ipcRenderer.invoke(
             "SavePayloadStream",
             {
@@ -414,7 +414,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                         <div className={styles["upload-dragger-box"]}>
                             <Dragger
                                 className={styles["upload-dragger"]}
-                                accept={FileType.join(",")}
+                                // accept={FileType.join(",")} 
                                 multiple={true}
                                 showUploadList={false}
                                 beforeUpload={(f: any, fileList: any) => {
@@ -431,7 +431,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                             可将文件拖入框内，或
                                             <span className={styles["hight-light"]}>点击此处导入</span>
                                         </div>
-                                        <div className={styles["sub-title"]}>支持文件夹批量上传</div>
+                                        <div className={styles["sub-title"]}>支持文件夹批量上传(支持文件类型txt/csv)</div>
                                     </div>
                                 </div>
                             </Dragger>
@@ -2320,6 +2320,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                             title='扩充到护网专用工具'
                                                             type='payload'
                                                             onQueryGroup={onQueryGroup}
+                                                            folder={folder}
                                                             group={inputName}
                                                             onClose={() => {
                                                                 m.destroy()
@@ -2600,7 +2601,12 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
         ipcRenderer
             .invoke("DeletePayload", deletePayload)
             .then(() => {
-                onQueryPayload(pagination?.Page, pagination?.Limit)
+                let page = pagination?.Page
+                // 如为当页全部删除回到第一页
+                if(pagination&&deletePayload.Ids?.length===response?.Data.length){
+                    page = 1
+                }
+                onQueryPayload(page, pagination?.Limit)
                 setSelectPayloadArr([])
                 success("删除成功")
             })
@@ -3165,6 +3171,8 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
 
     const [data, setData] = useState<DataItem[]>([])
 
+    // 关闭Payload
+    const [isClosePayload,setClosePayload] = useState<boolean>(false)
     // 第一次进入
     const [isFirstEnter, setFirstEnter] = useState<boolean>(false)
     const NewPayloadFirstEnter = "NewPayloadFirstEnter"
@@ -3274,12 +3282,23 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     }, [])
 
     useEffect(() => {
-        // 页面初次进入时
-        getRemoteValue(NewPayloadFirstEnter).then((res) => {
-            if (!res) {
-                setFirstEnter(true)
-            }
-        })
+        ipcRenderer
+            .invoke("YakVersionAtLeast", {
+                AtLeastVersion: "v1.2.9-sp3",
+                YakVersion: ""
+            })
+            .then((res: {Ok: boolean}) => {
+                if (res.Ok) {
+                    // 页面初次进入时
+                    getRemoteValue(NewPayloadFirstEnter).then((res) => {
+                        if (!res) {
+                            setFirstEnter(true)
+                        }
+                    })
+                } else {
+                    setClosePayload(true)
+                }
+            })
     }, [])
 
     const reset = useMemoizedFn(() => {
@@ -3406,6 +3425,21 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                 footer={
                     <div style={{marginTop: 24, textAlign: "right"}}>
                         <YakitButton size='max' onClick={initNewPayload}>
+                            确定
+                        </YakitButton>
+                    </div>
+                }
+            />
+            <YakitHint
+                visible={isClosePayload}
+                title='引擎版本过低'
+                content='当前引擎版本过低无法使用新版Payload，请将引擎更新到 v1.2.9-sp3及以上版本'
+                footer={
+                    <div style={{marginTop: 24, textAlign: "right"}}>
+                        <YakitButton size='max' onClick={()=>{
+                            setClosePayload(false)
+                            emiter.emit("closePage", JSON.stringify({route: YakitRoute.PayloadManager}))
+                        }}>
                             确定
                         </YakitButton>
                     </div>

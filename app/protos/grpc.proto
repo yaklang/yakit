@@ -596,6 +596,8 @@ service Yak {
 
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
+
+  rpc YakVersionAtLeast(YakVersionAtLeastRequest) returns (GeneralResponse);
 }
 
 message GetSpaceEngineStatusRequest {
@@ -4469,4 +4471,9 @@ message GenerateURLRequest{
 }
 message GenerateURLResponse{
   string URL = 1;
+}
+
+message YakVersionAtLeastRequest{
+ string AtLeastVersion = 1;
+ string YakVersion = 2;
 }
