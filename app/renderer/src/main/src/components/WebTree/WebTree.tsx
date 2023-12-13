@@ -36,6 +36,7 @@ interface WebTreeProp {
     onSelectKeys?: (selectedKeys: TreeKey[]) => void // 选中节点得keys
     onGetUrl?: (searchURL: string, includeInUrl: string) => void // 获取选中后节点得url信息 用于表格查询
     resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
+    onWebTreeData?: (webTreeData: TreeNode[]) => void // 获取网站树数据
 }
 
 /**
@@ -54,7 +55,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         onSelectNodes,
         onSelectKeys,
         onGetUrl,
-        resetTableAndEditorShow
+        resetTableAndEditorShow,
+        onWebTreeData = () => {}
     } = props
     const [treeLoading, setTreeLoading] = useState<boolean>(true)
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
@@ -347,6 +349,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         setSearchValue(value)
     })
 
+    useEffect(() => {
+        onWebTreeData(webTreeData)
+    }, [webTreeData]);
     return (
         <div className={styles.webTree} ref={webTreeRef}>
             {/* 文件树 不要搜索框和刷新按钮 */}
