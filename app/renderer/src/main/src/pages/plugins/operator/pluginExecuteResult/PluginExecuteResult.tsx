@@ -1,11 +1,12 @@
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {HorizontalScrollCard} from "../horizontalScrollCard/HorizontalScrollCard"
 import styles from "./PluginExecuteResult.module.scss"
 import {
     PluginExecuteLogProps,
     PluginExecuteResultProps,
     PluginExecuteResultTabContentProps,
+    PluginExecuteWebsiteTreeProps,
     VulnerabilitiesRisksTableProps
 } from "./PluginExecuteResultType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -26,6 +27,8 @@ import {Timeline} from "antd"
 import {LogLevelToCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
 import {EngineConsole} from "@/components/baseConsole/BaseConsole"
+import {WebTree} from "@/components/WebTree/WebTree"
+import classNames from "classnames"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -38,6 +41,9 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 <HorizontalScrollCard title={"Data Card"} />
             </div>
             <PluginTabs defaultActiveKey='httpFlow'>
+                <TabPane tab='网站树结构' key='website-trees'>
+                    <PluginExecuteWebsiteTree />
+                </TabPane>
                 <TabPane tab='漏洞与风险' key='risk'>
                     <VulnerabilitiesRisksTable />
                 </TabPane>
@@ -54,6 +60,30 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         </div>
     )
 })
+const PluginExecuteWebsiteTree: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
+    const webTreeRef = useRef<any>()
+    return (
+        <PluginExecuteResultTabContent title='' className={styles["plugin-execute-webSite-tree"]}>
+            <WebTree
+                ref={webTreeRef}
+                height={0}
+                searchPlaceholder='请输入域名进行搜索,例baidu.com'
+                treeExtraQueryparams={""}
+                refreshTreeFlag={false}
+                onGetUrl={(searchURL, includeInUrl) => {
+                    // setSearchURL(searchURL)
+                    // setIncludeInUrl(includeInUrl)
+                }}
+                resetTableAndEditorShow={(table, editor) => {
+                    // setOnlyShowFirstNode(table)
+                    // setSecondNodeVisible(editor)
+                }}
+            ></WebTree>
+            <div>表格</div>
+        </PluginExecuteResultTabContent>
+    )
+})
+/** 基础插件信息 / 日志 */
 const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
     const {loading, messageList} = props
     const timelineItemProps = useMemo(() => {
@@ -226,13 +256,16 @@ const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = Reac
 })
 /**插件执行的tab content 结构 */
 const PluginExecuteResultTabContent: React.FC<PluginExecuteResultTabContentProps> = React.memo((props) => {
+    const {title, extra, children, className = ""} = props
     return (
         <div className={styles["plugin-execute-result-tab-content"]}>
-            <div className={styles["plugin-execute-result-tab-content-head"]}>
-                <div>{props.title}</div>
-                <div>{props.extra}</div>
-            </div>
-            <div className={styles["plugin-execute-result-tab-content-body"]}>{props.children}</div>
+            {(title || extra) && (
+                <div className={styles["plugin-execute-result-tab-content-head"]}>
+                    <div>{title}</div>
+                    <div>{extra}</div>
+                </div>
+            )}
+            <div className={classNames(styles["plugin-execute-result-tab-content-body"], className)}>{children}</div>
         </div>
     )
 })
