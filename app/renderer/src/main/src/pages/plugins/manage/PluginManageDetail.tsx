@@ -142,7 +142,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             setLoading(true)
             apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
                 .then((res) => {
-                    console.log("res", res, {uuid: info.uuid, list_type: "check"})
                     if (res) {
                         setPlugin({...res})
                         setOldContent("")
@@ -415,8 +414,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         if (callback) callback()
                         return
                     }
-
-                    console.log("audit-submit-api", {...info, ...audit})
 
                     apiAuditPluginDetaiCheck({...info, ...audit})
                         .then(() => {
@@ -732,7 +729,11 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                         </div>
                                     ) : (
                                         <div className={styles["details-editor-wrapper"]}>
-                                            <YakitEditor type={plugin.type === "nuclei" ? "yaml" : plugin.type} value={content} readOnly={true} />
+                                            <YakitEditor
+                                                type={plugin.type === "nuclei" ? "yaml" : plugin.type}
+                                                value={content}
+                                                readOnly={true}
+                                            />
                                         </div>
                                     )}
                                 </div>

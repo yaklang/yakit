@@ -146,7 +146,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
             apiFetchCheckList(query)
                 .then((res) => {
-                    console.log("plugin-manage-date", query, res.data, JSON.stringify(res.pagemeta))
                     if (!res.data) res.data = []
                     dispatch({
                         type: "add",
@@ -343,7 +342,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 删除插件集合接口
     const apiDelPlugins = useMemoizedFn(
         (params?: API.PluginsWhereDeleteRequest, thenCallback?: () => any, catchCallback?: () => any) => {
-            console.log("plugins method:delete", params)
             apiDeletePluginCheck(params)
                 .then(() => {
                     if (thenCallback) thenCallback()
