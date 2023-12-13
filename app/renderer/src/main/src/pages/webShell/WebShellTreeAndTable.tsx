@@ -30,7 +30,7 @@ import {requestYakURLList} from "@/pages/yakURLTree/netif";
 import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {yakitFailed} from "@/utils/notification";
 import {goBack} from "@/pages/webShell/FileManager";
-import { TreeNode } from "@/components/WebTree/WebTree";
+import {TreeNode, WebTree} from "@/components/WebTree/WebTree";
 
 interface WebShellURLTreeAndTableProp {
     Id: string
@@ -299,14 +299,31 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         )
     }
     const [goBackTree, setGoBackTree] = useState<TreeNode[]>([]);
+    const webTreeRef = useRef<any>()
 
+    const [refreshTreeFlag, setRefreshTreeFlag] = useState<boolean>(false)
+    const [searchURL, setSearchURL] = useState<string>("")
 
     return (
         <ResizeBox
             freeze={true}
             firstRatio={'20%'}
             firstNode={
-                <YakURLTree
+                <WebTree
+                    ref={webTreeRef}
+                    schema={"behinder"}
+                    height={300}
+                    searchPlaceholder='请输入域名进行搜索，例baidu.com'
+                    treeQueryparams={""}
+                    refreshTreeFlag={refreshTreeFlag}
+                    // onGetUrl={(searchURL, includeInUrl) => {
+                    //     setSearchURL(searchURL)
+                    //     // setIncludeInUrl(includeInUrl)
+                    // }}
+                    // resetTableAndEditorShow={(table, editor) => {
+                    //     // setOnlyShowFirstNode(table)
+                    //     // setSecondNodeVisible(editor)
+                    // }}
                     // raw={currentPath}
                     // goBackTree={goBackTree}
                     // onDataChange={
