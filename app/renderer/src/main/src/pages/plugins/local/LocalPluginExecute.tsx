@@ -1,11 +1,12 @@
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream"
-import { yakitNotify } from "@/utils/notification"
-import { randomString } from "@/utils/randomUtil"
-import { useMemoizedFn } from "ahooks"
-import React, { useState, useRef } from "react"
-import { LocalPluginExecuteDetailHeard } from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import { PluginExecuteResult } from "../operator/pluginExecuteResult/PluginExecuteResult"
-import { LocalPluginExecuteProps } from "./PluginsLocalType"
+import {yakitNotify} from "@/utils/notification"
+import {randomString} from "@/utils/randomUtil"
+import {useInterval, useMemoizedFn} from "ahooks"
+import React, {useState, useRef} from "react"
+import {LocalPluginExecuteDetailHeard} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
+import {LocalPluginExecuteProps} from "./PluginsLocalType"
+import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 
 export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo((props) => {
     const {plugin, headExtraNode} = props
@@ -15,24 +16,20 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
 
     const tokenRef = useRef<string>(randomString(40))
 
-    const [infoState, {reset, setXtermRef}, xtermRef] = useHoldingIPCRStream(
-        "debug-plugin",
-        "DebugPlugin",
-        tokenRef.current,
-        () => {
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: tokenRef.current,
+        onEnd: () => {
+            debugPluginStreamEvent.stop()
             setTimeout(() => setIsExecuting(false), 300)
         },
-        undefined,
-        undefined,
-        (rId) => {
+        setRuntimeId: (rId) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
             setRuntimeId(rId)
         }
-    )
-    const onClearExecuteResult = useMemoizedFn(() => {
-        reset()
-        yakitNotify("success", "执行结果清除成功")
     })
+    console.log('streamInfo',streamInfo)
     return (
         <>
             <LocalPluginExecuteDetailHeard
@@ -40,10 +37,11 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                 plugin={plugin}
                 extraNode={headExtraNode}
                 isExecuting={isExecuting}
-                onClearExecuteResult={onClearExecuteResult}
                 setIsExecuting={setIsExecuting}
+                debugPluginStreamEvent={debugPluginStreamEvent}
+                progressList={streamInfo.progressState}
             />
-            <PluginExecuteResult infoState={infoState} runtimeId={runtimeId} loading={isExecuting}/>
+            <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
         </>
     )
 })

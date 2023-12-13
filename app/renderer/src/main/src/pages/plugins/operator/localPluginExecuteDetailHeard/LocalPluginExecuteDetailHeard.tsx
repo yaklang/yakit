@@ -12,7 +12,7 @@ import {
 import {PluginDetailHeader} from "../../baseTemplate"
 import styles from "./LocalPluginExecuteDetailHeard.module.scss"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
-import {Form, Progress} from "antd"
+import {Divider, Form, Progress} from "antd"
 import {YakParamProps} from "../../pluginsType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
@@ -20,7 +20,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {failed} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Uint8ArrayToString} from "@/utils/str"
 import classNames from "classnames"
@@ -135,7 +135,7 @@ const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
 
 /**插件执行头部 */
 export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardProps> = React.memo((props) => {
-    const {token, plugin, extraNode, isExecuting, setIsExecuting, onClearExecuteResult} = props
+    const {token, plugin, extraNode, isExecuting, setIsExecuting, debugPluginStreamEvent, progressList} = props
     const [form] = Form.useForm()
     /** 当前插件是否点击过开始执行 */
     const [isClickExecute, setIsClickExecute] = useState<boolean>(false)
@@ -254,11 +254,15 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             HTTPRequestTemplate: extraParamsValue,
             ExecParams: yakExecutorParams
         }
-        apiDebugPlugin(executeParams, token)
+        debugPluginStreamEvent.reset()
+        apiDebugPlugin(executeParams, token).then(() => {
+            debugPluginStreamEvent.start()
+        })
     })
     /**取消执行 */
     const onStopExecute = useMemoizedFn(() => {
         apiCancelDebugPlugin(token).then(() => {
+            debugPluginStreamEvent.stop()
             setIsExecuting(false)
         })
     })
@@ -282,6 +286,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     /**打开额外参数抽屉 */
     const openExtraPropsDrawer = useMemoizedFn(() => {
         setExtraParamsVisible(true)
+    })
+    const onClearExecuteResult = useMemoizedFn(() => {
+        debugPluginStreamEvent.reset()
+        yakitNotify("success", "执行结果清除成功")
     })
     const isShowExtraParamsButton = useMemo(() => {
         switch (plugin.Type) {
@@ -318,9 +326,14 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     <div className={styles["plugin-head-executing-wrapper"]}>
                         {isClickExecute ? (
                             <div className={styles["plugin-head-executing"]}>
+                                {progressList.length > 1 && (
+                                    <PluginExecuteProgress
+                                        percent={progressList[0].progress}
+                                        name={progressList[0].id}
+                                    />
+                                )}
                                 {isExecuting ? (
                                     <>
-                                        <PluginExecuteProgress percent={60} name='Main' />
                                         <YakitButton type='text' onClick={onClearExecuteResult}>
                                             清除执行结果
                                         </YakitButton>
@@ -393,6 +406,14 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     </div>
                 </Form.Item>
             </Form>
+            <div className={styles["plugin-head-executing-progress"]}>
+                {progressList.map((ele, index) => (
+                    <>
+                        {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
+                        <PluginExecuteProgress percent={ele.progress} name={ele.id} />
+                    </>
+                ))}
+            </div>
             <React.Suspense fallback={<div>loading...</div>}>
                 <PluginExecuteExtraParams
                     ref={pluginExecuteExtraParamsRef}
@@ -589,11 +610,13 @@ const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((
     const {percent, name} = props
     return (
         <div className={styles["plugin-execute-progress-wrapper"]}>
-            <span className={styles["plugin-execute-progress-name"]}>{name}</span>
+            <div className={styles["plugin-execute-progress-name"]}>
+                <span className='content-ellipsis'>{name}</span>
+            </div>
             <Progress
                 strokeColor='#F28B44'
                 trailColor='#F0F2F5'
-                percent={percent}
+                percent={Math.ceil(percent)}
                 format={(percent) => `${percent}%`}
             />
         </div>
