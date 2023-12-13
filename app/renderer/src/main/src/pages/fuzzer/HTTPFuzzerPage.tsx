@@ -455,7 +455,7 @@ export interface SelectOptionProps {
 
 export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     // 请求包配置
-    fuzzTagMode: "legacy",
+    fuzzTagMode: "standard",
     fuzzTagSyncIndex: false,
     isHttps: false,
     isGmTLS: false,
@@ -1213,7 +1213,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const newValue: AdvancedConfigValueProps = {
             ...val,
             hitColor: val.hitColor || "red",
-            fuzzTagMode: val.fuzzTagMode === undefined ? "legacy" : val.fuzzTagMode,
+            fuzzTagMode: val.fuzzTagMode === undefined ? "standard" : val.fuzzTagMode,
             fuzzTagSyncIndex: !!val.fuzzTagSyncIndex,
             minDelaySeconds: val.minDelaySeconds ? Number(val.minDelaySeconds) : 0,
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
