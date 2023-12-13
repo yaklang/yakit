@@ -34,7 +34,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
-
+import {LocalPluginExecute} from "./LocalPluginExecute"
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
 
@@ -528,19 +528,20 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         <TabPane tab='执行' key='execute'>
                             <div className={styles["plugin-execute-wrapper"]}>
                                 {executorShow ? (
-                                    <LocalPluginExecutor
-                                        script={plugin}
-                                        isEdit={false}
-                                        setIsEdit={() => {}}
-                                        isShowPrivateDom={false}
-                                        settingShow={false}
-                                        setSettingShow={() => {}}
-                                        extraParams={[]}
-                                        setExtraParams={() => {}}
-                                        groups={[]}
-                                        updateGroups={() => {}}
-                                        patternMenu='expert'
-                                    />
+                                    // <LocalPluginExecutor
+                                    //     script={plugin}
+                                    //     isEdit={false}
+                                    //     setIsEdit={() => {}}
+                                    //     isShowPrivateDom={false}
+                                    //     settingShow={false}
+                                    //     setSettingShow={() => {}}
+                                    //     extraParams={[]}
+                                    //     setExtraParams={() => {}}
+                                    //     groups={[]}
+                                    //     updateGroups={() => {}}
+                                    //     patternMenu='expert'
+                                    // />
+                                    <LocalPluginExecute plugin={plugin} headExtraNode={pluginExecuteDetailExtraHeard} />
                                 ) : (
                                     <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />
                                 )}
