@@ -503,6 +503,7 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
     return (
         <>
             <YakitResizeBox
+                lineDirection='top'
                 isVer={true}
                 lineStyle={{display: onlyShowFirstNode ? "none" : ""}}
                 firstNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined}}
@@ -528,6 +529,7 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         }}
                         onlyShowSearch={true}
                         historyId={historyId}
+                        titleHeight={47}
                     />
                 }
                 secondNode={
