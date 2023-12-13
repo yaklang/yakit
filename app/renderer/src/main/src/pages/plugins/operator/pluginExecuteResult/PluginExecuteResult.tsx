@@ -16,23 +16,24 @@ import {Risk} from "@/pages/risks/schema"
 import {QueryGeneralResponse, genDefaultPagination} from "@/pages/invoker/schema"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {formatTimestamp} from "@/utils/timeUtil"
+import {CurrentHttpFlow} from "@/pages/yakitStore/viewers/base"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
-    const {infoState} = props
+    const {infoState, runtimeId} = props
     return (
         <div className={styles["plugin-execute-result"]}>
             <div className={styles["plugin-execute-result-wrapper"]}>
                 <HorizontalScrollCard title={"Data Card"} />
             </div>
-            <PluginTabs defaultActiveKey='risk'>
+            <PluginTabs defaultActiveKey='httpFlow'>
                 <TabPane tab='漏洞与风险' key='risk'>
                     <VulnerabilitiesRisksTable />
                 </TabPane>
-                <TabPane tab='本次执行 HTTP 流量' key='current-http-flow'>
-                    本次执行 HTTP 流量
+                <TabPane tab='HTTP 流量' key='httpFlow' style={{borderBottom: "1px solid var(--yakit-border-color)"}}>
+                    <CurrentHttpFlow runtimeId={runtimeId} />
                 </TabPane>
                 <TabPane tab='基础插件信息 / 日志' key='feature-0'>
                     基础插件信息 / 日志
