@@ -23,5 +23,8 @@ export interface PluginExecuteResultTabContentProps {
 }
 
 export interface PluginExecuteWebsiteTreeProps{
-
+    runtimeId: string
+}
+export interface PluginExecutePortTableProps{
+    
 }
