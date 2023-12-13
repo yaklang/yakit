@@ -19,4 +19,9 @@ export interface PluginExecuteResultTabContentProps {
     title?: ReactNode
     extra?: ReactNode
     children?: ReactNode
+    className?:string
+}
+
+export interface PluginExecuteWebsiteTreeProps{
+
 }
