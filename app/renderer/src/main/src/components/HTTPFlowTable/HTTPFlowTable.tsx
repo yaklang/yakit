@@ -1744,7 +1744,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 className={classNames(style["icon-hover"], {
                                     [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
                                 })}
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation()
                                     ipcRenderer
                                         .invoke("GetHTTPFlowById", {Id: rowData?.Id})
                                         .then((i: HTTPFlow) => {
@@ -1762,6 +1763,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
                                 })}
                                 onClick={(e) => {
+                                    e.stopPropagation()
                                     let m = showDrawer({
                                         width: "80%",
                                         content: onExpandHTTPFlow(rowData, () => m.destroy())
