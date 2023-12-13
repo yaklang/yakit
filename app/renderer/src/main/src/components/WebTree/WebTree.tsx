@@ -374,9 +374,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         setSearchValue(value)
     })
 
-    useEffect(() => {
-        onWebTreeData(webTreeData)
-    }, [webTreeData]);
     return (
         <div className={styles.webTree} ref={webTreeRef}>
             <div className={styles["tree-top-wrap"]} ref={treeTopWrapRef}>
