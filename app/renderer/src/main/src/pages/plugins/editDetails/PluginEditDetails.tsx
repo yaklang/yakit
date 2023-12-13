@@ -93,7 +93,6 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptById", {Id: id})
             .then((res: YakScript) => {
-                console.log("fetch", res)
                 setInfo(res)
                 setTypeParams({
                     Type: res.Type,
@@ -424,7 +423,6 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
 
             const request: localYakInfo = convertLocalToLocalInfo(isModifyState, {info: info, modify: modify})
             if (!pluginId && newToDebugId.current) request.Id = newToDebugId.current
-            console.log("local-api", request)
             if (!saveLoading) setSaveLoading(true)
             ipcRenderer
                 .invoke("SaveNewYakScript", request)

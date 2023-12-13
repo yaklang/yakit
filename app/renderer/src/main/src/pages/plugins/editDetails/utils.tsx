@@ -246,7 +246,6 @@ export const uploadOnlinePlugin = (
     isModify: boolean,
     callback?: (plugin?: YakScript) => any
 ) => {
-    console.log("api-upload", JSON.stringify(info))
     // 往线上上传插件
     NetWorkApi<API.PluginsEditRequest, API.PluginsResponse>({
         method: "post",
@@ -259,7 +258,6 @@ export const uploadOnlinePlugin = (
                 if (callback) callback(true)
                 return
             }
-            console.log("upload-download-api", JSON.stringify({ListType: "mine", UUID: [res.uuid]}))
             // 下载插件
             apiDownloadPluginMine({UUID: [res.uuid]})
                 .then(() => {
@@ -298,7 +296,6 @@ export const uploadOnlinePlugin = (
  * @param info 复制online的信息
  */
 export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugin?: YakScript) => any) => {
-    console.log("copy-api", info)
     // 往线上上传插件
     NetWorkApi<API.CopyPluginsRequest, API.PluginsResponse>({
         method: "post",
@@ -306,7 +303,6 @@ export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugi
         data: info
     })
         .then((res) => {
-            console.log("copy-download-api", JSON.stringify({ListType: "mine", UUID: [res.uuid]}))
             // 下载插件
             apiDownloadPluginMine({UUID: [res.uuid]})
                 .then(() => {
