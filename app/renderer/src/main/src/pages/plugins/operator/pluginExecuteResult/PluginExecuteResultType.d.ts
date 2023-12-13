@@ -1,10 +1,10 @@
-import {InfoState} from "@/hook/useHoldingIPCRStream"
-import { ExecResultLog } from "@/pages/invoker/batch/ExecMessageViewer"
+
+import { HoldGRPCStreamInfo, StreamResult } from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {ReactNode} from "react"
 
 export interface PluginExecuteResultProps {
     runtimeId: string
-    infoState: InfoState
+    streamInfo: HoldGRPCStreamInfo
     loading:boolean
 }
 
@@ -12,7 +12,7 @@ export interface VulnerabilitiesRisksTableProps {}
 
 export interface PluginExecuteLogProps {
     loading:boolean
-    messageList:ExecResultLog[]
+    messageList:StreamResult.Log[]
 }
 
 export interface PluginExecuteResultTabContentProps {

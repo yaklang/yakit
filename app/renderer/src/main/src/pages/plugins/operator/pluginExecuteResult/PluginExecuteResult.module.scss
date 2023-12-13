@@ -4,6 +4,7 @@
     flex: 1;
     overflow: hidden;
     gap: 12px;
+    padding-top: 12px;
     .plugin-execute-result-wrapper {
         @extend %display-column-center;
         gap: 12px;
