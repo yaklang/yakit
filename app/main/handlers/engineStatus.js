@@ -162,18 +162,19 @@ module.exports = (win, callback, getClient, newClient) => {
      * @param {Object} params
      * @param {Boolean} params.sudo 是否使用管理员权限启动yak
      * @param {Number} params.port 本地缓存数据里的引擎启动端口号
+     * @param {Boolean} params.isEnpriTraceAgent 本地缓存数据里的引擎启动端口号
      */
     const asyncStartLocalYakEngineServer = (win, params) => {
         engineCount += 1
 
-        const { sudo, port } = params
+        const { sudo, port,isEnpriTraceAgent } = params
         return new Promise((resolve, reject) => {
             try {
                 // 考虑如果管理员权限启动未成功该通过什么方式自启普通权限引擎进程
                 if (sudo) {
                     if (isWindows) {
                         const subprocess = childProcess.exec(
-                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${port}${dbFile ? " --profile-db " + dbFile : ""}`),
+                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${port}${dbFile ? " --profile-db " + dbFile : ""}${isEnpriTraceAgent?` --disable-output`:""}`),
                             {
                                 maxBuffer: 1000 * 1000 * 1000,
                                 stdio: "pipe",
@@ -190,7 +191,7 @@ module.exports = (win, callback, getClient, newClient) => {
                         })
                         resolve()
                     } else {
-                        const cmd = `${getLocalYaklangEngine()} grpc --port ${port}${dbFile ? ` --profile-db ${dbFile}` : ""}`
+                        const cmd = `${getLocalYaklangEngine()} grpc --port ${port}${dbFile ? ` --profile-db ${dbFile}` : ""}${isEnpriTraceAgent?` --disable-output`:""}`
                         sudoExec(
                             cmd,
                             {
@@ -211,8 +212,9 @@ module.exports = (win, callback, getClient, newClient) => {
 
                     const grpcPort = ["grpc", "--port", `${port}`]
                     const extraParams = dbFile ? [...grpcPort, "--profile-db", dbFile] : grpcPort
+                    const resultParams = isEnpriTraceAgent? [...extraParams, "--disable-output"]:extraParams
 
-                    const subprocess = childProcess.spawn(getLocalYaklangEngine(), extraParams, {
+                    const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
                         // stdio: ["ignore", "ignore", "ignore"]
                         detached: false, windowsHide: true,
                         stdio: ["ignore", log, log]

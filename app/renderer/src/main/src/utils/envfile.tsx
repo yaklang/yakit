@@ -93,7 +93,7 @@ const fetchEnv = () => {
 const {ipcRenderer} = window.require("electron");
 ipcRenderer.invoke("set-release-edition-raw", fetchEnv() || "").then(() => {
     if (isEnpriTraceAgent()) {
-        info("设置 EnpriTraceAgent 发行版成功")
+        info(`设置 ${getReleaseEditionName()} 发行版成功`)
     }
 })
 
