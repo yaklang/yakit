@@ -48,8 +48,10 @@ export interface InternalTextAreaProps extends TextAreaProps {
  * @description InternalInputPasswordProps 的属性
  * @augments InternalInputPasswordProps 继承antd的Input PasswordProps 默认属性
  * @param {string} wrapperClassName
+ * @param {CSSProperties} wrapperStyle
  */
 export interface InternalInputPasswordProps extends Omit<PasswordProps, "size"> {
     wrapperClassName?: string
     size?: YakitSizeType
+    wrapperStyle?: React.CSSProperties
 }

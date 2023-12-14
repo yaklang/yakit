@@ -124,16 +124,7 @@ const InternalTextArea: React.FC<InternalTextAreaProps> = (props) => {
 }
 
 const InternalInputPassword: React.FC<InternalInputPasswordProps> = (props) => {
-    const {wrapperClassName, style, size, className, ...restProps} = props
-    const [focus, setFocus] = useState<boolean>(false)
-    const onFocus = useMemoizedFn((e) => {
-        setFocus(true)
-        if (props.onFocus) props.onFocus(e)
-    })
-    const onBlur = useMemoizedFn((e) => {
-        setFocus(false)
-        if (props.onBlur) props.onBlur(e)
-    })
+    const {wrapperClassName, wrapperStyle, size, className, ...restProps} = props
     return (
         <div
             className={classNames(
@@ -146,9 +137,9 @@ const InternalInputPassword: React.FC<InternalInputPasswordProps> = (props) => {
                 },
                 wrapperClassName
             )}
-            style={style}
+            style={{...(wrapperStyle || {})}}
         >
-            <Input.Password {...restProps} onFocus={onFocus} onBlur={onBlur} spellCheck={false} />
+            <Input.Password {...restProps} spellCheck={false} />
         </div>
     )
 }
