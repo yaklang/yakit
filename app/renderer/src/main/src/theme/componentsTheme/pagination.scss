@@ -1,0 +1,31 @@
+.ant-pagination-item-active {
+    border-color: var(--yakit-primary-5);
+}
+.ant-pagination-item-active a {
+    color: var(--yakit-primary-5);
+}
+.ant-pagination-item:hover {
+    border-color: var(--yakit-primary-4);
+}
+.ant-pagination-item:hover a {
+    color: var(--yakit-primary-4);
+}
+
+.ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+    border-color: var(--yakit-primary-4);
+}
+
+.ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+    border-color: var(--yakit-primary-5);
+    box-shadow: 0 0 0 2px var(--yakit-primary-1);
+}
+.ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-link-icon, .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-link-icon{
+    color: var(--yakit-primary-5);
+}
+.ant-pagination-prev:hover .ant-pagination-item-link, .ant-pagination-next:hover .ant-pagination-item-link{
+    color: var(--yakit-primary-4);
+}
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled){
+    color: var(--yakit-header-color);
+    background-color: var(--yakit-primary-1);
+}
