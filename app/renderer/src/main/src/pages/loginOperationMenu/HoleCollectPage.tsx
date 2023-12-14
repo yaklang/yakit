@@ -359,7 +359,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                                     </Tooltip>
                                 </Space>
                                 <Space>
-                                    <ExportExcel getData={getData} fileName='风险与漏洞' newUI={true} />
+                                    <ExportExcel getData={getData} fileName='风险与漏洞' />
                                     <YakitPopconfirm
                                         title={
                                             selectedRowKeys.length > 0
