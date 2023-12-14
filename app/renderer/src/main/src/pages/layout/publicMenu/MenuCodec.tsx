@@ -150,6 +150,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     className={styles["input-textarea-body"]}
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
+                    isShowResize={false}
                 />
                 <div className={styles["input-textarea-copy"]}>
                     <CopyComponents
@@ -171,6 +172,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     className={styles["input-textarea-body"]}
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}
+                    isShowResize={false}
                 />
                 <div className={styles["input-textarea-copy"]}>
                     <CopyComponents
