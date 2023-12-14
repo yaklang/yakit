@@ -7,6 +7,15 @@
 @use "../theme/componentsTheme/notification.scss";
 @use "../theme/componentsTheme/input.scss";
 @use "../theme/componentsTheme/descriptions.scss";
+@use "../theme/componentsTheme/pagination.scss";
+
+body{
+    color: var(--yakit-header-color);
+}
+
+a {
+    color: var(--yakit-primary-5);
+}
 
 /* 内容过长省略样式 */
 .content-ellipsis {
@@ -65,4 +74,3 @@ $keyColor: map-keys($colors);
         font-weight: map-get($currentColor, "fontWeight");
     }
 }
-
