@@ -48,7 +48,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [selected, setSelected] = useState<TreeNode>({} as TreeNode)
     const [selectedNode, setSelectedNode] = useState<TreeNode[]>([])
-    const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([])
     const [data, setData] = useState<TreeNode[]>([])
     // const [treeData, setTreeData] = useState<TreeNode[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -307,25 +306,25 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     const [goBackTree, setGoBackTree] = useState<TreeNode[]>([]);
     const webTreeRef = useRef<any>()
 
-    const [refreshTreeFlag, setRefreshTreeFlag] = useState<boolean>(false)
-    const [searchURL, setSearchURL] = useState<string>("")
-
+    const [currentPathAllTree, setcurrentPathAllTree] = useState<TreeNode[]>([])
     useEffect(() => {
-        loadFromYakURLRaw("behinder" + ":///" + 'C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/' + "?" + 'mode=list&id=1', (res) => {
-            setSelectedNode(res.Resources.map((item: YakURLResource, index: number) => {
+        loadFromYakURLRaw(currentPath.charAt(0).toLocaleLowerCase() + currentPath.slice(1), (res) => {
+            const arr = res.Resources.map((item: YakURLResource, index: number) => {
                 return {
                     title: item.VerboseName,
                     key: item.Path,
                     isLeaf: !item.HaveChildrenNodes,
                     data: item
                 }
-            }))
+            })
+            setcurrentPathAllTree(arr)
+            setSelectedNode(arr)
             setLoading(false)
         }).catch((error) => {
             setLoading(false)
             yakitFailed(`加载失败: ${error}`)
         })
-    }, [])
+    }, [currentPath])
 
     return (
         <ResizeBox
@@ -335,12 +334,9 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                 <WebTree
                     height={800}
                     ref={webTreeRef}
-                    schema={"behinder"}
-                    filePath={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/"}
-                    fileQuery={"mode=list&id=1"}
+                    schema={props.shellType.toLowerCase()}
+                    searchVal={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/?mode=list&id=" + props.Id}
                     searchPlaceholder='请输入域名进行搜索，例baidu.com'
-                    treeQueryparams={""}
-                    refreshTreeFlag={refreshTreeFlag}
                     onSelectNodes={(nodes) => {
                         setLoading(false)
                         if (nodes.length) {
@@ -356,10 +352,9 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                 })
                                 setSelectedNode(newNodes)
                             })
+                        } else {
+                            setSelectedNode(currentPathAllTree)
                         }
-                    }}
-                    onSelectKeys={(selectedKeys) => {
-                        setSelectedKeys(selectedKeys)
                     }}
                     // resetTableAndEditorShow={(table, editor) => {
                     //     // setOnlyShowFirstNode(table)
@@ -428,11 +423,11 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                             icon={<ChevronLeftIcon/>}
                                     />
                                     <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
-                                    <span style={{paddingRight: "5px"}}>Path:</span>
-                                    <YakitInput
+                                    {/* <span style={{paddingRight: "5px"}}>Path:</span> */}
+                                    {/* <YakitInput
                                         onChange={(e) => setCurrentPath(e.target.value)}
                                         value={currentPath}
-                                    />
+                                    /> */}
 
                                     <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>
 

@@ -26,8 +26,7 @@ export interface TreeNode extends DataNode {
 interface WebTreeProp {
     ref?: React.Ref<any>
     schema?: string | "website" | "file" | "behinder" // 默认website
-    filePath?: string // 文件路径
-    fileQuery?: string // 文件查询参数
+    searchVal?: string // 搜索树值
     height: number // 树高度 用于虚拟滚动
     searchVal?: string // 搜索树值
     searchInputDisabled?: boolean
@@ -37,7 +36,7 @@ interface WebTreeProp {
     refreshTreeFlag?: boolean // 选中树节点后 表格参数改变导致树查询参数改变 是否需要刷新树 默认->不刷新
     onSelectNodes?: (selectedNodes: TreeNode[]) => void // 选中节点得nodes
     onSelectKeys?: (selectedKeys: TreeKey[]) => void // 选中节点得keys
-    onGetUrl?: (searchURL: string, includeInUrl: string) => void // 获取选中后节点得url信息 用于表格查询
+    onGetUrl?: (searchURL: string, includeInUrl: string) => void // 获取选中后节点得url信息 用于表格查询 website树有用
     resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
 
     /** runtime-id 网站树的过滤条件(runtime_id) */
@@ -247,7 +246,12 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             resetTableAndEditorShow && resetTableAndEditorShow(true, false)
         }
         setSearchValue(val)
-        getTreeData(schema + "://" + `${val ? val : "/"}`)
+
+        const yakUrl = {
+            website: schema + "://" + `${val ? val : "/"}`,
+            behinder: schema + ":///" + val
+        }
+        getTreeData(yakUrl[schema])
     })
 
     useEffect(() => {
@@ -274,14 +278,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 } else {
                     refreshTree()
                 }
-            }
-        } else {
-            if (searchTreeFlag) {
-                setExpandedKeys([])
-                setSelectedNodes([])
-                getTreeData(schema + "://" + searchValue)
-            } else {
-                refreshTree()
             }
         }
     }, [treeExtraQueryparams, refreshTreeFlag, inViewport])
@@ -328,7 +324,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         onSelectNodes && onSelectNodes(selectedNodes)
         const node = selectedNodes[0]
         if (node) {
-            console.log("node", node)
             const urlItem = node.data?.Extra.find((item) => item.Key === "url")
             if (urlItem && urlItem.Value) {
                 try {
