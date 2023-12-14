@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from "react"
+import React, {useEffect, useState, useMemo, useRef, ReactNode} from "react"
 import {
     Button,
     Checkbox,
@@ -173,7 +173,6 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     const [queryList, setQueryList] = useState<QueryListProps>()
     const [currentSelectItem, setCurrentSelectItem] = useState<PortAsset>()
     const [scrollToIndex, setScrollToIndex] = useState<number>()
-    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
 
     const portAssetRef = useRef(null)
     const [inViewport] = useInViewport(portAssetRef)
@@ -573,15 +572,9 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     })
 
     return (
-        <div ref={portAssetRef} className={styles["portAsset-content"]} style={{ display: "flex", flexDirection: "row" }}>
-            <div style={{ flex: 1, overflow: "hidden" }}>
-                <YakitResizeBox
-                    isVer={true}
-                    firstMinSize={150}
-                    freeze={!onlyShowFirstNode}
-                    firstRatio={onlyShowFirstNode ? "100%" : "60%"}
-                    secondRatio={onlyShowFirstNode ? "0%" : "40%"}
-                    secondMinSize={onlyShowFirstNode ? "0px" : 100}
+        <div ref={portAssetRef} className={styles["portAsset-content"]} style={{display: "flex", flexDirection: "row"}}>
+            <div style={{flex: 1, overflow: "hidden"}}>
+                <PortTableAndDetail
                     firstNode={
                         <div className={styles["portAsset"]}>
                             <div className={styles["portAsset-head"]}>
@@ -764,12 +757,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                         }
                                         if (val?.Id !== currentSelectItem?.Id) {
                                             setCurrentSelectItem(val)
-                                            setOnlyShowFirstNode&&setOnlyShowFirstNode(false)
                                         }
-                                        else{
-                                            setOnlyShowFirstNode&&setOnlyShowFirstNode(!onlyShowFirstNode)
-                                        }
-                                        
                                     }}
                                     enableDrag={true}
                                     onChange={onTableChange}
@@ -778,22 +766,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             </div>
                         </div>
                     }
-                    secondNode={
-                        <>
-                            {!onlyShowFirstNode && currentSelectItem && (
-                                <div className={classNames("yakit-descriptions", styles["port-description"])}>
-                                    <PortAssetDescription port={currentSelectItem} />
-                                </div>
-                            )}
-                        </>
-                    }
-                    secondNodeStyle={{
-                        padding: currentSelectItem ? "8px 16px 16px 12px" : 0,
-                        display: currentSelectItem ? "" : "none",
-                    }}
-                    lineStyle={{ display: currentSelectItem?.Id ? "" : "none" }}
-                    // {...ResizeBoxProps}
-                ></YakitResizeBox>
+                    currentSelectItem={currentSelectItem}
+                />
             </div>
             <PortAssetQuery
                 loading={advancedQueryLoading}
@@ -807,6 +781,44 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     )
 }
 
+interface PortTableAndDetailProps {
+    firstNode: ReactNode
+    currentSelectItem?: PortAsset
+}
+const PortTableAndDetail: React.FC<PortTableAndDetailProps> = React.memo((props) => {
+    const {firstNode, currentSelectItem} = props
+    const onlyShowFirstNode=useMemo(()=>{
+        return !(currentSelectItem&&currentSelectItem.Id)
+    },[currentSelectItem])
+    return (
+        <>
+            <YakitResizeBox
+                isVer={true}
+                firstMinSize={150}
+                freeze={!onlyShowFirstNode}
+                firstRatio={onlyShowFirstNode ? "100%" : "60%"}
+                secondRatio={onlyShowFirstNode ? "0%" : "40%"}
+                secondMinSize={onlyShowFirstNode ? "0px" : 100}
+                firstNode={firstNode}
+                    secondNode={
+                        <>
+                            {!onlyShowFirstNode && currentSelectItem && (
+                                <div className={classNames("yakit-descriptions", styles["port-description"])}>
+                                    <PortAssetDescription port={currentSelectItem} />
+                                </div>
+                            )}
+                        </>
+                    }
+                    secondNodeStyle={{
+                        padding: currentSelectItem ? "8px 16px 16px 12px" : 0,
+                    display: currentSelectItem ? "" : "none"
+                    }}
+                    lineStyle={{ display: currentSelectItem?.Id ? "" : "none" }}
+                    // {...ResizeBoxProps}
+                ></YakitResizeBox>
+        </>
+    )
+})
 interface PortAssetQueryProps {
     loading: boolean
     portsGroupList: PortsGroup[]
