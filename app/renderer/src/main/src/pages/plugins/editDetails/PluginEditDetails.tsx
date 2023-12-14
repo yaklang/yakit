@@ -1187,11 +1187,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                     />
                                 </div>
                                 <div className={styles["editor-body"]}>
-                                    <YakitEditor
-                                        type={typeParams.Type }
-                                        value={code}
-                                        setValue={setCode}
-                                    />
+                                    <YakitEditor type={typeParams.Type} value={code} setValue={setCode} />
                                 </div>
                             </div>
                         </div>

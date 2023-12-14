@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import ReactDOM from "react-dom"
 import {useDebounceFn, useGetState, useKeyPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
@@ -53,7 +53,7 @@ import {monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
 import {onInsertYakFuzzer, showDictsAndSelect} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
-import { GetPluginLanguage} from "@/pages/plugins/builtInData"
+import {GetPluginLanguage} from "@/pages/plugins/builtInData"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -111,7 +111,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         overLine = 3,
         editorId
     } = props
-    const language = GetPluginLanguage(type || "http")
+
+    /** 编辑器语言 */
+    const language = useMemo(() => {
+        return GetPluginLanguage(type || "http")
+    }, [type])
 
     const systemRef = useRef<YakitSystem>("Darwin")
     const wrapperRef = useRef<HTMLDivElement>(null)
@@ -437,7 +441,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     {key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符"}
                 ])
             }
-            if (language === "yak" ){
+            if (language === "yak") {
                 rightContextMenu.current = rightContextMenu.current.concat([
                     {type: "divider"},
                     {key: "yak-formatter", label: "Yak 代码格式化"}
@@ -708,7 +712,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     /** Yak语言 代码错误检查并显示提示标记 */
     const yakSyntaxChecking = useDebounceFn(
         useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
-            if (language==="yak"){
+            if (language === "yak") {
                 const allContent = model.getValue()
                 ipcRenderer
                     .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type})

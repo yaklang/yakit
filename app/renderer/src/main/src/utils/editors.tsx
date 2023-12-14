@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import HexEditor from "react-hex-editor"
@@ -51,7 +51,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {DataCompareModal} from "@/pages/compare/DataCompare"
 import emiter from "./eventBus/eventBus"
 import {v4 as uuidv4} from "uuid"
-import { GetPluginLanguage } from "@/pages/plugins/builtInData"
+import {GetPluginLanguage} from "@/pages/plugins/builtInData"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -119,7 +119,11 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     // const [editorHeight, setEditorHeight] = useState(0);
     const outterContainer = useRef(null)
     const [loading, setLoading] = useState(true)
-    const language = GetPluginLanguage(props.type || "")
+
+    /** 编辑器语言 */
+    const language = useMemo(() => {
+        return GetPluginLanguage(props.type || "http")
+    }, [props.type])
 
 
     useEffect(() => {
