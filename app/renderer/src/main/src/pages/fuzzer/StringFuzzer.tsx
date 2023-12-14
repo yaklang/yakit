@@ -17,6 +17,7 @@ import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {v4 as uuidv4} from "uuid"
 
 const {Text} = Typography
 const {ipcRenderer} = window.require("electron")
@@ -191,7 +192,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
                         {
                             Label: template,
                             Description: `标签${count + 1}`,
-                            DefaultDescription: `标签${count + 1}`
+                            DefaultDescription: `${uuidv4()}`
                         }
                     ]
                 })

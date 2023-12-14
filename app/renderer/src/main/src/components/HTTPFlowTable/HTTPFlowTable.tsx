@@ -843,77 +843,81 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 初次进入页面 获取默认高级筛选项
     useEffect(() => {
-        // 筛选模式
-        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode).then((e) => {
-            if (!!e) {
-                setFilterMode(e)
-            }
-        })
-        // HostName
-        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName).then((e) => {
-            if (!!e) {
-                let hostName = JSON.parse(e)
-                setHostName(hostName)
-            }
-        })
-        // URL路径
-        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath).then((e) => {
-            if (!!e) {
-                let pathArr = JSON.parse(e)
-                setUrlPath(pathArr)
-            }
-        })
-        // 文件后缀
-        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix).then((e) => {
-            if (!!e) {
-                let fileSuffix = JSON.parse(e)
-                setFileSuffix(fileSuffix)
-            }
-        })
-        // 响应类型
-        getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType).then((e) => {
-            if (!!e) {
-                const ContentType: string = e
-                setSearchContentType(ContentType)
-            }
-        })
+        if (pageType === "History") {
+            // 筛选模式
+            getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode).then((e) => {
+                if (!!e) {
+                    setFilterMode(e)
+                }
+            })
+            // HostName
+            getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName).then((e) => {
+                if (!!e) {
+                    let hostName = JSON.parse(e)
+                    setHostName(hostName)
+                }
+            })
+            // URL路径
+            getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath).then((e) => {
+                if (!!e) {
+                    let pathArr = JSON.parse(e)
+                    setUrlPath(pathArr)
+                }
+            })
+            // 文件后缀
+            getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix).then((e) => {
+                if (!!e) {
+                    let fileSuffix = JSON.parse(e)
+                    setFileSuffix(fileSuffix)
+                }
+            })
+            // 响应类型
+            getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType).then((e) => {
+                if (!!e) {
+                    const ContentType: string = e
+                    setSearchContentType(ContentType)
+                }
+            })
+        }
     }, [])
 
     useDebounceEffect(
         () => {
-            let newParams = {...params}
-            // 屏蔽
-            if (filterMode === "shield") {
-                newParams = {
-                    ...newParams,
-                    SearchContentType: "",
-                    ExcludeContentType: searchContentType.length === 0 ? [] : searchContentType.split(","),
-                    IncludeInUrl: [],
-                    ExcludeInUrl: hostName,
-                    IncludePath: [],
-                    ExcludePath: urlPath,
-                    IncludeSuffix: [],
-                    ExcludeSuffix: fileSuffix
+            if (pageType === "History") {
+                let newParams = {...params}
+                // 屏蔽
+                if (filterMode === "shield") {
+                    newParams = {
+                        ...newParams,
+                        SearchContentType: "",
+                        ExcludeContentType: searchContentType.length === 0 ? [] : searchContentType.split(","),
+                        IncludeInUrl: [],
+                        ExcludeInUrl: hostName,
+                        IncludePath: [],
+                        ExcludePath: urlPath,
+                        IncludeSuffix: [],
+                        ExcludeSuffix: fileSuffix
+                    }
                 }
-            }
-            // 展示
-            else {
-                newParams = {
-                    ...newParams,
-                    SearchContentType: searchContentType,
-                    ExcludeContentType: [],
-                    IncludeInUrl: hostName,
-                    ExcludeInUrl: [],
-                    IncludePath: urlPath,
-                    ExcludePath: [],
-                    IncludeSuffix: fileSuffix,
-                    ExcludeSuffix: []
+                // 展示
+                else {
+                    newParams = {
+                        ...newParams,
+                        SearchContentType: searchContentType,
+                        ExcludeContentType: [],
+                        IncludeInUrl: hostName,
+                        ExcludeInUrl: [],
+                        IncludePath: urlPath,
+                        ExcludePath: [],
+                        IncludeSuffix: fileSuffix,
+                        ExcludeSuffix: []
+                    }
                 }
+                setParams(newParams)
+                setTimeout(() => {
+                    updateData()
+                }, 10)
             }
-            setParams(newParams)
-            setTimeout(() => {
-                updateData()
-            }, 10)
         },
         [filterMode, hostName, urlPath, fileSuffix, searchContentType],
         {wait: 500}
@@ -1744,7 +1748,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 className={classNames(style["icon-hover"], {
                                     [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
                                 })}
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation()
                                     ipcRenderer
                                         .invoke("GetHTTPFlowById", {Id: rowData?.Id})
                                         .then((i: HTTPFlow) => {
@@ -1762,6 +1767,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
                                 })}
                                 onClick={(e) => {
+                                    e.stopPropagation()
                                     let m = showDrawer({
                                         width: "80%",
                                         content: onExpandHTTPFlow(rowData, () => m.destroy())

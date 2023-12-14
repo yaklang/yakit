@@ -165,6 +165,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                         <div className={styles["action-btn-group"]}>
                             <a
                                 onClick={(e) => {
+                                    e.stopPropagation()
                                     ipcRenderer
                                         .invoke("GetHTTPFlowById", {Id: rowData?.Id})
                                         .then((i: HTTPFlow) => {
@@ -185,6 +186,7 @@ export const MITMLog: React.FC<MITMLogProps> = React.memo((props) => {
                             <div className={styles["divider-style"]}></div>
                             <a
                                 onClick={(e) => {
+                                    e.stopPropagation()
                                     let m = showDrawer({
                                         width: "80%",
                                         content: onExpandHTTPFlow(rowData, () => m.destroy())
