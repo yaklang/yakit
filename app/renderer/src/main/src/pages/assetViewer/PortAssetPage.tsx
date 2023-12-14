@@ -621,8 +621,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     extra={
                                         <div className={styles["table-head-extra"]}>
                                             <ExportExcel
-                                                newUI={true}
-                                                newBtnProps={{
+                                                btnProps={{
                                                     type: "outline2",
                                                     icon: <ExportIcon className={styles["table-head-icon"]} />
                                                 }}
