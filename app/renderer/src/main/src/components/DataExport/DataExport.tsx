@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Button, ButtonProps, Modal, Space, Tag, Pagination, Checkbox, Row, Col} from "antd"
+import {Space, Pagination, Checkbox, Row, Col} from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import {export_json_to_excel, CellSetting} from "./toExcel"
 import {failed} from "../../utils/notification"
@@ -9,20 +9,16 @@ import {YakitButton, YakitButtonProp} from "@/components/yakitUI/YakitButton/Yak
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import styles from "./DataExport.module.scss"
-import classNames from "classnames"
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 interface ExportExcelProps {
-    btnProps?: ButtonProps
-    newBtnProps?: YakitButtonProp
+    btnProps?: YakitButtonProp
     getData: (query: PaginationSchema) => Promise<any>
     fileName?: string
     pageSize?: number
     showButton?: boolean
     text?: string
-    openModal?: boolean
-    newUI?: boolean
-    newUIType?: YakitButtonProp["type"],
-    textUILoadingFlag?: boolean
+    newUIType?: YakitButtonProp["type"]
 }
 
 interface resProps {
@@ -42,16 +38,12 @@ const maxCellNumber = 100000 // 最大单元格10w
 export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     const {
         btnProps,
-        newBtnProps,
         getData,
         fileName = "端口资产",
         pageSize = 100000,
         showButton = true,
         text,
-        openModal = false,
-        newUI = false,
-        newUIType = "outline2",
-        textUILoadingFlag = false
+        newUIType = "outline2"
     } = props
     const [loading, setLoading] = useState<boolean>(false)
     const [visible, setVisible] = useState<boolean>(false)
@@ -133,39 +125,32 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         <>
             {showButton ? (
                 <>
-                    {newUI ? (
-                        <YakitButton loading={loading} type={newUIType} onClick={() => toExcel()} {...newBtnProps}>
+                    <YakitButton loading={loading} type={newUIType} onClick={() => toExcel()} {...btnProps}>
                             {text || "导出Excel"}
                         </YakitButton>
-                    ) : (
-                        <Button onClick={() => toExcel()} loading={loading} {...btnProps}>
-                            {text || "导出Excel"}
-                        </Button>
-                    )}
                 </>
-            ) : newUI ? (
-                <YakitButton loading={loading} type={newUIType} onClick={() => toExcel()} {...newBtnProps}>
-                    {text || "导出Excel"}
-                </YakitButton>
             ) : (
                 <>
-                    <span onClick={() => toExcel()}>
-                        {text || "导出Excel"}
-                    </span>
-                    {textUILoadingFlag && loading && <LoadingOutlined spin={loading} style={{ marginLeft: 5 }} />}
+                    <span onClick={() => toExcel()}>{text || "导出Excel"}</span>
+                    {loading && <LoadingOutlined spin={loading} style={{marginLeft: 5}} />}
                 </>
             )}
-            <Modal title='数据导出' visible={visible} onCancel={() => setVisible(false)} footer={null}>
-                {/* <p>
-                    共&nbsp;&nbsp;<Tag>{exportDataBatch.current?.length || 0}</Tag>条记录
-                </p> */}
+            <YakitModal
+                title='数据导出'
+                closable={true}
+                visible={visible}
+                onCancel={() => setVisible(false)}
+                footer={null}
+            >
+                <div style={{padding: 24}}>
                 <Space wrap>
                     {Array.from({length: frequency}).map((_, index) => (
-                        <Button onClick={() => inBatchExport(index)}>
-                            第{pagination.Pagination.Page}页{exportNumber.current && exportNumber.current * index + 1}-
+                            <YakitButton type='outline2' onClick={() => inBatchExport(index)}>
+                                第{pagination.Pagination.Page}页
+                                {exportNumber.current && exportNumber.current * index + 1}-
                             {(index === frequency - 1 && exportDataBatch.current?.length) ||
                                 (exportNumber.current && exportNumber.current * (index + 1))}
-                        </Button>
+                            </YakitButton>
                     ))}
                 </Space>
                 <div className={styles["pagination"]}>
@@ -179,7 +164,8 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                         onChange={onChange}
                     />
                 </div>
-            </Modal>
+                </div>
+            </YakitModal>
         </>
     )
 }
@@ -234,10 +220,9 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
             </Checkbox.Group>
             <div className={styles["button-box"]}>
                 <ExportExcel
-                    newBtnProps={{
-                        className:"button"
+                    btnProps={{
+                        className: "button"
                     }}
-                    newUI={true}
                     newUIType='primary'
                     getData={getData}
                     fileName={fileName}
