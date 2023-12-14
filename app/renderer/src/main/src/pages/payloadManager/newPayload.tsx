@@ -1615,6 +1615,14 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                 failed(`删除失败：${e}`)
             })
     })
+
+     // 右键展开菜单
+     const handleRightClick = useMemoizedFn((e)=>{
+        e.preventDefault();
+        if(!onlyInsert){
+            setMenuOpen(true) 
+        }
+    })
     return (
         <>
             {isEditInput ? (
@@ -1655,6 +1663,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                             setNotExpandArr([...notExpandArr, folder.id])
                         }
                     }}
+                    onContextMenu={handleRightClick}
                 >
                     <div className={styles["folder-header"]}>
                         <div className={styles["is-fold-icon"]}>
@@ -2282,6 +2291,15 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                   }
               ]
     }, [])
+
+    // 右键展开菜单
+    const handleRightClick = useMemoizedFn((e)=>{
+        e.preventDefault();
+        if(!onlyInsert){
+            setSelectItem(file.id)
+            setMenuOpen(true)  
+        }
+    })
     return (
         <>
             {isEditInput ? (
@@ -2316,6 +2334,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     onClick={() => {
                         setSelectItem(file.id)
                     }}
+                    onContextMenu={handleRightClick}
                 >
                     <div className={styles["file-header"]}>
                         <div className={styles["drag-icon"]}>
