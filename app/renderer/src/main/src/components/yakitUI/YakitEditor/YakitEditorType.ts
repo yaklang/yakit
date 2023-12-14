@@ -1,6 +1,6 @@
-import {ReactElement} from "react"
+import { ReactElement } from "react"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
-import {EditorMenuItemType} from "./EditorMenu"
+import { EditorMenuItemType } from "./EditorMenu"
 import { EditorDetailInfoProps } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 
 /** monaco-editor 相关接口 */
@@ -84,7 +84,7 @@ export interface OtherMenuListProps {
         menu: EditorMenuItemType[]
         onRun: (editor: YakitIMonacoEditor, key: string) => any
         /** Order菜单权重排序 0为第一个 1为第二个... 负数统一放最后 */
-        order?:number
+        order?: number
     }
 }
 
@@ -141,7 +141,7 @@ export interface KeyboardToFuncProps {
 
 /** 操作记录存储 */
 export interface OperationRecord {
-    [key: string]: number|boolean
+    [key: string]: number | boolean
 }
 
 export interface OperationRecordRes {

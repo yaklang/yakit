@@ -448,7 +448,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 <Tabs.TabPane tab={"源码"} key={"code"} disabled={isDisabledLocal}>
                     <div style={{height: "100%"}}>
                         <YakEditor
-                            type={script?.Type === "nuclei" ? "yaml" : script?.Type}
+                            type={script?.Type}
                             value={script?.Content}
                             readOnly={true}
                         />

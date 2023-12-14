@@ -432,7 +432,7 @@ export const YakitPluginInfoOnline: React.FC<YakitPluginInfoOnlineProps> = (prop
                     </Suspense>
                     <Tabs className='no-theme-tabs' activeKey={tabKey} onChange={(e) => setTabKey(e)}>
                         <TabPane tab='源码' key='1'>
-                            <YakEditor type={plugin.type === "nuclei" ? "yaml" : plugin.type} value={plugin.content} readOnly={true} />
+                            <YakEditor type={plugin.type} value={plugin.content} readOnly={true} />
                         </TabPane>
                         <TabPane tab='评论' key='2'>
                             <PluginComment isLogin={userInfo.isLogin} plugin={plugin} />
