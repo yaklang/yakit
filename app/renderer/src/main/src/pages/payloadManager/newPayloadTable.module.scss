@@ -1,0 +1,194 @@
+.new-payload-table {
+    :global {
+        // table相关
+        .ant-table-thead > tr > th,
+        .ant-table-tbody > tr > td {
+            padding: 8px 16px;
+        }
+        .ant-table-thead > tr > th {
+            color: #31343f;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 16px;
+            background: #f8f8f8;
+        }
+        .ant-table-thead > tr > th,
+        .ant-table-tbody > tr > td {
+            border-bottom: 1px solid #eaecf3;
+        }
+        .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > thead > tr > th,
+        .ant-table.ant-table-bordered > .ant-table-container > .ant-table-content > table > tbody > tr > td {
+            border-right: 1px solid #eaecf3;
+        }
+        .ant-table-tbody > tr.ant-table-row:hover > td,
+        .ant-table-tbody > tr > td.ant-table-cell-row-hover {
+            background: var(--yakit-card-background-color);
+        }
+        .ant-table-filter-trigger:hover {
+            color: transparent;
+            background: transparent;
+        }
+        // 分页相关
+        .ant-pagination-item-active {
+            border-color: #f28b44;
+        }
+        .ant-pagination-item-active a {
+            color: #f28b44;
+        }
+        .ant-pagination-item:hover a {
+            color: #f28b44;
+        }
+        .ant-pagination-prev:hover .ant-pagination-item-link,
+        .ant-pagination-next:hover .ant-pagination-item-link {
+            color: #f28b44;
+            border-color: #f28b44;
+        }
+        .ant-pagination-jump-prev .ant-pagination-item-container .ant-pagination-item-link-icon,
+        .ant-pagination-jump-next .ant-pagination-item-container .ant-pagination-item-link-icon {
+            color: #f28b44;
+        }
+        .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+            border-color: #f28b44;
+        }
+        .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            border-color: #f28b44;
+            box-shadow: 0 0 0 2px rgb(242 139 68 / 20%);
+        }
+        .ant-pagination-options-quick-jumper input:hover {
+            border-color: #f28b44;
+        }
+        .ant-pagination-options-quick-jumper input:focus,
+        .ant-pagination-options-quick-jumper input-focused {
+            border-color: #f28b44;
+            box-shadow: 0 0 0 2px rgb(242 139 68 / 20%);
+        }
+        .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+            background-color: rgba(242, 139, 68, 0.1);
+        }
+    }
+    .order {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .basic {
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 400;
+    }
+    .table-operation {
+        display: flex;
+        justify-content: center;
+        .delete {
+            color: #f6544a;
+        }
+        .edit {
+            cursor: pointer;
+            color: #85899e;
+        }
+        svg {
+            height: 16px;
+            width: 16px;
+        }
+    }
+    .show-total {
+        color: #85899e;
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 16px;
+    }
+    .selector-icon {
+        color: #b4bbca;
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+        &:hover {
+            color: var(--yakit-primary-5);
+        }
+    }
+    .active-selector-icon {
+        color: var(--yakit-primary-5);
+    }
+    .selected-row {
+        border: 2px solid #1890ff; /* 选择你希望的边框样式 */
+    }
+}
+.filter-box {
+    padding: 6px 4px;
+    .filter-item {
+        padding: 6px 8px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        .icon {
+            color: #85899e;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+        .content {
+            font-size: 12px;
+            color: #31343f;
+            font-weight: 400;
+            line-height: 16px;
+            user-select: none;
+        }
+    }
+    .hover-filter-item {
+        &:hover {
+            border-radius: 4px;
+            background: #f0f1f3;
+        }
+    }
+    .active-filter-item {
+        .icon {
+            color: #f28b44;
+        }
+        .content {
+            color: #f28b44;
+        }
+        border-radius: 4px;
+        background: rgba(242, 139, 68, 0.06);
+    }
+}
+.payload-edit-form {
+    padding: 8px 24px 8px 24px;
+    .name {
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        margin-bottom: 6px;
+        .must {
+            color: #f4736b;
+        }
+    }
+    .opt-btn {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    :global {
+        .ant-form-item-label {
+            padding-bottom: 0px;
+        }
+    }
+}
+.td-active-border {
+    border: 1px solid var(--yakit-primary-5) !important;
+    padding: 7px 15px !important;
+}

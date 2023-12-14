@@ -1,5 +1,5 @@
 const {ipcMain, dialog} = require("electron")
-
+const path = require("path")
 module.exports = (win, getClient) => {
     // asyncQueryYakScript wrapper
     const asyncQueryYakScript = (params) => {
@@ -360,7 +360,11 @@ module.exports = (win, getClient) => {
                 }
             })
         })
-       
+    })
+
+    ipcMain.handle("pathJoin", async (e, params) => {
+        const {dir,file} = params
+        return path.join(dir, file)
     })
 
     // asyncQueryYakScriptExecResult wrapper

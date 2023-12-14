@@ -234,14 +234,42 @@ service Yak {
   rpc PacketPrettifyHelper(PacketPrettifyHelperRequest) returns (PacketPrettifyHelperResponse);
 
   // Payload 相关接口
-  rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse);
+  // database payload group
+  rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse); // query by [keyword/group/folder]
+  rpc QueryPayloadFromFile(QueryPayloadFromFileRequest) returns (QueryPayloadFromFileResponse);  
+  // delete by [id/group/folder]
+  rpc DeletePayloadByFolder(NameRequest) returns (Empty);
   rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
-  rpc DeletePayload(DeletePayloadRequest) returns (Empty);
+  rpc DeletePayload(DeletePayloadRequest) returns (Empty); 
+  // save payload to database
   rpc SavePayload(SavePayloadRequest) returns (Empty);
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
+  rpc SavePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress); // 两次stream
+  // update group/folder/payload
+  rpc RenamePayloadFolder(RenameRequest) returns (Empty);
+  rpc RenamePayloadGroup(RenameRequest) returns (Empty); // rename 
+  rpc UpdatePayload(UpdatePayloadRequest) returns (Empty); // edit
+  rpc UpdatePayloadToFile(UpdatePayloadToFileRequest) returns (Empty);
+  rpc BackUpOrCopyPayloads(BackUpOrCopyPayloadsRequest) returns (Empty); 
+  // Folder and Group
+  // get and update all group with order
   rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
-  rpc UpdatePayload(UpdatePayloadRequest) returns (Empty);
-  rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse);
+  rpc UpdateAllPayloadGroup(UpdateAllPayloadGroupRequest) returns (Empty);
+  // get payload 
+  rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse); // !已弃用 get payload by [group/folder]
+  rpc GetAllPayloadFromFile(GetAllPayloadRequest) returns (stream GetAllPayloadFromFileResponse); // !已弃用 get payload by [group/folder] from file
+  // export payload
+  rpc ExportAllPayload(GetAllPayloadRequest) returns (stream GetAllPayloadResponse); // get payload by [group/folder]
+  rpc ExportAllPayloadFromFile(GetAllPayloadRequest) returns (stream GetAllPayloadResponse); // get payload by [group/folder] from file
+  // create folder
+  rpc CreatePayloadFolder(NameRequest) returns (Empty);
+  // 去重
+  rpc RemoveDuplicatePayloads(NameRequest) returns (stream SavePayloadProgress);
+  // 转换为数据库保存
+  rpc CoverPayloadGroupToDatabase(NameRequest) returns (stream SavePayloadProgress); // !已弃用
+  rpc ConvertPayloadGroupToDatabase(NameRequest) returns (stream SavePayloadProgress);
+  // 迁移旧的payload
+  rpc MigratePayloads(Empty) returns (stream SavePayloadProgress);
 
   // 自动生成补全
   rpc GetYakitCompletionRaw(Empty) returns (YakitCompletionRawResponse);
@@ -569,6 +597,8 @@ service Yak {
 
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
+
+  rpc YakVersionAtLeast(YakVersionAtLeastRequest) returns (GeneralResponse);
 }
 
 message GetSpaceEngineStatusRequest {
@@ -1823,15 +1853,19 @@ message StaticAnalyzeErrorResult {
 message StaticAnalyzeErrorResponse {
   repeated StaticAnalyzeErrorResult Result = 1;
 }
-
 message SavePayloadProgress {
-  double Progress = 1;
-  int64 HandledBytes = 2;
-  string HandledBytesVerbose = 3;
-  int64 TotalBytes = 4;
-  string TotalBytesVerbose = 5;
-  double CostDuration = 6;
-  string CostDurationVerbose = 7;
+  double Progress = 1; // 进度
+
+  int64 HandledBytes = 2;          // old
+  string HandledBytesVerbose = 3;          // old
+  int64 TotalBytes = 4;          // old
+  string TotalBytesVerbose = 5;          // old
+  double CostDuration = 6;          // old
+
+  string CostDurationVerbose = 7; // 耗时
+  string Speed = 8;// 速度
+  string RestDurationVerbose  =9;// 剩余时间
+  string Message = 10;
 }
 
 message DeletePluginByUserIDRequest {
@@ -3188,8 +3222,30 @@ message GetYakVMBuildInMethodCompletionResponse {
   repeated MethodSuggestion Suggestions = 1;
 }
 
+
+
+message RenameRequest {
+  string Name = 1;
+  string NewName = 2;
+}
+
+message NameRequest {
+  string Name = 1;
+}
+
+message PayloadGroupNode {
+  string Type =1; // "File" / "DataBase" / "Folder"
+  string Name  = 2;
+  int64 Number = 3;
+  repeated PayloadGroupNode Nodes = 4; // for Type "Folder"
+}
+
 message GetAllPayloadGroupResponse {
   repeated string Groups = 1;
+  repeated PayloadGroupNode Nodes = 2;
+}
+message UpdateAllPayloadGroupRequest{
+  repeated PayloadGroupNode Nodes = 1;
 }
 
 message SavePayloadRequest {
@@ -3197,11 +3253,32 @@ message SavePayloadRequest {
   string Group = 2;
   string Content = 3;
   repeated string FileName = 4;
+  string Folder = 5;
+  bool IsNew = 6;
 }
 
-message UpdatePayloadRequest{
-  string Group = 1;
-  string OldGroup = 2;
+
+message UpdatePayloadRequest {
+  // old 
+  string Group = 1;   // old
+  string OldGroup = 2; // old
+
+  // new, please use this 
+  int64 Id = 3;
+  Payload Data = 4;
+}
+
+message UpdatePayloadToFileRequest {
+  string GroupName = 1;
+  string Content = 2;
+}
+
+// copy payload(get by id) to group
+message BackUpOrCopyPayloadsRequest { 
+  repeated int64 Ids = 1;
+  string Group = 2;
+  string Folder = 3;
+  bool Copy = 4;
 }
 
 message DeletePayloadByGroupRequest {
@@ -3213,10 +3290,20 @@ message DeletePayloadRequest {
   repeated int64 Ids = 2;
 }
 
+message QueryPayloadFromFileRequest {
+  string Group = 1;
+  string Folder = 2; 
+}
+message QueryPayloadFromFileResponse {
+  bytes Data = 1;
+  bool IsBigFile = 2;
+}
+
 message QueryPayloadRequest {
   Paging Pagination = 1;
   string Group = 2;
   string Keyword = 3;
+  string Folder = 4; 
 }
 
 message QueryPayloadResponse {
@@ -3230,16 +3317,26 @@ message Payload {
   string Group = 2;
   bytes ContentBytes = 3;
   string Content = 4;
+  string Folder = 5;
+  int64 HitCount = 6;
+  bool IsFile = 7;
 }
 
 message GetAllPayloadRequest {
   string Group = 1;
+  string Folder = 2;
+  string SavePath = 3;
 }
 
 message GetAllPayloadResponse {
   repeated Payload Data = 1;
+  double Progress = 2;
 }
 
+message GetAllPayloadFromFileResponse {
+    double Progress = 1;
+    bytes Data = 2;
+  }
 
 message QueryYakScriptRequest {
   Paging Pagination = 1;
@@ -4383,4 +4480,9 @@ message GenerateURLRequest{
 }
 message GenerateURLResponse{
   string URL = 1;
+}
+
+message YakVersionAtLeastRequest{
+ string AtLeastVersion = 1;
+ string YakVersion = 2;
 }

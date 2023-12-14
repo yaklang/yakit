@@ -6,7 +6,7 @@ import {monacoEditorWrite} from "./fuzzerTemplates"
 import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {failed, info, yakitFailed, yakitNotify} from "../../utils/notification"
+import {failed, info, yakitFailed, yakitNotify,warn} from "../../utils/notification"
 import {
     useControllableValue,
     useCreation,
@@ -20,7 +20,6 @@ import {
 } from "ahooks"
 import {getRemoteValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
-import {PayloadManagerPage} from "../payloadManager/PayloadManager"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
 import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
@@ -101,6 +100,7 @@ import {CopyableField} from "@/utils/inputUtil"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import { PayloadGroupNodeProps, ReadOnlyNewPayload } from "../payloadManager/newPayload"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -271,22 +271,39 @@ export interface FuzzerRequestProps {
     FuzzerTabIndex?: string
 }
 
-export const showDictsAndSelect = (res: (i: string) => any) => {
-    const m = showModal({
-        title: "选择想要插入的字典",
-        width: 1200,
-        content: (
-            <div style={{width: 1100, height: 500, overflow: "hidden"}}>
-                <PayloadManagerPage
-                    readOnly={true}
-                    selectorHandle={(e) => {
-                        res(e)
-                        m.destroy()
-                    }}
-                />
-            </div>
-        )
-    })
+export const showDictsAndSelect = (fun: (i: string) => any) => {
+    ipcRenderer
+            .invoke("GetAllPayloadGroup")
+            .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
+                if(res.Nodes.length===0){
+                    warn("暂无字典，请先添加后再使用")
+                }
+                else{
+                    const y = showYakitModal({
+                        title: null,
+                        footer: null,
+                        width: 1200,
+                        type: "white",
+                        closable: false,
+                        content: (
+                            <ReadOnlyNewPayload
+                                selectorHandle={(e) => {
+                                    fun(e)
+                                    y.destroy()
+                                }}
+                                onClose={() => {
+                                    y.destroy()
+                                }}
+                                Nodes={res.Nodes}
+                            />
+                        )
+                    })
+                }
+            })
+            .catch((e: any) => {
+                failed(`获取字典列表失败：${e}`)
+            })
+            .finally()
 }
 
 interface FuzzResponseFilter {
@@ -1477,6 +1494,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     setDefaultResponseSearch(affixSearch)
                 }}
                 successFuzzer={successFuzzer}
+                failedFuzzer={failedFuzzer}
                 secondNodeSize={secondNodeSize}
                 query={query}
                 setQuery={(q) => setQuery({...q})}
@@ -1486,11 +1504,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                 showSuccess={showSuccess}
                 retrySubmit={() => {
-                    retryRef.current = true
-                    setRedirectedResponse(undefined)
-                    sendFuzzerSettingInfo()
-                    onValidateHTTPFuzzer()
-                    getNewCurrentPage()
+                    if(failedFuzzer.length > 0){
+                        retryRef.current = true
+                        setRedirectedResponse(undefined)
+                        sendFuzzerSettingInfo()
+                        onValidateHTTPFuzzer()
+                        getNewCurrentPage()
+                    }
                 }}
                 isShowMatch = {!loading}
                 matchSubmit={()=>{
@@ -1892,6 +1912,7 @@ interface SecondNodeExtraProps {
     onSearchValueChange: (s: string) => void
     onSearch: () => void
     successFuzzer: FuzzerResponse[]
+    failedFuzzer: FuzzerResponse[]
     secondNodeSize?: Size
     query?: HTTPFuzzerPageTableQuery
     setQuery: (h: HTTPFuzzerPageTableQuery) => void
@@ -1920,6 +1941,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         onSearchValueChange,
         onSearch,
         successFuzzer,
+        failedFuzzer,
         secondNodeSize,
         query,
         setQuery,
@@ -2391,6 +2413,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 onClick={() => {
                     retrySubmit && retrySubmit()
                 }}
+                disabled={failedFuzzer.length===0}
             >
                 一键重试
             </YakitButton>

@@ -2,7 +2,6 @@ import React, {ReactNode, Suspense} from "react"
 import {YakExecutor} from "../pages/invoker/YakExecutor"
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
 import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors"
-import {PayloadManagerPage} from "../pages/payloadManager/PayloadManager"
 import {PortScanPage} from "../pages/portscan/PortScanPage"
 import {PluginOperator} from "../pages/yakitStore/PluginOperator"
 import {failed} from "../utils/notification"
@@ -126,6 +125,7 @@ import {PluginUser} from "@/pages/plugins/user/PluginUser"
 import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
+import { NewPayload } from "@/pages/payloadManager/newPayload"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -355,7 +355,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DB_HTTPHistory,
     YakitRoute.Plugin_Audit,
     YakitRoute.AddYakitScript,
-    YakitRoute.ModifyYakitScript
+    YakitRoute.ModifyYakitScript,
+    YakitRoute.PayloadManager
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -537,7 +538,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.YakScript:
             return <YakExecutor />
         case YakitRoute.PayloadManager:
-            return <PayloadManagerPage />
+            return <NewPayload />
         case YakitRoute.AccountAdminPage:
             return <AccountAdminPage />
         case YakitRoute.RoleAdminPage:
