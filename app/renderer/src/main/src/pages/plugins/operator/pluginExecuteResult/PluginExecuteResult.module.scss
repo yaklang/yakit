@@ -21,6 +21,11 @@
 
         border-left: 1px solid var(--yakit-border-color);
         border-right: 1px solid var(--yakit-border-color);
+
+        .table-head-extra {
+            @extend %display-flex-center;
+            gap: 8px;
+        }
     }
 
     .table-container {
@@ -56,5 +61,30 @@
         height: 100%;
         padding: 12px;
         border-left: 1px solid var(--yakit-border-color);
+    }
+}
+
+.port-table-detail{
+    border: 1px solid var(--yakit-border-color);
+    overflow-y: overlay;
+    overflow-x: hidden;
+    height: 100%;
+}
+
+.table-host {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+}
+
+.htmlTitle-extra {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 20px;
+    word-break: keep-all;
+    .valid-data {
+        margin-bottom: 1px;
     }
 }

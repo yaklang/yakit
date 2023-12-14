@@ -649,8 +649,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                     extra={
                                         <div className={styles["table-head-extra"]}>
                                             <ExportExcel
-                                                newUI={true}
-                                                newBtnProps={{
+                                                btnProps={{
                                                     type: "outline2",
                                                     icon: <ExportIcon className={styles["table-head-icon"]} />
                                                 }}
@@ -860,10 +859,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
         }
     })
     return (
-        <div
-            className={classNames(styles["portAsset-query"])}
-            style={{ display: visible ? "" : "none" }}
-        >
+        <div className={classNames(styles["portAsset-query"])} style={{display: visible ? "" : "none"}}>
             <div className={styles["query-head"]}>
                 <span>高级筛选</span>
                 <YakitSwitch checked={visible} onChange={setVisible} />
