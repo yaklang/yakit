@@ -10,6 +10,7 @@ import styles from "./YakitInput.module.scss"
 import classNames from "classnames"
 import {YakitButton} from "../YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
+import {ResizerIcon} from "@/assets/newIcon"
 
 /**
  * 更新说明
@@ -103,20 +104,21 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
 }
 
 const InternalTextArea: React.FC<InternalTextAreaProps> = (props) => {
-    const {wrapperClassName, style,textAreaStyle, ...restProps} = props
+    const {wrapperClassName, wrapperStyle, isShowResize = true, ...restProps} = props
     return (
         <div
             className={classNames(
                 styles["yakit-textArea-wrapper"],
                 {
-                    [styles["yakit-textArea-disabled"]]: !!props.disabled
+                    [styles["yakit-textArea-disabled"]]: !!props.disabled,
+                    [styles["yakit-textArea-resize-hide"]]: !isShowResize
                 },
                 wrapperClassName
             )}
-            style={style}
+            style={{...(wrapperStyle || {})}}
         >
-            <Input.TextArea {...restProps} spellCheck={false}
-            />
+            <Input.TextArea {...restProps} spellCheck={false} />
+            {isShowResize && <ResizerIcon className={styles["resizer-icon"]} />}
         </div>
     )
 }
@@ -146,12 +148,7 @@ const InternalInputPassword: React.FC<InternalInputPasswordProps> = (props) => {
             )}
             style={style}
         >
-            <Input.Password
-                {...restProps}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                spellCheck={false}
-            />
+            <Input.Password {...restProps} onFocus={onFocus} onBlur={onBlur} spellCheck={false} />
         </div>
     )
 }

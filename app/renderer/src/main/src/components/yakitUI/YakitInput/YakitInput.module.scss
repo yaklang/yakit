@@ -420,6 +420,7 @@
 // ========================== textArea ==========================
 .yakit-textArea-wrapper {
     width: 100%;
+    position: relative;
 
     :global {
         .ant-input {
@@ -441,6 +442,18 @@
             color: var(--yakit-helper-text-color);
         }
     }
+    .resizer-icon {
+        position: absolute;
+        bottom: 5px;
+        right: 2px;
+        color: var(--yakit-body-text-color);
+        z-index: 1;
+        pointer-events: none;
+        background-color: #fff;
+    }
+}
+.yakit-textArea-resize-hide{
+    resize: none;
 }
 
 // ========================== textArea disabled ==========================

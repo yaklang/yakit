@@ -74,8 +74,8 @@ const EditableCell: React.FC<EditableCellProps> = ({
             {editable && editing && (
                 <div style={{position: "absolute", top: 0, left: 0, height: "100%", width: "100%", overflow: "hidden"}}>
                     <YakitInput.TextArea
-                        style={{height: "100%"}}
-                        textAreaStyle={{
+                        wrapperStyle={{height: "100%"}}
+                        style={{
                             height: "100%",
                             resize: "none",
                             fontSize: "12px",
