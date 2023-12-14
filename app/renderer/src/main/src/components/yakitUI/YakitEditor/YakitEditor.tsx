@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import ReactDOM from "react-dom"
 import {useDebounceFn, useGetState, useKeyPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
@@ -115,6 +115,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const systemRef = useRef<YakitSystem>("Darwin")
     const wrapperRef = useRef<HTMLDivElement>(null)
     const isInitRef = useRef<boolean>(false)
+
+    const language = useMemo(() => {
+        const keywords = Object.keys(pluginTypeToName)
+        return keywords.includes(type || "") ? "yak" : type
+    }, [type])
 
     const [editor, setEditor] = useState<YakitIMonacoEditor>()
     const preWidthRef = useRef<number>(0)
@@ -1150,7 +1155,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     theme={theme || "kurior"}
                     value={isBytes ? new Buffer((valueBytes || []) as Uint8Array).toString() : value}
                     onChange={setValue}
-                    language={type || "http"}
+                    language={language || "http"}
                     editorDidMount={(editor: YakitIMonacoEditor, monaco: any) => {
                         setEditor(editor)
                         /** 编辑器关光标，设置坐标0的初始位置 */

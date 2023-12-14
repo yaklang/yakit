@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import HexEditor from "react-hex-editor"
@@ -119,6 +119,11 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     // const [editorHeight, setEditorHeight] = useState(0);
     const outterContainer = useRef(null)
     const [loading, setLoading] = useState(true)
+
+    const language = useMemo(() => {
+        const keywords = Object.keys(pluginTypeToName)
+        return keywords.includes(props.type || "") ? "yak" : props.type
+    }, [props.type])
 
     useEffect(() => {
         if (props.triggerId !== triggerId) {
@@ -379,7 +384,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                         : props.value
                                 }
                                 onChange={props.setValue}
-                                language={props.type || "http"}
+                                language={language || "http"}
                                 height={100}
                                 editorDidMount={(editor: IMonacoEditor, monaco: any) => {
                                     setEditor(editor)
