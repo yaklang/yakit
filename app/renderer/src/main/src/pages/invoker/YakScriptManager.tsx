@@ -118,7 +118,7 @@ export const YakScriptManagerPage: React.FC<YakScriptManagerPageProp> = (props) 
                     expandedRowRender: (i: YakScript) => {
                         return <div style={{height: 400}}>
                             <YakEditor
-                                type={i.Type === "nuclei" ? "yaml" : i.Type} readOnly={true} value={i.Content}
+                                type={i.Type} readOnly={true} value={i.Content}
                             />
                         </div>
                     },

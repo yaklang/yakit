@@ -720,7 +720,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                         data={settingParams}
                                                     />
                                                     <PluginEditorDiff
-                                                        language={plugin.type === "nuclei" ? "yaml" : plugin.type}
+                                                        language={ plugin.type}
                                                         isDiff={isApply}
                                                         newCode={content}
                                                         oldCode={oldContent}
@@ -731,7 +731,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                         </div>
                                     ) : (
                                         <div className={styles["details-editor-wrapper"]}>
-                                            <YakitEditor type={plugin.type === "nuclei" ? "yaml" : plugin.type} value={content} readOnly={true} />
+                                            <YakitEditor type={plugin.type} value={content} readOnly={true} />
                                         </div>
                                     )}
                                 </div>

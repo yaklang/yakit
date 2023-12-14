@@ -1483,7 +1483,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
                     <YakitPopover
                         placement='topRight'
                         overlayClassName={"terminal-popover"}
-                        content={<YakEditor type={pluginType === "nuclei" ? "yaml" : pluginType} value={content} readOnly={true} />}
+                        content={<YakEditor type={pluginType} value={content} readOnly={true} />}
                     >
                         <OutlineTerminalIcon className={"plugin-details-item-show-icon-style"} />
                     </YakitPopover>

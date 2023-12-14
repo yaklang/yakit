@@ -600,7 +600,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = (props) => {
                                 </div>
                                 <div className={styles["editor-body"]}>
                                     <PluginDiffEditorModal
-                                        language={typeParams.Type === "nuclei" ? "yaml" : typeParams.Type}
+                                        language={typeParams.Type}
                                         oldCode={oldCode}
                                         newCode={newCode}
                                         visible={codeModal}

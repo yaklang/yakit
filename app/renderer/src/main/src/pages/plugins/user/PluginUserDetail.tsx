@@ -333,7 +333,7 @@ export const PluginUserDetail: React.FC<PluginUserDetailProps> = React.memo(
                                         type={plugin.type}
                                     />
                                     <div className={styles["details-editor-wrapper"]}>
-                                        <YakitEditor type={plugin.type === "nuclei" ? "yaml" : plugin.type} value={plugin.content} readOnly={true} />
+                                        <YakitEditor type={plugin.type} value={plugin.content} readOnly={true} />
                                     </div>
                                 </div>
                             </TabPane>

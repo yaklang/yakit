@@ -492,7 +492,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                                                 <>
                                                     <YakScriptLargeEditor
                                                         script={params}
-                                                        language={params.Type === "nuclei" ? "yaml" : params.Type}
+                                                        language={ params.Type}
                                                         onExit={(data) => {
                                                             m.destroy()
                                                             setFullscreen(false)
@@ -547,7 +547,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
                     {!fullscreen && (
                         <div style={{height: 400}}>
                             <YakEditor
-                                type={params.Type === "nuclei" ? "yaml" : params.Type}
+                                type={params.Type}
                                 setValue={(Content) => setParams({...getParams(), Content})}
                                 value={params.Content}
                             />
