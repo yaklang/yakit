@@ -54,6 +54,14 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
     const [viewer, setViewer] = useState("packet")
     const [highlightRanges, setHighlightRanges] = useState<{start: number; end: number}[]>([{start: 0, end: 6}])
     const [keyToScope, setKeyToScope] = useState<{[key: string]: any}>({})
+
+    const [treeHeight, setTreeHeight] = useState<number>(0)
+    const TreeBoxRef = useRef<any>()
+
+    useEffect(() => {
+        setTreeHeight(TreeBoxRef.current.offsetHeight)
+    }, [])
+
     const handleSetValue = React.useCallback(
         (offset, value) => {
             showData[offset] = value
@@ -117,6 +125,11 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
     })
     return (
         <YakitResizeBox
+            onMouseUp={()=>{
+                setTimeout(()=>{
+                    setTreeHeight(TreeBoxRef.current.offsetHeight)
+                },200)
+            }}
             isVer={true}
             firstNode={
                 <AutoCard
@@ -161,8 +174,12 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                     <YakitResizeBox
                         isVer={true}
                         firstRatio='30%'
+                        onMouseUp={(firstSize)=>{
+                            setTreeHeight(firstSize)
+                        }}
                         firstNode={
-                            <Tree
+                            <div ref={TreeBoxRef} style={{height: "100%"}}>
+                               <Tree
                                 // loadData={(node) => {
                                 //     console.log("load", node)
                                 //     return new Promise((resolve, reject) => {
@@ -173,7 +190,8 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                                 //         }
                                 //     })
                                 // }}
-                                virtual
+                                height={treeHeight}
+                                virtual={true}
                                 onSelect={(selectedKeys, info) => {
                                     console.log("select keys", selectedKeys)
                                     console.log("info", info)
@@ -189,7 +207,8 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                                 titleRender={(item) => (
                                     <MemoTooltip title={item.title as any}>{item.title as any}</MemoTooltip>
                                 )}
-                            />
+                            /> 
+                            </div>
                         }
                         secondNode={
                             <HexEditor
