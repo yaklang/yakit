@@ -59,7 +59,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
             <YakitInput.Search
                 {...inputSearchModuleTypeProps}
                 size={inputSearchModuleTypeProps.size || "large"}
-                style={{
+                wrapperStyle={{
                     ...inputSearchModuleTypeProps.wrapperStyle,
                     width: `calc(100% - ${beforeOptionWidth}px`,
                     position: "relative"

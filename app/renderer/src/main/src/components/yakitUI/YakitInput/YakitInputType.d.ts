@@ -12,6 +12,7 @@ import {YakitSelectProps} from "../YakitSelect/YakitSelectType"
  * @augments InputProps 继承antd的Input默认属性
  * @param {YakitSizeType} size  默认middle
  * @param {string} wrapperClassName  
+ * @param {CSSProperties} wrapperStyle
  */
 export interface YakitInputProps extends Omit<InputProps, "size"> {
     size?: YakitSizeType
@@ -23,10 +24,12 @@ export interface YakitInputProps extends Omit<InputProps, "size"> {
  * @augments InputProps 继承antd的Input SearchProps 默认属性
  * @param {YakitSizeType} size  默认middle
  * @param {string} wrapperClassName  
+ * @param {CSSProperties} wrapperStyle  
  */
 export interface YakitInputSearchProps extends Omit<SearchProps,"size">{
     size?: YakitSizeType
     wrapperClassName?: string
+    wrapperStyle?:CSSProperties
 }
 /**
  * @description InternalTextAreaProps 的属性

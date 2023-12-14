@@ -58,7 +58,7 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
 }
 
 const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
-    const {size, wrapperClassName, className, style, ...restProps} = props
+    const {size, wrapperClassName, className, wrapperStyle, ...restProps} = props
     const [focus, setFocus] = useState<boolean>(false)
     const onFocus = useMemoizedFn((e) => {
         setFocus(true)
@@ -81,7 +81,7 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
                 },
                 wrapperClassName
             )}
-            style={style}
+            style={{...(wrapperStyle || {})}}
         >
             <Input.Search
                 allowClear
