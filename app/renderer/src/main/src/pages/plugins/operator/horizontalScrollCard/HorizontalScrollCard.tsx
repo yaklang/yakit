@@ -127,7 +127,7 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                     onScroll={onScrollCardList}
                 >
                     {data.map((cardItem) => (
-                        <React.Fragment key={cardItem.id}>
+                        <React.Fragment key={cardItem.tag}>
                             {cardItem.info.length > 1 ? (
                                 <HorizontalScrollCardItemInfoMultiple {...cardItem} />
                             ) : (
