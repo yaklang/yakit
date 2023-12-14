@@ -351,7 +351,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.HTTPFuzzer,
     YakitRoute.WebsiteTree,
     YakitRoute.DB_Ports,
-    YakitRoute.DB_HTTPHistory,
     YakitRoute.Beta_DebugPlugin,
     YakitRoute.DB_HTTPHistory,
     YakitRoute.Plugin_Audit,
