@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo, useRef, ReactNode} from "react"
+import React, {useEffect, useState, useMemo, useRef, ReactNode, CSSProperties} from "react"
 import {
     Descriptions,
     Space,
@@ -34,14 +34,15 @@ import {
     YakitMenuItemProps,
     YakitMenuItemType
 } from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import { showYakitDrawer } from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import { YakitCopyText } from "@/components/yakitUI/YakitCopyText/YakitCopyText"
+import { YakitPopconfirm } from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import { showByRightContext } from "@/components/yakitUI/YakitMenu/showByRightContext"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import { YakitDropdownMenu } from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import { YakitResizeBox, YakitResizeBoxProps } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 
 const {ipcRenderer} = window.require("electron")
@@ -80,7 +81,7 @@ interface QueryListProps {
     [key: string]: string[]
 }
 
-const formatJson = (filterVal, jsonData) => {
+export const portAssetFormatJson = (filterVal, jsonData) => {
     return jsonData.map((v, index) =>
         filterVal.map((j) => {
             if (j === "UpdatedAt") {
@@ -376,7 +377,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 .then((res: QueryGeneralResponse<PortAsset>) => {
                     const {Data} = res
                     //    数据导出
-                    let exportData: any = []
+                    let exportData: PortAsset[] = []
                     const header: string[] = []
                     const filterVal: string[] = []
                     columns.forEach((item) => {
@@ -385,7 +386,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             filterVal.push(item.dataKey)
                         }
                     })
-                    exportData = formatJson(filterVal, Data)
+                    exportData = portAssetFormatJson(filterVal, Data)
                     resolve({
                         header,
                         exportData,
@@ -738,6 +739,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                         </div>
                     }
                     currentSelectItem={currentSelectItem}
+                    secondNodeClassName={styles["port-description"]}
                 />
             </div>
             <PortAssetQuery
@@ -755,12 +757,14 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
 interface PortTableAndDetailProps {
     firstNode: ReactNode
     currentSelectItem?: PortAsset
+    resizeBoxProps?: YakitResizeBoxProps
+    secondNodeClassName?: string
 }
-const PortTableAndDetail: React.FC<PortTableAndDetailProps> = React.memo((props) => {
-    const {firstNode, currentSelectItem} = props
-    const onlyShowFirstNode=useMemo(()=>{
-        return !(currentSelectItem&&currentSelectItem.Id)
-    },[currentSelectItem])
+export const PortTableAndDetail: React.FC<PortTableAndDetailProps> = React.memo((props) => {
+    const {firstNode, currentSelectItem, resizeBoxProps, secondNodeClassName} = props
+    const onlyShowFirstNode = useMemo(() => {
+        return !(currentSelectItem && currentSelectItem.Id)
+    }, [currentSelectItem])
     return (
         <>
             <YakitResizeBox
@@ -770,22 +774,23 @@ const PortTableAndDetail: React.FC<PortTableAndDetailProps> = React.memo((props)
                 firstRatio={onlyShowFirstNode ? "100%" : "60%"}
                 secondRatio={onlyShowFirstNode ? "0%" : "40%"}
                 secondMinSize={onlyShowFirstNode ? "0px" : 100}
+                lineStyle={{display: currentSelectItem?.Id ? "" : "none"}}
+                {...resizeBoxProps}
+                secondNodeStyle={{
+                    padding: currentSelectItem ? "8px 16px 16px 12px" : 0,
+                    display: currentSelectItem ? "" : "none",
+                    ...(resizeBoxProps?.secondNodeStyle || {})
+                }}
                 firstNode={firstNode}
                     secondNode={
                         <>
                             {!onlyShowFirstNode && currentSelectItem && (
-                                <div className={classNames("yakit-descriptions", styles["port-description"])}>
+                            <div className={classNames("yakit-descriptions", secondNodeClassName)}>
                                     <PortAssetDescription port={currentSelectItem} />
                                 </div>
                             )}
                         </>
                     }
-                    secondNodeStyle={{
-                        padding: currentSelectItem ? "8px 16px 16px 12px" : 0,
-                    display: currentSelectItem ? "" : "none"
-                    }}
-                    lineStyle={{ display: currentSelectItem?.Id ? "" : "none" }}
-                    // {...ResizeBoxProps}
                 ></YakitResizeBox>
         </>
     )
