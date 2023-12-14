@@ -557,7 +557,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                             HTTP反连地址&nbsp;&nbsp;
                                             <CopyableField
                                                 width={340}
-                                                text={`http://${reverseAddr}/${paramsRef.current?.ClassName || ""}`}
+                                                text={`http://${reverseAddr}/${paramsRef.current?.className || ""}.class`}
                                                 style={{color: "blue"}}
                                             />
                                         </div>
@@ -565,7 +565,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                             RMI反连地址&nbsp;&nbsp;
                                             <CopyableField
                                                 width={340}
-                                                text={`rmi://${reverseAddr}/${paramsRef.current?.ClassName || ""}`}
+                                                text={`rmi://${reverseAddr}/${paramsRef.current?.className || ""}.class`}
                                                 style={{color: "blue"}}
                                             />
                                         </div>
@@ -573,7 +573,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
                                             LDAP反连地址&nbsp;&nbsp;
                                             <CopyableField
                                                 width={340}
-                                                text={`ldap://${reverseAddr}/${paramsRef.current?.ClassName || ""}`}
+                                                text={`ldap://${reverseAddr}/${paramsRef.current?.className || ""}.class`}
                                                 style={{color: "blue"}}
                                             />
                                         </div>
