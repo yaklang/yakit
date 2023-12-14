@@ -3366,6 +3366,9 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                     setClosePayload(true)
                 }
             })
+            .catch((e)=>{
+                setClosePayload(true)
+            })
     }, [])
 
     const reset = useMemoizedFn(() => {
