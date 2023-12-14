@@ -685,7 +685,6 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
     const formStart = useMemoizedFn(() => {
         if (btnLoading) return
         if (!onStart) return
-        console.log(123, paramsRef.current);
         if (isStart) {
             onStart({...paramsRef.current})
         } else {
