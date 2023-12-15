@@ -3,6 +3,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {HorizontalScrollCard} from "../horizontalScrollCard/HorizontalScrollCard"
 import styles from "./PluginExecuteResult.module.scss"
 import {
+    PluginExecuteCustomTableProps,
     PluginExecuteLogProps,
     PluginExecutePortTableProps,
     PluginExecuteResultProps,
@@ -57,8 +58,15 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 return <PluginExecuteLog loading={loading} messageList={streamInfo.logState} />
             case "console":
                 return <EngineConsole isMini={true} />
+            case "table":
+                const tableInfo: HoldGRPCStreamProps.InfoTable = streamInfo.tabsInfoState[ele.tabName] || {
+                    columns: [],
+                    data: [],
+                    name: ""
+                }
+                return <PluginExecuteCustomTable tableInfo={tableInfo} />
             default:
-                return <>{ele.tabName}</>
+                return <></>
         }
     })
     return (
@@ -69,9 +77,13 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 </div>
             )}
             {streamInfo.tabsState.length > 0 && (
-                <PluginTabs defaultActiveKey='http'>
+                <PluginTabs>
                     {streamInfo.tabsState.map((ele) => (
-                        <TabPane tab={ele.tabName} key={ele.type} className={styles["plugin-execute-result-tabPane"]}>
+                        <TabPane
+                            tab={ele.tabName}
+                            key={ele.tabName}
+                            className={styles["plugin-execute-result-tabPane"]}
+                        >
                             {renderTabContent(ele)}
                         </TabPane>
                     ))}
@@ -573,5 +585,27 @@ const PluginExecuteResultTabContent: React.FC<PluginExecuteResultTabContentProps
             )}
             <div className={classNames(styles["plugin-execute-result-tab-content-body"], className)}>{children}</div>
         </div>
+    )
+})
+
+const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.memo((props) => {
+    const {
+        tableInfo: {columns = [], data = []}
+    } = props
+    return (
+        <TableVirtualResize
+            isShowTitle={false}
+            enableDrag={true}
+            data={data}
+            renderKey={"uuid"}
+            pagination={{
+                page: 1,
+                limit: 50,
+                total: data.length,
+                onChange: () => {}
+            }}
+            columns={columns}
+            containerClassName={styles["custom-table-container"]}
+        />
     )
 })
