@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState, useMemo} from "react"
+import React, {useEffect, useRef, useState, useMemo, CSSProperties} from "react"
 import {YakScript} from "../../invoker/schema"
 import {Card, Col, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag} from "antd"
 import {
@@ -426,8 +426,11 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
 
 interface CurrentHttpFlowProp {
     runtimeId: string
+    httpHistoryTableTitleStyle?:CSSProperties
+    containerClassName?:string
 }
 export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
+    const {httpHistoryTableTitleStyle,containerClassName=''}=props;
     const [highlightSearch, setHighlightSearch] = useState("")
     const lasetIdRef = useRef<number>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
@@ -525,11 +528,13 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         httpHistoryTableTitleStyle={{
                             borderLeft: "1px solid var(--yakit-border-color)",
                             borderRight: "1px solid var(--yakit-border-color)",
-                            paddingTop: 12
+                            paddingTop: 12,
+                            ...(httpHistoryTableTitleStyle||{}),
                         }}
                         onlyShowSearch={true}
                         historyId={historyId}
                         titleHeight={47}
+                        containerClassName={containerClassName}
                     />
                 }
                 secondNode={
