@@ -8,7 +8,9 @@ export interface PluginExecuteResultProps {
     loading:boolean
 }
 
-export interface VulnerabilitiesRisksTableProps {}
+export interface VulnerabilitiesRisksTableProps {
+    riskState:StreamResult.Risk[]
+}
 
 export interface PluginExecuteLogProps {
     loading:boolean
