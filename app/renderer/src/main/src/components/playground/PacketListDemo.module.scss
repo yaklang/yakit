@@ -1,0 +1,24 @@
+.hex-editor {
+    height: 100%;
+    width: 100%;
+    :global {
+        .hNamKE.editAscii .byteValue.selection > .nybbleHighValue,
+        .hNamKE.notFocused .byteValue.selection > .nybbleHighValue,
+        .hNamKE.editAscii .byteValue.selection > .nybbleLowValue,
+        .hNamKE.notFocused .byteValue.selection > .nybbleLowValue {
+            background-color: var(--yakit-primary-5) !important;
+            color: #ffffff !important;
+        }
+        .hNamKE.editHex .asciiValue.selectionCursor,
+        .hNamKE.notFocused .asciiValue.selectionCursor {
+            background-color: var(--yakit-primary-5) !important;
+            color: #ffffff !important;
+        }
+        .hNamKE.editHex .asciiValue.selection,
+        .hNamKE.notFocused .asciiValue.selection {
+            background-color: var(--yakit-primary-5) !important;
+            color: #ffffff !important;
+        }
+    }
+}
+

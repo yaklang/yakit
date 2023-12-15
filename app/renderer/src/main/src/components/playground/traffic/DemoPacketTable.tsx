@@ -5,23 +5,20 @@ import {info} from "@/utils/notification"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {TrafficViewerControlIf} from "@/components/playground/traffic/base"
 import Item from "antd/lib/list/Item"
+import { useMemoizedFn } from "ahooks"
 
 export interface DemoPacketTableProp extends TrafficViewerControlIf {}
 
 const {ipcRenderer} = window.require("electron")
 
 export const DemoPacketTable: React.FC<DemoPacketTableProp> = (props) => {
-    const [selected, setSelected] = useState<TrafficPacket>()
 
-    useEffect(() => {
-        if (!selected) {
+    const onSelectFun = useMemoizedFn((data:TrafficPacket)=>{
+        if (!data) {
             return
         }
-
-        if (props.onClick !== undefined) {
-            props.onClick(selected)
-        }
-    }, [selected])
+        props.onClick&&props.onClick(data)
+    })
 
     return (
         <DemoVirtualTable<TrafficPacket>
@@ -50,7 +47,7 @@ export const DemoPacketTable: React.FC<DemoPacketTableProp> = (props) => {
                 {headerTitle: "长度", key: "Id", width: 80, colRender: (i) => (i.Raw || []).length}
             ]}
             rowClick={(data) => {
-                setSelected(data)
+                onSelectFun(data)
             }}
             loadMore={(data: TrafficPacket | undefined) => {
                 return new Promise((resolve, reject) => {
