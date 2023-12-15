@@ -1,6 +1,7 @@
 @use "../../plugins.scss";
 .plugin-execute-result {
     @extend %display-column-center;
+    justify-content: flex-start;
     flex: 1;
     overflow: hidden;
     gap: 12px;
@@ -37,11 +38,14 @@
 }
 
 .plugin-execute-result-tab-content {
+    @extend %display-column-center;
+    justify-content: flex-start;
     height: 100%;
     color: var(--yakit-header-color);
     font-size: 12px;
     font-weight: 400;
     line-height: 16px; /* 133.333% */
+    overflow: hidden;
     .plugin-execute-result-tab-content-head {
         @extend %display-flex-center;
         justify-content: space-between;
@@ -50,6 +54,7 @@
     }
     .plugin-execute-result-tab-content-body {
         padding: 12px;
+        overflow: auto;
     }
 }
 
@@ -58,6 +63,8 @@
     align-items: flex-start;
     flex: 1;
     height: 100%;
+    border: 1px solid var(--yakit-border-color);
+    border-top: 0;
     .plugin-execute-web-tree {
         @extend %display-column-center;
         height: 100%;
@@ -69,7 +76,7 @@
     }
 }
 
-.port-table-detail{
+.port-table-detail {
     border: 1px solid var(--yakit-border-color);
     overflow-y: overlay;
     overflow-x: hidden;
