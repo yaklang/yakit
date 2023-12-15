@@ -304,7 +304,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     /** @name 数据流处理逻辑 */
     const handleResults = useMemoizedFn(() => {
         // runtime-id
-        if ((!runTimeId.current.sent || runTimeId.current.sent !== runTimeId.current.cache) && setRuntimeId) {
+        if (runTimeId.current.sent !== runTimeId.current.cache && setRuntimeId) {
             setRuntimeId(runTimeId.current.cache)
             runTimeId.current.sent = runTimeId.current.cache
         }
