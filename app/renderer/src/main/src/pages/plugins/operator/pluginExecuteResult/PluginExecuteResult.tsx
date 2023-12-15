@@ -3,6 +3,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {HorizontalScrollCard} from "../horizontalScrollCard/HorizontalScrollCard"
 import styles from "./PluginExecuteResult.module.scss"
 import {
+    PluginExecuteCodeProps,
     PluginExecuteCustomTableProps,
     PluginExecuteLogProps,
     PluginExecutePortTableProps,
@@ -42,12 +43,13 @@ import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightCont
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
-    const {streamInfo, runtimeId, loading} = props
+    const {streamInfo, runtimeId, loading, pluginType} = props
     const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
         switch (ele.type) {
             case "risk":
@@ -65,6 +67,11 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                     name: ""
                 }
                 return <PluginExecuteCustomTable tableInfo={tableInfo} />
+            case "text":
+                const textInfo: HoldGRPCStreamProps.InfoText = streamInfo.tabsInfoState[ele.tabName] || {
+                    content: ""
+                }
+                return <PluginExecuteCode content={textInfo.content} pluginType={pluginType} />
             default:
                 return <></>
         }
@@ -607,5 +614,14 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
             columns={columns}
             containerClassName={styles["custom-table-container"]}
         />
+    )
+})
+
+const PluginExecuteCode: React.FC<PluginExecuteCodeProps> = React.memo((props) => {
+    const {content, pluginType} = props
+    return (
+        <>
+            <YakitEditor readOnly={true} value={content} type={pluginType || "yak"} />
+        </>
     )
 })

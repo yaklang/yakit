@@ -1,4 +1,4 @@
-import { ColumnsTypeProps } from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {ReactNode} from "react"
 
@@ -6,6 +6,7 @@ export interface PluginExecuteResultProps {
     runtimeId: string
     streamInfo: HoldGRPCStreamInfo
     loading: boolean
+    pluginType:string
 }
 
 export interface VulnerabilitiesRisksTableProps {
@@ -30,5 +31,10 @@ export interface PluginExecuteWebsiteTreeProps {
 export interface PluginExecutePortTableProps {}
 
 export interface PluginExecuteCustomTableProps {
-   tableInfo:HoldGRPCStreamProps.InfoTable
+    tableInfo: HoldGRPCStreamProps.InfoTable
+}
+
+export interface PluginExecuteCodeProps {
+    content: string
+    pluginType:string
 }
