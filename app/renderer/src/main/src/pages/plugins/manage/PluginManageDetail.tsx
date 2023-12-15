@@ -173,6 +173,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         } catch (error) {}
                         if (!infoData.RiskType) infoData.RiskDetail = undefined
                         setInfoParams({...infoData})
+                        setCacheTags(infoData?.Tags || [])
                         // 设置配置信息
                         let settingData: PluginSettingParamProps = {
                             Params: convertRemoteToLocalParams(res.params || []).map((item) => {
@@ -306,9 +307,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             return undefined
         })
+        const [cacheTags, setCacheTags] = useState<string[]>()
         // 删除某些tag 触发  DNSLog和HTTP数据包变形开关的改变
         const onTagsCallback = useMemoizedFn(() => {
-            setInfoParams({...(fetchInfoData() || getInfoParams())})
+            setCacheTags({...fetchInfoData()}?.Tags || [])
         })
         // DNSLog和HTTP数据包变形开关的改变 影响 tag的增删
         const onSwitchToTags = useMemoizedFn((value: string[]) => {
@@ -316,6 +318,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 ...(fetchInfoData() || getInfoParams()),
                 Tags: value
             })
+            setCacheTags(value)
         })
 
         // 插件配置信息-相关逻辑
@@ -712,8 +715,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                 <div className={styles["setting-body"]}>
                                                     <PluginModifySetting
                                                         ref={settingRef}
-                                                        type='yak'
-                                                        tags={infoParams.Tags || []}
+                                                        type={plugin.type}
+                                                        tags={cacheTags || []}
                                                         setTags={onSwitchToTags}
                                                         data={settingParams}
                                                     />
