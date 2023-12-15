@@ -22,6 +22,7 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {DownOutlined} from "@ant-design/icons"
 import {number} from "echarts"
 import styles from "./PacketListDemo.module.scss"
+import { YakitInput } from "../yakitUI/YakitInput/YakitInput"
 const DirectoryTree = Tree.DirectoryTree
 const MemoTooltip = Tooltip || React.memo(Tooltip)
 export interface PacketListProp {
@@ -182,6 +183,9 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                     }
                     extra={
                         <Form layout={"inline"} size={"small"}>
+                            <Form.Item>
+                              <YakitInput size="small" placeholder="请输入..."/>  
+                            </Form.Item>
                             <DemoItemSwitch label={"实时"} value={realtime} setValue={setRealtime} />
                             <YakitButton danger={true} onClick={clear}>
                                 清空

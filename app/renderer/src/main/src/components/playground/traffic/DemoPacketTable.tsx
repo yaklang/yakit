@@ -6,7 +6,7 @@ import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {TrafficViewerControlIf} from "@/components/playground/traffic/base"
 import Item from "antd/lib/list/Item"
 import { useMemoizedFn } from "ahooks"
-
+import styles from "./DemoPacketTable.module.scss"
 export interface DemoPacketTableProp extends TrafficViewerControlIf {}
 
 const {ipcRenderer} = window.require("electron")
@@ -21,6 +21,7 @@ export const DemoPacketTable: React.FC<DemoPacketTableProp> = (props) => {
     })
 
     return (
+        <div className={styles['demo-packet-table-box']}>
         <DemoVirtualTable<TrafficPacket>
             isStop={!props.realtime}
             isScrollUpdate={!props.realtime}
@@ -85,5 +86,6 @@ export const DemoPacketTable: React.FC<DemoPacketTableProp> = (props) => {
             }}
             rowKey={"Id"}
         />
+        </div>
     )
 }
