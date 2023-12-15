@@ -63,8 +63,6 @@
     align-items: flex-start;
     flex: 1;
     height: 100%;
-    border: 1px solid var(--yakit-border-color);
-    border-top: 0;
     .plugin-execute-web-tree {
         @extend %display-column-center;
         height: 100%;
