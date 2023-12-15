@@ -724,7 +724,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
             Modal.confirm({
                 title: "温馨提示",
                 icon: <ExclamationCircleOutlined />,
-                content: "请问是否要保存NTML配置并关闭弹框？",
+                content: "请问是否要保存HTTP认证全局配置并关闭弹框？",
                 okText: "保存",
                 cancelText: "不保存",
                 closable: true,
@@ -913,7 +913,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                 contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
                 title={
                     <div className={styles["heard-title"]}>
-                        <div className={styles["title"]}>NTML配置</div>
+                        <div className={styles["title"]}>HTTP认证全局配置</div>
                         <div className={styles["table-total"]}>
                             共 <span>{params.AuthInfos.length}</span> 条NTML
                         </div>
