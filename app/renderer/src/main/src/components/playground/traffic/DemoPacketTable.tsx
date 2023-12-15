@@ -45,7 +45,7 @@ export const DemoPacketTable: React.FC<DemoPacketTableProp> = (props) => {
                     colRender: (i) => i.NetworkEndpointIPDst + ":" + i.TransportEndpointPortDst
                 },
                 {headerTitle: "协议", key: "protocol", width: 80, colRender: (i) => i.Protocol},
-                {headerTitle: "长度", key: "Id", width: 80, colRender: (i) => (i.Raw || []).length}
+                {headerTitle: "长度", key: "Length", width: 80, colRender: (i) => (i.Raw || []).length}
             ]}
             rowClick={(data) => {
                 onSelectFun(data)
