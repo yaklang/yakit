@@ -106,6 +106,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                     RiskAnnotation: res.RiskAnnotation,
                     Tags: !res.Tags || res.Tags === "null" ? [] : (res.Tags || "").split(",")
                 })
+                setCacheTags(!res.Tags || res.Tags === "null" ? [] : (res.Tags || "").split(","))
                 setSettingParams({
                     Params: (res.Params || []).map((item) => {
                         const obj: PluginParamDataProps = {...item, ExtraSetting: {double: false, data: []}}
@@ -305,9 +306,10 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         }
         return undefined
     })
+    const [cacheTags, setCacheTags] = useState<string[]>()
     // 删除某些tag 触发  DNSLog和HTTP数据包变形开关的改变
     const onTagsCallback = useMemoizedFn(() => {
-        setInfoParams({...(fetchInfoData() || getInfoParams())})
+        setCacheTags({...fetchInfoData()}?.Tags || [])
     })
     // DNSLog和HTTP数据包变形开关的改变 影响 tag的增删
     const onSwitchToTags = useMemoizedFn((value: string[]) => {
@@ -315,6 +317,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             ...(fetchInfoData() || getInfoParams()),
             Tags: value
         })
+        setCacheTags(value)
     })
 
     // 插件配置信息-相关逻辑
@@ -1166,7 +1169,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                             <PluginModifySetting
                                 ref={settingRef}
                                 type={typeParams.Type}
-                                tags={infoParams.Tags || []}
+                                tags={cacheTags || []}
                                 setTags={onSwitchToTags}
                                 data={settingParams}
                             />
