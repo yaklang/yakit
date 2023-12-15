@@ -47,7 +47,12 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                 setRuntimeId={setRuntimeId}
             />
             {isShowResult && (
-                <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
+                <PluginExecuteResult
+                    streamInfo={streamInfo}
+                    runtimeId={runtimeId}
+                    loading={isExecuting}
+                    pluginType={plugin.Type}
+                />
             )}
         </>
     )
