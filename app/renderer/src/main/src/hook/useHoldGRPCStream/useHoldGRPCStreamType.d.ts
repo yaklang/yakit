@@ -121,10 +121,16 @@ export declare namespace StreamResult {
         targets: string
     }
 
-    /** @name 数据流结果(text类数据) */
+    /** @name 数据流结果(text类构建信息) */
     export interface Text {
         at_head: boolean
         tab_name: string
+    }
+
+    /** @name 数据流结果(text类数据) */
+    export interface TextData {
+        data: string
+        table_name: string
     }
 
     /** @name 数据流结果(风险数据) */
