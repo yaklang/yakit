@@ -325,7 +325,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         <div className={styles.webTree} ref={webTreeRef}>
             <div className={styles["tree-top-wrap"]} ref={treeTopWrapRef}>
                 <YakitInput.Search
-                    style={{marginBottom: 15, width: "calc(100% - 40px)"}}
+                    wrapperStyle={{ width: "calc(100% - 40px)", marginBottom: 15 }}
                     placeholder={searchPlaceholder}
                     allowClear
                     onChange={onSearchChange}
