@@ -106,10 +106,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
 
     /** 自定义tab页放前面还是后面 */
     const placeTab = useMemoizedFn((isHead: boolean, info: HoldGRPCStreamProps.InfoTab) => {
-        if (isHead) topTabs.current.push(info)
-        else {
-            endTabs.current.push(info)
-        }
+        topTabs.current.unshift(info)
     })
 
     /** 放入日志队列 */
@@ -191,9 +188,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
                             switch (info.feature) {
                                 case "website-trees":
                                     const website = info.params as StreamResult.WebSite
-                                    tabInfo = {tabName: "网站树结构", type: "website"}
-
-                                    placeTab(!!info.at_head, tabInfo)
+                                    // tabInfo = {tabName: "网站树结构", type: "website"}
+                                    // placeTab(!!info.at_head, tabInfo)
                                     tabWebsite.current = website
                                     break
                                 case "fixed-table":
@@ -263,6 +259,25 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
                         return
                     }
 
+                    // 自定义text数据
+                    if (obj.type === "log" && logData.level === "feature-text-data") {
+                        try {
+                            const checkInfo = checkStreamValidity(logData)
+                            if (!checkInfo) return
+
+                            const textData: StreamResult.TextData = checkInfo
+                            const content = tabsText.current.get(textData.table_name)
+                            if (content === undefined) {
+                                pushLogs(obj)
+                                return
+                            }
+
+                            if (content === textData.data) return
+                            tabsText.current.set(textData.table_name, textData.data)
+                        } catch (e) {}
+                        return
+                    }
+
                     // risk 风险信息列表
                     if (obj.type === "log" && logData.level === "json-risk") {
                         try {
@@ -295,6 +310,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         })
 
         return () => {
+            stop()
+            cancel()
             ipcRenderer.removeAllListeners(`${token}-data`)
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
