@@ -172,7 +172,7 @@ const HorizontalScrollCardItemInfoMultiple: React.FC<StatusCardListProps> = Reac
             <div className={styles["horizontal-scroll-card-list-item-info-multiple-infos"]}>
                 {info.map((ele) => (
                     <div
-                        key={ele.Timestamp}
+                        key={ele.Timestamp+ele.Id}
                         className={styles["horizontal-scroll-card-list-item-info-multiple-infos-item"]}
                     >
                         <div
