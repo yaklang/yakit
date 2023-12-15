@@ -2,7 +2,7 @@ import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {useInterval, useMemoizedFn} from "ahooks"
-import React, {useState, useRef} from "react"
+import React, {useState, useRef, useMemo} from "react"
 import {LocalPluginExecuteDetailHeard} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
 import {LocalPluginExecuteProps} from "./PluginsLocalType"
@@ -29,7 +29,10 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
             setRuntimeId(rId)
         }
     })
-    console.log('streamInfo',streamInfo)
+    const isShowResult = useMemo(() => {
+        return isExecuting || runtimeId
+    }, [isExecuting, runtimeId])
+    console.log("streamInfo", streamInfo)
     return (
         <>
             <LocalPluginExecuteDetailHeard
@@ -40,8 +43,12 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                 setIsExecuting={setIsExecuting}
                 debugPluginStreamEvent={debugPluginStreamEvent}
                 progressList={streamInfo.progressState}
+                runtimeId={runtimeId}
+                setRuntimeId={setRuntimeId}
             />
-            <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
+            {isShowResult && (
+                <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
+            )}
         </>
     )
 })

@@ -135,7 +135,17 @@ const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
 
 /**插件执行头部 */
 export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardProps> = React.memo((props) => {
-    const {token, plugin, extraNode, isExecuting, setIsExecuting, debugPluginStreamEvent, progressList} = props
+    const {
+        token,
+        plugin,
+        extraNode,
+        isExecuting,
+        setIsExecuting,
+        debugPluginStreamEvent,
+        progressList,
+        setRuntimeId,
+        runtimeId
+    } = props
     const [form] = Form.useForm()
     /** 当前插件是否点击过开始执行 */
     const [isClickExecute, setIsClickExecute] = useState<boolean>(false)
@@ -289,6 +299,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     })
     const onClearExecuteResult = useMemoizedFn(() => {
         debugPluginStreamEvent.reset()
+        setRuntimeId("")
+        setIsExpend(true)
         yakitNotify("success", "执行结果清除成功")
     })
     const isShowExtraParamsButton = useMemo(() => {
@@ -326,17 +338,19 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     <div className={styles["plugin-head-executing-wrapper"]}>
                         {isClickExecute ? (
                             <div className={styles["plugin-head-executing"]}>
-                                {progressList.length > 1 && (
+                                {progressList.length === 1 && (
                                     <PluginExecuteProgress
                                         percent={progressList[0].progress}
                                         name={progressList[0].id}
                                     />
                                 )}
+                                {runtimeId && (
+                                    <YakitButton type='text' onClick={onClearExecuteResult}>
+                                        清除执行结果
+                                    </YakitButton>
+                                )}
                                 {isExecuting ? (
                                     <>
-                                        <YakitButton type='text' onClick={onClearExecuteResult}>
-                                            清除执行结果
-                                        </YakitButton>
                                         <YakitButton danger onClick={onStopExecute}>
                                             停止
                                         </YakitButton>
@@ -406,14 +420,16 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     </div>
                 </Form.Item>
             </Form>
-            <div className={styles["plugin-head-executing-progress"]}>
-                {progressList.map((ele, index) => (
-                    <>
-                        {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
-                        <PluginExecuteProgress percent={ele.progress} name={ele.id} />
-                    </>
-                ))}
-            </div>
+            {progressList.length > 1 && (
+                <div className={styles["plugin-head-executing-progress"]}>
+                    {progressList.map((ele, index) => (
+                        <>
+                            {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
+                            <PluginExecuteProgress percent={ele.progress} name={ele.id} />
+                        </>
+                    ))}
+                </div>
+            )}
             <React.Suspense fallback={<div>loading...</div>}>
                 <PluginExecuteExtraParams
                     ref={pluginExecuteExtraParamsRef}

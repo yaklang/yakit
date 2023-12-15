@@ -367,75 +367,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
             </>
         )
     }, [removeLoading, isShowUpload])
-    const pluginExecuteDetailExtraHeard = useMemo(() => {
-        return (
-            <>
-                <div className={styles["plugin-info-extra-header"]}>
-                    {removeLoading ? (
-                        <LoadingOutlined className={styles["loading-icon"]} />
-                    ) : (
-                        <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
-                    )}
-                    <div className='divider-style' />
-                    <YakitButton type='text2' icon={<OutlinePencilaltIcon onClick={onEdit} />} />
-                    <div className='divider-style' />
-                    <FuncFilterPopover
-                        icon={<OutlineDotshorizontalIcon />}
-                        menu={{
-                            type: "primary",
-                            data: [
-                                {
-                                    key: "share",
-                                    label: "导出",
-                                    itemIcon: <OutlineExportIcon className={styles["plugin-local-extra-node-icon"]} />
-                                },
-                                {
-                                    key: "local-debugging",
-                                    label: "本地调试",
-                                    itemIcon: <OutlineTerminalIcon className={styles["plugin-local-extra-node-icon"]} />
-                                },
-                                {
-                                    key: "add-to-menu",
-                                    label: "添加到菜单栏",
-                                    itemIcon: (
-                                        <OutlinePluscircleIcon className={styles["plugin-local-extra-node-icon"]} />
-                                    )
-                                },
-                                {
-                                    key: "remove-menu",
-                                    label: "移出菜单栏",
-                                    itemIcon: <OutlineLogoutIcon className={styles["plugin-local-extra-node-icon"]} />
-                                },
-                                {type: "divider"},
-                                {
-                                    key: "clear-execute-result",
-                                    itemIcon: <OutlineLogoutIcon className={styles["plugin-local-extra-node-icon"]} />,
-                                    label: "清除执行结果",
-                                    type: "danger"
-                                }
-                            ],
-                            className: styles["func-filter-dropdown-menu"],
-                            onClick: onMenuSelect
-                        }}
-                        button={{type: "text2"}}
-                        placement='bottomRight'
-                    />
-                    {isShowUpload && (
-                        <>
-                            <YakitButton
-                                icon={<OutlineClouduploadIcon />}
-                                onClick={onUpload}
-                                className={styles["cloud-upload-icon"]}
-                                loading={uploadLoading}
-                            >
-                                上传
-                            </YakitButton>
-                        </>
-                    )}
-                </div>
-            </>
-        )
-    }, [removeLoading, isShowUpload])
     if (!plugin) return null
     return (
         <>
@@ -541,7 +472,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     //     updateGroups={() => {}}
                                     //     patternMenu='expert'
                                     // />
-                                    <LocalPluginExecute plugin={plugin} headExtraNode={pluginExecuteDetailExtraHeard} />
+                                    <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} />
                                 ) : (
                                     <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />
                                 )}

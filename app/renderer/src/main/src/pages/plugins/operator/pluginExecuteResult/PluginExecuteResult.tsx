@@ -40,12 +40,27 @@ import {PortTableAndDetail, portAssetFormatJson} from "@/pages/assetViewer/PortA
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
     const {streamInfo, runtimeId, loading} = props
+    const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
+        switch (ele.type) {
+            case "risk":
+                return <VulnerabilitiesRisksTable riskState={streamInfo.riskState} />
+            case "http":
+                return <PluginExecuteHttpFlow runtimeId={runtimeId} />
+            case "log":
+                return <PluginExecuteLog loading={loading} messageList={streamInfo.logState} />
+            case "console":
+                return <EngineConsole isMini={true} />
+            default:
+                return <>{ele.tabName}</>
+        }
+    })
     return (
         <div className={styles["plugin-execute-result"]}>
             {streamInfo.cardState.length > 0 && (
@@ -53,8 +68,14 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                     <HorizontalScrollCard title={"Data Card"} data={streamInfo.cardState} />
                 </div>
             )}
-            <PluginTabs defaultActiveKey='port'>
-                <TabPane tab='扫描端口列表' key='port'>
+            {streamInfo.tabsState.length > 0 && (
+                <PluginTabs defaultActiveKey='http'>
+                    {streamInfo.tabsState.map((ele) => (
+                        <TabPane tab={ele.tabName} key={ele.type} className={styles["plugin-execute-result-tabPane"]}>
+                            {renderTabContent(ele)}
+                        </TabPane>
+                    ))}
+                    {/* <TabPane tab='扫描端口列表' key='port'>
                     <PluginExecutePortTable />
                 </TabPane>
                 <TabPane tab='漏洞与风险' key='risk'>
@@ -68,8 +89,9 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 </TabPane>
                 <TabPane tab='Console' key='console'>
                     <EngineConsole isMini={true} />
-                </TabPane>
-            </PluginTabs>
+                </TabPane> */}
+                </PluginTabs>
+            )}
         </div>
     )
 })
@@ -350,8 +372,8 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
         <div className={styles["plugin-execute-http-flow"]}>
             <YakitResizeBox
                 lineDirection='right'
-                isShowDefaultLineStyle={false}
                 firstRatio={"20%"}
+                firstMinSize={300}
                 firstNode={
                     <div className={styles["plugin-execute-web-tree"]}>
                         <ReactResizeDetector
@@ -382,7 +404,14 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
                         />
                     </div>
                 }
-                secondNode={<CurrentHttpFlow runtimeId={runtimeId} />}
+                secondNode={
+                    <CurrentHttpFlow
+                        runtimeId={runtimeId}
+                        httpHistoryTableTitleStyle={{borderLeft: 0, borderRight: 0}}
+                        containerClassName={styles["current-http-table-container"]}
+                    />
+                }
+                secondNodeStyle={{padding: 0}}
             ></YakitResizeBox>
         </div>
     )
@@ -397,24 +426,19 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
             })
             .splice(0, 25)
     }, [messageList])
+    const list = useMemo(() => {
+        return (timelineItemProps || []).reverse().filter((item) => item.level !== "json-risk")
+    }, [timelineItemProps])
     return (
         <PluginExecuteResultTabContent title='任务额外日志与结果'>
             <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                {(timelineItemProps || [])
-                    .reverse()
-                    .filter((item) => item.level !== "json-risk")
-                    .map((e, index) => {
-                        return (
-                            <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
-                                <YakitLogFormatter
-                                    data={e.data}
-                                    level={e.level}
-                                    timestamp={e.timestamp}
-                                    onlyTime={true}
-                                />
-                            </Timeline.Item>
-                        )
-                    })}
+                {list.map((e, index) => {
+                    return (
+                        <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
+                            <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} onlyTime={true} />
+                        </Timeline.Item>
+                    )
+                })}
             </Timeline>
         </PluginExecuteResultTabContent>
     )
@@ -436,31 +460,9 @@ const getSeverity = (type) => {
 }
 /**风险与漏洞tab表 */
 const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
-    const [response, setResponse] = useState<QueryGeneralResponse<Risk>>({
-        Data: [],
-        Pagination: genDefaultPagination(20),
-        Total: 0
-    })
-    useEffect(() => {
-        update(1)
-    }, [])
-    const update = useMemoizedFn(
-        (page?: number, limit?: number, order?: string, orderBy?: string, extraParam?: any) => {
-            const paginationProps = {
-                Page: page || 1,
-                Limit: 50,
-                OrderBy: "created_at",
-                Order: "desc"
-            }
-            ipcRenderer
-                .invoke("QueryRisks", {
-                    Pagination: paginationProps
-                })
-                .then((r: QueryGeneralResponse<any>) => {
-                    setResponse(r)
-                })
-        }
-    )
+    const {riskState} = props
+    useEffect(() => {}, [])
+
     const columns: ColumnsTypeProps[] = useMemo(() => {
         return [
             {
@@ -534,7 +536,7 @@ const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = Reac
         emiter.emit("menuOpenPage", JSON.stringify(info))
     })
     return (
-        <TableVirtualResize<Risk>
+        <TableVirtualResize<StreamResult.Risk>
             renderTitle={
                 <div className={styles["table-renderTitle"]}>
                     <span>风险与漏洞</span>
@@ -545,12 +547,12 @@ const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = Reac
             }
             enableDrag={true}
             titleHeight={44}
-            data={response.Data}
+            data={riskState}
             renderKey={"Hash"}
             pagination={{
                 page: 1,
                 limit: 50,
-                total: response.Data.length,
+                total: riskState.length,
                 onChange: () => {}
             }}
             columns={columns}
