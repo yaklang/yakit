@@ -21,6 +21,8 @@ export interface PluginExecuteDetailHeardProps {
         reset: () => vid
     }
     progressList: StreamResult.Progress[]
+    runtimeId: string
+    setRuntimeId: (b: string) => vid
 }
 
 export interface YakExtraParamProps {
