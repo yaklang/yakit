@@ -43,6 +43,7 @@
         }
         &:global(:last-child) {
             border-radius: 4px;
+            margin-bottom: 0;
             & > :global(.ant-collapse-header:hover) {
                 border-radius: 4px;
             }
@@ -51,6 +52,9 @@
             border-radius: 4px;
             background: var(--yakit-card-background-color);
             margin-bottom: 8px;
+            &:last-child {
+                margin-bottom: 0;
+            }
         }
     }
 }
@@ -73,7 +77,7 @@
         &:global(.ant-collapse-item-active) {
             background-color: transparent;
             border-radius: 0;
-            margin-bottom: 8px;
+            margin-bottom: 0;
         }
     }
 }
