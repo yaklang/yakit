@@ -1,14 +1,11 @@
-import { CollapsePanelProps, CollapseProps } from "antd";
+import {CollapsePanelProps, CollapseProps} from "antd"
 /**
  * @description: YakitSelectProps
  * @augments YakitCollapseProps 继承antd的 CollapseProps 默认属性
  */
-export interface YakitCollapseProps extends CollapseProps{
-}
+export interface YakitCollapseProps extends Omit<CollapseProps, "ghost"> {}
 /**
  * @description: YakitPanelProps
  * @augments YakitPanelProps 继承antd的 CollapsePanelProps 默认属性
  */
-export interface YakitPanelProps extends CollapsePanelProps{
-
-}
+export interface YakitPanelProps extends CollapsePanelProps {}
