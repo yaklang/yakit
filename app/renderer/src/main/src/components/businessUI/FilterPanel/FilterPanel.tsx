@@ -71,7 +71,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                             <YakitCollapse
                                 activeKey={activeKey}
                                 onChange={(key) => setActiveKey(key as string[])}
-                                className={styles["content-collapse"]}
+                                className={styles["content-collapse"]} 
                             >
                                 {groupList.map((item, i) => (
                                     <YakitPanel

@@ -125,7 +125,9 @@
     max-width: 300px;
     border-left: 1px solid var(--yakit-border-color);
     overflow: hidden;
-
+    .portAsset-query-loading {
+        overflow: hidden;
+    }
     .query-head {
         display: flex;
         flex-direction: row;
@@ -139,10 +141,19 @@
         color: var(--yakit-header-color);
     }
     .query-collapse {
-        height: calc(100% - 44px);
+        flex: 1;
+        overflow: auto;
+
         :global {
             .ant-collapse-content-box {
                 padding: 0 4px 12px !important;
+            }
+            .ant-collapse-item .ant-collapse-header {
+                padding-left: 12px;
+                padding-right: 10px;
+            }
+            .ant-collapse-item:first-child > .ant-collapse-header {
+                border-top: 0;
             }
         }
         .port-group-remove {

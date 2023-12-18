@@ -2,7 +2,7 @@ import {Collapse} from "antd"
 import React, {useState} from "react"
 import styles from "./YakitCollapse.module.scss"
 import classNames from "classnames"
-import {YakitCollapseProps} from "./YakitCollapseType"
+import {YakitCollapseProps, YakitPanelProps} from "./YakitCollapseType"
 import {SolidChevrondownIcon, SolidChevronrightIcon} from "@/assets/icon/solid"
 
 const {Panel} = Collapse
@@ -10,30 +10,36 @@ const {Panel} = Collapse
 /**
  * @description: 折叠面板
  * @augments  继承antd的 CollapseProps 默认属性
- * @param {string} wrapperClassName Collapse 装饰div的className
- * @param {CSSProperties} wrapperStyle Collapse 装饰div的style
  */
 export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
-    const {type = "default", wrapperClassName, wrapperStyle, ...restProps} = props
-    
+    const {expandIcon, bordered = true, className = "", ...restProps} = props
+
     return (
-        <div
+        <Collapse
+            {...restProps}
             className={classNames(
-                styles["yakit-collapse-default-wrapper"],
+                styles["yakit-collapse"],
                 {
-                    [styles["yakit-collapse-grey-wrapper"]]: type === "grey"
+                    [styles["yakit-collapse-bordered-hidden"]]: !bordered,
+                    [styles["yakit-collapse-bordered"]]: bordered
                 },
-                wrapperClassName
+                className
             )}
-            style={wrapperStyle}
-        >
-            <Collapse
-                {...restProps}
-                ghost
-                expandIcon={(e) => (e.isActive ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />)}
-            />
-        </div>
+            ghost
+            expandIcon={
+                expandIcon ? expandIcon : (e) => (e.isActive ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />)
+            }
+        />
     )
 }
 
-export default Object.assign(YakitCollapse, {YakitPanel: Panel})
+/**
+ * @description: 折叠面板
+ * @augments  继承antd的CollapsePanelProps 默认属性
+ */
+export const YakitPanel: React.FC<YakitPanelProps> = (props) => {
+    const {...restProps} = props
+    return <Panel {...restProps} />
+}
+
+export default Object.assign(YakitCollapse, {YakitPanel})
