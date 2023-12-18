@@ -55,7 +55,12 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
             case "risk":
                 return <VulnerabilitiesRisksTable riskState={streamInfo.riskState} />
             case "http":
-                return <PluginExecuteHttpFlow runtimeId={runtimeId} />
+                return (
+                    <PluginExecuteHttpFlow
+                        runtimeId={runtimeId}
+                        website={!!streamInfo.tabsInfoState["website"]?.targets}
+                    />
+                )
             case "log":
                 return <PluginExecuteLog loading={loading} messageList={streamInfo.logState} />
             case "console":
@@ -383,16 +388,34 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
 })
 /**HTTP 流量 */
 const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
-    const {runtimeId} = props
+    const {runtimeId, website = false} = props
+
     const [height, setHeight] = useState<number>(300) //表格所在div高度
 
     const webTreeRef = useRef<any>()
+    // 被点击的树节点
+    const [searchURL, setSearchURL] = useState<string>("")
+    // 被点击的树节点URL参数
+    const [includeInUrl, setIncludeInUrl] = useState<string>("")
+    // 是否只展示表格
+    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
+    // 表格里详情是否显示
+    const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
+    useEffect(() => {
+        setSecondNodeVisible(!onlyShowFirstNode)
+    }, [onlyShowFirstNode])
+
     return (
         <div className={styles["plugin-execute-http-flow"]}>
             <YakitResizeBox
                 lineDirection='right'
-                firstRatio={"20%"}
-                firstMinSize={300}
+                firstNodeStyle={{
+                    display: website ? "" : "none"
+                }}
+                firstMinSize={website ? 300 : 0}
+                lineStyle={{display: website ? "" : "none"}}
+                secondNodeStyle={{padding: 0}}
+                secondRatio={website ? "80%" : "100%"}
                 firstNode={
                     <div className={styles["plugin-execute-web-tree"]}>
                         <ReactResizeDetector
@@ -413,24 +436,30 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
                             treeExtraQueryparams={" "}
                             refreshTreeFlag={false}
                             onGetUrl={(searchURL, includeInUrl) => {
-                                // setSearchURL(searchURL)
-                                // setIncludeInUrl(includeInUrl)
+                                setSearchURL(searchURL)
+                                setIncludeInUrl(includeInUrl)
                             }}
                             resetTableAndEditorShow={(table, editor) => {
-                                // setOnlyShowFirstNode(table)
-                                // setSecondNodeVisible(editor)
+                                setOnlyShowFirstNode(table)
+                                setSecondNodeVisible(editor)
                             }}
+                            runTimeId={runtimeId}
                         />
                     </div>
                 }
                 secondNode={
                     <CurrentHttpFlow
                         runtimeId={runtimeId}
+                        searchURL={searchURL}
+                        includeInUrl={includeInUrl}
+                        isOnlyTable={onlyShowFirstNode}
+                        onIsOnlyTable={setOnlyShowFirstNode}
+                        showDetail={secondNodeVisible}
+                        pageType='History'
                         httpHistoryTableTitleStyle={{borderLeft: 0, borderRight: 0}}
                         containerClassName={styles["current-http-table-container"]}
                     />
                 }
-                secondNodeStyle={{padding: 0}}
             ></YakitResizeBox>
         </div>
     )
