@@ -239,3 +239,94 @@
         }
     }
 }
+
+.new-codec-middle-type-item {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    .type-header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        .type-title {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 4px;
+            .drag-icon {
+                color: #ccd2de;
+                svg {
+                    height: 12px;
+                    width: 12px;
+                }
+            }
+            .text {
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+            }
+            .text-default {
+                color: #31343f;
+            }
+            .text-active {
+                color: #ccd2de;
+            }
+        }
+        .type-extra {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            .extra-icon {
+                width: 16px;
+                height: 16px;
+                box-sizing: content-box;
+                padding: 4px;
+                cursor: pointer;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+            .extra-icon-default {
+                color: #85899e;
+                &:hover {
+                    color: var(--yakit-primary-5);
+                }
+            }
+            .extra-icon-active {
+                color: var(--yakit-danger-5);
+            }
+            .close-icon {
+                width: 16px;
+                height: 16px;
+                box-sizing: content-box;
+                padding: 4px;
+                cursor: pointer;
+                color: #85899e;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+                &:hover {
+                    color: var(--yakit-danger-5);
+                }
+            }
+        }
+    }
+}
+.type-item-run {
+    border-bottom: 1px solid rgba(86, 201, 145, 0.3);
+    background: rgba(86, 201, 145, 0.2);
+}
+.type-item-suspend {
+    border-bottom: 1px solid rgba(244, 115, 107, 0.3);
+    background: rgba(244, 115, 107, 0.2);
+}
+.type-item-shield {
+    border-bottom: 1px solid #eaecf3;
+    background: #f8f8f8;
+}

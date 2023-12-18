@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Divider, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState} from "ahooks"
+import {useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./NewCodec.module.scss"
@@ -10,21 +10,25 @@ import classNames from "classnames"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {SolidPlayIcon} from "@/assets/icon/solid"
+import {SolidDragsortIcon, SolidPlayIcon} from "@/assets/icon/solid"
 import {YakEditor} from "@/utils/editors"
 import {SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {
     OutlineArrowBigUpIcon,
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
+    OutlineBanIcon,
     OutlineClockIcon,
     OutlineDocumentduplicateIcon,
     OutlineImportIcon,
+    OutlinePauseIcon,
     OutlineSearchIcon,
-    OutlineStorageIcon
+    OutlineStorageIcon,
+    OutlineXIcon
 } from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 const {ipcRenderer} = window.require("electron")
 
 interface NewCodecRightEditorBoxProps {
@@ -117,9 +121,98 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
     )
 }
 
-interface NewCodecMiddleRunListProps {}
+interface NewCodecMiddleTypeItemProps {
+    title: string
+}
+
+export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (props) => {
+    const {title} = props
+    const [itemStatus, setItemStatus] = useState<"run" | "suspend" | "shield">("run")
+
+    // 屏蔽
+    const onShieldFun = useMemoizedFn(() => {
+        itemStatus === "shield" ? setItemStatus("run") : setItemStatus("shield")
+    })
+
+    // 中止
+    const onSuspendFun = useMemoizedFn(() => {
+        itemStatus === "suspend" ? setItemStatus("run") : setItemStatus("suspend")
+    })
+
+    // 删除
+    const onDeleteFun = useMemoizedFn(() => {})
+
+    return (
+        <div
+            className={classNames(styles["new-codec-middle-type-item"], {
+                // 运行
+                [styles["type-item-run"]]: itemStatus === "run",
+                // 中止
+                [styles["type-item-suspend"]]: itemStatus === "suspend",
+                // 屏蔽
+                [styles["type-item-shield"]]: itemStatus === "shield"
+            })}
+        >
+            <div className={styles["type-header"]}>
+                <div className={styles["type-title"]}>
+                    <div className={styles["drag-icon"]}>
+                        <SolidDragsortIcon />
+                    </div>
+                    <div
+                        className={classNames(styles["text"], {
+                            [styles["text-default"]]: itemStatus !== "shield",
+                            [styles["text-active"]]: itemStatus === "shield"
+                        })}
+                    >
+                        {title}
+                    </div>
+                </div>
+                <div className={styles["type-extra"]}>
+                    <div
+                        className={classNames(styles["extra-icon"], {
+                            [styles["extra-icon-default"]]: itemStatus !== "shield",
+                            [styles["extra-icon-active"]]: itemStatus === "shield"
+                        })}
+                        onClick={onShieldFun}
+                    >
+                        <OutlineBanIcon />
+                    </div>
+                    <div
+                        className={classNames(styles["extra-icon"], {
+                            [styles["extra-icon-default"]]: itemStatus !== "suspend",
+                            [styles["extra-icon-active"]]: itemStatus === "suspend"
+                        })}
+                        onClick={onSuspendFun}
+                    >
+                        <OutlinePauseIcon />
+                    </div>
+                    <div className={styles["close-icon"]} onClick={onDeleteFun}>
+                        <OutlineXIcon />
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+interface NewCodecMiddleRunListProps {
+    rightItems: any
+}
+
+const getItemStyle = (isDragging, draggableStyle) => {
+    let transform: string = draggableStyle["transform"] || ""
+    if (isDragging) {
+        const index = transform.indexOf(",")
+        if (index !== -1) transform = "translate(0px" + transform.substring(index, transform.length)
+    }
+    return {
+        ...draggableStyle,
+        transform
+    }
+}
+
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (props) => {
+    const {rightItems} = props
     return (
         <div className={styles["new-codec-run-list"]}>
             <div className={styles["header"]}>
@@ -138,9 +231,33 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                 </div>
             </div>
             <div className={styles["run-list"]}>
-                <div className={styles["no-data"]}>
+                {/* 右边拖放目标 */}
+                <Droppable droppableId='right'>
+                    {(provided) => (
+                        <div ref={provided.innerRef} {...provided.droppableProps}>
+                            {rightItems.map((item, index) => (
+                                <Draggable key={index} draggableId={`right-${index}`} index={index}>
+                                    {(provided, snapshot) => (
+                                        <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            style={{
+                                                ...getItemStyle(snapshot.isDragging, provided.draggableProps.style)
+                                            }}
+                                        >
+                                            <NewCodecMiddleTypeItem title={item} />
+                                        </div>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                </Droppable>
+                {/* <div className={styles["no-data"]}>
                     <YakitEmpty title='请从左侧列表拖入要使用的 Codec 工具' />
-                </div>
+                </div> */}
             </div>
             <div className={styles["run-box"]}>
                 <YakitCheckbox
@@ -159,9 +276,12 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
     )
 }
 
-interface NewCodecLeftDragListProps {}
+interface NewCodecLeftDragListProps {
+    leftItems: any
+}
 // codec左边拖拽列表
 export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props) => {
+    const {leftItems} = props
     const [fold, setFold] = useState<boolean>(true)
     return (
         <>
@@ -195,7 +315,35 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                             }}
                         />
                     </div>
-                    <div className={styles["left-drag-list"]}></div>
+                    <div className={styles["left-drag-list"]}>
+                        {/* 左边拖拽源 */}
+                        <Droppable droppableId='left'>
+                            {(provided) => (
+                                <div ref={provided.innerRef} {...provided.droppableProps} style={{width: "50%"}}>
+                                    {leftItems.map((item, index) => (
+                                        <Draggable key={index} draggableId={`left-${index}`} index={index}>
+                                            {(provided) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    style={{
+                                                        padding: 8,
+                                                        margin: "0 0 8px 0",
+                                                        backgroundColor: "lightblue",
+                                                        ...provided.draggableProps.style
+                                                    }}
+                                                >
+                                                    {item}
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </div>
                 </div>
             ) : (
                 <div className={classNames(styles["drag-list-hidden"])}>
@@ -215,17 +363,53 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
     )
 }
 
+const initialLeftItems = ["Item 1", "Item 2", "Item 3"]
+const initialRightItems = ["Item A", "Item B", "Item C"]
 export interface NewCodecProps {}
 const NewCodec: React.FC<NewCodecProps> = (props) => {
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
+    const [leftItems, setLeftItems] = useState(initialLeftItems)
+    const [rightItems, setRightItems] = useState(initialRightItems)
+    /**
+     * @description: 拖拽结束后的计算
+     */
+    const onDragEnd = useMemoizedFn((result) => {
+        const {source, destination} = result
+
+        // 左边向右边拖拽
+        if (source.droppableId === "left" && destination && destination.droppableId === "right") {
+            const [removed] = leftItems.splice(source.index, 1)
+            rightItems.splice(destination.index, 0, removed)
+            setLeftItems([...leftItems])
+            setRightItems([...rightItems])
+        }
+
+        // 右边内部排序
+        if (source.droppableId === "right" && destination && destination.droppableId === "right") {
+            const [removed] = rightItems.splice(source.index, 1)
+            rightItems.splice(destination.index, 0, removed)
+            setRightItems([...rightItems])
+        }
+    })
+
+    /**
+     * @description: 计算移动的范围是否在目标范围类
+     */
+    const onDragUpdate = useThrottleFn(
+        (result) => {
+            const {index, droppableId} = result.source
+            const {combine, destination, draggableId} = result
+        },
+        {wait: 200}
+    ).run
     return (
         <div className={styles["new-codec"]}>
             {!isExpand && (
-                <>
-                    <NewCodecLeftDragList />
-                    <NewCodecMiddleRunList />
-                </>
+                <DragDropContext onDragEnd={onDragEnd} onDragUpdate={onDragUpdate}>
+                    <NewCodecLeftDragList leftItems={leftItems} />
+                    <NewCodecMiddleRunList rightItems={rightItems} />
+                </DragDropContext>
             )}
             <NewCodecRightEditorBox isExpand={isExpand} setExpand={setExpand} />
         </div>
