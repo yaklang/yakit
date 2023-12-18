@@ -15,37 +15,6 @@
             padding: 3px 10px;
         }
 
-        .ant-collapse > .ant-collapse-item > .ant-collapse-header {
-            padding: 8px 12px;
-            align-items: center;
-            line-height: 16px;
-        }
-
-        .ant-collapse-header-text {
-            font-weight: 500;
-            font-size: 12px;
-            line-height: 16px;
-            color: var(--yakit-header-color);
-            margin-left: 8px;
-        }
-
-        .ant-collapse-content > .ant-collapse-content-box {
-            padding: 12px;
-        }
-
-        .ant-collapse-expand-icon {
-            width: 16px;
-            height: 16px;
-        }
-
-        .ant-collapse-ghost > .ant-collapse-item {
-            border-bottom: 1px solid var(--yakit-border-color);
-
-            &:last-child {
-                border-bottom: 0;
-            }
-        }
-
         .ant-form-item {
             margin-bottom: 12px;
         }
@@ -120,7 +89,6 @@
 
     .advanced-config-extra-formItem {
         padding: 12px 12px 0;
-        border-bottom: 1px solid var(--yakit-border-color);
     }
 
     .etcHostsText {
@@ -133,24 +101,6 @@
     .variable-list {
         color: var(--yakit-helper-text-color);
 
-        :global {
-            .ant-collapse-item > .ant-collapse-header {
-                height: 24px;
-                padding: 0 0 0 12px !important;
-            }
-
-            .ant-collapse-header-text {
-                color: var(--yakit-body-text-color);
-            }
-
-            .ant-collapse-content > .ant-collapse-content-box {
-                padding: 0 0 12px 12px;
-            }
-
-            .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
-                padding-top: 6px !important;
-            }
-        }
 
         .variable-list-panel-extra {
             display: flex;

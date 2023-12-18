@@ -426,7 +426,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     activeKey={activeKey}
                     onChange={(key) => onSwitchCollapse(key)}
                     destroyInactivePanel={true}
-                    type='grey'
                 >
                     <YakitPanel
                         header='请求包配置'
@@ -468,7 +467,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             label={
                                 <span className={styles["advanced-config-form-label"]}>
                                     渲染 Fuzz
-                                    <Tooltip title='兼容模式支持嵌套使用时内层大括号省略 {{base64(url(www.example.com))}}，但标准模式不可省略，关闭后Fuzztag将失效。' overlayStyle={{width: 150}}>
+                                    <Tooltip
+                                        title='兼容模式支持嵌套使用时内层大括号省略 {{base64(url(www.example.com))}}，但标准模式不可省略，关闭后Fuzztag将失效。'
+                                        overlayStyle={{width: 150}}
+                                    >
                                         <InformationCircleIcon className={styles["info-icon"]} />
                                     </Tooltip>
                                 </span>
@@ -486,7 +488,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <YakitSwitch />
                         </Form.Item>
 
-                        <Form.Item label='超时时长' name='timeout'>
+                        <Form.Item label='超时时长' name='timeout' style={{marginBottom: 0}}>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
                     </YakitPanel>
@@ -523,7 +525,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
 
-                        <Form.Item label='随机延迟'>
+                        <Form.Item label='随机延迟' style={{marginBottom: 0}}>
                             <div className={styles["advanced-config-delay"]}>
                                 <Form.Item
                                     name='minDelaySeconds'
@@ -590,12 +592,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         <Form.Item label='重试次数' name='maxRetryTimes'>
                             <YakitInputNumber type='horizontal' size='small' min={0} />
                         </Form.Item>
-                        <Collapse
-                            ghost
-                            activeKey={retryActive}
-                            expandIcon={(e) => (e.isActive ? <SolidChevronDownIcon /> : <SolidChevronRightIcon />)}
-                            destroyInactivePanel={true}
-                        >
+                        <YakitCollapse activeKey={retryActive} destroyInactivePanel={true} bordered={false}>
                             <YakitPanel
                                 header={
                                     <Form.Item name='retry' noStyle valuePropName='checked'>
@@ -622,11 +619,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 key='不重试条件'
                                 className={styles["advanced-config-collapse-secondary-item"]}
                             >
-                                <Form.Item label='状态码' name={["noRetryConfiguration", "statusCode"]}>
+                                <Form.Item
+                                    label='状态码'
+                                    name={["noRetryConfiguration", "statusCode"]}
+                                    style={{marginBottom: 0}}
+                                >
                                     <YakitInput placeholder='200,300-399' size='small' disabled={!noRetry} />
                                 </Form.Item>
                             </YakitPanel>
-                        </Collapse>
+                        </YakitCollapse>
                     </YakitPanel>
                     <YakitPanel
                         header='重定向配置'
@@ -663,7 +664,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         <Form.Item label='重定向次数' name='redirectCount'>
                             <YakitInputNumber type='horizontal' size='small' />
                         </Form.Item>
-                        <Form.Item label='JS 重定向' name='followJSRedirect' valuePropName={"checked"}>
+                        <Form.Item
+                            label='JS 重定向'
+                            name='followJSRedirect'
+                            valuePropName={"checked"}
+                            style={{marginBottom: 0}}
+                        >
                             <YakitSwitch />
                         </Form.Item>
                     </YakitPanel>
@@ -700,7 +706,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 placeholder={"指定DNS服务器"}
                             />
                         </Form.Item>
-                        <Form.Item label={"Hosts配置"} name='etcHosts'>
+                        <Form.Item label={"Hosts配置"} name='etcHosts' style={{marginBottom: 0}}>
                             <Space direction={"vertical"}>
                                 {(etcHosts || []).map((i, n) => (
                                     <Tooltip
@@ -935,70 +941,65 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         <Form.List name='params'>
                             {(fields, {add}) => {
                                 return (
-                                    <Collapse
-                                        ghost
-                                        activeKey={variableActiveKey}
-                                        onChange={(key) => {
-                                            setVariableActiveKey(key as string[])
-                                        }}
-                                        expandIcon={(e) =>
-                                            e.isActive ? (
-                                                <SolidChevronDownIcon className={styles["chevron-down-icon"]} />
-                                            ) : (
-                                                <SolidChevronRightIcon className={styles["chevron-right-icon"]} />
-                                            )
-                                        }
-                                        className={styles["variable-list"]}
-                                        destroyInactivePanel={true}
-                                    >
-                                        {fields.map(({key, name}, i) => (
-                                            <YakitPanel
-                                                key={`${key}`}
-                                                header={`变量${name}`}
-                                                className={styles["variable-list-panel"]}
-                                                extra={
-                                                    <div
-                                                        className={styles["variable-list-panel-extra"]}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                        }}
-                                                    >
-                                                        <TrashIcon
+                                    <>
+                                        <YakitCollapse
+                                            activeKey={variableActiveKey}
+                                            onChange={(key) => {
+                                                setVariableActiveKey(key as string[])
+                                            }}
+                                            className={styles["variable-list"]}
+                                            destroyInactivePanel={true}
+                                            bordered={false}
+                                        >
+                                            {fields.map(({key, name}, i) => (
+                                                <YakitPanel
+                                                    key={`${key}`}
+                                                    header={`变量${name}`}
+                                                    className={styles["variable-list-panel"]}
+                                                    extra={
+                                                        <div
+                                                            className={styles["variable-list-panel-extra"]}
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
-                                                                const v = form.getFieldsValue()
-                                                                const variables = v.params || []
-                                                                variables.splice(i, 1)
-                                                                form.setFieldsValue({
-                                                                    params: [...variables]
-                                                                })
-                                                                onSetValue({
-                                                                    ...v,
-                                                                    params: [...variables]
-                                                                })
                                                             }}
-                                                            className={styles["variable-list-remove"]}
-                                                        />
-
-                                                        <Form.Item
-                                                            name={[name, "Type"]}
-                                                            noStyle
-                                                            wrapperCol={{span: 24}}
                                                         >
-                                                            <YakitRadioButtons
-                                                                buttonStyle='solid'
-                                                                options={variableModeOptions}
-                                                                size={"small"}
+                                                            <TrashIcon
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    const v = form.getFieldsValue()
+                                                                    const variables = v.params || []
+                                                                    variables.splice(i, 1)
+                                                                    form.setFieldsValue({
+                                                                        params: [...variables]
+                                                                    })
+                                                                    onSetValue({
+                                                                        ...v,
+                                                                        params: [...variables]
+                                                                    })
+                                                                }}
+                                                                className={styles["variable-list-remove"]}
                                                             />
-                                                        </Form.Item>
-                                                    </div>
-                                                }
-                                            >
-                                                <SetVariableItem name={name} />
-                                            </YakitPanel>
-                                        ))}
+
+                                                            <Form.Item
+                                                                name={[name, "Type"]}
+                                                                noStyle
+                                                                wrapperCol={{span: 24}}
+                                                            >
+                                                                <YakitRadioButtons
+                                                                    buttonStyle='solid'
+                                                                    options={variableModeOptions}
+                                                                    size={"small"}
+                                                                />
+                                                            </Form.Item>
+                                                        </div>
+                                                    }
+                                                >
+                                                    <SetVariableItem name={name} />
+                                                </YakitPanel>
+                                            ))}
+                                        </YakitCollapse>
                                         {fields?.length === 0 && (
-                                            <Form.Item wrapperCol={{span: 24}}>
+                                            <>
                                                 <YakitButton
                                                     type='outline2'
                                                     onClick={() => {
@@ -1014,9 +1015,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 >
                                                     添加
                                                 </YakitButton>
-                                            </Form.Item>
+                                            </>
                                         )}
-                                    </Collapse>
+                                    </>
                                 )
                             }}
                         </Form.List>
@@ -1067,7 +1068,7 @@ interface MatchersListProps {
     onRemove: (index: number) => void
     onEdit: (index: number) => void
 }
-
+/**匹配器 */
 const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
     const {matcherValue, onAdd, onRemove, onEdit} = props
     const {matchersList} = matcherValue
@@ -1097,7 +1098,7 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                 ))}
             </Form.Item>
             {matchersList?.length === 0 && (
-                <Form.Item wrapperCol={{span: 24}}>
+                <>
                     <YakitButton
                         type='outline2'
                         onClick={() => onAdd()}
@@ -1107,7 +1108,7 @@ const MatchersList: React.FC<MatchersListProps> = React.memo((props) => {
                     >
                         添加
                     </YakitButton>
-                </Form.Item>
+                </>
             )}
         </>
     )
@@ -1119,7 +1120,7 @@ interface ExtractorsListProps {
     onRemove: (index: number) => void
     onEdit: (index: number) => void
 }
-
+/**数据提取器 */
 const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
     const {extractorValue, onAdd, onRemove, onEdit} = props
     const {extractorList} = extractorValue
@@ -1149,7 +1150,7 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                 ))}
             </Form.Item>
             {extractorList?.length === 0 && (
-                <Form.Item wrapperCol={{span: 24}}>
+                <>
                     <YakitButton
                         type='outline2'
                         onClick={() => onAdd()}
@@ -1159,7 +1160,7 @@ const ExtractorsList: React.FC<ExtractorsListProps> = React.memo((props) => {
                     >
                         添加
                     </YakitButton>
-                </Form.Item>
+                </>
             )}
         </>
     )
