@@ -137,6 +137,7 @@ import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
+const NewCodec = React.lazy(() => import("../pages/codec/NewCodec"))
 const NewHome = React.lazy(() => import("@/pages/newHome/NewHome"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 
@@ -488,7 +489,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <NewHome />
+            return <NewCodec/>
+            // return <NewHome />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
