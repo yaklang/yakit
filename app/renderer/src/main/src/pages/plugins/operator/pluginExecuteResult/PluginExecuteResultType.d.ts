@@ -6,7 +6,7 @@ export interface PluginExecuteResultProps {
     runtimeId: string
     streamInfo: HoldGRPCStreamInfo
     loading: boolean
-    pluginType:string
+    pluginType: string
 }
 
 export interface VulnerabilitiesRisksTableProps {
@@ -27,6 +27,7 @@ export interface PluginExecuteResultTabContentProps {
 
 export interface PluginExecuteWebsiteTreeProps {
     runtimeId: string
+    website?: boolean
 }
 export interface PluginExecutePortTableProps {}
 
@@ -36,5 +37,5 @@ export interface PluginExecuteCustomTableProps {
 
 export interface PluginExecuteCodeProps {
     content: string
-    pluginType:string
+    pluginType: string
 }
