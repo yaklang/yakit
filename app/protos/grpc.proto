@@ -166,6 +166,8 @@ service Yak {
   rpc YakScriptRiskTypeList(Empty) returns (YakScriptRiskTypeListResponse);
   rpc SaveNewYakScript(SaveNewYakScriptRequest) returns (YakScript);
   rpc SaveYakScriptToOnline(SaveYakScriptToOnlineRequest) returns (stream SaveYakScriptToOnlineResponse);
+  rpc ExportLocalYakScript(ExportLocalYakScriptRequest) returns (ExportLocalYakScriptResponse);
+  rpc ImportYakScript(ImportYakScriptRequest) returns (stream ImportYakScriptResult);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -597,7 +599,7 @@ service Yak {
 
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
-
+  
   rpc YakVersionAtLeast(YakVersionAtLeastRequest) returns (GeneralResponse);
 }
 
@@ -1018,7 +1020,7 @@ message AuthInfo {
     string AuthType = 3;
     string Host = 4;
     bool Forbidden = 5;
-  }
+}
 
 message ThirdPartyApplicationConfig {
     // zoomeye / hunter / shodan / fofa / github / token
@@ -1128,6 +1130,7 @@ message DebugPluginRequest {
 
   string Input = 3;
   HTTPRequestBuilderParams HTTPRequestTemplate = 4;
+  repeated KVPair ExecParams = 5;
 }
 
 message HTTPRequestBuilderResult {
@@ -1853,6 +1856,7 @@ message StaticAnalyzeErrorResult {
 message StaticAnalyzeErrorResponse {
   repeated StaticAnalyzeErrorResult Result = 1;
 }
+
 message SavePayloadProgress {
   double Progress = 1; // 进度
 
@@ -3223,7 +3227,6 @@ message GetYakVMBuildInMethodCompletionResponse {
 }
 
 
-
 message RenameRequest {
   string Name = 1;
   string NewName = 2;
@@ -3465,6 +3468,31 @@ message SaveYakScriptToOnlineResponse {
 
 message ToOnlineResult {
   string ScriptName = 1;
+}
+
+message ExportLocalYakScriptRequest {
+  string OutputDir = 1;
+  string OutputPluginDir = 2;
+  repeated int64 YakScriptIds = 3;
+  string Keywords = 4;
+  string Type = 5;
+  string UserName = 6;
+  string Tags = 7;
+}
+
+message ExportLocalYakScriptResponse {
+  string OutputDir = 1;
+}
+
+message ImportYakScriptRequest {
+  repeated string Dirs = 1;
+}
+
+message ImportYakScriptResult {
+  // 进度
+  double Progress = 1;
+  string Message = 2;
+  string MessageType = 3;
 }
 
 message GetYakScriptTagsAndTypeResponse {
@@ -3960,9 +3988,9 @@ message QueryHTTPFlowRequest {
 }
 
 message ExportHTTPFlowsRequest {
-  QueryHTTPFlowRequest ExportWhere = 1;
-  repeated int64 Ids = 2;
-  repeated string FieldName = 3;
+    QueryHTTPFlowRequest ExportWhere = 1;
+    repeated int64 Ids = 2;
+    repeated string FieldName = 3;
 }
 
 message DeleteHTTPFlowRequest {
