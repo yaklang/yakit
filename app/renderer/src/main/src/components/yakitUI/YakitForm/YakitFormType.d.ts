@@ -4,7 +4,7 @@ import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
 import {InternalTextAreaProps} from "../YakitInput/YakitInputType"
 
 type YakitDragger = Omit<DraggerProps, "beforeUpload" | "onChange">
-export interface YakitFormDraggerProps extends YakitDragger {
+export interface YakitFormDraggerProps extends YakitDraggerProps {
     size?: YakitSizeType
     formItemClassName?: string
     formItemProps?: FormItemProps
