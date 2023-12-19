@@ -217,7 +217,7 @@ const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((
         }
     }
     return (
-        <YakitCollapse defaultActiveKey={defaultActiveKey} bordered={false}>
+        <YakitCollapse defaultActiveKey={defaultActiveKey} className={styles['extra-params-node-type']}>
             {extraParamsGroup.map((item, index) => (
                 <YakitPanel key={`${item.group}`} header={`参数组：${item.group}`}>
                     {item.data?.map((formItem) => (
