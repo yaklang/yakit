@@ -22,6 +22,11 @@
         .ant-form-item {
             margin-bottom: 8px;
         }
+        .ant-form-item-tooltip {
+            svg {
+                color: var(--yakit-helper-text-color);
+            }
+        }
     }
     .plugin-execute-extra-params-drawer-title {
         display: flex;
@@ -60,6 +65,13 @@
         }
         .panel-list-extra-remove {
             display: none;
+        }
+    }
+}
+.extra-params-node-type {
+    :global {
+        .ant-collapse-item:first-child .ant-collapse-header {
+            border-top: 0;
         }
     }
 }
