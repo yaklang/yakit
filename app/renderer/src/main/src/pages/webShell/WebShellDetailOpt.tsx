@@ -1,8 +1,7 @@
 import React from 'react';
 import {ShellType, WebShellDetail} from "@/pages/webShell/models";
-import { Tabs } from 'antd';
 import {WebShellURLTreeAndTable} from "@/pages/webShell/WebShellTreeAndTable";
-
+import YakitTabs from '@/components/yakitUI/YakitTabs/YakitTabs';
 
 interface WebShellDetailOptProps {
     id: string
@@ -14,23 +13,23 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
 
     return (
         <div style={{width: "100%", height: "100%"}}>
-            <Tabs className='scan-port-tabs no-theme-tabs' tabBarStyle={{marginBottom: 5}}>
-                <Tabs.TabPane tab={"基本信息"} key={"basicInfo"}>
+            <YakitTabs className='scan-port-tabs no-theme-tabs' tabBarStyle={{marginBottom: 5}}>
+                <YakitTabs.YakitTabPane tab={"基本信息"} key={"basicInfo"}>
                     {props.webshellInfo.Url}
                     {props.webshellInfo.ShellType}
-                </Tabs.TabPane>
-                <Tabs.TabPane tab={"虚拟终端"} key={"vcmd"}>
+                </YakitTabs.YakitTabPane>
+                <YakitTabs.YakitTabPane tab={"虚拟终端"} key={"vcmd"}>
                     {props.webshellInfo.Url}
                     {props.webshellInfo.ShellType}
-                </Tabs.TabPane>
-                <Tabs.TabPane tab={"文件管理"} key={"fileOpt"}>
+                </YakitTabs.YakitTabPane>
+                <YakitTabs.YakitTabPane tab={"文件管理"} key={"fileOpt"}>
                     <WebShellURLTreeAndTable Id={props.webshellInfo.Id} shellType={props.webshellInfo.ShellType as ShellType}/>
-                </Tabs.TabPane>
-                <Tabs.TabPane tab={"数据库管理"} key={"databaseOpt"}>
+                </YakitTabs.YakitTabPane>
+                <YakitTabs.YakitTabPane tab={"数据库管理"} key={"databaseOpt"}>
                     {props.webshellInfo.Url}
                     {props.webshellInfo.ShellType}
-                </Tabs.TabPane>
-            </Tabs>
+                </YakitTabs.YakitTabPane>
+            </YakitTabs>
         </div>
     )
 }
