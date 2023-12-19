@@ -7,13 +7,6 @@ import {ChevronLeftIcon, ChevronRightIcon} from "@/assets/newIcon"
 import {useMemoizedFn, useMutationObserver} from "ahooks"
 import { getReleaseEditionName } from "@/utils/envfile"
 
-/**
- * 更新说明
- * 1.增加环境变量加载主题色
- * 2.修复横向输入时，value为0无法加减问题
- * 3.antd form 校验错误状态做兼容处理
- * 4.增加颜色变量
- */
 
 /**
  * @description: 两种方式的数字输入

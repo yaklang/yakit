@@ -14,7 +14,7 @@ export declare type ValueType = string | number
 export interface YakitInputNumberProps extends Omit<InputNumberProps, "size"> {
     type?: "horizontal" | "vertical"
     size?: YakitSizeType
-    ref?:any
+    ref?: any
     wrapperClassName?: string
 }
 
@@ -22,6 +22,6 @@ export interface YakitInputNumberProps extends Omit<InputNumberProps, "size"> {
  * @description: 两种方式的数字输入
  * @augments InputNumberProps 继承antd的InputNumber默认属性
  */
-export interface YakitInputNumberHorizontalProps extends Omit<InputNumberProps, "size"> {
+export interface YakitInputNumberHorizontalProps extends Omit<InputNumberProps, "size" | "bordered"> {
     size?: YakitSizeType
 }

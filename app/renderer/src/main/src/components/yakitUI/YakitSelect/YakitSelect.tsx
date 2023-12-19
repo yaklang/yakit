@@ -26,7 +26,14 @@ const {Option} = Select
  * @param {CSSProperties} wrapperStyle Switch装饰div的style
  */
 export const YakitSelectCustom = <ValueType, OptionType>(
-    {className, size='middle', wrapperClassName, wrapperStyle, dropdownRender, ...props}: YakitSelectProps<OptionType>,
+    {
+        className,
+        size = "middle",
+        wrapperClassName,
+        wrapperStyle,
+        dropdownRender,
+        ...props
+    }: YakitSelectProps<OptionType>,
     ref: React.Ref<BaseSelectRef>
 ) => {
     const [show, setShow] = useState<boolean>(false)
@@ -47,6 +54,22 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             style={wrapperStyle}
         >
             <Select
+                suffixIcon={
+                    show ? (
+                        <ChevronUpIcon className={styles["yakit-select-icon"]} />
+                    ) : (
+                        <ChevronDownIcon className={styles["yakit-select-icon"]} />
+                    )
+                }
+                tagRender={(props) => {
+                    return (
+                        <YakitTag size={size} {...props}>
+                            <span className='content-ellipsis' style={{width: "100%"}}>
+                                {props.label}
+                            </span>
+                        </YakitTag>
+                    )
+                }}
                 {...props}
                 size='middle'
                 dropdownClassName={classNames(
@@ -61,20 +84,6 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     setShow(open)
                     if (props.onDropdownVisibleChange) props.onDropdownVisibleChange(open)
                 }}
-                tagRender={(props) => {
-                    return (
-                        <YakitTag size={size} {...props}>
-                            <span className='content-ellipsis' style={{width:'100%'}}>{props.label}</span>
-                        </YakitTag>
-                    )
-                }}
-                suffixIcon={
-                    show ? (
-                        <ChevronUpIcon className={styles["yakit-select-icon"]} />
-                    ) : (
-                        <ChevronDownIcon className={styles["yakit-select-icon"]} />
-                    )
-                }
             >
                 {props.children}
             </Select>
