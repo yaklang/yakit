@@ -10,7 +10,7 @@ import classNames from "classnames"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {SolidDragsortIcon, SolidPlayIcon} from "@/assets/icon/solid"
+import {SolidDragsortIcon, SolidPlayIcon, SolidStarIcon} from "@/assets/icon/solid"
 import {YakEditor} from "@/utils/editors"
 import {SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {
@@ -23,14 +23,18 @@ import {
     OutlineImportIcon,
     OutlinePauseIcon,
     OutlineSearchIcon,
+    OutlineStarIcon,
     OutlineStorageIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOperatorContentType"
 const {ipcRenderer} = window.require("electron")
-
+const {YakitPanel} = YakitCollapse
 interface NewCodecRightEditorBoxProps {
     isExpand: boolean
     setExpand: (v: boolean) => void
@@ -198,7 +202,7 @@ interface NewCodecMiddleRunListProps {
     rightItems: any
 }
 
-const getItemStyle = (isDragging, draggableStyle) => {
+const getMiddleItemStyle = (isDragging, draggableStyle) => {
     let transform: string = draggableStyle["transform"] || ""
     if (isDragging) {
         const index = transform.indexOf(",")
@@ -232,7 +236,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             </div>
             <div className={styles["run-list"]}>
                 {/* 右边拖放目标 */}
-                <Droppable droppableId='right'>
+                <Droppable droppableId='right' direction='vertical'>
                     {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps}>
                             {rightItems.map((item, index) => (
@@ -243,7 +247,10 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
                                             style={{
-                                                ...getItemStyle(snapshot.isDragging, provided.draggableProps.style)
+                                                ...getMiddleItemStyle(
+                                                    snapshot.isDragging,
+                                                    provided.draggableProps.style
+                                                )
                                             }}
                                         >
                                             <NewCodecMiddleTypeItem title={item} />
@@ -276,13 +283,157 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
     )
 }
 
-interface NewCodecLeftDragListProps {
-    leftItems: any
+interface NewCodecLeftDragListItemProps {
+    node: LeftDataNodeProps[]
+    itemIndex: number
 }
+let lastIsDragging = false
+const getLeftItemStyle = (isDragging, draggableStyle) => {
+    let transform: string = draggableStyle["transform"] || ""
+    // console.log("transform---",transform,isDragging);
+    if (isDragging) {
+        // 使用正则表达式匹配 translate 函数中的两个参数
+        const match = transform.match(/translate\((-?\d+)px, (-?\d+)px\)/)
+        if (match) {
+            // 提取匹配到的两个值，并将它们转换为数字
+            const [value1, value2] = match.slice(1).map(Number)
+            // 判断值是否小于 0
+            if (value1 < 0) {
+                // 修改值为 0
+                const modifiedString = transform.replace(
+                    /translate\((-?\d+)px, (-?\d+)px\)/,
+                    `translate(0px, ${value2}px)`
+                )
+                transform = modifiedString
+            }
+            // 为解决列表最后一个元素超出时,样式溢出
+            if(!lastIsDragging&&value1===0&&value2<-200){
+                transform = `translate(0px, 0px)`
+            }
+        }
+    }
+    lastIsDragging = isDragging
+    return {
+        ...draggableStyle,
+        transform
+    }
+}
+
+// 左边拖拽源
+export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> = (props) => {
+    const {node, itemIndex} = props
+
+    const dragListItemDom = useMemoizedFn((item) => (
+        <div className={styles["drag-list-item"]}>
+            <div className={styles["title"]}>{item.title}</div>
+            <div className={styles["extra"]}></div>
+            {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
+                e.stopPropagation()
+            }}>
+                <OutlineStarIcon/>
+            </div> */}
+            <div
+                className={classNames(styles["star-icon"], styles["star-icon-active"])}
+                onClick={(e) => {
+                    e.stopPropagation()
+                }}
+            >
+                <SolidStarIcon />
+            </div>
+        </div>
+    ))
+
+    return (
+        <Droppable
+            droppableId='left'
+            direction='vertical'
+            isDropDisabled={true}
+            renderClone={(provided, snapshot, rubric) => {
+                const item: LeftDataNodeProps[] =
+                    node.filter((item) => `left-${item.title}` === rubric.draggableId) || []
+                return (
+                    <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        style={{
+                            ...getLeftItemStyle(snapshot.isDragging, provided.draggableProps.style)
+                        }}
+                    >
+                        <>
+                            {item.length > 0 && (
+                                <div className={styles["drag-list-item-clone"]}>
+                                    <div className={styles["title"]}>{item[0].title}</div>
+                                    <div className={styles["extra"]}></div>
+                                    {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])}>
+                                        <OutlineStarIcon/>
+                                    </div> */}
+                                    <div
+                                        className={classNames(styles["star-icon"], styles["star-icon-active"])}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                        }}
+                                    >
+                                        <SolidStarIcon />
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    </div>
+                )
+            }}
+        >
+            {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps}>
+                    {node.map((item, index) => {
+                        return (
+                            <Draggable
+                                key={itemIndex * 10 + index}
+                                draggableId={`left-${item.title}`}
+                                index={itemIndex * 10 + index}
+                                shouldCloneOnDrag={false}
+                            >
+                                {(provided, snapshot) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        style={{
+                                            ...getLeftItemStyle(snapshot.isDragging, provided.draggableProps.style)
+                                        }}
+                                    >
+                                        {dragListItemDom(item)}
+                                    </div>
+                                )}
+                            </Draggable>
+                        )
+                    })}
+                    {provided.placeholder}
+                </div>
+            )}
+        </Droppable>
+    )
+}
+
+interface NewCodecLeftDragListProps {
+    leftData: LeftDataProps[]
+}
+
+interface LeftDataNodeProps {
+    title: string
+}
+
+interface LeftDataProps {
+    title: string
+    node: LeftDataNodeProps[]
+}
+
 // codec左边拖拽列表
 export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props) => {
-    const {leftItems} = props
+    const {leftData} = props
     const [fold, setFold] = useState<boolean>(true)
+    const [activeKey, setActiveKey] = useState<string[]>([])
+
     return (
         <>
             {fold ? (
@@ -316,33 +467,64 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                         />
                     </div>
                     <div className={styles["left-drag-list"]}>
-                        {/* 左边拖拽源 */}
-                        <Droppable droppableId='left'>
-                            {(provided) => (
-                                <div ref={provided.innerRef} {...provided.droppableProps} style={{width: "50%"}}>
-                                    {leftItems.map((item, index) => (
-                                        <Draggable key={index} draggableId={`left-${index}`} index={index}>
-                                            {(provided) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    style={{
-                                                        padding: 8,
-                                                        margin: "0 0 8px 0",
-                                                        backgroundColor: "lightblue",
-                                                        ...provided.draggableProps.style
-                                                    }}
-                                                >
-                                                    {item}
-                                                </div>
+                        <YakitSpin spinning={false}>
+                            {/* 左边列表 */}
+                            <YakitCollapse
+                                expandIcon={() => <></>}
+                                accordion={true}
+                                activeKey={activeKey}
+                                onChange={(key) => {
+                                    const arr = key as string[]
+                                    setActiveKey(arr)
+                                }}
+                                className={styles["left-drag-list-collapse"]}
+                            >
+                                {leftData.map((item, index) => {
+                                    return (
+                                        <YakitPanel
+                                            header={
+                                                (activeKey || []).includes(item.title) ? (
+                                                    <div className={styles["panel-active-title"]}>{item.title}</div>
+                                                ) : (
+                                                    item.title
+                                                )
+                                            }
+                                            key={item.title}
+                                            extra={
+                                                item.title === "我收藏的工具" ? (
+                                                    <>
+                                                        {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}>
+                                                    <OutlineStarIcon/>
+                                                </div> */}
+                                                        <div
+                                                            className={classNames(
+                                                                styles["star-icon"],
+                                                                styles["star-icon-active"]
+                                                            )}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                            }}
+                                                        >
+                                                            <SolidStarIcon />
+                                                        </div>
+                                                    </>
+                                                ) : null
+                                            }
+                                        >
+                                            {item.node.length > 0 && (
+                                                <NewCodecLeftDragListItem
+                                                    node={item.node}
+                                                    itemIndex={index}
+                                                />
                                             )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
+                                        </YakitPanel>
+                                    )
+                                })}
+                                <div className={styles["to-end"]}>已经到底啦～</div>
+                            </YakitCollapse>
+                        </YakitSpin>
                     </div>
                 </div>
             ) : (
@@ -371,11 +553,68 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
     const [isExpand, setExpand] = useState<boolean>(false)
     const [leftItems, setLeftItems] = useState(initialLeftItems)
     const [rightItems, setRightItems] = useState(initialRightItems)
+    const [leftData, setLeftData] = useState<LeftDataProps[]>([
+        {
+            title: "我收藏的工具",
+            node: []
+        },
+        {
+            title: "对称加解密",
+            node: [{title: "SM4加密"}, {title: "SM4解密"}, {title: "AES加密"}, {title: "AES解密"}]
+        },
+        {
+            title: "Java",
+            node: [{title: "反序列化"}, {title: "序列化"}]
+        },
+        {
+            title: "解码",
+            node: [
+                {title: "Base64 解码"},
+                {title: "HTML 解码"},
+                {title: "URL解码"},
+                {title: "十六进制解码"},
+                {title: "Unicode 中文解码"}
+            ]
+        },
+        {
+            title: "编码",
+            node: [
+                {title: "Base64 编码"},
+                {title: "HTML 编码"},
+                {title: "URL编码"},
+                {title: "URL路径编码"},
+                {title: "十六进制编码"},
+                {title: "Unicode 中文编码"}
+            ]
+        },
+        {
+            title: "hash",
+            node: [{title: "MD5"}, {title: "SM3"}, {title: "Sha1"}, {title: "Sha2"}]
+        },
+        {
+            title: "美化",
+            node: [{title: "JSON"}, {title: "HTTP数据包"}]
+        },
+        {
+            title: "Yaklang",
+            node: [{title: "Codec插件"}, {title: "热加载临时脚本"}]
+        },
+        {
+            title: "其他",
+            node: [
+                {title: "解析HTTP参数"},
+                {title: "从URL加载数据包"},
+                {title: "数据包转Curl命令"},
+                {title: "FuzzTag(模糊测试)"}
+            ]
+        }
+    ])
     /**
      * @description: 拖拽结束后的计算
      */
-    const onDragEnd = useMemoizedFn((result) => {
+    const onDragEnd = useMemoizedFn((result: DragDropContextResultProps) => {
         const {source, destination} = result
+        // console.log("onDragEnd", source, destination, result)
 
         // 左边向右边拖拽
         if (source.droppableId === "left" && destination && destination.droppableId === "right") {
@@ -403,11 +642,25 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
         },
         {wait: 200}
     ).run
+
+    
+    const onBeforeCapture = useMemoizedFn((result: DragDropContextResultProps) => {})
+
+
+    const onDragStart = useMemoizedFn((result: DragDropContextResultProps) => {
+        if (!result.source) return
+        // console.log("onDragStart---", result)
+    })
     return (
         <div className={styles["new-codec"]}>
             {!isExpand && (
-                <DragDropContext onDragEnd={onDragEnd} onDragUpdate={onDragUpdate}>
-                    <NewCodecLeftDragList leftItems={leftItems} />
+                <DragDropContext
+                    onDragEnd={onDragEnd}
+                    onDragStart={onDragStart}
+                    onDragUpdate={onDragUpdate}
+                    onBeforeCapture={onBeforeCapture}
+                >
+                    <NewCodecLeftDragList leftData={leftData}/>
                     <NewCodecMiddleRunList rightItems={rightItems} />
                 </DragDropContext>
             )}
