@@ -19,8 +19,16 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
                     {props.webshellInfo.Url}
                     {props.webshellInfo.ShellType}
                 </Tabs.TabPane>
+                <Tabs.TabPane tab={"虚拟终端"} key={"vcmd"}>
+                    {props.webshellInfo.Url}
+                    {props.webshellInfo.ShellType}
+                </Tabs.TabPane>
                 <Tabs.TabPane tab={"文件管理"} key={"fileOpt"}>
                     <WebShellURLTreeAndTable Id={props.webshellInfo.Id} shellType={props.webshellInfo.ShellType as ShellType}/>
+                </Tabs.TabPane>
+                <Tabs.TabPane tab={"数据库管理"} key={"databaseOpt"}>
+                    {props.webshellInfo.Url}
+                    {props.webshellInfo.ShellType}
                 </Tabs.TabPane>
             </Tabs>
         </div>
