@@ -297,6 +297,11 @@
                 margin-left: 0;
             }
         }
+        .copy-wrapper{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .constant-wrapper {
             flex-grow: 1;
             flex-shrink: 0;
