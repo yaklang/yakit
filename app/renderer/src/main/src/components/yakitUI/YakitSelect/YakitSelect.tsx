@@ -106,7 +106,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     if (!props.children) {
         extraProps = {
             ...extraProps,
-            option: cacheHistoryData.options,
+            options: cacheHistoryData.options,
             defaultValue: cacheHistoryData.defaultValue
         }
     }
@@ -144,6 +144,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     )
                 }}
                 {...props}
+                {...extraProps}
                 size='middle'
                 dropdownClassName={classNames(
                     styles["yakit-select-popup"],
