@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {defQueryWebShellRequest, QueryWebShellRequest} from "@/pages/webShell/WebShellViewer";
 import {ResizeBox} from "@/components/ResizeBox";
 import {ShellType, WebShellDetail} from "@/pages/webShell/models";
@@ -12,13 +12,14 @@ import {
     ArrowCircleRightSvgIcon,
     IconSolidCodeIcon,
     RefreshIcon,
+    RemoveIcon,
     SMViewGridAddIcon, TrashIcon
 } from "@/assets/newIcon";
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize";
 import {Button, Divider, Space, Tooltip} from 'antd';
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType";
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
-import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from 'ahooks';
+import {useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from 'ahooks';
 import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema";
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss";
 import {showDrawer, showModal} from "@/utils/showModal";
@@ -48,6 +49,9 @@ import {
     ScorpioFailIcon,
     ScorpioSuccessIcon
 } from "@/pages/webShell/icon";
+import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer';
+import { WebShellDetailOpt } from './WebShellDetailOpt';
+import {menuBodyHeight} from "@/pages/globalVariable"
 
 export interface WebShellManagerProp {
     available: boolean
@@ -130,7 +134,19 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
     const [loading, setLoading] = useState(false)
+// 抽屉
+const cvePageRef = useRef<any>()
+const [inViewport] = useInViewport(cvePageRef)
+const [visible,setVisible] = useState<boolean>(false)
+const [drawerData,setDrawerData] = useState<WebShellDetail>()
+const heightDrawer = useMemo(() => {
+    return menuBodyHeight.firstTabMenuBodyHeight - 58
+}, [menuBodyHeight.firstTabMenuBodyHeight])
 
+
+const onClose = useMemoizedFn(()=>{
+    setVisible(false)
+})
 
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
         return [
@@ -243,9 +259,13 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                             <div className={style["divider-style"]}></div>
 
                             <ArrowCircleRightSvgIcon
+                                style={{transform:"rotate(-90deg)"}}
                                 className={style["icon-style"]}
                                 onClick={(e) => {
-                                    addToTab("**webshell-opt", info)
+                                    // addToTab("**webshell-opt", info)
+                                    setVisible(true)
+                                    setDrawerData(info)
+                                    setAdvancedQuery(false)
                                 }}
                             />
                         </div>
@@ -437,7 +457,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
 
     return (
 
-        <div className={cveStyles["cve-list"]}>
+        <div className={cveStyles["cve-list"]} ref={cvePageRef}>
             {
                 available ? (
                     <>
@@ -549,6 +569,27 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                     <>
                     </>
                 )}
+                 <YakitDrawer
+                placement='bottom'
+                closable={false}
+                onClose={onClose}
+                visible={visible && !!inViewport}
+                // getContainer={getContainer}
+                mask={false}
+                style={{height: visible ? heightDrawer : 0}}
+                className={cveStyles["shell-table-drawer"]}
+                contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
+                title={<div className={cveStyles["heard-title"]}>{drawerData?.Url}</div>}
+                extra={
+                    <div className={cveStyles["heard-right-operation"]}>
+                        <div onClick={onClose} className={cveStyles["icon-remove"]}>
+                            <RemoveIcon />
+                        </div>
+                    </div>
+                }
+            >
+                {drawerData&&<WebShellDetailOpt id='' webshellInfo={drawerData}/>}
+            </YakitDrawer>
         </div>
 
     )
