@@ -40,9 +40,9 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
             style={{...(wrapperStyle || {})}}
         >
             <Input
+                spellCheck={false}
                 {...restProps}
                 size='middle'
-                spellCheck={false}
                 className={classNames(
                     styles["yakit-input-middle"],
                     {
@@ -86,12 +86,12 @@ const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
         >
             <Input.Search
                 allowClear
+                enterButton
+                spellCheck={false}
                 {...restProps}
                 onFocus={onFocus}
                 onBlur={onBlur}
                 size='middle'
-                enterButton
-                spellCheck={false}
                 className={classNames(styles["yakit-search-middle"], {
                     [styles["yakit-search-large"]]: size === "large",
                     [styles["yakit-search-small"]]: size === "small",
@@ -117,7 +117,7 @@ const InternalTextArea: React.FC<InternalTextAreaProps> = (props) => {
             )}
             style={{...(wrapperStyle || {})}}
         >
-            <Input.TextArea {...restProps} spellCheck={false} />
+            <Input.TextArea spellCheck={false} {...restProps} />
             {isShowResize && <ResizerIcon className={styles["resizer-icon"]} />}
         </div>
     )
@@ -139,7 +139,7 @@ const InternalInputPassword: React.FC<InternalInputPasswordProps> = (props) => {
             )}
             style={{...(wrapperStyle || {})}}
         >
-            <Input.Password {...restProps} spellCheck={false} />
+            <Input.Password spellCheck={false} {...restProps} />
         </div>
     )
 }

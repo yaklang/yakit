@@ -15,7 +15,7 @@ import classNames from "classnames"
  * @augments YakitSegmentedProps
  */
 export const YakitSegmented = React.forwardRef<HTMLDivElement, YakitSegmentedProps>((props, ref) => {
-    const {wrapClassName, size = "middle", ...resProps} = props
+    const {wrapClassName, size = "middle", className = "", ...resProps} = props
     return (
         <div
             className={classNames(
@@ -26,7 +26,12 @@ export const YakitSegmented = React.forwardRef<HTMLDivElement, YakitSegmentedPro
                 wrapClassName
             )}
         >
-            <Segmented {...resProps} size='small' ref={ref} className={classNames(styles["yakit-segmented"])} />
+            <Segmented
+                {...resProps}
+                size='small'
+                ref={ref}
+                className={classNames(styles["yakit-segmented"], className)}
+            />
         </div>
     )
 })
