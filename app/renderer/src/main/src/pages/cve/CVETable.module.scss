@@ -397,3 +397,35 @@
         }
     }
 }
+.heard-right-operation {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    .icon-remove {
+        color: var(--yakit-helper-text-color);
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        :hover {
+            color: var(--yakit-primary-4);
+        }
+    }
+}
+
+.shell-table-drawer {
+    :global {
+        .ant-drawer-body {
+            padding: 4px 16px 16px;
+            overflow: hidden;
+        }
+    }
+}
