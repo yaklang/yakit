@@ -1,7 +1,7 @@
+%icon {
+    color: var(--yakit-primary-5);
+}
 .plugin-execute-extra-params-drawer {
-    svg {
-        color: var(--yakit-helper-text-color);
-    }
     :global {
         .ant-drawer-body {
             padding: 16px 12px;
@@ -38,12 +38,6 @@
             gap: 8px;
         }
     }
-    .extra-params-group-name {
-        font-size: 14px;
-        color: var(--yakit-header-color);
-        margin: 0;
-        font-weight: bold;
-    }
     .to-end {
         text-align: center;
         color: var(--yakit-disable-text-color);
@@ -53,27 +47,19 @@
     }
 }
 .plugin-extra-params {
-    svg {
-        color: var(--yakit-body-text-color);
+    .plus-icon {
+        svg {
+            @extend %icon;
+        }
     }
-    .extra-params-form-list {
-        :global {
-            .ant-collapse-header-text {
-                width: inherit;
+    .form-list-panel {
+        &:hover {
+            .panel-list-extra-remove {
+                display: flex;
             }
         }
-        .form-list-panel-extra {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            &:hover {
-                .panel-list-extra-remove {
-                    display: flex;
-                }
-            }
-            .panel-list-extra-remove {
-                display: none;
-            }
+        .panel-list-extra-remove {
+            display: none;
         }
     }
 }
