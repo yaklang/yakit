@@ -447,7 +447,14 @@ interface CurrentHttpFlowProp {
     showDetail?: boolean
     /** 表格的应用类型(history|MITM) */
     pageType?: HTTPHistorySourcePageType
+
+    /** 
+     * 流量表筛选条件回调
+     * @param queryParams 流量表筛选条件JSON
+     */
+    onQueryParams?: (queryParams: string, execFlag?: boolean) => void
 }
+
 export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
     const {
         runtimeId,
@@ -458,7 +465,8 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
         isOnlyTable,
         onIsOnlyTable,
         showDetail,
-        pageType
+        pageType,
+        onQueryParams
     } = props
     const [highlightSearch, setHighlightSearch] = useState("")
     const lasetIdRef = useRef<number>()
@@ -541,11 +549,10 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                 secondNodeStyle={{display: isOnlyTable ? "none" : ""}}
                 firstNode={
                     <HTTPFlowTable
+                        toPlugin={true}
+                        runTimeId={runtimeId}
                         noDeleteAll={true}
-                        params={{
-                            RuntimeId: runtimeId,
-                            SourceType: "scan"
-                        }}
+                        params={{SourceType: "scan"}}
                         searchURL={searchURL}
                         includeInUrl={includeInUrl}
                         onSelected={(i) => {
@@ -566,6 +573,7 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         titleHeight={47}
                         containerClassName={containerClassName}
                         pageType={pageType}
+                        onQueryParams={onQueryParams}
                     />
                 }
                 secondNode={
