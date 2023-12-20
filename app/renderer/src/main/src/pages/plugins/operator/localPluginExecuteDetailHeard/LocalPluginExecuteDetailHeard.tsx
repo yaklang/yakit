@@ -238,7 +238,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     Field: "Input",
                     FieldVerbose: "Input",
                     Required: true,
-                    TypeVerbose: "string",
+                    TypeVerbose: "yak",
                     DefaultValue: "",
                     Help: "Input"
                 }
@@ -276,7 +276,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     /**开始执行 */
     const onStartExecute = useMemoizedFn((value) => {
         if (!isClickExecute) setIsClickExecute(true)
-        setIsExecuting(true)
         const yakExecutorParams: YakExecutorParam[] = getYakExecutorParam({...value, ...customExtraParamsValue})
         const input = value["Input"]
         let executeParams: DebugPluginRequest = {
@@ -288,6 +287,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         }
         debugPluginStreamEvent.reset()
         apiDebugPlugin(executeParams, token).then(() => {
+            setIsExecuting(true)
+            setIsExpend(false)
             debugPluginStreamEvent.start()
         })
     })

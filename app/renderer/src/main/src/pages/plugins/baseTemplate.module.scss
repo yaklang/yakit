@@ -198,6 +198,10 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1;
     .header-wrapper {
         display: flex;
         justify-content: space-between;
