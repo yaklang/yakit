@@ -60,6 +60,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         selectType = "file",
         renderType = "input",
         textareaProps = {},
+        disabled,
         ...restProps
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
@@ -107,6 +108,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     <YakitInput.TextArea
                         placeholder='路径支持手动输入,输入多个请用逗号分隔'
                         value={fileName || name}
+                        disabled={disabled}
                         {...textareaProps}
                         onChange={(e) => {
                             setName(e.target.value)
@@ -154,6 +156,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                         placeholder='路径支持手动输入,输入多个请用逗号分隔'
                         size={size}
                         value={fileName || name}
+                        disabled={disabled}
                         {...InputProps}
                         onChange={(e) => {
                             setName(e.target.value)
@@ -216,6 +219,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
      * @description 选择文件夹
      */
     const onUploadFolder = useMemoizedFn(() => {
+        if (disabled) return
         ipcRenderer
             .invoke("openDialog", {
                 title: "请选择文件夹",
@@ -232,6 +236,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     })
     /**选择文件 */
     const onUploadFile = useMemoizedFn(() => {
+        if (disabled) return
         ipcRenderer
             .invoke("openDialog", {
                 title: "请选择文件",
@@ -319,6 +324,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             {selectType === "file" && (
                 <Dragger
                     {...restProps}
+                    disabled={disabled}
                     showUploadList={false}
                     directory={false}
                     multiple={true}
@@ -333,7 +339,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             <span>
                                 可将文件拖入框内或点击此处
                                 <span
-                                    className={styles["dragger-help-active"]}
+                                    className={classNames(styles["dragger-help-active"], {
+                                        [styles["dragger-help-active-disabled"]]: disabled
+                                    })}
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         onUploadFile()
@@ -353,6 +361,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             {selectType === "folder" && (
                 <Dragger
                     {...restProps}
+                    disabled={disabled}
                     showUploadList={false}
                     directory
                     className={classNames(styles["yakit-dragger"], props.className)}
@@ -366,7 +375,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             <span>
                                 点击此处
                                 <span
-                                    className={styles["dragger-help-active"]}
+                                    className={classNames(styles["dragger-help-active"], {
+                                        [styles["dragger-help-active-disabled"]]: disabled
+                                    })}
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         onUploadFolder()
@@ -385,6 +396,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             {selectType === "all" && (
                 <Dragger
                     {...restProps}
+                    disabled={disabled}
                     showUploadList={false}
                     className={classNames(styles["yakit-dragger"], props.className)}
                     beforeUpload={() => {
@@ -397,7 +409,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             <span>
                                 点击此处
                                 <span
-                                    className={styles["dragger-help-active"]}
+                                    className={classNames(styles["dragger-help-active"], {
+                                        [styles["dragger-help-active-disabled"]]: disabled
+                                    })}
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         onUploadFile()
@@ -407,7 +421,9 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                 </span>
                                 <Divider type='vertical' />
                                 <span
-                                    className={styles["dragger-help-active"]}
+                                    className={classNames(styles["dragger-help-active"], {
+                                        [styles["dragger-help-active-disabled"]]: disabled
+                                    })}
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         onUploadFolder()
