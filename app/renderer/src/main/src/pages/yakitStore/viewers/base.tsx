@@ -617,7 +617,7 @@ export const YakitFeatureTabName = (feature: string, params: any) => {
     return feature.toUpperCase
 }
 
-const formatJson = (filterVal, jsonData) => {
+export const formatJson = (filterVal, jsonData) => {
     return jsonData.map((v) => filterVal.map((j) => v[j]))
 }
 
