@@ -51,16 +51,6 @@
         .ant-input:hover {
             border-color: var(--input-hover-border-color);
         }
-
-        .ant-input:focus,
-        .ant-input-focused,
-        .ant-input-affix-wrapper:hover,
-        .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover,
-        .ant-input-affix-wrapper-focused,
-        .ant-input-affix-wrapper:focus {
-            border-color: var(--input-hover-border-color) !important;
-            box-shadow: 0 0 0 2px var(--input-box-shadow-color);
-        }
         .ant-input-affix-wrapper {
             padding: 0 8px;
             display: inline-flex;
@@ -68,6 +58,15 @@
             color: var(--yakit-header-color);
             border-color: var(--input-border-color);
             border-radius: 4px;
+        }
+        .ant-input:focus,
+        .ant-input-focused,
+        .ant-input-affix-wrapper:hover,
+        .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover,
+        .ant-input-affix-wrapper-focused,
+        .ant-input-affix-wrapper:focus {
+            border-color: var(--input-hover-border-color);
+            box-shadow: 0 0 0 2px var(--input-box-shadow-color);
         }
     }
 
@@ -452,7 +451,7 @@
         background-color: #fff;
     }
 }
-.yakit-textArea-resize-hide{
+.yakit-textArea-resize-hide {
     resize: none;
 }
 
