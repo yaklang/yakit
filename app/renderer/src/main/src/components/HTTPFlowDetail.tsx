@@ -929,6 +929,15 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             setOriginRspValue(flow?.Response || new Uint8Array())
         }
     }, [rspType, flow?.Response])
+
+    const onInitBeforeValue = useMemoizedFn((data: "request" | "response") => {
+        if(data === "request"){
+            setBeforeResValue(new Uint8Array())
+        }
+        if (data === "response") {
+            setBeforeRspValue(new Uint8Array())
+        }
+    })
     const handleGetHTTPFlowBare = useMemoizedFn((data: "request" | "response") => {
         ipcRenderer
             .invoke("GetHTTPFlowBare", {
@@ -944,8 +953,13 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         setBeforeRspValue(res.Data)
                     }
                 }
+                else{
+                    onInitBeforeValue(data)
+                }
             })
-            .catch((err) => {})
+            .catch((err) => {
+                onInitBeforeValue(data)
+            })
             .finally(() => {})
     })
     const onScrollTo = useMemoizedFn(() => {
