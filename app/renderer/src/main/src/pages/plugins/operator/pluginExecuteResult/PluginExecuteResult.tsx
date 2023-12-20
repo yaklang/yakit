@@ -50,6 +50,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
     const {streamInfo, runtimeId, loading, pluginType} = props
+
     const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
         switch (ele.type) {
             case "risk":
@@ -81,6 +82,27 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 return <></>
         }
     })
+
+    const showTabs = useMemo(() => {
+        if (streamInfo.riskState.length === 0) {
+            return streamInfo.tabsState.filter((item) => item.tabName !== "漏洞与风险")
+        }
+        return streamInfo.tabsState
+    }, [streamInfo.tabsState, streamInfo.riskState])
+
+    const tabBarRender = useMemoizedFn((tab: HoldGRPCStreamProps.InfoTab, length: number) => {
+        if (tab.type === "risk") {
+            return (
+                <>
+                    {tab.tabName}
+                    <span className={styles["plugin-execute-result-tabBar"]}>{length}</span>
+                </>
+            )
+        }
+
+        return tab.tabName
+    })
+
     return (
         <div className={styles["plugin-execute-result"]}>
             {streamInfo.cardState.length > 0 && (
@@ -88,11 +110,11 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                     <HorizontalScrollCard title={"Data Card"} data={streamInfo.cardState} />
                 </div>
             )}
-            {streamInfo.tabsState.length > 0 && (
+            {showTabs.length > 0 && (
                 <PluginTabs>
-                    {streamInfo.tabsState.map((ele) => (
+                    {showTabs.map((ele) => (
                         <TabPane
-                            tab={ele.tabName}
+                            tab={tabBarRender(ele, streamInfo.riskState.length)}
                             key={ele.tabName}
                             className={styles["plugin-execute-result-tabPane"]}
                         >
@@ -100,20 +122,8 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                         </TabPane>
                     ))}
                     {/* <TabPane tab='扫描端口列表' key='port'>
-                    <PluginExecutePortTable />
-                </TabPane>
-                <TabPane tab='漏洞与风险' key='risk'>
-                    <VulnerabilitiesRisksTable />
-                </TabPane>
-                <TabPane tab='HTTP 流量' key='httpFlow' style={{borderBottom: "1px solid var(--yakit-border-color)"}}>
-                    <PluginExecuteHttpFlow runtimeId={runtimeId} />
-                </TabPane>
-                <TabPane tab='基础插件信息 / 日志' key='log'>
-                    <PluginExecuteLog loading={loading} messageList={streamInfo.logState} />
-                </TabPane>
-                <TabPane tab='Console' key='console'>
-                    <EngineConsole isMini={true} />
-                </TabPane> */}
+                        <PluginExecutePortTable />
+                    </TabPane> */}
                 </PluginTabs>
             )}
         </div>
@@ -405,6 +415,14 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
         setSecondNodeVisible(!onlyShowFirstNode)
     }, [onlyShowFirstNode])
 
+    const [treeQueryparams, setTreeQueryparams] = useState<string>("")
+    const [refreshTreeFlag, setRefreshTreeFlag] = useState<boolean>(false)
+    // 流量表筛选条件 改变 控制webtree刷新
+    const onQueryParams = useMemoizedFn((queryParams: string, execFlag?: boolean) => {
+        setTreeQueryparams(queryParams)
+        setRefreshTreeFlag(!!execFlag)
+    })
+
     return (
         <div className={styles["plugin-execute-http-flow"]}>
             <YakitResizeBox
@@ -433,8 +451,8 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
                             ref={webTreeRef}
                             height={height}
                             searchPlaceholder='请输入域名进行搜索,例baidu.com'
-                            treeExtraQueryparams={" "}
-                            refreshTreeFlag={false}
+                            treeExtraQueryparams={treeQueryparams}
+                            refreshTreeFlag={refreshTreeFlag}
                             onGetUrl={(searchURL, includeInUrl) => {
                                 setSearchURL(searchURL)
                                 setIncludeInUrl(includeInUrl)
@@ -458,6 +476,7 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
                         pageType='History'
                         httpHistoryTableTitleStyle={{borderLeft: 0, borderRight: 0}}
                         containerClassName={styles["current-http-table-container"]}
+                        onQueryParams={onQueryParams}
                     />
                 }
             ></YakitResizeBox>

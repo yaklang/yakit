@@ -333,6 +333,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             <PluginDetailHeader
                 pluginName={plugin.ScriptName}
                 help={plugin.Help}
+                tagMinWidth={120}
                 tags={plugin.Tags}
                 extraNode={
                     <div className={styles["plugin-head-executing-wrapper"]}>

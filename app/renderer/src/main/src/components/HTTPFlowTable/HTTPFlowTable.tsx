@@ -1,11 +1,11 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
-import {Button, Divider, Empty, Form, Input, Popover, Select, Space, Tooltip, Badge} from "antd"
+import {Button, Divider, Empty, Form, Input, Select, Space, Tooltip, Badge} from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
-import {yakitInfo, yakitNotify} from "../../utils/notification"
+import {yakitNotify} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -31,18 +31,13 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {FooterBottom, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {
     CheckCircleIcon,
-    FilterIcon,
-    RefreshIcon,
     RemoveIcon,
-    SearchIcon,
     StatusOfflineIcon,
     ColorSwatchIcon,
     ChevronDownIcon,
     ArrowCircleRightSvgIcon,
     ChromeFrameSvgIcon,
-    CheckIcon,
-    TrashIcon,
-    SaveIcon
+    CheckIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
@@ -52,7 +47,7 @@ import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "../yakitUI/YakitTag/YakitCheckableTag"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitMenu, YakitMenuItemProps} from "../yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
 import {YakitDropdownMenu} from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -62,7 +57,7 @@ import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {ShareModal} from "@/pages/fuzzer/components/ShareImportExportData"
 import {YakitRoute} from "@/routes/newRoute"
 import {useSize} from "ahooks"
-import {HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts, HTTPFlowTableFromValue} from "./HTTPFlowTableForm"
+import {HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts} from "./HTTPFlowTableForm"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon} from "../layout/icons"
 import {ExportSelect} from "../DataExport/DataExport"
@@ -70,6 +65,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import { useHttpFlowStore } from "@/store/httpFlow"
+import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -438,6 +434,11 @@ export interface HTTPFlowTableProp {
     onQueryParams?: (queryParams: string, execFlag?: boolean) => void
     titleHeight?:number
     containerClassName?:string
+
+    /** 是否为插件执行使用 */
+    toPlugin?: boolean
+    /** RuntimeId 流量过滤条件(RuntimeId) */
+    runTimeId?: string
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -734,7 +735,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         pageType,
         historyId,
         titleHeight=38,
-        containerClassName=''
+        containerClassName='',
+        toPlugin = false,
+        runTimeId
     } = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
@@ -1057,10 +1060,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "offset" | "update") => {
+        // 插件执行中流量数据必有runTimeId
+        if(toPlugin && !runTimeId) {
+            setTimeout(() => {
+                setLoading(false)
+                isGrpcRef.current = false
+            }, 200)
+            return
+        }
+
         updateQueryParams(query)
         query = query.StatusCode ? {...query, StatusCode: query.StatusCode.join(",")} : query
         if (isGrpcRef.current) return
         isGrpcRef.current = true
+
+        if(runTimeId) query.RuntimeId = runTimeId
+
         // 查询数据
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
@@ -1565,7 +1580,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <SearchIcon onClick={() => getHTTPFlowsFieldGroup(true)} />,
+                    filterIcon: <OutlineSearchIcon onClick={() => getHTTPFlowsFieldGroup(true)} />,
                     filters: tags
                 }
             },
@@ -1704,7 +1719,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <SearchIcon />,
+                    filterIcon: <OutlineSearchIcon />,
                     filters: contentType
                 }
             },
@@ -2697,7 +2712,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     )}
                                     {size?.width && size?.width < 1000 ? (
                                         <YakitPopover trigger='click' placement='bottomRight' content={searchNode}>
-                                            <YakitButton icon={<SearchIcon />} type='outline2' />
+                                            <YakitButton icon={<OutlineSearchIcon />} type='outline2' />
                                         </YakitPopover>
                                     ) : (
                                         <YakitInput.Search
@@ -2956,7 +2971,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             >
                                                 <YakitButton
                                                     type='text2'
-                                                    icon={<RefreshIcon />}
+                                                    icon={<OutlineRefreshIcon />}
                                                     onClick={(e) => e.stopPropagation()}
                                                 />
                                             </Badge>
