@@ -90,23 +90,27 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         if (!cacheHistoryDataKey) return
         onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
             const value = cacheData.defaultValue ? cacheData.defaultValue.split(",") : []
-            let newOption: DefaultOptionType[] = []
-            if (cacheData.options.length > 0) {
-                newOption = cacheData.options as DefaultOptionType[]
-            } else if (props?.defaultOptions?.length > 0) {
-                newOption = (props.defaultOptions || []) as DefaultOptionType[]
-            } else if ((props?.options?.length || 0) > 0) {
-                newOption = props.options as DefaultOptionType[]
-            }
+            let newOption: DefaultOptionType[] = getNewOption(cacheData.options)
             if (props.onChange) props.onChange(value, newOption)
             setCacheHistoryData({defaultValue: value, options: newOption as unknown as YakitOptionTypeProps})
         })
+    })
+    const getNewOption = useMemoizedFn((options) => {
+        let newOption: DefaultOptionType[] = []
+        if (options.length > 0) {
+            newOption = options as DefaultOptionType[]
+        } else if (props?.defaultOptions?.length > 0) {
+            newOption = (props.defaultOptions || []) as DefaultOptionType[]
+        } else if ((props?.options?.length || 0) > 0) {
+            newOption = props.options as DefaultOptionType[]
+        }
+        return newOption||[]
     })
     let extraProps = {}
     if (!props.children) {
         extraProps = {
             ...extraProps,
-            options: cacheHistoryData.options,
+            options: getNewOption(cacheHistoryData.options),
             defaultValue: cacheHistoryData.defaultValue
         }
     }
