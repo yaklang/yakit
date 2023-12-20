@@ -8,7 +8,7 @@ import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
  * @property {string} className
  * @property {string} wrapClassName
  */
-export interface YakitRadioButtonsProps extends Omit<RadioGroupProps, "size" | "optionType" | "optionType"> {
+export interface YakitRadioButtonsProps extends Omit<RadioGroupProps, "size" | "optionType"> {
     size?: YakitSizeType
     className?: string
     wrapClassName?: string
