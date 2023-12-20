@@ -1,9 +1,11 @@
 .drag-list-item-clone {
+    width: 420px;
     padding: 10px 12px 10px 16px;
     display: flex;
     align-items: center;
     flex-direction: row;
     justify-content: space-between;
+    background: var(--yakit-primary-1);
     .title {
         color: #31343f;
         font-size: 12px;
@@ -95,17 +97,21 @@
                     flex-direction: row;
                     justify-content: space-between;
                     border-bottom: 1px solid #eaecf3;
+                    background: #f8f8f8;
                     .title {
                         color: #31343f;
                         font-size: 12px;
                         font-weight: 400;
                         line-height: 16px;
                     }
-                    &:hover{
-                        background:  #F8F8F8;
+                    &:hover {
+                        background: var(--yakit-primary-1);
                     }
                 }
                 :global {
+                    .ant-collapse-item-active {
+                        background-color: #f8f8f8;
+                    }
                     .ant-collapse-item {
                         .ant-collapse-header {
                             padding: 10px 12px;
@@ -117,9 +123,6 @@
                                 font-size: 12px;
                                 font-weight: 600;
                                 line-height: 16px;
-                            }
-                            &:hover{
-                                background:  #F8F8F8;
                             }
                         }
                         .ant-collapse-content {
@@ -138,6 +141,20 @@
                 padding-top: 24px;
                 padding-bottom: 24px;
             }
+        }
+        /* 隐藏滚动条 */
+        .left-drag-list::-webkit-scrollbar {
+            width: 0;
+        }
+
+        /* 隐藏滚动条轨道 */
+        .left-drag-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* 隐藏滚动条滑块 */
+        .left-drag-list::-webkit-scrollbar-thumb {
+            background-color: transparent;
         }
     }
     .new-codec-run-list {
@@ -201,6 +218,7 @@
             }
         }
         .run-list {
+            overflow: auto;
             flex: 1;
             .no-data {
                 height: 100%;
@@ -435,4 +453,116 @@
 .type-item-shield {
     border-bottom: 1px solid #eaecf3;
     background: #f8f8f8;
+}
+.drag-list-item-popover {
+    :global {
+        .ant-popover-content {
+            max-width: 352px;
+        }
+        .ant-popover-inner-content {
+            padding: 16px;
+        }
+
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+
+        .ant-popover-arrow {
+            right: 0;
+        }
+
+        .ant-popover-placement-top,
+        .ant-popover-placement-topLeft,
+        .ant-popover-placement-topRight {
+            padding-bottom: 8px;
+        }
+    }
+}
+.popover-content {
+    .title {
+        color: var(--color-gray-Text-04, #31343f);
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 24px;
+        margin-bottom: 8px;
+    }
+    .content {
+        color: var(--color-gray-Text-03, #85899e);
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+    }
+}
+
+
+.codec-run-list-history-store {
+    width: 300px;
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--yakit-border-color);
+        padding-bottom: 8px;
+        .title {
+            font-weight: 500;
+        }
+    }
+    .list-item-border {
+        border-bottom: 1px solid var(--yakit-border-color);
+    }
+    .list{
+        max-height: 280px;
+        overflow: auto;
+       .list-item {
+        padding: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        &:hover {
+            background-color: rgb(248, 248, 248);
+            border-radius: 4px;
+        }
+        .name {
+            font-size: 13px;
+            flex: 1;
+            padding-right: 6px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .opt {
+            cursor: pointer;
+            svg {
+                height: 16px;
+                width: 16px;
+                color: #b4bbca;
+            }
+            &:hover {
+                svg {
+                    color: #f6544a;
+                }
+            }
+        }
+    } 
+    }
+    
+    .no-data {
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 16px;
+        text-align: center;
+        color: #85899e;
+        margin-top: 8px;
+    }
+}
+.codec-save-modal {
+    padding: 20px;
+    .btn-box {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        gap: 10px;
+        margin-top: 29px;
+    }
 }

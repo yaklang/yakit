@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Divider, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn, useThrottleFn} from "ahooks"
+import {useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./NewCodec.module.scss"
@@ -25,6 +25,7 @@ import {
     OutlineSearchIcon,
     OutlineStarIcon,
     OutlineStorageIcon,
+    OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -33,6 +34,9 @@ import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOperatorContentType"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 interface NewCodecRightEditorBoxProps {
@@ -66,9 +70,11 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         <div className={styles["header"]}>
                             <div className={styles["title"]}>Input</div>
                             <div className={styles["extra"]}>
-                                <div className={styles["extra-icon"]}>
-                                    <OutlineImportIcon />
-                                </div>
+                                <Tooltip title={"导入"}>
+                                    <div className={styles["extra-icon"]}>
+                                        <OutlineImportIcon />
+                                    </div>
+                                </Tooltip>
                                 <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                                 <div className={styles["clear"]}>清空</div>
                             </div>
@@ -92,15 +98,22 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         <div className={styles["header"]}>
                             <div className={styles["title"]}>Output</div>
                             <div className={styles["extra"]}>
-                                <div className={styles["extra-icon"]}>
-                                    <OutlineStorageIcon />
-                                </div>
-                                <div className={styles["extra-icon"]}>
-                                    <OutlineArrowBigUpIcon />
-                                </div>
-                                <div className={styles["extra-icon"]}>
-                                    <OutlineDocumentduplicateIcon />
-                                </div>
+                                <Tooltip title={"保存"}>
+                                    <div className={styles["extra-icon"]}>
+                                        <OutlineStorageIcon />
+                                    </div>
+                                </Tooltip>
+                                <Tooltip title={"将Output替换至Input"}>
+                                    <div className={styles["extra-icon"]}>
+                                        <OutlineArrowBigUpIcon />
+                                    </div>
+                                </Tooltip>
+                                <Tooltip title={"复制"}>
+                                    <div className={styles["extra-icon"]}>
+                                        <OutlineDocumentduplicateIcon />
+                                    </div>
+                                </Tooltip>
+
                                 <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                                 {Expand()}
                             </div>
@@ -198,6 +211,97 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
         </div>
     )
 }
+
+interface CodecRunListHistoryStoreProps {
+    popoverVisible: boolean
+    setPopoverVisible: (v: boolean) => void
+    onSelect: (v: any) => void
+}
+const CodecRunListHistory = "CodecRunListHistory"
+export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> = React.memo((props) => {
+    const {popoverVisible, setPopoverVisible, onSelect} = props
+    const [mitmSaveData, setMitmSaveData] = useState<any[]>([])
+    useEffect(() => {
+        // onMitmSaveFilter()
+    }, [popoverVisible])
+    const onMitmSaveFilter = useMemoizedFn(() => {
+        getRemoteValue(CodecRunListHistory).then((data) => {
+            if (!data) {
+                setMitmSaveData([])
+                return
+            }
+            try {
+                const filterData: any[] = JSON.parse(data)
+                setMitmSaveData(filterData)
+            } catch (error) {}
+        })
+    })
+
+    const removeItem = useMemoizedFn((filterName: string) => {
+        setMitmSaveData((mitmSaveData) => mitmSaveData.filter((item) => item.filterName !== filterName))
+    })
+
+    // useUpdateEffect(() => {
+    //     setRemoteValue(CodecRunListHistory, JSON.stringify(mitmSaveData))
+    // }, [mitmSaveData])
+
+    const onSelectItem = useMemoizedFn((filter) => {
+        onSelect(filter)
+        setPopoverVisible(false)
+    })
+    return (
+        <div className={styles["codec-run-list-history-store"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>历史存储</div>
+                {mitmSaveData.length !== 0 && (
+                    <YakitButton
+                        type='text'
+                        colors='danger'
+                        onClick={() => {
+                            setMitmSaveData([])
+                        }}
+                    >
+                        清空
+                    </YakitButton>
+                )}
+            </div>
+
+            {mitmSaveData.length > 0 ? (
+                <div className={styles["list"]}>
+                    {mitmSaveData.map((item, index) => (
+                        <div
+                            key={item.filterName}
+                            className={classNames(styles["list-item"], {
+                                [styles["list-item-border"]]: index !== mitmSaveData.length - 1
+                            })}
+                            onClick={() => {
+                                onSelectItem(item.filter)
+                            }}
+                        >
+                            <div className={styles["name"]}>{item.filterName}</div>
+                            <div
+                                className={styles["opt"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    removeItem(item.filterName)
+                                }}
+                            >
+                                <OutlineTrashIcon />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className={classNames(styles["no-data"])}>暂无数据</div>
+            )}
+        </div>
+    )
+})
+
+interface SaveObjProps {
+    historyName: string
+}
+
 interface NewCodecMiddleRunListProps {
     rightItems: any
 }
@@ -217,6 +321,83 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (props) => {
     const {rightItems} = props
+    const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
+    const [_, setFilterName, getFilterName] = useGetState<string>("")
+    // 历史选取项
+    const onMenuSelect = useMemoizedFn((v) => {})
+
+    // 保存至历史
+    const onSaveCodecRunListHistory = useMemoizedFn(() => {
+        const m = showYakitModal({
+            title: "保存编解码顺序",
+            content: (
+                <div className={styles["codec-save-modal"]}>
+                    <YakitInput.TextArea
+                        placeholder='请为编解码顺序取个名字...'
+                        showCount
+                        maxLength={50}
+                        onChange={(e) => {
+                            setFilterName(e.target.value)
+                        }}
+                    />
+                    <div className={styles["btn-box"]}>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                setFilterName("")
+                                m.destroy()
+                            }}
+                        >
+                            取消
+                        </YakitButton>
+                        <YakitButton
+                            type='primary'
+                            onClick={() => {
+                                if (getFilterName().length === 0) {
+                                    warn("请输入名字")
+                                    return
+                                }
+                                // const filter = filtersRef.current.getFormValue()
+                                const saveObj: SaveObjProps = {
+                                    historyName: getFilterName()
+                                    // filter
+                                }
+                                // getRemoteValue(CodecRunListHistory).then((data) => {
+                                //     if (!data) {
+                                //         setRemoteValue(CodecRunListHistory, JSON.stringify([saveObj]))
+                                //         info("存储成功")
+                                //         m.destroy()
+                                //         return
+                                //     }
+                                //     try {
+                                //         const filterData: SaveObjProps[] = JSON.parse(data)
+                                //         if (
+                                //             filterData.filter((item) => item.historyName === getFilterName()).length > 0
+                                //         ) {
+                                //             warn("此名字重复")
+                                //         } else {
+                                //             setRemoteValue(CodecRunListHistory, JSON.stringify([saveObj, ...filterData]))
+                                //             info("存储成功")
+                                //             m.destroy()
+                                //         }
+                                //     } catch (error) {}
+                                // })
+                            }}
+                        >
+                            保存
+                        </YakitButton>
+                    </div>
+                </div>
+            ),
+            onCancel: () => {
+                setFilterName("")
+                m.destroy()
+            },
+            footer: null,
+            width: 400
+        })
+    })
+
     return (
         <div className={styles["new-codec-run-list"]}>
             <div className={styles["header"]}>
@@ -224,12 +405,29 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                     编解码顺序<span className={styles["count"]}>0</span>
                 </div>
                 <div className={styles["extra"]}>
-                    <div className={styles["extra-icon"]}>
-                        <OutlineStorageIcon />
-                    </div>
-                    <div className={styles["extra-icon"]}>
-                        <OutlineClockIcon />
-                    </div>
+                    <Tooltip title={"保存"}>
+                        <div className={styles["extra-icon"]} onClick={onSaveCodecRunListHistory}>
+                            <OutlineStorageIcon />
+                        </div>
+                    </Tooltip>
+                    <YakitPopover
+                        overlayClassName={styles["http-history-table-drop-down-popover"]}
+                        content={
+                            <CodecRunListHistoryStore
+                                onSelect={(v) => onMenuSelect(v)}
+                                popoverVisible={popoverVisible}
+                                setPopoverVisible={setPopoverVisible}
+                            />
+                        }
+                        trigger='click'
+                        placement='bottomRight'
+                        onVisibleChange={setPopoverVisible}
+                        visible={popoverVisible}
+                    >
+                        <div className={styles["extra-icon"]}>
+                            <OutlineClockIcon />
+                        </div>
+                    </YakitPopover>
                     <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                     <div className={styles["clear"]}>清空</div>
                 </div>
@@ -240,7 +438,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                     {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps}>
                             {rightItems.map((item, index) => (
-                                <Draggable key={index} draggableId={`right-${index}`} index={index}>
+                                <Draggable key={`run-${index}`} draggableId={`run-${index}`} index={index}>
                                     {(provided, snapshot) => (
                                         <div
                                             ref={provided.innerRef}
@@ -285,7 +483,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
 
 interface NewCodecLeftDragListItemProps {
     node: LeftDataNodeProps[]
-    itemIndex: number
+    parentItem: LeftDataProps
 }
 let lastIsDragging = false
 const getLeftItemStyle = (isDragging, draggableStyle) => {
@@ -307,7 +505,7 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
                 transform = modifiedString
             }
             // 为解决列表最后一个元素超出时,样式溢出
-            if(!lastIsDragging&&value1===0&&value2<-200){
+            if (!lastIsDragging && value1 === 0 && value2 < -200) {
                 transform = `translate(0px, 0px)`
             }
         }
@@ -321,26 +519,47 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
 
 // 左边拖拽源
 export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> = (props) => {
-    const {node, itemIndex} = props
+    const {node, parentItem} = props
+
+    // 将其添加至运行列表
+    const onClickToRunList = useMemoizedFn(() => {
+        console.log("onClickToRunList")
+    })
 
     const dragListItemDom = useMemoizedFn((item) => (
-        <div className={styles["drag-list-item"]}>
-            <div className={styles["title"]}>{item.title}</div>
-            <div className={styles["extra"]}></div>
-            {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
+        <YakitPopover
+            // visible={true}
+            placement='right'
+            overlayClassName={styles["drag-list-item-popover"]}
+            content={
+                <div className={styles["popover-content"]}>
+                    <div className={styles["title"]}>Base64 解码</div>
+                    <div className={styles["content"]}>
+                        Base64
+                        是一种使用一组受限符号对任意字节数据进行编码的表示法，这些符号可以方便地被人类使用并由计算机处理。
+                    </div>
+                </div>
+            }
+        >
+            <div className={styles["drag-list-item"]} onClick={onClickToRunList}>
+                <div className={styles["title"]}>{item.title}</div>
+                <div className={styles["extra"]}>
+                    {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
                 e.stopPropagation()
             }}>
                 <OutlineStarIcon/>
             </div> */}
-            <div
-                className={classNames(styles["star-icon"], styles["star-icon-active"])}
-                onClick={(e) => {
-                    e.stopPropagation()
-                }}
-            >
-                <SolidStarIcon />
+                    <div
+                        className={classNames(styles["star-icon"], styles["star-icon-active"])}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
+                        <SolidStarIcon />
+                    </div>
+                </div>
             </div>
-        </div>
+        </YakitPopover>
     ))
 
     return (
@@ -350,7 +569,7 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
             isDropDisabled={true}
             renderClone={(provided, snapshot, rubric) => {
                 const item: LeftDataNodeProps[] =
-                    node.filter((item) => `left-${item.title}` === rubric.draggableId) || []
+                    node.filter((item) => `${parentItem.title}-${item.title}` === rubric.draggableId) || []
                 return (
                     <div
                         ref={provided.innerRef}
@@ -364,17 +583,18 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
                             {item.length > 0 && (
                                 <div className={styles["drag-list-item-clone"]}>
                                     <div className={styles["title"]}>{item[0].title}</div>
-                                    <div className={styles["extra"]}></div>
-                                    {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])}>
+                                    <div className={styles["extra"]}>
+                                        {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])}>
                                         <OutlineStarIcon/>
                                     </div> */}
-                                    <div
-                                        className={classNames(styles["star-icon"], styles["star-icon-active"])}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                        }}
-                                    >
-                                        <SolidStarIcon />
+                                        <div
+                                            className={classNames(styles["star-icon"], styles["star-icon-active"])}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                        >
+                                            <SolidStarIcon />
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -388,9 +608,9 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
                     {node.map((item, index) => {
                         return (
                             <Draggable
-                                key={itemIndex * 10 + index}
-                                draggableId={`left-${item.title}`}
-                                index={itemIndex * 10 + index}
+                                key={`${parentItem.title}-${item.title}`}
+                                draggableId={`${parentItem.title}-${item.title}`}
+                                index={index}
                                 shouldCloneOnDrag={false}
                             >
                                 {(provided, snapshot) => (
@@ -514,10 +734,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                                             }
                                         >
                                             {item.node.length > 0 && (
-                                                <NewCodecLeftDragListItem
-                                                    node={item.node}
-                                                    itemIndex={index}
-                                                />
+                                                <NewCodecLeftDragListItem node={item.node} parentItem={item} />
                                             )}
                                         </YakitPanel>
                                     )
@@ -545,13 +762,11 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
     )
 }
 
-const initialLeftItems = ["Item 1", "Item 2", "Item 3"]
 const initialRightItems = ["Item A", "Item B", "Item C"]
 export interface NewCodecProps {}
 const NewCodec: React.FC<NewCodecProps> = (props) => {
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
-    const [leftItems, setLeftItems] = useState(initialLeftItems)
     const [rightItems, setRightItems] = useState(initialRightItems)
     const [leftData, setLeftData] = useState<LeftDataProps[]>([
         {
@@ -614,14 +829,13 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
      */
     const onDragEnd = useMemoizedFn((result: DragDropContextResultProps) => {
         const {source, destination} = result
-        // console.log("onDragEnd", source, destination, result)
+        console.log("onDragEnd", result)
 
         // 左边向右边拖拽
         if (source.droppableId === "left" && destination && destination.droppableId === "right") {
-            const [removed] = leftItems.splice(source.index, 1)
-            rightItems.splice(destination.index, 0, removed)
-            setLeftItems([...leftItems])
-            setRightItems([...rightItems])
+            // rightItems.splice(destination.index, 0, removed)
+            // setLeftItems([...leftItems])
+            // setRightItems([...rightItems])
         }
 
         // 右边内部排序
@@ -643,9 +857,7 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
         {wait: 200}
     ).run
 
-    
     const onBeforeCapture = useMemoizedFn((result: DragDropContextResultProps) => {})
-
 
     const onDragStart = useMemoizedFn((result: DragDropContextResultProps) => {
         if (!result.source) return
@@ -660,7 +872,7 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                     onDragUpdate={onDragUpdate}
                     onBeforeCapture={onBeforeCapture}
                 >
-                    <NewCodecLeftDragList leftData={leftData}/>
+                    <NewCodecLeftDragList leftData={leftData} />
                     <NewCodecMiddleRunList rightItems={rightItems} />
                 </DragDropContext>
             )}
