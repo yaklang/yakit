@@ -569,7 +569,7 @@ const onClose = useMemoizedFn(()=>{
                     <>
                     </>
                 )}
-                 <YakitDrawer
+                 {visible && !!inViewport&&<YakitDrawer
                 placement='bottom'
                 closable={false}
                 onClose={onClose}
@@ -589,7 +589,7 @@ const onClose = useMemoizedFn(()=>{
                 }
             >
                 {drawerData&&<WebShellDetailOpt id='' webshellInfo={drawerData}/>}
-            </YakitDrawer>
+            </YakitDrawer>}
         </div>
 
     )
