@@ -35,12 +35,14 @@ export interface YakExtraParamProps {
 export interface ExecuteEnterNodeByPluginParamsProps {
     paramsList: YakParamProps[]
     pluginType?:string
+    isExecuting:boolean
 }
 
 export interface OutputFormComponentsByTypeProps {
     item: YakParamProps
     extraSetting?: FormExtraSettingProps
     pluginType?:string
+    disabled?:boolean
 }
 
 export interface FormExtraSettingProps {

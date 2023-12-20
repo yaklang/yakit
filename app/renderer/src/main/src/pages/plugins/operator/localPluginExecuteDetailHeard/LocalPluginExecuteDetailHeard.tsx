@@ -226,7 +226,13 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         switch (type) {
             case "yak":
             case "lua":
-                return <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={plugin.Type} />
+                return (
+                    <ExecuteEnterNodeByPluginParams
+                        paramsList={requiredParams}
+                        pluginType={plugin.Type}
+                        isExecuting={isExecuting}
+                    />
+                )
             case "codec":
                 const codecItem: YakParamProps = {
                     Field: "Input",
@@ -236,7 +242,14 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     DefaultValue: "",
                     Help: "Input"
                 }
-                return <OutputFormComponentsByType key='Input-Input' item={codecItem} pluginType={plugin.Type} />
+                return (
+                    <OutputFormComponentsByType
+                        key='Input-Input'
+                        item={codecItem}
+                        pluginType={plugin.Type}
+                        disabled={isExecuting}
+                    />
+                )
             case "mitm":
             case "port-scan":
             case "nuclei":
@@ -248,7 +261,14 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     DefaultValue: "",
                     Help: "Input"
                 }
-                return <OutputFormComponentsByType key='Input-扫描目标' item={item} pluginType={plugin.Type} />
+                return (
+                    <OutputFormComponentsByType
+                        key='Input-扫描目标'
+                        item={item}
+                        pluginType={plugin.Type}
+                        disabled={isExecuting}
+                    />
+                )
             default:
                 return <></>
         }
@@ -450,7 +470,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
 
 /**执行的入口通过插件参数生成组件 */
 const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsProps> = React.memo((props) => {
-    const {paramsList, pluginType} = props
+    const {paramsList, pluginType, isExecuting} = props
     const formContent = (item: YakParamProps) => {
         let extraSetting: FormExtraSettingProps | undefined = undefined
         try {
@@ -473,12 +493,20 @@ const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsPro
                                 rules: [{required: item.Required}]
                             }}
                             selectType='all'
+                            disabled={isExecuting}
                         />
                     </>
                 )
 
             default:
-                return <OutputFormComponentsByType item={item} extraSetting={extraSetting} pluginType={pluginType} />
+                return (
+                    <OutputFormComponentsByType
+                        item={item}
+                        extraSetting={extraSetting}
+                        pluginType={pluginType}
+                        disabled={isExecuting}
+                    />
+                )
         }
     }
     return (
@@ -492,7 +520,7 @@ const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsPro
 
 /**执行表单单个项 */
 export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
-    const {item, extraSetting, pluginType} = props
+    const {item, extraSetting, pluginType, disabled} = props
     const [validateStatus, setValidateStatus] = useState<"success" | "error">("success")
     const [code, setCode] = useState<Buffer>(Buffer.from(item.DefaultValue || "", "utf8"))
     const formProps = {
@@ -515,31 +543,31 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
         case "string":
             return (
                 <Form.Item {...formProps}>
-                    <YakitInput placeholder='请输入' />
+                    <YakitInput placeholder='请输入' disabled={disabled} />
                 </Form.Item>
             )
         case "text":
             return (
                 <Form.Item {...formProps}>
-                    <YakitInput.TextArea placeholder='请输入' />
+                    <YakitInput.TextArea placeholder='请输入' disabled={disabled} />
                 </Form.Item>
             )
         case "uint":
             return (
                 <Form.Item {...formProps}>
-                    <YakitInputNumber precision={0} min={0} />
+                    <YakitInputNumber precision={0} min={0} disabled={disabled} />
                 </Form.Item>
             )
         case "float":
             return (
                 <Form.Item {...formProps}>
-                    <YakitInputNumber step={0.1} />
+                    <YakitInputNumber step={0.1} disabled={disabled} />
                 </Form.Item>
             )
         case "boolean":
             return (
                 <Form.Item {...formProps} valuePropName='checked'>
-                    <YakitSwitch size='large' />
+                    <YakitSwitch size='large' disabled={disabled} />
                 </Form.Item>
             )
         case "select":
@@ -554,7 +582,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
             }
             return (
                 <Form.Item {...formProps}>
-                    <YakitSelect {...selectProps} />
+                    <YakitSelect {...selectProps} disabled={disabled} />
                 </Form.Item>
             )
         case "http-packet":
@@ -582,7 +610,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     trigger='setValue'
                     validateTrigger='setValue'
                 >
-                    <HTTPPacketYakitEditor originValue={code} value={item.DefaultValue || ""} />
+                    <HTTPPacketYakitEditor originValue={code} value={item.DefaultValue || ""} readOnly={disabled} />
                 </Form.Item>
             )
         case "yak":
@@ -610,7 +638,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     trigger='setValue'
                     validateTrigger='setValue'
                 >
-                    <YakitEditor type={pluginType} value={item.DefaultValue || ""} />
+                    <YakitEditor type={pluginType} value={item.DefaultValue || ""} readOnly={disabled} />
                 </Form.Item>
             )
 
