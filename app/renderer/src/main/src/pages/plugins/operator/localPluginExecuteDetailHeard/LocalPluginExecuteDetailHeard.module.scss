@@ -15,11 +15,6 @@
 .plugin-execute-form-wrapper {
     @extend %display-column-center;
     padding-top: 24px;
-    :global {
-        .ant-form-item-label > label .ant-form-item-tooltip {
-            color: var(--yakit-helper-text-color);
-        }
-    }
     .plugin-execute-form-item {
         width: 100%;
     }
@@ -50,9 +45,11 @@
             border: 0;
         }
         .ant-form-item-control-input-content {
-            box-shadow: 0 0 0 2px rgb(255 77 79 / 20%);
             border-radius: 2px;
-            border: 1px solid #ff4d4f;
+            border: 1px solid var(--yakit-danger-5);
+            &:focus-within {
+                box-shadow: 0 0 0 2px var(--yakit-danger-1);
+            }
         }
     }
 }
