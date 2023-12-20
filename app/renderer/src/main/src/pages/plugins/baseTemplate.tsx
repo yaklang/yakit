@@ -200,7 +200,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                     </div>
                     <div className={styles["header-btn"]}>
                         <YakitButton type='text2' icon={<OutlineReplyIcon />} onClick={onBack}>
-                            返回
+                            返回列表
                         </YakitButton>
                         <div className={styles["divider-style"]}></div>
                         <YakitButton
