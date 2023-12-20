@@ -60,7 +60,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         runTimeId = ""
     } = props
 
-    const [treeLoading, setTreeLoading] = useState<boolean>(true)
+    const [treeLoading, setTreeLoading] = useState<boolean>(false)
     // 未搜索情况时的网站树
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
     // 已搜索情况时的网站树
@@ -89,12 +89,14 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }
 
     const getTreeData = useMemoizedFn((yakurl: string) => {
+        if(treeLoading)return
+
         // 由于这里会有闭包 30毫秒后再掉接口
         setTreeLoading(true)
         setTimeout(() => {
             let params: string = ""
             if (treeExtraQueryparams) {
-                params = treeExtraQueryparams
+                params = `params=${treeExtraQueryparams}`
             }
 
             let search: string = ""
@@ -109,7 +111,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             if (runTimeId) {
                 runTime_id = params || search ? `&runtime_id=${runTimeId}` : `runtime_id=${runTimeId}`
             }
-
+            console.log("webtree-first", `${yakurl}?${params}${search}${runTime_id}`)
             loadFromYakURLRaw(`${yakurl}?${params}${search}${runTime_id}`, (res) => {
                 // 判断是否是搜索树
                 if (searchTreeFlag.current) {
@@ -190,7 +192,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             if (runTimeId) {
                 obj.Query.push({Key: "runtime_id", Value: runTimeId})
             }
-
+            console.log("webtree-loadmore", JSON.stringify(obj))
             requestYakURLList(
                 obj,
                 (rsp) => {
@@ -361,7 +363,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         <div className={styles.webTree} ref={webTreeRef}>
             <div className={styles["tree-top-wrap"]} ref={treeTopWrapRef}>
                 <YakitInput.Search
-                    wrapperStyle={{ width: "calc(100% - 40px)", marginBottom: 15 }}
+                    wrapperStyle={{width: "calc(100% - 40px)", marginBottom: 15}}
                     placeholder={searchPlaceholder}
                     allowClear
                     onChange={onSearchChange}
