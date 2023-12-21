@@ -19,6 +19,7 @@ import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import styles from "./WebTree.module.scss"
 
 type TreeNodeType = "dir" | "file" | "query" | "path"
+
 export interface TreeNode extends DataNode {
     data?: YakURLResource // 树节点其他额外数据
 }
@@ -73,9 +74,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
 
     const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
         const iconsEle = {
-            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
-            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
-            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
+            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon'/>,
+            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon'/>,
+            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon'/>
         }
         return iconsEle[treeNodeType] || <></>
     }
@@ -133,9 +134,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 icon: ({expanded}) => {
                     if (item.ResourceType === "dir") {
                         return expanded ? (
-                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                            <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
                         ) : (
-                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                            <SolidFolderaddIcon className='yakitTreeNode-icon'/>
                         )
                     }
                     return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
@@ -174,6 +175,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             const url = {
                 ...data.Url
             }
+
+            console.log("url", url)
             if (schema === "website") {
                 url.Query = [{Key: "params", Value: handleFilterParams()}]
                 if (key.startsWith("https://")) {
@@ -199,9 +202,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                             icon: ({expanded}) => {
                                 if (i.ResourceType === "dir") {
                                     return expanded ? (
-                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
                                     ) : (
-                                        <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                                        <SolidFolderaddIcon className='yakitTreeNode-icon'/>
                                     )
                                 }
                                 return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
@@ -356,7 +359,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }, [treeTopWrapRef.current])
 
     // 搜索框
-    const onSearchChange = useMemoizedFn((e: {target: {value: string}}) => {
+    const onSearchChange = useMemoizedFn((e: { target: { value: string } }) => {
         const value = e.target.value
         setSearchValue(value)
     })
@@ -372,11 +375,11 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     onSearch={onSearchTree}
                     value={searchValue}
                 />
-                <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshTree} style={{marginBottom: 15}} />
+                <YakitButton type='text2' icon={<RefreshIcon/>} onClick={refreshTree} style={{marginBottom: 15}}/>
             </div>
             <div className={styles["tree-wrap"]}>
                 {treeLoading ? (
-                    <YakitSpin />
+                    <YakitSpin/>
                 ) : (
                     <YakitTree
                         height={height !== undefined ? height - treeTopWrapHeight : undefined}
