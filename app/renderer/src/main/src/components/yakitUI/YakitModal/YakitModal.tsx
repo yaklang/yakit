@@ -1,47 +1,56 @@
 import React, {CSSProperties, ReactNode, useMemo} from "react"
 import {Modal, ModalProps} from "antd"
 import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
-import {RemoveIcon} from "@/assets/newIcon"
-
-import styles from "./yakitModal.module.scss"
+import {OutlineXIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
 
-export interface YakitModalProp extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType"> {
+import styles from "./yakitModal.module.scss"
+
+export interface YakitModalProp extends Omit<ModalProps, "style" | "cancelButtonProps" | "okButtonProps" | "okType"> {
+    headerStyle?: CSSProperties
+    footerStyle?: CSSProperties
+
     cancelButtonProps?: YakitButtonProp
     okButtonProps?: YakitButtonProp
     okType?: YakitButtonProp["type"]
+
     /** @name 副标题 */
     subTitle?: ReactNode
-    /** @name footer组件style */
-    footerStyle?: CSSProperties
-    /** @name footer组件左部操作区域 */
+    /** @name footer组件左侧操作区域 */
     footerExtra?: ReactNode
-    /** header和footer背景色(灰底和白底) */
+    /** 弹框类型 */
     type?: "gray" | "white"
+    /** @name 弹框的尺寸 */
+    size?: "small" | "large"
 }
 
 /** 可以用，但是使用的时候考虑部分属性的覆盖重写问题， */
 export const YakitModal: React.FC<YakitModalProp> = (props) => {
     const {
         children,
+        /** 样式属性 ↓↓↓ */
         wrapClassName,
-        title,
-        closable,
+        headerStyle,
+        bodyStyle,
+        footerStyle,
+        /** 原有属性 ↓↓↓ */
+        closable = true,
         closeIcon,
+        title,
         footer,
-        cancelText = "取消",
         cancelButtonProps,
-        okText = "确认",
-        confirmLoading,
-        okType,
+        cancelText = "取消",
         okButtonProps,
+        confirmLoading,
+        okText = "确认",
+        okType,
         onCancel,
         onOk,
         /** 自定义新增属性 ↓↓↓ */
-        subTitle,
-        footerStyle,
-        footerExtra,
         type = "gray",
+        size = "small",
+        subTitle,
+        footerExtra,
         ...resetProps
     } = props
 
@@ -49,49 +58,63 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         if (type === "white") return styles["yakit-modal-white"]
         return styles["yakit-modal-gray"]
     }, [type])
+    const sizeClass = useMemo(() => {
+        if (size === "large") return styles["yakit-modal-large"]
+        return styles["yakit-modal-small"]
+    }, [size])
 
     return (
         <Modal
             {...resetProps}
-            wrapClassName={classNames(styles["yakit-modal-wrapper"], typeClass, wrapClassName)}
+            wrapClassName={classNames(styles["yakit-modal-wrapper"], typeClass, sizeClass, wrapClassName)}
             closable={false}
             footer={null}
             onCancel={onCancel}
         >
             <div className={styles["yakit-modal-body"]}>
-                {closable && (
-                    <div className={styles["body-close"]} onClick={onCancel}>
-                        {!!closeIcon ? closeIcon : <RemoveIcon className={styles["close-icon"]} />}
-                    </div>
-                )}
-                {!!title && (
-                    <div className={styles["body-header"]}>
-                        {title}
-                        <span className={styles["body-header-subTitle"]}>{subTitle}</span>
-                    </div>
-                )}
-                <div className={styles["body-content"]}>{children}</div>
-                {footer === null ? (
-                    <></>
-                ) : (
-                    <div
-                        style={footerStyle || {}}
-                        className={!!footer ? styles["body-custom-footer"] : styles["body-footer"]}
-                    >
+                <div style={headerStyle || undefined} className={styles["header-body"]}>
+                    {!!title && (
+                        <div className={styles["title-wrapper"]}>
+                            {title}
+                            <span className={styles["subtitle-style"]}>{subTitle}</span>
+                        </div>
+                    )}
+                    {closable && (
+                        <YakitButton
+                            type='text2'
+                            size={size === "large" ? "large" : "middle"}
+                            icon={!!closeIcon ? closeIcon : <OutlineXIcon />}
+                            onClick={onCancel}
+                        />
+                    )}
+                </div>
+
+                <div style={bodyStyle || undefined} className={styles["content-body"]}>
+                    {children}
+                </div>
+
+                {footer === null ? null : (
+                    <div style={footerStyle || undefined} className={styles["footer-body"]}>
                         {!!footer ? (
                             footer
                         ) : (
                             <>
-                                <div className={styles["body-footer-extra"]}>{footerExtra || <></>}</div>
-                                <div className={styles["body-footer-btn"]}>
-                                    <YakitButton type='outline2' {...cancelButtonProps} onClick={onCancel}>
+                                <div className={styles["footer-extra"]}>{footerExtra || null}</div>
+                                <div className={styles["footer-btn-group"]}>
+                                    <YakitButton
+                                        size={size === "large" ? "large" : "middle"}
+                                        type='outline2'
+                                        onClick={onCancel}
+                                        {...cancelButtonProps}
+                                    >
                                         {cancelText}
                                     </YakitButton>
                                     <YakitButton
-                                        {...okButtonProps}
                                         loading={confirmLoading}
+                                        size={size === "large" ? "large" : "middle"}
                                         type={okType}
                                         onClick={onOk}
+                                        {...okButtonProps}
                                     >
                                         {okText}
                                     </YakitButton>
