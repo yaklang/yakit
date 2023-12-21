@@ -8,7 +8,7 @@ import styles from "./uiOperate.module.scss"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import emiter from "@/utils/eventBus/eventBus"
-import { yakitFailed } from "@/utils/notification"
+import {yakitFailed} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -56,20 +56,22 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
     }, [temporaryProjectId])
 
     const handleCloseSoft = async () => {
-        // 如果运行节点存在
-        if (Array.from(runNodeList).length) {
-            setCloseRunNodeItemVerifyVisible(true)
-            return
-        }
-        // 如果打开得是临时项目
-        if (
-            props.pageChildrenShow && lastTemporaryProjectIdRef.current === props.currentProjectId &&
-            !lastTemporaryProjectNoPromptRef.current
-        ) {
-            setCloseTemporaryProjectVisible(true)
-            return
-        } else {
-            await handleTemporaryProject()
+        if (props.pageChildrenShow) {
+            // 如果运行节点存在
+            if (Array.from(runNodeList).length) {
+                setCloseRunNodeItemVerifyVisible(true)
+                return
+            }
+            // 如果打开得是临时项目
+            if (
+                lastTemporaryProjectIdRef.current === props.currentProjectId &&
+                !lastTemporaryProjectNoPromptRef.current
+            ) {
+                setCloseTemporaryProjectVisible(true)
+                return
+            } else {
+                await handleTemporaryProject()
+            }
         }
         operate("close")
     }

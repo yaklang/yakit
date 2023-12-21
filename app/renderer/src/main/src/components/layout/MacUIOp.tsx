@@ -55,21 +55,22 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
     }, [temporaryProjectId])
 
     const handleCloseSoft = async () => {
-        // 如果运行节点存在
-        if (Array.from(runNodeList).length) {
-            setCloseRunNodeItemVerifyVisible(true)
-            return
-        }
-        // 如果打开得是临时项目
-        if (
-            props.pageChildrenShow &&
-            lastTemporaryProjectIdRef.current === props.currentProjectId &&
-            !lastTemporaryProjectNoPromptRef.current
-        ) {
-            setCloseTemporaryProjectVisible(true)
-            return
-        } else {
-            await handleTemporaryProject()
+        if (props.pageChildrenShow) {
+            // 如果运行节点存在
+            if (Array.from(runNodeList).length) {
+                setCloseRunNodeItemVerifyVisible(true)
+                return
+            }
+            // 如果打开得是临时项目
+            if (
+                lastTemporaryProjectIdRef.current === props.currentProjectId &&
+                !lastTemporaryProjectNoPromptRef.current
+            ) {
+                setCloseTemporaryProjectVisible(true)
+                return
+            } else {
+                await handleTemporaryProject()
+            }
         }
         operate("close")
     }
