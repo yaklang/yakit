@@ -307,6 +307,10 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                     </>
                                                 }
                                                 onConfirm={async () => {
+                                                    if (+i.port === port) {
+                                                        await handleTemporaryProject()
+                                                    }
+                                                    
                                                     ipcRenderer
                                                         .invoke("kill-yak-grpc", i.pid)
                                                         .then((val) => {
