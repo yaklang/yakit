@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     HorizontalScrollCardItemInfoSingleProps,
     HorizontalScrollCardProps,
@@ -10,6 +10,7 @@ import styles from "./HorizontalScrollCard.module.scss"
 import classNames from "classnames"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon, OutlineHashtagIcon} from "@/assets/icon/outline"
 import {useLongPress, useThrottleFn} from "ahooks"
+import ReactResizeDetector from "react-resize-detector"
 
 const getTextColor = (id: string) => {
     switch (true) {
@@ -48,12 +49,32 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
     const {title, data = []} = props
     const [scroll, setScroll] = useState<HorizontalScrollCardScrollProps>({
         scrollLeft: 0,
-        scrollRight: 1 //初始值要大于1
+        scrollRight: 0
     })
+    const [cardWidth, setCardWidth] = useState<number>(0)
+    const [cardWidthWrapper, setCardWidthWrapper] = useState<number>(0)
 
+    const horizontalScrollCardWrapperRef = useRef<HTMLDivElement>(null)
     const horizontalScrollCardRef = useRef<HTMLDivElement>(null)
     const scrollLeftIconRef = useRef<HTMLDivElement>(null)
     const scrollRightIconRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (!cardWidth) return
+        if (!cardWidthWrapper) return
+        if (cardWidth >= cardWidthWrapper && scroll.scrollRight === 0) {
+            setScroll({
+                ...scroll,
+                scrollRight: 1
+            })
+        }
+        if (cardWidthWrapper > cardWidth && scroll.scrollRight > 0) {
+            setScroll({
+                ...scroll,
+                scrollRight: 0
+            })
+        }
+    }, [cardWidth, cardWidthWrapper])
 
     useLongPress(
         () => {
@@ -112,7 +133,19 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                 <span className={styles["horizontal-scroll-card-heard-title"]}>{title}</span>
                 <div className={styles["horizontal-scroll-card-heard-total"]}>{data.length}</div>
             </div>
-            <div className={styles["horizontal-scroll-card-list-wrapper"]}>
+            <div className={styles["horizontal-scroll-card-list-wrapper"]} ref={horizontalScrollCardWrapperRef}>
+                <ReactResizeDetector
+                    onResize={(w, h) => {
+                        if (!w || !h) {
+                            return
+                        }
+                        setCardWidthWrapper(w)
+                    }}
+                    handleWidth={true}
+                    handleHeight={true}
+                    refreshMode={"debounce"}
+                    refreshRate={50}
+                />
                 {scroll.scrollLeft > 0 && (
                     <div
                         className={classNames(styles["horizontal-scroll-card-list-direction-left"])}
@@ -126,6 +159,18 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                     ref={horizontalScrollCardRef}
                     onScroll={onScrollCardList}
                 >
+                    <ReactResizeDetector
+                        onResize={(w, h) => {
+                            if (!w || !h) {
+                                return
+                            }
+                            setCardWidth(w)
+                        }}
+                        handleWidth={true}
+                        handleHeight={true}
+                        refreshMode={"debounce"}
+                        refreshRate={50}
+                    />
                     {data.map((cardItem) => (
                         <React.Fragment key={cardItem.tag}>
                             {cardItem.info.length > 1 ? (
@@ -172,7 +217,7 @@ const HorizontalScrollCardItemInfoMultiple: React.FC<StatusCardListProps> = Reac
             <div className={styles["horizontal-scroll-card-list-item-info-multiple-infos"]}>
                 {info.map((ele) => (
                     <div
-                        key={ele.Timestamp+ele.Id}
+                        key={ele.Timestamp + ele.Id}
                         className={styles["horizontal-scroll-card-list-item-info-multiple-infos-item"]}
                     >
                         <div
