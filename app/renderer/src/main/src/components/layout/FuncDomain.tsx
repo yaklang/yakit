@@ -73,6 +73,7 @@ import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
 import {onImportPlugin} from "@/pages/fuzzer/components/ShareImport"
+import { useTemporaryProjectStore } from "@/store/temporaryProject"
 
 const {ipcRenderer} = window.require("electron")
 const {Dragger} = Upload
@@ -1010,6 +1011,8 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const [available, setAvailable] = useState(false) // cve数据库是否可用
     const [isDiffUpdate, setIsDiffUpdate] = useState(false)
     const {dynamicStatus} = yakitDynamicStatus()
+    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+        
     useEffect(() => {
         onIsCVEDatabaseReady()
     }, [])
@@ -1119,7 +1122,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 addToTab("**beta-codec")
                 return
             case "invalidCache":
-                invalidCacheAndUserData()
+                invalidCacheAndUserData(temporaryProjectId, setTemporaryProjectId)
                 return
             case "pcapfix":
                 showPcapPermission()
