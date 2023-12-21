@@ -53,7 +53,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
         lastTemporaryProjectIdRef.current = temporaryProjectId
     }, [temporaryProjectId])
 
-    const handleCloseSoft = () => {
+    const handleCloseSoft = async () => {
         // 如果运行节点存在
         if (Array.from(runNodeList).length) {
             setCloseRunNodeItemVerifyVisible(true)
@@ -67,6 +67,8 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
         ) {
             setCloseTemporaryProjectVisible(true)
             return
+        } else {
+            await handleTemporaryProject()
         }
         operate("close")
     }
