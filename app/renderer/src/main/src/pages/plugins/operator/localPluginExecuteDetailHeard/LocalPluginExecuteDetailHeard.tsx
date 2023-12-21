@@ -373,7 +373,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                                     />
                                 )}
                                 {runtimeId && (
-                                    <YakitButton type='text' onClick={onClearExecuteResult}>
+                                    <YakitButton type='text' danger onClick={onClearExecuteResult}>
                                         清除执行结果
                                     </YakitButton>
                                 )}
