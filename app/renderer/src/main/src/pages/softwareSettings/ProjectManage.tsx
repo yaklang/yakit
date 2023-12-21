@@ -49,6 +49,7 @@ import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
 import { RemoteGV } from "@/yakitGV"
 import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import { useRunNodeStore } from "@/store/runNode"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -502,7 +503,23 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         }
     }
 
+    // 处理全部运行节点删除
+    const {runNodeList, clearRunNodeList} = useRunNodeStore()
+    const handleKillAllRunNode = async () => {
+        let promises: (() => Promise<any>)[] = []
+        Array.from(runNodeList).forEach(([key, pid]) => {
+            promises.push(() => ipcRenderer.invoke("kill-run-node", {pid}))
+        })
+        try {
+            await Promise.all(promises.map((promiseFunc) => promiseFunc()))
+            clearRunNodeList()
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
+
     useEffect(() => {
+        handleKillAllRunNode()
         getProjectInfo()
     }, [])
 

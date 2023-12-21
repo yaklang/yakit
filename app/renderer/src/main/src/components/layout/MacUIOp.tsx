@@ -8,6 +8,7 @@ import {useRunNodeStore} from "@/store/runNode"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {TemporaryProjectPop} from "./WinUIOp"
 import emiter from "@/utils/eventBus/eventBus"
+import { yakitFailed } from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -81,6 +82,19 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
         }
     }
 
+    const handleKillAllRunNode = async () => {
+        let promises: (() => Promise<any>)[] = []
+        Array.from(runNodeList).forEach(([key, pid]) => {
+            promises.push(() => ipcRenderer.invoke("kill-run-node", {pid}))
+        })
+        try {
+            await Promise.all(promises.map((promiseFunc) => promiseFunc()))
+            clearRunNodeList()
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
+
     return (
         <div
             className={styles["mac-ui-op-wrapper"]}
@@ -128,8 +142,8 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                     visible={closeRunNodeItemVerifyVisible}
                     title='是否确认关闭节点'
                     content='关闭Yakit会默认关掉所有启用的节点'
-                    onOk={() => {
-                        clearRunNodeList()
+                    onOk={async () => {
+                        await handleKillAllRunNode()
                         setCloseRunNodeItemVerifyVisible(false)
                         handleCloseSoft()
                     }}

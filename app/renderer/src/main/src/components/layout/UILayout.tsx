@@ -817,7 +817,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     const onOkEnterProjectMag = () => {
-        handleKillAllRunNode()
         setYakitMode("soft")
         setLinkDatabase(true)
         setProjectName("")
@@ -1039,21 +1038,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setShowChatCS(false)
         setRemoteValue(RemoteGV.KnowChatCS, "true")
     })
-
-    // 处理全部运行节点删除
-    const {runNodeList, clearRunNodeList} = useRunNodeStore()
-    const handleKillAllRunNode = async () => {
-        let promises: (() => Promise<any>)[] = []
-        Array.from(runNodeList).forEach(([key, pid]) => {
-            promises.push(() => ipcRenderer.invoke("kill-run-node", {pid}))
-        })
-        try {
-            await Promise.all(promises.map((promiseFunc) => promiseFunc()))
-            clearRunNodeList()
-        } catch (error) {
-            yakitFailed(error + "")
-        }
-    }
 
     // 判断是否显示页面children
     const pageChildrenShow: boolean = useMemo(() => {
