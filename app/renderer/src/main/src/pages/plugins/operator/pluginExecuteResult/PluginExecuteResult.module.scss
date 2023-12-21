@@ -6,6 +6,7 @@
     overflow: hidden;
     gap: 12px;
     padding-top: 12px;
+    min-height: 500px;
     .plugin-execute-result-wrapper {
         @extend %display-column-center;
         gap: 12px;
@@ -67,12 +68,11 @@
         padding: 14px 12px 10px;
         border-bottom: 1px solid var(--yakit-border-color);
     }
-    .plugin-execute-result-tab-content-body {
-        padding: 12px;
-        overflow: auto;
-    }
 }
-
+.plugin-execute-result-tab-content-body {
+    padding: 12px;
+    overflow: auto;
+}
 .plugin-execute-http-flow {
     @extend %display-flex-center;
     align-items: flex-start;
@@ -113,4 +113,8 @@
     .valid-data {
         margin-bottom: 1px;
     }
+}
+
+.plugin-execute-custom-table {
+    padding: 0;
 }

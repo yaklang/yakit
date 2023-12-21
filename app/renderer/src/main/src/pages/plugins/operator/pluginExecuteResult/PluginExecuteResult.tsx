@@ -25,7 +25,7 @@ import {Risk} from "@/pages/risks/schema"
 import {QueryGeneralResponse, genDefaultPagination} from "@/pages/invoker/schema"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {CurrentHttpFlow} from "@/pages/yakitStore/viewers/base"
+import {CurrentHttpFlow, formatJson} from "@/pages/yakitStore/viewers/base"
 import {Timeline} from "antd"
 import {LogLevelToCode} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {YakitLogFormatter} from "@/pages/invoker/YakitLogFormatter"
@@ -645,23 +645,57 @@ const PluginExecuteResultTabContent: React.FC<PluginExecuteResultTabContentProps
 
 const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.memo((props) => {
     const {
-        tableInfo: {columns = [], data = []}
+        tableInfo: {columns = [], data = [], name = ""}
     } = props
+    const getData = useMemoizedFn(() => {
+        return new Promise((resolve) => {
+            const header = columns.map((ele) => ele.title)
+            const exportData = formatJson(header, data)
+            const params = {
+                header,
+                exportData,
+                response: {
+                    Pagination: {
+                        Page: 1
+                    },
+                    Data: data,
+                    Total: data.length
+                }
+            }
+            resolve(params)
+        })
+    })
     return (
-        <TableVirtualResize
-            isShowTitle={false}
-            enableDrag={true}
-            data={data}
-            renderKey={"uuid"}
-            pagination={{
-                page: 1,
-                limit: 50,
-                total: data.length,
-                onChange: () => {}
-            }}
-            columns={columns}
-            containerClassName={styles["custom-table-container"]}
-        />
+        <PluginExecuteResultTabContent
+            title={name}
+            extra={
+                <ExportExcel
+                    btnProps={{
+                        size: "small",
+                        type: "outline2"
+                    }}
+                    getData={getData}
+                    fileName={name || "输出表"}
+                    text='导出全部'
+                />
+            }
+            className={styles["plugin-execute-custom-table"]}
+        >
+            <TableVirtualResize
+                isShowTitle={false}
+                enableDrag={true}
+                data={data}
+                renderKey={"uuid"}
+                pagination={{
+                    page: 1,
+                    limit: 50,
+                    total: data.length,
+                    onChange: () => {}
+                }}
+                columns={columns}
+                containerClassName={styles["custom-table-container"]}
+            />
+        </PluginExecuteResultTabContent>
     )
 })
 

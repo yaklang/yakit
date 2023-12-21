@@ -198,6 +198,10 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 1;
     .header-wrapper {
         display: flex;
         justify-content: space-between;
@@ -297,6 +301,11 @@
                 margin-left: 0;
             }
         }
+        .copy-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .constant-wrapper {
             flex-grow: 1;
             flex-shrink: 0;
@@ -322,13 +331,9 @@
         }
     }
     .modify-select {
-        height: 11px;
         :global {
             .ant-select-selector {
                 padding-left: 30px !important;
-            }
-            .ant-select-selection-overflow-item {
-                margin-top: 1px !important;
             }
             .ant-select-selection-search-input {
                 margin-left: 18px !important;
@@ -336,19 +341,15 @@
         }
     }
     .multiple-modify-select {
-        height: 11px;
         :global {
             .ant-select-selector {
                 padding-left: 30px !important;
-            }
-            .ant-select-selection-overflow-item {
-                margin-top: 1px !important;
             }
         }
     }
     .modify-select-icon {
         position: absolute;
-        top: 2px;
+        top: 0;
         left: 0;
         width: 37px;
         height: 32px;
