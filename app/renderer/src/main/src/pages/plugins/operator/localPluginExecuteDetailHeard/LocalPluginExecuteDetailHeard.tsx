@@ -432,16 +432,20 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                     <div className={styles["plugin-execute-form-operate"]}>
                         {isExecuting ? (
-                            <YakitButton danger onClick={onStopExecute}>
+                            <YakitButton danger onClick={onStopExecute} size='large'>
                                 停止
                             </YakitButton>
                         ) : (
-                            <YakitButton className={styles["plugin-execute-form-operate-start"]} htmlType='submit'>
+                            <YakitButton
+                                className={styles["plugin-execute-form-operate-start"]}
+                                htmlType='submit'
+                                size='large'
+                            >
                                 开始执行
                             </YakitButton>
                         )}
                         {isShowExtraParamsButton && (
-                            <YakitButton type='text' onClick={openExtraPropsDrawer} disabled={isExecuting}>
+                            <YakitButton type='text' onClick={openExtraPropsDrawer} disabled={isExecuting} size='large'>
                                 额外参数
                             </YakitButton>
                         )}
