@@ -70,8 +70,10 @@ const getValueByType = (defaultValue, type: string): number | string | boolean |
     let value
     switch (type) {
         case "uint":
-        case "float":
             value = parseInt(defaultValue || "0")
+            break
+        case "float":
+            value = parseFloat(defaultValue || "0.0")
             break
         case "boolean":
             value = defaultValue === "true"
@@ -82,10 +84,10 @@ const getValueByType = (defaultValue, type: string): number | string | boolean |
             break
         case "select":
             const newVal = defaultValue ? defaultValue.split(",") : []
-            value = newVal.length > 0 ? newVal : undefined
+            value = newVal.length > 0 ? newVal : []
             break
         default:
-            value = defaultValue ? defaultValue : undefined
+            value = defaultValue ? defaultValue : ""
             break
     }
     return value
