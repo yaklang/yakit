@@ -410,6 +410,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineMode, localPort, adminPort])
 
+
+    const handleTemporaryProject = async () => {
+        if (temporaryProjectId) {
+            await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+            setTemporaryProjectId("")
+            emiter.emit("onFeachGetCurrentProject")
+        }
+    }
+
     /** yaklang引擎切换启动模式 */
     const changeEngineMode = useMemoizedFn((type: YaklangEngineMode, keepalive?: boolean) => {
         info(`引擎状态切换为: ${EngineModeVerbose(type as YaklangEngineMode)}`)
@@ -417,7 +426,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setYakitStatus("")
         setKeepalive(false)
         setEngineLink(false)
-        cacheYakitStatus.current = ""
+        cacheYakitStatus.current = ""                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
 
         /** 未安装引擎下的模式切换取消 */
         if (!isEngineInstalled.current && type !== "remote") {
@@ -428,6 +437,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
 
         setEngineMode(undefined)
+        getLocalValue(LocalGV.YaklangEngineMode).then(res => {
+            if (type !== res) {
+                handleTemporaryProject()
+            }
+        })
+        
         // 修改状态，重连引擎
         setLocalValue(LocalGV.YaklangEngineMode, type)
         switch (type) {
@@ -606,7 +621,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [])
 
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectNoPromptFlag} =
+    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag} =
         useTemporaryProjectStore()
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const temporaryProjectPopRef = useRef<any>(null)
@@ -843,6 +858,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
     })
     const onReady = useMemoizedFn(() => {
+        console.log('onReady');
         if (!getEngineLink()) {
             isEnpriTraceAgent()
                 ? setEngineLink(true)

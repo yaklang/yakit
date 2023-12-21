@@ -484,7 +484,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     })
 
     const handleTemporaryProject = async () => {
-        // 若临时项目存在 设置为默认项目
         if (temporaryProjectId) {
             await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
             setTemporaryProjectId("")
@@ -700,7 +699,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 ProjectName: "[temporary]"
             })
             const newTemporaryId = res.Id + ""
-            console.log(123, newTemporaryId);
             setTemporaryProjectId(newTemporaryId)
             await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId})
             info("切换临时项目成功")
