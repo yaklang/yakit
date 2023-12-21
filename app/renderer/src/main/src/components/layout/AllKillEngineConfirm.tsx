@@ -108,6 +108,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
 
     return (
         <YakitModal
+            hiddenHeader={true}
             wrapClassName={styles["center-modal"]}
             visible={visible}
             footer={null}
@@ -115,6 +116,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
             maskClosable={false}
             keyboard={false}
             width={448}
+            bodyStyle={{padding: 24}}
         >
             <div className={styles["all-kill-engine-wrapper"]}>
                 <div>

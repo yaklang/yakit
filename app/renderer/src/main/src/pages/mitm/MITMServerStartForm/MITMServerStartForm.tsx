@@ -452,6 +452,7 @@ const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
             okText='确认'
             onCancel={onClose}
             onOk={onOKFun}
+            bodyStyle={{padding: 0}}
         >
             <div style={{padding: 15}}>
                 <Form

@@ -2399,6 +2399,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     maskClosable={false}
                     footer={null}
                     closable={true}
+                    bodyStyle={{padding: 0}}
                 >
                     <WebFuzzerResponseExtractor responses={successFuzzer} sendPayloadsType={sendPayloadsType} />
                 </YakitModal>

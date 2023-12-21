@@ -909,6 +909,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
             confirmLoading={submitLoading}
             onCancel={cancel}
             onOk={submit}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["modify-author-modal-body"]}>
                 <Form.Item

@@ -1,107 +1,107 @@
+/** -------------------- 类型 start -------------------- */
+// gray类型
 .yakit-modal-gray {
-    --haeder-footer-background: var(--yakit-card-background-color);
-    --header-footer-border: var(--yakit-border-color);
+    --modal-header-footer-background: var(--ui-neutral-20);
+    --modal-header-footer-border: var(--ui-neutral-40);
 }
+// white类型
 .yakit-modal-white {
-    --haeder-footer-background: var(--yakit-neutral10-color);
-    --header-footer-border: var(--yakit-neutral10-color);
+    --modal-header-footer-background: transparent;
+    --modal-header-footer-border: transparent;
 }
+/** -------------------- 类型 end -------------------- */
+
+/** -------------------- 尺寸 start -------------------- */
+// small尺寸
+.yakit-modal-small {
+    --modal-header-padding: 8px 16px;
+    &.yakit-modal-gray {
+        --modal-content-padding: 16px;
+        --modal-footer-padding: 8px 16px;
+    }
+    &.yakit-modal-white {
+        --modal-content-padding: 8px 16px;
+        --modal-footer-padding: 8px 16px 16px 16px;
+    }
+}
+// large尺寸
+.yakit-modal-large {
+    --modal-header-padding: 10px 24px;
+    &.yakit-modal-gray {
+        --modal-content-padding: 24px;
+        --modal-footer-padding: 10px 24px;
+    }
+    &.yakit-modal-white {
+        --modal-content-padding: 8px 24px;
+        --modal-footer-padding: 12px 24px 24px 24px;
+    }
+}
+/** -------------------- 尺寸 end -------------------- */
 
 .yakit-modal-wrapper {
-    --select-modal-hover-color: var(--yakit-primary-5);
-
     :global {
         .ant-modal-body {
             padding: 0;
         }
     }
+}
 
-    .yakit-modal-body {
-        background-color: var(--yakit-neutral10-color);
-        position: relative;
-        border-radius: 4px;
+.yakit-modal-body {
+    overflow: hidden;
+    background-color: var(--ui-neutral-10);
+    border-radius: 4px;
+}
 
-        .body-close {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 16px;
-            height: 16px;
-            display: flex;
-            font-size: 16px;
-            color: var(--yakit-helper-text-color);
-            cursor: pointer;
-            align-items: center;
-
-            .close-icon {
-                svg {
-                    width: 16px;
-                    height: 16px;
-                }
-            }
+// header
+.header-body {
+    overflow: hidden;
+    width: 100%;
+    padding: var(--modal-header-padding);
+    background-color: var(--modal-header-footer-background);
+    border-bottom: 1px solid var(--modal-header-footer-border);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    .title-wrapper {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        color: var(--ui-neutral-100);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+        .subtitle-style {
+            margin-left: 16px;
+            font-weight: 400;
+            font-size: 12px;
+            color: var(--ui-neutral-60);
         }
-
-        .body-close:hover {
-            color: var(--select-modal-hover-color);
-        }
-
-        .body-header {
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            padding: 8px 16px;
-            gap: 16px;
-            height: 41px;
-            background: var(--haeder-footer-background);
-            border-bottom: 1px solid var(--header-footer-border);
-            border-radius: 4px 4px 0px 0px;
-
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 20px;
-            color: var(--yakit-header-color);
-
-            .body-header-subTitle {
-                font-weight: 400;
-                font-size: 12px;
-                color: var(--yakit-helper-text-color);
-                flex: 1;
-                margin-right: 16px;
-            }
-        }
-
-        .body-content {
-        }
-
-        .body-footer {
-            box-sizing: border-box;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 16px 24px 16px;
-            height: 57px;
-            background: var(--haeder-footer-background);
-            border-top: 1px solid var(--header-footer-border);
-            border-radius: 0px 0px 4px 4px;
-
-            .body-footer-extra {
-            }
-
-            .body-footer-btn {
-                display: flex;
-                gap: 8px;
-            }
-        }
-
-        .body-custom-footer {
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            padding: 8px 16px;
-            background: var(--haeder-footer-background);
-            border-top: 1px solid var(--header-footer-border);
-            border-radius: 0px 0px 4px 4px;
-        }
+    }
+}
+// body
+.content-body {
+    overflow: hidden;
+    width: 100%;
+    padding: var(--modal-content-padding);
+}
+// footer
+.footer-body {
+    overflow: hidden;
+    width: 100%;
+    padding: var(--modal-footer-padding);
+    background-color: var(--modal-header-footer-background);
+    border-top: 1px solid var(--modal-header-footer-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .footer-extra {
+        flex: 1;
+        overflow: hidden;
+    }
+    .footer-btn-group {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
     }
 }

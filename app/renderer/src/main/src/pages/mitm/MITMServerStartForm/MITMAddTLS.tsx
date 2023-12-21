@@ -45,6 +45,7 @@ const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
             }}
             zIndex={1001}
             width='50%'
+            bodyStyle={{padding: 0}}
         >
             <InputCertificateForm ref={cerFormRef} formProps={{layout:'vertical',style:{padding:"24px 16px"}}}/>
         </YakitModal>

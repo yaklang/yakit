@@ -865,6 +865,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 width='60%'
                 onOk={() => onImportJSON()}
                 confirmLoading={importLoading}
+                bodyStyle={{padding: 0}}
             >
                 <Form className={style["json-import"]} layout='vertical'>
                     <YakitFormDragger

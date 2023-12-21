@@ -1047,6 +1047,7 @@ export const PluginAddParamModal: React.FC<PluginAddParamModalProps> = memo((pro
             footer={null}
             visible={visible}
             onCancel={() => setVisible(false)}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["plugin-add-param-form"]}>
                 <Form

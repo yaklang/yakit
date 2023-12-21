@@ -3,6 +3,7 @@ html {
     --yakit-color-purple: #8863f7;
     --yakit-color-blue-purple: #da5fdd;
     --yakit-color-blue: #4a94f8;
+    --yakit-color-lake-blue: #29bcd0;
     --yakit-color-cyan: #35d8ee;
     --yakit-color-green: #56c991;
     --yakit-color-red: #f4736b;
@@ -43,6 +44,17 @@ html {
     --yakit-serious-6: #9d1b13;
 }
 html[data-theme="default"] {
+    --ui-neutral-100: #31343f;
+    --ui-neutral-90: #454750;
+    --ui-neutral-80: #545663;
+    --ui-neutral-70: #85899e;
+    --ui-neutral-60: #b4bbca;
+    --ui-neutral-50: #ccd2de;
+    --ui-neutral-40: #eaecf3;
+    --ui-neutral-30: #f0f1f3;
+    --ui-neutral-20: #f8f8f8;
+    --ui-neutral-10: #ffffff;
+
     --ui-text-color: #31343f;
     --ui-text-inverse-color: #fff;
     --ui-icon-color: #85899e;
@@ -58,9 +70,28 @@ html[data-theme="default"] {
     --yakit-primary-6: #e27122;
 }
 html[data-theme="dark"] {
+    --ui-neutral-100: #ffffff;
+    --ui-neutral-90: #f8f8f8;
+    --ui-neutral-80: #f0f1f3;
+    --ui-neutral-70: #eaecf3;
+    --ui-neutral-60: #ccd2de;
+    --ui-neutral-50: #b4bbca;
+    --ui-neutral-40: #85899e;
+    --ui-neutral-30: #545663;
+    --ui-neutral-20: #454750;
+    --ui-neutral-10: #31343f;
+
     --ui-text-color: #fff;
     --ui-text-inverse-color: #31343f;
     --ui-icon-color: #85899e;
     --ui-background-color: #000;
     --ui-hover-background-color: #f0f1f3;
+
+    // 主题色
+    --yakit-primary-1: rgba(242, 139, 68, 0.06);
+    --yakit-primary-2: #fbe7d9;
+    --yakit-primary-3: #fbc6a1;
+    --yakit-primary-4: #f69c5d;
+    --yakit-primary-5: #f28b44;
+    --yakit-primary-6: #e27122;
 }

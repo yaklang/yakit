@@ -629,6 +629,7 @@ const PluginBaseInspect: React.FC<PluginBaseInspectProps> = React.memo((props) =
             okButtonProps={{style: {display: "none"}}}
             footer={loading ? undefined : null}
             onCancel={() => setVisible(false)}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["plugin-base-inspect-body"]}>
                 <div className={styles["header-wrapper"]}>

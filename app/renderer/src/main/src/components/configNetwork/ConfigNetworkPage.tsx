@@ -1051,9 +1051,9 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
             okType='primary'
             width={480}
             onOk={() => onOk()}
+            bodyStyle={{padding: "24px 16px"}}
         >
             <Form
-                style={{padding: "24px 16px"}}
                 form={form}
                 labelCol={{span: 5}}
                 wrapperCol={{span: 16}}

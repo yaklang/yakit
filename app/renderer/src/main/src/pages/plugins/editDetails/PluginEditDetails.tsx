@@ -1333,6 +1333,7 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
             footer={null}
             visible={visible}
             onCancel={() => setVisible(content)}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["plugin-editor-modal-body"]}>
                 <YakitEditor type={language} value={content} setValue={setContent} />
@@ -1385,6 +1386,7 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
             footer={null}
             visible={visible}
             onCancel={() => setVisible(content)}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["plugin-editor-modal-body"]}>
                 <YakitDiffEditor
@@ -1431,6 +1433,7 @@ const PluginSyncAndCopyModal: React.FC<PluginSyncAndCopyModalProps> = memo((prop
             visible={visible}
             onCancel={() => setVisible(false)}
             onOk={onSubmit}
+            bodyStyle={{padding: 0}}
         >
             {isCopy ? (
                 <div className={styles["plugin-sync-and-copy-body"]}>
@@ -1544,6 +1547,7 @@ const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
             visible={visible}
             onCancel={() => onCancel(false)}
             onOk={onSubmit}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["modify-plugin-reason-wrapper"]}>
                 <YakitInput.TextArea

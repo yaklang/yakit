@@ -781,6 +781,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                 centered
                 width={922}
                 onCancel={() => setVisible(false)}
+                hiddenHeader={true}
+                bodyStyle={{padding: 0}}
             >
                 <ReactPlayerVideo
                     url={urlVideo}
