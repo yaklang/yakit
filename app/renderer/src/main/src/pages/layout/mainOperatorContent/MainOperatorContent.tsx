@@ -1535,6 +1535,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 type='white'
                 title={<></>}
                 closable={true}
+                bodyStyle={{padding: 0}}
             >
                 <div style={{padding: "0 24px"}}>
                     <Form.Item label='专项漏洞类型'>

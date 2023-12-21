@@ -39,6 +39,7 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
             onOk={() => {
                 saveABSFileToOpen("yakit-mitm-replacer-rules-config.json", value)
             }}
+            bodyStyle={{padding: 0}}
         >
             <Spin spinning={loading}>
                 <div style={{height: 466}}>
@@ -118,6 +119,7 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
                     />
                 </div>
             }
+            bodyStyle={{padding: 0}}
         >
             <Spin spinning={loading}>
                 <div style={{height: 466}}>

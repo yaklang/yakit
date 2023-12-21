@@ -481,6 +481,8 @@ const CustomWork = (props: workProps) => {
                     visible={visibleSubWork}
                     onCancel={() => setvisibleSubWork(false)}
                     width={800}
+                    hiddenHeader={true}
+                    bodyStyle={{padding: 0}}
                 >
 
                     <div className={menuStyle["subMenu-edit-modal"]}>
@@ -735,6 +737,8 @@ const ParamsWork = (props: workProps) => {
                     footer={null}
                     visible={visibleSubWork}
                     onCancel={() => setvisibleSubWork(false)}
+                    hiddenHeader={true}
+                    bodyStyle={{padding: 0}}
                 >
 
                     <div className={menuStyle["subMenu-edit-modal"]}>

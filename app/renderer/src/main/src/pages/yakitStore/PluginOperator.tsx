@@ -820,6 +820,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
                 footer={null}
                 closable={true}
                 closeIcon={<RemoveIcon className='plugin-modal-remove-icon' />}
+                bodyStyle={{padding: 0}}
             >
                 <Space direction={"vertical"} className='modal-remove-menu'>
                     {(groups &&

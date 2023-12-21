@@ -807,7 +807,7 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
             onCancel={onCloseModal}
             onOk={onOKFun}
         >
-            <div style={{padding: 15}}>
+            <div>
                 <div style={{fontSize: 12, color: "#85899e", marginBottom: 10}}>
                     运行节点会占用引擎资源，建议运行节点的时候，适度使用Yakit，否则会造成节点运行任务缓慢，可以运行多个节点（运行在不同平台，或统一平台节点名称不同）。
                 </div>
@@ -1952,13 +1952,15 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 centered={true}
                 closable={true}
                 type='white'
+                size="large"
                 visible={editShow.visible}
-                cancelButtonProps={{size: "large", loading: editLoading}}
-                okButtonProps={{size: "large", loading: editLoading}}
+                cancelButtonProps={{loading: editLoading}}
+                okButtonProps={{loading: editLoading}}
                 onCancel={() => setEditShow({visible: false, type: "yakit"})}
                 onOk={onSubmitEdit}
+                bodyStyle={{padding: "16px 24px"}}
             >
-                <div className={styles["version-content-wrapper"]}>
+                <div>
                     <YakitInput.TextArea
                         rows={10}
                         value={editInfo}

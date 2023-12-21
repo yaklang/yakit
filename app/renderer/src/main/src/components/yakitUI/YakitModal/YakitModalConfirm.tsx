@@ -169,6 +169,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                     <RemoveIcon />
                 </div>
             }
+            bodyStyle={{padding: 0}}
             {...props}
         />
     )

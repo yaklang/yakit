@@ -975,6 +975,8 @@ const PluginsOnlineHeard: React.FC<PluginsOnlineHeardProps> = React.memo((props)
                 centered={true}
                 width={368}
                 onCancel={() => setVisibleQRCode(false)}
+                hiddenHeader={true}
+                bodyStyle={{padding: 0}}
             >
                 <div className={styles["yakit-modal-code"]}>
                     <div className={styles["yakit-modal-code-heard"]}>

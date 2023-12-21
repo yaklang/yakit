@@ -2443,6 +2443,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 width={520}
                 type='white'
                 closable={false}
+                hiddenHeader={true}
+                bodyStyle={{padding: 0}}
             >
                 <UploadStatusInfo
                     title={"转为数据库存储中，请耐心等待..."}
@@ -3073,6 +3075,8 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                 width={520}
                 type='white'
                 closable={false}
+                hiddenHeader={true}
+                bodyStyle={{padding: 0}}
             >
                 <UploadStatusInfo
                     title={"自动去重中，请耐心等待..."}
@@ -3208,6 +3212,8 @@ export const ExportByGrpc: React.FC<ExportByGrpcProps> = (props) => {
             width={520}
             type='white'
             closable={false}
+            hiddenHeader={true}
+            bodyStyle={{padding: 0}}
         >
             <UploadStatusInfo
                 title={"导出中，请耐心等待..."}
@@ -3524,6 +3530,8 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                 width={520}
                 type='white'
                 closable={false}
+                hiddenHeader={true}
+                bodyStyle={{padding: 0}}
             >
                 <UploadStatusInfo
                     title={"迁移数据中，请耐心等待..."}

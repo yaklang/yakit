@@ -1998,6 +1998,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
 
     return (
         <YakitModal
+            hiddenHeader={true}
             getContainer={getContainer}
             centered={true}
             closable={false}
@@ -2007,6 +2008,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
             width={modalWidth}
             visible={visible}
             onCancel={() => setVisible(false)}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["name-edit-modal"]}>
                 <div className={styles["name-edit-modal-heard"]}>

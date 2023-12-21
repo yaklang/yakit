@@ -22,6 +22,11 @@ export interface YakitModalProp extends Omit<ModalProps, "style" | "cancelButton
     type?: "gray" | "white"
     /** @name 弹框的尺寸 */
     size?: "small" | "large"
+    /**
+     * @name 隐藏Header元素
+     * @description 设为true时, headerStyle|title|subTitle|closable|closeIcon都将无效
+     */
+    hiddenHeader?: boolean
 }
 
 /** 可以用，但是使用的时候考虑部分属性的覆盖重写问题， */
@@ -51,6 +56,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         size = "small",
         subTitle,
         footerExtra,
+        hiddenHeader = false,
         ...resetProps
     } = props
 
@@ -72,22 +78,24 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
             onCancel={onCancel}
         >
             <div className={styles["yakit-modal-body"]}>
-                <div style={headerStyle || undefined} className={styles["header-body"]}>
-                    {!!title && (
-                        <div className={styles["title-wrapper"]}>
-                            {title}
-                            <span className={styles["subtitle-style"]}>{subTitle}</span>
-                        </div>
-                    )}
-                    {closable && (
-                        <YakitButton
-                            type='text2'
-                            size={size === "large" ? "large" : "middle"}
-                            icon={!!closeIcon ? closeIcon : <OutlineXIcon />}
-                            onClick={onCancel}
-                        />
-                    )}
-                </div>
+                {!hiddenHeader && (
+                    <div style={headerStyle || undefined} className={styles["header-body"]}>
+                        {!!title && (
+                            <div className={styles["title-wrapper"]}>
+                                {title}
+                                <span className={styles["subtitle-style"]}>{subTitle}</span>
+                            </div>
+                        )}
+                        {closable && (
+                            <YakitButton
+                                type='text2'
+                                size={size === "large" ? "large" : "middle"}
+                                icon={!!closeIcon ? closeIcon : <OutlineXIcon />}
+                                onClick={onCancel}
+                            />
+                        )}
+                    </div>
+                )}
 
                 <div style={bodyStyle || undefined} className={styles["content-body"]}>
                     {children}

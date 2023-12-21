@@ -112,6 +112,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 width={720}
                 zIndex={1001}
                 onOk={() => onOk()}
+                bodyStyle={{padding: 0}}
             >
                 <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
                     {/* <Form.Item
@@ -413,6 +414,7 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((prop
             zIndex={1002}
             footer={null}
             closable={true}
+            bodyStyle={{padding: 0}}
         >
             <Form
                 labelCol={{span: 5}}
@@ -505,6 +507,7 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = React.memo((prop
             footer={null}
             closable={true}
             width={600}
+            bodyStyle={{padding: 0}}
         >
             <Form
                 labelCol={{span: 5}}
@@ -626,6 +629,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                 zIndex={1002}
                 footer={null}
                 closable={true}
+                bodyStyle={{padding: 0}}
             >
                 <ExtractRegular onSave={(v) => onGetRule(v)} defaultCode={defaultCode} />
             </YakitModal>

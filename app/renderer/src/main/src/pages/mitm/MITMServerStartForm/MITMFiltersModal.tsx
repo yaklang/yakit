@@ -269,6 +269,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     onSetFilter()
                 }
             }}
+            bodyStyle={{padding: 0}}
         >
             <MITMFilters filter={_mitmFilter} onFinished={() => onSetFilter()} ref={filtersRef} />
         </YakitModal>

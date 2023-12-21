@@ -278,6 +278,7 @@ function NewApp() {
                             ? `我已认真阅读本协议(${readingSeconds}s)`
                             : "我已认真阅读本协议，认同协议内容"
                     }
+                    bodyStyle={{padding: "16px 24px 24px 24px"}}
                 >
                     <div className={styles["yakit-agr-modal-body"]}>
                         <div className={styles["body-title"]}>免责声明</div>

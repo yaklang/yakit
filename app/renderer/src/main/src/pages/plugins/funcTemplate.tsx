@@ -1711,6 +1711,7 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
             footer={null}
             destroyOnClose={true}
             onCancel={onFailed}
+            bodyStyle={{padding: 0}}
         >
             {visible && <CodeScoreModule type={type} code={code} isStart={visible} callback={moduleCallback} />}
         </YakitModal>

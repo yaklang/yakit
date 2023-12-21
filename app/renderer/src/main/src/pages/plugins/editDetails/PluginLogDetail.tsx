@@ -732,6 +732,7 @@ const ModifyPluginReason: React.FC<ModifyPluginReasonProps> = memo((props) => {
             visible={visible}
             onCancel={() => onCancel(false)}
             onOk={onSubmit}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["modify-plugin-reason-wrapper"]}>
                 <YakitInput.TextArea

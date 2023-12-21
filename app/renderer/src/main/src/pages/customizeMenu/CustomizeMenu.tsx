@@ -613,10 +613,12 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 </div>
             </DragDropContext>
             <YakitModal
+                hiddenHeader={true}
                 closable={false}
                 footer={null}
                 visible={visibleSubMenu}
                 onCancel={() => setVisibleSubMenu(false)}
+                bodyStyle={{padding: 0}}
             >
                 <div className={style["subMenu-edit-modal"]}>
                     <div className={style["subMenu-edit-modal-heard"]}>
@@ -656,6 +658,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 visible={emptyMenuLength > 0}
                 onCancel={() => setEmptyMenuLength(0)}
                 width={431}
+                bodyStyle={{padding: 0}}
             >
                 <div className={style["confirm-modal"]}>
                     <ShieldExclamationIcon className={style["confirm-icon"]} />

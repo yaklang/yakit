@@ -1727,6 +1727,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             destroyOnClose={true}
             visible={visible}
             onCancel={onClose}
+            bodyStyle={{padding: 0}}
         >
             <Form
                 style={transferShow.visible ? {display: "none"} : {}}
