@@ -385,7 +385,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                         : props.value
                                 }
                                 onChange={props.setValue}
-                                language={props.type || "http"}
+                                language={language || "http"}
                                 height={100}
                                 editorDidMount={(editor: IMonacoEditor, monaco: any) => {
                                     setEditor(editor)
