@@ -437,7 +437,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
 
         setEngineMode(undefined)
-        
+
         const res = await getLocalValue(LocalGV.YaklangEngineMode)
         if (type !== res) {
             handleTemporaryProject()
@@ -824,6 +824,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setProjectName("")
     }
 
+    useEffect(() => {
+        emiter.on("onSwitchEngine", onOkEnterProjectMag)
+        return () => {
+            emiter.off("onSwitchEngine", onOkEnterProjectMag)
+        }
+    }, [])
+
     /** 软件配置界面完成事件回调 */
     const softwareSettingFinish = useMemoizedFn(() => {
         setYakitMode("")
@@ -858,7 +865,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         })
     })
     const onReady = useMemoizedFn(() => {
-        console.log('onReady');
         if (!getEngineLink()) {
             isEnpriTraceAgent()
                 ? setEngineLink(true)

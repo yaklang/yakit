@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, useMemo} from "react"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info, success, yakitFailed} from "@/utils/notification"
 import {showModal} from "@/utils/showModal"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {LoadingOutlined} from "@ant-design/icons"
@@ -15,6 +15,8 @@ import classNames from "classnames"
 import styles from "./performanceDisplay.module.scss"
 import {YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog"
 import {useRunNodeStore} from "@/store/runNode"
+import emiter from "@/utils/eventBus/eventBus"
+import {useTemporaryProjectStore} from "@/store/temporaryProject"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -171,6 +173,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     }, [inViewport])
 
     const allClose = useMemoizedFn(async () => {
+        await handleTemporaryProject()
         ;(process || []).forEach((i) => {
             ipcRenderer.invoke("kill-yak-grpc", i.pid).then((val) => {
                 if (!val) {
@@ -186,6 +189,15 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
         return engineMode === "admin" || engineMode === "local"
     }, [engineMode])
 
+    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+    const handleTemporaryProject = async () => {
+        if (temporaryProjectId) {
+            await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+            setTemporaryProjectId("")
+            emiter.emit("onFeachGetCurrentProject")
+        }
+    }
+
     return (
         <YakitPopover
             visible={show}
@@ -199,6 +211,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                             <Popconfirm
                                 title={"重置引擎版本会恢复最初引擎出厂版本，同时强制重启"}
                                 onConfirm={async () => {
+                                    await handleTemporaryProject()
                                     process.map((i) => {
                                         ipcRenderer.invoke(`kill-yak-grpc`, i.pid)
                                     })
@@ -252,7 +265,8 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                             {isDev ? (
                                                 <Popconfirm
                                                     title={<>确定是否切换连接的引擎,</>}
-                                                    onConfirm={() => {
+                                                    onConfirm={async () => {
+                                                        await handleTemporaryProject()
                                                         const switchEngine: YaklangEngineWatchDogCredential = {
                                                             Mode: "local",
                                                             Port: i.port,
@@ -265,6 +279,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                                 setTimeout(() => {
                                                                     ipcRenderer.invoke("switch-conn-refresh", false)
                                                                     success(`切换核心引擎成功！`)
+                                                                    emiter.emit("onSwitchEngine")
                                                                 }, 500)
                                                             })
                                                             .catch((e) => {
