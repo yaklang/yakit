@@ -28,7 +28,7 @@ const convertCardInfo = (maps: Map<string, HoldGRPCStreamProps.CacheCard>) => {
                 cardObj[el.Tag] = {tag: el.Tag, info: [el]}
             }
         } else {
-            cardArr[el.Id] = {tag: el.Id, info: [el]}
+            cardObj[el.Id] = {tag: el.Id, info: [el]}
         }
     }
     return Object.values(cardObj)
