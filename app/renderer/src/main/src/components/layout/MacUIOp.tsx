@@ -7,6 +7,7 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {useRunNodeStore} from "@/store/runNode"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {TemporaryProjectPop} from "./WinUIOp"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -38,7 +39,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
 
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
-    const {temporaryProjectId, temporaryProjectNoPromptFlag} = useTemporaryProjectStore()
+    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId} = useTemporaryProjectStore()
     const lastTemporaryProjectIdRef = useRef<string>("")
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const lastTemporaryProjectNoPromptRef = useRef<boolean>(false)
@@ -68,6 +69,14 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
             return
         }
         operate("close")
+    }
+
+    const handleTemporaryProject = async () => {
+        if (temporaryProjectId) {
+            await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+            setTemporaryProjectId("")
+            emiter.emit("onFeachGetCurrentProject")
+        }
     }
 
     return (
@@ -130,7 +139,8 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                 {closeTemporaryProjectVisible && (
                     <TemporaryProjectPop
                         ref={temporaryProjectPopRef}
-                        onOk={() => {
+                        onOk={async () => {
+                            await handleTemporaryProject()
                             setCloseTemporaryProjectVisible(false)
                             lastTemporaryProjectIdRef.current = ""
                             handleCloseSoft()
