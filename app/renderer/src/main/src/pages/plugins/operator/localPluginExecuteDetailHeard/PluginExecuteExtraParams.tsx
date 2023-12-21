@@ -10,7 +10,7 @@ import {
     YakExtraParamProps
 } from "./LocalPluginExecuteDetailHeardType"
 import {yakitFailed} from "@/utils/notification"
-import {FormContentItemByType} from "./LocalPluginExecuteDetailHeard"
+import {FormContentItemByType, defPluginExecuteFormValue} from "./LocalPluginExecuteDetailHeard"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -58,7 +58,19 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
             }
         }, [visible, extraParamsValue])
         const onClose = useMemoizedFn(() => {
-            const newValue = form.getFieldsValue()
+            let newValue = form.getFieldsValue()
+            switch (pluginType) {
+                case "mitm":
+                case "port-scan":
+                case "nuclei":
+                    newValue = {
+                        ...defPluginExecuteFormValue,
+                        ...newValue
+                    }
+                    break
+                default:
+                    break
+            }
             if (JSON.stringify(extraParamsValue) !== JSON.stringify(newValue)) {
                 const m = YakitModalConfirm({
                     title: "温馨提示",
