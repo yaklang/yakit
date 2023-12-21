@@ -356,34 +356,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                             setSelectedNode(currentPathAllTree)
                         }
                     }}
-                    // resetTableAndEditorShow={(table, editor) => {
-                    //     // setOnlyShowFirstNode(table)
-                    //     // setSecondNodeVisible(editor)
-                    // }}
-                    // raw={currentPath}
-                    // goBackTree={goBackTree}
-                    // onDataChange={
-                    //     (newData) => {
-                    //         // 在这里，你可以访问新的 `data` 的值
-                    //         // setTreeData(newData)
-                    //         console.log("WebShellURLTreeAndTable", newData)
-                    //         setData(newData)
-                    //         setTotal(newData.length)
-                    //         setLoading(false)
-                    //     }
-                    // }
-                    // onNodeSelect={
-                    //     (node) => {
-                    //         console.log("setSelectedNode ", node)
-                    //         setSelectedNode(node)
-                    //     }
-                    // }
-                    // onCurrentPath={
-                    //     (path) => {
-                    //         console.log("onCurrentPath ", path)
-                    //         setCurrentPath(path)
-                    //     }
-                    // }
                 />
             }
             secondNodeStyle={{height: "100%"}}

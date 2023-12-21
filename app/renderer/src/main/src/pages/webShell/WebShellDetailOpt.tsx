@@ -35,6 +35,7 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
     const [inputValue, setInputValue] = useState<string>("")
     const [defaultPath, setDefaultPath] = useState<string>("")
     const [defaultXterm, setDefaultXterm] = useState<string>("")
+    const [linePath,setLinePath ] = useState<string>("")
     const [baseInfo, setBaseInfo] = useState<{ key: string; content: string }[]>([])
     const [activeKey, setActiveKey] = useState<string>("basicInfo")
     /** 日志输出 */
@@ -93,7 +94,8 @@ ${msg.currentPath}`
         if (cmd.startsWith(defaultXterm)) {
             cmd = cmd.replace(defaultXterm, "")
         }
-        const p = path.normalize(defaultPath)
+
+        const p = linePath === "" ? path.normalize(defaultPath) : path.normalize(linePath)
         console.log("p", p)
         const url: YakURL = {
             FromRaw: "",
@@ -111,6 +113,7 @@ ${msg.currentPath}`
             res.Resources.forEach((resource) => {
                 // 遍历每个资源的 Extra 数组
                 const cp = resource.Path
+                setLinePath(cp)
                 resource.Extra.forEach((item) => {
                     // 检查键是否匹配 'content'
                     if (item.Key === 'content') {
