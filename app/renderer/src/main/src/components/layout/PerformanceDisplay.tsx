@@ -290,7 +290,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                     <YakitButton
                                                         type='outline1'
                                                         colors='success'
-                                                        disabled={isLocal && +i.port === port}
+                                                        disabled={+i.port === 0 || isLocal && +i.port === port}
                                                     >
                                                         切换引擎
                                                     </YakitButton>
