@@ -335,7 +335,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                     height={800}
                     ref={webTreeRef}
                     schema={props.shellType.toLowerCase()}
-                    searchVal={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/?mode=list&id=" + props.Id}
+                    searchVal={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/?op=file&mode=list&id=" + props.Id}
                     searchPlaceholder='请输入域名进行搜索，例baidu.com'
                     onSelectNodes={(nodes) => {
                         setLoading(false)
