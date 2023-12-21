@@ -34,15 +34,15 @@ export interface YakExtraParamProps {
 
 export interface ExecuteEnterNodeByPluginParamsProps {
     paramsList: YakParamProps[]
-    pluginType?:string
-    isExecuting:boolean
+    pluginType?: string
+    isExecuting: boolean
 }
 
 export interface OutputFormComponentsByTypeProps {
     item: YakParamProps
     extraSetting?: FormExtraSettingProps
-    pluginType?:string
-    disabled?:boolean
+    pluginType?: string
+    disabled?: boolean
 }
 
 export interface FormExtraSettingProps {
@@ -59,4 +59,10 @@ export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {}
 /**表单的key value类型 */
 export interface CustomPluginExecuteFormValue {
     [string]: number | string | boolean | string[] | Buffer
+}
+
+export interface FormContentItemByTypeProps {
+    item: YakParamProps
+    pluginType?: string
+    disabled?: boolean
 }

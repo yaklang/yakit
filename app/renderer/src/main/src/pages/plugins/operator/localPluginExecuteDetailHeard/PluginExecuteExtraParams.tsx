@@ -1,30 +1,23 @@
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
+import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import styles from "./PluginExecuteExtraParams.module.scss"
 import {useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Divider, Form, FormInstance} from "antd"
 import {
-    FormExtraSettingProps,
     PluginExecuteExtraFormValue,
     CustomPluginExecuteFormValue,
     YakExtraParamProps
 } from "./LocalPluginExecuteDetailHeardType"
-import {YakParamProps} from "../../pluginsType"
-import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {failed, yakitFailed} from "@/utils/notification"
-import {OutputFormComponentsByType} from "./LocalPluginExecuteDetailHeard"
+import {yakitFailed} from "@/utils/notification"
+import {FormContentItemByType} from "./LocalPluginExecuteDetailHeard"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
-import {PluginType} from "@/pages/yakitStore/YakitStorePage"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {OutlineTrashIcon} from "@/assets/icon/outline"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {SolidPlusIcon} from "@/assets/icon/solid"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {KVPair} from "@/models/kv"
 import {PluginGV} from "../../builtInData"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
@@ -117,14 +110,8 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                 case "yak":
                 case "lua":
                     return (
-                        <Form
-                            size='small'
-                            labelCol={{span: 6}}
-                            wrapperCol={{span: 18}}
-                            form={form}
-                            // initialValues={{...extraParamsValue}}
-                        >
-                            <ExtraParamsNodeByType extraParamsGroup={extraParamsGroup} />
+                        <Form size='small' labelCol={{span: 6}} wrapperCol={{span: 18}} form={form}>
+                            <ExtraParamsNodeByType extraParamsGroup={extraParamsGroup} pluginType={pluginType} />
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </Form>
                     )
@@ -182,47 +169,20 @@ export default PluginExecuteExtraParams
 
 interface ExtraParamsNodeByTypeProps {
     extraParamsGroup: YakExtraParamProps[]
+    pluginType: string
 }
 const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((props) => {
-    const {extraParamsGroup} = props
+    const {extraParamsGroup, pluginType} = props
     const defaultActiveKey = useMemo(() => {
         return extraParamsGroup.map((ele) => ele.group)
     }, [extraParamsGroup])
-    const formContent = (item: YakParamProps) => {
-        let extraSetting: FormExtraSettingProps | undefined = undefined
-        try {
-            extraSetting = JSON.parse(item.ExtraSetting || "{}") || {
-                double: false,
-                data: []
-            }
-        } catch (error) {
-            failed("获取参数配置数据错误，请重新打开该页面")
-        }
-        switch (item.TypeVerbose) {
-            case "upload-path":
-                return (
-                    <YakitFormDragger
-                        className={styles["plugin-execute-form-item"]}
-                        formItemProps={{
-                            name: item.Field,
-                            label: item.FieldVerbose || item.Field,
-                            required: item.Required
-                        }}
-                        selectType='all'
-                    />
-                )
-
-            default:
-                return <OutputFormComponentsByType item={item} extraSetting={extraSetting} />
-        }
-    }
     return (
-        <YakitCollapse defaultActiveKey={defaultActiveKey} className={styles['extra-params-node-type']}>
+        <YakitCollapse defaultActiveKey={defaultActiveKey} className={styles["extra-params-node-type"]}>
             {extraParamsGroup.map((item, index) => (
                 <YakitPanel key={`${item.group}`} header={`参数组：${item.group}`}>
                     {item.data?.map((formItem) => (
                         <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
-                            {formContent(formItem)}
+                            <FormContentItemByType item={formItem} pluginType={pluginType} />
                         </React.Fragment>
                     ))}
                 </YakitPanel>
