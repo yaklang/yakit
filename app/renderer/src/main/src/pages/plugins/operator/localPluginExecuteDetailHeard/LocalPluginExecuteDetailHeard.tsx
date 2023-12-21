@@ -123,7 +123,7 @@ const getYakExecutorParam = (object) => {
     return newValue
 }
 
-const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
+export const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
     IsHttps: false,
     IsRawHTTPRequest: false,
     RawHTTPRequest: Buffer.from("", "utf-8"),
