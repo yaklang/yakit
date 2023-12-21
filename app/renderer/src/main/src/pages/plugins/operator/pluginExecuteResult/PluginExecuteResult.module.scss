@@ -71,7 +71,7 @@
 }
 .plugin-execute-result-tab-content-body {
     padding: 12px;
-    overflow: auto;
+    overflow: overlay;
 }
 .plugin-execute-http-flow {
     @extend %display-flex-center;
