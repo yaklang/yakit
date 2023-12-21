@@ -410,7 +410,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineMode, localPort, adminPort])
 
-
     const handleTemporaryProject = async () => {
         if (temporaryProjectId) {
             await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
@@ -426,7 +425,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setYakitStatus("")
         setKeepalive(false)
         setEngineLink(false)
-        cacheYakitStatus.current = ""                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+        cacheYakitStatus.current = ""
 
         /** 未安装引擎下的模式切换取消 */
         if (!isEngineInstalled.current && type !== "remote") {
@@ -439,10 +438,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setEngineMode(undefined)
 
         const res = await getLocalValue(LocalGV.YaklangEngineMode)
-        if (type !== res) {
+        if (!(res === "local" && type === "local")) {
             handleTemporaryProject()
         }
-        
+
         // 修改状态，重连引擎
         setLocalValue(LocalGV.YaklangEngineMode, type)
         switch (type) {
