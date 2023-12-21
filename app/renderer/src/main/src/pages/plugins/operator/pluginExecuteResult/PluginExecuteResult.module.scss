@@ -6,6 +6,7 @@
     overflow: hidden;
     gap: 12px;
     padding-top: 12px;
+    min-height: 500px;
     .plugin-execute-result-wrapper {
         @extend %display-column-center;
         gap: 12px;
