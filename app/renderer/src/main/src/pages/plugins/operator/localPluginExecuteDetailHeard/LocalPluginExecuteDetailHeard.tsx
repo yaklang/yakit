@@ -673,7 +673,7 @@ const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((
             <Progress
                 strokeColor='#F28B44'
                 trailColor='#F0F2F5'
-                percent={Math.ceil(percent)}
+                percent={Math.ceil(percent * 100)}
                 format={(percent) => `${percent}%`}
             />
         </div>
