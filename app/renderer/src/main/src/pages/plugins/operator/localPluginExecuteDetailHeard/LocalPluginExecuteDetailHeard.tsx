@@ -7,7 +7,8 @@ import {
     PluginExecuteExtraFormValue,
     CustomPluginExecuteFormValue,
     PluginExecuteProgressProps,
-    YakExtraParamProps
+    YakExtraParamProps,
+    FormContentItemByTypeProps
 } from "./LocalPluginExecuteDetailHeardType"
 import {PluginDetailHeader} from "../../baseTemplate"
 import styles from "./LocalPluginExecuteDetailHeard.module.scss"
@@ -320,6 +321,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     })
     /**打开额外参数抽屉 */
     const openExtraPropsDrawer = useMemoizedFn(() => {
+        if (isExecuting) return
         setExtraParamsVisible(true)
     })
     const onClearExecuteResult = useMemoizedFn(() => {
@@ -371,7 +373,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                                     />
                                 )}
                                 {runtimeId && (
-                                    <YakitButton type='text' onClick={onClearExecuteResult}>
+                                    <YakitButton type='text' danger onClick={onClearExecuteResult}>
                                         清除执行结果
                                     </YakitButton>
                                 )}
@@ -439,7 +441,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                             </YakitButton>
                         )}
                         {isShowExtraParamsButton && (
-                            <YakitButton type='text' onClick={openExtraPropsDrawer}>
+                            <YakitButton type='text' onClick={openExtraPropsDrawer} disabled={isExecuting}>
                                 额外参数
                             </YakitButton>
                         )}
@@ -474,51 +476,54 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
 /**执行的入口通过插件参数生成组件 */
 const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsProps> = React.memo((props) => {
     const {paramsList, pluginType, isExecuting} = props
-    const formContent = (item: YakParamProps) => {
-        let extraSetting: FormExtraSettingProps | undefined = undefined
-        try {
-            extraSetting = JSON.parse(item.ExtraSetting || "{}") || {
-                double: false,
-                data: []
-            }
-        } catch (error) {
-            failed("获取参数配置数据错误，请重新打开该页面")
-        }
-        switch (item.TypeVerbose) {
-            case "upload-path":
-                return (
-                    <>
-                        <YakitFormDragger
-                            className={styles["plugin-execute-form-item"]}
-                            formItemProps={{
-                                name: item.Field,
-                                label: item.FieldVerbose || item.Field,
-                                rules: [{required: item.Required}]
-                            }}
-                            selectType='all'
-                            disabled={isExecuting}
-                        />
-                    </>
-                )
 
-            default:
-                return (
-                    <OutputFormComponentsByType
-                        item={item}
-                        extraSetting={extraSetting}
-                        pluginType={pluginType}
-                        disabled={isExecuting}
-                    />
-                )
-        }
-    }
     return (
         <>
             {paramsList.map((item) => (
-                <React.Fragment key={item.Field + item.FieldVerbose}>{formContent(item)}</React.Fragment>
+                <React.Fragment key={item.Field + item.FieldVerbose}>
+                    <FormContentItemByType item={item} pluginType={pluginType} disabled={isExecuting} />
+                </React.Fragment>
             ))}
         </>
     )
+})
+/**插件执行输入》输出form表单的组件item */
+export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React.memo((props) => {
+    const {item, disabled, pluginType} = props
+    let extraSetting: FormExtraSettingProps | undefined = undefined
+    try {
+        extraSetting = JSON.parse(item.ExtraSetting || "{}") || {
+            double: false,
+            data: []
+        }
+    } catch (error) {
+        failed("获取参数配置数据错误，请重新打开该页面")
+    }
+    switch (item.TypeVerbose) {
+        case "upload-path":
+            return (
+                <YakitFormDragger
+                    className={styles["plugin-execute-form-item"]}
+                    formItemProps={{
+                        name: item.Field,
+                        label: item.FieldVerbose || item.Field,
+                        rules: [{required: item.Required}]
+                    }}
+                    selectType='all'
+                    disabled={disabled}
+                />
+            )
+
+        default:
+            return (
+                <OutputFormComponentsByType
+                    item={item}
+                    extraSetting={extraSetting}
+                    pluginType={pluginType}
+                    disabled={disabled}
+                />
+            )
+    }
 })
 
 /**执行表单单个项 */
@@ -612,6 +617,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     initialValue={item.DefaultValue || ""}
                     trigger='setValue'
                     validateTrigger='setValue'
+                    validateStatus={validateStatus}
+                    help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
                     <HTTPPacketYakitEditor originValue={code} value={item.DefaultValue || ""} readOnly={disabled} />
                 </Form.Item>
@@ -640,6 +647,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     initialValue={item.DefaultValue || ""}
                     trigger='setValue'
                     validateTrigger='setValue'
+                    validateStatus={validateStatus}
+                    help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
                     <YakitEditor type={pluginType} value={item.DefaultValue || ""} readOnly={disabled} />
                 </Form.Item>
