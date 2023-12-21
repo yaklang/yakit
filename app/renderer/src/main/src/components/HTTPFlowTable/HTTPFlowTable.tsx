@@ -1601,7 +1601,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <OutlineSearchIcon onClick={() => getHTTPFlowsFieldGroup(true)} />,
+                    filterIcon: <OutlineSearchIcon className={style['filter-icon']} onClick={() => getHTTPFlowsFieldGroup(true)} />,
                     filters: tags
                 }
             },
@@ -1740,7 +1740,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <OutlineSearchIcon />,
+                    filterIcon: <OutlineSearchIcon className={style['filter-icon']} />,
                     filters: contentType
                 }
             },

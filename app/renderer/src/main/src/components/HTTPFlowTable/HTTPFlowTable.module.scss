@@ -5,6 +5,13 @@
         color: var(--yakit-success-5);
     }
 
+    .filter-icon{
+        svg{
+            width: 16px;
+            height: 16px;
+        }
+    }
+
     .body-length-text-red {
         color: var(--yakit-danger-5);
     }
