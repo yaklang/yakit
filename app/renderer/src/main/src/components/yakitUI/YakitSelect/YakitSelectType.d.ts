@@ -27,6 +27,8 @@ export interface YakitSelectProps<
     /**@name 缓存数据  list长度*/
     cacheHistoryListLength?: number
     defaultOptions?: OptionType
+    /**是否缓存默认值 */
+    isCacheDefaultValue?: boolean
 }
 export interface YakitSelectOptionProps extends OptionProps {}
 

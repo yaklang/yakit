@@ -284,6 +284,7 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                     mode='tags'
                     placeholder='请输入...'
                     cacheHistoryDataKey={PluginGV.LocalExecuteExtraPath}
+                    isCacheDefaultValue={false}
                 />
             </Form.Item>
             <YakitCollapse
