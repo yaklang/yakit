@@ -420,7 +420,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }
 
     /** yaklang引擎切换启动模式 */
-    const changeEngineMode = useMemoizedFn((type: YaklangEngineMode, keepalive?: boolean) => {
+    const changeEngineMode = useMemoizedFn(async (type: YaklangEngineMode, keepalive?: boolean) => {
         info(`引擎状态切换为: ${EngineModeVerbose(type as YaklangEngineMode)}`)
 
         setYakitStatus("")
@@ -437,11 +437,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
 
         setEngineMode(undefined)
-        getLocalValue(LocalGV.YaklangEngineMode).then(res => {
-            if (type !== res) {
-                handleTemporaryProject()
-            }
-        })
+        
+        const res = await getLocalValue(LocalGV.YaklangEngineMode)
+        if (type !== res) {
+            handleTemporaryProject()
+        }
         
         // 修改状态，重连引擎
         setLocalValue(LocalGV.YaklangEngineMode, type)
