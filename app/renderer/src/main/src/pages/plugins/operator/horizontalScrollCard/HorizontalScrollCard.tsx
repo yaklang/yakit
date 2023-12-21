@@ -159,18 +159,6 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                     ref={horizontalScrollCardRef}
                     onScroll={onScrollCardList}
                 >
-                    <ReactResizeDetector
-                        onResize={(w, h) => {
-                            if (!w || !h) {
-                                return
-                            }
-                            setCardWidth(w)
-                        }}
-                        handleWidth={true}
-                        handleHeight={true}
-                        refreshMode={"debounce"}
-                        refreshRate={50}
-                    />
                     {data.map((cardItem) => (
                         <React.Fragment key={cardItem.tag}>
                             {cardItem.info.length > 1 ? (
@@ -183,6 +171,18 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                             )}
                         </React.Fragment>
                     ))}
+                    <ReactResizeDetector
+                        onResize={(w, h) => {
+                            if (!w || !h) {
+                                return
+                            }
+                            setCardWidth(w)
+                        }}
+                        handleWidth={true}
+                        handleHeight={true}
+                        refreshMode={"debounce"}
+                        refreshRate={50}
+                    />
                 </div>
                 {scroll.scrollRight > 0 && (
                     <div
