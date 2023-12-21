@@ -18,7 +18,8 @@ const {ipcRenderer} = window.require("electron")
 export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
     // console.log("WebShellDetailOpt", props)
     const xtermRef = useRef<any>(null)
-    const xtermStringRef = useRef<string>("")
+    const [inputValue, setInputValue] = useState('');
+    const [baseInfo, setBaseInfo] = useState('');
     /** 日志输出 */
     const writeToConsole = (i: string) => {
         if (xtermRef?.current && xtermRef.current?.terminal) {
@@ -36,8 +37,6 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
         // },2000)
     }, [xtermRef])
 
-    const [baseInfo, setBaseInfo] = useState('');
-
     useEffect(() => {
         const id = props.webshellInfo.Id
         // 定义一个异步函数来获取基本信息
@@ -48,14 +47,6 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
             failed(`FeaturePing failed: ${e}`)
         })
     }, [props.webshellInfo.Id]);
-
-    const removeLastCharacter = useMemoizedFn((str) => {
-        if (str.length > 0) {
-          return str.slice(0, -1);  // 使用负索引来移除最后一位字符
-        } else {
-          return str;
-        }
-      })
 
     return (
         <div style={{width: "100%", height: "100%"}}>
@@ -73,9 +64,10 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
                             isWrite={false}
                             onData={(data)=>{
                                 console.log("onData---",data);
-                                if(data.length>0){
+                                if(data.replace(/[\x7F]/g, '').length>0){
                                     writeToConsole(data)
-                                    xtermStringRef.current += data
+                                    // 处理用户输入的数据
+                                    setInputValue(prevInput => prevInput + data);
                                 }
                             }}
                             onKey={(e) => {
@@ -84,17 +76,17 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
                                 console.log("onKey---",key,keyCode);
                                 // 删除
                                 if(keyCode === TERMINAL_INPUT_KEY.BACK && xtermRef?.current){
+                                    setInputValue(prevInput => prevInput.replace(/.$/, "").replace(/[\x7F]/g, ''))
                                     // 发送 backspace 字符
                                     xtermRef.current.terminal.write('\b \b')
-                                    xtermStringRef.current = removeLastCharacter(xtermStringRef.current)
                                     return
                                 }
                                 // 回车
                                 if(keyCode === TERMINAL_INPUT_KEY.ENTER && xtermRef?.current){
-                                    console.log("gg",xtermStringRef.current);
+                                    console.log("gg",inputValue);
                                     // 此处调用接口
                                     xtermRef.current.terminal.write('\n')
-                                    xtermStringRef.current = ""
+                                    setInputValue("")
                                     return
                                 }
                                 
