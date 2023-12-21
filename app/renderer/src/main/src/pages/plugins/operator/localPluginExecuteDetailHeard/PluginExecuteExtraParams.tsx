@@ -269,7 +269,6 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                     ref={pathRef}
                     allowClear
                     defaultOptions={["/", "/admin"].map((item) => ({value: item, label: item}))}
-                    size='small'
                     mode='tags'
                     placeholder='请输入...'
                     cacheHistoryDataKey={PluginGV.LocalExecuteExtraPath}
