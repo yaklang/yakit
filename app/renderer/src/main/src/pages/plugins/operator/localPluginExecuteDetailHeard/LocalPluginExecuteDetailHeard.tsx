@@ -612,6 +612,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     initialValue={item.DefaultValue || ""}
                     trigger='setValue'
                     validateTrigger='setValue'
+                    validateStatus={validateStatus}
+                    help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
                     <HTTPPacketYakitEditor originValue={code} value={item.DefaultValue || ""} readOnly={disabled} />
                 </Form.Item>
@@ -640,6 +642,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     initialValue={item.DefaultValue || ""}
                     trigger='setValue'
                     validateTrigger='setValue'
+                    validateStatus={validateStatus}
+                    help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
                     <YakitEditor type={pluginType} value={item.DefaultValue || ""} readOnly={disabled} />
                 </Form.Item>
