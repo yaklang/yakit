@@ -37,6 +37,8 @@ import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOper
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {NewCodecCheckUI, NewCodecInputUI, NewCodecSelectUI} from "./NewCodecUIStore"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 interface NewCodecRightEditorBoxProps {
@@ -208,6 +210,28 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                     </div>
                 </div>
             </div>
+            {/* 输入框模块-仅可读 */}
+            <NewCodecInputUI require={true} readOnly={true} />
+            {/* 多选框模块 */}
+            <NewCodecCheckUI />
+            {/* 下拉框模块 */}
+            <NewCodecSelectUI require={true} title='输入格式' />
+            {/* 输入框模块 */}
+            <NewCodecInputUI require={true} />
+            <div style={{display:"flex",flexDirection:"row",gap:8}}>
+                <div style={{flex:1}}>
+                  {/* 输入框模块 */}
+                <NewCodecInputUI direction="left"/>  
+                </div>
+                <div style={{flex:1}}>
+                 {/* 下拉框模块-无标题 */}
+                <NewCodecSelectUI direction="right"/>   
+                </div>
+                
+            </div>
+
+            {/* 可搜索下拉框 */}
+            <NewCodecSelectUI showSearch={true} />
         </div>
     )
 }
