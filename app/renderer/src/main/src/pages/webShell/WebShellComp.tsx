@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react"
 import {Form, Space} from "antd";
 import {FromLayoutProps} from "@/pages/invoker/YakScriptCreator";
-import {ShellScript, ShellType, WebShellDetail} from "@/pages/webShell/models";
+import {EncMode, ShellScript, ShellType, WebShellDetail} from "@/pages/webShell/models";
 import {useCreation, useDebounceEffect, useGetState, useMemoizedFn} from "ahooks";
 import {InputItem} from "@/utils/inputUtil";
 import {YakScript} from "@/pages/invoker/schema";
@@ -263,8 +263,8 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
                                 setParams({...params, EncMode: val});
                             }}
                         >
-                            <YakitSelect.Option value='base64'>Base64</YakitSelect.Option>
-                            <YakitSelect.Option value='raw'>Raw</YakitSelect.Option>
+                            <YakitSelect.Option value={EncMode.Base64}>Base64</YakitSelect.Option>
+                            <YakitSelect.Option value={EncMode.Raw}>Raw</YakitSelect.Option>
                         </YakitSelect>
                     </Form.Item>
                 </>
