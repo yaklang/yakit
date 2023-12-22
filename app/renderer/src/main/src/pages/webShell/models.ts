@@ -28,7 +28,7 @@ export  interface WebShellDetail {
     SecretKey: string;
     EncMode: string;
     Charset: string;
-    ShellType: string;
+    ShellType: "Behinder"|"Godzilla";
     ShellScript: string;
     Status: boolean;
     Tag: string[];
