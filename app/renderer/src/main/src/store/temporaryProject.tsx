@@ -1,4 +1,4 @@
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import { setLocalValue } from "@/utils/kv"
 import { RemoteGV } from "@/yakitGV"
 import {create} from "zustand"
 import {persist} from "zustand/middleware"
@@ -17,7 +17,7 @@ export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>()(
             temporaryProjectNoPromptFlag: false,
             setTemporaryProjectId: (id: string) => {
                 set({temporaryProjectId: id})
-                setRemoteValue(RemoteGV.TemporaryProjectId, id)
+                setLocalValue(RemoteGV.TemporaryProjectId, id)
             },
             setTemporaryProjectNoPromptFlag: (flag: boolean) => {
                 set({temporaryProjectNoPromptFlag: flag})
