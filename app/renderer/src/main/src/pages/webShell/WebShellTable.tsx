@@ -574,7 +574,7 @@ const onClose = useMemoizedFn(()=>{
                 closable={false}
                 onClose={onClose}
                 visible={visible && !!inViewport}
-                // getContainer={getContainer}
+                getContainer={cvePageRef.current}
                 mask={false}
                 style={{height: visible ? heightDrawer : 0}}
                 className={cveStyles["shell-table-drawer"]}
