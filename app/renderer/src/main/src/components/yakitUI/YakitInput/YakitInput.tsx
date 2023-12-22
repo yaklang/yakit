@@ -1,5 +1,5 @@
 import {Input, InputRef} from "antd"
-import React, {useState} from "react"
+import React, {forwardRef, useState} from "react"
 import {
     YakitInputSearchProps,
     YakitInputProps,
@@ -24,7 +24,7 @@ import {ResizerIcon} from "@/assets/newIcon"
  * @description: 输入
  * @augments InputProps 继承antd的Input默认属性
  */
-const InternalInput: React.FC<YakitInputProps> = (props) => {
+const InternalInput: React.FC<YakitInputProps> = forwardRef((props, ref: React.Ref<InputRef>) => {
     const {size, wrapperClassName, className, wrapperStyle, ...restProps} = props
     return (
         <div
@@ -42,6 +42,7 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
             <Input
                 spellCheck={false}
                 {...restProps}
+                ref={ref}
                 size='middle'
                 className={classNames(
                     styles["yakit-input-middle"],
@@ -56,7 +57,7 @@ const InternalInput: React.FC<YakitInputProps> = (props) => {
             </Input>
         </div>
     )
-}
+})
 
 const InternalSearch: React.FC<YakitInputSearchProps> = (props) => {
     const {size, wrapperClassName, className, wrapperStyle, ...restProps} = props
