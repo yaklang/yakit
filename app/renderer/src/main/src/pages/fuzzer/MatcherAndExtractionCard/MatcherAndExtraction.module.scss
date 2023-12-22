@@ -65,9 +65,10 @@
         position: relative;
         overflow-y: auto;
         :global {
+            .ant-collapse-item > .ant-collapse-header {
+                border-top: 0;
+            }
             .ant-collapse > .ant-collapse-item > .ant-collapse-header {
-                padding: 2px 8px;
-                height: 28px;
                 background: var(--yakit-card-background-color);
                 border-radius: 4px 4px 0px 0px;
                 border-bottom: 1px solid transparent;
@@ -80,7 +81,7 @@
             }
             .ant-collapse-item {
                 border: 1px solid var(--yakit-border-color);
-                border-radius: 4px;
+                border-radius: 4px !important;
             }
             .ant-collapse-item + .ant-collapse-item {
                 margin-top: 8px;
@@ -259,7 +260,7 @@
         .ant-popover-inner-content {
             padding: 0;
         }
-        .ant-popover-arrow{
+        .ant-popover-arrow {
             top: initial !important;
         }
     }
