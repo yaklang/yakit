@@ -496,6 +496,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             setLatestProject(res2 || undefined)
             update()
         } catch (error) {
+            update()
             yakitFailed(error + "")
         }
     }
