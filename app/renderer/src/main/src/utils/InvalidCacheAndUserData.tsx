@@ -1,5 +1,5 @@
 import React from "react";
-import {info} from "@/utils/notification";
+import {info, yakitFailed} from "@/utils/notification";
 import {showModal} from "@/utils/showModal";
 import {Alert, Button, Space} from "antd";
 import { getReleaseEditionName } from "./envfile";
@@ -10,9 +10,13 @@ const {ipcRenderer} = window.require("electron");
 export const invalidCacheAndUserData = (temporaryProjectId: string, setTemporaryProjectId) => {
     const handleTemporaryProject = async () => {
         if (temporaryProjectId) {
-            await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
-            setTemporaryProjectId("")
-            emiter.emit("onFeachGetCurrentProject")
+            try {
+                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+                setTemporaryProjectId("")
+                emiter.emit("onFeachGetCurrentProject")
+            } catch (error) {
+                yakitFailed(error + "")
+            }
         }
     }
 
