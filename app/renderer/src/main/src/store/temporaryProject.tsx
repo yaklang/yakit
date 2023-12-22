@@ -19,7 +19,10 @@ export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>()(
                 set({temporaryProjectId: id})
                 setRemoteValue(RemoteGV.TemporaryProjectId, id)
             },
-            setTemporaryProjectNoPromptFlag: (flag: boolean) => set({temporaryProjectNoPromptFlag: flag})
+            setTemporaryProjectNoPromptFlag: (flag: boolean) => {
+                set({temporaryProjectNoPromptFlag: flag})
+                setRemoteValue(RemoteGV.TemporaryProjectPrompt, flag + "")
+            }
         }),
         {
             name: "temporary-project"

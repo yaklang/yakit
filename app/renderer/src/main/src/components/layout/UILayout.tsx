@@ -867,8 +867,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             isEnpriTraceAgent()
                 ? setEngineLink(true)
                 : (async () => {
-                      const res = await getRemoteValue(RemoteGV.TemporaryProjectId)
-                      setTemporaryProjectId(res || "")
+                      setTemporaryProjectId((await getRemoteValue(RemoteGV.TemporaryProjectId)) || "")
+                      const res = await getRemoteValue(RemoteGV.TemporaryProjectPrompt)
+                      if (res) {
+                          setTemporaryProjectNoPromptFlag(res === "true")
+                      } else {
+                          setTemporaryProjectNoPromptFlag(false)
+                      }
                       setLinkDatabase(true)
                       setYakitMode("soft")
                       setTimeout(() => setEngineLink(true), 100)
