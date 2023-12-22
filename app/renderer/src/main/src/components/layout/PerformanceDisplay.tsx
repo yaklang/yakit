@@ -267,7 +267,9 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 <Popconfirm
                                                     title={<>确定是否切换连接的引擎,</>}
                                                     onConfirm={async () => {
-                                                        await handleTemporaryProject()
+                                                        if (+i.port !== port) {
+                                                            await handleTemporaryProject()
+                                                        }
                                                         const switchEngine: YaklangEngineWatchDogCredential = {
                                                             Mode: "local",
                                                             Port: i.port,
@@ -280,7 +282,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                                 setTimeout(() => {
                                                                     ipcRenderer.invoke("switch-conn-refresh", false)
                                                                     success(`切换核心引擎成功！`)
-                                                                    if (!isEnpriTraceAgent()) {
+                                                                    if (!isEnpriTraceAgent() && +i.port !== port) {
                                                                         emiter.emit("onSwitchEngine")
                                                                     }
                                                                 }, 500)
