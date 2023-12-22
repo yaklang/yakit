@@ -9,6 +9,7 @@ import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {TemporaryProjectPop} from "./WinUIOp"
 import emiter from "@/utils/eventBus/eventBus"
 import { yakitFailed } from "@/utils/notification"
+import { isEnpriTraceAgent } from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -63,6 +64,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
             }
             // 如果打开得是临时项目
             if (
+                !isEnpriTraceAgent() &&
                 lastTemporaryProjectIdRef.current === props.currentProjectId &&
                 !lastTemporaryProjectNoPromptRef.current
             ) {
