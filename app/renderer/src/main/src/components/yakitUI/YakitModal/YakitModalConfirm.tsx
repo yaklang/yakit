@@ -41,6 +41,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                         }}
                         title={null}
                         headerStyle={{paddingBottom: 0}}
+                        bodyStyle={{padding: 0}}
                     >
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {
