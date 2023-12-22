@@ -1,5 +1,5 @@
 import React, {memo, ReactNode, useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useGetState, useMemoizedFn, useScroll, useUpdateEffect, useVirtualList} from "ahooks"
+import {useDebounceEffect, useGetState, useMemoizedFn, useScroll, useVirtualList} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryGeneralRequest} from "../invoker/schema"
 import {failed, info, yakitFailed} from "@/utils/notification"
@@ -47,9 +47,6 @@ import classNames from "classnames"
 import styles from "./ProjectManage.module.scss"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
-import { RemoteGV } from "@/yakitGV"
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
-import { useRunNodeStore } from "@/store/runNode"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -701,6 +698,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             })
             const newTemporaryId = res.Id + ""
             setTemporaryProjectId(newTemporaryId)
+            // setRemoteValue(RemoteGV.TemporaryProjectId, newTemporaryId)
             await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId})
             info("切换临时项目成功")
             onFinish()
