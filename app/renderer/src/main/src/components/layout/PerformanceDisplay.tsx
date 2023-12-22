@@ -17,6 +17,7 @@ import {YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngine
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
+import { isEnpriTraceAgent } from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -279,7 +280,9 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                                 setTimeout(() => {
                                                                     ipcRenderer.invoke("switch-conn-refresh", false)
                                                                     success(`切换核心引擎成功！`)
-                                                                    emiter.emit("onSwitchEngine")
+                                                                    if (!isEnpriTraceAgent()) {
+                                                                        emiter.emit("onSwitchEngine")
+                                                                    }
                                                                 }, 500)
                                                             })
                                                             .catch((e) => {
