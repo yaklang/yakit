@@ -66,9 +66,7 @@ export enum RemoteGV {
     /** @name history页面左侧tabs */
     HistoryLeftTabs = "history_left_tabs",
     /** @name 临时项目id */
-    TemporaryProjectId = "temporary_project_id",
-    /** @name 临时项目是否给提示弹框 */
-    TemporaryProjectPrompt = "temporary_project_prompt"
+    TemporaryProjectId = "temporary_project_id"
 }
 
 /** 项目逻辑全局变量 */

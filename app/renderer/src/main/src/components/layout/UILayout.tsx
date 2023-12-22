@@ -868,12 +868,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 ? setEngineLink(true)
                 : (async () => {
                       setTemporaryProjectId((await getRemoteValue(RemoteGV.TemporaryProjectId)) || "")
-                      const res = await getRemoteValue(RemoteGV.TemporaryProjectPrompt)
-                      if (res) {
-                          setTemporaryProjectNoPromptFlag(res === "true")
-                      } else {
-                          setTemporaryProjectNoPromptFlag(false)
-                      }
                       setLinkDatabase(true)
                       setYakitMode("soft")
                       setTimeout(() => setEngineLink(true), 100)

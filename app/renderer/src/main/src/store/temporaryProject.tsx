@@ -21,7 +21,6 @@ export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>()(
             },
             setTemporaryProjectNoPromptFlag: (flag: boolean) => {
                 set({temporaryProjectNoPromptFlag: flag})
-                setRemoteValue(RemoteGV.TemporaryProjectPrompt, flag + "")
             }
         }),
         {
