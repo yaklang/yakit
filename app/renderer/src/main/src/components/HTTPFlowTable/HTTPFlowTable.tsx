@@ -2527,7 +2527,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             return
         }
         const m = showYakitModal({
-            title: "导入分享数据",
+            title: "分享数据",
             content: <ShareModal module={YakitRoute.DB_HTTPHistory} shareContent={JSON.stringify(ids)} />,
             onCancel: () => {
                 m.destroy()

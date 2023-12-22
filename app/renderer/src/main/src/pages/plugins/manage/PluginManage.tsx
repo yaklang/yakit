@@ -994,6 +994,7 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
             visible={visible}
             onCancel={setVisible}
             onOk={onSubmit}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["reason-modal-body"]}>
                 <YakitInput.TextArea

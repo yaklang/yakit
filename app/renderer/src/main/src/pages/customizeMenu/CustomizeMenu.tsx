@@ -653,7 +653,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 </div>
             </YakitModal>
             <YakitModal
-                closable={true}
+                hiddenHeader={true}
                 footer={null}
                 visible={emptyMenuLength > 0}
                 onCancel={() => setEmptyMenuLength(0)}

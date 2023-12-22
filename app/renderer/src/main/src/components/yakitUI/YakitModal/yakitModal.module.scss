@@ -66,11 +66,14 @@
         flex: 1;
         overflow: hidden;
         display: flex;
+        align-items: center;
         color: var(--ui-neutral-100);
         font-size: 14px;
         font-weight: 600;
         line-height: 20px;
         .subtitle-style {
+            flex: 1;
+            overflow: hidden;
             margin-left: 16px;
             font-weight: 400;
             font-size: 12px;

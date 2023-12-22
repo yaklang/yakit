@@ -199,7 +199,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             onCancel={() => {
                 setVisible(false)
             }}
-            closable={false}
+            closable={true}
             title='过滤器配置'
             width={720}
             maskClosable={false}
