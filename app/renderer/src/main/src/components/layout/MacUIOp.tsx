@@ -71,6 +71,10 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
             } else {
                 await handleTemporaryProject()
             }
+        } else {
+            if (Array.from(runNodeList).length) {
+                handleKillAllRunNode()
+            }
         }
         operate("close")
     }

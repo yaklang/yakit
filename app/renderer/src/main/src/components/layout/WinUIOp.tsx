@@ -72,6 +72,10 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
             } else {
                 await handleTemporaryProject()
             }
+        } else {
+            if (Array.from(runNodeList).length) {
+                handleKillAllRunNode()
+            }
         }
         operate("close")
     }

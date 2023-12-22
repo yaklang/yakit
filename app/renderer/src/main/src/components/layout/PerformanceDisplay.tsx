@@ -117,19 +117,6 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [port, setPort, getPort] = useGetState<number>(0)
 
-    const handleKillAllRunNode = async () => {
-        let promises: (() => Promise<any>)[] = []
-        Array.from(runNodeList).forEach(([key, pid]) => {
-            promises.push(() => ipcRenderer.invoke("kill-run-node", {pid}))
-        })
-        try {
-            await Promise.all(promises.map((promiseFunc) => promiseFunc()))
-            clearRunNodeList()
-        } catch (error) {
-            yakitFailed(error + "")
-        }
-    }
-
     const fetchPSList = useMemoizedFn(() => {
         if (psLoading) return
 
@@ -186,7 +173,6 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     }, [inViewport])
 
     const allClose = useMemoizedFn(async () => {
-        await handleKillAllRunNode()
         await handleTemporaryProject()
         ;(process || []).forEach((i) => {
             ipcRenderer.invoke("kill-yak-grpc", i.pid).then((val) => {
@@ -225,7 +211,6 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                             <Popconfirm
                                 title={"重置引擎版本会恢复最初引擎出厂版本，同时强制重启"}
                                 onConfirm={async () => {
-                                    await handleKillAllRunNode()
                                     await handleTemporaryProject()
                                     process.map((i) => {
                                         ipcRenderer.invoke(`kill-yak-grpc`, i.pid)
@@ -281,7 +266,6 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 <Popconfirm
                                                     title={<>确定是否切换连接的引擎,</>}
                                                     onConfirm={async () => {
-                                                        await handleKillAllRunNode()
                                                         await handleTemporaryProject()
                                                         const switchEngine: YaklangEngineWatchDogCredential = {
                                                             Mode: "local",
@@ -324,7 +308,6 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 }
                                                 onConfirm={async () => {
                                                     if (+i.port === port) {
-                                                        await handleKillAllRunNode()
                                                         await handleTemporaryProject()
                                                     }
                                                     
