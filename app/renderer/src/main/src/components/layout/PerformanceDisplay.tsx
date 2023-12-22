@@ -193,9 +193,13 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
     const handleTemporaryProject = async () => {
         if (temporaryProjectId) {
-            await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
-            setTemporaryProjectId("")
-            emiter.emit("onFeachGetCurrentProject")
+            try {
+                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+                setTemporaryProjectId("")
+                emiter.emit("onFeachGetCurrentProject")
+            } catch (error) {
+                yakitFailed(error + "")
+            }
         }
     }
 

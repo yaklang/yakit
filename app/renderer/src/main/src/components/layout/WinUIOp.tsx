@@ -84,9 +84,13 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
 
     const handleTemporaryProject = async () => {
         if (temporaryProjectId) {
-            await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
-            setTemporaryProjectId("")
-            emiter.emit("onFeachGetCurrentProject")
+            try {
+                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+                setTemporaryProjectId("")
+                emiter.emit("onFeachGetCurrentProject")
+            } catch (error) {
+                yakitFailed(error + "")
+            }
         }
     }
 
