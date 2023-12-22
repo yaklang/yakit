@@ -1165,6 +1165,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             footer: null,
             maskClosable: false,
             closable: false,
+            hiddenHeader: true,
             style: {top: "10%"},
             content: (
                 <HTTPFuzzerHotPatch

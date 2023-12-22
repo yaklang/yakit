@@ -1009,6 +1009,7 @@ export const OnlineUserExtraOperate: React.FC<OnlineUserExtraOperateProps> = Rea
             centered: true,
             width: 506,
             mask: false,
+            hiddenHeader: true,
             content: (
                 <CodeScoreModal
                     type={data.type || ""}

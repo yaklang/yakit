@@ -2835,6 +2835,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             const m = showYakitModal({
                 footer: null,
                 closable: false,
+                hiddenHeader: true,
                 content: (
                     <React.Suspense fallback={<div>loading...</div>}>
                         <TabRenameModalContent
@@ -3934,7 +3935,6 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
         type: "white",
         onCancelText: "不保存",
         onOkText: "保存",
-        icon: <ExclamationCircleOutlined />,
         ...(props || {}),
         onOk: () => {
             if (props?.onOk) {
@@ -3943,17 +3943,6 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
                 m.destroy()
             }
         },
-        closeIcon: (
-            <div
-                onClick={(e) => {
-                    e.stopPropagation()
-                    m.destroy()
-                }}
-                className='modal-remove-icon'
-            >
-                <RemoveIcon />
-            </div>
-        ),
         content: <div style={{paddingTop: 8}}>{props?.content}</div>
     })
     return m

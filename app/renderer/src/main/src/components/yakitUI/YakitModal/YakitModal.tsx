@@ -83,7 +83,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
                         {!!title && (
                             <div className={styles["title-wrapper"]}>
                                 {title}
-                                <span className={styles["subtitle-style"]}>{subTitle}</span>
+                                <div className={styles["subtitle-style"]}>{subTitle}</div>
                             </div>
                         )}
                         {closable && (

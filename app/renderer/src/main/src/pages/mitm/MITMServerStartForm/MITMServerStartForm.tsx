@@ -444,7 +444,7 @@ const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
     return (
         <YakitModal
             visible={agentConfigModalVisible}
-            title='代理劫持'
+            title='配置用户名密码'
             width={506}
             maskClosable={false}
             closable

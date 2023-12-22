@@ -1,13 +1,12 @@
-import React, {CSSProperties, ReactNode, useEffect, useState} from "react"
-import {Modal, ModalProps} from "antd"
+import React, {useEffect, useState} from "react"
 import style from "./YakitModalConfirm.module.scss"
-import {YakitButton, YakitButtonProp} from "../YakitButton/YakitButton"
-import {RemoveIcon} from "@/assets/newIcon"
-import {showModal, ShowModalProps} from "@/utils/showModal"
+import {YakitButton} from "../YakitButton/YakitButton"
+import {ShowModalProps} from "@/utils/showModal"
 import ReactDOM from "react-dom"
-import {YakitModal} from "./YakitModal"
+import {YakitModal, YakitModalProp} from "./YakitModal"
 import {ErrorBoundary} from "react-error-boundary"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
+import {OutlineXIcon} from "@/assets/icon/outline"
 
 export interface YakitModalConfirmProps extends YakitBaseModalProp {
     title?: React.ReactNode | string
@@ -29,7 +28,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
             ReactDOM.render(
                 <>
                     <YakitBaseModal
-                        {...(targetConfig as ModalProps)}
+                        {...(targetConfig as YakitModalProp)}
                         onVisibleSetter={(r) => {
                             setter = r
                         }}
@@ -41,6 +40,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                             }
                         }}
                         title={null}
+                        headerStyle={{paddingBottom: 0}}
                     >
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {
@@ -104,7 +104,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
 }
 
 interface YakitBaseModalProp
-    extends Omit<ModalProps, "cancelButtonProps" | "okButtonProps" | "okType">,
+    extends Omit<YakitModalProp, "cancelButtonProps" | "okButtonProps" | "okType">,
         React.ComponentProps<any> {
     onVisibleSetter?: (setter: (i: boolean) => any) => any
     showConfirmLoading?: boolean
@@ -166,26 +166,22 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                     }}
                     className='modal-remove-icon'
                 >
-                    <RemoveIcon />
+                    <OutlineXIcon />
                 </div>
             }
-            bodyStyle={{padding: 0}}
             {...props}
         />
     )
 }
-
 
 export const debugYakitModal = (y: any) => {
     const m = showYakitModal({
         title: "调试信息",
         width: "50%",
         content: (
-            <div style={{marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20}}>
-                {JSON.stringify(y)}
-            </div>
+            <div style={{marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20}}>{JSON.stringify(y)}</div>
         ),
-        onOk: ()=>{
+        onOk: () => {
             m.destroy()
         }
     })
@@ -195,12 +191,8 @@ export const debugYakitModalAny = (y: any) => {
     const m = showYakitModal({
         title: "调试信息",
         width: "50%",
-        content: (
-            <div style={{marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20}}>
-                {y}
-            </div>
-        ),
-        onOk: ()=>{
+        content: <div style={{marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20}}>{y}</div>,
+        onOk: () => {
             m.destroy()
         }
     })
@@ -216,7 +208,8 @@ export const showYakitModal = (props: ShowModalProps) => {
             ReactDOM.render(
                 <>
                     <YakitBaseModal
-                        {...(targetConfig as ModalProps)}
+                        bodyStyle={{padding: 0}}
+                        {...(targetConfig as YakitModalProp)}
                         onVisibleSetter={(r) => {
                             setter = r
                         }}

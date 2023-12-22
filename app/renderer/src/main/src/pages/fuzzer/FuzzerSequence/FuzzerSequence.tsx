@@ -1623,6 +1623,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 maskClosable: false,
                 closable: false,
                 style: {top: "10%"},
+                hiddenHeader: true,
                 content: (
                     <HTTPFuzzerHotPatch
                         initialHotPatchCode={hotPatchCode}

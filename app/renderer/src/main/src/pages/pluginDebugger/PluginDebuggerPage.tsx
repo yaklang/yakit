@@ -443,6 +443,7 @@ const SecondNodeHeader: React.FC<SecondNodeHeaderProps> = React.memo(
                 width: 1200,
                 onOkText: "合并",
                 closable: false,
+                hiddenHeader: true,
                 content: (
                     <DataCompareModal
                         leftTitle='原始源码'

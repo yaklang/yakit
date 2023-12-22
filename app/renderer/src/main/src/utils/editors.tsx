@@ -1288,7 +1288,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             },
             width: 1200,
             footer: null,
-            closable: false
+            closable: false,
+            hiddenHeader: true
         })
         }, 500);
     })
