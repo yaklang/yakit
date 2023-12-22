@@ -72,6 +72,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
+import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -672,12 +673,50 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     failed("当前项目无关键信息，无法导出!")
                     return
                 }
+                // 临时项目暂不支持导出
+                if (temporaryProjectId) {
+                    const m = showYakitModal({
+                        title: "提示",
+                        content: (
+                            <div style={{padding: 20}}>
+                                临时项目导出还在开发中，会安排尽快上线
+                            </div>
+                        ),
+                        onCancel: () => {
+                            m.destroy()
+                        },
+                        onOk: () => {
+                            m.destroy()
+                        },
+                        width: 400
+                    })
+                    return
+                }
                 setLinkDatabase(true)
                 setProjectModalInfo({visible: true, isNew: false, isExport: true, project: currentProject})
                 return
             case "plaintextProject":
                 if (!currentProject || !currentProject.Id) {
                     failed("当前项目无关键信息，无法导出!")
+                    return
+                }
+                // 临时项目暂不支持导出
+                if (temporaryProjectId) {
+                    const m = showYakitModal({
+                        title: "提示",
+                        content: (
+                            <div style={{padding: 20}}>
+                                临时项目导出还在开发中，会安排尽快上线
+                            </div>
+                        ),
+                        onCancel: () => {
+                            m.destroy()
+                        },
+                        onOk: () => {
+                            m.destroy()
+                        },
+                        width: 400
+                    })
                     return
                 }
                 setLinkDatabase(true)
