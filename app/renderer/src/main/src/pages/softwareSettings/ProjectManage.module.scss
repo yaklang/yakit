@@ -138,6 +138,19 @@
                 }
             }
 
+            .new-temporary-project-wrapper {
+                background: rgba(53, 216, 238, 0.1);
+                .temporary-project-icon {
+                    svg {
+                        width: 32px;
+                        height: 32px;
+                    }
+                }
+            }
+            .new-temporary-project-wrapper:hover {
+                background: rgba(53, 216, 238, 0.2);
+            }
+
             .new-project-wrapper {
                 background: rgba(86, 201, 145, 0.1);
             }
