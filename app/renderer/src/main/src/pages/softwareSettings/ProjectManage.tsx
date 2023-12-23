@@ -481,6 +481,10 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         )
     })
 
+    /**
+     * 导出项目数据时 需要导出成功后再删除临时项目
+     * 中途取消或者没有导出数据时，需立即删除临时项目
+     */
     const handleTemporaryProject = async () => {
         if (temporaryProjectId) {
             try {
@@ -497,15 +501,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             await handleTemporaryProject()
             const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProject")
             setLatestProject(res2 || undefined)
-            update()
         } catch (error) {
-            update()
             yakitFailed(error + "")
         }
     }
 
     useEffect(() => {
         getProjectInfo()
+        update()
     }, [])
 
     const update = useMemoizedFn((page?: number) => {
@@ -701,7 +704,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             })
             const newTemporaryId = res.Id + ""
             setTemporaryProjectId(newTemporaryId)
-            // setRemoteValue(RemoteGV.TemporaryProjectId, newTemporaryId)
             await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId})
             info("切换临时项目成功")
             onFinish()
@@ -2080,6 +2082,10 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
         ipcRenderer.on(`${token}-error`, (e, error) => {
             failed(`${hintTitle} error:  ${error}`)
             infos.push(`${hintTitle} error: ${error}`)
+            // 导出失败时
+            if (isExport) {
+
+            }
         })
         ipcRenderer.on(`${token}-end`, (e) => {
             info(`${hintTitle} finished`)
@@ -2089,6 +2095,11 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                 if (isExport) {
                     onSuccess("isExport")
                     if (pathRef.current) openABSFileLocated(pathRef.current)
+                }
+            } else {
+                // 导出失败时
+                if (isExport) {
+
                 }
             }
         })
