@@ -496,6 +496,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         }
     }
 
+    useEffect(() => {
+        emiter.on("onGetProjectInfo", getProjectInfo)
+        return () => {
+            emiter.off("onGetProjectInfo", getProjectInfo)
+        }
+    }, [])
+
     const getProjectInfo = async () => {
         try {
             await handleTemporaryProject()
@@ -507,7 +514,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     }
 
     useEffect(() => {
-        getProjectInfo()
+        if (!isExportTemporaryProjectFlag) {
+            getProjectInfo()
+        }
         update()
     }, [])
 
@@ -693,7 +702,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     }>({visible: false})
     const [modalLoading, setModalLoading] = useState<boolean>(false)
 
-    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+    const {temporaryProjectId, isExportTemporaryProjectFlag, setTemporaryProjectId} = useTemporaryProjectStore()
 
     // 创建临时项目
     const creatTemporaryProject = useMemoizedFn(async () => {
@@ -1492,6 +1501,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         onModalSubmit
     } = props
 
+    const {isExportTemporaryProjectFlag, setIsExportTemporaryProjectFlag} = useTemporaryProjectStore()
+
     const [data, setData, getData] = useGetState<FileProjectInfoProps[]>([])
 
     const fetchChildNode = useMemoizedFn((selectedOptions: FileProjectInfoProps[]) => {
@@ -1773,7 +1784,20 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         }
     })
 
-    const onClose = useMemoizedFn(() => setVisible(false))
+    // 处理导出临时项目问题
+    const handleExportTemporaryProject = () => {
+        if (isExportTemporaryProjectFlag) {
+            setIsExportTemporaryProjectFlag(false)
+            // 发送信号到ProjectManage去执行 getPageInfo
+            // 由于 NewProjectAndFolder 该组件是在UILayout中使用
+            emiter.emit("onGetProjectInfo")
+        }
+    }
+
+    const onClose = useMemoizedFn(() => {
+        setVisible(false)
+        handleExportTemporaryProject()
+    })
 
     const [dropShow, setDropShow] = useState<boolean>(false)
 
@@ -1987,8 +2011,12 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             </Form>
 
             <TransferProject
+                usedBy='NewProjectAndFolder'
                 {...transferShow}
                 onSuccess={(type) => {
+                    if (type === "isExport") {
+                        handleExportTemporaryProject()
+                    }
                     onModalSubmit(type, {} as any)
                     setTimeout(() => {
                         setTransferShow({visible: false})
@@ -2004,6 +2032,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
 })
 
 interface TransferProjectProps {
+    usedBy?: string
     isExport?: boolean
     isImport?: boolean
     data?: ExportProjectProps | ImportProjectProps
@@ -2017,7 +2046,9 @@ export interface ProjectIOProgress {
     Verbose: string
 }
 export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
-    const {isExport, isImport, data, visible, setVisible, onSuccess} = props
+    const {usedBy, isExport, isImport, data, visible, setVisible, onSuccess} = props
+
+    const {isExportTemporaryProjectFlag, setIsExportTemporaryProjectFlag} = useTemporaryProjectStore()
 
     const [token, setToken] = useState(randomString(40))
     const [percent, setPercent] = useState<number>(0.0)
@@ -2082,10 +2113,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
         ipcRenderer.on(`${token}-error`, (e, error) => {
             failed(`${hintTitle} error:  ${error}`)
             infos.push(`${hintTitle} error: ${error}`)
-            // 导出失败时
-            if (isExport) {
-
-            }
+            // TODO 暂不清楚导出失败是个什么效果
         })
         ipcRenderer.on(`${token}-end`, (e) => {
             info(`${hintTitle} finished`)
@@ -2097,10 +2125,7 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                     if (pathRef.current) openABSFileLocated(pathRef.current)
                 }
             } else {
-                // 导出失败时
-                if (isExport) {
-
-                }
+                // TODO 暂不清楚导出失败是个什么效果
             }
         })
 
@@ -2118,7 +2143,19 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
         }
     }, [visible])
 
-    const onClose = useMemoizedFn(() => setVisible(false))
+    // 处理导出临时项目问题
+    const handleExportTemporaryProject = () => {
+        // 当是加密导出 点击组件TransferProject取消时不执行删除操作
+        if (isExportTemporaryProjectFlag && usedBy !== "NewProjectAndFolder") {
+            setIsExportTemporaryProjectFlag(false)
+            // 发送信号到ProjectManage去执行 getPageInfo
+            emiter.emit("onGetProjectInfo")
+        }
+    }
+    const onClose = useMemoizedFn(() => {
+        handleExportTemporaryProject()
+        setVisible(false)
+    })
 
     return (
         <div className={visible ? styles["transfer-project-mask"] : styles["transfer-project-hidden-mask"]}>
