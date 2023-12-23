@@ -72,7 +72,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
-import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -416,7 +416,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             try {
                 await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
                 setTemporaryProjectId("")
-                emiter.emit("onFeachGetCurrentProject")
             } catch (error) {
                 yakitFailed(error + "")
             }
@@ -613,18 +612,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [projectModalLoading, setProjectModalLoading] = useState<boolean>(false)
     const [ProjectName, setProjectName] = useState<string>()
 
-    useEffect(() => {
-        const funCallBack = () => {
-            ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => {
-                setCurrentProject(rsp || undefined)
-            })
-        }
-        emiter.on("onFeachGetCurrentProject", funCallBack)
-        return () => {
-            emiter.off("onFeachGetCurrentProject", funCallBack)
-        }
-    }, [])
-
     const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag} =
         useTemporaryProjectStore()
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
@@ -681,11 +668,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 if (temporaryProjectId) {
                     const m = showYakitModal({
                         title: "提示",
-                        content: (
-                            <div style={{padding: 20}}>
-                                临时项目导出还在开发中，会安排尽快上线
-                            </div>
-                        ),
+                        content: <div style={{padding: 20}}>临时项目导出还在开发中，会安排尽快上线</div>,
                         onCancel: () => {
                             m.destroy()
                         },
@@ -708,11 +691,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 if (temporaryProjectId) {
                     const m = showYakitModal({
                         title: "提示",
-                        content: (
-                            <div style={{padding: 20}}>
-                                临时项目导出还在开发中，会安排尽快上线
-                            </div>
-                        ),
+                        content: <div style={{padding: 20}}>临时项目导出还在开发中，会安排尽快上线</div>,
                         onCancel: () => {
                             m.destroy()
                         },
@@ -910,7 +889,23 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             isEnpriTraceAgent()
                 ? setEngineLink(true)
                 : (async () => {
-                      setTemporaryProjectId((await getLocalValue(RemoteGV.TemporaryProjectId)) || "")
+                      try {
+                        /**
+                         * 开发环境
+                         * 临时项目id存到数据库的主要原因是 若开发环境 手动断开控制台 方便下次进入项目管理页面能拿到临时项目id 在项目管理页面删掉临时项目
+                         */
+                          const res = await ipcRenderer.invoke("is-dev")
+                          if (res) {
+                              setTemporaryProjectId((await getRemoteValue(RemoteGV.TemporaryProjectId)) || "")
+                          }
+
+                          const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)
+                          if (flag) {
+                              setTemporaryProjectNoPromptFlag(flag === "true")
+                          }
+                      } catch (error) {
+                          yakitFailed(error + "")
+                      }
                       setLinkDatabase(true)
                       setYakitMode("soft")
                       setTimeout(() => setEngineLink(true), 100)

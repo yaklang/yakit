@@ -1,7 +1,8 @@
-import { setLocalValue } from "@/utils/kv"
-import { RemoteGV } from "@/yakitGV"
+import {setRemoteValue} from "@/utils/kv"
+import {yakitFailed} from "@/utils/notification"
+import {RemoteGV} from "@/yakitGV"
 import {create} from "zustand"
-import {persist} from "zustand/middleware"
+const {ipcRenderer} = window.require("electron")
 
 interface TemporaryProjectStoreProps {
     temporaryProjectId: string
@@ -10,21 +11,20 @@ interface TemporaryProjectStoreProps {
     setTemporaryProjectNoPromptFlag: (flag: boolean) => void
 }
 
-export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>()(
-    persist(
-        (set, get) => ({
-            temporaryProjectId: "",
-            temporaryProjectNoPromptFlag: false,
-            setTemporaryProjectId: (id: string) => {
-                set({temporaryProjectId: id})
-                setLocalValue(RemoteGV.TemporaryProjectId, id)
-            },
-            setTemporaryProjectNoPromptFlag: (flag: boolean) => {
-                set({temporaryProjectNoPromptFlag: flag})
-            }
-        }),
-        {
-            name: "temporary-project"
+export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>((set, get) => ({
+    temporaryProjectId: "",
+    temporaryProjectNoPromptFlag: false,
+    setTemporaryProjectId: async (id: string) => {
+        set({temporaryProjectId: id})
+        try {
+            const res = await ipcRenderer.invoke("is-dev")
+            res && setRemoteValue(RemoteGV.TemporaryProjectId, id)
+        } catch (error) {
+            yakitFailed(error + "")
         }
-    )
-)
+    },
+    setTemporaryProjectNoPromptFlag: (flag: boolean) => {
+        set({temporaryProjectNoPromptFlag: flag})
+        setRemoteValue(RemoteGV.TemporaryProjectNoPrompt, flag + "")
+    }
+}))

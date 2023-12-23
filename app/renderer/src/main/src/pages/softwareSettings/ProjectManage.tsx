@@ -486,7 +486,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             try {
                 await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
                 setTemporaryProjectId("")
-                emiter.emit("onFeachGetCurrentProject")
             } catch (error) {
                 yakitFailed(error + "")
             }
@@ -562,7 +561,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         ipcRenderer
             .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
             .then((e) => {
-                emiter.emit("onFeachGetCurrentProject")
                 info("删除成功")
                 setData({
                     ...getData(),
