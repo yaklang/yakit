@@ -1,6 +1,6 @@
 import React, {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
-import {failed, warn} from "./utils/notification"
+import {failed, warn, yakitFailed} from "./utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
 import {getCompletions} from "./utils/monacoSpec/yakCompletionSchema"
 import {showModal} from "./utils/showModal"
@@ -234,10 +234,23 @@ function NewApp() {
         }
     }, [])
 
+    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+    const handleTemporaryProject = async () => {
+        if (temporaryProjectId) {
+            try {
+                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+                setTemporaryProjectId("")
+            } catch (error) {
+                yakitFailed(error + "")
+            }
+        }
+    }
+
     // 退出时 确保渲染进程各类事项已经处理完毕
     const {dynamicStatus} = yakitDynamicStatus()
     useEffect(() => {
         ipcRenderer.on("close-windows-renderer", async (e, res: any) => {
+            await handleTemporaryProject()
             // 通知应用退出
             if (dynamicStatus.isDynamicStatus) {
                 warn("远程控制关闭中...")
