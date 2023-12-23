@@ -7,7 +7,6 @@ import {useRunNodeStore} from "@/store/runNode"
 import styles from "./uiOperate.module.scss"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
-import emiter from "@/utils/eventBus/eventBus"
 import {yakitFailed} from "@/utils/notification"
 import { isEnpriTraceAgent } from "@/utils/envfile"
 
@@ -42,7 +41,7 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
 
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId} = useTemporaryProjectStore()
+    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag} = useTemporaryProjectStore()
     const lastTemporaryProjectIdRef = useRef<string>("")
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const lastTemporaryProjectNoPromptRef = useRef<boolean>(false)
@@ -154,6 +153,7 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
                         ref={temporaryProjectPopRef}
                         onOk={async () => {
                             await handleTemporaryProject()
+                            setTemporaryProjectNoPromptFlag(temporaryProjectPopRef.current.temporaryProjectNoPrompt)
                             setCloseTemporaryProjectVisible(false)
                             lastTemporaryProjectIdRef.current = ""
                             handleCloseSoft()
