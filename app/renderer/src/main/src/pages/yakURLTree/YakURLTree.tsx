@@ -85,7 +85,7 @@ export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
                                 reject("node.data is empty")
                                 return
                             }
-
+                            console.log("originData.Url", originData.Url)
                             requestYakURLList({ url: originData.Url }, rsp => {
                                 const newNodes: TreeNode[] = rsp.Resources.map((i, index) => ({
                                     title: i.VerboseName,
