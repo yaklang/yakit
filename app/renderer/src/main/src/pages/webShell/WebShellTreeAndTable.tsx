@@ -35,6 +35,7 @@ import { TreeKey } from "@/components/yakitUI/YakitTree/YakitTree";
 
 interface WebShellURLTreeAndTableProp {
     Id: string
+    CurrentPath: string
     shellType: ShellType
 }
 
@@ -157,8 +158,8 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         }, 10)
     })
 
-    // const [currentPath, setCurrentPath] = useState<string>("behinder:///C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
-    const [currentPath, setCurrentPath] = useState<string>(props.shellType + ":///C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/?mode=list&id=" + props.Id)
+    // const [currentYakURL, setCurrentPath] = useState<string>("behinder:///C:/Vuln/apache-tomcat-8.5.84/webapps/S2-032?mode=list&id=" + props.Id)
+    const [currentYakURL, setCurrentYakURL] = useState<string>(`${props.shellType}:///${props.CurrentPath}?op=file&mode=list&id=${props.Id}`)
 
     const fileMenuData = [
         {
@@ -308,7 +309,8 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
 
     const [currentPathAllTree, setcurrentPathAllTree] = useState<TreeNode[]>([])
     useEffect(() => {
-        loadFromYakURLRaw(currentPath.charAt(0).toLocaleLowerCase() + currentPath.slice(1), (res) => {
+        console.log("currentYakURL ", currentYakURL)
+        loadFromYakURLRaw(currentYakURL.charAt(0).toLocaleLowerCase() + currentYakURL.slice(1), (res) => {
             const arr = res.Resources.map((item: YakURLResource, index: number) => {
                 return {
                     title: item.VerboseName,
@@ -324,7 +326,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             setLoading(false)
             yakitFailed(`加载失败: ${error}`)
         })
-    }, [currentPath])
+    }, [currentYakURL])
 
     return (
         <ResizeBox
@@ -335,12 +337,13 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                     height={800}
                     ref={webTreeRef}
                     schema={props.shellType.toLowerCase()}
-                    searchVal={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/?op=file&mode=list&id=" + props.Id}
+                    searchVal={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/bin/?op=file&mode=list&id=" + props.Id}
                     searchPlaceholder='请输入域名进行搜索，例baidu.com'
                     onSelectNodes={(nodes) => {
                         setLoading(false)
                         if (nodes.length) {
                             const url = nodes[0]?.data?.Url as YakURL
+                            console.log("url ", url)
                             requestYakURLList({url}, (rsp) => {
                                 const newNodes: TreeNode[] = rsp.Resources.map((i) => {
                                     return {
@@ -398,7 +401,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                     {/* <span style={{paddingRight: "5px"}}>Path:</span> */}
                                     {/* <YakitInput
                                         onChange={(e) => setCurrentPath(e.target.value)}
-                                        value={currentPath}
+                                        value={currentYakURL}
                                     /> */}
 
                                     <Divider type='vertical' style={{margin: "0px 8px 0px 0px", top: 1}}/>

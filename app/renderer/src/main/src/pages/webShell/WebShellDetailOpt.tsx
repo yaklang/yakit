@@ -229,6 +229,7 @@ ${msg.currentPath}`
                 <YakitTabs.YakitTabPane tab={"文件管理"} key={"fileOpt"}>
                     <WebShellURLTreeAndTable
                         Id={props.webshellInfo.Id}
+                        CurrentPath={defaultPath}
                         shellType={props.webshellInfo.ShellType as ShellType}
                     />
                 </YakitTabs.YakitTabPane>
