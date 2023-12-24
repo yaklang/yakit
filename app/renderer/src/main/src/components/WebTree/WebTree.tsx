@@ -185,7 +185,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     url.Query.push({Key: "schema", Value: "http"})
                 }
             }
-
+            console.log("url", url)
             requestYakURLList(
                 {url},
                 (rsp) => {
@@ -194,6 +194,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                             website: key + "/" + i.ResourceName,
                             behinder: i.Path
                         }
+                        console.log("idObj", idObj)
                         return {
                             title: i.VerboseName,
                             key: idObj[schema],
