@@ -135,27 +135,26 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     })
 
     const addChildrenToBinNode = (tree, binContents) => {
+        cacheExpanded.current=[]
         // 递归搜索 'bin' 节点的函数
         const findAndAddBinChildren = (nodes) => {
             nodes.forEach(node => {
                 if (node.title === 'bin') {
-
                     // 假定 binContents 是一个包含子节点的数组
-                    node.children.push({
-                        title: binContents.title,
-                        key: binContents.key, // 这里你可能需要根据实际情况生成一个唯一的 key
-                        isLeaf: binContents.isLeaf,
-                        data: binContents.data,
-                    });
-                    console.log("binContexxxxxxxxxxnts", tree)
+                    node.children=[...binContents]
                     return tree;
                 } else if (node.children && node.children.length) {
+                    cacheExpanded.current.push(`node-${treeKey.current}`)
+                    node.key = `node-${treeKey.current}`
+                    treeKey.current+=1
                     findAndAddBinChildren(node.children); // 继续递归搜索子节点
                 }
             });
         };
-
-        findAndAddBinChildren(tree);
+        findAndAddBinChildren(tree)
+        treeKey.current = 0
+        return {tree,defaultExpandedKeys:[...expandedKeys,...cacheExpanded.current]}
+        // ||binContents;
     }
 
     // 树节点第一层组装树
@@ -179,6 +178,14 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 }
             } as TreeNode
         })
+        if(isExtendTree){
+            setExpandedKeys(['node-0', 'node-1', 'node-2', 'node-3', 'node-4'])
+            const {tree,defaultExpandedKeys} = addChildrenToBinNode(getDefaultWebTreeData(), newArr)
+            setExpandedKeys([...expandedKeys,...defaultExpandedKeys])
+            return tree
+        }
+        
+        return newArr
     }
     useEffect(() => {
         const buildTree = (parts, tree) => {
@@ -427,6 +434,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         const value = e.target.value
         setSearchValue(value)
     })
+console.log("expandedKeys--",expandedKeys);
 
     return (
         <div className={styles.webTree} ref={webTreeRef}>
