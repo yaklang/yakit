@@ -909,13 +909,13 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                 // mask={false}
                 maskClosable={false}
                 // style={{height: visible ? heightDrawer : 0}}
-                className={classNames(styles["ntml-config-drawer"])}
+                className={classNames(styles["ntlm-config-drawer"])}
                 contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
                 title={
                     <div className={styles["heard-title"]}>
                         <div className={styles["title"]}>HTTP认证全局配置</div>
                         <div className={styles["table-total"]}>
-                            共 <span>{params.AuthInfos.length}</span> 条NTML
+                            共 <span>{params.AuthInfos.length}</span> 条认证配置
                         </div>
                     </div>
                 }
@@ -937,7 +937,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                     </div>
                 }
             >
-                <div className={styles["ntml-config-table"]}>
+                <div className={styles["ntlm-config-table"]}>
                     <TableVirtualResize
                         isRefresh={isRefresh}
                         titleHeight={42}
@@ -1070,7 +1070,7 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
                 </Form.Item>
                 <Form.Item label='认证类型' name='AuthType' rules={[{required: true, message: "该项为必填"}]}>
                     <YakitSelect placeholder='请选择...'>
-                        <YakitSelect value='ntml'>ntml</YakitSelect>
+                        <YakitSelect value='ntlm'>ntlm</YakitSelect>
                         <YakitSelect value='any'>any</YakitSelect>
                         <YakitSelect value='basic'>basic</YakitSelect>
                         <YakitSelect value='digest'>digest</YakitSelect>
