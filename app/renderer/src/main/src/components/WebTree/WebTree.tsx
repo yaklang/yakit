@@ -26,7 +26,7 @@ export interface TreeNode extends DataNode {
 
 interface WebTreeProp {
     ref?: React.Ref<any>
-    schema?: string | "website" | "file" | "behinder" // 默认website
+    schema?: string | "website" | "file" | "behinder"|"godzilla" // 默认website
     searchVal?: string // 搜索树值
     height: number // 树高度 用于虚拟滚动
     searchVal?: string // 搜索树值
@@ -267,7 +267,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
                         const idObj = {
                             website: key + "/" + i.ResourceName,
-                            behinder: i.Path
+                            behinder: i.Path,
+                            godzilla: i.Path
                         }
                         console.log("idObj", idObj)
                         return {
@@ -315,7 +316,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
 
         const yakUrl = {
             website: schema + "://" + `${val ? val : "/"}`,
-            behinder: schema + ":///" + val
+            behinder: schema + ":///" + val,
+            godzilla: schema + ":///" + val,
         }
         getTreeData(yakUrl[schema])
     })
@@ -434,7 +436,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         const value = e.target.value
         setSearchValue(value)
     })
-console.log("expandedKeys--",expandedKeys);
 
     return (
         <div className={styles.webTree} ref={webTreeRef}>

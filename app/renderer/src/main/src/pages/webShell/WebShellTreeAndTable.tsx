@@ -32,6 +32,7 @@ import {yakitFailed} from "@/utils/notification";
 import {goBack} from "@/pages/webShell/FileManager";
 import {TreeNode, WebTree} from "@/components/WebTree/WebTree";
 import { TreeKey } from "@/components/yakitUI/YakitTree/YakitTree";
+import path from "path"
 
 interface WebShellURLTreeAndTableProp {
     Id: string
@@ -309,8 +310,22 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
 
     const [currentPathAllTree, setcurrentPathAllTree] = useState<TreeNode[]>([])
     useEffect(() => {
-        console.log("currentYakURL ", currentYakURL)
-        loadFromYakURLRaw(currentYakURL.charAt(0).toLocaleLowerCase() + currentYakURL.slice(1), (res) => {
+        const p = path.normalize(props.CurrentPath)
+        const url: YakURL = {
+            FromRaw: "",
+            Schema: "Behinder",
+            User: "",
+            Pass: "",
+            Location: "",
+            Path: "/",
+            Query: [
+                {Key: "op", Value: "file"},
+                {Key: "id", Value: props.Id},
+                {Key: "path", Value: p},
+                {Key: "mode", Value: "list"},
+            ]
+        }
+        requestYakURLList({url, method: "POST"}, (res) => {
             console.log("res ", res)
             const arr = res.Resources.map((item: YakURLResource, index: number) => {
                 return {
