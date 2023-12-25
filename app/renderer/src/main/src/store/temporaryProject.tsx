@@ -1,8 +1,6 @@
 import {setRemoteValue} from "@/utils/kv"
-import {yakitFailed} from "@/utils/notification"
 import {RemoteGV} from "@/yakitGV"
 import {create} from "zustand"
-const {ipcRenderer} = window.require("electron")
 
 interface TemporaryProjectStoreProps {
     temporaryProjectId: string
@@ -19,12 +17,6 @@ export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>((set,
     isExportTemporaryProjectFlag: false,
     setTemporaryProjectId: async (id: string) => {
         set({temporaryProjectId: id})
-        try {
-            const res = await ipcRenderer.invoke("is-dev")
-            res && setRemoteValue(RemoteGV.TemporaryProjectId, id)
-        } catch (error) {
-            yakitFailed(error + "")
-        }
     },
     setTemporaryProjectNoPromptFlag: (flag: boolean) => {
         set({temporaryProjectNoPromptFlag: flag})

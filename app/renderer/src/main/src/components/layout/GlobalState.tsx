@@ -404,7 +404,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             promises.push(() => ipcRenderer.invoke("kill-run-node", {pid}))
         })
         try {
-            await Promise.all(promises.map((promiseFunc) => promiseFunc()))
+            await Promise.allSettled(promises.map((promiseFunc) => promiseFunc()))
             clearRunNodeList()
             yakitNotify("success", "成功关闭全部运行节点")
         } catch (error) {

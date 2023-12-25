@@ -612,15 +612,25 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [projectModalLoading, setProjectModalLoading] = useState<boolean>(false)
     const [ProjectName, setProjectName] = useState<string>()
 
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, isExportTemporaryProjectFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag, setIsExportTemporaryProjectFlag} =
-        useTemporaryProjectStore()
+    const {
+        temporaryProjectId,
+        temporaryProjectNoPromptFlag,
+        isExportTemporaryProjectFlag,
+        setTemporaryProjectId,
+        setTemporaryProjectNoPromptFlag,
+        setIsExportTemporaryProjectFlag
+    } = useTemporaryProjectStore()
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const temporaryProjectPopRef = useRef<any>(null)
 
     const getAppTitleName: string = useMemo(() => {
         // 引擎未连接或便携版 显示默认title
         if (!engineLink || isEnpriTraceAgent()) return getReleaseEditionName()
-        else if (!isExportTemporaryProjectFlag && temporaryProjectId && temporaryProjectId === (currentProject?.Id ? currentProject?.Id + "" : "")) {
+        else if (
+            !isExportTemporaryProjectFlag &&
+            temporaryProjectId &&
+            temporaryProjectId === (currentProject?.Id ? currentProject?.Id + "" : "")
+        ) {
             return "临时项目"
         } else {
             return ProjectName
@@ -666,8 +676,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
                 setLinkDatabase(true)
                 const copyCurrentProject = structuredClone(currentProject)
-                if (copyCurrentProject.ProjectName === '[temporary]') {
-                    copyCurrentProject.ProjectName = '临时项目'
+                if (copyCurrentProject.ProjectName === "[temporary]") {
+                    copyCurrentProject.ProjectName = "临时项目"
                     setIsExportTemporaryProjectFlag(true)
                 }
                 setProjectModalInfo({visible: true, isNew: false, isExport: true, project: copyCurrentProject})
@@ -678,7 +688,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     return
                 }
                 setLinkDatabase(true)
-                if (currentProject.ProjectName === '[temporary]') {
+                if (currentProject.ProjectName === "[temporary]") {
                     setIsExportTemporaryProjectFlag(true)
                 }
                 setProjectTransferShow({
@@ -686,7 +696,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     isExport: true,
                     data: {
                         Id: currentProject.Id,
-                        ProjectName: currentProject.ProjectName === '[temporary]' ? '临时项目' : currentProject.ProjectName,
+                        ProjectName:
+                            currentProject.ProjectName === "[temporary]" ? "临时项目" : currentProject.ProjectName,
                         Password: ""
                     }
                 })
@@ -868,15 +879,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 ? setEngineLink(true)
                 : (async () => {
                       try {
-                        /**
-                         * 开发环境
-                         * 临时项目id存到数据库的主要原因是 若开发环境 手动断开控制台 方便下次进入项目管理页面能拿到临时项目id 在项目管理页面删掉临时项目
-                         */
-                          const res = await ipcRenderer.invoke("is-dev")
-                          if (res) {
-                            //   setTemporaryProjectId((await getRemoteValue(RemoteGV.TemporaryProjectId)) || "")
-                          }
-
+                          // TODO 掉新接口获取临时项目信息 ProjectManage里面去删除临时项目 主要是防止上次临时项目没有删除的情况发生
+                          // setTemporaryProjectId()
                           const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)
                           if (flag) {
                               setTemporaryProjectNoPromptFlag(flag === "true")

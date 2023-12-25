@@ -1,4 +1,5 @@
 const {ipcMain} = require("electron");
+const { TEMPORARY_PROJECT } = require("../state")
 
 module.exports = (win, getClient) => {
     // asyncSetCurrentProject wrapper

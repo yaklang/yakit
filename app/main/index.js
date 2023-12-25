@@ -140,9 +140,9 @@ app.whenReady().then(() => {
         })
     }
 
-    // TODO 能否删掉该弹窗
     ipcMain.handle("app-exit", async (e, params) => {
-        if (closeFlag) {
+        const showCloseMessageBox = params.showCloseMessageBox
+        if (closeFlag && showCloseMessageBox) {
             dialog
                 .showMessageBox(win, {
                     icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),

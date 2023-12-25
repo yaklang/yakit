@@ -20,6 +20,7 @@ import {coordinate} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {ProjectDescription} from "./pages/softwareSettings/ProjectManage"
+import {useRunNodeStore} from "./store/runNode"
 
 /** 快捷键目录 */
 const InterceptKeyword = [
@@ -235,10 +236,15 @@ function NewApp() {
     }, [])
 
     const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+    const temporaryProjectIdRef = useRef<string>("")
+    useEffect(() => {
+        temporaryProjectIdRef.current = temporaryProjectId
+    }, [temporaryProjectId])
+
     const handleTemporaryProject = async () => {
-        if (temporaryProjectId) {
+        if (temporaryProjectIdRef.current) {
             try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectIdRef.current, IsDeleteLocal: true})
                 setTemporaryProjectId("")
             } catch (error) {
                 yakitFailed(error + "")
@@ -246,18 +252,36 @@ function NewApp() {
         }
     }
 
+    const {runNodeList, clearRunNodeList} = useRunNodeStore()
+    const handleKillAllRunNode = async () => {
+        let promises: (() => Promise<any>)[] = []
+        Array.from(runNodeList).forEach(([key, pid]) => {
+            promises.push(() => ipcRenderer.invoke("kill-run-node", {pid}))
+        })
+        try {
+            await Promise.allSettled(promises.map((promiseFunc) => promiseFunc()))
+            clearRunNodeList()
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
+
     // 退出时 确保渲染进程各类事项已经处理完毕
     const {dynamicStatus} = yakitDynamicStatus()
     useEffect(() => {
         ipcRenderer.on("close-windows-renderer", async (e, res: any) => {
+            // 如果关闭按钮有其他的弹窗 则不显示 showMessageBox
+            const showCloseMessageBox = !(Array.from(runNodeList).length || temporaryProjectIdRef.current)
+            await handleKillAllRunNode()
             await handleTemporaryProject()
+
             // 通知应用退出
             if (dynamicStatus.isDynamicStatus) {
                 warn("远程控制关闭中...")
                 await remoteOperation(false, dynamicStatus)
-                ipcRenderer.invoke("app-exit")
+                ipcRenderer.invoke("app-exit", {showCloseMessageBox})
             } else {
-                ipcRenderer.invoke("app-exit")
+                ipcRenderer.invoke("app-exit", {showCloseMessageBox})
             }
         })
         return () => {
