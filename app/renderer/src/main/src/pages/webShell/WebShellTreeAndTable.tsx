@@ -361,6 +361,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                             setSelectedNode(currentPathAllTree)
                         }
                     }}
+                    isExtendTree={true}
                 />
             }
             secondNodeStyle={{height: "100%"}}
