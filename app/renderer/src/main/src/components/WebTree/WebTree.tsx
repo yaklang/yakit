@@ -37,6 +37,7 @@ interface WebTreeProp {
     onSelectKeys?: (selectedKeys: TreeKey[]) => void // 选中节点得keys
     onGetUrl?: (searchURL: string, includeInUrl: string) => void // 获取选中后节点得url信息 用于表格查询 website树有用
     resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
+    isExtendTree?: boolean
 }
 
 /**
@@ -55,7 +56,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         onSelectNodes,
         onSelectKeys,
         onGetUrl,
-        resetTableAndEditorShow
+        resetTableAndEditorShow,
+        isExtendTree
     } = props
     const [treeLoading, setTreeLoading] = useState<boolean>(true)
     const [defaultWebTreeData, setDefaultWebTreeData, getDefaultWebTreeData] = useGetState<TreeNode[]>([]) // 默认网站树
@@ -122,40 +124,39 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             })
         }, 30)
     }
-
+    const treeKey = useRef<number>(0)
+    const cacheExpanded = useRef<TreeKey[]>([])
     const addChildrenToBinNode = (tree, binContents) => {
+        cacheExpanded.current=[]
         // 递归搜索 'bin' 节点的函数
         const findAndAddBinChildren = (nodes) => {
             nodes.forEach(node => {
                 if (node.title === 'bin') {
-
                     // 假定 binContents 是一个包含子节点的数组
-                    node.children.push({
-                        title: binContents.title,
-                        key: binContents.key, // 这里你可能需要根据实际情况生成一个唯一的 key
-                        isLeaf: binContents.isLeaf,
-                        data: binContents.data,
-                    });
-                    console.log("binContexxxxxxxxxxnts", tree)
+                    node.children=[...binContents]
                     return tree;
                 } else if (node.children && node.children.length) {
+                    cacheExpanded.current.push(`node-${treeKey.current}`)
+                    node.key = `node-${treeKey.current}`
+                    treeKey.current+=1
                     findAndAddBinChildren(node.children); // 继续递归搜索子节点
                 }
             });
         };
-
-        findAndAddBinChildren(tree);
+        findAndAddBinChildren(tree)
+        treeKey.current = 0
+        return {tree,defaultExpandedKeys:[...expandedKeys,...cacheExpanded.current]}
+        // ||binContents;
     }
 
     // 树节点第一层组装树
     const assembleFirstTreeNode = (arr) => {
-        return arr.map((item: YakURLResource, index: number) => {
+        let newArr = arr.map((item: YakURLResource, index: number) => {
             const idObj = {
                 website: item.VerboseName,
                 behinder: item.Path
             }
-
-            const newNodes = {
+               return {
                 title: item.VerboseName,
                 key: idObj[schema],
                 isLeaf: !item.HaveChildrenNodes,
@@ -170,11 +171,16 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     }
                     return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
                 }
-            }
-
-            addChildrenToBinNode(getDefaultWebTreeData(), newNodes)
-            console.log("newNodes", newNodes)
+                }  
         })
+        if(isExtendTree){
+            setExpandedKeys(['node-0', 'node-1', 'node-2', 'node-3', 'node-4'])
+            const {tree,defaultExpandedKeys} = addChildrenToBinNode(getDefaultWebTreeData(), newArr)
+            setExpandedKeys([...expandedKeys,...defaultExpandedKeys])
+            return tree
+        }
+        
+        return newArr
     }
     useEffect(() => {
         const buildTree = (parts, tree) => {
@@ -428,6 +434,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         const value = e.target.value
         setSearchValue(value)
     })
+console.log("expandedKeys--",expandedKeys);
 
     return (
         <div className={styles.webTree} ref={webTreeRef}>
