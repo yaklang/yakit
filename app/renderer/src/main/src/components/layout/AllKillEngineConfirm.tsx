@@ -1,5 +1,5 @@
 import React, {useState} from "react"
-import {failed, info} from "@/utils/notification"
+import {failed, info, yakitFailed} from "@/utils/notification"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
@@ -8,6 +8,7 @@ import {Loading3QuartersSvgIcon, YaklangInstallHintSvgIcon} from "./icons"
 
 import classNames from "classnames"
 import styles from "./AllKillEngineConfirm.module.scss"
+import { useTemporaryProjectStore } from "@/store/temporaryProject"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -100,7 +101,22 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
         setProcess([])
         setVisible(false)
     }
-    const onOK = () => {
+
+    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+    const handleTemporaryProject = async () => {
+        if (temporaryProjectId) {
+            try {
+                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+                setTemporaryProjectId("")
+            } catch (error) {
+                yakitFailed(error + "")
+            }
+        }
+    }
+
+    const onOK = async () => {
+        // 删掉临时项目
+        await handleTemporaryProject()
         fetchProcess(() => {
             onExecute()
         })

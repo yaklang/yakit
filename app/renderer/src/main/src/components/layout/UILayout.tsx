@@ -874,7 +874,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                          */
                           const res = await ipcRenderer.invoke("is-dev")
                           if (res) {
-                              setTemporaryProjectId((await getRemoteValue(RemoteGV.TemporaryProjectId)) || "")
+                            //   setTemporaryProjectId((await getRemoteValue(RemoteGV.TemporaryProjectId)) || "")
                           }
 
                           const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)

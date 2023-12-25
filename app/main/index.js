@@ -140,6 +140,7 @@ app.whenReady().then(() => {
         })
     }
 
+    // TODO 能否删掉该弹窗
     ipcMain.handle("app-exit", async (e, params) => {
         if (closeFlag) {
             dialog
