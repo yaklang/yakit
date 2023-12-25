@@ -121,6 +121,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 if (searchTreeFlag.current) {
                     setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
                 } else {
+                    console.log("9999", res.Resources)
                     setWebTreeData(assembleFirstTreeNode(res.Resources))
                 }
                 setTimeout(() => {
@@ -132,6 +133,30 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             })
         }, 30)
     })
+
+    const addChildrenToBinNode = (tree, binContents) => {
+        // 递归搜索 'bin' 节点的函数
+        const findAndAddBinChildren = (nodes) => {
+            nodes.forEach(node => {
+                if (node.title === 'bin') {
+
+                    // 假定 binContents 是一个包含子节点的数组
+                    node.children.push({
+                        title: binContents.title,
+                        key: binContents.key, // 这里你可能需要根据实际情况生成一个唯一的 key
+                        isLeaf: binContents.isLeaf,
+                        data: binContents.data,
+                    });
+                    console.log("binContexxxxxxxxxxnts", tree)
+                    return tree;
+                } else if (node.children && node.children.length) {
+                    findAndAddBinChildren(node.children); // 继续递归搜索子节点
+                }
+            });
+        };
+
+        findAndAddBinChildren(tree);
+    }
 
     // 树节点第一层组装树
     const assembleFirstTreeNode = (arr: YakURLResource[]) => {
@@ -155,7 +180,39 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             } as TreeNode
         })
     }
+    useEffect(() => {
+        const buildTree = (parts, tree) => {
+            if (parts.length === 0) return;
+            let part = parts.shift();
+            let node = tree.find(n => n.title === part);
+            if (!node) {
+                node = {title: part, isLeaf: parts.length === 0, children: []};
+                tree.push(node);
+            }
+            buildTree(parts, node.children);
+        };
 
+        if (!props.searchVal) return;
+        // 初始化根节点
+        let tree: TreeNode[] = [];
+        [props.searchVal!].forEach(path => {
+            // 清理路径中的查询字符串部分
+            let cleanPath = path.split('?')[0]; // 获取 '?' 前的部分
+
+            // 分割路径，处理盘符
+            let parts = cleanPath.includes('/') ? cleanPath.split('/') : cleanPath.split('\\');
+            // 单独处理盘符
+            if (parts[0].length === 2 && parts[0][1] === ':') {
+                parts[0] += '/'; // 将盘符与后面的路径分隔符合并
+            }
+            buildTree(parts, tree);
+        });
+        console.log("tree", tree)
+        setDefaultWebTreeData(tree)
+    }, [props.searchVal])
+    const createFileTree = (paths) => {
+
+    }
     const refreshChildrenByParent = useMemoizedFn((origin: TreeNode[], parentKey: string, nodes: TreeNode[]) => {
         const arr: TreeNode[] = origin.map((node) => {
             if (node.key === parentKey) {

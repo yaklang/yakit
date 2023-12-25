@@ -311,6 +311,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     useEffect(() => {
         console.log("currentYakURL ", currentYakURL)
         loadFromYakURLRaw(currentYakURL.charAt(0).toLocaleLowerCase() + currentYakURL.slice(1), (res) => {
+            console.log("res ", res)
             const arr = res.Resources.map((item: YakURLResource, index: number) => {
                 return {
                     title: item.VerboseName,
@@ -345,6 +346,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                             const url = nodes[0]?.data?.Url as YakURL
                             console.log("url ", url)
                             requestYakURLList({url}, (rsp) => {
+                                console.log("rsp ", rsp)
                                 const newNodes: TreeNode[] = rsp.Resources.map((i) => {
                                     return {
                                         title: i.VerboseName,
