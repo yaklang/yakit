@@ -1,5 +1,4 @@
 const {ipcMain} = require("electron");
-const { TEMPORARY_PROJECT } = require("../state")
 
 module.exports = (win, getClient) => {
     // asyncSetCurrentProject wrapper
@@ -128,6 +127,21 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("GetDefaultProject", async (e) => {
         return await asyncGetDefaultProject()
+    })
+
+    const asyncGetTemporaryProject = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetTemporaryProject(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetTemporaryProject", async (e) => {
+        return await asyncGetTemporaryProject()
     })
 
     const handlerHelper = require("./handleStreamWithContext")

@@ -481,10 +481,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         )
     })
 
-    /**
-     * 导出项目数据时 需要导出成功后再删除临时项目
-     * 中途取消或者没有导出数据时，需立即删除临时项目
-     */
     const handleTemporaryProject = async () => {
         if (temporaryProjectId) {
             try {
@@ -703,6 +699,19 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const [modalLoading, setModalLoading] = useState<boolean>(false)
 
     const {temporaryProjectId, isExportTemporaryProjectFlag, setTemporaryProjectId} = useTemporaryProjectStore()
+
+    const [detectionTemporaryProjectVisible, setDetectionTemporaryProjectVisible] = useState<boolean>(false)
+
+    const getTemporaryProject = async () => {
+        try {
+            const res = await ipcRenderer.invoke("GetTemporaryProject")
+            if (res) {
+                setTemporaryProjectId(res.Id)
+            }
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    }
 
     // 创建临时项目
     const creatTemporaryProject = useMemoizedFn(async () => {
@@ -1091,7 +1100,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
                     <div
                         className={classNames(styles["btn-wrapper"], styles["new-temporary-project-wrapper"])}
-                        onClick={creatTemporaryProject}
+                        onClick={async () => {
+                            await getTemporaryProject()
+                            if (temporaryProjectId) {
+                                setDetectionTemporaryProjectVisible(true)
+                            } else {
+                                await creatTemporaryProject()
+                            }
+                        }}
                     >
                         <div className={styles["btn-body"]}>
                             <div className={styles["body-title"]}>
@@ -1437,6 +1453,21 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 onCancel={() => {
                     setNewProjectInfo({Id: "", ProjectName: ""})
                     setInquireIntoProjectVisible(false)
+                }}
+            />
+
+            <YakitHint 
+                visible={detectionTemporaryProjectVisible}
+                title="提示"
+                content='检测到有临时项目正在使用中，是否需要删除并创建新的临时项目'
+                onOk={async () => {
+                    // 先删临时项目
+                    await handleTemporaryProject()
+                    await creatTemporaryProject()
+                    setDetectionTemporaryProjectVisible(false)
+                }}
+                onCancel={() => {
+                    setDetectionTemporaryProjectVisible(false)
                 }}
             />
         </div>
@@ -2113,7 +2144,6 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
         ipcRenderer.on(`${token}-error`, (e, error) => {
             failed(`${hintTitle} error:  ${error}`)
             infos.push(`${hintTitle} error: ${error}`)
-            // TODO 暂不清楚导出失败是个什么效果
         })
         ipcRenderer.on(`${token}-end`, (e) => {
             info(`${hintTitle} finished`)
@@ -2124,8 +2154,6 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                     onSuccess("isExport")
                     if (pathRef.current) openABSFileLocated(pathRef.current)
                 }
-            } else {
-                // TODO 暂不清楚导出失败是个什么效果
             }
         })
 

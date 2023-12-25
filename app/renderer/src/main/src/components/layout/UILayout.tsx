@@ -879,8 +879,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 ? setEngineLink(true)
                 : (async () => {
                       try {
-                          // TODO 掉新接口获取临时项目信息 ProjectManage里面去删除临时项目 主要是防止上次临时项目没有删除的情况发生
-                          // setTemporaryProjectId()
                           const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)
                           if (flag) {
                               setTemporaryProjectNoPromptFlag(flag === "true")
