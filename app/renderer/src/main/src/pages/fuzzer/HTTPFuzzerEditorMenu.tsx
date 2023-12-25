@@ -383,7 +383,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                 <div
                                                                     className={styles["menu-list-item-info"]}
                                                                     style={{
-                                                                        maxWidth: menuWidth ? menuWidth - 100 : 260
+                                                                        overflow:"hidden",
+                                                                        maxWidth: menuWidth ? menuWidth - 30 : 260
                                                                     }}
                                                                 >
                                                                     <DragSortIcon
