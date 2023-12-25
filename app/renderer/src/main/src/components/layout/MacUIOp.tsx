@@ -8,8 +8,8 @@ import {useRunNodeStore} from "@/store/runNode"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {TemporaryProjectPop} from "./WinUIOp"
 import emiter from "@/utils/eventBus/eventBus"
-import { yakitFailed } from "@/utils/notification"
-import { isEnpriTraceAgent } from "@/utils/envfile"
+import {yakitFailed} from "@/utils/notification"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -41,7 +41,8 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
 
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag} = useTemporaryProjectStore()
+    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag} =
+        useTemporaryProjectStore()
     const lastTemporaryProjectIdRef = useRef<string>("")
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const lastTemporaryProjectNoPromptRef = useRef<boolean>(false)
@@ -68,7 +69,10 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
             }
 
             // 如果打开得是临时项目
-            if (lastTemporaryProjectIdRef.current === props.currentProjectId &&
+            if (
+                lastTemporaryProjectIdRef.current &&
+                props.currentProjectId &&
+                lastTemporaryProjectIdRef.current === props.currentProjectId &&
                 !lastTemporaryProjectNoPromptRef.current
             ) {
                 setCloseTemporaryProjectVisible(true)
