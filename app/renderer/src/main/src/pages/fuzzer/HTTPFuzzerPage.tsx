@@ -1823,7 +1823,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                             <div className={styles["resize-card-heard-extra"]}></div>
                                             {secondNodeExtra()}
                                         </div>
-                                        {cachedTotal > 1 ? (
+                                        {cachedTotal >= 1 ? (
                                             <>
                                                 {showSuccess && (
                                                     <HTTPFuzzerPageTable
