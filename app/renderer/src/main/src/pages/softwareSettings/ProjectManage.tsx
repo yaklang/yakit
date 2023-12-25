@@ -231,7 +231,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             {
                 key: "ProjectName",
                 name: typeToName["all"],
-                width: "10%",
+                width: "15%",
                 headerRender: (index) => {
                     return (
                         <DropdownMenu
@@ -328,7 +328,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             {
                 key: "CreatedAt",
                 name: timeToName["updated_at"],
-                width: "20%",
+                width: "15%",
                 headerRender: (index) => {
                     return (
                         <DropdownMenu
