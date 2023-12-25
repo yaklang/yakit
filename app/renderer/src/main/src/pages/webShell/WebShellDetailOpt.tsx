@@ -36,7 +36,7 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
     const [defaultXterm, setDefaultXterm] = useState<string>("")
     const [linePath, setLinePath] = useState<string>("")
     const [baseInfo, setBaseInfo] = useState<{key: string; content: string}[]>([])
-    const [baseInfoString, setBaseInfoString] = useState<string>("")
+    const [baseInfoObj, setBaseInfoObj] = useState<{key: string; content: string}[]>([])
     const [activeKey, setActiveKey] = useState<string>("basicInfo")
     const [shellType, setShellType] = useState<"Behinder" | "Godzilla">("Behinder")
     /** 日志输出 */
@@ -47,13 +47,22 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
         }
     }, [xtermRef])
 
-    // useUpdateEffect(() => {
-    //     if (activeKey === "vcmd") {
-    //         xtermClear(xtermRef)
-    //         setInputValue(defaultXterm)
-    //         writeXTerm(xtermRef, defaultXterm)
-    //     }
-    // }, [activeKey])
+    useUpdateEffect(() => {
+        if (activeKey === "vcmd"&&inputValue.length===0) {
+            // xtermClear(xtermRef)
+            setInputValue(defaultXterm)
+            writeXTerm(xtermRef, defaultXterm)
+        }
+    }, [activeKey])
+
+    // 定义排序函数
+    const sortByPriority = (a, b) => {
+        // 将此三项放在最前面
+        const priorityValues = ["OsInfo", "OS", "CurrentDir"];
+        const priorityA = priorityValues.indexOf(a.key);
+        const priorityB = priorityValues.indexOf(b.key);
+        return priorityB-priorityA;
+    };
 
     useEffect(() => {
         const {Id, ShellType} = props.webshellInfo
@@ -84,9 +93,20 @@ ${msg.currentPath}`
                             setBaseInfo(resultString)
                         }
                     } else {
-                        console.log("rrr---",r);
-                        
-                        setBaseInfoString(new Buffer(r.Data, "utf8").toString())
+                        let obj = JSON.parse(new Buffer(r.Data, "utf8").toString())
+                        setDefaultPath(obj.CurrentDir)
+                        const helloMsg = `OS: ${obj.OS}        
+${obj.CurrentDir}`
+console.log("wuwuwuuw",helloMsg);
+
+                            setDefaultXterm(helloMsg + ">")
+                        const sortedKeys = Object.keys(obj)
+                        const resultString = sortedKeys.map((key) => ({
+                            key,
+                            content: obj[key]
+                        }))
+                        resultString.sort(sortByPriority);
+                        setBaseInfoObj(resultString)
                     }
                 } catch (error) {}
             })
@@ -165,7 +185,16 @@ ${msg.currentPath}`
                                 })}
                             </>
                         ) : (
-                            <div>{baseInfoString}</div>
+                            <>
+                                {baseInfoObj.map((item) => {
+                                    return (
+                                        <div style={{display: "flex", flexDirection: "row"}}>
+                                            <div style={{marginRight: 10}}>{item.key}:</div>
+                                            <div dangerouslySetInnerHTML={{__html: item.content}} />
+                                        </div>
+                                    )
+                                })}
+                            </>
                         )}
                     </div>
                 </YakitTabs.YakitTabPane>
