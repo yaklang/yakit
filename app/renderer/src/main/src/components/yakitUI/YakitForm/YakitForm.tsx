@@ -1,11 +1,17 @@
 import {Upload, Form, Spin, Divider} from "antd"
-import React, {ReactNode, useEffect, useMemo, useState} from "react"
-import {YakitDraggerProps, YakitFormDraggerProps} from "./YakitFormType.d"
+import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
+import {
+    YakitDraggerContentProps,
+    YakitDraggerProps,
+    YakitFormDraggerContentProps,
+    YakitFormDraggerProps
+} from "./YakitFormType.d"
 import styles from "./YakitForm.module.scss"
 import classNames from "classnames"
 import {YakitInput} from "../YakitInput/YakitInput"
 import {useMemoizedFn} from "ahooks"
 import {failed, yakitNotify} from "@/utils/notification"
+import {FileItem} from "fs"
 
 const {Dragger} = Upload
 
@@ -45,13 +51,28 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
 })
 
 /**
- * @description:YakitDragger  支持拖拽:文件/文件夹 文件路径只包括文件夹或者文件的第一级路径, 不包括文件夹下面的子文件路径数
+ * @description:YakitDragger  支持拖拽:文件/文件夹 文件路径只包括文件夹或者文件的第一级路径, 不包括文件夹下面的子文件路径数;
+ * @description 如果需要显示文件中的内容，推荐使用组件:YakitDraggerContent
  * @augments YakitDraggerProps 继承antd的 DraggerProps 默认属性
+ * eg:  <YakitFormDraggerContent
+        className={styles["plugin-execute-form-item"]}
+        formItemProps={{
+             name: "Input",
+             label: "扫描目标",
+             rules: [{required: true}]
+        }}
+        accept='.txt,.xlsx,.xls,.csv'
+        textareaProps={{
+            placeholder: "请输入扫描目标，多个目标用“英文逗号”或换行分隔"
+        }}
+        help='可将TXT、Excel文件拖入框内或'
+        disabled={disabled}
+    />
  */
 export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     const {
         size,
-        InputProps = {},
+        inputProps = {},
         help,
         value: fileName,
         onChange: setFileName,
@@ -61,6 +82,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         renderType = "input",
         textareaProps = {},
         disabled,
+        isShowPathNumber = true,
         ...restProps
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
@@ -157,11 +179,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                         size={size}
                         value={fileName || name}
                         disabled={disabled}
-                        {...InputProps}
+                        {...inputProps}
                         onChange={(e) => {
                             setName(e.target.value)
                             if (setFileName) setFileName(e.target.value)
-                            if (InputProps.onChange) InputProps.onChange(e)
+                            if (inputProps.onChange) inputProps.onChange(e)
                             e.stopPropagation()
                         }}
                         onPressEnter={(e) => {
@@ -173,15 +195,15 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             }
                             const type = name.substring(index, name.length)
                             getContent(name, type)
-                            if (InputProps.onPressEnter) InputProps.onPressEnter(e)
+                            if (inputProps.onPressEnter) inputProps.onPressEnter(e)
                         }}
                         onFocus={(e) => {
                             e.stopPropagation()
-                            if (InputProps.onFocus) InputProps.onFocus(e)
+                            if (inputProps.onFocus) inputProps.onFocus(e)
                         }}
                         onClick={(e) => {
                             e.stopPropagation()
-                            if (InputProps.onClick) InputProps.onClick(e)
+                            if (inputProps.onClick) inputProps.onClick(e)
                         }}
                         onBlur={(e) => {
                             e.stopPropagation()
@@ -193,7 +215,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             }
                             const type = name.substring(index, name.length)
                             getContent(name, type)
-                            if (InputProps.onBlur) InputProps.onBlur(e)
+                            if (inputProps.onBlur) inputProps.onBlur(e)
                         }}
                     />
                 )
@@ -350,9 +372,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                     上传文件
                                 </span>
                             </span>
-                            <span>
-                                识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
-                            </span>
+                            {isShowPathNumber && (
+                                <span>
+                                    识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
+                                </span>
+                            )}
                         </div>
                     )}
                 </Dragger>
@@ -373,7 +397,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
-                                点击此处
+                                可将文件拖入框内或点击此处
                                 <span
                                     className={classNames(styles["dragger-help-active"], {
                                         [styles["dragger-help-active-disabled"]]: disabled
@@ -386,9 +410,11 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                     上传文件夹
                                 </span>
                             </span>
-                            <span>
-                                识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
-                            </span>
+                            {isShowPathNumber && (
+                                <span>
+                                    识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
+                                </span>
+                            )}
                         </div>
                     )}
                 </Dragger>
@@ -407,7 +433,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
-                                点击此处
+                                可将文件拖入框内或点击此处
                                 <span
                                     className={classNames(styles["dragger-help-active"], {
                                         [styles["dragger-help-active-disabled"]]: disabled
@@ -432,9 +458,12 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                     上传文件夹
                                 </span>
                             </span>
-                            <span>
-                                识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
-                            </span>
+
+                            {isShowPathNumber && (
+                                <span>
+                                    识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
+                                </span>
+                            )}
                         </div>
                     )}
                 </Dragger>
