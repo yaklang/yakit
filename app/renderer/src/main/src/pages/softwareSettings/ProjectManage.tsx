@@ -324,7 +324,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     )
                 }
             },
-            {key: "FileSize", name: "大小", width: "10%"},
+            {key: "FileSize", name: "大小", width: "10%", render: (data) => {
+                return (
+                    <>
+                        {!data.Type || data.Type === "project" ? data.FileSize : "-"}
+                    </>
+                )
+            }},
             {
                 key: "CreatedAt",
                 name: timeToName["updated_at"],
@@ -708,9 +714,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             if (res) {
                 id = res.Id
             }
-        } catch (error) {
-        }
-        
+        } catch (error) {}
+
         setTemporaryProjectId(id)
         return id
     }
@@ -1457,9 +1462,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }}
             />
 
-            <YakitHint 
+            <YakitHint
                 visible={detectionTemporaryProjectVisible}
-                title="提示"
+                title='提示'
                 content='检测到有临时项目正在使用中，是否需要删除并创建新的临时项目'
                 onOk={async () => {
                     // 先删临时项目
