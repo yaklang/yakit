@@ -8,7 +8,8 @@ import {
     CustomPluginExecuteFormValue,
     PluginExecuteProgressProps,
     YakExtraParamProps,
-    FormContentItemByTypeProps
+    FormContentItemByTypeProps,
+    PluginFixFormParamsProps
 } from "./LocalPluginExecuteDetailHeardType"
 import {PluginDetailHeader} from "../../baseTemplate"
 import styles from "./LocalPluginExecuteDetailHeard.module.scss"
@@ -21,7 +22,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
-import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitFormDragger, YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {failed, yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Uint8ArrayToString} from "@/utils/str"
@@ -33,6 +34,7 @@ import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
 import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../../utils"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -256,22 +258,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             case "mitm":
             case "port-scan":
             case "nuclei":
-                const item: YakParamProps = {
-                    Field: "Input",
-                    FieldVerbose: "扫描目标",
-                    Required: true,
-                    TypeVerbose: "string",
-                    DefaultValue: "",
-                    Help: "Input"
-                }
-                return (
-                    <OutputFormComponentsByType
-                        key='Input-扫描目标'
-                        item={item}
-                        pluginType={plugin.Type}
-                        disabled={isExecuting}
-                    />
-                )
+                return <PluginFixFormParams form={form} disabled={isExecuting} />
             default:
                 return <></>
         }
@@ -281,11 +268,18 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         if (!isClickExecute) setIsClickExecute(true)
         const yakExecutorParams: YakExecutorParam[] = getYakExecutorParam({...value, ...customExtraParamsValue})
         const input = value["Input"]
+
         let executeParams: DebugPluginRequest = {
             Code: plugin.Content,
             PluginType: plugin.Type,
             Input: input,
-            HTTPRequestTemplate: extraParamsValue,
+            HTTPRequestTemplate: {
+                ...extraParamsValue,
+                IsRawHTTPRequest: value.IsRawHTTPRequest,
+                RawHTTPRequest: value.RawHTTPRequest
+                    ? Buffer.from(value.RawHTTPRequest, "utf8")
+                    : Buffer.from("", "utf8")
+            },
             ExecParams: yakExecutorParams
         }
         debugPluginStreamEvent.reset()
@@ -679,5 +673,63 @@ const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((
                 format={(percent) => `${percent}%`}
             />
         </div>
+    )
+})
+/**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
+const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
+    const {form, disabled} = props
+    const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
+    const rawItem = useMemo(() => {
+        const codeItem: YakParamProps = {
+            Field: "RawHTTPRequest",
+            FieldVerbose: "数据包",
+            Required: true,
+            TypeVerbose: "yak",
+            DefaultValue: "",
+            Help: ""
+        }
+        return codeItem
+    }, [])
+    return (
+        <>
+            <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked'>
+                <YakitSwitch size='large' disabled={disabled} />
+            </Form.Item>
+            <Form.Item label='请求类型' name='IsRawHTTPRequest' initialValue={true}>
+                <YakitRadioButtons
+                    buttonStyle='solid'
+                    options={[
+                        {
+                            value: true,
+                            label: "原始请求"
+                        },
+                        {
+                            value: false,
+                            label: "请求配置"
+                        }
+                    ]}
+                    disabled={disabled}
+                />
+            </Form.Item>
+            {isRawHTTPRequest ? (
+                <OutputFormComponentsByType item={rawItem} />
+            ) : (
+                <YakitFormDraggerContent
+                    className={styles["plugin-execute-form-item"]}
+                    formItemProps={{
+                        name: "Input",
+                        label: "扫描目标",
+                        rules: [{required: true}]
+                    }}
+                    accept='.txt,.xlsx,.xls,.csv'
+                    textareaProps={{
+                        placeholder: "请输入扫描目标，多个目标用“英文逗号”或换行分隔",
+                        rows: 3
+                    }}
+                    help='可将TXT、Excel文件拖入框内或'
+                    disabled={disabled}
+                />
+            )}
+        </>
     )
 })

@@ -217,9 +217,6 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
     }
     return (
         <div className={styles["plugin-extra-params"]}>
-            <Form.Item label='强制 HTTPS' name='IsHttps' valuePropName='checked'>
-                <YakitSwitch />
-            </Form.Item>
             <Form.Item label='HTTP方法' name='Method' initialValue='GET'>
                 <YakitSelect
                     options={["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT"].map((item) => ({
