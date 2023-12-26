@@ -21,6 +21,7 @@ import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {ProjectDescription} from "./pages/softwareSettings/ProjectManage"
 import {useRunNodeStore} from "./store/runNode"
+import { visitorsStatisticsFun } from "./utils/visitorsStatistics"
 
 /** 快捷键目录 */
 const InterceptKeyword = [
@@ -274,7 +275,7 @@ function NewApp() {
             const showCloseMessageBox = !(Array.from(runNodeList).length || temporaryProjectIdRef.current)
             await handleKillAllRunNode()
             await handleTemporaryProject()
-
+            await visitorsStatisticsFun()
             // 通知应用退出
             if (dynamicStatus.isDynamicStatus) {
                 warn("远程控制关闭中...")
@@ -284,8 +285,12 @@ function NewApp() {
                 ipcRenderer.invoke("app-exit", {showCloseMessageBox})
             }
         })
+        ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
+            visitorsStatisticsFun()
+        })
         return () => {
             ipcRenderer.removeAllListeners("close-windows-renderer")
+            ipcRenderer.removeAllListeners("minimize-windows-renderer")
         }
     }, [dynamicStatus.isDynamicStatus])
 
