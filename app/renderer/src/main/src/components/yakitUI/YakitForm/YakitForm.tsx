@@ -442,3 +442,184 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         </>
     )
 })
+/**内容显示的是文件中的内容，不显示路径；只支持选择文件 */
+export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.memo((props) => {
+    const {
+        value,
+        disabled,
+        size,
+        textareaProps = {},
+        onChange,
+        help,
+        showDefHelp,
+        fileLimit = 500,
+        ...restProps
+    } = props
+    const [uploadLoading, setUploadLoading] = useState<boolean>(false)
+    const fileRef = useRef<HTMLInputElement>(null)
+    const renderContent = useMemoizedFn((helpNode: ReactNode) => {
+        return (
+            <Spin spinning={uploadLoading}>
+                <YakitInput.TextArea
+                    placeholder='路径支持手动输入,输入多个请用逗号分隔'
+                    value={value}
+                    disabled={disabled}
+                    {...textareaProps}
+                    onChange={(e) => {
+                        if (onChange) onChange(e.target.value)
+                        if (textareaProps.onChange) textareaProps.onChange(e)
+                        e.stopPropagation()
+                    }}
+                    onPressEnter={(e) => {
+                        e.stopPropagation()
+                        if (textareaProps.onPressEnter) textareaProps.onPressEnter(e)
+                    }}
+                    onFocus={(e) => {
+                        e.stopPropagation()
+                        if (textareaProps.onFocus) textareaProps.onFocus(e)
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        if (textareaProps.onClick) textareaProps.onClick(e)
+                    }}
+                    onBlur={(e) => {
+                        e.stopPropagation()
+                        if (textareaProps.onBlur) textareaProps.onBlur(e)
+                    }}
+                />
+                <div
+                    className={classNames(styles["dragger-help-middle"], {
+                        [styles["dragger-help-small"]]: size === "small",
+                        [styles["dragger-help-large"]]: size === "large"
+                    })}
+                >
+                    {helpNode}
+                </div>
+            </Spin>
+        )
+    })
+    /**拖拽文件后的处理 */
+    const afterFileDrop = useMemoizedFn((e) => {
+        if (disabled) return
+        const {files = []} = e.dataTransfer
+        const filesLength = files.length
+        if (filesLength > 0) {
+            const item = files[0]
+            if (item.size / 1024 > fileLimit) {
+                yakitNotify("error", `文件大小不能超过${fileLimit}KB`)
+                return
+            }
+            const path = item.path.replace(/\\/g, "\\")
+            if (isAcceptEligible(path, props.accept || ".*")) {
+                onGetContent(path)
+            } else {
+                yakitNotify("error", "文件类型不支持")
+            }
+        }
+    })
+    /**选择文件 */
+    const onUploadFile = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (disabled) return
+        if (fileRef.current && fileRef.current.files) {
+            const file = fileRef.current.files[0] as FileItem
+            if (file) {
+                if (file.size / 1024 > fileLimit) {
+                    yakitNotify("error", `文件大小不能超过${fileLimit}KB`)
+                    return
+                }
+                const path = file.path.replace(/\\/g, "\\")
+                if (isAcceptEligible(path, props.accept || ".*")) {
+                    onGetContent(path)
+                } else {
+                    yakitNotify("error", "文件类型不支持")
+                }
+            }
+        }
+    })
+    /**通过文件路径获取文件内容 */
+    const onGetContent = useMemoizedFn((path: string) => {
+        setUploadLoading(true)
+        ipcRenderer
+            .invoke("fetch-file-content", path)
+            .then((res: string | {name: string; data: string[]}[]) => {
+                if (Array.isArray(res)) {
+                    // 表格文件读取出来的
+                    let data: string[] = []
+                    res.forEach((element) => {
+                        data = data.concat(element.data)
+                    })
+                    if (onChange) onChange(JSON.stringify(data).replace(/(\[|\]|\{|\}|\")/g, ""))
+                } else {
+                    // 其他文件读取出来的
+                    if (onChange) onChange(res)
+                }
+            })
+            .catch((err) => {
+                failed("数据获取失败：" + err)
+            })
+            .finally(() => setTimeout(() => setUploadLoading(false), 200))
+    })
+    return (
+        <>
+            <Dragger
+                onDrop={afterFileDrop}
+                {...restProps}
+                disabled={disabled}
+                showUploadList={false}
+                directory={false}
+                multiple={false}
+                className={classNames(styles["yakit-dragger"], props.className)}
+                beforeUpload={() => {
+                    return false
+                }}
+            >
+                {renderContent(
+                    <div className={classNames(styles["form-item-help"], styles["form-item-content-help"])}>
+                        {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
+                        <label
+                            onClick={(e) => {
+                                e.stopPropagation()
+                            }}
+                        >
+                            <span
+                                className={classNames(styles["dragger-help-active"], {
+                                    [styles["dragger-help-active-disabled"]]: disabled
+                                })}
+                            >
+                                点击此处上传
+                            </span>
+                            <input
+                                id='file'
+                                type='file'
+                                ref={fileRef}
+                                onChange={onUploadFile}
+                                style={{display: "none"}}
+                            />
+                        </label>
+                    </div>
+                )}
+            </Dragger>
+        </>
+    )
+})
+
+/**form表单item 内容显示的是文件中的内容，不显示路径；只支持选择文件 */
+export const YakitFormDraggerContent: React.FC<YakitFormDraggerContentProps> = React.memo((props) => {
+    const {formItemProps = {}, size, formItemClassName, ...restProps} = props
+    return (
+        <Form.Item
+            {...formItemProps}
+            className={classNames(
+                styles["form-label-middle"],
+                {
+                    [styles["form-label-small"]]: size === "small",
+                    [styles["form-label-large"]]: size === "large"
+                },
+                formItemClassName
+            )}
+        >
+            <YakitDraggerContent {...restProps} size={size} />
+        </Form.Item>
+    )
+})
