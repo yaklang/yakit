@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Checkbox, Input} from "antd"
+import {Checkbox, Divider} from "antd"
 import {DownOutlined} from "@ant-design/icons"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -11,7 +11,10 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineSearchIcon} from "@/assets/icon/outline"
+import {NewHTTPPacketEditor, YakEditor} from "@/utils/editors"
+import {StringToUint8Array} from "@/utils/str"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 const {ipcRenderer} = window.require("electron")
 export interface NewCodecInputUIProps {
     extra?: React.ReactNode
@@ -24,21 +27,35 @@ export interface NewCodecInputUIProps {
 }
 export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
     const {extra, readOnly, require, direction} = props
+    const [isFocus, setFocus] = useState<boolean>(false)
     const inputRef = useRef<any>(null)
-    const onFocusInput = useMemoizedFn(() => {
+
+    const onFocusBox = useMemoizedFn(() => {
         if (inputRef.current) {
-            console.log("onFocusInput", inputRef.current)
             inputRef.current.focus()
         }
+    })
+
+    const onFocus = useMemoizedFn((e) => {
+        setFocus(true)
+    })
+
+    const onBlur = useMemoizedFn((e) => {
+        setFocus(false)
     })
     return (
         <div
             className={classNames(styles["new-codec-input-ui"], {
                 [styles["new-codec-left-border-input-ui"]]: direction === "left"
             })}
-            onClick={onFocusInput}
+            onClick={onFocusBox}
         >
-            <div className={styles["main"]}>
+            <div
+                className={classNames(styles["main"], {
+                    [styles["main-focus"]]: isFocus,
+                    [styles["main-left-focus"]]: direction === "left"
+                })}
+            >
                 <div className={styles["header"]}>
                     <div className={styles["title"]}>校验规则</div>
                     {require && <div className={styles["icon"]}>*</div>}
@@ -47,8 +64,7 @@ export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
                     <div className={styles["read-only"]}>A-Za-z0-9+/=</div>
                 ) : (
                     <div className={styles["content"]}>
-                        {/* 此处使用Input而不使用YakitInput原因为ref无法获取 */}
-                        <Input ref={inputRef} placeholder='请输入...' />
+                        <YakitInput onFocus={onFocus} onBlur={onBlur} ref={inputRef} placeholder='请输入...' />
                     </div>
                 )}
             </div>
@@ -127,6 +143,38 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                 </YakitSelect>
                 <YakitSelect value='M'>M</YakitSelect>
             </YakitSelect>
+        </div>
+    )
+}
+
+export interface NewCodecEditorProps {
+    // 标题
+    title?: string
+    // 是否为必填
+    require?: boolean
+}
+export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
+    const {title, require} = props
+    return (
+        <div className={styles["new-codec-editor"]}>
+            <div className={styles["header"]}>
+                {title && (
+                    <div className={styles["title"]}>
+                        {title}
+                        {require && <div className={styles["icon"]}>*</div>}
+                    </div>
+                )}
+                <div className={styles["extra"]}>
+                    <div className={styles["apply"]}>应用</div>
+                    <Divider type={"vertical"} style={{margin: "4px 4px 0px 8px"}} />
+                    <div className={styles["expand-box"]} onClick={() => {}}>
+                        <OutlineArrowsexpandIcon />
+                    </div>
+                </div>
+            </div>
+            <div className={styles["editor-box"]}>
+                <NewHTTPPacketEditor noHeader={true} originValue={StringToUint8Array("NewCodecEditor")} />
+            </div>
         </div>
     )
 }

@@ -3,14 +3,20 @@
     flex-direction: row;
     background-color: #fff;
     border-radius: 4px 4px 0px 0px;
+    .main-focus {
+        border-bottom: 1.5px solid var(--yakit-primary-5);
+    }
+    .main-left-focus {
+        border-radius: 4px 0px 0px 4px;
+    }
     .main {
+        box-sizing: border-box;
         padding: 4px 12px 6px 12px;
         display: flex;
         flex-direction: column;
         gap: 4px;
         flex: 1;
-        height: 36px;
-        box-sizing: content-box;
+        height: 46px;
         .header {
             display: flex;
             flex-direction: row;
@@ -56,13 +62,13 @@
         }
         .ant-input:focus {
             box-shadow: unset;
-            border-bottom: 1px solid var(--yakit-primary-6);
         }
     }
 }
 .new-codec-left-border-input-ui {
     border-radius: 4px 0px 0px 4px;
 }
+
 .new-codec-check-ui {
     padding: 4px 0px;
     .text {
@@ -89,6 +95,7 @@
             height: 46px;
             padding: 4px 58px 6px 12px;
             border-radius: 4px 4px 0px 0px;
+            border: 1px solid #ffffff;
             .ant-select-selection-item {
                 display: block;
                 padding-right: 0px;
@@ -169,5 +176,76 @@
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
             align-items: flex-end;
         }
+    }
+}
+.new-codec-editor {
+    height: 288px;
+    padding: 8px 12px 12px 12px;
+    background-color: #fff;
+    border-radius: 4px 4px 0px 0px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    .header {
+        height: 24px;
+        align-items: center;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        .title {
+            color: #b4bbca;
+            font-size: 11px;
+            font-weight: 400;
+            line-height: 16px;
+            .icon {
+                position: relative;
+                display: inline-block;
+                margin-left: 4px;
+                color: #f4736b;
+                font-family: SimSong;
+                font-size: 11px;
+                font-weight: 400;
+                line-height: 16px;
+                top: 2px;
+            }
+        }
+        .extra {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            .apply {
+                color: #f28b44;
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 500;
+                line-height: 16px;
+            }
+            .expand-box {
+                padding: 3px;
+                height: 20px;
+                width: 20px;
+                cursor: pointer;
+                color: #85899e;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                &:hover {
+                    background-color: var(--yakit-background-color);
+                }
+                svg {
+                    color: var(--yakit-body-text-color);
+                    height: 16px;
+                    width: 16px;
+                    &:hover {
+                        color: var(--yakit-primary-4);
+                    }
+                }
+            }
+        }
+    }
+    .editor-box {
+        flex: 1;
     }
 }

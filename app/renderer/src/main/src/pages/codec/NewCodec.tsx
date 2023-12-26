@@ -37,7 +37,7 @@ import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOper
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {NewCodecCheckUI, NewCodecInputUI, NewCodecSelectUI} from "./NewCodecUIStore"
+import {NewCodecCheckUI, NewCodecEditor, NewCodecInputUI, NewCodecSelectUI} from "./NewCodecUIStore"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -219,11 +219,11 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
             {/* 输入框模块 */}
             <NewCodecInputUI require={true} />
             <div style={{display:"flex",flexDirection:"row",gap:8}}>
-                <div style={{flex:1}}>
+                <div style={{flex:3}}>
                   {/* 输入框模块 */}
                 <NewCodecInputUI direction="left"/>  
                 </div>
-                <div style={{flex:1}}>
+                <div style={{flex:2}}>
                  {/* 下拉框模块-无标题 */}
                 <NewCodecSelectUI direction="right"/>   
                 </div>
@@ -232,6 +232,8 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
 
             {/* 可搜索下拉框 */}
             <NewCodecSelectUI showSearch={true} />
+            {/* 编辑器 */}
+            <NewCodecEditor title="编写临时插件" require={true}/>
         </div>
     )
 }
