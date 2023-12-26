@@ -274,7 +274,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }
     })
     const onRefLocalPluginList = useMemoizedFn(() => {
-        fetchList(true)
+        setTimeout(() => {
+            fetchList(true)
+        }, 200)
     })
 
     /**获取插件删除的提醒记录状态 */

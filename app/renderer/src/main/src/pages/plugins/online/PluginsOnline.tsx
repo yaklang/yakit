@@ -332,7 +332,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         clearDataByRoute(YakitRoute.Plugin_Store)
     })
     const onRefOnlinePluginList = useMemoizedFn(() => {
-        fetchList(true)
+        setTimeout(() => {
+            fetchList(true)
+        }, 200)
     })
 
     // 选中插件的数量
