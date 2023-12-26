@@ -58,37 +58,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
             }
         }, [visible, extraParamsValue])
         const onClose = useMemoizedFn(() => {
-            let newValue = form.getFieldsValue()
-            switch (pluginType) {
-                case "mitm":
-                case "port-scan":
-                case "nuclei":
-                    newValue = {
-                        ...defPluginExecuteFormValue,
-                        ...newValue
-                    }
-                    break
-                default:
-                    break
-            }
-            if (JSON.stringify(extraParamsValue) !== JSON.stringify(newValue)) {
-                const m = YakitModalConfirm({
-                    title: "温馨提示",
-                    content: "请问是否要保存额外参数并关闭弹框？",
-                    onOkText: "保存",
-                    onCancelText: "不保存",
-                    onOk: () => {
-                        onSaveSetting()
-                        m.destroy()
-                    },
-                    onCancel: () => {
-                        m.destroy()
-                        setVisible(false)
-                    }
-                })
-            } else {
-                setVisible(false)
-            }
+            onSaveSetting()
         })
         /**
          * @description 保存高级配置
@@ -152,25 +122,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                 visible={visible}
                 onClose={onClose}
                 width='40%'
-                title={
-                    <div className={styles["plugin-execute-extra-params-drawer-title"]}>
-                        <div className={styles["plugin-execute-extra-params-drawer-title-text"]}>额外参数</div>
-                        <div className={styles["plugin-execute-extra-params-drawer-title-btns"]}>
-                            <YakitButton
-                                type='outline2'
-                                onClick={() => {
-                                    setVisible(false)
-                                }}
-                            >
-                                取消
-                            </YakitButton>
-                            <YakitButton type='primary' onClick={onSaveSetting}>
-                                保存
-                            </YakitButton>
-                        </div>
-                    </div>
-                }
-                maskClosable={false}
+                title='额外参数'
             >
                 {pluginParamsNodeByPluginType(pluginType)}
             </YakitDrawer>
