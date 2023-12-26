@@ -557,6 +557,7 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         includeInUrl={includeInUrl}
                         onSelected={(i) => {
                             if (!i) return
+                            lasetIdRef.current = i.Id
                             getHTTPFlowById(i.Id, i)
                         }}
                         onSearch={setHighlightSearch}

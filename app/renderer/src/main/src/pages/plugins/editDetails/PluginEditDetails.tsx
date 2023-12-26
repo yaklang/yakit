@@ -54,6 +54,8 @@ import {YakScriptParamsSetter} from "@/pages/invoker/YakScriptParamsSetter"
 import {queryYakScriptList} from "@/pages/yakitStore/network"
 import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 import {SolidStoreIcon} from "@/assets/icon/solid"
+import {HTML5Backend} from "react-dnd-html5-backend"
+import {DndProvider} from "react-dnd"
 
 import "../plugins.scss"
 import styles from "./pluginEditDetails.module.scss"
@@ -450,14 +452,14 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                     title: "立即执行",
                     width: 1000,
                     content: (
-                        <>
+                        <DndProvider backend={HTML5Backend}>
                             <YakScriptRunner
                                 consoleHeight={"200px"}
                                 debugMode={true}
                                 script={yakScriptInfo}
                                 params={[...(extraParams || [])]}
                             />
-                        </>
+                        </DndProvider>
                     )
                 })
             } else {
@@ -475,13 +477,13 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                         title: "立即执行",
                                         width: 1000,
                                         content: (
-                                            <>
+                                            <DndProvider backend={HTML5Backend}>
                                                 <YakScriptRunner
                                                     debugMode={true}
                                                     script={yakScriptInfo}
                                                     params={[...params, ...(extraParams || [])]}
                                                 />
-                                            </>
+                                            </DndProvider>
                                         )
                                     })
                                 }}
