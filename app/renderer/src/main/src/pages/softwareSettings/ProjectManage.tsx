@@ -575,12 +575,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
             .then((e) => {
                 info("删除成功")
-                setData({
-                    ...getData(),
-                    Projects: getData().Projects.filter((item) => +item.Id !== +delId.Id),
-                    Total: getData().Total == 0 ? 0 : getData().Total - 1,
-                    ProjectToTal: getData().ProjectToTal == 0 ? 0 : getData().ProjectToTal - 1
-                })
+                update()
                 ipcRenderer
                     .invoke("GetCurrentProject")
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
