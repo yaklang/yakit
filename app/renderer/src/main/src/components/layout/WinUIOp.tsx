@@ -8,7 +8,6 @@ import styles from "./uiOperate.module.scss"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {yakitFailed} from "@/utils/notification"
-import {isEnpriTraceAgent} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
