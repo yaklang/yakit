@@ -306,14 +306,16 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         )
     }
     const [goBackTree, setGoBackTree] = useState<TreeNode[]>([]);
+
     const webTreeRef = useRef<any>()
 
     const [currentPathAllTree, setcurrentPathAllTree] = useState<TreeNode[]>([])
-    useEffect(() => {
+
+    const getYakURL = ():YakURL => {
         const p = path.normalize(props.CurrentPath)
-        const url: YakURL = {
+        return {
             FromRaw: "",
-            Schema: "Behinder",
+            Schema: props.shellType,
             User: "",
             Pass: "",
             Location: "",
@@ -325,7 +327,10 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                 {Key: "mode", Value: "list"},
             ]
         }
-        requestYakURLList({url, method: "POST"}, (res) => {
+    }
+
+    useEffect(() => {
+        requestYakURLList({url:getYakURL(), method: "GET"}, (res) => {
             console.log("res ", res)
             const arr = res.Resources.map((item: YakURLResource, index: number) => {
                 return {
@@ -354,6 +359,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                     ref={webTreeRef}
                     schema={props.shellType.toLowerCase()}
                     searchVal={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/bin/?op=file&mode=list&id=" + props.Id}
+                    searchYakURL={getYakURL()}
                     searchPlaceholder='请输入域名进行搜索，例baidu.com'
                     onSelectNodes={(nodes) => {
                         setLoading(false)

@@ -124,7 +124,7 @@ console.log("wuwuwuuw",helloMsg);
         const p = linePath === "" ? path.normalize(defaultPath) : path.normalize(linePath)
         const url: YakURL = {
             FromRaw: "",
-            Schema: "Behinder",
+            Schema: props.webshellInfo.ShellScript,
             User: "",
             Pass: "",
             Location: "",
