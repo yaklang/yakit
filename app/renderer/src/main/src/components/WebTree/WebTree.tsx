@@ -26,8 +26,9 @@ export interface TreeNode extends DataNode {
 
 interface WebTreeProp {
     ref?: React.Ref<any>
-    schema?: string | "website" | "file" | "behinder"|"godzilla" // 默认website
+    schema?: string | "website" | "file" | "behinder" | "godzilla" // 默认website
     searchVal?: string // 搜索树值
+    searchYakURL?: YakURL // 搜索树yakurl
     height: number // 树高度 用于虚拟滚动
     searchVal?: string // 搜索树值
     searchInputDisabled?: boolean
@@ -135,25 +136,22 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     })
 
     const addChildrenToBinNode = (tree, binContents) => {
-        cacheExpanded.current=[]
+        cacheExpanded.current = []
         // 递归搜索 'bin' 节点的函数
         const findAndAddBinChildren = (nodes) => {
             nodes.forEach(node => {
                 if (node.title === 'bin') {
                     // 假定 binContents 是一个包含子节点的数组
-                    node.children=[...binContents]
+                    node.children = [...binContents]
                     return tree;
                 } else if (node.children && node.children.length) {
-                    cacheExpanded.current.push(`node-${treeKey.current}`)
-                    node.key = `node-${treeKey.current}`
-                    treeKey.current+=1
+                    cacheExpanded.current.push(node.key)
                     findAndAddBinChildren(node.children); // 继续递归搜索子节点
                 }
             });
         };
         findAndAddBinChildren(tree)
-        treeKey.current = 0
-        return {tree,defaultExpandedKeys:[...expandedKeys,...cacheExpanded.current]}
+        return {tree, defaultExpandedKeys: [...expandedKeys, ...cacheExpanded.current]}
         // ||binContents;
     }
 
@@ -178,25 +176,62 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 }
             } as TreeNode
         })
-        if(isExtendTree){
+        if (isExtendTree) {
             setExpandedKeys(['node-0', 'node-1', 'node-2', 'node-3', 'node-4'])
-            const {tree,defaultExpandedKeys} = addChildrenToBinNode(getDefaultWebTreeData(), newArr)
-            setExpandedKeys([...expandedKeys,...defaultExpandedKeys])
+            const {tree, defaultExpandedKeys} = addChildrenToBinNode(getDefaultWebTreeData(), newArr)
+            setExpandedKeys([...expandedKeys, ...defaultExpandedKeys])
             return tree
         }
-        
+
         return newArr
     }
     useEffect(() => {
-        const buildTree = (parts, tree) => {
+        const buildTree = (parts, tree, currentPath = "") => {
             if (parts.length === 0) return;
             let part = parts.shift();
             let node = tree.find(n => n.title === part);
+            currentPath += (currentPath ? '/' : '') + part; // 更新路径
+            const item: YakURLResource = {
+                ResourceType: "dir",
+                VerboseType: "dir",
+                ResourceName: part,
+                VerboseName: part,
+                Size: 0,
+                SizeVerbose: "",
+                ModifiedTimestamp: 0,
+                Path: currentPath,
+                YakURLVerbose: "",
+                Url: {
+                    FromRaw: "",
+                    Schema: "Godzilla",
+                    User: "",
+                    Pass: "",
+                    Location: "",
+                    Path: currentPath,
+                    Query: [
+                        {
+                            Key: "op",
+                            Value: "file"
+                        },
+                        {
+                            Key: "mode",
+                            Value: "list"
+                        },
+                        {
+                            Key: "id",
+                            Value: "3"
+                        },
+
+                    ],
+                },
+                Extra: [],
+                HaveChildrenNodes: true,
+            }
             if (!node) {
-                node = {title: part, isLeaf: parts.length === 0, children: []};
+                node = {title: part, key: currentPath, isLeaf: parts.length === 0, children: [], data: item};
                 tree.push(node);
             }
-            buildTree(parts, node.children);
+            buildTree(parts, node.children, currentPath);
         };
 
         if (!props.searchVal) return;
@@ -217,9 +252,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         console.log("tree", tree)
         setDefaultWebTreeData(tree)
     }, [props.searchVal])
-    const createFileTree = (paths) => {
 
-    }
     const refreshChildrenByParent = useMemoizedFn((origin: TreeNode[], parentKey: string, nodes: TreeNode[]) => {
         const arr: TreeNode[] = origin.map((node) => {
             if (node.key === parentKey) {
@@ -265,6 +298,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 {url},
                 (rsp) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
+                        // console.log("i", i)
                         const idObj = {
                             website: key + "/" + i.ResourceName,
                             behinder: i.Path,
