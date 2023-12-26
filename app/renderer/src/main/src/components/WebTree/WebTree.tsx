@@ -203,26 +203,12 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 YakURLVerbose: "",
                 Url: {
                     FromRaw: "",
-                    Schema: "Godzilla",
+                    Schema: searchYakURL?.Schema || "",
                     User: "",
                     Pass: "",
                     Location: "",
                     Path: currentPath,
-                    Query: [
-                        {
-                            Key: "op",
-                            Value: "file"
-                        },
-                        {
-                            Key: "mode",
-                            Value: "list"
-                        },
-                        {
-                            Key: "id",
-                            Value: "3"
-                        },
-
-                    ],
+                    Query: [...(searchYakURL?.Query || []).filter((item)=>item.Key!=="path"),{Key: "path", Value: currentPath},],
                 },
                 Extra: [],
                 HaveChildrenNodes: true,
@@ -304,7 +290,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                             behinder: i.Path,
                             godzilla: i.Path
                         }
-                        console.log("idObj", idObj)
+                        // console.log("idObj", idObj)
                         return {
                             title: i.VerboseName,
                             key: idObj[schema],
