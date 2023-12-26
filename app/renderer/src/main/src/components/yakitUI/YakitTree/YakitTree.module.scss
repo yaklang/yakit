@@ -62,6 +62,7 @@
 
         .ant-tree-title {
             white-space: nowrap;
+            width: calc(100% - 24px);
         }
 
         .ant-tree-checkbox-inner {
