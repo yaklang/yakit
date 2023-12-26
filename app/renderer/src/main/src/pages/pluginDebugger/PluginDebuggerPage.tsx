@@ -45,6 +45,7 @@ import imageLoadErrorDefault from "@/assets/imageLoadErrorDefault.png"
 import styles from "./PluginDebuggerPage.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder";
+import { PluginTestErrorIcon } from "../plugins/icon"
 
 export interface PluginDebuggerPageProp {
     // 是否生成yaml模板
@@ -674,7 +675,7 @@ const PluginBaseInspect: React.FC<PluginBaseInspectProps> = React.memo((props) =
                                         return (
                                             <div className={styles["list-opt"]}>
                                                 <div className={styles["opt-header"]}>
-                                                    {/* <PluginTestErrorIcon /> */}
+                                                    <PluginTestErrorIcon />
                                                     {item.Item}
                                                 </div>
                                                 <div className={styles["opt-content"]}>{item.Suggestion}</div>
