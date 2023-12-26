@@ -540,10 +540,12 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
         label: item.FieldVerbose || item.Field,
         name: item.Field,
         className: styles["plugin-execute-form-item"],
-        tooltip: {
-            icon: <QuestionMarkCircleIcon />,
-            title: item.Help
-        }
+        tooltip: item.Help
+            ? {
+                  icon: <QuestionMarkCircleIcon />,
+                  title: item.Help
+              }
+            : null
     }
     const onValidateStatus = useDebounceFn(
         (value: "success" | "error") => {
