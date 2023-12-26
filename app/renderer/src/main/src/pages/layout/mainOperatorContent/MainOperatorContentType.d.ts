@@ -91,7 +91,7 @@ export interface TabContentProps {
     setCurrentTabKey: (s: YakitRoute | string) => void
     openMultipleMenuPage: (route: RouteToPageProps) => void
 
-    onRemove: (p: PageCache) => vid
+    onRemove: (p: PageCache) => void
 }
 
 /**
