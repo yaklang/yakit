@@ -505,6 +505,7 @@ service Yak {
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
   rpc GetDefaultProject(Empty) returns (ProjectDescription);
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度

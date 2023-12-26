@@ -530,7 +530,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         // @ts-ignore
         if (param.Type === "all") delete param.Type
         if (param.ProjectName) param.Type = "project"
-
         setLoading(true)
         ipcRenderer
             .invoke("GetProjects", param)
@@ -702,15 +701,18 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
     const [detectionTemporaryProjectVisible, setDetectionTemporaryProjectVisible] = useState<boolean>(false)
 
-    const getTemporaryProject = async () => {
+    const getTemporaryProjectId = async () => {
+        let id = ""
         try {
             const res = await ipcRenderer.invoke("GetTemporaryProject")
             if (res) {
-                setTemporaryProjectId(res.Id)
+                id = res.Id
             }
         } catch (error) {
-            yakitFailed(error + "")
         }
+        
+        setTemporaryProjectId(id)
+        return id
     }
 
     // 创建临时项目
@@ -1101,8 +1103,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     <div
                         className={classNames(styles["btn-wrapper"], styles["new-temporary-project-wrapper"])}
                         onClick={async () => {
-                            await getTemporaryProject()
-                            if (temporaryProjectId) {
+                            if (await getTemporaryProjectId()) {
                                 setDetectionTemporaryProjectVisible(true)
                             } else {
                                 await creatTemporaryProject()
