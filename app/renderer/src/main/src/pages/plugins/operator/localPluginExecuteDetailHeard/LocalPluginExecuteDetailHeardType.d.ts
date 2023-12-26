@@ -4,6 +4,7 @@ import {YakParamProps} from "../../pluginsType"
 import {KVPair} from "@/models/kv"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import { FormInstance } from "antd"
 
 export interface PluginExecuteDetailHeardProps {
     token: string
@@ -65,4 +66,9 @@ export interface FormContentItemByTypeProps {
     item: YakParamProps
     pluginType?: string
     disabled?: boolean
+}
+
+export interface PluginFixFormParamsProps {
+    form: FormInstance<any>
+    disabled:boolean
 }
