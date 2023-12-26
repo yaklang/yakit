@@ -13,16 +13,16 @@ export interface PluginExecuteDetailHeardProps {
     extraNode: ReactNode
     /**是否执行中 */
     isExecuting: boolean
-    setIsExecuting: (b: boolean) => vid
+    setIsExecuting: (b: boolean) => void
     debugPluginStreamEvent: {
-        start: () => vid
-        stop: () => vid
-        cancel: () => vid
-        reset: () => vid
+        start: () => void
+        stop: () => void
+        cancel: () => void
+        reset: () => void
     }
     progressList: StreamResult.Progress[]
     runtimeId: string
-    setRuntimeId: (b: string) => vid
+    setRuntimeId: (b: string) => void
 }
 
 export interface YakExtraParamProps {
@@ -58,7 +58,7 @@ export interface PluginExecuteProgressProps {
 export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {}
 /**表单的key value类型 */
 export interface CustomPluginExecuteFormValue {
-    [string]: number | string | boolean | string[] | Buffer
+    [key: string]: number | string | boolean | string[] | Uint8Array | KVPair[]
 }
 
 export interface FormContentItemByTypeProps {
