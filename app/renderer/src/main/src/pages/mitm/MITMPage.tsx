@@ -758,7 +758,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                                 name: "localPath",
                                 label: "本地仓库地址"
                             }}
-                            InputProps={{
+                            inputProps={{
                                 placeholder: "本地仓库地址需设置在yak-projects项目文件下"
                             }}
                             selectType='folder'

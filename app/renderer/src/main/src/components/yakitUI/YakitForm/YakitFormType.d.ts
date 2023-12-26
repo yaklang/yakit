@@ -5,14 +5,13 @@ import {InternalTextAreaProps} from "../YakitInput/YakitInputType"
 
 type YakitDragger = Omit<DraggerProps, "beforeUpload" | "onChange">
 export interface YakitFormDraggerProps extends YakitDraggerProps {
-    size?: YakitSizeType
     formItemClassName?: string
     formItemProps?: FormItemProps
 }
 /**拖拽/点击文件,回显文件路径组件props */
 export interface YakitDraggerProps extends YakitDragger {
     size?: YakitSizeType
-    InputProps?: InputProps
+    inputProps?: InputProps
     /**@description selectType为file,该属性才有效*/
     setContent?: (s: string) => void
     help?: ReactDOM
@@ -28,4 +27,29 @@ export interface YakitDraggerProps extends YakitDragger {
     renderType?: "input" | "textarea"
     /** textarea的props */
     textareaProps?: InternalTextAreaProps
+    /**是否显示路径数量 */
+    isShowPathNumber?: boolean
+}
+
+export interface YakitDraggerContentProps
+    extends Omit<YakitDragger, "showUploadList" | "directory" | "multiple" | "beforeUpload" | "onChange"> {
+    /** textarea的props */
+    textareaProps?: InternalTextAreaProps
+    size?: YakitSizeType
+    /**回显的文本值 */
+    value?: string
+    /**@description 回显的文本回调事件*/
+    onChange?: (s: string) => void
+    help?: ReactDOM
+    showDefHelp?: boolean
+    // InputProps?: InputProps
+    // /** 展示组件 input|textarea */
+    // renderType?: "input" | "textarea"
+    /**@default 500k */
+    fileLimit?:number
+}
+
+export interface YakitFormDraggerContentProps extends YakitDraggerContentProps {
+    formItemClassName?: string
+    formItemProps?: FormItemProps
 }

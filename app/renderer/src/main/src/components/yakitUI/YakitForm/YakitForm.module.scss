@@ -97,4 +97,9 @@
     justify-content: space-between;
     width: 100%;
     font-size: 14px;
+    color: var(--yakit-body-text-color);
+}
+
+.form-item-content-help {
+    justify-content: flex-start;
 }

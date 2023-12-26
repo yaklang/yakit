@@ -257,7 +257,7 @@ export const DemoItemInputDraggerPath: React.FC<ItemInputDraggerPathProps> = mem
             onChange={setValue}
             selectType={selectType}
             renderType={renderType}
-            InputProps={{
+            inputProps={{
                 style: {width: width || "100%"},
                 size: size as any,
                 disabled: !!disable,
