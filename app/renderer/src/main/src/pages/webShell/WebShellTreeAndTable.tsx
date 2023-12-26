@@ -53,6 +53,13 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     const [data, setData] = useState<TreeNode[]>([])
     // const [treeData, setTreeData] = useState<TreeNode[]>([])
     const [loading, setLoading] = useState<boolean>(false)
+
+    const TreeBoxRef = useRef<any>()
+    const [treeHeight, setTreeHeight] = useState<number>(0)
+    useEffect(() => {
+        setTreeHeight(TreeBoxRef.current.offsetHeight)
+    }, [TreeBoxRef.current])
+    
     const onRowClick = useMemoizedFn((record: TreeNode) => {
         setSelected(record) // 更新当前选中的行
         // setWebShell(record)
@@ -354,8 +361,9 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
             freeze={true}
             firstRatio={'20%'}
             firstNode={
-                <WebTree
-                    height={800}
+                <div style={{height:"100%"}} ref={TreeBoxRef}>
+                 <WebTree
+                    height={treeHeight}
                     ref={webTreeRef}
                     schema={props.shellType.toLowerCase()}
                     searchVal={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/bin/?op=file&mode=list&id=" + props.Id}
@@ -383,7 +391,9 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                         }
                     }}
                     isExtendTree={true}
-                />
+                />   
+                </div>
+                
             }
             secondNodeStyle={{height: "100%"}}
             secondNode={
