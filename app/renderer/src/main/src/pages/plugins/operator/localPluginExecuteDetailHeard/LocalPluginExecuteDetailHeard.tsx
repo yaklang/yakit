@@ -275,6 +275,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             Input: input,
             HTTPRequestTemplate: {
                 ...extraParamsValue,
+                IsHttps: !!value.IsHttps,
                 IsRawHTTPRequest: value.IsRawHTTPRequest,
                 RawHTTPRequest: value.RawHTTPRequest
                     ? Buffer.from(value.RawHTTPRequest, "utf8")
