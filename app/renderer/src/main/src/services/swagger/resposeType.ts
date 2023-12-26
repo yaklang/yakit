@@ -201,6 +201,9 @@ export declare namespace API {
     is_official?: string;
     is_private?: string;
   }
+  export interface TouristRequest {
+    macCode: string;
+  }
   export interface ShareResponse {
     share_id: string;
     extract_code?: string;

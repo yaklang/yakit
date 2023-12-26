@@ -74,6 +74,7 @@ import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
 import {onImportPlugin} from "@/pages/fuzzer/components/ShareImport"
 import { useTemporaryProjectStore } from "@/store/temporaryProject"
+import { visitorsStatisticsFun } from "@/utils/visitorsStatistics"
 
 const {ipcRenderer} = window.require("electron")
 const {Dragger} = Upload
@@ -1735,6 +1736,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     }, [isEngineLink])
 
     const onDownload = useMemoizedFn((type: "yakit" | "yaklang") => {
+        visitorsStatisticsFun()
         ipcRenderer.invoke("receive-download-yaklang-or-yakit", type)
     })
 

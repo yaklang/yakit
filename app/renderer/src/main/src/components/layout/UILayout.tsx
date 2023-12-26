@@ -73,6 +73,7 @@ import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
 import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
+import { visitorsStatisticsFun } from "@/utils/visitorsStatistics"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -907,6 +908,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     const onReady = useMemoizedFn(() => {
         if (!getEngineLink()) {
+            visitorsStatisticsFun()
             isEnpriTraceAgent()
                 ? setEngineLink(true)
                 : (async () => {

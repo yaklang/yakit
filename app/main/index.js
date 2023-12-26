@@ -81,6 +81,8 @@ const createWindow = () => {
     })
     win.on("minimize", (e) => {
         win.webContents.send("refresh-token")
+        // 关闭app时通知渲染进程 渲染进程操作后再进行关闭
+        win.webContents.send("minimize-windows-renderer")
     })
     win.on("maximize", (e) => {
         win.webContents.send("refresh-token")

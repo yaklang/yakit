@@ -20,6 +20,7 @@ import {coordinate} from "./pages/globalVariable"
 import {remoteOperation} from "./pages/dynamicControl/DynamicControl"
 import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {ProjectDescription} from "./pages/softwareSettings/ProjectManage"
+import { visitorsStatisticsFun } from "./utils/visitorsStatistics"
 
 /** 快捷键目录 */
 const InterceptKeyword = [
@@ -238,6 +239,7 @@ function NewApp() {
     const {dynamicStatus} = yakitDynamicStatus()
     useEffect(() => {
         ipcRenderer.on("close-windows-renderer", async (e, res: any) => {
+            await visitorsStatisticsFun()
             // 通知应用退出
             if (dynamicStatus.isDynamicStatus) {
                 warn("远程控制关闭中...")
@@ -247,8 +249,12 @@ function NewApp() {
                 ipcRenderer.invoke("app-exit")
             }
         })
+        ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
+            visitorsStatisticsFun()
+        })
         return () => {
             ipcRenderer.removeAllListeners("close-windows-renderer")
+            ipcRenderer.removeAllListeners("minimize-windows-renderer")
         }
     }, [dynamicStatus.isDynamicStatus])
 
