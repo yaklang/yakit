@@ -260,7 +260,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 className={styles["form-rule-help-setting"]}
                                 onClick={() => setAgentConfigModalVisible(true)}
                             >
-                                配置用户名密码&nbsp;
+                                配置代理认证&nbsp;
                             </span>
                         </span>
                     }
@@ -405,7 +405,7 @@ interface AgentConfigModalProp {
 }
 
 // 代理劫持弹窗
-const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
+export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
     const {agentConfigModalVisible, onCloseModal, generateURL} = props
     const [form] = Form.useForm()
     const [params, setParams] = useState<AgentConfigModalParams>(initAgentConfigModalParams)
@@ -447,7 +447,7 @@ const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((props) => {
     return (
         <YakitModal
             visible={agentConfigModalVisible}
-            title='配置用户名密码'
+            title='配置代理认证'
             width={506}
             maskClosable={false}
             closable

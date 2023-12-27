@@ -51,6 +51,7 @@ import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
 import emiter from "@/utils/eventBus/eventBus"
+import { AgentConfigModal } from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -366,6 +367,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             }, 500)
         }
     })
+
+    const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
+
     return (
         <div
             className={classNames(styles["http-query-advanced-config"])}
@@ -375,7 +379,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             <Form
                 form={form}
                 colon={false}
-                onValuesChange={(changedFields, allFields) => onSetValue(allFields)}
+                onValuesChange={(changedFields, allFields) => {
+                    console.log('表单改变', allFields);
+                    onSetValue(allFields)
+                }}
                 size='small'
                 labelCol={{span: 10}}
                 wrapperCol={{span: 14}}
@@ -419,6 +426,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             </span>
                         }
                         name='proxy'
+                        style={{ marginBottom: 5 }}
                     >
                         <YakitSelect
                             allowClear
@@ -430,6 +438,15 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             dropdownMatchSelectWidth={245}
                         />
                     </Form.Item>
+                    <YakitButton
+                        size='small'
+                        type='text'
+                        onClick={() => setAgentConfigModalVisible(true)}
+                        icon={<PlusSmIcon />}
+                        style={{ marginLeft: 100, marginBottom: 12 }}
+                    >
+                        配置代理认证
+                    </YakitButton>
                     <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
                         <YakitSwitch />
                     </Form.Item>
@@ -1047,6 +1064,22 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 onClose={onClose}
                 onSave={onSave}
             />
+            <AgentConfigModal
+                agentConfigModalVisible={agentConfigModalVisible}
+                onCloseModal={() => setAgentConfigModalVisible(false)}
+                generateURL={(url) => {
+                    const copyProxyList = structuredClone(proxyListRef.current)
+                    copyProxyList.push({ label: url, value: url })
+                    proxyListRef.current = copyProxyList.filter((item, index, self) => self.findIndex(t => (t.value === item.value)) === index)
+                    const v = form.getFieldsValue()
+                    const copyProxyArr = structuredClone(v.proxy)
+                    copyProxyArr.push(url)
+                    onSetValue({
+                        ...v,
+                        proxy: [...new Set(copyProxyArr)]
+                    })
+                }}
+            ></AgentConfigModal>
         </div>
     )
 })
