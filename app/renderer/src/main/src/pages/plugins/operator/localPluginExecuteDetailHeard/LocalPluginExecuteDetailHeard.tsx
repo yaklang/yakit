@@ -251,7 +251,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     <OutputFormComponentsByType
                         key='Input-Input'
                         item={codecItem}
-                        pluginType={plugin.Type}
+                        codeType='plaintext'
                         disabled={isExecuting}
                     />
                 )
@@ -518,7 +518,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
                 <OutputFormComponentsByType
                     item={item}
                     extraSetting={extraSetting}
-                    pluginType={pluginType}
+                    codeType={pluginType}
                     disabled={disabled}
                 />
             )
@@ -527,7 +527,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
 
 /**执行表单单个项 */
 export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
-    const {item, extraSetting, pluginType, disabled} = props
+    const {item, extraSetting, codeType, disabled} = props
     const [validateStatus, setValidateStatus] = useState<"success" | "error">("success")
     const [code, setCode] = useState<Buffer>(Buffer.from(item.DefaultValue || "", "utf8"))
     const formProps = {
@@ -651,10 +651,9 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <YakitEditor type={pluginType} value={item.DefaultValue || ""} readOnly={disabled} />
+                    <YakitEditor type={codeType} value={item.DefaultValue || ""} readOnly={disabled} />
                 </Form.Item>
             )
-
         default:
             return <></>
     }

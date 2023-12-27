@@ -42,7 +42,8 @@ export interface ExecuteEnterNodeByPluginParamsProps {
 export interface OutputFormComponentsByTypeProps {
     item: YakParamProps
     extraSetting?: FormExtraSettingProps
-    pluginType?: string
+    /**根据插件类型出编辑器类型/或者自己输入对应的编辑器类型 */
+    codeType?: string
     disabled?: boolean
 }
 
