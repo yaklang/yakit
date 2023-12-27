@@ -1,6 +1,5 @@
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {failed} from "./notification"
 import {isCommunityEdition} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 let MachineID: string = ""
@@ -11,12 +10,10 @@ const getMachineIDOperation = () => {
         ipcRenderer
             .invoke("GetMachineID", {})
             .then((obj: {MachineID: string}) => {
-                console.log("getMachineIDOperation", obj.MachineID)
                 MachineID = obj.MachineID
                 resolve(true)
             })
             .catch((e) => {
-                failed(`获取机器码失败: ${e}`)
                 reject()
             })
     })
@@ -37,9 +34,7 @@ const visitorsStatisticsOperation = () => {
                 if (data.ok) {
                 }
             })
-            .catch((err) => {
-                failed(`游客信息统计失败:${err}`)
-            })
+            .catch((err) => {})
             .finally(() => {
                 resolve(true)
             })
