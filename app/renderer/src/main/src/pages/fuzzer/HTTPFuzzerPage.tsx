@@ -285,6 +285,7 @@ export const showDictsAndSelect = (fun: (i: string) => any) => {
                         width: 1200,
                         type: "white",
                         closable: false,
+                        hiddenHeader: true,
                         content: (
                             <ReadOnlyNewPayload
                                 selectorHandle={(e) => {
