@@ -757,7 +757,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         setModalStatus(true)
     })
 
-    const onSetCurrentRow = useDebounceFn(
+    const onRowClick = useDebounceFn(
         (rowDate) => {
             setCurrentItem(rowDate)
         },
@@ -960,7 +960,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
                         loading={loading}
                         columns={columns}
                         currentSelectItem={currentItem}
-                        onRowClick={onSetCurrentRow}
+                        onRowClick={onRowClick}
                         onMoveRow={onMoveRow}
                         enableDragSort={true}
                         enableDrag={true}
