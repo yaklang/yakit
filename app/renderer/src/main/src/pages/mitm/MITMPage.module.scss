@@ -165,13 +165,22 @@
     }
 }
 
+.giturlInfoBox {
+    width: calc(100% + 32px);
+    background: rgba(86, 201, 145, 0.1);
+    color: rgba(133, 137, 158, 1);
+    padding: 8px 16px;
+    margin-bottom: 16px;
+    margin-left: -16px;
+}
+
 .import-local-plugin-modal {
     .import-local-plugin-subTitle {
         display: flex;
         margin-left: 70px;
     }
     .import-local-plugin-form {
-        padding: 24px 16px;
+        padding: 0 16px;
         :global {
             .ant-form-item-explain,
             .ant-form-item-extra {

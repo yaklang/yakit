@@ -1,42 +1,30 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect} from "react"
 import {Progress} from "antd"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useDebounceFn} from "ahooks"
 import styles from "./YakitUploadModal.module.scss"
 import {failed, warn} from "@/utils/notification"
-import {OutlinePaperclipIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlinePaperclipIcon} from "@/assets/icon/outline"
 import Dragger from "antd/lib/upload/Dragger"
 import {PropertyIcon} from "@/pages/payloadManager/icon"
 import {SolidDocumentdownloadIcon, SolidXcircleIcon} from "@/assets/icon/solid"
-import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 
-interface SavePayloadProgress {
+export interface SaveProgressStream {
     Progress: number
-    Speed: string
-    CostDurationVerbose: string
-    RestDurationVerbose: string
+    Speed?: string
+    CostDurationVerbose?: string
+    RestDurationVerbose?: string
 }
 
 interface UploadStatusInfoProps {
     title: string
-    streamData: SavePayloadProgress
-    cancelRun: () => void
+    streamData: SaveProgressStream
     logListInfo: string[]
-    /** @name 是否显示-剩余时间-耗时-下载速度，默认显示 */
-    showDownloadDetail?: boolean
-    /** @name 是否自动关闭 */
-    autoClose?: boolean
-    /** @name 关闭Modal的回调 */
-    onClose: () => void
+    /** @name 是否显示-剩余时间-耗时-下载速度 */
+    showDownloadDetail: boolean
 }
 
-export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
-    const {title, streamData, logListInfo, cancelRun, onClose, showDownloadDetail = true, autoClose} = props
-    useEffect(() => {
-        if (autoClose && streamData.Progress === 1) {
-            onClose()
-        }
-    }, [autoClose, streamData.Progress, onClose])
+const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
+    const {title, streamData, logListInfo, showDownloadDetail} = props
 
     return (
         <div className={styles["yaklang-engine-hint-wrapper"]}>
@@ -72,16 +60,11 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                         </div>
                     )}
                     <div className={styles["log-info"]}>
-                        {logListInfo.map((item) => (
-                            <div key={item} className={styles["log-item"]}>
+                        {logListInfo.map((item, index) => (
+                            <div key={index} className={styles["log-item"]}>
                                 {item}
                             </div>
                         ))}
-                    </div>
-                    <div className={styles["download-btn"]}>
-                        <YakitButton loading={false} size='large' type='outline2' onClick={cancelRun}>
-                            取消
-                        </YakitButton>
                     </div>
                 </div>
             </div>
@@ -89,49 +72,37 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
     )
 }
 
+export interface UploadList {
+    path: string
+    name: string
+}
 export interface YakitUploadComponentProps {
-    /** @name 步骤1标题 */
-    title?: string
+    step: 1 | 2 // 步骤1或2 步骤1为上传 步骤2为进度条显示
+    fileType?: string[] // 上传文件类型
+    uploadList: UploadList[]
+    onUploadList: (uploadList: UploadList[]) => void
     /** @name 步骤2标题 */
     nextTitle?: string
-    /** @name 关闭Modal的回调 */
-    onClose?: () => void
-    /** @name 导入的回调 */
-    onSubmit?: (v: {path: string; name: string}[]) => void
-    /** @name 导入中取消的回调 */
-    cancelRun?: () => void
-    // 步骤1或2 步骤1为上传 步骤2为进度条显示
-    step: 1 | 2
+    /** @name 步骤2显示进度条-剩余时间-耗时-下载速度 */
+    showDownloadDetail?: boolean
+    /** @name 步骤2-导入流数据 */
+    streamData?: SaveProgressStream
     /** @name 导入中的日志信息 */
     logListInfo?: string[]
-    /** @name 步骤2-进度条-剩余时间-耗时-下载速度 */
-    streamData?: SavePayloadProgress
-    /** @name 是否自动关闭 */
-    autoClose?: boolean
-}
-
-const defaultStreamData = {
-    Progress: 0,
-    Speed: "",
-    CostDurationVerbose: "",
-    RestDurationVerbose: ""
 }
 
 export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props) => {
     const {
-        title = "导入",
-        nextTitle = "导入中",
-        onClose,
-        cancelRun,
-        onSubmit,
         step,
-        logListInfo,
-        streamData = defaultStreamData,
-        autoClose
+        fileType = [],
+        uploadList = [],
+        onUploadList,
+        nextTitle = "导入中",
+        showDownloadDetail = false,
+        streamData,
+        logListInfo
     } = props
-    // 可上传文件类型
-    const FileType = ["text/plain", "text/csv"]
-    const [uploadList, setUploadList] = useState<{path: string; name: string}[]>([])
+
     const beforeUploadFun = useDebounceFn(
         (fileList: any[]) => {
             let arr: {
@@ -139,8 +110,8 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                 name: string
             }[] = []
             fileList.forEach((f) => {
-                if (!FileType.includes(f.type)) {
-                    failed(`${f.name}非txt、csv文件，请上传正确格式文件！`)
+                if (fileType.length && !fileType.includes(f.type)) {
+                    failed(`${f.name}非${fileType.join("、")}文件，请上传正确格式文件！`)
                     return false
                 }
                 if (uploadList.map((item) => item.path).includes(f.path)) {
@@ -153,27 +124,17 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                     name
                 })
             })
-            setUploadList([...uploadList, ...arr])
+            onUploadList([...uploadList, ...arr])
         },
         {
             wait: 200
         }
     ).run
 
-    const onReadySubmit = useMemoizedFn(() => {
-        onSubmit && onSubmit(uploadList)
-    })
-
     return (
         <div className={styles["yakit-upload-component"]}>
             {step === 1 && (
                 <>
-                    <div className={styles["header"]}>
-                        <div className={styles["title"]}>{title}</div>
-                        <div className={styles["extra"]} onClick={onClose}>
-                            <OutlineXIcon />
-                        </div>
-                    </div>
                     <div className={styles["info-box"]}>
                         <div className={styles["card-box"]}>
                             <>
@@ -198,7 +159,8 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                                                     <span className={styles["hight-light"]}>点击此处导入</span>
                                                 </div>
                                                 <div className={styles["sub-title"]}>
-                                                    支持文件夹批量上传(支持文件类型txt/csv)
+                                                    支持文件夹批量上传
+                                                    {fileType.length ? `(支持文件类型${fileType.join("、")})` : ""}
                                                 </div>
                                             </div>
                                         </div>
@@ -219,7 +181,7 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                                             const newUploadList = uploadList.filter(
                                                 (itemIn) => itemIn.path !== item.path
                                             )
-                                            setUploadList(newUploadList)
+                                            onUploadList(newUploadList)
                                         }}
                                     >
                                         <SolidXcircleIcon />
@@ -228,61 +190,50 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                             ))}
                         </div>
                     </div>
-                    <div className={styles["submit-box"]}>
-                        <YakitButton size='large' disabled={uploadList.length === 0} type='outline1' onClick={onClose}>
-                            取消
-                        </YakitButton>
-                        <YakitButton size='large' disabled={uploadList.length === 0} onClick={onReadySubmit}>
-                            导入
-                        </YakitButton>
-                    </div>
                 </>
             )}
 
-            {step === 2 && (
+            {step === 2 && streamData && (
                 <UploadStatusInfo
                     title={nextTitle}
                     streamData={streamData}
-                    cancelRun={() => cancelRun && cancelRun()}
+                    showDownloadDetail={showDownloadDetail}
                     logListInfo={logListInfo || []}
-                    autoClose={autoClose}
-                    onClose={() => {
-                        onClose && onClose()
-                    }}
                 />
             )}
         </div>
     )
 }
-declare type getContainerFunc = () => HTMLElement
-export interface YakitUploadModalProps extends YakitUploadComponentProps {
-    /** @name 控制Modal是否打开 */
-    visible: boolean
-    /** @name 控制Modal不全占据页面 */
-    getContainer?: string | HTMLElement | getContainerFunc | false
-}
 
-/**
- * @description: 新样式上传Modal（包含2个步骤，步骤1选择上传，步骤2展示上传内容）
- */
-export const YakitUploadModal: React.FC<YakitUploadModalProps> = (props) => {
-    const {visible, getContainer, ...restProps} = props
-    return (
-        <div>
-            <YakitModal
-                // document.getElementById("new-payload") || document.body
-                getContainer={getContainer}
-                title={null}
-                footer={null}
-                width={520}
-                type={"white"}
-                closable={false}
-                maskClosable={false}
-                hiddenHeader={true}
-                visible={visible}
-            >
-                <YakitUploadComponent {...restProps} />
-            </YakitModal>
-        </div>
-    )
-}
+// declare type getContainerFunc = () => HTMLElement
+// export interface YakitUploadModalProps extends YakitUploadComponentProps {
+//     /** @name 控制Modal是否打开 */
+//     visible: boolean
+//     /** @name 控制Modal不全占据页面 */
+//     getContainer?: string | HTMLElement | getContainerFunc | false
+// }
+
+// /**
+//  * @description: 新样式上传Modal（包含2个步骤，步骤1选择上传，步骤2展示上传内容）
+//  */
+// export const YakitUploadModal: React.FC<YakitUploadModalProps> = (props) => {
+//     const {visible, getContainer, ...restProps} = props
+//     return (
+//         <div>
+//             <YakitModal
+//                 // document.getElementById("new-payload") || document.body
+//                 getContainer={getContainer}
+//                 title={null}
+//                 footer={null}
+//                 width={520}
+//                 type={"white"}
+//                 closable={false}
+//                 maskClosable={false}
+//                 hiddenHeader={true}
+//                 visible={visible}
+//             >
+//                 <YakitUploadComponent {...restProps} />
+//             </YakitModal>
+//         </div>
+//     )
+// }

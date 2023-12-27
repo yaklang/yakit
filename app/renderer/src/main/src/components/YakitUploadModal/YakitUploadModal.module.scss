@@ -315,6 +315,8 @@
             }
             .log-info {
                 margin-top: 16px;
+                max-height: 200px;
+                overflow-y: auto;
                 .log-item {
                     color: #85899e;
                     font-size: 14px;

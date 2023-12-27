@@ -74,7 +74,7 @@ import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
 
 const {ipcRenderer} = window.require("electron")
-
+const defaultFilters = {plugin_type: [], tags: []}
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
     /** 是否为加载更多 */
@@ -83,7 +83,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [isList, setIsList] = useState<boolean>(false)
 
     const [plugin, setPlugin] = useState<YakScript>()
-    const [filters, setFilters] = useState<PluginFilterParams>({plugin_type: [], tags: []})
+    const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters)
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
     const [initTotal, setInitTotal] = useState<number>(0)
@@ -119,6 +119,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 
     const latestLoadingRef = useLatest(loading)
 
+    // 判断是否在详情页执行打导入
+    const [importInDetail, setImportInDetail] = useState<boolean>(false)
+
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return response.Total
@@ -138,10 +141,12 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         emiter.on("onRefLocalPluginList", onRefLocalPluginList)
         emiter.on("savePluginInfoSignal", onRefPlugin)
         emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
+        emiter.on("onImportRefLocalPluginList", onImportRefLocalPluginList)
         return () => {
             emiter.off("onRefLocalPluginList", onRefLocalPluginList)
             emiter.off("savePluginInfoSignal", onRefPlugin)
             emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
+            emiter.off("onImportRefLocalPluginList", onImportRefLocalPluginList)
         }
     }, [])
     useEffect(() => {
@@ -279,6 +284,26 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }, 200)
     })
 
+    // 重置所有条件插件列表查询条件
+    const resetAllQueryRefLocalList = () => {
+        filtersDetailRef.current = undefined
+        searchDetailRef.current = undefined
+        setFilters(defaultFilters)
+        setSearch(cloneDeep(defaultSearch))
+        setTimeout(() => {
+            fetchList(true)
+        }, 200)
+    }
+    // 导入本地插件非详情页时刷新列表
+    const onImportRefLocalPluginList = useMemoizedFn(() => {
+        if (!plugin) {
+            resetAllQueryRefLocalList()
+        } else {
+            setImportInDetail(true)
+            yakitNotify("success", "成功导入本地插件")
+        }
+    })
+
     /**获取插件删除的提醒记录状态 */
     const getPluginRemoveCheck = useMemoizedFn(() => {
         getRemoteValue(PluginGV.LocalPluginRemoveCheck).then((data) => {
@@ -299,6 +324,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         })
     })
 
+    // 真正查询接口传给后端的参数 主要用于其他地方可能需要查询参数的地方
+    const [queryFetchList, setQueryFetchList] = useState<QueryYakScriptRequest>()
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
@@ -320,6 +347,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             const query: QueryYakScriptRequest = {
                 ...convertLocalPluginsRequestParams(queryFilters, querySearch, params)
             }
+            setQueryFetchList(query)
             try {
                 const res = await apiQueryYakScript(query)
                 if (!res.Data) res.Data = []
@@ -487,10 +515,17 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         searchDetailRef.current = undefined
         filtersDetailRef.current = undefined
         setPlugin(undefined)
-        setSearch(backValues.search)
-        setFilters(backValues.filter)
-        setAllCheck(backValues.allCheck)
-        setSelectList(backValues.selectList)
+        if (importInDetail) {
+            setAllCheck(false)
+            setSelectList([])
+            setImportInDetail(false)
+            resetAllQueryRefLocalList()
+        } else {
+            setSearch(backValues.search)
+            setFilters(backValues.filter)
+            setAllCheck(backValues.allCheck)
+            setSelectList(backValues.selectList)
+        }
     })
     const onSearch = useMemoizedFn((val) => {
         setSearch(val)
@@ -601,7 +636,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             footer: null,
             content: (
                 <div style={{padding: 24}}>
-                    <OutputPluginForm YakScriptIds={Ids} isSelectAll={allCheck} />
+                    <OutputPluginForm
+                        YakScriptIds={Ids}
+                        isSelectAll={allCheck}
+                        queryFetchList={queryFetchList}
+                    />
                 </div>
             ),
             modalAfterClose: () => {

@@ -16,7 +16,7 @@ import {
     Badge,
     MenuItemProps
 } from "antd"
-import {YakScript} from "../invoker/schema"
+import {QueryYakScriptRequest, YakScript} from "../invoker/schema"
 import {failed, success, yakitNotify} from "../../utils/notification"
 import {formatTimestamp} from "../../utils/timeUtil"
 import {CopyableField, InputItem} from "../../utils/inputUtil"
@@ -447,11 +447,7 @@ export const PluginOperator: React.FC<YakScriptOperatorProp> = (props) => {
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"源码"} key={"code"} disabled={isDisabledLocal}>
                     <div style={{height: "100%"}}>
-                        <YakEditor
-                            type={script?.Type}
-                            value={script?.Content}
-                            readOnly={true}
-                        />
+                        <YakEditor type={script?.Type} value={script?.Content} readOnly={true} />
                     </div>
                 </Tabs.TabPane>
                 <Tabs.TabPane tab={"历史"} key={"history"} disabled={isDisabledLocal}>
@@ -857,23 +853,26 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
     )
 })
 
-export interface OutputPluginFormProp {
+interface OutputPluginFormProp {
     YakScriptId?: number
     YakScriptName?: string
     YakScriptIds?: number[]
     isSelectAll?: boolean
+    queryFetchList?: QueryYakScriptRequest
 }
 
 interface ParamsProps {
     OutputDir: string
     OutputPluginDir?: string
-    YakScriptId?: number
     YakScriptIds?: number[]
-    All?: boolean
+    Keywords?: string
+    Type?: string
+    UserName?: string
+    Tags?: string
 }
 
 export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((props) => {
-    const {YakScriptId, YakScriptName, YakScriptIds, isSelectAll} = props
+    const {YakScriptId, YakScriptName, YakScriptIds, isSelectAll, queryFetchList} = props
     const [_, setLocalPath, getLocalPath] = useGetState("")
     const [pluginDirName, setPluginDirName, getPluginDirName] = useGetState(YakScriptName || "")
     const [cachePath, setCachePath, getCachePath] = useGetState<string[]>([])
@@ -901,12 +900,17 @@ export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((prop
                     }
                     if (YakScriptId) {
                         params.OutputPluginDir = getPluginDirName()
-                        params.YakScriptId = YakScriptId
                     }
-                    if (YakScriptIds && !isSelectAll) params.YakScriptIds = YakScriptIds
-                    if (isSelectAll) params.All = true
+                    params.YakScriptIds = YakScriptIds?.length ? YakScriptIds : YakScriptId ? [YakScriptId] : []
+                    if (queryFetchList) {
+                        params.Keywords = queryFetchList.Keyword
+                        params.Type = queryFetchList.Type
+                        params.UserName = queryFetchList.UserName
+                        params.Tags = queryFetchList.Tag + ""
+                    }
+                    console.log('导出接口传参', params);
                     ipcRenderer
-                        .invoke("ExportYakScript", params)
+                        .invoke("ExportLocalYakScript", params)
                         .then((data: {OutputDir: string}) => {
                             const newCachePath = Array.from(new Set([...getCachePath(), getLocalPath()]))
                             const savePath = newCachePath.slice(-5)

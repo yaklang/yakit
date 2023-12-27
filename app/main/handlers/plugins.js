@@ -1,6 +1,6 @@
-const {ipcMain} = require("electron")
+const { ipcMain } = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
-const {USER_INFO} = require("../state")
+const { USER_INFO } = require("../state")
 
 module.exports = (win, getClient) => {
     // get plugins risk list
@@ -65,5 +65,50 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SmokingEvaluatePluginBatch", async (e, params, token) => {
         let stream = getClient().SmokingEvaluatePluginBatch(params)
         handlerHelper.registerHandler(win, stream, streamSmokingEvaluatePluginBatch, token)
+    })
+
+    // 批量本地插件导入
+    let importYakScriptStream
+    ipcMain.handle("ImportYakScript", async (e, params) => {
+        importYakScriptStream = getClient().ImportYakScript(params)
+        importYakScriptStream.on("data", (e) => {
+            if (!win) {
+                return
+            }
+            win.webContents.send("import-yak-script-data", e)
+        })
+        importYakScriptStream.on("error", (e) => {
+            if (!win) {
+                return
+            }
+            win.webContents.send("import-yak-script-error", e)
+        })
+        importYakScriptStream.on("end", () => {
+            importYakScriptStream.cancel()
+            importYakScriptStream = null
+            if (!win) {
+                return
+            }
+            win.webContents.send("import-yak-script-end")
+        })
+    })
+    ipcMain.handle("cancel-importYakScript", async () => {
+        if (importYakScriptStream) importYakScriptStream.cancel()
+    })
+
+    // 批量导出本地插件
+    const asyncExportLocalYakScript = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ExportLocalYakScript(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ExportLocalYakScript", async (e, params) => {
+        return await asyncExportLocalYakScript(params)
     })
 }

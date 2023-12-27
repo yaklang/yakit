@@ -13,7 +13,6 @@ import {
 import {YakitEllipsis} from "../basics/YakitEllipsis"
 import {useCreation, useMemoizedFn} from "ahooks"
 import {showModal} from "@/utils/showModal"
-import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {failed, info, success, yakitFailed, warn, yakitNotify} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
 import {ConfigGlobalReverse} from "@/utils/basic"
@@ -72,7 +71,6 @@ import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import yakitImg from "../../assets/yakit.jpg"
-import {onImportPlugin} from "@/pages/fuzzer/components/ShareImport"
 import { useTemporaryProjectStore } from "@/store/temporaryProject"
 import { visitorsStatisticsFun } from "@/utils/visitorsStatistics"
 
@@ -870,12 +868,8 @@ const GetUIOpSettingMenu = () => {
                 label: "网卡权限修复"
             },
             {
-                key: "plugin",
-                label: "配置插件源",
-                children: [
-                    {label: "外部", key: "external"},
-                    {label: "插件商店", key: "store"}
-                ]
+                key: "store",
+                label: "配置插件源"
             },
             {
                 key: "system-manager",
@@ -957,12 +951,8 @@ const GetUIOpSettingMenu = () => {
             children: [{key: "invalidCache", label: "删除缓存数据"}]
         },
         {
-            key: "plugin",
-            label: "配置插件源",
-            children: [
-                {label: "插件商店", key: "store"},
-                {label: "外部", key: "external"}
-            ]
+            key: "store",
+            label: "配置插件源"
         },
         {
             key: "cve-database",
@@ -1044,9 +1034,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "cve-database-differential-update":
                 setDataBaseUpdateVisible(true)
                 setIsDiffUpdate(true)
-                return
-            case "external":
-                onImportPlugin()
                 return
             case "store":
                 if (dynamicStatus.isDynamicStatus) {

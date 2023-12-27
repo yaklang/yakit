@@ -6,12 +6,11 @@ import "./index.scss"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {useStore} from "@/store"
-import {LoadYakitPluginForm} from "@/pages/yakitStore/YakitStorePage"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitRoute} from "@/routes/newRoute"
-import {ImportLocalPlugin} from "@/pages/mitm/MITMPage"
+import {ImportLocalPlugin, LoadPluginMode, localModeInfo} from "@/pages/mitm/MITMPage"
 import emiter from "@/utils/eventBus/eventBus"
 
 const layout = {
@@ -38,29 +37,6 @@ export function onImportShare() {
         title: "导入数据包 ID",
         content: <ShareImport onClose={() => m.destroy()} />,
         footer: null
-    })
-}
-export function onImportPlugin() {
-    const m = showYakitModal({
-        title: null,
-        footer: null,
-        mask: false,
-        width: 680,
-        content: (
-            <>
-                <ImportLocalPlugin
-                    visible={true}
-                    setVisible={(v) => {
-                        if (!v) {
-                            m.destroy()
-                            setTimeout(() => {
-                                emiter.emit("onRefLocalPluginList", "")
-                            }, 200)
-                        }
-                    }}
-                />
-            </>
-        )
     })
 }
 

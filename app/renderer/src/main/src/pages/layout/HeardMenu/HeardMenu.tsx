@@ -24,7 +24,7 @@ import {
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {onImportPlugin, onImportShare} from "@/pages/fuzzer/components/ShareImport"
+import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {Divider, Dropdown, Tabs, Tooltip, Form} from "antd"
 import {MenuPayloadIcon, MenuYakRunnerIcon} from "@/pages/customizeMenu/icon/menuIcon"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
