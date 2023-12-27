@@ -53,9 +53,14 @@ import "./YakExecutor.css"
 import {type} from "os"
 import {randomString} from "../../utils/randomUtil"
 import {values} from "@antv/util"
+import {Form} from "antd"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
 const RecentFileList = "recent-file-list"
+const FontSizeCacheKey = "yakrunner-editor-fontsize"
 
 const {TabPane} = Tabs
 const {Text, Paragraph} = Typography
@@ -142,6 +147,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     const [isStaticExec, setIsStaticExec] = useState<boolean>(false)
 
     const [extraParams, setExtraParams] = useState("")
+    const [fontSize, setFontSize] = useState(15)
     const [infoState, {reset, setXtermRef}, interactiveXtermRef] = useHoldingIPCRStream(
         "interactive-runner-start",
         "InteractiveRunYakCode",
@@ -259,7 +265,11 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                     saveFiliList()
                 }, 5000)
             })
-
+        ipcRenderer.invoke("fetch-local-cache", FontSizeCacheKey).then((value: any) => {
+            if (value) {
+                setFontSize(value)
+            }
+        })
         return () => {
             saveFiliList()
             if (time) clearInterval(time)
@@ -813,53 +823,41 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                 />
                                                 <Popover
                                                     trigger={["click"]}
-                                                    title={"设置命令行额外参数"}
+                                                    title={"其他设置"}
                                                     placement='bottomRight'
                                                     content={
-                                                        <Space style={{width: 400}}>
-                                                            <div>yak {tabList[+activeTab]?.tab || "[file]"}</div>
-                                                            <Divider type={"vertical"} />
-                                                            <Paragraph
-                                                                style={{width: 200, marginBottom: 0}}
-                                                                editable={{
-                                                                    icon: (
-                                                                        <Space>
-                                                                            <EditOutlined />
-                                                                            <SaveOutlined
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation()
-                                                                                    tabList[+activeTab].extraParams =
-                                                                                        extraParams
-                                                                                    setTabList(tabList)
-                                                                                    if (tabList[+activeTab].isFile) {
-                                                                                        const files = fileList.map(
-                                                                                            (item) => {
-                                                                                                if (
-                                                                                                    item.route ===
-                                                                                                    tabList[+activeTab]
-                                                                                                        .route
-                                                                                                ) {
-                                                                                                    item.extraParams =
-                                                                                                        extraParams
-                                                                                                    return item
-                                                                                                }
-                                                                                                return item
-                                                                                            }
-                                                                                        )
-                                                                                        setFileList(files)
-                                                                                    }
-                                                                                    success("保存成功")
-                                                                                }}
-                                                                            />
-                                                                        </Space>
-                                                                    ),
-                                                                    tooltip: "编辑/保存为该文件默认参数",
-                                                                    onChange: setExtraParams
-                                                                }}
-                                                            >
-                                                                {extraParams}
-                                                            </Paragraph>
-                                                        </Space>
+                                                        <>
+                                                            <Form.Item label='运行命令' name='runCommand'>
+                                                                <YakitInput
+                                                                    prefix={
+                                                                        "yak " + tabList[+activeTab]?.tab || "[file]"
+                                                                    }
+                                                                    value={extraParams}
+                                                                    onChange={(e) => setExtraParams(e.target.value)}
+                                                                    onPressEnter={(e) => {
+                                                                        tabList[+activeTab].extraParams = extraParams
+                                                                        setTabList(tabList)
+                                                                        tabList[+activeTab].isFile && 
+                                                                            setFileList(fileList.map((item) => {
+                                                                                item.route === tabList[+activeTab].route && (item.extraParams = extraParams);
+                                                                                return item
+                                                                            }))
+                                                                        success("保存成功")
+                                                                    }}
+                                                                />
+                                                            </Form.Item>
+                                                            <Form.Item label='字体大小' name='fontSize'>
+                                                                <YakitInputNumber 
+                                                                    size='small'
+                                                                    value={fontSize}
+                                                                    defaultValue={fontSize}
+                                                                    onChange={(value) => {
+                                                                        setFontSize(value as number)
+                                                                        ipcRenderer.invoke("set-local-cache", FontSizeCacheKey, value as number)
+                                                                    }}
+                                                                />
+                                                            </Form.Item>
+                                                        </>
                                                     }
                                                 >
                                                     <Button
@@ -914,6 +912,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
                                                                 setValue={(value) => {
                                                                     modifyCode(value, index)
                                                                 }}
+                                                                fontSize={fontSize}
                                                                 actions={[
                                                                     {
                                                                         contextMenuGroupId: "9_cutcopypaste",
