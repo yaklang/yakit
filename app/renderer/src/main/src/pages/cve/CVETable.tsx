@@ -314,10 +314,14 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
             }
         ]
     }, [])
-    const onRowClick = useMemoizedFn((record: CVEDetail) => {
-        if (record?.CVE !== currentSelectItem?.CVE) {
+    const onRowClick = useMemoizedFn((record?: CVEDetail) => {
+        if(record){
             setCVE(record)
             setSelected(record.CVE) // 更新当前选中的行
+        }
+        else{
+            setCVE(emptyCVE())
+            setSelected("")
         }
     })
     const onSetCurrentRow = useDebounceFn(

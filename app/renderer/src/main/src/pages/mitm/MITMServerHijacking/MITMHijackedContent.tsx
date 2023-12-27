@@ -6,7 +6,7 @@ import React, {useEffect, useRef, useState} from "react"
 import {MITMResponse} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
 import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
-import {MITMLog, MITMLogHeardExtra} from "./MITMLog"
+import { MITMLogHeardExtra} from "./MITMLog"
 import {HTTP_FLOW_TABLE_SHIELD_DATA, ShieldData} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMPluginLogViewer} from "../MITMPluginLogViewer"
@@ -325,7 +325,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             case "log":
                 return (
                     <>
-                        {/* <MITMLog/> */}
                         <HTTPHistory pageType="MITM" />
                     </>
                 )

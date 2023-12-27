@@ -1434,9 +1434,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setSelectedRows(newSelectedRows)
         }
     })
-    const onRowClick = useMemoizedFn((rowDate: HTTPFlow) => {
-        if (!rowDate.Hash) return
-        if (rowDate.Hash !== selected?.Hash) {
+    const onRowClick = useMemoizedFn((rowDate?: HTTPFlow) => {
+        if (rowDate) {
             setSelected(rowDate)
             setOnlyShowFirstNode && setOnlyShowFirstNode(false)
         } else {

@@ -625,12 +625,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }, [])
 
         const onRowClick = useMemoizedFn((val) => {
-            if (val?.UUID === currentSelectItem?.UUID) {
-                setCurrentSelectItem(undefined)
-                setFirstFull(true)
-            } else {
+            if (val) {
                 setCurrentSelectItem(val)
                 setFirstFull(false)
+            } else {
+                setCurrentSelectItem(undefined)
+                setFirstFull(true)
             }
         })
 
