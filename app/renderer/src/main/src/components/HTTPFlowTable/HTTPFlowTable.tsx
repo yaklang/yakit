@@ -1407,15 +1407,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }, 100)
     })
 
-    // useEffect(() => {
-    //     if (!selectedRowKeys.length) {
-    //         setIsAllSelect(false)
-    //     }
-    // }, [selectedRowKeys])
+    useEffect(() => {
+        if (!selectedRowKeys.length) {
+            setIsAllSelect(false)
+        }
+    }, [selectedRowKeys])
 
-    // useEffect(() => {
-    //     setIsAllSelect(false)
-    // }, [total, queryParams])
+    useEffect(() => {
+        setIsAllSelect(false)
+    }, [data])
 
     const onSelectAll = (newSelectedRowKeys: string[], selected: HTTPFlow[], checked: boolean) => {
         setIsAllSelect(checked)
