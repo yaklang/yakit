@@ -733,7 +733,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                                             const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
                                             setScrollToIndex(index)
                                         }
-                                        if (val?.Id !== currentSelectItem?.Id) {
+                                        if (val) {
                                             setCurrentSelectItem(val)
                                             setOnlyShowFirstNode && setOnlyShowFirstNode(false)
                                         } else {

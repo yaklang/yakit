@@ -276,8 +276,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     })
 
     /** Prompt提问 */
-    const onPromptSubmit = useMemoizedFn((content: string) => {
+    const onPromptSubmit = useMemoizedFn((v:{content:string,baseType:string}) => {
         if (loading) return
+        const {content,baseType} = v
         if (!content || content.trim() === "") return
 
         if (!baseType && !expInfo && !backCatch) {
@@ -1473,7 +1474,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
 interface PromptWidgetProps {
     setShowPrompt: (v: boolean) => void
     onSubmitPreset: (info: PresetKeywordProps) => void
-    onPromptSubmit?: (v: string) => void
+    onPromptSubmit?: (v:{content:string,baseType:string}) => void
 }
 
 interface PromptListProps {
@@ -1794,7 +1795,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
 interface ChatCsPromptFormProps {
     selectItem: PromptListProps
     onClose: () => void
-    onPromptSubmit?: (v: string) => void
+    onPromptSubmit?: (v:{content:string,baseType:string}) => void
 }
 
 interface InputObjProps<T> {
@@ -1817,7 +1818,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
             return inputObj[key] || match
         })
 
-        onPromptSubmit && onPromptSubmit(replacedStr)
+        onPromptSubmit && onPromptSubmit({content:replacedStr,baseType:selectItem.api})
         setTimeout(() => {
             onClose()
         }, 500)

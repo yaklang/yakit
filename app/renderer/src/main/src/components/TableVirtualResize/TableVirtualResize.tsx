@@ -667,16 +667,18 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         } else {
             setSelectedRows([])
             setCurrentIndex && setCurrentIndex(rowIndex)
-            if (onSetCurrentRow) onSetCurrentRow(record)
+            // if (onSetCurrentRow) onSetCurrentRow(record)
             if (props.onRowClick) {
                 props.onRowClick(record)
             }
             // 反选
             if(currentRow&&currentRow[renderKey]===record[renderKey]){
                 setCurrentRow(undefined)
+                onSetCurrentRow&&onSetCurrentRow(undefined)
             }
             else{
                 setCurrentRow(record)
+                onSetCurrentRow&&onSetCurrentRow(record)
             }
         }
     })
