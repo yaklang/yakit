@@ -211,29 +211,28 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                 </div>
             </div>
             {/* 输入框模块-仅可读 */}
-            <NewCodecInputUI require={true} readOnly={true} />
+            <NewCodecInputUI disabled={itemStatus === "shield"} require={true} defaultValue={`A-Za-z0-9+/=`} />
             {/* 多选框模块 */}
-            <NewCodecCheckUI />
+            <NewCodecCheckUI disabled={itemStatus === "shield"} />
             {/* 下拉框模块 */}
-            <NewCodecSelectUI require={true} title='输入格式' />
+            <NewCodecSelectUI disabled={itemStatus === "shield"} require={true} title='输入格式' />
             {/* 输入框模块 */}
-            <NewCodecInputUI require={true} />
-            <div style={{display:"flex",flexDirection:"row",gap:8}}>
-                <div style={{flex:3}}>
-                  {/* 输入框模块 */}
-                <NewCodecInputUI direction="left"/>  
+            <NewCodecInputUI disabled={itemStatus === "shield"} require={true} />
+            <div style={{display: "flex", flexDirection: "row", gap: 8}}>
+                <div style={{flex: 3}}>
+                    {/* 输入框模块 */}
+                    <NewCodecInputUI disabled={itemStatus === "shield"} direction='left' />
                 </div>
-                <div style={{flex:2}}>
-                 {/* 下拉框模块-无标题 */}
-                <NewCodecSelectUI direction="right"/>   
+                <div style={{flex: 2}}>
+                    {/* 下拉框模块-无标题 */}
+                    <NewCodecSelectUI disabled={itemStatus === "shield"} directionBox='right' />
                 </div>
-                
             </div>
 
             {/* 可搜索下拉框 */}
-            <NewCodecSelectUI showSearch={true} />
+            <NewCodecSelectUI disabled={itemStatus === "shield"} showSearch={true} />
             {/* 编辑器 */}
-            <NewCodecEditor title="编写临时插件" require={true}/>
+            <NewCodecEditor disabled={itemStatus === "shield"} title='编写临时插件' require={true} />
         </div>
     )
 }

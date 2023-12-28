@@ -100,6 +100,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         contextMenu = {},
         onContextMenu,
         readOnly = false,
+        disabled = false,
         noWordWrap = false,
         noMiniMap = false,
         noLineNumber = false,
@@ -144,6 +145,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [nowFontsize, setNowFontsize] = useState<number>(fontSize)
+
+    useEffect(()=>{
+        // 控制编辑器失焦
+        if(disabled){
+            const fakeInput = document.createElement('input');
+            document.body.appendChild(fakeInput);
+            fakeInput.focus();
+            document.body.removeChild(fakeInput);
+        }
+    },[disabled])
 
     // 阻止编辑器点击URL默认打开行为 自定义外部系统默认浏览器打开URL
     useEffect(() => {
@@ -1150,7 +1161,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     return (
         <div
             className={classNames("yakit-editor-code", styles["yakit-editor-wrapper"], {
-                "yakit-editor-wrap-style": !showBreak
+                "yakit-editor-wrap-style": !showBreak,
+                [styles['yakit-editor-disabled']]:disabled
             })}
         >
             <ReactResizeDetector
@@ -1167,6 +1179,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 refreshMode={"debounce"}
                 refreshRate={30}
             />
+            {disabled&&<div className={styles['yakit-editor-shade']}></div>}
             <div
                 ref={wrapperRef}
                 className={styles["yakit-editor-container"]}

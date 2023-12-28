@@ -4,6 +4,21 @@
     overflow: hidden;
 }
 
+.yakit-editor-disabled {
+    position: relative;
+    .yakit-editor-shade {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0px;
+        left: 0px;
+        background: #F0F1F3; /* 半透明黑色背景 */
+        opacity: .6;
+        z-index: 999; /* 确保蒙层位于最上层 */
+        cursor: no-drop;
+    }
+}
+
 .yakit-editor-container {
     width: 100%;
     height: 100%;

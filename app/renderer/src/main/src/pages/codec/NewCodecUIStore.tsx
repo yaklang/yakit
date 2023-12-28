@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Checkbox, Divider} from "antd"
+import {Checkbox, CheckboxProps, Divider} from "antd"
 import {DownOutlined} from "@ant-design/icons"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -12,24 +12,30 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineSearchIcon} from "@/assets/icon/outline"
-import {NewHTTPPacketEditor, YakEditor} from "@/utils/editors"
+import {IMonacoEditor, NewHTTPPacketEditor, YakEditor} from "@/utils/editors"
 import {StringToUint8Array} from "@/utils/str"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitInputProps} from "@/components/yakitUI/YakitInput/YakitInputType"
+import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 const {ipcRenderer} = window.require("electron")
-export interface NewCodecInputUIProps {
+export interface NewCodecInputUIProps extends YakitInputProps {
     extra?: React.ReactNode
-    // 是否仅可读
-    readOnly?: boolean
     // 是否为必填
     require?: boolean
     // 左右布局时 border圆角方向
     direction?: "left" | "right"
 }
 export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
-    const {extra, readOnly, require, direction} = props
+    const {extra, require, direction, ...restProps} = props
     const [isFocus, setFocus] = useState<boolean>(false)
     const inputRef = useRef<any>(null)
+
+    useEffect(() => {
+        if (restProps.disabled) {
+            setFocus(false)
+        }
+    }, [restProps.disabled])
 
     const onFocusBox = useMemoizedFn(() => {
         if (inputRef.current) {
@@ -61,21 +67,27 @@ export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
                     <div className={styles["title"]}>校验规则</div>
                     {require && <div className={styles["icon"]}>*</div>}
                 </div>
-                {readOnly ? (
-                    <div className={styles["read-only"]}>A-Za-z0-9+/=</div>
-                ) : (
-                    <div className={styles["content"]}>
-                        <YakitInput onFocus={onFocus} onBlur={onBlur} ref={inputRef} placeholder='请输入...' />
-                    </div>
-                )}
+                <div className={styles["content"]}>
+                    <YakitInput
+                        onFocus={onFocus}
+                        onBlur={onBlur}
+                        ref={inputRef}
+                        placeholder='请输入...'
+                        {...restProps}
+                    />
+                </div>
             </div>
             {extra && <div className={styles["extra"]}>{extra}</div>}
         </div>
     )
 }
 
-export interface NewCodecCheckUIProps {}
+export interface NewCodecCheckUIProps {
+    // 是否禁用
+    disabled?: boolean
+}
 export const NewCodecCheckUI: React.FC<NewCodecCheckUIProps> = (props) => {
+    const {disabled} = props
     const onChange = (checkedValues: CheckboxValueType[]) => {}
     return (
         <div className={styles["new-codec-check-ui"]}>
@@ -84,7 +96,7 @@ export const NewCodecCheckUI: React.FC<NewCodecCheckUIProps> = (props) => {
                 onChange={onChange}
             >
                 {["严格校验", "自动丢弃不合规片段"].map((item) => (
-                    <YakitCheckbox key={item} value={item}>
+                    <YakitCheckbox key={item} value={item} disabled={disabled}>
                         <div className={styles["text"]}>{item}</div>
                     </YakitCheckbox>
                 ))}
@@ -93,7 +105,7 @@ export const NewCodecCheckUI: React.FC<NewCodecCheckUIProps> = (props) => {
     )
 }
 
-export interface NewCodecSelectUIProps {
+export interface NewCodecSelectUIProps extends YakitSelectProps {
     // 标题
     title?: string
     // 是否为必填
@@ -101,11 +113,11 @@ export interface NewCodecSelectUIProps {
     // 是否可搜索
     showSearch?: boolean
     // 左右布局时 border圆角方向
-    direction?: "left" | "right"
+    directionBox?: "left" | "right"
 }
 // 当前控件样式仅适配此尺寸 - 如需更多尺寸请扩展
 export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
-    const {require, title, showSearch, direction} = props
+    const {require, title, showSearch, directionBox, ...restProps} = props
     const [show, setShow] = useState<boolean>(false)
     return (
         <div
@@ -113,7 +125,7 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                 [styles["new-codec-title-select-ui"]]: title,
                 [styles["new-codec-no-title-select-ui"]]: !title,
                 [styles["new-codec-search-select-ui"]]: showSearch,
-                [styles["new-codec-right-border-select-ui"]]: direction === "right"
+                [styles["new-codec-right-border-select-ui"]]: directionBox === "right"
             })}
         >
             {title && (
@@ -124,7 +136,6 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
             )}
             <YakitSelect
                 showSearch={showSearch}
-                // value={"B"}
                 onSelect={(val) => {}}
                 placeholder='请选择...'
                 suffixIcon={
@@ -137,6 +148,8 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                 }
                 onDropdownVisibleChange={(v) => setShow(v)}
                 // wrapperClassName={style["unit-select"]}
+
+                {...restProps}
             >
                 <YakitSelect value='B'>B</YakitSelect>
                 <YakitSelect value='K'>
@@ -156,8 +169,33 @@ interface NewCodecEditorBodyProps extends NewCodecEditorProps {
     onClose?: () => void
 }
 export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => {
-    const {title, require, extend, onExtend, onClose} = props
-    const onOperate = useMemoizedFn(() => {
+    const {title, require, extend, onExtend, onClose, disabled} = props
+    // 编辑器实例
+    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+    // 编辑器焦点状态
+    const [editorFocus, setEditorFocus] = useState<boolean>(false)
+    // 编辑器
+    useEffect(() => {
+        if (reqEditor) {
+            // 添加焦点获取的监听器
+            reqEditor.onDidFocusEditorText(() => {
+                setEditorFocus(true)
+            })
+            // 添加焦点失去的监听器
+            reqEditor.onDidBlurEditorText(() => {
+                setEditorFocus(false)
+            })
+        }
+    }, [reqEditor])
+
+    const onFocusEditor = useMemoizedFn(() => {
+        if (disabled) return
+        reqEditor && reqEditor.focus()
+    })
+
+    const onOperate = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (disabled) return
         if (extend) {
             onClose && onClose()
         } else {
@@ -168,8 +206,10 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
         <div
             className={classNames(styles["new-codec-editor"], {
                 [styles["new-codec-editor-no-extend"]]: !extend,
-                [styles["new-codec-editor-extend"]]: extend
+                [styles["new-codec-editor-extend"]]: extend,
+                [styles["new-codec-editor-focus"]]: editorFocus
             })}
+            onClick={onFocusEditor}
         >
             <div className={styles["header"]}>
                 {title && (
@@ -179,27 +219,52 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
                     </div>
                 )}
                 <div className={styles["extra"]}>
-                    <div className={styles["apply"]}>应用</div>
-                    <Divider type={"vertical"} style={extend?{margin: "4px 10px 0px 14px"}:{margin: "4px 4px 0px 8px"}} />
-                    <div className={styles["expand-box"]} onClick={onOperate}>
+                    <div
+                        className={classNames(styles["apply"], {
+                            [styles["apply-disabled"]]: disabled
+                        })}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                    >
+                        应用
+                    </div>
+                    <Divider
+                        type={"vertical"}
+                        style={extend ? {margin: "4px 10px 0px 14px"} : {margin: "4px 4px 0px 8px"}}
+                    />
+                    <div
+                        className={classNames(styles["expand-box"], {
+                            [styles["expand-hover-box"]]: !disabled,
+                            [styles["expand-disabled-box"]]: disabled
+                        })}
+                        onClick={onOperate}
+                    >
                         {extend ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
                     </div>
                 </div>
             </div>
             <div className={styles["editor-box"]}>
-                <NewHTTPPacketEditor noHeader={true} originValue={StringToUint8Array("NewCodecEditor")} />
+                <NewHTTPPacketEditor
+                    onEditor={(editor) => {
+                        setReqEditor(editor)
+                    }}
+                    disabled={disabled}
+                    noHeader={true}
+                    originValue={StringToUint8Array("NewCodecEditor")}
+                />
             </div>
         </div>
     )
 }
-
-interface NewCodecEditorParamsProps {}
 
 export interface NewCodecEditorProps {
     // 标题
     title?: string
     // 是否为必填
     require?: boolean
+    // 是否禁用
+    disabled?: boolean
 }
 export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
     const onExtend = useMemoizedFn(() => {

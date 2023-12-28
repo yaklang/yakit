@@ -1080,6 +1080,7 @@ interface DataCompareProps {
 
 export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     /** yakit-editor组件基础属性 */
+    disabled?: boolean
     readOnly?: boolean
     contextMenu?: OtherMenuListProps
     noLineNumber?: boolean
@@ -1734,6 +1735,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     : strValue
                             }
                             readOnly={props.readOnly}
+                            disabled={props.disabled}
                             setValue={setStrValue}
                             noWordWrap={noWordwrap}
                             fontSize={fontSize}

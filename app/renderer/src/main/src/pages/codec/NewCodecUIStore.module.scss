@@ -39,13 +39,6 @@
                 top: 2px;
             }
         }
-        .read-only {
-            color: #31343f;
-            /* 文字/text/12 */
-            font-size: 12px;
-            font-weight: 400;
-            line-height: 16px;
-        }
         .content {
         }
     }
@@ -59,6 +52,10 @@
             height: 16px;
             border-radius: 0px;
             border-color: var(--yakit-primary-6);
+        }
+        .ant-input[disabled] {
+            background-color: #ffffff;
+            border: unset;
         }
         .ant-input:focus {
             box-shadow: unset;
@@ -96,13 +93,40 @@
             padding: 4px 58px 6px 12px;
             border-radius: 4px 4px 0px 0px;
             border: 1px solid #ffffff;
+            box-sizing: border-box;
+            border-bottom: 1.5px solid #ffffff;
             .ant-select-selection-item {
                 display: block;
                 padding-right: 0px;
             }
         }
+
         .ant-select:not(.ant-select-customize-input) .ant-select-arrow {
             right: 8px;
+            color: #31343f;
+        }
+        .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            background-color: #ffffff;
+        }
+        .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-arrow {
+            color: #ccd2de;
+        }
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector:hover {
+            border: 1px solid #ffffff;
+            border-bottom: 1.5px solid #ffffff;
+        }
+        .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            border: 1px solid #ffffff;
+            border-bottom: 1.5px solid var(--yakit-primary-5);
+            box-shadow: unset;
+        }
+        .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-arrow {
+            transform: rotate(180deg);
+            color: var(--yakit-primary-5);
+        }
+        .ant-select-show-search:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input)
+            .ant-select-arrow {
+            transform: unset;
         }
     }
 }
@@ -184,7 +208,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    
+    border-bottom: 1.5px solid #fff;
     .header {
         align-items: center;
         display: flex;
@@ -214,6 +238,10 @@
                 font-weight: 500;
                 line-height: 16px;
             }
+            .apply-disabled {
+                color: #ccd2de;
+                cursor: no-drop;
+            }
             .expand-box {
                 padding: 3px;
                 height: 20px;
@@ -224,17 +252,24 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                &:hover {
-                    background-color: var(--yakit-background-color);
-                }
                 svg {
                     color: var(--yakit-body-text-color);
                     height: 16px;
                     width: 16px;
+                }
+            }
+            .expand-hover-box {
+                &:hover {
+                    background-color: var(--yakit-background-color);
+                }
+                svg {
                     &:hover {
                         color: var(--yakit-primary-4);
                     }
                 }
+            }
+            .expand-disabled-box {
+                cursor: no-drop;
             }
         }
     }
@@ -243,33 +278,35 @@
         overflow: hidden;
     }
 }
-.new-codec-editor-no-extend{
+.new-codec-editor-no-extend {
     height: 288px;
-    padding: 8px 12px 12px 12px;
+    padding: 8px 12px 10.5px 12px;
     gap: 4px;
     .header {
         height: 24px;
-       .title {
-        color: #b4bbca;
-        font-size: 11px;
-        font-weight: 400;
-        line-height: 16px;
-    } 
+        .title {
+            color: #b4bbca;
+            font-size: 11px;
+            font-weight: 400;
+            line-height: 16px;
+        }
     }
-    
 }
-.new-codec-editor-extend{
+.new-codec-editor-extend {
     height: 708px;
-    padding: 16px 24px 24px 24px;
+    padding: 16px 24px 22.5px 24px;
     gap: 12px;
     .header {
         height: 20px;
         .title {
-            color: #31343F;
+            color: #31343f;
             font-size: 14px;
             font-weight: 600;
             line-height: 26px;
         }
     }
-
+}
+.new-codec-editor-focus {
+    box-sizing: border-box;
+    border-bottom: 1.5px solid var(--yakit-primary-5);
 }
