@@ -684,7 +684,7 @@ const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((prop
             Field: "RawHTTPRequest",
             FieldVerbose: "数据包",
             Required: true,
-            TypeVerbose: "yak",
+            TypeVerbose: "http-packet",
             DefaultValue: "",
             Help: ""
         }
@@ -695,7 +695,7 @@ const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((prop
             <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked'>
                 <YakitSwitch size='large' disabled={disabled} />
             </Form.Item>
-            <Form.Item label='请求类型' name='IsRawHTTPRequest' initialValue={true}>
+            <Form.Item label='请求类型' name='IsRawHTTPRequest' initialValue={false}>
                 <YakitRadioButtons
                     buttonStyle='solid'
                     options={[
