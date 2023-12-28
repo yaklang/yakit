@@ -69,6 +69,7 @@ import {ExportSelect} from "../DataExport/DataExport"
 import emiter from "@/utils/eventBus/eventBus"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
+import { useHttpFlowStore } from "@/store/httpFlow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -758,7 +759,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const [compareLeft, setCompareLeft] = useState<CompateData>({content: "", language: "http"})
     const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
-    const [compareState, setCompareState] = useState(0)
+    const {compareState, setCompareState} = useHttpFlowStore()
 
     // 屏蔽数据
     const [shieldData, setShieldData] = useState<ShieldData>({

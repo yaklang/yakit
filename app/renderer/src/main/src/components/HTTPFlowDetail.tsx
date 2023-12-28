@@ -17,7 +17,7 @@ import {
     Typography
 } from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
-import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
+import {CompateData, HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
 import {IMonacoEditor, NewHTTPPacketEditor} from "../utils/editors"
 import {failed} from "../utils/notification"
 import {FuzzableParamList} from "./FuzzableParamList"
@@ -47,6 +47,7 @@ import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
+import {useHttpFlowStore} from "@/store/httpFlow"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -186,7 +187,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 menu: [
                     {
                         key: "copy-url",
-                        label: "复制URL"
+                        label: "复制 URL"
                     }
                 ],
                 onRun: (editor, key) => {
@@ -196,6 +197,85 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             }
         }
     }, [flow?.Url])
+
+    // 编辑器发送到对比器
+    const {compareState, setCompareState} = useHttpFlowStore()
+    const [compareLeft, setCompareLeft] = useState<CompateData>({content: "", language: "http"})
+    const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
+    // 向主页发送对比数据
+    useEffect(() => {
+        if (compareLeft.content) {
+            const params = {info: compareLeft, type: 1}
+            const comState = compareState === 0 ? 1 : 0
+            setCompareState(comState)
+            ipcRenderer.invoke("add-data-compare", params)
+        }
+    }, [compareLeft])
+
+    useEffect(() => {
+        if (compareRight.content) {
+            const params = {info: compareRight, type: 2}
+            const comState = compareState === 0 ? 2 : 0
+            setCompareState(comState)
+            ipcRenderer.invoke("add-data-compare", params)
+        }
+    }, [compareRight])
+
+    const sendCodeCompareMenuItem = (type: string) => {
+        return {
+            codeCompare: {
+                menu: [
+                    {
+                        key: "code-compare",
+                        label: "发送到对比器",
+                        children: [
+                            {
+                                key: "code-compare-left",
+                                label: "发送到对比器左侧",
+                                disabled: [false, true, false][compareState]
+                            },
+                            {
+                                key: "code-compare-right",
+                                label: "发送到对比器右侧",
+                                disabled: [false, false, true][compareState]
+                            }
+                        ]
+                    }
+                ],
+                onRun: (editor, key) => {
+                    if (type === "response" && flow?.Response) {
+                        if (key === "code-compare-left") {
+                            setCompareLeft({
+                                content: new Buffer(flow?.Response).toString("utf8"),
+                                language: "http"
+                            })
+                        } else {
+                            setCompareRight({
+                                content: new Buffer(flow?.Response).toString("utf8"),
+                                language: "http"
+                            })
+                        }
+                        return
+                    }
+
+                    if (type === "request" && flow?.Request) {
+                        if (key === "code-compare-left") {
+                            setCompareLeft({
+                                content: new Buffer(flow?.Request).toString("utf8"),
+                                language: "http"
+                            })
+                        } else {
+                            setCompareRight({
+                                content: new Buffer(flow?.Request).toString("utf8"),
+                                language: "http"
+                            })
+                        }
+                        return
+                    }
+                }
+            }
+        }
+    }
 
     return (
         <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
@@ -329,7 +409,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             extraEditorProps={{
                                                 isShowSelectRangeMenu: true
                                             }}
-                                            contextMenu={{...copyUrlMenuItem}}
+                                            contextMenu={{...copyUrlMenuItem, ...sendCodeCompareMenuItem("request")}}
                                         />
                                     </div>
                                 </Card>
@@ -349,7 +429,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                             extraEditorProps={{
                                                 isShowSelectRangeMenu: true
                                             }}
-                                            contextMenu={{...copyUrlMenuItem}}
+                                            contextMenu={{...copyUrlMenuItem, ...sendCodeCompareMenuItem("response")}}
                                         />
                                     </div>
                                 </Card>
@@ -859,7 +939,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 menu: [
                     {
                         key: "copy-url",
-                        label: "复制URL"
+                        label: "复制 URL"
                     }
                 ],
                 onRun: (editor, key) => {
@@ -869,6 +949,85 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             }
         }
     }, [flow?.Url])
+
+    // 编辑器发送到对比器
+    const {compareState, setCompareState} = useHttpFlowStore()
+    const [compareLeft, setCompareLeft] = useState<CompateData>({content: "", language: "http"})
+    const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
+    // 向主页发送对比数据
+    useEffect(() => {
+        if (compareLeft.content) {
+            const params = {info: compareLeft, type: 1}
+            const comState = compareState === 0 ? 1 : 0
+            setCompareState(comState)
+            ipcRenderer.invoke("add-data-compare", params)
+        }
+    }, [compareLeft])
+
+    useEffect(() => {
+        if (compareRight.content) {
+            const params = {info: compareRight, type: 2}
+            const comState = compareState === 0 ? 2 : 0
+            setCompareState(comState)
+            ipcRenderer.invoke("add-data-compare", params)
+        }
+    }, [compareRight])
+
+    const sendCodeCompareMenuItem = (type: string) => {
+        return {
+            codeCompare: {
+                menu: [
+                    {
+                        key: "code-compare",
+                        label: "发送到对比器",
+                        children: [
+                            {
+                                key: "code-compare-left",
+                                label: "发送到对比器左侧",
+                                disabled: [false, true, false][compareState]
+                            },
+                            {
+                                key: "code-compare-right",
+                                label: "发送到对比器右侧",
+                                disabled: [false, false, true][compareState]
+                            }
+                        ]
+                    }
+                ],
+                onRun: (editor, key) => {
+                    if (type === "response" && flow?.Response) {
+                        if (key === "code-compare-left") {
+                            setCompareLeft({
+                                content: new Buffer(flow?.Response).toString("utf8"),
+                                language: "http"
+                            })
+                        } else {
+                            setCompareRight({
+                                content: new Buffer(flow?.Response).toString("utf8"),
+                                language: "http"
+                            })
+                        }
+                        return
+                    }
+
+                    if (type === "request" && flow?.Request) {
+                        if (key === "code-compare-left") {
+                            setCompareLeft({
+                                content: new Buffer(flow?.Request).toString("utf8"),
+                                language: "http"
+                            })
+                        } else {
+                            setCompareRight({
+                                content: new Buffer(flow?.Request).toString("utf8"),
+                                language: "http"
+                            })
+                        }
+                        return
+                    }
+                }
+            }
+        }
+    }
 
     // 是否显示原始数据
     const [isShowBeforeData, setShowBeforeData] = useState<boolean>(false)
@@ -904,7 +1063,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         reqEditor?.setScrollTop(0)
         resEditor?.setScrollTop(0)
         const existedTags = Tags ? Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
-        if (existedTags.includes("[手动修改]")||existedTags.includes("[响应被丢弃]")) {
+        if (existedTags.includes("[手动修改]") || existedTags.includes("[响应被丢弃]")) {
             setShowBeforeData(true)
             handleGetHTTPFlowBare("request")
             handleGetHTTPFlowBare("response")
@@ -931,7 +1090,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     }, [rspType, flow?.Response])
 
     const onInitBeforeValue = useMemoizedFn((data: "request" | "response") => {
-        if(data === "request"){
+        if (data === "request") {
             setBeforeResValue(new Uint8Array())
         }
         if (data === "response") {
@@ -952,8 +1111,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     if (data === "response") {
                         setBeforeRspValue(res.Data)
                     }
-                }
-                else{
+                } else {
                     onInitBeforeValue(data)
                 }
             })
@@ -1059,7 +1217,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noMinimap={true}
                         contextMenu={{
                             ...copyRequestBase64BodyMenuItem,
-                            ...copyUrlMenuItem
+                            ...copyUrlMenuItem,
+                            ...sendCodeCompareMenuItem("request")
                         }}
                         // 这个为了解决不可见字符的问题
                         defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
@@ -1133,7 +1292,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         })()}
                         contextMenu={{
                             ...copyResponseBase64BodyMenuItem,
-                            ...copyUrlMenuItem
+                            ...copyUrlMenuItem,
+                            ...sendCodeCompareMenuItem("response")
                         }}
                         extra={[
                             (() => {
