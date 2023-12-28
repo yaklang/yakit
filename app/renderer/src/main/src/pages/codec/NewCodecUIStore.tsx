@@ -15,6 +15,7 @@ import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineSearchIcon} f
 import {NewHTTPPacketEditor, YakEditor} from "@/utils/editors"
 import {StringToUint8Array} from "@/utils/str"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 const {ipcRenderer} = window.require("electron")
 export interface NewCodecInputUIProps {
     extra?: React.ReactNode
@@ -146,17 +147,30 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
         </div>
     )
 }
-
-export interface NewCodecEditorProps {
-    // 标题
-    title?: string
-    // 是否为必填
-    require?: boolean
+interface NewCodecEditorBodyProps extends NewCodecEditorProps {
+    // 是否是全屏
+    extend: boolean
+    // 全屏回调
+    onExtend?: () => void
+    // 缩小回调
+    onClose?: () => void
 }
-export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
-    const {title, require} = props
+export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => {
+    const {title, require, extend, onExtend, onClose} = props
+    const onOperate = useMemoizedFn(() => {
+        if (extend) {
+            onClose && onClose()
+        } else {
+            onExtend && onExtend()
+        }
+    })
     return (
-        <div className={styles["new-codec-editor"]}>
+        <div
+            className={classNames(styles["new-codec-editor"], {
+                [styles["new-codec-editor-no-extend"]]: !extend,
+                [styles["new-codec-editor-extend"]]: extend
+            })}
+        >
             <div className={styles["header"]}>
                 {title && (
                     <div className={styles["title"]}>
@@ -166,9 +180,9 @@ export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
                 )}
                 <div className={styles["extra"]}>
                     <div className={styles["apply"]}>应用</div>
-                    <Divider type={"vertical"} style={{margin: "4px 4px 0px 8px"}} />
-                    <div className={styles["expand-box"]} onClick={() => {}}>
-                        <OutlineArrowsexpandIcon />
+                    <Divider type={"vertical"} style={extend?{margin: "4px 10px 0px 14px"}:{margin: "4px 4px 0px 8px"}} />
+                    <div className={styles["expand-box"]} onClick={onOperate}>
+                        {extend ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
                     </div>
                 </div>
             </div>
@@ -177,4 +191,36 @@ export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
             </div>
         </div>
     )
+}
+
+interface NewCodecEditorParamsProps {}
+
+export interface NewCodecEditorProps {
+    // 标题
+    title?: string
+    // 是否为必填
+    require?: boolean
+}
+export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
+    const onExtend = useMemoizedFn(() => {
+        const m = showYakitModal({
+            title: null,
+            footer: null,
+            width: 1200,
+            type: "white",
+            closable: false,
+            maskClosable: false,
+            hiddenHeader: true,
+            content: (
+                <NewCodecEditorBody
+                    extend={true}
+                    onClose={() => {
+                        m.destroy()
+                    }}
+                    {...props}
+                />
+            )
+        })
+    })
+    return <NewCodecEditorBody extend={false} onExtend={onExtend} {...props} />
 }
