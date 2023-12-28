@@ -271,7 +271,8 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
     useEffect(() => {
         document.onmousedown = (e) => {
             try {
-                if (!e) {
+                // @ts-ignore
+                if (!e || !e?.path || Array.isArray(e?.path || undefined)) {
                     return
                 }
 
