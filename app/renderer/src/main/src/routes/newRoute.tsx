@@ -303,8 +303,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-config-network": {label: "全局网络配置"},
     "beta-codec": {label: "新版codec"},
     "plugin-audit": {label: "插件管理"},
-    "**beta-debug-traffic-analize": {label: "流量分析"}
-    "beta-webshell-manager": {label: "WebShell 管理"},
+    "**beta-debug-traffic-analize": {label: "流量分析"},
+    "beta-webshell-manager": {label: "网站管理"},
     "beta-webshell-opt": {label: "WebShell 实例"},
 }
 /** 页面路由(无法多开的页面) */
