@@ -124,14 +124,14 @@ console.log("wuwuwuuw",helloMsg);
         const p = linePath === "" ? path.normalize(defaultPath) : path.normalize(linePath)
         const url: YakURL = {
             FromRaw: "",
-            Schema: props.webshellInfo.ShellScript,
+            Schema: props.webshellInfo.ShellType,
             User: "",
             Pass: "",
             Location: "",
             Path: "/",
             Query: [
                 {Key: "op", Value: "cmd"},
-                {Key: "id", Value: "1"},
+                {Key: "id", Value: props.webshellInfo.Id},
                 {Key: "cmd", Value: cmd},
                 {Key: "path", Value: p}
             ]
