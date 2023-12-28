@@ -61,7 +61,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
         setCreateLoading(true)
         console.log("createWebShell ", params)
         ipcRenderer.invoke(props.isCreate ? "CreateWebShell" : "UpdateWebShell", params).then((data: WebShellDetail) => {
-            success(props.isCreate ? "创建" : "编辑" + " WebShell 成功")
+            success(props.isCreate ? "创建" : "编辑" + " 网站管理 成功")
             setParams(data)
             if (data) {
                 props.onCreated && props.onCreated(data)
@@ -69,7 +69,7 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
             }
             props.closeModal && props.closeModal()
         }).catch((err) => {
-            failed(props.isCreate ? "创建" : "编辑" + ` WebShell 失败: ${err}`)
+            failed(props.isCreate ? "创建" : "编辑" + ` 网站管理 失败: ${err}`)
         }).finally(() => {
             setTimeout(() => {
                 setCreateLoading(false)
@@ -207,7 +207,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
     }, [shellScript])
     return (
         <>
-            <Form.Item label={"Shell 类型"} required={true} rules={[{required: true, message: "该项为必填"}]}>
+            <Form.Item label={"网站类型"} required={true} rules={[{required: true, message: "该项为必填"}]}>
                 <YakitSelect
                     value={params.ShellType || ShellType.Behinder}
                     onSelect={(val) => {

@@ -942,7 +942,7 @@ const GetUIOpSettingMenu = () => {
                 },
                 {
                     key: "webshell-manager",
-                    label: "WebShell 管理"
+                    label: "网站管理"
                 },
             ]
         },
