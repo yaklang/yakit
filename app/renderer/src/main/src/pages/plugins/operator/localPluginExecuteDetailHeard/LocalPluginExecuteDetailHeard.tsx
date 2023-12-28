@@ -20,7 +20,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {NewHTTPPacketEditor} from "@/utils/editors"
 import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
 import {YakitFormDragger, YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {failed, yakitNotify} from "@/utils/notification"
@@ -153,7 +152,9 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         setRuntimeId,
         runtimeId
     } = props
+
     const [form] = Form.useForm()
+    const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
     /** 当前插件是否点击过开始执行 */
     const [isClickExecute, setIsClickExecute] = useState<boolean>(false)
 
@@ -332,11 +333,12 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             case "mitm":
             case "port-scan":
             case "nuclei":
+                if (isRawHTTPRequest) return false
                 return true
             default:
                 return extraParamsGroup.length > 0
         }
-    }, [extraParamsGroup.length, plugin.Type])
+    }, [extraParamsGroup.length, plugin.Type, isRawHTTPRequest])
     const executeExtraParams: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue = useMemo(() => {
         switch (plugin.Type) {
             case "yak":
@@ -678,6 +680,7 @@ const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((
 /**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
 const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
     const {form, disabled} = props
+
     const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
     const rawItem = useMemo(() => {
         const codeItem: YakParamProps = {
