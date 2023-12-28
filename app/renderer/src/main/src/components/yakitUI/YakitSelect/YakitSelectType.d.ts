@@ -12,7 +12,7 @@ import {type} from "os"
  * @augments YakitSelectProps 继承antd的 SelectProps 默认属性
  * @param {string} wrapperClassName 装饰div的className
  * @param {CSSProperties} wrapperStyle 装饰div的style
- * @param {string} cacheHistoryDataKey 缓存数据
+ * @param {string} cacheHistoryDataKey 缓存数据 key值
  */
 
 export interface YakitSelectProps<
@@ -22,7 +22,7 @@ export interface YakitSelectProps<
     wrapperClassName?: string
     wrapperStyle?: CSSProperties
     size?: YakitSizeType
-    /**@name 缓存数据 */
+    /**@name 缓存数据 key键 */
     cacheHistoryDataKey?: string
     /**@name 缓存数据  list长度*/
     cacheHistoryListLength?: number
