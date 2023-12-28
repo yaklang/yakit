@@ -757,9 +757,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [loading, setLoading] = useState(false)
     const [selected, setSelected, getSelected] = useGetState<HTTPFlow>()
 
-    const [compareLeft, setCompareLeft] = useState<CompateData>({content: "", language: "http"})
-    const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
-    const {compareState, setCompareState} = useHttpFlowStore()
+    const {compareState, setCompareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
 
     // 屏蔽数据
     const [shieldData, setShieldData] = useState<ShieldData>({
@@ -927,25 +925,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const isFilter: boolean = useMemo(() => {
         return hostName.length > 0 || urlPath.length > 0 || fileSuffix.length > 0 || searchContentType?.length > 0
     }, [hostName, urlPath, fileSuffix, searchContentType])
-
-    // 向主页发送对比数据
-    useEffect(() => {
-        if (compareLeft.content) {
-            const params = {info: compareLeft, type: 1}
-            setCompareState(compareState === 0 ? 1 : 0)
-
-            ipcRenderer.invoke("add-data-compare", params)
-        }
-    }, [compareLeft])
-
-    useEffect(() => {
-        if (compareRight.content) {
-            const params = {info: compareRight, type: 2}
-            setCompareState(compareState === 0 ? 2 : 0)
-
-            ipcRenderer.invoke("add-data-compare", params)
-        }
-    }, [compareRight])
 
     useEffect(() => {
         if (pageType === "MITM") {

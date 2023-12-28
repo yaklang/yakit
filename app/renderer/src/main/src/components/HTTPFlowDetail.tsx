@@ -199,28 +199,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [flow?.Url])
 
     // 编辑器发送到对比器
-    const {compareState, setCompareState} = useHttpFlowStore()
-    const [compareLeft, setCompareLeft] = useState<CompateData>({content: "", language: "http"})
-    const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
-    // 向主页发送对比数据
-    useEffect(() => {
-        if (compareLeft.content) {
-            const params = {info: compareLeft, type: 1}
-            const comState = compareState === 0 ? 1 : 0
-            setCompareState(comState)
-            ipcRenderer.invoke("add-data-compare", params)
-        }
-    }, [compareLeft])
-
-    useEffect(() => {
-        if (compareRight.content) {
-            const params = {info: compareRight, type: 2}
-            const comState = compareState === 0 ? 2 : 0
-            setCompareState(comState)
-            ipcRenderer.invoke("add-data-compare", params)
-        }
-    }, [compareRight])
-
+    const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
     const sendCodeCompareMenuItem = (type: string) => {
         return {
             codeCompare: {
@@ -951,28 +930,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     }, [flow?.Url])
 
     // 编辑器发送到对比器
-    const {compareState, setCompareState} = useHttpFlowStore()
-    const [compareLeft, setCompareLeft] = useState<CompateData>({content: "", language: "http"})
-    const [compareRight, setCompareRight] = useState<CompateData>({content: "", language: "http"})
-    // 向主页发送对比数据
-    useEffect(() => {
-        if (compareLeft.content) {
-            const params = {info: compareLeft, type: 1}
-            const comState = compareState === 0 ? 1 : 0
-            setCompareState(comState)
-            ipcRenderer.invoke("add-data-compare", params)
-        }
-    }, [compareLeft])
-
-    useEffect(() => {
-        if (compareRight.content) {
-            const params = {info: compareRight, type: 2}
-            const comState = compareState === 0 ? 2 : 0
-            setCompareState(comState)
-            ipcRenderer.invoke("add-data-compare", params)
-        }
-    }, [compareRight])
-
+    const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
     const sendCodeCompareMenuItem = (type: string) => {
         return {
             codeCompare: {
