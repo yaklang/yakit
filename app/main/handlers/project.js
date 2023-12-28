@@ -129,6 +129,21 @@ module.exports = (win, getClient) => {
         return await asyncGetDefaultProject()
     })
 
+    const asyncGetTemporaryProject = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetTemporaryProject(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetTemporaryProject", async (e) => {
+        return await asyncGetTemporaryProject()
+    })
+
     const handlerHelper = require("./handleStreamWithContext")
 
     const streamExportProjectMap = new Map();

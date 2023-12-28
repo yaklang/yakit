@@ -1183,15 +1183,30 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
 const UIDevTool: React.FC = React.memo(() => {
     const [show, setShow] = useState<boolean>(false)
 
-    const menuSelect = useMemoizedFn((type: string) => {
+    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+
+    const handleTemporaryProject = async () => {
+        if (temporaryProjectId) {
+            try {
+                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+                setTemporaryProjectId("")
+            } catch (error) {
+                yakitFailed(error + "")
+            }
+        }
+    }
+
+    const menuSelect = useMemoizedFn(async (type: string) => {
         switch (type) {
             case "devtool":
                 ipcRenderer.invoke("trigger-devtool")
                 return
             case "reload":
+                await handleTemporaryProject()
                 ipcRenderer.invoke("trigger-reload")
                 return
             case "reloadCache":
+                await handleTemporaryProject()
                 ipcRenderer.invoke("trigger-reload-cache")
                 return
 

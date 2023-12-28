@@ -13,7 +13,6 @@ export const invalidCacheAndUserData = (temporaryProjectId: string, setTemporary
             try {
                 await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
                 setTemporaryProjectId("")
-                emiter.emit("onFeachGetCurrentProject")
             } catch (error) {
                 yakitFailed(error + "")
             }

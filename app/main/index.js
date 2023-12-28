@@ -141,7 +141,8 @@ app.whenReady().then(() => {
     }
 
     ipcMain.handle("app-exit", async (e, params) => {
-        if (closeFlag) {
+        const showCloseMessageBox = params.showCloseMessageBox
+        if (closeFlag && showCloseMessageBox) {
             dialog
                 .showMessageBox(win, {
                     icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
@@ -204,6 +205,7 @@ app.whenReady().then(() => {
     })
 })
 
+// 这个退出压根执行不到 win.on("close") 阻止了默认行为
 app.on("window-all-closed", function () {
     clearing()
     app.quit()

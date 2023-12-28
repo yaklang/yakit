@@ -8,8 +8,8 @@ import {useRunNodeStore} from "@/store/runNode"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {TemporaryProjectPop} from "./WinUIOp"
 import emiter from "@/utils/eventBus/eventBus"
-import { yakitFailed } from "@/utils/notification"
-import { isEnpriTraceAgent } from "@/utils/envfile"
+import {yakitFailed} from "@/utils/notification"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -41,7 +41,8 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
 
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId} = useTemporaryProjectStore()
+    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag} =
+        useTemporaryProjectStore()
     const lastTemporaryProjectIdRef = useRef<string>("")
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const lastTemporaryProjectNoPromptRef = useRef<boolean>(false)
@@ -57,40 +58,28 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
 
     const handleCloseSoft = async () => {
         if (props.pageChildrenShow) {
+            /**
+             * 当关闭按钮出现在项目里面时，点关闭给弹窗的情况
+             * 临时项目的弹窗需要放到最后一个弹窗弹出
+             */
             // 如果运行节点存在
             if (Array.from(runNodeList).length) {
                 setCloseRunNodeItemVerifyVisible(true)
                 return
             }
+
             // 如果打开得是临时项目
             if (
-                !isEnpriTraceAgent() &&
+                lastTemporaryProjectIdRef.current &&
+                props.currentProjectId &&
                 lastTemporaryProjectIdRef.current === props.currentProjectId &&
                 !lastTemporaryProjectNoPromptRef.current
             ) {
                 setCloseTemporaryProjectVisible(true)
                 return
-            } else {
-                await handleTemporaryProject()
-            }
-        } else {
-            if (Array.from(runNodeList).length) {
-                handleKillAllRunNode()
             }
         }
         operate("close")
-    }
-
-    const handleTemporaryProject = async () => {
-        if (temporaryProjectId) {
-            try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
-                setTemporaryProjectId("")
-                emiter.emit("onFeachGetCurrentProject")
-            } catch (error) {
-                yakitFailed(error + "")
-            }
-        }
     }
 
     const handleKillAllRunNode = async () => {
@@ -99,7 +88,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
             promises.push(() => ipcRenderer.invoke("kill-run-node", {pid}))
         })
         try {
-            await Promise.all(promises.map((promiseFunc) => promiseFunc()))
+            await Promise.allSettled(promises.map((promiseFunc) => promiseFunc()))
             clearRunNodeList()
         } catch (error) {
             yakitFailed(error + "")
@@ -162,15 +151,15 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                         setCloseRunNodeItemVerifyVisible(false)
                     }}
                 />
+
                 {/* 退出临时项目确认弹框 */}
                 {closeTemporaryProjectVisible && (
                     <TemporaryProjectPop
                         ref={temporaryProjectPopRef}
                         onOk={async () => {
-                            await handleTemporaryProject()
+                            setTemporaryProjectNoPromptFlag(temporaryProjectPopRef.current.temporaryProjectNoPrompt)
                             setCloseTemporaryProjectVisible(false)
-                            lastTemporaryProjectIdRef.current = ""
-                            handleCloseSoft()
+                            operate("close")
                         }}
                         onCancel={() => {
                             setCloseTemporaryProjectVisible(false)

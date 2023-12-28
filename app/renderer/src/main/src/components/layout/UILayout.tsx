@@ -72,7 +72,7 @@ import {NetWorkApi} from "@/services/fetch"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
-import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -416,7 +416,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             try {
                 await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
                 setTemporaryProjectId("")
-                emiter.emit("onFeachGetCurrentProject")
             } catch (error) {
                 yakitFailed(error + "")
             }
@@ -613,27 +612,25 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [projectModalLoading, setProjectModalLoading] = useState<boolean>(false)
     const [ProjectName, setProjectName] = useState<string>()
 
-    useEffect(() => {
-        const funCallBack = () => {
-            ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => {
-                setCurrentProject(rsp || undefined)
-            })
-        }
-        emiter.on("onFeachGetCurrentProject", funCallBack)
-        return () => {
-            emiter.off("onFeachGetCurrentProject", funCallBack)
-        }
-    }, [])
-
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag} =
-        useTemporaryProjectStore()
+    const {
+        temporaryProjectId,
+        temporaryProjectNoPromptFlag,
+        isExportTemporaryProjectFlag,
+        setTemporaryProjectId,
+        setTemporaryProjectNoPromptFlag,
+        setIsExportTemporaryProjectFlag
+    } = useTemporaryProjectStore()
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const temporaryProjectPopRef = useRef<any>(null)
 
     const getAppTitleName: string = useMemo(() => {
         // 引擎未连接或便携版 显示默认title
         if (!engineLink || isEnpriTraceAgent()) return getReleaseEditionName()
-        else if (temporaryProjectId && temporaryProjectId === (currentProject?.Id ? currentProject?.Id + "" : "")) {
+        else if (
+            !isExportTemporaryProjectFlag &&
+            temporaryProjectId &&
+            temporaryProjectId === (currentProject?.Id ? currentProject?.Id + "" : "")
+        ) {
             return "临时项目"
         } else {
             return ProjectName
@@ -677,59 +674,30 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     failed("当前项目无关键信息，无法导出!")
                     return
                 }
-                // 临时项目暂不支持导出
-                if (temporaryProjectId) {
-                    const m = showYakitModal({
-                        title: "提示",
-                        content: (
-                            <div style={{padding: 20}}>
-                                临时项目导出还在开发中，会安排尽快上线
-                            </div>
-                        ),
-                        onCancel: () => {
-                            m.destroy()
-                        },
-                        onOk: () => {
-                            m.destroy()
-                        },
-                        width: 400
-                    })
-                    return
-                }
                 setLinkDatabase(true)
-                setProjectModalInfo({visible: true, isNew: false, isExport: true, project: currentProject})
+                const copyCurrentProject = structuredClone(currentProject)
+                if (copyCurrentProject.ProjectName === "[temporary]") {
+                    copyCurrentProject.ProjectName = "临时项目"
+                    setIsExportTemporaryProjectFlag(true)
+                }
+                setProjectModalInfo({visible: true, isNew: false, isExport: true, project: copyCurrentProject})
                 return
             case "plaintextProject":
                 if (!currentProject || !currentProject.Id) {
                     failed("当前项目无关键信息，无法导出!")
                     return
                 }
-                // 临时项目暂不支持导出
-                if (temporaryProjectId) {
-                    const m = showYakitModal({
-                        title: "提示",
-                        content: (
-                            <div style={{padding: 20}}>
-                                临时项目导出还在开发中，会安排尽快上线
-                            </div>
-                        ),
-                        onCancel: () => {
-                            m.destroy()
-                        },
-                        onOk: () => {
-                            m.destroy()
-                        },
-                        width: 400
-                    })
-                    return
-                }
                 setLinkDatabase(true)
+                if (currentProject.ProjectName === "[temporary]") {
+                    setIsExportTemporaryProjectFlag(true)
+                }
                 setProjectTransferShow({
                     visible: true,
                     isExport: true,
                     data: {
                         Id: currentProject.Id,
-                        ProjectName: currentProject.ProjectName,
+                        ProjectName:
+                            currentProject.ProjectName === "[temporary]" ? "临时项目" : currentProject.ProjectName,
                         Password: ""
                     }
                 })
@@ -910,7 +878,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             isEnpriTraceAgent()
                 ? setEngineLink(true)
                 : (async () => {
-                      setTemporaryProjectId((await getLocalValue(RemoteGV.TemporaryProjectId)) || "")
+                      try {
+                          const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)
+                          if (flag) {
+                              setTemporaryProjectNoPromptFlag(flag === "true")
+                          }
+                      } catch (error) {
+                          yakitFailed(error + "")
+                      }
                       setLinkDatabase(true)
                       setYakitMode("soft")
                       setTimeout(() => setEngineLink(true), 100)
@@ -1091,6 +1066,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
         return flag
     }, [engineLink, isJudgeLicense, linkDatabase])
+
+    // 处理导出临时项目明文导出问题
+    const handleExportTemporaryProject = () => {
+        if (isExportTemporaryProjectFlag) {
+            setIsExportTemporaryProjectFlag(false)
+            // 发送信号到ProjectManage去执行 getPageInfo
+            // 由于 NewProjectAndFolder 该组件是在UILayout中使用
+            emiter.emit("onGetProjectInfo")
+        }
+    }
 
     return (
         <div className={styles["ui-layout-wrapper"]}>
@@ -1462,6 +1447,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             <TransferProject
                 {...projectTransferShow}
                 onSuccess={() => {
+                    handleExportTemporaryProject()
                     if (!projectTransferShow.visible) return
                     setProjectTransferShow({visible: false})
                 }}

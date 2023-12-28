@@ -231,7 +231,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             {
                 key: "ProjectName",
                 name: typeToName["all"],
-                width: "10%",
+                width: "15%",
                 headerRender: (index) => {
                     return (
                         <DropdownMenu
@@ -324,11 +324,17 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     )
                 }
             },
-            {key: "FileSize", name: "大小", width: "10%"},
+            {key: "FileSize", name: "大小", width: "10%", render: (data) => {
+                return (
+                    <>
+                        {!data.Type || data.Type === "project" ? data.FileSize : "-"}
+                    </>
+                )
+            }},
             {
                 key: "CreatedAt",
                 name: timeToName["updated_at"],
-                width: "20%",
+                width: "15%",
                 headerRender: (index) => {
                     return (
                         <DropdownMenu
@@ -486,27 +492,34 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             try {
                 await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
                 setTemporaryProjectId("")
-                emiter.emit("onFeachGetCurrentProject")
             } catch (error) {
                 yakitFailed(error + "")
             }
         }
     }
 
+    useEffect(() => {
+        emiter.on("onGetProjectInfo", getProjectInfo)
+        return () => {
+            emiter.off("onGetProjectInfo", getProjectInfo)
+        }
+    }, [])
+
     const getProjectInfo = async () => {
         try {
             await handleTemporaryProject()
             const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProject")
             setLatestProject(res2 || undefined)
-            update()
         } catch (error) {
-            update()
             yakitFailed(error + "")
         }
     }
 
     useEffect(() => {
-        getProjectInfo()
+        if (!isExportTemporaryProjectFlag) {
+            getProjectInfo()
+        }
+        update()
     }, [])
 
     const update = useMemoizedFn((page?: number) => {
@@ -523,7 +536,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         // @ts-ignore
         if (param.Type === "all") delete param.Type
         if (param.ProjectName) param.Type = "project"
-
         setLoading(true)
         ipcRenderer
             .invoke("GetProjects", param)
@@ -562,14 +574,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         ipcRenderer
             .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
             .then((e) => {
-                emiter.emit("onFeachGetCurrentProject")
                 info("删除成功")
-                setData({
-                    ...getData(),
-                    Projects: getData().Projects.filter((item) => +item.Id !== +delId.Id),
-                    Total: getData().Total == 0 ? 0 : getData().Total - 1,
-                    ProjectToTal: getData().ProjectToTal == 0 ? 0 : getData().ProjectToTal - 1
-                })
+                update()
                 ipcRenderer
                     .invoke("GetCurrentProject")
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
@@ -692,7 +698,22 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     }>({visible: false})
     const [modalLoading, setModalLoading] = useState<boolean>(false)
 
-    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+    const {temporaryProjectId, isExportTemporaryProjectFlag, setTemporaryProjectId} = useTemporaryProjectStore()
+
+    const [detectionTemporaryProjectVisible, setDetectionTemporaryProjectVisible] = useState<boolean>(false)
+
+    const getTemporaryProjectId = async () => {
+        let id = ""
+        try {
+            const res = await ipcRenderer.invoke("GetTemporaryProject")
+            if (res) {
+                id = res.Id
+            }
+        } catch (error) {}
+
+        setTemporaryProjectId(id)
+        return id
+    }
 
     // 创建临时项目
     const creatTemporaryProject = useMemoizedFn(async () => {
@@ -703,7 +724,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             })
             const newTemporaryId = res.Id + ""
             setTemporaryProjectId(newTemporaryId)
-            // setRemoteValue(RemoteGV.TemporaryProjectId, newTemporaryId)
             await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId})
             info("切换临时项目成功")
             onFinish()
@@ -1082,7 +1102,13 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
                     <div
                         className={classNames(styles["btn-wrapper"], styles["new-temporary-project-wrapper"])}
-                        onClick={creatTemporaryProject}
+                        onClick={async () => {
+                            if (await getTemporaryProjectId()) {
+                                setDetectionTemporaryProjectVisible(true)
+                            } else {
+                                await creatTemporaryProject()
+                            }
+                        }}
                     >
                         <div className={styles["btn-body"]}>
                             <div className={styles["body-title"]}>
@@ -1430,6 +1456,21 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     setInquireIntoProjectVisible(false)
                 }}
             />
+
+            <YakitHint
+                visible={detectionTemporaryProjectVisible}
+                title='提示'
+                content='检测到有临时项目正在使用中，是否需要删除并创建新的临时项目'
+                onOk={async () => {
+                    // 先删临时项目
+                    await handleTemporaryProject()
+                    await creatTemporaryProject()
+                    setDetectionTemporaryProjectVisible(false)
+                }}
+                onCancel={() => {
+                    setDetectionTemporaryProjectVisible(false)
+                }}
+            />
         </div>
     )
 })
@@ -1491,6 +1532,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         setLoading,
         onModalSubmit
     } = props
+
+    const {isExportTemporaryProjectFlag, setIsExportTemporaryProjectFlag} = useTemporaryProjectStore()
 
     const [data, setData, getData] = useGetState<FileProjectInfoProps[]>([])
 
@@ -1773,7 +1816,20 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
         }
     })
 
-    const onClose = useMemoizedFn(() => setVisible(false))
+    // 处理导出临时项目问题
+    const handleExportTemporaryProject = () => {
+        if (isExportTemporaryProjectFlag) {
+            setIsExportTemporaryProjectFlag(false)
+            // 发送信号到ProjectManage去执行 getPageInfo
+            // 由于 NewProjectAndFolder 该组件是在UILayout中使用
+            emiter.emit("onGetProjectInfo")
+        }
+    }
+
+    const onClose = useMemoizedFn(() => {
+        setVisible(false)
+        handleExportTemporaryProject()
+    })
 
     const [dropShow, setDropShow] = useState<boolean>(false)
 
@@ -1987,8 +2043,12 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             </Form>
 
             <TransferProject
+                usedBy='NewProjectAndFolder'
                 {...transferShow}
                 onSuccess={(type) => {
+                    if (type === "isExport") {
+                        handleExportTemporaryProject()
+                    }
                     onModalSubmit(type, {} as any)
                     setTimeout(() => {
                         setTransferShow({visible: false})
@@ -2004,6 +2064,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
 })
 
 interface TransferProjectProps {
+    usedBy?: string
     isExport?: boolean
     isImport?: boolean
     data?: ExportProjectProps | ImportProjectProps
@@ -2017,7 +2078,9 @@ export interface ProjectIOProgress {
     Verbose: string
 }
 export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
-    const {isExport, isImport, data, visible, setVisible, onSuccess} = props
+    const {usedBy, isExport, isImport, data, visible, setVisible, onSuccess} = props
+
+    const {isExportTemporaryProjectFlag, setIsExportTemporaryProjectFlag} = useTemporaryProjectStore()
 
     const [token, setToken] = useState(randomString(40))
     const [percent, setPercent] = useState<number>(0.0)
@@ -2109,7 +2172,19 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
         }
     }, [visible])
 
-    const onClose = useMemoizedFn(() => setVisible(false))
+    // 处理导出临时项目问题
+    const handleExportTemporaryProject = () => {
+        // 当是加密导出 点击组件TransferProject取消时不执行删除操作
+        if (isExportTemporaryProjectFlag && usedBy !== "NewProjectAndFolder") {
+            setIsExportTemporaryProjectFlag(false)
+            // 发送信号到ProjectManage去执行 getPageInfo
+            emiter.emit("onGetProjectInfo")
+        }
+    }
+    const onClose = useMemoizedFn(() => {
+        handleExportTemporaryProject()
+        setVisible(false)
+    })
 
     return (
         <div className={visible ? styles["transfer-project-mask"] : styles["transfer-project-hidden-mask"]}>

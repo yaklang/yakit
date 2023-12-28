@@ -1,30 +1,26 @@
-import { setLocalValue } from "@/utils/kv"
-import { RemoteGV } from "@/yakitGV"
+import {setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
 import {create} from "zustand"
-import {persist} from "zustand/middleware"
 
 interface TemporaryProjectStoreProps {
     temporaryProjectId: string
     temporaryProjectNoPromptFlag: boolean
+    isExportTemporaryProjectFlag: boolean
     setTemporaryProjectId: (id: string) => void
     setTemporaryProjectNoPromptFlag: (flag: boolean) => void
+    setIsExportTemporaryProjectFlag: (flag: boolean) => void
 }
 
-export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>()(
-    persist(
-        (set, get) => ({
-            temporaryProjectId: "",
-            temporaryProjectNoPromptFlag: false,
-            setTemporaryProjectId: (id: string) => {
-                set({temporaryProjectId: id})
-                setLocalValue(RemoteGV.TemporaryProjectId, id)
-            },
-            setTemporaryProjectNoPromptFlag: (flag: boolean) => {
-                set({temporaryProjectNoPromptFlag: flag})
-            }
-        }),
-        {
-            name: "temporary-project"
-        }
-    )
-)
+export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>((set, get) => ({
+    temporaryProjectId: "",
+    temporaryProjectNoPromptFlag: false,
+    isExportTemporaryProjectFlag: false,
+    setTemporaryProjectId: async (id: string) => {
+        set({temporaryProjectId: id})
+    },
+    setTemporaryProjectNoPromptFlag: (flag: boolean) => {
+        set({temporaryProjectNoPromptFlag: flag})
+        setRemoteValue(RemoteGV.TemporaryProjectNoPrompt, flag + "")
+    },
+    setIsExportTemporaryProjectFlag: (flag: boolean) => set({isExportTemporaryProjectFlag: flag})
+}))
