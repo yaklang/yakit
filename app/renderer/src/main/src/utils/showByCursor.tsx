@@ -84,11 +84,10 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
     div.id = cursorMenuId
     div.className = "popup"
     document.body.appendChild(div)
-
+    let cursorMenuRootDiv
     const destory = () => {
-        const unmountResult = ReactDOM.unmountComponentAtNode(div)
-        if (unmountResult && div.parentNode) {
-            div.parentNode.removeChild(div)
+        if (cursorMenuRootDiv) {
+            cursorMenuRootDiv.unmount()
         }
     }
 
@@ -98,8 +97,12 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
                 destory()
                 document.removeEventListener("click", onClickOutsize)
             })
-            if ((props.content || []).length > 0)
-                createRoot(div).render(
+            if ((props.content || []).length > 0) {
+                if (!cursorMenuRootDiv) {
+                    cursorMenuRootDiv = createRoot(div)
+                }
+
+                cursorMenuRootDiv.render(
                     <Menu
                         className={"right-cursor-menu"}
                         onClick={(item: {key: string}) => {
@@ -147,6 +150,7 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
                         })}
                     </Menu>
                 )
+            }
         })
     }
     render()

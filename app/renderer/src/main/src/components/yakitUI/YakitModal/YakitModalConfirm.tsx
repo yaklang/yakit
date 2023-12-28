@@ -37,10 +37,11 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                         }}
                         afterClose={() => {
                             if (props.modalAfterClose) props.modalAfterClose()
-                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                            if (unmountResult && div.parentNode) {
-                                div.parentNode.removeChild(div)
-                            }
+                            setTimeout(() => {
+                                if (yakitModalConfirmRootDiv) {
+                                    yakitModalConfirmRootDiv.unmount()
+                                }
+                            })
                         }}
                         title={null}
                         headerStyle={{paddingBottom: 0}}
@@ -221,10 +222,11 @@ export const showYakitModal = (props: ShowModalProps) => {
                         }}
                         afterClose={() => {
                             if (props.modalAfterClose) props.modalAfterClose()
-                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                            if (unmountResult && div.parentNode) {
-                                div.parentNode.removeChild(div)
-                            }
+                            setTimeout(() => {
+                                if (yakitModalRootDiv) {
+                                    yakitModalRootDiv.unmount()
+                                }
+                            })
                         }}
                     >
                         <ErrorBoundary

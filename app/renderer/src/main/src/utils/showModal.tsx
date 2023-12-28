@@ -59,10 +59,11 @@ export const showModal = (props: ShowModalProps) => {
                         }}
                         afterClose={() => {
                             if (props.modalAfterClose) props.modalAfterClose()
-                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                            if (unmountResult && div.parentNode) {
-                                div.parentNode.removeChild(div)
-                            }
+                            setTimeout(() => {
+                                if (modalRootDiv) {
+                                    modalRootDiv.unmount()
+                                }
+                            })
                         }}
                     >
                         <ErrorBoundary
@@ -166,10 +167,11 @@ export const showDrawer = (props: ShowDrawerProps) => {
                             onDestroy = setter
                         }}
                         afterClose={() => {
-                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                            if (unmountResult && div.parentNode) {
-                                div.parentNode.removeChild(div)
-                            }
+                            setTimeout(() => {
+                                if (drawerRootDiv) {
+                                    drawerRootDiv.unmount()
+                                }
+                            })
                         }}
                     >
                         {targetConfig.content}

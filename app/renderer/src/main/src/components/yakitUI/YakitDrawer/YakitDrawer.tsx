@@ -80,13 +80,6 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
                         onVisibleSetter={(r) => {
                             setter = r
                         }}
-                        // afterClose={() => {
-                        //     if (props.modalAfterClose) props.modalAfterClose()
-                        //     const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                        //     if (unmountResult && div.parentNode) {
-                        //         div.parentNode.removeChild(div)
-                        //     }
-                        // }}
                     >
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {
