@@ -14,6 +14,10 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {CustomCodecEditor, CustomCodecList} from "@/pages/webShell/CustomCodec";
 import {CodecType} from "@/utils/encodec";
 import {queryYakScriptList} from "@/pages/yakitStore/network";
+import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint";
+import { getRemoteValue, setRemoteValue } from "@/utils/kv";
+import emiter from "@/utils/eventBus/eventBus";
+import { YakitRoute } from "@/routes/newRoute";
 
 
 export interface WebShellManagerViewerProp {
@@ -28,6 +32,9 @@ export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [loading, setLoading] = useState(false)
     const [available, setAvailable] = useState(false)
+    // 第一次进入
+    const [isFirstEnter, setFirstEnter] = useState<boolean>(false)
+    const WebShellFirstViewer = "WebShellFirstViewer"
     useEffect(() => {
         onIsCVEDatabaseReady()
     }, [])
@@ -37,6 +44,16 @@ export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
         setTimeout(() => setLoading(false), 200)
     })
     console.log(loading, available, advancedQuery)
+
+    useEffect(() => {
+        // 页面初次进入时
+        getRemoteValue(WebShellFirstViewer).then((res) => {
+            if (!res) {
+                setFirstEnter(true)
+            }
+        })
+    }, [])
+
     return loading ? (
         <YakitSpin spinning={true} style={{alignItems: "center", paddingTop: 150}}/>
     ) : (
@@ -53,6 +70,23 @@ export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
                 advancedQuery={advancedQuery}
                 setAdvancedQuery={setAdvancedQuery}
                 available={available}
+            />
+            <YakitHint
+                visible={isFirstEnter}
+                title='使用协议'
+                content={<>
+                <div>本工具是一款开源的跨平台网站管理工具，旨在为合法授权的安全研究人员、渗透测试专家以及网站管理员提供支持。它的设计目的是为了进行安全评估、教育目的以及帮助网站管理员进行日常管理工作。</div>
+                <div>请用户在使用本工具时遵守所有适用的法律和道德准则。本工具不应用于任何未经授权的测试、非法入侵、数据盗窃或任何其他非法活动。用户使用本工具进行的任何行为都应当是合法、合规且具有正当授权的。</div>
+                </>
+                }
+                onOk={() => {
+                    setFirstEnter(false)
+                    setRemoteValue(WebShellFirstViewer, JSON.stringify({enter: true}))
+                }}
+                onCancel={() => {
+                    setFirstEnter(false)
+                    emiter.emit("closePage", JSON.stringify({route: YakitRoute.Beta_WebShellManager}))
+                }}
             />
         </div>
     )
@@ -276,8 +310,8 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                             />
                         </YakitPanel>
                         <YakitPanel
-                            header='WebShell 生成'
-                            key='WebShell 生成'
+                            header='网站生成'
+                            key='网站生成'
                             extra={
                                 <YakitButton
                                     type='text'

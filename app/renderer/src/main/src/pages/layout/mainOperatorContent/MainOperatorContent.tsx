@@ -553,6 +553,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
 
             default:
+                removeMenuPage({route: route, menuName: ""})
                 break
         }
     })

@@ -474,7 +474,7 @@ const onClose = useMemoizedFn(()=>{
                                                 <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery}/>
                                             </div>
                                         )}
-                                        <div className={cveStyles["cve-list-title"]}>WebShell 管理</div>
+                                        <div className={cveStyles["cve-list-title"]}>网站管理</div>
                                         <Space>
                                             <Tooltip title='刷新会重置所有查询条件'>
                                                 <Button
@@ -527,7 +527,7 @@ const onClose = useMemoizedFn(()=>{
                                             onClick={() => {
                                                 // setDataBaseUpdateVisible(true)
                                                 let m = showModal({
-                                                    title: "添加 Shell",
+                                                    title: "添加网站",
                                                     width: "60%",
                                                     content: <WebShellCreatorForm
                                                         closeModal={() => {
@@ -541,7 +541,7 @@ const onClose = useMemoizedFn(()=>{
                                             }}
                                         >
                                             <SMViewGridAddIcon/>
-                                            添加 Shell
+                                            添加网站
                                         </YakitButton>
                                     </div>
                                 </div>
