@@ -20,6 +20,8 @@ import {YakitInputProps} from "@/components/yakitUI/YakitInput/YakitInputType"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 const {ipcRenderer} = window.require("electron")
 export interface NewCodecInputUIProps extends YakitInputProps {
+    // 标题
+    title?: string
     extra?: React.ReactNode
     // 是否为必填
     require?: boolean
@@ -27,7 +29,7 @@ export interface NewCodecInputUIProps extends YakitInputProps {
     direction?: "left" | "right"
 }
 export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
-    const {extra, require, direction, ...restProps} = props
+    const {title, extra, require, direction, ...restProps} = props
     const [isFocus, setFocus] = useState<boolean>(false)
     const inputRef = useRef<any>(null)
 
@@ -64,7 +66,7 @@ export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
                 })}
             >
                 <div className={styles["header"]}>
-                    <div className={styles["title"]}>校验规则</div>
+                    <div className={styles["title"]}>{title}</div>
                     {require && <div className={styles["icon"]}>*</div>}
                 </div>
                 <div className={styles["content"]}>
@@ -85,9 +87,11 @@ export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
 export interface NewCodecCheckUIProps {
     // 是否禁用
     disabled?: boolean
+    // 值
+    value?: string[]
 }
 export const NewCodecCheckUI: React.FC<NewCodecCheckUIProps> = (props) => {
-    const {disabled} = props
+    const {disabled, value = []} = props
     const onChange = (checkedValues: CheckboxValueType[]) => {}
     return (
         <div className={styles["new-codec-check-ui"]}>
@@ -95,7 +99,7 @@ export const NewCodecCheckUI: React.FC<NewCodecCheckUIProps> = (props) => {
                 // value={[]}
                 onChange={onChange}
             >
-                {["严格校验", "自动丢弃不合规片段"].map((item) => (
+                {value.map((item) => (
                     <YakitCheckbox key={item} value={item} disabled={disabled}>
                         <div className={styles["text"]}>{item}</div>
                     </YakitCheckbox>
@@ -114,10 +118,12 @@ export interface NewCodecSelectUIProps extends YakitSelectProps {
     showSearch?: boolean
     // 左右布局时 border圆角方向
     directionBox?: "left" | "right"
+    // 值
+    value?: string[]
 }
 // 当前控件样式仅适配此尺寸 - 如需更多尺寸请扩展
 export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
-    const {require, title, showSearch, directionBox, ...restProps} = props
+    const {require, title, showSearch, directionBox, value = [], ...restProps} = props
     const [show, setShow] = useState<boolean>(false)
     return (
         <div
@@ -151,16 +157,21 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
 
                 {...restProps}
             >
-                <YakitSelect value='B'>B</YakitSelect>
+                {value.map((item) => (
+                    <YakitSelect value={item}>{item}</YakitSelect>
+                ))}
+                {/* <YakitSelect value='B'>B</YakitSelect>
                 <YakitSelect value='K'>
                     KdsffffffffffffffffffssssssssssssssssssKdsffffffffffffffffffssssssssssssssssssKdsffffffffffffffffffssssssssssssssssssKdsffffffffffffffffffssssssssssssssssssKdsffffffffffffffffffssssssssssssssssss
                 </YakitSelect>
-                <YakitSelect value='M'>M</YakitSelect>
+                <YakitSelect value='M'>M</YakitSelect> */}
             </YakitSelect>
         </div>
     )
 }
 interface NewCodecEditorBodyProps extends NewCodecEditorProps {
+    // 值
+    editorValue: string
     // 是否是全屏
     extend: boolean
     // 全屏回调
@@ -169,7 +180,7 @@ interface NewCodecEditorBodyProps extends NewCodecEditorProps {
     onClose?: () => void
 }
 export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => {
-    const {title, require, extend, onExtend, onClose, disabled} = props
+    const {title, require, extend, onExtend, onClose, disabled, editorValue} = props
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     // 编辑器焦点状态
@@ -212,12 +223,10 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
             onClick={onFocusEditor}
         >
             <div className={styles["header"]}>
-                {title && (
-                    <div className={styles["title"]}>
-                        {title}
-                        {require && <div className={styles["icon"]}>*</div>}
-                    </div>
-                )}
+                <div className={styles["title"]}>
+                    {title}
+                    {require && <div className={styles["icon"]}>*</div>}
+                </div>
                 <div className={styles["extra"]}>
                     <div
                         className={classNames(styles["apply"], {
@@ -251,7 +260,8 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
                     }}
                     disabled={disabled}
                     noHeader={true}
-                    originValue={StringToUint8Array("NewCodecEditor")}
+                    originValue={StringToUint8Array(editorValue)}
+                    onChange={() => {}}
                 />
             </div>
         </div>
@@ -261,12 +271,16 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
 export interface NewCodecEditorProps {
     // 标题
     title?: string
+    // 值
+    value?: string
     // 是否为必填
     require?: boolean
     // 是否禁用
     disabled?: boolean
 }
 export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
+    const {value} = props
+    const [editorValue, setEditorValue] = useState<string>(value || "")
     const onExtend = useMemoizedFn(() => {
         const m = showYakitModal({
             title: null,
@@ -282,10 +296,11 @@ export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
                     onClose={() => {
                         m.destroy()
                     }}
+                    editorValue={editorValue}
                     {...props}
                 />
             )
         })
     })
-    return <NewCodecEditorBody extend={false} onExtend={onExtend} {...props} />
+    return <NewCodecEditorBody editorValue={editorValue} extend={false} onExtend={onExtend} {...props} />
 }

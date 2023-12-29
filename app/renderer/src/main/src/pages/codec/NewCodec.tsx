@@ -83,7 +83,6 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         </div>
                         <div className={styles["editor"]}>
                             <YakEditor
-                                type='plaintext'
                                 noMiniMap={true}
                                 value={""}
                                 setValue={(content: string) => {
@@ -122,7 +121,6 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         </div>
                         <div className={styles["editor"]}>
                             <YakEditor
-                                type='plaintext'
                                 readOnly={true}
                                 value={""}
                                 noMiniMap={true}
@@ -141,11 +139,13 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 }
 
 interface NewCodecMiddleTypeItemProps {
-    title: string
+    data: RightItemsProps
 }
 
 export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (props) => {
-    const {title} = props
+    const {data} = props
+
+    const {title, node} = data
     const [itemStatus, setItemStatus] = useState<"run" | "suspend" | "shield">("run")
 
     // 屏蔽
@@ -161,6 +161,47 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
     // 删除
     const onDeleteFun = useMemoizedFn(() => {})
 
+    // 控件
+    const onShowUI = useMemoizedFn((item: RightItemsTypeProps) => {
+        switch (item.type) {
+            case "input":
+                // 输入框模块
+                return (
+                    <NewCodecInputUI
+                        title={item.title}
+                        disabled={itemStatus === "shield" || item.disabled}
+                        require={item.require}
+                        defaultValue={item.defaultValue}
+                    />
+                )
+            case "check":
+                // 多选框模块
+                return <NewCodecCheckUI disabled={itemStatus === "shield" || item.disabled} value={item.checkArr} />
+            case "select":
+                // 下拉框模块
+                return (
+                    <NewCodecSelectUI
+                        disabled={itemStatus === "shield" || item.disabled}
+                        require={item.require}
+                        title={item.title}
+                        showSearch={item.showSearch}
+                        value={item.selectArr}
+                    />
+                )
+            case "editor":
+                // 编辑器模块
+                return (
+                    <NewCodecEditor
+                        disabled={itemStatus === "shield" || item.disabled}
+                        title={item.title}
+                        require={item.require}
+                        value={item.value}
+                    />
+                )
+            default:
+                return <></>
+        }
+    })
     return (
         <div
             className={classNames(styles["new-codec-middle-type-item"], {
@@ -210,29 +251,26 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                     </div>
                 </div>
             </div>
-            {/* 输入框模块-仅可读 */}
-            <NewCodecInputUI disabled={itemStatus === "shield"} require={true} defaultValue={`A-Za-z0-9+/=`} />
-            {/* 多选框模块 */}
-            <NewCodecCheckUI disabled={itemStatus === "shield"} />
-            {/* 下拉框模块 */}
-            <NewCodecSelectUI disabled={itemStatus === "shield"} require={true} title='输入格式' />
-            {/* 输入框模块 */}
-            <NewCodecInputUI disabled={itemStatus === "shield"} require={true} />
-            <div style={{display: "flex", flexDirection: "row", gap: 8}}>
-                <div style={{flex: 3}}>
-                    {/* 输入框模块 */}
-                    <NewCodecInputUI disabled={itemStatus === "shield"} direction='left' />
-                </div>
-                <div style={{flex: 2}}>
-                    {/* 下拉框模块-无标题 */}
-                    <NewCodecSelectUI disabled={itemStatus === "shield"} directionBox='right' />
-                </div>
-            </div>
-
-            {/* 可搜索下拉框 */}
-            <NewCodecSelectUI disabled={itemStatus === "shield"} showSearch={true} />
-            {/* 编辑器 */}
-            <NewCodecEditor disabled={itemStatus === "shield"} title='编写临时插件' require={true} />
+            {node?.map((item) => {
+                switch (item.type) {
+                    case "flex":
+                        // 左右布局
+                        return (
+                            <div style={{display: "flex", flexDirection: "row", gap: 8}}>
+                                <div style={{flex: item.leftFlex || 3}}>
+                                    {/* 左 */}
+                                    {onShowUI(item.leftNode)}
+                                </div>
+                                <div style={{flex: item.rightFlex || 2}}>
+                                    {/* 右 */}
+                                    {onShowUI(item.rightNode)}
+                                </div>
+                            </div>
+                        )
+                    default:
+                        return <>{onShowUI(item)}</>
+                }
+            })}
         </div>
     )
 }
@@ -328,7 +366,7 @@ interface SaveObjProps {
 }
 
 interface NewCodecMiddleRunListProps {
-    rightItems: any
+    rightItems: RightItemsProps[]
 }
 
 const getMiddleItemStyle = (isDragging, draggableStyle) => {
@@ -476,7 +514,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                                 )
                                             }}
                                         >
-                                            <NewCodecMiddleTypeItem title={item} />
+                                            <NewCodecMiddleTypeItem data={item} />
                                         </div>
                                     )}
                                 </Draggable>
@@ -786,13 +824,116 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
         </>
     )
 }
+// 输入框
+interface RightItemsInputProps {
+    // 标题
+    title?: string
+    // 是否必传
+    require?: boolean
+    // 是否禁用
+    disabled?: boolean
+    // 默认值
+    defaultValue?: string
+    // 控件类型
+    type: "input"
+}
 
-const initialRightItems = ["Item A", "Item B", "Item C"]
+// 多选框
+interface RightItemsCheckProps {
+    // 值
+    checkArr: string[]
+    // 控件类型
+    type: "check"
+    // 是否禁用
+    disabled?: boolean
+}
+
+// 下拉选择框
+interface RightItemsSelectProps {
+    // 标题
+    title?: string
+    // 值
+    selectArr: string[]
+    // 是否禁用
+    disabled?: boolean
+    // 是否必传
+    require?: boolean
+    // 是否可以搜索
+    showSearch?: boolean
+    // 控件类型
+    type: "select"
+}
+
+// 编辑器
+interface RightItemsEditorProps {
+    // 标题
+    title?: string
+    // 是否禁用
+    disabled?: boolean
+    // 是否必传
+    require?: boolean
+    // 编辑器值
+    value?: string
+    // 控件类型
+    type: "editor"
+}
+
+type RightItemsTypeProps = RightItemsInputProps | RightItemsCheckProps | RightItemsSelectProps | RightItemsEditorProps
+
+// 左右布局
+interface RightItemsFlexProps {
+    // 左右占据宽度的比值(默认3:2)
+    leftFlex?: number
+    rightFlex?: number
+    // 左右内容
+    leftNode: RightItemsTypeProps
+    rightNode: RightItemsTypeProps
+    // 控件类型
+    type: "flex"
+}
+interface RightItemsProps {
+    title: string
+    node?: (RightItemsTypeProps | RightItemsFlexProps)[]
+}
+const initialRightItems: RightItemsProps[] = [
+    {
+        title: "Item A",
+        node: [
+            {title: "校验规则", require: true, disabled: true, defaultValue: "A-Za-z0-9+/=", type: "input"},
+            {checkArr: ["严格校验", "自动丢弃不合规片段"], type: "check"},
+            {selectArr: ["B", "K", "M"], type: "select"},
+            {title: "Key", require: true, type: "input"},
+            {
+                leftNode: {type: "input", title: "IV"},
+                rightNode: {selectArr: ["B", "K", "M"], type: "select"},
+                type: "flex"
+            },
+            {selectArr: ["B", "K", "M"], showSearch: true, type: "select"},
+            {value: "NewCodecEditor--", title: "编写临时插件", require: true, type: "editor"}
+        ]
+    },
+    {
+        title: "Item B",
+        node: [
+            {title: "校验规则", require: true, disabled: true, defaultValue: "A-Za-z0-9+/=", type: "input"},
+            {checkArr: ["严格校验", "自动丢弃不合规片段"], type: "check"},
+            {selectArr: ["B", "K", "M"], type: "select"},
+            {title: "Key", require: true, type: "input"},
+            {
+                leftNode: {type: "input", title: "IV"},
+                rightNode: {selectArr: ["B", "K", "M"], type: "select"},
+                type: "flex"
+            },
+            {selectArr: ["B", "K", "M"], showSearch: true, type: "select"},
+            {value: "NewCodecEditor--", title: "编写临时插件", require: true, type: "editor"}
+        ]
+    }
+]
 export interface NewCodecProps {}
 const NewCodec: React.FC<NewCodecProps> = (props) => {
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
-    const [rightItems, setRightItems] = useState(initialRightItems)
+    const [rightItems, setRightItems] = useState<RightItemsProps[]>(initialRightItems)
     const [leftData, setLeftData] = useState<LeftDataProps[]>([
         {
             title: "我收藏的工具",
