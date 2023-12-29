@@ -128,7 +128,9 @@
     "devDependencies": {
         "babel-plugin-import": "^1.13.8",
         "env-cmd": "^10.1.0",
+        "html-webpack-plugin": "^5.6.0",
         "increase-memory-limit": "^1.0.7",
+        "path-browserify": "^1.0.1",
         "progress-bar-webpack-plugin": "^2.1.0",
         "sass": "^1.54.8",
         "sass-loader": "^13.3.3",

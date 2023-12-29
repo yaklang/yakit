@@ -2,6 +2,7 @@ const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin")
 const { override, fixBabelImports, addWebpackExternals, addWebpackAlias, addWebpackPlugin, overrideDevServer, addWebpackModuleRule, addBabelPresets, setWebpackTarget, addPostcssPlugins, addWebpackResolve, adjustStyleLoaders } = require('customize-cra');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin'); // 打包进度
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin")
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require("path")
 
 
@@ -19,12 +20,19 @@ module.exports = {
                 assert: false,
                 timers: false,
                 crypto: false,
+                path: require.resolve("path-browserify"),
+                url: false,
+                stream: false,
+                util: false,
+                http: false,
+                zlib: false
                 // fs: require.resolve('fs'),
                 // buffer: require.resolve('buffer'),
                 // crypto: require.resolve("crypto-browserify"),
                 // assert: require.resolve("assert/"),
                 // timers: require.resolve("timers-browserify")
             },
+            // ignoreWarnings: [/Failed to parse source map/],
         }),
         fixBabelImports('import', { //配置按需加载
             libraryName: 'antd',
@@ -39,6 +47,11 @@ module.exports = {
         addWebpackPlugin(new MonacoWebpackPlugin({
             languages: ["json", "javascript", "go", "markdown", "html", "yaml", "java"]
         })),
+        // addWebpackPlugin(new HtmlWebpackPlugin({
+        //     favicon: "./public/favicon.ico",
+        //     filename: "./public/index.html",
+        //     manifest: "./public/manifest.json"
+        // })),
         // addPostcssPlugins([require("postcss-px2rem")({ remUnit: 37.5 })]),
         // process.env.NODE_ENV === "development" ?
         //     addWebpackPlugin(new UglifyJsPlugin({
@@ -63,44 +76,50 @@ module.exports = {
         //             },
         //         },
         //     })),
-        addWebpackPlugin(new UglifyJsPlugin({
-            // // 开启打包缓存
-            // cache: true,
-            // // 开启多线程打包
-            // parallel: true,
-            uglifyOptions: {
-                // 删除警告
-                warnings: false,
-                // 压缩
-                // compress: {
-                //     // 移除console
-                //     drop_console: true,
-                //     // 移除debugger
-                //     drop_debugger: true,
-                // },
-            },
-        })),
+        // addWebpackPlugin(new UglifyJsPlugin({
+        //     // // 开启打包缓存
+        //     // cache: true,
+        //     // // 开启多线程打包
+        //     // parallel: true,
+        //     uglifyOptions: {
+        //         // 删除警告
+        //         warnings: false,
+        //         // 压缩
+        //         // compress: {
+        //         //     // 移除console
+        //         //     drop_console: true,
+        //         //     // 移除debugger
+        //         //     drop_debugger: true,
+        //         // },
+        //     },
+        // })),
         addWebpackExternals(
             { "./cptable": "var cptable" },
         ),
-        setWebpackTarget('node'),
+        // setWebpackTarget('node'),
         addWebpackModuleRule({
             test: [/\.css$/, /\.scss$/], // 可以打包后缀为sass/scss/css的文件
             use: ["style-loader", "css-loader", "sass-loader"]
-        }),
-        // adjustStyleLoaders(({ use: [, css, postcss, resolve, processor] }) => {
-        //     css.options.sourceMap = true;         // css-loader
-        //     postcss.options.sourceMap = true;     // postcss-loader
-        //     // when enable pre-processor,
-        //     // resolve-url-loader will be enabled too
-        //     if (resolve) {
-        //         resolve.options.sourceMap = true;   // resolve-url-loader
-        //     }
-        //     // pre-processor
-        //     if (processor && processor.loader.includes('sass-loader')) {
-        //         processor.options.sourceMap = true; // sass-loader
-        //     }
-        // }),
+        },
+            {
+                test: /\.js$/,
+                enforce: 'pre',
+                use: [
+                    {
+                        //needed to chain sourcemaps.  see: https://webpack.js.org/loaders/source-map-loader/
+                        loader: 'source-map-loader',
+                        options: {
+                            filterSourceMappingUrl: (url, resourcePath) => {
+                                if (/.*\/node_modules\/.*/.test(resourcePath)) {
+                                    return false
+                                }
+                                return true
+                            }
+
+                        }
+                    }],
+            }
+        ),
         (config) => {
             config.output.path = OUTPUT_PATH
             config.output.publicPath = "./"
@@ -112,7 +131,9 @@ module.exports = {
             // )
             //暴露webpack的配置 config ,evn
             // 去掉打包生产map 文件
-            // if (process.env.NODE_ENV === "production") config.devtool = false
+            // config.devtool = config.mode === 'development' ? 'cheap-module-source-map' : false;
+            // if (process.env.NODE_ENV === "production") 
+            config.devtool = false
             // if (process.env.NODE_ENV !== "development") config.plugins = [...config.plugins, ...myPlugin]
             //1.修改、添加loader 配置 :
             // 所有的loaders规则是在config.module.rules(数组)的第二项 
@@ -125,6 +146,7 @@ module.exports = {
             //         // resources: path.resolve(__dirname, 'src/asset/base.scss')//全局引入公共的scss 文件
             //     }
             // })
+            // console.log('config-webpack', config)
             return config
         }
     ),
@@ -132,9 +154,13 @@ module.exports = {
         config => ({
             ...config,
             hot: true,
-            // devMiddleware: {
-            //     writeToDisk: true,
-            // }
+            devMiddleware: {
+                writeToDisk: true,
+                // host: process.env.HOST || "0.0.0.0",
+                // sockHost: process.env.WDS_SOCKET_HOST,
+                // sockPath: process.env.WDS_SOCKET_PATH,// default: '/sockjs-node'
+                // sockPort: process.env.WDS_SOCKET_PORT,
+            }
             // writeToDisk: true,
             // host: process.env.HOST || "0.0.0.0",
             // sockHost: process.env.WDS_SOCKET_HOST,
