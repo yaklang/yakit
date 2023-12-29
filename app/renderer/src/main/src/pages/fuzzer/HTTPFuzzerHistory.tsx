@@ -122,7 +122,6 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                         onConfirm={() => {
                             deleteAll()
                         }}
-                        className='button-text-danger'
                     >
                         <YakitButton type='text' size={"small"} colors='danger' icon={<DeleteOutlined />} />
                     </YakitPopconfirm>

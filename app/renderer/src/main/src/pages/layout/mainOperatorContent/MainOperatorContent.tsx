@@ -2069,7 +2069,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         const [scroll, setScroll] = useState<ScrollProps>({
             scrollLeft: 0,
             scrollBottom: 0,
-            scrollRight: 0 //初始值要大于1
+            scrollRight: 0 
         })
 
         const [closeGroupTip, setCloseGroupTip] = useState<boolean>(true) // 关闭组的时候是否还需要弹窗提示,默认是要弹窗的;如果用户选择了不再提示,后续则就不需要再弹出提示框

@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     HorizontalScrollCardItemInfoSingleProps,
     HorizontalScrollCardProps,
@@ -10,86 +10,7 @@ import styles from "./HorizontalScrollCard.module.scss"
 import classNames from "classnames"
 import {OutlineChevrondoubleleftIcon, OutlineChevrondoublerightIcon, OutlineHashtagIcon} from "@/assets/icon/outline"
 import {useLongPress, useThrottleFn} from "ahooks"
-
-let testData: StatusCardListProps[] = [
-    {
-        id: "1",
-        tag: "成功次数",
-        info: [{Data: "1", Id: "IDID", Timestamp: 111}]
-    },
-    {
-        id: "2",
-        tag: "mysql",
-        info: [
-            {Id: "成功次数:mysql", Data: "1", Timestamp: 222, Tags: "mysql"},
-            {Id: "失败次数:mysql", Data: "2", Timestamp: 333, Tags: "mysql"},
-            {Id: "总尝试次数:mysql", Data: "3", Timestamp: 444, Tags: "mysql"}
-        ]
-    },
-
-    {
-        id: "3",
-        tag: "ID",
-        info: [{Data: "1", Id: "tttttttttttt", Timestamp: 55555}]
-    },
-    {
-        id: "4",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 666, Tags: "SYN扫描失败"}]
-    },
-    {
-        id: "5",
-        tag: "mysql",
-        info: [
-            {Id: "成功次数:mysql", Data: "1", Timestamp: 777, Tags: "mysql"},
-            {Id: "失败次数:mysql", Data: "2", Timestamp: 888, Tags: "mysql"},
-            {Id: "总尝试次数:mysql", Data: "3", Timestamp: 999, Tags: "mysql"}
-        ]
-    },
-    {
-        id: "6",
-        tag: "mysql",
-        info: [
-            {Id: "成功次数:mysql", Data: "1", Timestamp: 101010, Tags: "mysql"},
-            {Id: "失败次数:mysql", Data: "2", Timestamp: 111111, Tags: "mysql"},
-            {Id: "总尝试次数:mysql", Data: "3", Timestamp: 121212, Tags: "mysql"}
-        ]
-    },
-    {
-        id: "7",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 141414, Tags: "SYN扫描失败"}]
-    },
-    {
-        id: "8",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 151515, Tags: "SYN扫描失败"}]
-    },
-    {
-        id: "9",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 161616, Tags: "SYN扫描失败"}]
-    },
-    {
-        id: "10",
-        tag: "SYN扫描失败",
-        info: [{Data: "请安装Npcap", Id: "SYN失败", Timestamp: 171717, Tags: "SYN扫描失败"}]
-    }
-]
-
-const getData = (): StatusCardListProps[] => {
-    const data: StatusCardListProps[] = []
-    const length = testData.length
-    for (let index = 0; index < 100; index++) {
-        const random = Math.floor(Math.random() * length)
-        const item = {
-            ...testData[random],
-            id: `${index}`
-        }
-        data.push(item)
-    }
-    return data
-}
+import ReactResizeDetector from "react-resize-detector"
 
 const getTextColor = (id: string) => {
     switch (true) {
@@ -125,15 +46,35 @@ const getBgColor = (id: string) => {
 }
 
 export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.memo((props) => {
-    const {title, data = [...getData()]} = props
+    const {title, data = []} = props
     const [scroll, setScroll] = useState<HorizontalScrollCardScrollProps>({
         scrollLeft: 0,
-        scrollRight: 1 //初始值要大于1
+        scrollRight: 0
     })
+    const [cardWidth, setCardWidth] = useState<number>(0)
+    const [cardWidthWrapper, setCardWidthWrapper] = useState<number>(0)
 
+    const horizontalScrollCardWrapperRef = useRef<HTMLDivElement>(null)
     const horizontalScrollCardRef = useRef<HTMLDivElement>(null)
     const scrollLeftIconRef = useRef<HTMLDivElement>(null)
     const scrollRightIconRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (!cardWidth) return
+        if (!cardWidthWrapper) return
+        if (cardWidth >= cardWidthWrapper && scroll.scrollRight === 0) {
+            setScroll({
+                ...scroll,
+                scrollRight: 1
+            })
+        }
+        if (cardWidthWrapper > cardWidth && scroll.scrollRight > 0) {
+            setScroll({
+                ...scroll,
+                scrollRight: 0
+            })
+        }
+    }, [cardWidth, cardWidthWrapper])
 
     useLongPress(
         () => {
@@ -192,7 +133,19 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                 <span className={styles["horizontal-scroll-card-heard-title"]}>{title}</span>
                 <div className={styles["horizontal-scroll-card-heard-total"]}>{data.length}</div>
             </div>
-            <div className={styles["horizontal-scroll-card-list-wrapper"]}>
+            <div className={styles["horizontal-scroll-card-list-wrapper"]} ref={horizontalScrollCardWrapperRef}>
+                <ReactResizeDetector
+                    onResize={(w, h) => {
+                        if (!w || !h) {
+                            return
+                        }
+                        setCardWidthWrapper(w)
+                    }}
+                    handleWidth={true}
+                    handleHeight={true}
+                    refreshMode={"debounce"}
+                    refreshRate={50}
+                />
                 {scroll.scrollLeft > 0 && (
                     <div
                         className={classNames(styles["horizontal-scroll-card-list-direction-left"])}
@@ -207,7 +160,7 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                     onScroll={onScrollCardList}
                 >
                     {data.map((cardItem) => (
-                        <React.Fragment key={cardItem.id}>
+                        <React.Fragment key={cardItem.tag}>
                             {cardItem.info.length > 1 ? (
                                 <HorizontalScrollCardItemInfoMultiple {...cardItem} />
                             ) : (
@@ -218,6 +171,18 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                             )}
                         </React.Fragment>
                     ))}
+                    <ReactResizeDetector
+                        onResize={(w, h) => {
+                            if (!w || !h) {
+                                return
+                            }
+                            setCardWidth(w)
+                        }}
+                        handleWidth={true}
+                        handleHeight={true}
+                        refreshMode={"debounce"}
+                        refreshRate={50}
+                    />
                 </div>
                 {scroll.scrollRight > 0 && (
                     <div
@@ -252,7 +217,7 @@ const HorizontalScrollCardItemInfoMultiple: React.FC<StatusCardListProps> = Reac
             <div className={styles["horizontal-scroll-card-list-item-info-multiple-infos"]}>
                 {info.map((ele) => (
                     <div
-                        key={ele.Timestamp}
+                        key={ele.Timestamp + ele.Id}
                         className={styles["horizontal-scroll-card-list-item-info-multiple-infos-item"]}
                     >
                         <div

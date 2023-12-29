@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState, useMemo} from "react"
+import React, {useEffect, useRef, useState, useMemo, CSSProperties} from "react"
 import {YakScript} from "../../invoker/schema"
 import {Card, Col, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag} from "antd"
 import {
@@ -37,6 +37,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
 import {Uint8ArrayToString} from "@/utils/str"
 import {v4 as uuidv4} from "uuid"
+import {HTTPHistorySourcePageType} from "@/components/HTTPHistory"
 const {ipcRenderer} = window.require("electron")
 
 export interface StatusCardProps {
@@ -175,6 +176,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
         }
         return props.defaultConsole ? "console" : "feature-0"
     })
+    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
     const xtermRef = useRef(null)
     const timer = useRef<any>(null)
     const [pageCode, setPageCode] = useState<number>(1)
@@ -321,7 +323,11 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 })}
                 {!!props.runtimeId && (
                     <YakitTabs.YakitTabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
-                        <CurrentHttpFlow runtimeId={props.runtimeId}></CurrentHttpFlow>
+                        <CurrentHttpFlow
+                            runtimeId={props.runtimeId}
+                            isOnlyTable={onlyShowFirstNode}
+                            onIsOnlyTable={setOnlyShowFirstNode}
+                        ></CurrentHttpFlow>
                     </YakitTabs.YakitTabPane>
                 )}
                 <YakitTabs.YakitTabPane
@@ -426,8 +432,42 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
 
 interface CurrentHttpFlowProp {
     runtimeId: string
+    httpHistoryTableTitleStyle?:CSSProperties
+    containerClassName?:string
+
+    /** 指定搜索url */
+    searchURL?: string
+    /** 指定搜索url参数 */
+    includeInUrl?: string | string[]
+    /** 是否只展示表格 */
+    isOnlyTable: boolean
+    /** 是否只展示表格 */
+    onIsOnlyTable: (value: boolean) => any
+    /** 是否展示详情 */
+    showDetail?: boolean
+    /** 表格的应用类型(history|MITM) */
+    pageType?: HTTPHistorySourcePageType
+
+    /** 
+     * 流量表筛选条件回调
+     * @param queryParams 流量表筛选条件JSON
+     */
+    onQueryParams?: (queryParams: string, execFlag?: boolean) => void
 }
-const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
+
+export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
+    const {
+        runtimeId,
+        httpHistoryTableTitleStyle,
+        containerClassName = "",
+        searchURL,
+        includeInUrl,
+        isOnlyTable,
+        onIsOnlyTable,
+        showDetail,
+        pageType,
+        onQueryParams
+    } = props
     const [highlightSearch, setHighlightSearch] = useState("")
     const lasetIdRef = useRef<number>()
     const [flowRequest, setFlowRequest] = useState<Uint8Array>()
@@ -435,7 +475,6 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
     const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [flow, setFlow] = useState<HTTPFlow>()
-    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
     const [historyId, setHistoryId] = useState<string>(uuidv4())
     
     const getHTTPFlowById = (id: number, rowDate: HTTPFlow) => {
@@ -444,7 +483,7 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
         setFlow(rowDate)
         setFlowRequest(undefined)
         setFlowResponse(undefined)
-        setOnlyShowFirstNode(false)
+        onIsOnlyTable(false)
 
         // 是否获取Request
         let isGetRequest: boolean = true
@@ -493,44 +532,53 @@ const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
             firstRatio: "50%",
             secondRatio: "50%"
         }
-        if (onlyShowFirstNode) {
+        if (isOnlyTable) {
             p.secondRatio = "0%"
             p.firstRatio = "100%"
         }
         return p
-    }, [onlyShowFirstNode])
+    }, [isOnlyTable])
 
     return (
         <>
             <YakitResizeBox
+                lineDirection='top'
                 isVer={true}
-                lineStyle={{display: onlyShowFirstNode ? "none" : ""}}
-                firstNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined}}
+                lineStyle={{display: isOnlyTable ? "none" : ""}}
+                firstNodeStyle={{padding: isOnlyTable ? 0 : undefined}}
+                secondNodeStyle={{display: isOnlyTable ? "none" : ""}}
                 firstNode={
                     <HTTPFlowTable
+                        toPlugin={true}
+                        runTimeId={runtimeId}
                         noDeleteAll={true}
-                        params={{
-                            RuntimeId: props.runtimeId,
-                            SourceType: "scan"
-                        }}
+                        params={{SourceType: "scan"}}
+                        searchURL={searchURL}
+                        includeInUrl={includeInUrl}
                         onSelected={(i) => {
                             if (!i) return
+                            lasetIdRef.current = i.Id
                             getHTTPFlowById(i.Id, i)
                         }}
                         onSearch={setHighlightSearch}
-                        onlyShowFirstNode={onlyShowFirstNode}
-                        setOnlyShowFirstNode={setOnlyShowFirstNode}
+                        onlyShowFirstNode={isOnlyTable}
+                        setOnlyShowFirstNode={onIsOnlyTable}
                         httpHistoryTableTitleStyle={{
                             borderLeft: "1px solid var(--yakit-border-color)",
                             borderRight: "1px solid var(--yakit-border-color)",
-                            paddingTop: 12
+                            paddingTop: 12,
+                            ...(httpHistoryTableTitleStyle||{}),
                         }}
                         onlyShowSearch={true}
                         historyId={historyId}
+                        titleHeight={47}
+                        containerClassName={containerClassName}
+                        pageType={pageType}
+                        onQueryParams={onQueryParams}
                     />
                 }
                 secondNode={
-                    flow && !onlyShowFirstNode ? (
+                    flow && (!isOnlyTable || showDetail) ? (
                         <HTTPFlowDetailRequestAndResponse
                             id={flow.Id}
                             defaultHttps={flow?.IsHTTPS}
@@ -570,7 +618,7 @@ export const YakitFeatureTabName = (feature: string, params: any) => {
     return feature.toUpperCase
 }
 
-const formatJson = (filterVal, jsonData) => {
+export const formatJson = (filterVal, jsonData) => {
     return jsonData.map((v) => filterVal.map((j) => v[j]))
 }
 

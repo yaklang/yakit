@@ -1,3 +1,12 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 // -------------------- 审核状态图标颜色 ↓↓↓ --------------------
 .aduit-status-flag-color {
     color: #ffb660;
@@ -7,74 +16,6 @@
 }
 .aduit-status-ban-color {
     color: #b4bbca;
-}
-// -------------------- tabs组件样式 ↓↓↓ --------------------
-.plugins-tabs {
-    width: 100%;
-    height: 100%;
-    .ant-tabs-content-holder {
-        border-right: 0;
-    }
-    .ant-tabs-ink-bar {
-        display: none;
-    }
-    & > .ant-tabs-nav {
-        width: 22px;
-        min-width: unset;
-        .ant-tabs-nav-wrap {
-            width: 22px;
-            border-left: 1px solid #eaecf3;
-        }
-        .ant-tabs-tab {
-            width: 21px;
-            display: flex;
-            padding: 8px 4px;
-            flex-direction: column;
-            border-radius: 0px 4px 4px 0px;
-            border-top: 1px solid #eaecf3;
-            border-right: 1px solid #eaecf3;
-            border-bottom: 1px solid #eaecf3;
-            background: #f0f1f3;
-            .ant-tabs-tab-btn {
-                width: 12px;
-                color: #31343f;
-                font-size: 12px;
-                font-weight: 400;
-                line-height: 14px;
-                writing-mode: vertical-rl;
-                text-shadow: unset;
-            }
-        }
-        .ant-tabs-tab + .ant-tabs-tab {
-            margin-top: 4px;
-        }
-        .ant-tabs-tab.ant-tabs-tab-active {
-            border-top: 1px solid #f28b44;
-            border-right: 1px solid #f28b44;
-            border-bottom: 1px solid #f28b44;
-            background: #f28b44;
-            .ant-tabs-tab-btn {
-                color: #ffffff;
-            }
-        }
-        .ant-tabs-tab.ant-tabs-tab-disabled {
-            .ant-tabs-tab-btn {
-                color: #ccd2de;
-            }
-        }
-    }
-    .ant-tabs-content-holder {
-        flex: 1;
-        overflow: hidden;
-        margin-right: 0;
-        .ant-tabs-content {
-            width: 100%;
-            height: 100%;
-        }
-    }
-    & > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
-        padding-right: 0;
-    }
 }
 // -------------------- tooltip组件样式 ↓↓↓ --------------------
 .plugins-tooltip {

@@ -1,0 +1,72 @@
+%icon {
+    color: var(--yakit-primary-5);
+}
+.plugin-execute-extra-params-drawer {
+    :global {
+        .ant-drawer-body {
+            padding: 16px 12px;
+        }
+        .ant-form-item-with-help .ant-form-item-explain {
+            font-size: 12px;
+            color: var(--yakit-helper-text-color);
+            line-height: 16px;
+            min-height: 16px;
+            margin-top: 2px;
+        }
+        .ant-form-item-label > label {
+            color: var(--yakit-header-color);
+        }
+        .ant-collapse-header-text {
+            width: 100%;
+        }
+        .ant-form-item {
+            margin-bottom: 8px;
+        }
+    }
+    .plugin-execute-extra-params-drawer-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .plugin-execute-extra-params-drawer-title-text {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--yakit-header-color);
+        }
+        .plugin-execute-extra-params-drawer-title-btns {
+            display: flex;
+            gap: 8px;
+        }
+    }
+    .to-end {
+        text-align: center;
+        color: var(--yakit-disable-text-color);
+        font-size: 11px;
+        padding-top: 12px;
+        padding-bottom: 24px;
+    }
+}
+.plugin-extra-params {
+    .plus-icon {
+        svg {
+            @extend %icon;
+        }
+    }
+    .form-list-panel {
+        &:hover {
+            .panel-list-extra-remove {
+                display: flex;
+            }
+        }
+        .panel-list-extra-remove {
+            display: none;
+        }
+    }
+}
+.extra-params-node-type {
+    :global {
+        .ant-collapse-item:first-child .ant-collapse-header {
+            border-top: 0;
+        }
+    }
+}

@@ -542,10 +542,12 @@ const PluginUserList: React.FC<PluginUserListProps> = React.memo(
         //     }, 200)
         // })
         const onRefreshUserList = useMemoizedFn(async () => {
-            try {
-                await fetchList(true)
-            } catch (error) {}
-            onRecalculationUserDetail()
+            setTimeout(async () => {
+                try {
+                    await fetchList(true)
+                } catch (error) {}
+                onRecalculationUserDetail()
+            }, 200)
         })
         const getInitTotal = useMemoizedFn(() => {
             apiFetchMineList({

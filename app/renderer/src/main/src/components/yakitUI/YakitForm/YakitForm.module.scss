@@ -1,8 +1,8 @@
 // ========================== form-label-small ==========================
 .form-label-small {
     :global {
-        .ant-form-item-label>label {
-            height: 24px
+        .ant-form-item-label > label {
+            height: 24px;
         }
     }
 }
@@ -31,8 +31,8 @@
 // ========================== form-label-large ==========================
 .form-label-large {
     :global {
-        .ant-form-item-label>label {
-            height: 32px
+        .ant-form-item-label > label {
+            height: 32px;
         }
     }
 }
@@ -52,6 +52,11 @@
         cursor: pointer;
     }
 
+    .dragger-help-active-disabled {
+        color: var(--yakit-disable-text-color);
+        cursor: not-allowed;
+    }
+
     .dragger-help-number {
         color: var(--yakit-primary-5);
         cursor: pointer;
@@ -61,7 +66,8 @@
 }
 
 // ========================== dragger-help-small ==========================
-.dragger-help-small {}
+.dragger-help-small {
+}
 
 // ========================== dragger-help-large ==========================
 .dragger-help-large {
@@ -90,4 +96,10 @@
     display: flex;
     justify-content: space-between;
     width: 100%;
+    font-size: 14px;
+    color: var(--yakit-body-text-color);
+}
+
+.form-item-content-help {
+    justify-content: flex-start;
 }

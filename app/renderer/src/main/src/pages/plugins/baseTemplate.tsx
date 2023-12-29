@@ -200,7 +200,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                     </div>
                     <div className={styles["header-btn"]}>
                         <YakitButton type='text2' icon={<OutlineReplyIcon />} onClick={onBack}>
-                            返回
+                            返回列表
                         </YakitButton>
                         <div className={styles["divider-style"]}></div>
                         <YakitButton
@@ -215,9 +215,23 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         </div>
     )
 })
-/** @name 插件详情-头部信息(样式未调完整) */
+/** @name 插件详情-头部信息 */
 export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props) => {
-    const {pluginName, help, titleNode, tags, extraNode, img, user, pluginId, updated_at, prImgs = [], type} = props
+    const {
+        pluginName,
+        help,
+        titleNode,
+        tagMinWidth = 20,
+        tags,
+        extraNode,
+        img,
+        user,
+        pluginId,
+        updated_at,
+        prImgs = [],
+        type,
+        basePluginId
+    } = props
 
     const tagList = useMemo(() => {
         if (!tags) return []
@@ -256,7 +270,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                             {titleNode || null}
                         </div>
                     </div>
-                    <div className={classNames(styles["info-tags"])}>
+                    <div style={{minWidth: tagMinWidth || 20}} className={classNames(styles["info-tags"])}>
                         {pluginTypeToName[type] && pluginTypeToName[type].name && (
                             <YakitTag color={pluginTypeToName[type]?.color as any}>
                                 {pluginTypeToName[type]?.name}
@@ -332,6 +346,15 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                                     {`插件ID : ${pluginId}`}
                                 </div>
                                 <CopyComponents className={classNames(styles["copy-icon-style"])} copyText={pluginId} />
+                            </div>
+                        </>
+                    )}
+                    {basePluginId && (
+                        <>
+                            <div className={styles["divider-style"]} />
+                            <div className={styles["copy-wrapper"]}>
+                                <span>来源:</span>
+                                <YakitTag style={{marginRight: 0}}>复制</YakitTag>
                             </div>
                         </>
                     )}

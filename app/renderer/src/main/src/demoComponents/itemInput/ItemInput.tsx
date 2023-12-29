@@ -221,7 +221,7 @@ export const DemoItemInputFloat: React.FC<ItemInputFloatProps> = memo((p) => {
 
 /**
  * @name 表单项-文件路径获取框
- * @description 文件支持拖拽放入，文件夹暂时不支持拖拽放入
+ * @description 文件/文件夹支持拖拽放入 setContent只支持选择文件
  */
 export const DemoItemInputDraggerPath: React.FC<ItemInputDraggerPathProps> = memo((p) => {
     const {
@@ -253,11 +253,11 @@ export const DemoItemInputDraggerPath: React.FC<ItemInputDraggerPathProps> = mem
             multiple={false}
             maxCount={1}
             showUploadList={false}
-            fileName={value}
-            setFileName={setValue}
+            value={value}
+            onChange={setValue}
             selectType={selectType}
             renderType={renderType}
-            InputProps={{
+            inputProps={{
                 style: {width: width || "100%"},
                 size: size as any,
                 disabled: !!disable,

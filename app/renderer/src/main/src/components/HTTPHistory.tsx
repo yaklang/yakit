@@ -208,7 +208,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         ref={webTreeRef}
                                         height={treeWrapHeight - 30}
                                         searchPlaceholder='请输入域名进行搜索，例baidu.com'
-                                        treeQueryparams={treeQueryparams}
+                                        treeExtraQueryparams={treeQueryparams}
                                         refreshTreeFlag={refreshTreeFlag}
                                         onGetUrl={(searchURL, includeInUrl) => {
                                             setSearchURL(searchURL)

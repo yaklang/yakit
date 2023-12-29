@@ -1,0 +1,121 @@
+@use "../../plugins.scss";
+.plugin-execute-result {
+    @extend %display-column-center;
+    justify-content: flex-start;
+    flex: 1;
+    overflow: hidden;
+    gap: 12px;
+    padding-top: 12px;
+    min-height: 500px;
+    .plugin-execute-result-wrapper {
+        @extend %display-column-center;
+        gap: 12px;
+    }
+    .table-renderTitle {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        padding: 14px 12px 10px;
+
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px; /* 133.333% */
+
+        .table-head-extra {
+            @extend %display-flex-center;
+            gap: 8px;
+        }
+    }
+
+    .plugin-execute-result-tabBar {
+        display: inline-block;
+        margin-left: 4px;
+        padding: 0px 8px;
+        background: #f6544a;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+
+    .plugin-execute-result-tabPane {
+        border: 1px solid var(--yakit-border-color);
+        border-top: 0;
+    }
+
+    .table-container {
+        border: 0 !important;
+        border-top: 1px solid var(--yakit-border-color) !important;
+    }
+    .custom-table-container {
+        border: 0 !important;
+    }
+}
+
+.plugin-execute-result-tab-content {
+    @extend %display-column-center;
+    justify-content: flex-start;
+    height: 100%;
+    color: var(--yakit-header-color);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px; /* 133.333% */
+    overflow: hidden;
+    .plugin-execute-result-tab-content-head {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        padding: 14px 12px 10px;
+        border-bottom: 1px solid var(--yakit-border-color);
+    }
+}
+.plugin-execute-result-tab-content-body {
+    padding: 12px;
+    overflow: overlay;
+}
+.plugin-execute-http-flow {
+    @extend %display-flex-center;
+    align-items: flex-start;
+    flex: 1;
+    height: 100%;
+    .plugin-execute-web-tree {
+        @extend %display-column-center;
+        justify-content: flex-start;
+        height: 100%;
+        padding: 12px;
+        padding-right: 0;
+    }
+    .current-http-table-container {
+        border: 0 !important;
+        border-top: 1px solid var(--yakit-border-color) !important;
+    }
+}
+
+.port-table-detail {
+    border: 1px solid var(--yakit-border-color);
+    overflow-y: overlay;
+    overflow-x: hidden;
+    height: 100%;
+}
+
+.table-host {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+}
+
+.htmlTitle-extra {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 20px;
+    word-break: keep-all;
+    .valid-data {
+        margin-bottom: 1px;
+    }
+}
+
+.plugin-execute-custom-table {
+    padding: 0;
+}

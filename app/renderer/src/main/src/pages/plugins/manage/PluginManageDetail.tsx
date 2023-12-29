@@ -19,7 +19,7 @@ import {
 import {useGetState, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
-import {Tabs, Tooltip} from "antd"
+import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginFilterParams, PluginInfoRefProps, PluginSearchParams, PluginSettingRefProps} from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
@@ -38,11 +38,12 @@ import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
 import {convertRemoteToLocalParams, convertRemoteToRemoteInfo} from "../editDetails/utils"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
 
-const {TabPane} = Tabs
+const {TabPane} = PluginTabs
 
 /** 详情页返回列表页 时的 关联数据 */
 export interface BackInfoProps {
@@ -141,7 +142,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             setLoading(true)
             apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
                 .then((res) => {
-                    console.log("res", res, {uuid: info.uuid, list_type: "check"})
                     if (res) {
                         setPlugin({...res})
                         setOldContent("")
@@ -173,6 +173,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         } catch (error) {}
                         if (!infoData.RiskType) infoData.RiskDetail = undefined
                         setInfoParams({...infoData})
+                        setCacheTags(infoData?.Tags || [])
                         // 设置配置信息
                         let settingData: PluginSettingParamProps = {
                             Params: convertRemoteToLocalParams(res.params || []).map((item) => {
@@ -306,9 +307,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             return undefined
         })
+        const [cacheTags, setCacheTags] = useState<string[]>()
         // 删除某些tag 触发  DNSLog和HTTP数据包变形开关的改变
         const onTagsCallback = useMemoizedFn(() => {
-            setInfoParams({...(fetchInfoData() || getInfoParams())})
+            setCacheTags({...fetchInfoData()}?.Tags || [])
         })
         // DNSLog和HTTP数据包变形开关的改变 影响 tag的增删
         const onSwitchToTags = useMemoizedFn((value: string[]) => {
@@ -316,6 +318,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 ...(fetchInfoData() || getInfoParams()),
                 Tags: value
             })
+            setCacheTags(value)
         })
 
         // 插件配置信息-相关逻辑
@@ -414,8 +417,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         if (callback) callback()
                         return
                     }
-
-                    console.log("audit-submit-api", {...info, ...audit})
 
                     apiAuditPluginDetaiCheck({...info, ...audit})
                         .then(() => {
@@ -593,7 +594,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 onBack={onPluginBack}
             >
                 <div className={styles["details-content-wrapper"]}>
-                    <Tabs tabPosition='right' className='plugins-tabs'>
+                    <PluginTabs tabPosition='right'>
                         <TabPane tab='源 码' key='code'>
                             <YakitSpin spinning={loading}>
                                 <div className={styles["plugin-info-wrapper"]}>
@@ -714,8 +715,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                 <div className={styles["setting-body"]}>
                                                     <PluginModifySetting
                                                         ref={settingRef}
-                                                        type='yak'
-                                                        tags={infoParams.Tags || []}
+                                                        type={plugin.type}
+                                                        tags={cacheTags || []}
                                                         setTags={onSwitchToTags}
                                                         data={settingParams}
                                                     />
@@ -740,7 +741,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         <TabPane tab='日 志(监修中)' key='log' disabled={true}>
                             <div></div>
                         </TabPane>
-                    </Tabs>
+                    </PluginTabs>
                 </div>
 
                 <ReasonModal

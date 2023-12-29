@@ -31,10 +31,16 @@
             align-items: center;
         }
 
+        .ant-select-clear {
+            right: 12px;
+        }
+
         .ant-select-arrow .anticon:not(.ant-select-suffix) {
             pointer-events: none;
         }
-
+        .ant-select-single.ant-select-show-arrow .ant-select-selection-item {
+            margin-bottom: 2px;
+        }
         .ant-select-single .ant-select-selector .ant-select-selection-item,
         .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
             display: flex;
@@ -43,7 +49,7 @@
         }
 
         .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            padding: 6px 12px;
+            // padding: 6px 12px;
             border-radius: 4px;
             border: 1px solid var(--select-border-color);
             width: 100%;
@@ -51,10 +57,6 @@
 
         .ant-select-single.ant-select-open .ant-select-selection-item {
             color: var(--select-font-color);
-        }
-
-        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            height: 16px;
         }
 
         .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector {
@@ -125,129 +127,6 @@
 .yakit-select-popup-y {
     transform: translateY(-2px);
 }
-
-// ========================== large ==========================
-.yakit-select-large {
-    // height: 32px;
-    font-size: 14px;
-
-    :global {
-        .ant-select {
-            font-size: 14px;
-        }
-
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            height: 32px;
-        }
-
-        .ant-select-single .ant-select-selector .ant-select-selection-item,
-        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
-            font-size: 14px;
-            height: 20px;
-        }
-
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            min-height: 32px;
-        }
-
-        .ant-select-selection-overflow {
-            min-height: 24px;
-            margin-bottom: 3px;
-        }
-
-        .ant-select-selection-overflow-item {
-            height: 24px;
-            line-height: 24px;
-            margin-top: 3px !important;
-        }
-        .ant-select-multiple .ant-select-selection-item {
-            height: 24px;
-            line-height: 24px;
-            margin-top: 0;
-        }
-        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
-            margin-top: 2px;
-            height: 26px;
-            line-height: 26px;
-        }
-    }
-}
-
-// ========================== middle ==========================
-.yakit-select-middle {
-    // height: 28px;
-
-    :global {
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            height: 28px;
-        }
-
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            min-height: 28px;
-        }
-
-        .ant-select-selection-overflow {
-            min-height: 20px;
-            margin-bottom: 2px;
-        }
-
-        .ant-select-selection-overflow-item {
-            height: 20px;
-            line-height: 20px;
-        }
-        .ant-select-multiple .ant-select-selection-item {
-            height: 20px;
-            line-height: 20px;
-        }
-        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
-            margin-top: 2px;
-            height: 22px;
-            line-height: 22px;
-        }
-    }
-}
-
-// ========================== small ==========================
-.yakit-select-small {
-    // height: 24px;
-
-    :global {
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            height: 24px;
-            padding: 4px 8px;
-        }
-
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            min-height: 24px !important;
-        }
-
-        .ant-select-selection-overflow {
-            min-height: 16px;
-            margin-bottom: 3px;
-        }
-
-        .ant-select-selection-overflow-item {
-            height: 16px;
-            line-height: 16px;
-        }
-
-        .ant-select-multiple .ant-select-selector::after {
-            line-height: 16px;
-        }
-        .ant-select-multiple .ant-select-selection-item {
-            height: 16px;
-            line-height: 16px;
-            margin-top: 1px;
-            border-radius: 2px;
-        }
-        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
-            margin-top: 2px;
-            height: 18px;
-            line-height: 18px;
-        }
-    }
-}
-
 // ========================== mode tags ==========================
 .yakit-select-wrapper-tags {
     --select-primary-icon-color: var(--yakit-primary-5);
@@ -266,14 +145,14 @@
             font-weight: 400;
         }
 
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            padding: 0 4px;
+        .ant-select:not(.ant-select-customize-input).ant-select-multiple .ant-select-selector {
+            // padding: 0 4px;
             height: auto;
-            min-height: 28px;
+            // min-height: 28px;
         }
 
         .ant-select-selection-overflow-item {
-            margin-top: 1px;
+            // margin-top: 1px;
             // display: inline-flex;
             display: inline-block;
             align-items: center;
@@ -281,6 +160,126 @@
         }
         .ant-tag {
             margin-right: 0;
+        }
+    }
+}
+// ========================== large ==========================
+.yakit-select-large {
+    // height: 32px;
+    font-size: 14px;
+
+    :global {
+        .ant-select {
+            font-size: 14px;
+        }
+
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            height: 32px;
+            min-height: 32px;
+            padding: 2px 12px 0 4px;
+        }
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+            padding: 2px 12px 0 12px;
+        }
+
+        .ant-select-single .ant-select-selector .ant-select-selection-item,
+        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+            font-size: 14px;
+            height: 20px;
+        }
+
+        .ant-select-selection-overflow {
+            min-height: 24px;
+        }
+
+        .ant-select-selection-overflow-item {
+            height: 24px;
+            line-height: 24px;
+            margin-bottom: 2px;
+        }
+        .ant-select-multiple .ant-select-selection-item {
+            height: 24px;
+            line-height: 24px;
+        }
+    }
+}
+
+// ========================== middle ==========================
+.yakit-select-middle {
+    // height: 28px;
+
+    :global {
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            height: 28px;
+            min-height: 28px;
+            padding: 2px 12px 0 4px;
+        }
+
+        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+            margin-bottom: 2px;
+        }
+
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+            padding: 2px 12px 0 12px;
+        }
+
+        .ant-select-selection-overflow {
+            min-height: 20px;
+        }
+
+        .ant-select-selection-overflow-item {
+            height: 20px;
+            line-height: 20px;
+            margin-bottom: 2px;
+        }
+        .ant-select-multiple .ant-select-selection-item {
+            height: 20px;
+            line-height: 20px;
+        }
+        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
+            height: 20px;
+            line-height: 20px;
+        }
+    }
+}
+
+// ========================== small ==========================
+.yakit-select-small {
+    // height: 24px;
+
+    :global {
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            height: 24px;
+            padding: 0px 12px 0 4px;
+            line-height: 16px;
+        }
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+            padding: 0px 12px 0 8px;
+        }
+
+        .ant-select-selection-overflow {
+            min-height: 16px;
+        }
+
+        .ant-select-selection-overflow-item {
+            height: 16px;
+            line-height: 16px;
+            margin-bottom: 2px;
+        }
+
+        .ant-select-multiple .ant-select-selector::after {
+            line-height: 16px;
+        }
+        .ant-select-multiple .ant-select-selection-item {
+            height: 16px;
+            line-height: 16px;
+            margin-top: 1px;
+            border-radius: 2px;
+        }
+        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
+            margin-top: 1px;
+            height: 16px;
+            line-height: 16px;
         }
     }
 }

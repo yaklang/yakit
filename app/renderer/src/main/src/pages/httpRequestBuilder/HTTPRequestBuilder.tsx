@@ -16,6 +16,7 @@ import styles from "./HTTPRequestBuilder.module.scss"
 import {PluginTypes} from "../pluginDebugger/PluginDebuggerPage"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {SetVariableItem} from "../fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
+import classNames from "classnames"
 
 const {YakitPanel} = YakitCollapse
 
@@ -442,61 +443,63 @@ interface VariableListProps {
     field: fields
     extra: (i: number) => React.ReactNode
     ref: React.Ref<any>
+    yakitPanelClassName?: string
 }
+export const VariableList: React.FC<VariableListProps> = React.forwardRef(
+    ({extra, field, yakitPanelClassName = ""}, ref) => {
+        const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
-const VariableList: React.FC<VariableListProps> = React.forwardRef(({extra, field}, ref) => {
-    const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
+        useImperativeHandle(ref, () => ({
+            variableActiveKey,
+            setVariableActiveKey
+        }))
 
-    useImperativeHandle(ref, () => ({
-        variableActiveKey,
-        setVariableActiveKey
-    }))
-
-    return (
-        <Form.List name={field}>
-            {(fields, {add}) => {
-                return (
-                    <>
-                        <YakitCollapse
-                            destroyInactivePanel={true}
-                            defaultActiveKey={variableActiveKey}
-                            activeKey={variableActiveKey}
-                            onChange={(key) => setVariableActiveKey(key as string[])}
-                            className={styles["variable-list"]}
-                            bordered={false}
-                        >
-                            {fields.map(({key, name}, i) => (
-                                <YakitPanel
-                                    key={`${key + ""}`}
-                                    header={`变量 ${name}`}
-                                    className={styles["variable-list-panel"]}
-                                    extra={extra(i)}
-                                >
-                                    <SetVariableItem name={name}/>
-                                </YakitPanel>
-                            ))}
-                        </YakitCollapse>
-                        {fields?.length === 0 && (
-                            <>
-                                <YakitButton
-                                    type='outline2'
-                                    onClick={() => {
-                                        add({Key: "", Value: ""})
-                                        setVariableActiveKey([
-                                            ...(variableActiveKey || []),
-                                            `${variableActiveKey?.length}`
-                                        ])
-                                    }}
-                                    icon={<PlusIcon />}
-                                    block
-                                >
-                                    添加
-                                </YakitButton>
-                            </>
-                        )}
-                    </>
-                )
-            }}
-        </Form.List>
-    )
-})
+        return (
+            <Form.List name={field}>
+                {(fields, {add}) => {
+                    return (
+                        <>
+                            <YakitCollapse
+                                destroyInactivePanel={true}
+                                defaultActiveKey={variableActiveKey}
+                                activeKey={variableActiveKey}
+                                onChange={(key) => setVariableActiveKey(key as string[])}
+                                className={styles["variable-list"]}
+                                bordered={false}
+                            >
+                                {fields.map(({key, name}, i) => (
+                                    <YakitPanel
+                                        key={`${key + ""}`}
+                                        header={`变量 ${name}`}
+                                        className={classNames(styles["variable-list-panel"], yakitPanelClassName)}
+                                        extra={extra(i)}
+                                    >
+                                        <SetVariableItem name={name}/>
+                                    </YakitPanel>
+                                ))}
+                            </YakitCollapse>
+                            {fields?.length === 0 && (
+                                <>
+                                    <YakitButton
+                                        type='outline2'
+                                        onClick={() => {
+                                            add({Key: "", Value: ""})
+                                            setVariableActiveKey([
+                                                ...(variableActiveKey || []),
+                                                `${variableActiveKey?.length}`
+                                            ])
+                                        }}
+                                        icon={<PlusIcon />}
+                                        block
+                                    >
+                                        添加
+                                    </YakitButton>
+                                </>
+                            )}
+                        </>
+                    )
+                }}
+            </Form.List>
+        )
+    }
+)

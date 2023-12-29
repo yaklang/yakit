@@ -339,8 +339,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const currentDom = document.getElementById(currentRow[renderKey])
             if (!currentDom) {
                 //  长按up
-                // scrollTo(index)
-                if (dom) dom.scrollTop = index * defItemHeight
+                scrollTo(index)
+                // if (dom) dom.scrollTop = index * defItemHeight
                 return
             }
 
@@ -352,7 +352,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 currentPosition.top + 28 <= top && currentPosition.top + 28 >= containerRefPosition.current.top
             if (!inViewport) dom.scrollTop = (index - Math.floor(rowNumber) + y) * defItemHeight + 1 + 6 // 1px border被外圈的border挡住了，所以+1,滚动条边角高度6
         },
-        {wait: 100, leading: true}
+        {wait: 200, leading: true}
     ).run
     useEffect(() => {
         if (isRightClickBatchOperate) document.addEventListener("mousedown", handleShiftMousedown)

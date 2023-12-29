@@ -11,7 +11,7 @@ import {
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
-import {Tabs, Tooltip} from "antd"
+import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakScript} from "@/pages/invoker/schema"
@@ -33,13 +33,14 @@ import {LoadingOutlined} from "@ant-design/icons"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
-
+import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
+import {LocalPluginExecute} from "./LocalPluginExecute"
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
-const {TabPane} = Tabs
+const {TabPane} = PluginTabs
 
 export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => {
     const {
@@ -90,9 +91,11 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     useEffect(() => {
         if (info) {
             setPlugin({...info})
+            setExecutorShow(false)
             // 必须加上延时，不然本次操作会成为组件(RollingLoadList)的初始数据
             setTimeout(() => {
                 setScrollTo(currentIndex)
+                setExecutorShow(true)
             }, 100)
         } else setPlugin(undefined)
     }, [info])
@@ -298,11 +301,72 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     })
     const isShowUpload: boolean = useMemo(() => {
         if (plugin?.IsCorePlugin) return false
-        // if (plugin?.isLocalPlugin) return true
-        // const isOwn = userInfo.user_id === +(plugin?.UserId || "0") || +(plugin?.UserId || "0") === 0
-        // return isOwn
         return !!plugin?.isLocalPlugin
     }, [plugin?.isLocalPlugin, plugin?.IsCorePlugin])
+    const headExtraNode = useMemo(() => {
+        return (
+            <>
+                <div className={styles["plugin-info-extra-header"]}>
+                    {removeLoading ? (
+                        <LoadingOutlined className={styles["loading-icon"]} />
+                    ) : (
+                        <YakitButton type='text2' icon={<OutlineTrashIcon onClick={onRemove} />} />
+                    )}
+                    <div className='divider-style' />
+                    <YakitButton type='text2' icon={<OutlinePencilaltIcon onClick={onEdit} />} />
+                    <div className='divider-style' />
+                    <FuncFilterPopover
+                        icon={<OutlineDotshorizontalIcon />}
+                        menu={{
+                            type: "primary",
+                            data: [
+                                {
+                                    key: "share",
+                                    label: "导出",
+                                    itemIcon: <OutlineExportIcon className={styles["plugin-local-extra-node-icon"]} />
+                                },
+                                {
+                                    key: "local-debugging",
+                                    label: "本地调试",
+                                    itemIcon: <OutlineTerminalIcon className={styles["plugin-local-extra-node-icon"]} />
+                                },
+                                {
+                                    key: "add-to-menu",
+                                    label: "添加到菜单栏",
+                                    itemIcon: (
+                                        <OutlinePluscircleIcon className={styles["plugin-local-extra-node-icon"]} />
+                                    )
+                                },
+                                {type: "divider"},
+                                {
+                                    key: "remove-menu",
+                                    itemIcon: <OutlineLogoutIcon className={styles["plugin-local-extra-node-icon"]} />,
+                                    label: "移出菜单栏",
+                                    type: "danger"
+                                }
+                            ],
+                            className: styles["func-filter-dropdown-menu"],
+                            onClick: onMenuSelect
+                        }}
+                        button={{type: "text2"}}
+                        placement='bottomRight'
+                    />
+                    {isShowUpload && (
+                        <>
+                            <YakitButton
+                                icon={<OutlineClouduploadIcon />}
+                                onClick={onUpload}
+                                className={styles["cloud-upload-icon"]}
+                                loading={uploadLoading}
+                            >
+                                上传
+                            </YakitButton>
+                        </>
+                    )}
+                </div>
+            </>
+        )
+    }, [removeLoading, isShowUpload])
     if (!plugin) return null
     return (
         <>
@@ -391,23 +455,24 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 spinLoading={spinLoading}
             >
                 <div className={styles["details-content-wrapper"]}>
-                    <Tabs defaultActiveKey='execute' tabPosition='right' className='plugins-tabs'>
+                    <PluginTabs defaultActiveKey='execute' tabPosition='right'>
                         <TabPane tab='执行' key='execute'>
                             <div className={styles["plugin-execute-wrapper"]}>
                                 {executorShow ? (
-                                    <LocalPluginExecutor
-                                        script={plugin}
-                                        isEdit={false}
-                                        setIsEdit={() => {}}
-                                        isShowPrivateDom={false}
-                                        settingShow={false}
-                                        setSettingShow={() => {}}
-                                        extraParams={[]}
-                                        setExtraParams={() => {}}
-                                        groups={[]}
-                                        updateGroups={() => {}}
-                                        patternMenu='expert'
-                                    />
+                                    // <LocalPluginExecutor
+                                    //     script={plugin}
+                                    //     isEdit={false}
+                                    //     setIsEdit={() => {}}
+                                    //     isShowPrivateDom={false}
+                                    //     settingShow={false}
+                                    //     setSettingShow={() => {}}
+                                    //     extraParams={[]}
+                                    //     setExtraParams={() => {}}
+                                    //     groups={[]}
+                                    //     updateGroups={() => {}}
+                                    //     patternMenu='expert'
+                                    // />
+                                    <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} />
                                 ) : (
                                     <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />
                                 )}
@@ -419,86 +484,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     pluginName={plugin.ScriptName}
                                     help={plugin.Help}
                                     tags={plugin.Tags}
-                                    extraNode={
-                                        <div className={styles["plugin-info-extra-header"]}>
-                                            {removeLoading ? (
-                                                <LoadingOutlined className={styles["loading-icon"]} />
-                                            ) : (
-                                                <YakitButton
-                                                    type='text2'
-                                                    icon={<OutlineTrashIcon onClick={onRemove} />}
-                                                />
-                                            )}
-                                            <div className='divider-style' />
-                                            <YakitButton
-                                                type='text2'
-                                                icon={<OutlinePencilaltIcon onClick={onEdit} />}
-                                            />
-                                            <div className='divider-style' />
-                                            <FuncFilterPopover
-                                                icon={<OutlineDotshorizontalIcon />}
-                                                menu={{
-                                                    type: "primary",
-                                                    data: [
-                                                        {
-                                                            key: "share",
-                                                            label: "导出",
-                                                            itemIcon: (
-                                                                <OutlineExportIcon
-                                                                    className={styles["plugin-local-extra-node-icon"]}
-                                                                />
-                                                            )
-                                                        },
-                                                        {
-                                                            key: "local-debugging",
-                                                            label: "本地调试",
-                                                            itemIcon: (
-                                                                <OutlineTerminalIcon
-                                                                    className={styles["plugin-local-extra-node-icon"]}
-                                                                />
-                                                            )
-                                                        },
-                                                        {
-                                                            key: "add-to-menu",
-                                                            label: "添加到菜单栏",
-                                                            itemIcon: (
-                                                                <OutlinePluscircleIcon
-                                                                    className={styles["plugin-local-extra-node-icon"]}
-                                                                />
-                                                            )
-                                                        },
-                                                        {type: "divider"},
-                                                        {
-                                                            key: "remove-menu",
-                                                            itemIcon: (
-                                                                <OutlineLogoutIcon
-                                                                    className={styles["plugin-local-extra-node-icon"]}
-                                                                />
-                                                            ),
-                                                            label: "移出菜单栏",
-                                                            type: "danger"
-                                                        }
-                                                    ],
-                                                    className: styles["func-filter-dropdown-menu"],
-                                                    onClick: onMenuSelect
-                                                }}
-                                                button={{type: "text2"}}
-                                                placement='bottomRight'
-                                            />
-                                            {isShowUpload && (
-                                                <>
-                                                    <YakitButton
-                                                        icon={<OutlineClouduploadIcon />}
-                                                        onClick={onUpload}
-                                                        className={styles["cloud-upload-icon"]}
-                                                        loading={uploadLoading}
-                                                    >
-                                                        上传
-                                                    </YakitButton>
-                                                </>
-                                            )}
-                                        </div>
-                                    }
+                                    extraNode={headExtraNode}
                                     img={plugin.HeadImg || ""}
                                     user={plugin.Author}
                                     pluginId={plugin.UUID}
@@ -522,7 +508,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         <TabPane tab='问题反馈' key='feedback' disabled={true}>
                             <div>问题反馈</div>
                         </TabPane>
-                    </Tabs>
+                    </PluginTabs>
                 </div>
             </PluginDetails>
         </>

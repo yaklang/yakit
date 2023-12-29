@@ -40,9 +40,9 @@ import {Tooltip} from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import {
     DeleteLocalPluginsByWhereRequestProps,
-    DeleteYakScriptRequestProps,
+    DeleteYakScriptRequestByIdsProps,
     apiDeleteLocalPluginsByWhere,
-    apiDeleteYakScript,
+    apiDeleteYakScriptByIds,
     apiFetchGroupStatisticsLocal,
     apiGetYakScriptByOnlineID,
     apiQueryYakScript,
@@ -274,7 +274,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         }
     })
     const onRefLocalPluginList = useMemoizedFn(() => {
-        fetchList(true)
+        setTimeout(() => {
+            fetchList(true)
+        }, 200)
     })
 
     /**获取插件删除的提醒记录状态 */
@@ -528,10 +530,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 await apiDeleteLocalPluginsByWhere(deleteAllParams)
             } else {
                 // 批量删除
-                let deleteBatchParams: DeleteYakScriptRequestProps = {
+                let deleteBatchParams: DeleteYakScriptRequestByIdsProps = {
                     Ids: (selectList || []).map((ele) => ele.Id)
                 }
-                await apiDeleteYakScript(deleteBatchParams)
+                await apiDeleteYakScriptByIds(deleteBatchParams)
             }
         } catch (error) {}
         setRemoveCheckVisible(false)
@@ -570,11 +572,11 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
     /**单个删除基础 */
     const onRemovePluginSingleBase = useMemoizedFn((data: YakScript) => {
-        let deleteParams: DeleteYakScriptRequestProps = {
+        let deleteParams: DeleteYakScriptRequestByIdsProps = {
             Ids: [data.Id]
         }
         return new Promise<void>((resolve, reject) => {
-            apiDeleteYakScript(deleteParams)
+            apiDeleteYakScriptByIds(deleteParams)
                 .then(() => {
                     const index = selectList.findIndex((ele) => ele.ScriptName === data.ScriptName)
                     if (index !== -1) {

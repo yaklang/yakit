@@ -1,15 +1,15 @@
+import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+
 export interface HorizontalScrollCardProps {
     /**卡片的标题 */
     title: string
     /**卡片数据源 */
-    data?: StatusCardListProps[]
+    data: HoldGRPCStreamProps.InfoCards[]
 }
 
 export interface StatusCardListProps {
-    /**唯一值 做key */
-    id: string
     /**具体信息 */
-    info: StatusCardProps[]
+    info: HoldGRPCStreamProps.InfoCard[]
     tag: string
 }
 /**插件返回的 CacheStatusCardProps */

@@ -70,6 +70,8 @@ export interface PluginDetailHeaderProps {
     help?: string
     /** title元素额外节点 */
     titleNode?: ReactNode
+    /** tag(type+标签内容)最小宽度 */
+    tagMinWidth?: number
     /** 插件标签组 */
     tags?: string
     /** 右侧拓展元素 */
@@ -86,6 +88,10 @@ export interface PluginDetailHeaderProps {
     prImgs?: CollaboratorInfoProps[]
     /**插件类型 */
     type: string
+    /**
+     * 复制源插件
+     */
+    basePluginId?: number
 }
 /**协作者信息 */
 export interface CollaboratorInfoProps {

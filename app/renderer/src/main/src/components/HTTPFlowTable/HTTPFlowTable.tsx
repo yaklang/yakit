@@ -1,11 +1,11 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
-import {Button, Divider, Empty, Form, Input, Popover, Select, Space, Tooltip, Badge} from "antd"
+import {Button, Divider, Empty, Form, Input, Select, Space, Tooltip, Badge} from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema} from "../../pages/invoker/schema"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
-import {yakitInfo, yakitNotify} from "../../utils/notification"
+import {yakitNotify} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -31,18 +31,13 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {FooterBottom, TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
 import {
     CheckCircleIcon,
-    FilterIcon,
-    RefreshIcon,
     RemoveIcon,
-    SearchIcon,
     StatusOfflineIcon,
     ColorSwatchIcon,
     ChevronDownIcon,
     ArrowCircleRightSvgIcon,
     ChromeFrameSvgIcon,
-    CheckIcon,
-    TrashIcon,
-    SaveIcon
+    CheckIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
@@ -52,7 +47,7 @@ import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "../yakitUI/YakitTag/YakitCheckableTag"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitMenu, YakitMenuItemProps} from "../yakitUI/YakitMenu/YakitMenu"
+import {YakitMenu} from "../yakitUI/YakitMenu/YakitMenu"
 import {YakitDropdownMenu} from "../yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -62,7 +57,7 @@ import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {ShareModal} from "@/pages/fuzzer/components/ShareImportExportData"
 import {YakitRoute} from "@/routes/newRoute"
 import {useSize} from "ahooks"
-import {HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts, HTTPFlowTableFromValue} from "./HTTPFlowTableForm"
+import {HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts} from "./HTTPFlowTableForm"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon} from "../layout/icons"
 import {ExportSelect} from "../DataExport/DataExport"
@@ -70,6 +65,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import { useHttpFlowStore } from "@/store/httpFlow"
+import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -436,6 +432,13 @@ export interface HTTPFlowTableProp {
     searchURL?: string
     includeInUrl?: string | string[]
     onQueryParams?: (queryParams: string, execFlag?: boolean) => void
+    titleHeight?: number
+    containerClassName?: string
+
+    /** 是否为插件执行使用 */
+    toPlugin?: boolean
+    /** RuntimeId 流量过滤条件(RuntimeId) */
+    runTimeId?: string
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -730,7 +733,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         refresh,
         onlyShowSearch = false,
         pageType,
-        historyId
+        historyId,
+        titleHeight = 38,
+        containerClassName = "",
+        toPlugin = false,
+        runTimeId
     } = props
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
@@ -1008,6 +1015,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     ).run
 
     /**
+     * @name 外面触发搜索条件的改变状态
+     * @description 因为直接进行触发搜索时，可能当前已存在搜索过程，导致触发搜索失败
+     */
+    const triggerFilterValue = useRef<boolean>(false)
+    /**
      * 网站树部分
      */
     useUpdateEffect(() => {
@@ -1027,9 +1039,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setSelectedRowKeys([])
             setSelectedRows([])
             setIsAllSelect(false)
-            setTimeout(() => {
-                updateData()
-            }, 10)
+            if (isGrpcRef.current) {
+                triggerFilterValue.current = true
+            } else {
+                setTimeout(() => {
+                    updateData()
+                }, 10)
+            }
         }
     }, [props.searchURL, props.includeInUrl, pageType])
     const [queryParams, setQueryParams] = useState<string>("")
@@ -1053,10 +1069,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "offset" | "update") => {
+        // 插件执行中流量数据必有runTimeId
+        if (toPlugin && !runTimeId) {
+            setTimeout(() => {
+                setLoading(false)
+                isGrpcRef.current = false
+            }, 200)
+            return
+        }
+
         updateQueryParams(query)
         query = query.StatusCode ? {...query, StatusCode: query.StatusCode.join(",")} : query
         if (isGrpcRef.current) return
         isGrpcRef.current = true
+
+        if (runTimeId) query.RuntimeId = runTimeId
+
         // 查询数据
         ipcRenderer
             .invoke("QueryHTTPFlows", query)
@@ -1299,6 +1327,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const scrollUpdate = useMemoizedFn(() => {
+        if (isGrpcRef.current) return
+
         const scrollTop = tableRef.current?.containerRef?.scrollTop
         const clientHeight = tableRef.current?.containerRef?.clientHeight
         const scrollHeight = tableRef.current?.containerRef?.scrollHeight
@@ -1307,6 +1337,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (typeof scrollTop === "number" && typeof clientHeight === "number" && typeof scrollHeight === "number") {
             // scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
             scrollBottomPercent = Number(((scrollTop + clientHeight) / scrollHeight).toFixed(2))
+        }
+
+        if (triggerFilterValue.current) {
+            updateData()
+            triggerFilterValue.current = false
         }
 
         // 滚动条接近触顶
@@ -1561,7 +1596,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <SearchIcon onClick={() => getHTTPFlowsFieldGroup(true)} />,
+                    filterIcon: (
+                        <OutlineSearchIcon
+                            className={style["filter-icon"]}
+                            onClick={() => getHTTPFlowsFieldGroup(true)}
+                        />
+                    ),
                     filters: tags
                 }
             },
@@ -1700,7 +1740,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <SearchIcon />,
+                    filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />,
                     filters: contentType
                 }
             },
@@ -2114,29 +2154,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     })
     const onExcelExport = (list) => {
-        const titleValue = columns
-        .filter((item) => !["序号", "操作"].includes(item.title))
-        .map((item) => item.title)
-            const exportValue = [...titleValue, "请求包", "响应包"]
-            const m = showYakitModal({
-                title: "导出字段",
-                content: (
-                    <ExportSelect
-                        exportValue={exportValue}
-                        setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
-                        exportKey='MITM-HTTP-HISTORY-EXPORT-KEY'
-                        fileName='History'
-                        getData={(pagination) => getExcelData(pagination, list)}
-                    />
-                ),
-                onCancel: () => {
-                    m.destroy()
-                    setSelectedRowKeys([])
-                    setSelectedRows([])
-                },
-                width: 650,
-                footer: null
-            })
+        const titleValue = columns.filter((item) => !["序号", "操作"].includes(item.title)).map((item) => item.title)
+        const exportValue = [...titleValue, "请求包", "响应包"]
+        const m = showYakitModal({
+            title: "导出字段",
+            content: (
+                <ExportSelect
+                    exportValue={exportValue}
+                    setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
+                    exportKey='MITM-HTTP-HISTORY-EXPORT-KEY'
+                    fileName='History'
+                    getData={(pagination) => getExcelData(pagination, list)}
+                />
+            ),
+            onCancel: () => {
+                m.destroy()
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            },
+            width: 650,
+            footer: null
+        })
     }
 
     const menuData = [
@@ -2580,7 +2618,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setCurrentIndex={setCurrentIndex}
                     scrollToIndex={scrollToIndex}
                     query={params}
-                    titleHeight={38}
+                    titleHeight={titleHeight}
                     renderTitle={
                         <div
                             className={style["http-history-table-title"]}
@@ -2693,7 +2731,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     )}
                                     {size?.width && size?.width < 1000 ? (
                                         <YakitPopover trigger='click' placement='bottomRight' content={searchNode}>
-                                            <YakitButton icon={<SearchIcon />} type='outline2' />
+                                            <YakitButton icon={<OutlineSearchIcon />} type='outline2' />
                                         </YakitPopover>
                                     ) : (
                                         <YakitInput.Search
@@ -2952,7 +2990,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                             >
                                                 <YakitButton
                                                     type='text2'
-                                                    icon={<RefreshIcon />}
+                                                    icon={<OutlineRefreshIcon />}
                                                     onClick={(e) => e.stopPropagation()}
                                                 />
                                             </Badge>
@@ -2991,6 +3029,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     onChange={onTableChange}
                     onSetCurrentRow={onSetCurrentRow}
                     useUpAndDown={true}
+                    containerClassName={containerClassName}
                 />
             </div>
 
