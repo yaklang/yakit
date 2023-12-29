@@ -432,8 +432,8 @@ export interface HTTPFlowTableProp {
     searchURL?: string
     includeInUrl?: string | string[]
     onQueryParams?: (queryParams: string, execFlag?: boolean) => void
-    titleHeight?:number
-    containerClassName?:string
+    titleHeight?: number
+    containerClassName?: string
 
     /** 是否为插件执行使用 */
     toPlugin?: boolean
@@ -734,8 +734,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         onlyShowSearch = false,
         pageType,
         historyId,
-        titleHeight=38,
-        containerClassName='',
+        titleHeight = 38,
+        containerClassName = "",
         toPlugin = false,
         runTimeId
     } = props
@@ -1015,6 +1015,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     ).run
 
     /**
+     * @name 外面触发搜索条件的改变状态
+     * @description 因为直接进行触发搜索时，可能当前已存在搜索过程，导致触发搜索失败
+     */
+    const triggerFilterValue = useRef<boolean>(false)
+    /**
      * 网站树部分
      */
     useUpdateEffect(() => {
@@ -1034,9 +1039,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setSelectedRowKeys([])
             setSelectedRows([])
             setIsAllSelect(false)
-            setTimeout(() => {
-                updateData()
-            }, 10)
+            if (isGrpcRef.current) {
+                triggerFilterValue.current = true
+            } else {
+                setTimeout(() => {
+                    updateData()
+                }, 10)
+            }
         }
     }, [props.searchURL, props.includeInUrl, pageType])
     const [queryParams, setQueryParams] = useState<string>("")
@@ -1061,7 +1070,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "offset" | "update") => {
         // 插件执行中流量数据必有runTimeId
-        if(toPlugin && !runTimeId) {
+        if (toPlugin && !runTimeId) {
             setTimeout(() => {
                 setLoading(false)
                 isGrpcRef.current = false
@@ -1074,7 +1083,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (isGrpcRef.current) return
         isGrpcRef.current = true
 
-        if(runTimeId) query.RuntimeId = runTimeId
+        if (runTimeId) query.RuntimeId = runTimeId
 
         // 查询数据
         ipcRenderer
@@ -1318,6 +1327,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const scrollUpdate = useMemoizedFn(() => {
+        if (isGrpcRef.current) return
+
         const scrollTop = tableRef.current?.containerRef?.scrollTop
         const clientHeight = tableRef.current?.containerRef?.clientHeight
         const scrollHeight = tableRef.current?.containerRef?.scrollHeight
@@ -1326,6 +1337,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (typeof scrollTop === "number" && typeof clientHeight === "number" && typeof scrollHeight === "number") {
             // scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
             scrollBottomPercent = Number(((scrollTop + clientHeight) / scrollHeight).toFixed(2))
+        }
+
+        if (triggerFilterValue.current) {
+            updateData()
+            triggerFilterValue.current = false
         }
 
         // 滚动条接近触顶
@@ -1580,7 +1596,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <OutlineSearchIcon className={style['filter-icon']} onClick={() => getHTTPFlowsFieldGroup(true)} />,
+                    filterIcon: (
+                        <OutlineSearchIcon
+                            className={style["filter-icon"]}
+                            onClick={() => getHTTPFlowsFieldGroup(true)}
+                        />
+                    ),
                     filters: tags
                 }
             },
@@ -1719,7 +1740,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterSearchInputProps: {
                         size: "small"
                     },
-                    filterIcon: <OutlineSearchIcon className={style['filter-icon']} />,
+                    filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />,
                     filters: contentType
                 }
             },
@@ -2133,29 +2154,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     })
     const onExcelExport = (list) => {
-        const titleValue = columns
-        .filter((item) => !["序号", "操作"].includes(item.title))
-        .map((item) => item.title)
-            const exportValue = [...titleValue, "请求包", "响应包"]
-            const m = showYakitModal({
-                title: "导出字段",
-                content: (
-                    <ExportSelect
-                        exportValue={exportValue}
-                        setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
-                        exportKey='MITM-HTTP-HISTORY-EXPORT-KEY'
-                        fileName='History'
-                        getData={(pagination) => getExcelData(pagination, list)}
-                    />
-                ),
-                onCancel: () => {
-                    m.destroy()
-                    setSelectedRowKeys([])
-                    setSelectedRows([])
-                },
-                width: 650,
-                footer: null
-            })
+        const titleValue = columns.filter((item) => !["序号", "操作"].includes(item.title)).map((item) => item.title)
+        const exportValue = [...titleValue, "请求包", "响应包"]
+        const m = showYakitModal({
+            title: "导出字段",
+            content: (
+                <ExportSelect
+                    exportValue={exportValue}
+                    setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
+                    exportKey='MITM-HTTP-HISTORY-EXPORT-KEY'
+                    fileName='History'
+                    getData={(pagination) => getExcelData(pagination, list)}
+                />
+            ),
+            onCancel: () => {
+                m.destroy()
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            },
+            width: 650,
+            footer: null
+        })
     }
 
     const menuData = [
