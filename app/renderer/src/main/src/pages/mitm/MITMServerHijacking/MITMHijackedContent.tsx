@@ -17,6 +17,7 @@ import classNames from "classnames"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useStore} from "@/store/mitmState"
 import { HTTPHistory } from "@/components/HTTPHistory"
+import { RemoteGV } from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -68,6 +69,18 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [width, setWidth] = useState<number>(0)
 
     const {setIsRefreshHistory} = useStore()
+
+    const [calloutColor, setCalloutColor] = useState<string>("")
+    useEffect(() => {
+        getRemoteValue(RemoteGV.MitmManualCalloutColor).then((calloutColor: string) => {
+            if (calloutColor !== null) {
+                setCalloutColor(calloutColor)
+            }
+        })
+    }, [])
+    useEffect(() => {
+        setRemoteValue(RemoteGV.MitmManualCalloutColor, calloutColor)
+    }, [calloutColor])
 
     const isManual = useCreation(() => {
         return autoForward === "manual"
@@ -185,7 +198,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             setHijackResponseType("never")
         }
         setForResponse(false)
-
+        // TODO 需要将calloutColor传给后端
         if (forResponse) {
             ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacket, currentPacketId).finally(() => {
                 clearCurrentPacket()
@@ -277,6 +290,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         onDiscardRequest={onDiscardRequest}
                         onSubmitData={forward}
                         width={width}
+                        calloutColor={calloutColor}
+                        onSetCalloutColor={setCalloutColor}
                     />
                 )
             case "log":
@@ -300,6 +315,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 currentIsWebsocket={currentIsWebsocket}
                                 currentIsForResponse={currentIsForResponse}
                                 className={styles["mitm-hijacked-manual-content-url"]}
+                                calloutColor={calloutColor}
+                                onSetCalloutColor={setCalloutColor}
                             />
                         )}
                         <div className={styles["mitm-hijacked-manual-content-editor"]}>
@@ -317,6 +334,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 onSetHijackResponseType={onSetHijackResponseType}
                                 currentIsForResponse={currentIsForResponse}
                                 requestPacket={requestPacket}
+                                onSetCalloutColor={setCalloutColor}
                             />
                         </div>
                     </div>

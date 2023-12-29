@@ -517,6 +517,7 @@ export const availableColors = [
     {
         color: "RED",
         title: "红色[#F4736B]",
+        tag_title: "红色",
         className: TableRowColor("RED"),
         searchWord: "YAKIT_COLOR_RED",
         render: (
@@ -529,6 +530,7 @@ export const availableColors = [
     {
         color: "GREEN",
         title: "绿色[#56C991]",
+        tag_title: "绿色",
         className: TableRowColor("GREEN"),
         searchWord: "YAKIT_COLOR_GREEN",
         render: (
@@ -541,6 +543,7 @@ export const availableColors = [
     {
         color: "BLUE",
         title: "蓝色[#4A94F8]",
+        tag_title: "蓝色",
         className: TableRowColor("BLUE"),
         searchWord: "YAKIT_COLOR_BLUE",
         render: (
@@ -553,6 +556,7 @@ export const availableColors = [
     {
         color: "YELLOW",
         title: "黄色[#FFD583]",
+        tag_title: "黄色",
         searchWord: "YAKIT_COLOR_YELLOW",
         className: TableRowColor("YELLOW"),
         render: (
@@ -565,6 +569,7 @@ export const availableColors = [
     {
         color: "ORANGE",
         title: "橙色[#FFB660]",
+        tag_title: "橙色",
         searchWord: "YAKIT_COLOR_ORANGE",
         className: TableRowColor("ORANGE"),
         render: (
@@ -577,6 +582,7 @@ export const availableColors = [
     {
         color: "PURPLE",
         title: "紫色[#8863F7]",
+        tag_title: "紫色",
         searchWord: "YAKIT_COLOR_PURPLE",
         className: TableRowColor("PURPLE"),
         render: (
@@ -589,6 +595,7 @@ export const availableColors = [
     {
         color: "CYAN",
         title: "天蓝色[#35D8EE]",
+        tag_title: "天蓝色",
         searchWord: "YAKIT_COLOR_CYAN",
         className: TableRowColor("CYAN"),
         render: (
@@ -601,6 +608,7 @@ export const availableColors = [
     {
         color: "GREY",
         title: "灰色[#B4BBCA]",
+        tag_title: "灰色",
         searchWord: "YAKIT_COLOR_GREY",
         className: TableRowColor("GREY"),
         render: (
