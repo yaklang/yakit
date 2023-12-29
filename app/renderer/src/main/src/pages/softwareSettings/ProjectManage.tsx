@@ -487,17 +487,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         )
     })
 
-    const handleTemporaryProject = async () => {
-        if (temporaryProjectId) {
-            try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
-                setTemporaryProjectId("")
-            } catch (error) {
-                yakitFailed(error + "")
-            }
-        }
-    }
-
     useEffect(() => {
         emiter.on("onGetProjectInfo", getProjectInfo)
         return () => {
@@ -507,7 +496,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
     const getProjectInfo = async () => {
         try {
-            await handleTemporaryProject()
+            await delTemporaryProject()
             const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProject")
             setLatestProject(res2 || undefined)
         } catch (error) {
@@ -698,7 +687,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     }>({visible: false})
     const [modalLoading, setModalLoading] = useState<boolean>(false)
 
-    const {temporaryProjectId, isExportTemporaryProjectFlag, setTemporaryProjectId} = useTemporaryProjectStore()
+    const {isExportTemporaryProjectFlag, setTemporaryProjectId, delTemporaryProject} = useTemporaryProjectStore()
 
     const [detectionTemporaryProjectVisible, setDetectionTemporaryProjectVisible] = useState<boolean>(false)
 
@@ -1463,7 +1452,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 content='检测到有临时项目正在使用中，是否需要删除并创建新的临时项目'
                 onOk={async () => {
                     // 先删临时项目
-                    await handleTemporaryProject()
+                    await delTemporaryProject()
                     await creatTemporaryProject()
                     setDetectionTemporaryProjectVisible(false)
                 }}

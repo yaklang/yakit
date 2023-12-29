@@ -236,22 +236,11 @@ function NewApp() {
         }
     }, [])
 
-    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+    const {temporaryProjectId, delTemporaryProject} = useTemporaryProjectStore()
     const temporaryProjectIdRef = useRef<string>("")
     useEffect(() => {
         temporaryProjectIdRef.current = temporaryProjectId
     }, [temporaryProjectId])
-
-    const handleTemporaryProject = async () => {
-        if (temporaryProjectIdRef.current) {
-            try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectIdRef.current, IsDeleteLocal: true})
-                setTemporaryProjectId("")
-            } catch (error) {
-                yakitFailed(error + "")
-            }
-        }
-    }
 
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const handleKillAllRunNode = async () => {
@@ -274,7 +263,7 @@ function NewApp() {
             // 如果关闭按钮有其他的弹窗 则不显示 showMessageBox
             const showCloseMessageBox = !(Array.from(runNodeList).length || temporaryProjectIdRef.current)
             await handleKillAllRunNode()
-            await handleTemporaryProject()
+            await delTemporaryProject()
             await visitorsStatisticsFun()
             // 通知应用退出
             if (dynamicStatus.isDynamicStatus) {

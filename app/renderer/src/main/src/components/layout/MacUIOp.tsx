@@ -41,7 +41,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
 
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag} =
+    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectNoPromptFlag} =
         useTemporaryProjectStore()
     const lastTemporaryProjectIdRef = useRef<string>("")
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
