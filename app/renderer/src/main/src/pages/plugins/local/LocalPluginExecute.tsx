@@ -30,7 +30,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
     const isShowResult = useMemo(() => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])
-    console.log("streamInfo", streamInfo)
+
     return (
         <>
             <LocalPluginExecuteDetailHeard

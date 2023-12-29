@@ -111,7 +111,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             if (runTimeId) {
                 runTime_id = params || search ? `&runtime_id=${runTimeId}` : `runtime_id=${runTimeId}`
             }
-            console.log("webtree-first", `${yakurl}?${params}${search}${runTime_id}`)
+
             loadFromYakURLRaw(`${yakurl}?${params}${search}${runTime_id}`, (res) => {
                 // 判断是否是搜索树
                 if (searchTreeFlag.current) {
@@ -192,7 +192,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             if (runTimeId) {
                 obj.Query.push({Key: "runtime_id", Value: runTimeId})
             }
-            console.log("webtree-loadmore", JSON.stringify(obj))
+
             requestYakURLList(
                 obj,
                 (rsp) => {
