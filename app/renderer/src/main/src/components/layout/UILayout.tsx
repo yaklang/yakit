@@ -72,8 +72,8 @@ import {NetWorkApi} from "@/services/fetch"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
-import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
-import { visitorsStatisticsFun } from "@/utils/visitorsStatistics"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -885,11 +885,22 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           if (flag) {
                               setTemporaryProjectNoPromptFlag(flag === "true")
                           }
+                          // INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
+                          if (isDev.current) {
+                              const res = await ipcRenderer.invoke("GetDefaultProject")
+                              if (res) {
+                                  ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id})
+                                  setLinkDatabase(false)
+                                  setYakitMode("")
+                                  setProjectName(res.ProjectName)
+                              }
+                          } else {
+                              setLinkDatabase(true)
+                              setYakitMode("soft")
+                          }
                       } catch (error) {
                           yakitFailed(error + "")
                       }
-                      setLinkDatabase(true)
-                      setYakitMode("soft")
                       setTimeout(() => setEngineLink(true), 100)
                   })()
         }
