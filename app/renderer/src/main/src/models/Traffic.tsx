@@ -23,6 +23,7 @@ export interface TrafficSession {
     IsForceClosed: boolean
     HaveClientHello: boolean
     SNI: string
+    Protocol: string
 }
 
 export interface TrafficTCPReassembled {
@@ -54,6 +55,7 @@ export interface TrafficPacket {
     TransportEndpointPortDst: number
     SessionId: string
     Protocol: string
+    Info: string
     Id: number
 }
 

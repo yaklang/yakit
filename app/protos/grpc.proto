@@ -115,6 +115,7 @@ message GetYakScriptByOnlineIDRequest {
 service Yak {
   // version
   rpc Version(Empty) returns (VersionResponse);
+  rpc YakVersionAtLeast(YakVersionAtLeastRequest) returns (GeneralResponse);
 
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
@@ -166,6 +167,8 @@ service Yak {
   rpc YakScriptRiskTypeList(Empty) returns (YakScriptRiskTypeListResponse);
   rpc SaveNewYakScript(SaveNewYakScriptRequest) returns (YakScript);
   rpc SaveYakScriptToOnline(SaveYakScriptToOnlineRequest) returns (stream SaveYakScriptToOnlineResponse);
+  rpc ExportLocalYakScript(ExportLocalYakScriptRequest) returns (ExportLocalYakScriptResponse);
+  rpc ImportYakScript(ImportYakScriptRequest) returns (stream ImportYakScriptResult);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -236,26 +239,26 @@ service Yak {
   // Payload 相关接口
   // database payload group
   rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse); // query by [keyword/group/folder]
-  rpc QueryPayloadFromFile(QueryPayloadFromFileRequest) returns (QueryPayloadFromFileResponse);  
+  rpc QueryPayloadFromFile(QueryPayloadFromFileRequest) returns (QueryPayloadFromFileResponse);
   // delete by [id/group/folder]
   rpc DeletePayloadByFolder(NameRequest) returns (Empty);
   rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
-  rpc DeletePayload(DeletePayloadRequest) returns (Empty); 
+  rpc DeletePayload(DeletePayloadRequest) returns (Empty);
   // save payload to database
   rpc SavePayload(SavePayloadRequest) returns (Empty);
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   rpc SavePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress); // 两次stream
   // update group/folder/payload
   rpc RenamePayloadFolder(RenameRequest) returns (Empty);
-  rpc RenamePayloadGroup(RenameRequest) returns (Empty); // rename 
+  rpc RenamePayloadGroup(RenameRequest) returns (Empty); // rename
   rpc UpdatePayload(UpdatePayloadRequest) returns (Empty); // edit
   rpc UpdatePayloadToFile(UpdatePayloadToFileRequest) returns (Empty);
-  rpc BackUpOrCopyPayloads(BackUpOrCopyPayloadsRequest) returns (Empty); 
+  rpc BackUpOrCopyPayloads(BackUpOrCopyPayloadsRequest) returns (Empty);
   // Folder and Group
   // get and update all group with order
   rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
   rpc UpdateAllPayloadGroup(UpdateAllPayloadGroupRequest) returns (Empty);
-  // get payload 
+  // get payload
   rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse); // !已弃用 get payload by [group/folder]
   rpc GetAllPayloadFromFile(GetAllPayloadRequest) returns (stream GetAllPayloadFromFileResponse); // !已弃用 get payload by [group/folder] from file
   // export payload
@@ -277,7 +280,9 @@ service Yak {
   rpc StaticAnalyzeError(StaticAnalyzeErrorRequest) returns (StaticAnalyzeErrorResponse);
   rpc YaklangCompileAndFormat(YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
 
+  rpc YaklangLanguageSuggestion(YaklangLanguageSuggestionRequest) returns (YaklangLanguageSuggestionResponse);
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
+  rpc YaklangGetCliCodeFromDatabase(YaklangGetCliCodeFromDatabaseRequest) returns (YaklangGetCliCodeFromDatabaseResponse);
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
@@ -449,6 +454,11 @@ service Yak {
   rpc GetYakScriptTagsAndType(Empty) returns (GetYakScriptTagsAndTypeResponse);
   rpc DeleteLocalPluginsByWhere(DeleteLocalPluginsByWhereRequest) returns (Empty);
   rpc DownloadOnlinePluginByScriptNames(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
+  // NewOnline 插件下载
+  rpc DownloadOnlinePlugins(DownloadOnlinePluginsRequest) returns(stream DownloadOnlinePluginProgress);
+  rpc DownloadOnlinePluginBatch(DownloadOnlinePluginsRequest) returns (Empty);
+  rpc DownloadOnlinePluginByPluginName(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
+
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
 
@@ -497,8 +507,8 @@ service Yak {
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
   rpc GetDefaultProject(Empty) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
   rpc ExportProject(ExportProjectRequest) returns (stream ProjectIOProgress);
@@ -560,6 +570,7 @@ service Yak {
   // rpc DeleteHTTPRequestBuilder(DeleteHTTPRequestBuilderRequest) returns (Empty);
   rpc DebugPlugin(DebugPluginRequest) returns (stream ExecResult);
   rpc SmokingEvaluatePlugin(SmokingEvaluatePluginRequest) returns (SmokingEvaluatePluginResponse);
+  rpc SmokingEvaluatePluginBatch(SmokingEvaluatePluginBatchRequest) returns (stream SmokingEvaluatePluginBatchResponse);
   rpc GetSystemDefaultDnsServers(Empty) returns (DefaultDnsServerResponse);
 
   // 诊断网络发生的问题
@@ -584,7 +595,6 @@ service Yak {
 
   rpc DuplexConnection(stream DuplexConnectionRequest) returns (stream DuplexConnectionResponse);
 
-  rpc SmokingEvaluatePluginBatch(SmokingEvaluatePluginBatchRequest) returns (stream SmokingEvaluatePluginBatchResponse);
 
   // 混合批量扫描
   rpc HybridScan(stream HybridScanRequest) returns (stream HybridScanResponse);
@@ -594,7 +604,6 @@ service Yak {
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
   
-  rpc YakVersionAtLeast(YakVersionAtLeastRequest) returns (GeneralResponse);
 }
 
 message GetSpaceEngineStatusRequest {
@@ -829,6 +838,8 @@ message TrafficPacket {
 
   string SessionId = 15;
   int64 Id = 16;
+  string Protocol = 17;
+  string Info = 18;
 }
 
 message QueryTrafficPacketResponse {
@@ -843,6 +854,9 @@ message TrafficTCPReassembled {
   bytes Raw = 3;
   int64 Seq = 4;
   int64 Timestamp = 5;
+  string Source = 6;
+  string Destination = 7;
+  string Protocol = 8;
 }
 
 message QueryTrafficTCPReassembledResponse {
@@ -1014,17 +1028,17 @@ message AuthInfo {
     string AuthType = 3;
     string Host = 4;
     bool Forbidden = 5;
-  }
+}
 
 message ThirdPartyApplicationConfig {
-  // zoomeye / hunter / shodan / fofa / github / token
-  string Type = 1;
-  string APIKey = 2;
-  string UserIdentifier = 3;
-  string UserSecret = 4;
-  string Namespace = 5;
-  string Domain = 6;
-  string WebhookURL = 7;
+    // zoomeye / hunter / shodan / fofa / github / token
+    string Type = 1;
+    string APIKey = 2;
+    string UserIdentifier = 3;
+    string UserSecret = 4;
+    string Namespace = 5;
+    string Domain = 6;
+    string WebhookURL = 7;
 }
 
 message DiagnoseNetworkRequest {
@@ -1082,6 +1096,7 @@ message SmokingEvaluateResult {
   string Item = 1;
   string Suggestion = 2;
   bytes ExtraInfo = 3;
+  Range Range = 4;
 }
 
 message SmokingEvaluatePluginResponse {
@@ -1774,17 +1789,27 @@ message ExecPacketScanRequest {
   string Proxy = 11;
 }
 
-message Position {
-  int64 Line = 1;
-  int64 Column = 2;
+message Range {
+  string Code = 1;
+  int64 StartLine = 2;
+  int64 StartColumn = 3;
+  int64 EndLine = 4;
+  int64 EndColumn = 5;
 }
 
 message YaklangInspectInformationRequest {
-  string YakScriptType = 1;
-  string YakScriptCode = 2;
-  Position StartPos = 3;
-  Position EndPos = 4;
+    string YakScriptType = 1;
+    string YakScriptCode = 2;
+    Range Range = 3;
 }
+
+message YaklangLanguageSuggestionRequest {
+    string InspectType = 1;// completion(补全) / hover(提示) / signature(签名)
+    string YakScriptType = 2;
+    string YakScriptCode = 3;
+    Range Range = 4;
+}
+
 
 // message RiskInfo {
 //   string Type = 1;
@@ -1805,13 +1830,26 @@ message YaklangInformation {
   repeated YaklangInformationKV Data = 2;
 }
 
+message YaklangLanguageSuggestionResponse {
+    repeated SuggestionDescription SuggestionMessage = 1;
+}
+
 message YaklangInspectInformationResponse {
-  repeated SuggestionDescription SuggestionMessage = 1;
-  repeated YaklangInformation Information = 2;
+  repeated YaklangInformation Information = 1;
+  repeated YakScriptParam CliParameter  = 2;
+}
+message YaklangGetCliCodeFromDatabaseResponse {
+  string Code = 1;
+}
+
+message YaklangGetCliCodeFromDatabaseRequest {
+  string ScriptName = 1;
+
 }
 
 message StaticAnalyzeErrorRequest {
   bytes Code = 1;
+  string PluginType = 2;
 }
 
 message YaklangCompileAndFormatRequest {
@@ -1863,6 +1901,8 @@ message DeleteLocalPluginsByWhereRequest {
   string Type = 2;
   int64  UserId = 3;
   string UserName = 4;
+  repeated int64 Ids = 5;
+  string Tags = 6;
 }
 
 message DownloadOnlinePluginProgress {
@@ -1895,6 +1935,22 @@ message DownloadOnlinePluginByIdsRequest {
   repeated int64 OnlineIDs = 1;
   string Token = 2;
   repeated string UUID = 3;
+}
+
+message DownloadOnlinePluginsRequest {
+    string Token = 1;
+    repeated bool IsPrivate = 2;
+    string  Keywords = 3;
+    repeated string PluginType = 4;
+    repeated string  Tags = 5;
+    string   UserName = 6;
+    int64  UserId = 7;
+    string TimeSearch = 8;
+    repeated string Group = 9;
+    string   ListType = 10;
+    repeated int64 Status = 11;
+    repeated string UUID = 12;
+    repeated string ScriptName = 13;
 }
 
 message DownloadOnlinePluginByScriptNamesRequest {
@@ -2058,6 +2114,26 @@ message QueryYakScriptByNamesResponse {
 
 message QueryYakScriptByIsCoreResponse {
   repeated YakScript Data = 1;
+}
+
+message QueryYakScriptRiskDetailByCWERequest {
+  string CWEId = 1;
+}
+
+message QueryYakScriptRiskDetailByCWEResponse {
+  string CWEId = 1;
+  string RiskType = 2;
+  string Description = 3;
+  string CWESolution = 4;
+}
+
+message YakScriptRiskTypeListResponse {
+  repeated RiskTypeLists Data = 1;
+}
+
+message RiskTypeLists {
+  string RiskType = 1;
+  string CWEId = 2;
 }
 
 message ExtractDataToFileRequest {
@@ -3148,9 +3224,8 @@ message SuggestionDescription {
   string Description = 2;
   string InsertText = 3;
   bool JustAppend = 4;
-
-  // 展示定义的内容，如果没有的话，一般展示 InsertText 就行
-  string DefinitionVerbose = 5;
+  string DefinitionVerbose = 5; // 展示定义的内容，如果没有的话，一般展示 InsertText 就行
+  string Kind = 6; // 补全类型, Method = 0, Function = 1, Constructor = 2, Field = 3, Variable = 4, Class = 5, Struct = 6, Interface = 7, Module = 8, Property = 9, Event = 10, Operator = 11, Unit = 12, Value = 13, Constant = 14, Enum = 15, EnumMember = 16, Keyword = 17, Text = 18, Color = 19, File = 20, Reference = 21, Customcolor = 22, Folder = 23, TypeParameter = 24, User = 25, Issue = 26, Snippet = 27
 }
 
 message MethodSuggestion {
@@ -3206,11 +3281,11 @@ message SavePayloadRequest {
 
 
 message UpdatePayloadRequest {
-  // old 
+  // old
   string Group = 1;   // old
   string OldGroup = 2; // old
 
-  // new, please use this 
+  // new, please use this
   int64 Id = 3;
   Payload Data = 4;
 }
@@ -3221,7 +3296,7 @@ message UpdatePayloadToFileRequest {
 }
 
 // copy payload(get by id) to group
-message BackUpOrCopyPayloadsRequest { 
+message BackUpOrCopyPayloadsRequest {
   repeated int64 Ids = 1;
   string Group = 2;
   string Folder = 3;
@@ -3239,7 +3314,7 @@ message DeletePayloadRequest {
 
 message QueryPayloadFromFileRequest {
   string Group = 1;
-  string Folder = 2; 
+  string Folder = 2;
 }
 message QueryPayloadFromFileResponse {
   bytes Data = 1;
@@ -3250,7 +3325,7 @@ message QueryPayloadRequest {
   Paging Pagination = 1;
   string Group = 2;
   string Keyword = 3;
-  string Folder = 4; 
+  string Folder = 4;
 }
 
 message QueryPayloadResponse {
@@ -3303,6 +3378,7 @@ message QueryYakScriptRequest {
 
   bool IgnoreGeneralModuleOrder = 15;
   repeated string Family = 16;
+  string UUID = 17;
 }
 
 message QueryYakScriptResponse {
@@ -3359,6 +3435,58 @@ message YakScript {
   bool OnlineOfficial = 28;
   string OnlineGroup = 29;
   bool IsCorePlugin = 30;
+  int64 UpdatedAt = 31;
+  string RiskType = 32;
+  QueryYakScriptRiskDetailByCWEResponse RiskDetail = 33;
+  string RiskAnnotation = 34;
+  // 协作者
+  repeated Collaborator CollaboratorInfo = 35;
+}
+
+message Collaborator {
+  string HeadImg = 1;
+  string UserName = 2;
+}
+
+message SaveNewYakScriptRequest {
+  string Content = 1;
+  string Type = 2;
+  repeated YakScriptParam Params = 3;
+  string ScriptName = 4;
+  string Help = 5;
+  string Level = 6;
+  string Tags = 7;
+  bool IsHistory = 8;
+  bool IsIgnore = 9;
+  bool IsGeneralModule = 10;
+  string GeneralModuleVerbose = 11;
+  string GeneralModuleKey = 12;
+  string FromGit = 13;
+  bool EnablePluginSelector = 14;
+  string PluginSelectorTypes = 15;
+  bool IsCorePlugin = 16;
+  string RiskType = 17;
+  QueryYakScriptRiskDetailByCWEResponse RiskDetail = 18;
+  string RiskAnnotation = 19;
+  int64 Id = 20;
+}
+
+message SaveYakScriptToOnlineRequest {
+  repeated string ScriptNames = 1;
+  string Token = 2;
+  bool IsPrivate = 3;
+  bool All = 4;
+}
+
+message SaveYakScriptToOnlineResponse {
+  // 进度
+  double Progress = 1;
+  string Message = 2;
+  string MessageType = 3;
+}
+
+message ToOnlineResult {
+  string ScriptName = 1;
 }
 
 message ExportLocalYakScriptRequest {
@@ -4399,4 +4527,18 @@ message GenerateURLRequest{
 }
 message GenerateURLResponse{
   string URL = 1;
+}
+
+message YakVersionAtLeastRequest{
+ string AtLeastVersion = 1;
+ string YakVersion = 2;
+}
+message ParseTrafficRequest{
+  int64 Id = 1;
+  string Type = 2;
+}
+message ParseTrafficResponse{
+    bool OK = 1;
+  string Result = 2;
+  string Message = 3;
 }

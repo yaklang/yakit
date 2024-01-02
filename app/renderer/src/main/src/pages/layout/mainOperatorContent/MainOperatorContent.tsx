@@ -587,6 +587,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**diagnose-network") openMenuPage({route: YakitRoute.Beta_DiagnoseNetwork})
             if (type === "**config-network") openMenuPage({route: YakitRoute.Beta_ConfigNetwork})
             if (type === "**beta-codec") openMenuPage({route: YakitRoute.Beta_Codec})
+            if (type === "**beta-debug-traffic-analize") openMenuPage({route: YakitRoute.Beta_DebugTrafficAnalize})
             if (type === "open-plugin-store") {
                 const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
                 if (flag === 0) {
@@ -2574,7 +2575,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             // 将拖拽的item添加到目的地的组内
             subPage.splice(destinationIndex, 0, newSourceItem)
-            
+
             // 如果组内的item为0 ,需要删除组
             if (sourceGroupChildrenList.length === 0) {
                 const number = subPage.findIndex((ele) => ele.id === sourceGroupId)

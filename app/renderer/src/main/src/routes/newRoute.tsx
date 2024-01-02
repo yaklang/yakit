@@ -3,6 +3,7 @@ import {YakExecutor} from "../pages/invoker/YakExecutor"
 import {ShellReceiverPage} from "../pages/shellReceiver/ShellReceiverPage"
 import {YakBatchExecutors} from "../pages/invoker/batch/YakBatchExecutors"
 import {PortScanPage} from "../pages/portscan/PortScanPage"
+import {PcapXDemo} from "@/components/playground/PcapXDemo"
 import {PluginOperator} from "../pages/yakitStore/PluginOperator"
 import {failed} from "../utils/notification"
 import {BrutePage} from "../pages/brute/BrutePage"
@@ -203,6 +204,8 @@ export enum YakitRoute {
     // 调试插件的功能
     Beta_DebugPlugin = "beta-debug-plugin",
     // 调试插件编辑器
+    Beta_DebugTrafficAnalize = "**beta-debug-traffic-analize",
+    // 调试插件编辑器
     Beta_DebugMonacoEditor = "beta-debug-monaco-editor",
     // 靶场调试
     Beta_VulinboxManager = "beta-vulinbox-manager",
@@ -293,7 +296,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-diagnose-network": {label: "网络异常诊断"},
     "beta-config-network": {label: "全局网络配置"},
     "beta-codec": {label: "新版codec"},
-    "plugin-audit": {label: "插件管理"}
+    "plugin-audit": {label: "插件管理"},
+    "**beta-debug-traffic-analize": {label: "流量分析"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -331,6 +335,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_VulinboxManager,
     YakitRoute.Beta_DiagnoseNetwork,
     YakitRoute.Beta_ConfigNetwork,
+    YakitRoute.Beta_DebugTrafficAnalize,
     YakitRoute.Beta_Codec,
     YakitRoute.Plugin_Audit
 ]
@@ -598,6 +603,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                     scriptName={params?.scriptName || ""}
                 />
             )
+        case YakitRoute.Beta_DebugTrafficAnalize:
+            return <PcapXDemo />
         case YakitRoute.Beta_DebugMonacoEditor:
             return <DebugMonacoEditorPage />
         case YakitRoute.Beta_VulinboxManager:

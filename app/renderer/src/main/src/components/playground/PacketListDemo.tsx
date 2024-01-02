@@ -22,7 +22,7 @@ import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {DownOutlined} from "@ant-design/icons"
 import {number} from "echarts"
 import styles from "./PacketListDemo.module.scss"
-import { YakitInput } from "../yakitUI/YakitInput/YakitInput"
+import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 const DirectoryTree = Tree.DirectoryTree
 const MemoTooltip = Tooltip || React.memo(Tooltip)
 export interface PacketListProp {
@@ -60,18 +60,18 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
     const TreeBoxRef = useRef<any>()
 
     const selectIdRef = useRef<number>()
-    const [show,setShow] = useState<boolean>(false)
+    const [show, setShow] = useState<boolean>(false)
 
     useEffect(() => {
-        if(TreeBoxRef.current){
+        if (TreeBoxRef.current) {
             setTreeHeight(TreeBoxRef.current.offsetHeight)
         }
     }, [TreeBoxRef.current])
 
     const handleSetValue = React.useCallback(
         (offset, value) => {
-            console.log("offset, value",offset, value);
-            
+            console.log("offset, value", offset, value)
+
             showData[offset] = value
             setShowData(showData)
             setNonce((v) => v + 1)
@@ -80,11 +80,10 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
     )
     const parseData = useMemoizedFn((data: TrafficPacket | TrafficSession | TrafficTCPReassembled) => {
         // 反选
-        if(selectIdRef.current===data.Id){
+        if (selectIdRef.current === data.Id) {
             setShow(false)
             selectIdRef.current = undefined
-        }
-        else{
+        } else {
             selectIdRef.current = data.Id
             setShow(true)
             // 选中
@@ -104,24 +103,36 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                 let keyToScope = {}
                 let toTreeData = (obj, keys: string[]) => {
                     let data: TreeNode[] = []
-                    if (!(obj instanceof Object)) {
+                    if (!(obj instanceof Array)) {
                         return undefined
                     }
-                    Object.keys(obj).forEach((v) => {
-                        let newKeys = [...keys, v]
-                        if (obj[v]?.leaf) {
-                            let title = obj[v] ? v + ":" + obj[v].verbose : obj[v]
+                    obj.forEach((v, index) => {
+                        let {name, value} = v
+                        let newKeys = [...keys, name + index]
+                        if (value?.leaf) {
+                            let title = value?.verbose ? name + ":" + value.verbose : name
                             data.push({
                                 key: newKeys.join("-"),
                                 title: title
                             })
-                            keyToScope[newKeys.join("-")] = obj[v]?.scope
+                            keyToScope[newKeys.join("-")] = value?.scope
                         } else {
+                            let children = toTreeData(value, newKeys)
                             data.push({
                                 key: newKeys.join("-"),
-                                title: v,
-                                children: toTreeData(obj[v], newKeys)
+                                title: name,
+                                children: children
                             })
+                            let scopeList: any[] = []
+                            children?.forEach((v) => {
+                                scopeList.push(keyToScope[v.key])
+                            })
+                            let scope: number[] = [0, 0]
+                            if (scopeList.length > 0) {
+                                scope[0] = scopeList[0][0]
+                                scope[1] = scopeList[scopeList.length - 1][1]
+                            }
+                            keyToScope[newKeys.join("-")] = scope
                         }
                     })
                     return data
@@ -129,8 +140,10 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                 let tdata = toTreeData(result, [])
                 setKeyToScope(keyToScope)
                 setTreeData(tdata)
-                
-                setShowData(StringToUint8Array(res.RAW, "utf8"))
+                const decodedString = atob(res.RAW)
+                const charCodeArray = decodedString.split("").map((c) => c.charCodeAt(0))
+                const uintArray = new Uint8Array(charCodeArray)
+                setShowData(uintArray)
                 // res["RAW"]
                 // if (data.OK) {
                 //     let mapData = UnmarshJson(data.Result)
@@ -140,7 +153,6 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                 // }
             })
         }
-        
     })
 
     const ResizeBoxProps = useCreation(() => {
@@ -157,10 +169,10 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
 
     return (
         <YakitResizeBox
-            onMouseUp={()=>{
-                setTimeout(()=>{
+            onMouseUp={() => {
+                setTimeout(() => {
                     setTreeHeight(TreeBoxRef.current.offsetHeight)
-                },200)
+                }, 200)
             }}
             isVer={true}
             firstNode={
@@ -173,7 +185,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                             <DemoItemRadioButton
                                 data={[
                                     {value: "packet", label: "数据包"},
-                                    {value: "session", label: "会话"},
+                                    // {value: "session", label: "会话"},
                                     {value: "tcp-reassembled", label: "TCP数据帧"}
                                 ]}
                                 value={viewer}
@@ -184,7 +196,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                     extra={
                         <Form layout={"inline"} size={"small"}>
                             <Form.Item>
-                              <YakitInput size="small" placeholder="请输入..."/>  
+                                <YakitInput size='small' placeholder='请输入...' />
                             </Form.Item>
                             <DemoItemSwitch label={"实时"} value={realtime} setValue={setRealtime} />
                             <YakitButton danger={true} onClick={clear}>
@@ -206,64 +218,73 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
             }
             secondNode={
                 <div style={{height: "100%"}}>
-                    {show&&<YakitResizeBox
-                        isVer={true}
-                        firstRatio='30%'
-                        onMouseUp={(firstSize)=>{
-                            setTreeHeight(firstSize)
-                        }}
-                        firstNode={
-                            <div ref={TreeBoxRef} style={{height: "100%"}}>
-                               {treeData&&treeData.length>0&&<YakitTree
-                                // loadData={(node) => {
-                                //     console.log("load", node)
-                                //     return new Promise((resolve, reject) => {
-                                //         const originData = node.data
-                                //         if (originData === undefined) {
-                                //             reject("node.data is empty")
-                                //             return
-                                //         }
-                                //     })
-                                // }}
-                                height={treeHeight}
-                                virtual={true}
-                                showSearch={false}
-                                onSelectedKeys={(selectedKeys, info) => {
-                                    console.log("select keys", selectedKeys)
-                                    console.log("info", info)
-                                    console.log("keyToScope", keyToScope)
-                                    let scope = keyToScope[selectedKeys[0]]
-                                    console.log("scope", scope)
-                                    if (scope?.length == 2) {
-                                        console.log({start: scope[0] / 8, end: scope[1] / 8})
-                                        HexEditorRef.current.setSelectionRange(scope[0] / 8, scope[1] / 8);
-                                    }
-                                }}
-                                treeData={treeData}
-                                titleRender={(item) => (
-                                    <MemoTooltip title={item.title as any}>{item.title as any}</MemoTooltip>
-                                )}
-                            /> }
-                            </div>
-                        }
-                        secondNode={
-                            <div className={styles['hex-editor']}>
-                               <HexEditor
-                                readOnly={true}
-                                ref={HexEditorRef}
-                                asciiWidth={18}
-                                data={showData}
-                                nonce={nonce}
-                                setValue={handleSetValue}
-                                overscanCount={0x03}
-                                showAscii={true}
-                                showColumnLabels={true}
-                                showRowLabels={true}
-                                highlightColumn={true}
-                            /> 
-                           </div>
-                        }
-                    ></YakitResizeBox>}
+                    {show && (
+                        <YakitResizeBox
+                            isVer={false}
+                            firstRatio='30%'
+                            onMouseUp={(firstSize) => {
+                                setTreeHeight(firstSize)
+                            }}
+                            firstNode={
+                                <div ref={TreeBoxRef} style={{height: "100%"}}>
+                                    {treeData && treeData.length > 0 && (
+                                        <YakitTree
+                                            // loadData={(node) => {
+                                            //     console.log("load", node)
+                                            //     return new Promise((resolve, reject) => {
+                                            //         const originData = node.data
+                                            //         if (originData === undefined) {
+                                            //             reject("node.data is empty")
+                                            //             return
+                                            //         }
+                                            //     })
+                                            // }}
+                                            height={treeHeight}
+                                            showSearch={false}
+                                            onSelectedKeys={(selectedKeys, info) => {
+                                                console.log("select keys", selectedKeys)
+                                                console.log("info", info)
+                                                console.log("keyToScope", keyToScope)
+                                                let scope = keyToScope[selectedKeys[0]]
+                                                console.log("scope", scope)
+                                                if (scope?.length == 2) {
+                                                    console.log({
+                                                        start: Math.floor(scope[0] / 8),
+                                                        end: Math.ceil(scope[1] / 8)
+                                                    })
+                                                    HexEditorRef.current.setSelectionRange(
+                                                        Math.floor(scope[0] / 8),
+                                                        Math.ceil(scope[1] / 8)
+                                                    )
+                                                }
+                                            }}
+                                            treeData={treeData}
+                                            // titleRender={(item) => (
+                                            //     <MemoTooltip title={item.title as any}>{item.title as any}</MemoTooltip>
+                                            // )}
+                                        />
+                                    )}
+                                </div>
+                            }
+                            secondNode={
+                                <div className={styles["hex-editor"]}>
+                                    <HexEditor
+                                        readOnly={true}
+                                        ref={HexEditorRef}
+                                        asciiWidth={18}
+                                        data={showData}
+                                        nonce={nonce}
+                                        setValue={handleSetValue}
+                                        overscanCount={0x03}
+                                        showAscii={true}
+                                        showColumnLabels={true}
+                                        showRowLabels={true}
+                                        highlightColumn={true}
+                                    />
+                                </div>
+                            }
+                        ></YakitResizeBox>
+                    )}
                 </div>
             }
             lineStyle={{display: !show ? "none" : ""}}
