@@ -380,7 +380,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 form={form}
                 colon={false}
                 onValuesChange={(changedFields, allFields) => {
-                    console.log('表单改变', allFields);
                     onSetValue(allFields)
                 }}
                 size='small'
