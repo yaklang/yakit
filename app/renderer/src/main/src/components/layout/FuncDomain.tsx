@@ -386,7 +386,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             }
             setUserMenu(cacheMenu)
         } else {
-            setUserMenu([{key: "sign-out", title: "退出登录"}])
+            setUserMenu([
+                {key: "data-statistics", title: "数据统计"},
+                {key: "sign-out", title: "退出登录"}
+            ])
         }
     }, [userInfo.role, userInfo.checkPlugin, userInfo.companyHeadImg, dynamicConnect])
 
@@ -625,6 +628,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             }
                                             if (key === "control-admin") {
                                                 onOpenPage({route: YakitRoute.ControlAdminPage})
+                                            }
+                                            if (key === "data-statistics") {
+                                                onOpenPage({route: YakitRoute.Data_Statistics})
                                             }
                                             if (key === "dynamic-control") {
                                                 setDynamicControlModal(true)
