@@ -130,6 +130,7 @@ import {PluginsOnline} from "@/pages/plugins/online/PluginsOnline"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
 import { NewPayload } from "@/pages/payloadManager/newPayload"
+import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -223,6 +224,8 @@ export enum YakitRoute {
     // WebShell 管理
     Beta_WebShellManager = "beta-webshell-manager",
     Beta_WebShellOpt = "beta-webshell-opt",
+    // 数据统计
+    Data_Statistics = "Data_Statistics"
 }
 /**
  * @description 页面路由对应的页面信息
@@ -306,6 +309,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "**beta-debug-traffic-analize": {label: "流量分析"},
     "beta-webshell-manager": {label: "网站管理"},
     "beta-webshell-opt": {label: "WebShell 实例"},
+    "Data_Statistics":{label: "数据统计"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -347,7 +351,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_Codec,
     YakitRoute.Plugin_Audit,
     YakitRoute.Beta_WebShellManager,
-
+    YakitRoute.Data_Statistics
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -371,14 +375,15 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Plugin_Audit,
     YakitRoute.AddYakitScript,
     YakitRoute.ModifyYakitScript,
-    YakitRoute.PayloadManager
+    YakitRoute.PayloadManager,
+    YakitRoute.Data_Statistics
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
 /** 用户退出登录后，需自动关闭的页面 */
-export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit]
+export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit,YakitRoute.Data_Statistics]
 
 export interface ComponentParams {
     // Route.HTTPFuzzer 参数
@@ -474,7 +479,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <NewHome />
+            return <DataStatistics />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -639,6 +644,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <WebShellViewer/>
         case YakitRoute.Beta_WebShellOpt:
             return <WebShellDetailOpt id={(params?.id||"") + ""} webshellInfo={params?.webshellInfo as WebShellDetail}/>
+        case YakitRoute.Data_Statistics:
+            return <DataStatistics />
         default:
             return <div />
     }
