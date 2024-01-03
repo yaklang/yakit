@@ -552,7 +552,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     try {
                         ;[
                             {regexp: /\nContent-Length:\s*?\d+/, classType: "content-length"},
-                            {regexp: /\nHost:/, classType: "host"}
                         ].map((detail) => {
                             // handle content-length
                             const match = detail.regexp.exec(text)

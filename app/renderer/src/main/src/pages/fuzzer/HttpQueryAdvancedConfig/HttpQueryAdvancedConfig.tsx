@@ -391,7 +391,19 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <Form.Item label='国密TLS' name='isGmTLS' valuePropName='checked'>
                         <YakitSwitch />
                     </Form.Item>
-                    <Form.Item label='真实Host' name='actualHost'>
+                    <Form.Item label={
+                        <span className={styles["advanced-config-form-label"]}>
+                            真实Host
+                            <Tooltip
+                                title='如需Host碰撞，请配置真实Host'
+                                overlayStyle={{width: 150}}
+                            >
+                                <InformationCircleIcon className={styles["info-icon"]} />
+                            </Tooltip>
+                        </span>
+                        }
+                        name='actualHost'
+                    >
                         <YakitInput placeholder='请输入...' size='small' />
                     </Form.Item>
                     <Form.Item
