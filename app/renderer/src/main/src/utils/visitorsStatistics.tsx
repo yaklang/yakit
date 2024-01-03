@@ -25,15 +25,10 @@ const visitorsStatisticsOperation = () => {
             url: "tourist",
             method: "post",
             data: {
-                macCode: MachineID
+                macCode: MachineID,
             }
         })
-            .then((data) => {
-                console.log("data", data)
-
-                if (data.ok) {
-                }
-            })
+            .then((data) => {})
             .catch((err) => {})
             .finally(() => {
                 resolve(true)
@@ -45,15 +40,12 @@ const visitorsStatisticsOperation = () => {
 export const visitorsStatisticsFun = async () => {
     return new Promise(async (resolve, reject) => {
         if (!isCommunityEdition()) resolve(true)
-        if (MachineID.length > 0) {
-            await visitorsStatisticsOperation()
-            resolve(true)
-        } else {
-            try {
+        try {
+            if (MachineID.length === 0) {
                 await getMachineIDOperation()
-                await visitorsStatisticsOperation()
-                resolve(true)
-            } catch (error) {}
-        }
+            }
+            visitorsStatisticsOperation()
+            resolve(true)
+        } catch (error) {}
     })
 }
