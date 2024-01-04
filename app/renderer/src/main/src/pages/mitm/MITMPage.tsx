@@ -919,8 +919,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             }
             startExecYakCode("导入线上Nuclei", {
                 Script: loadYakitPluginCode,
-                Params: params
-            })
+                Params: params,
+            }, false)
         }
 
         if (loadMode === "local") {
@@ -940,8 +940,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             }
             startExecYakCode("导入本地Nuclei", {
                 Script: loadNucleiPoCFromLocal,
-                Params: [{Key: "local-path", Value: formValue.localNucleiPath}]
-            })
+                Params: [{Key: "local-path", Value: formValue.localNucleiPath}],
+            }, false)
         }
 
         if (loadMode === "uploadId") {

@@ -430,17 +430,20 @@ export const ConfigGlobalReverse = React.memo(() => {
 interface YakScriptParam {
     Script: string
     Params: YakExecutorParam[]
+    successInfo?: boolean
 }
 
 export const startExecYakCode = (
-    verbose: string,
-    params: YakScriptParam) => {
+        verbose: string,
+        params: YakScriptParam,
+        successInfo: boolean = true
+    ) => {
     let m = showModal({
         width: "60%", maskClosable: false,
         title: `正在执行：${verbose}`,
         content: <div style={{height: 400, overflowY: "auto"}}>
             <AutoCard bodyStyle={{overflowY: "auto"}}>
-                <StartToExecYakScriptViewer script={params} verbose={verbose}/>
+                <StartToExecYakScriptViewer script={params} verbose={verbose} successInfo={successInfo} />
             </AutoCard>
         </div>
     })
@@ -449,8 +452,9 @@ export const startExecYakCode = (
 const StartToExecYakScriptViewer = React.memo((props: {
     verbose: string,
     script: YakScriptParam,
+    successInfo: boolean
 }) => {
-    const {script, verbose} = props;
+    const {script, verbose, successInfo = true} = props;
     const [token, setToken] = useState(randomString(40));
     const [loading, setLoading] = useState(true);
     const [infoState, {reset, setXtermRef}] = useHoldingIPCRStream(
@@ -458,7 +462,7 @@ const StartToExecYakScriptViewer = React.memo((props: {
         token, () => setTimeout(() => setLoading(false), 300),
         () => {
             ipcRenderer.invoke("ExecYakCode", script, token).then(() => {
-                info(`执行 ${verbose} 成功`)
+                successInfo && info(`执行 ${verbose} 成功`)
             }).catch(e => {
                 failed(`执行 ${verbose} 遇到问题：${e}`)
             })
