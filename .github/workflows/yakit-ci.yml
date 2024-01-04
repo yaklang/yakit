@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: 16.10.0
+          node-version: 18.18.2
       - run: echo ${{ github.ref }}
       - run: cp buildutil/zip /usr/local/bin/zip
       - run: chmod +x /usr/local/bin/zip
@@ -218,7 +218,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: 16.10.0
+          node-version: 18.18.2
 
       # 提取版本
       - name: Extract Version
@@ -274,7 +274,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: 16.10.0
+          node-version: 18.18.2
 
       # 提取版本
       - name: Extract Version
