@@ -312,8 +312,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     }
     const [goBackTree, setGoBackTree] = useState<TreeNode[]>([]);
 
-    const webTreeRef = useRef<any>()
-
     const [currentPathAllTree, setcurrentPathAllTree] = useState<TreeNode[]>([])
 
     const getYakURL = ():YakURL => {
@@ -364,15 +362,14 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                 <div style={{height:"100%"}} ref={TreeBoxRef}>
                  <WebTree
                     height={treeHeight}
-                    ref={webTreeRef}
                     schema={props.shellType.toLowerCase()}
-                    searchVal={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/bin/?op=file&mode=list&id=" + props.Id}
+                    // searchVal={"C:/Users/Administrator/Desktop/apache-tomcat-8.5.84/bin/?op=file&mode=list&id=" + props.Id}
                     searchYakURL={getYakURL()}
                     searchPlaceholder='请输入域名进行搜索，例baidu.com'
                     onSelectNodes={(nodes) => {
                         setLoading(false)
-                        if (nodes.length) {
-                            const url = nodes[0]?.data?.Url as YakURL
+                        if (Array.isArray(nodes)) {
+                            // const url = nodes[0]?.data?.Url as YakURL
                             console.log("nodes", nodes)
                             // @ts-ignore
                             const data:YakURLResource[] = (nodes||[]).map((item)=>item.data)
