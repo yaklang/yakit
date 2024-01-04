@@ -1,6 +1,6 @@
 import {YakURL,} from "@/pages/yakURLTree/data";
 import {yakitFailed} from "@/utils/notification";
-import {requestYakURLList} from "@/pages/yakURLTree/netif";
+import {requestYakURLList} from "./yakURLTree/netif";
 import {showModal} from "@/utils/showModal";
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";

@@ -26,7 +26,7 @@ import {showModal} from "@/utils/showModal";
 import {WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
 import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
-import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif";
+import {loadFromYakURLRaw, requestYakURLList} from "./yakURLTree/netif";
 import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {yakitFailed} from "@/utils/notification";
 import {goBack} from "@/pages/webShell/FileManager";
