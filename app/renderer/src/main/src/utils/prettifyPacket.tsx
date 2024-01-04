@@ -6,7 +6,7 @@ import prettier from "prettier/standalone"
 import babelParser from "prettier/plugins/babel"
 import htmlParser from "prettier/plugins/html"
 import espreeParser from "prettier/plugins/estree"
-import xmlParser from "prettier-plugin-xml"
+import xmlParser from "@prettier/plugin-xml"
 import {debugYakitModalAny} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import DOMPurify from "isomorphic-dompurify"
 
