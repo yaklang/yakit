@@ -30,7 +30,7 @@ import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif";
 import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {yakitFailed} from "@/utils/notification";
 import {goBack} from "@/pages/webShell/FileManager";
-import {TreeNode, WebTree} from "@/components/WebTree/WebTree";
+import {TreeNode, WebTree} from "./ShellTree/WebTree";
 import { TreeKey } from "@/components/yakitUI/YakitTree/YakitTree";
 import path from "path"
 

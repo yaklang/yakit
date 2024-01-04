@@ -1,7 +1,7 @@
 import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
-import YakitTree, {TreeKey} from "../yakitUI/YakitTree/YakitTree"
+import YakitTree, {TreeKey} from "@/components/yakitUI/YakitTree/YakitTree"
 import type {DataNode} from "antd/es/tree"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {
     OutlineDocumentIcon,
     OutlineFolderremoveIcon,
@@ -12,62 +12,60 @@ import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
 import {YakURL, YakURLResource} from "@/pages/yakURLTree/data"
 import {SolidFolderaddIcon} from "@/assets/icon/solid"
-import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
-import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
-import styles from "./WebTree.module.scss"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import styles from "@/components/WebTree/WebTree.module.scss"
 
 type TreeNodeType = "dir" | "file" | "query" | "path"
+
 export interface TreeNode extends DataNode {
     data?: YakURLResource // 树节点其他额外数据
 }
 
 interface WebTreeProp {
     ref?: React.Ref<any>
-    height: number // 树高度 用于虚拟滚动
+    schema?: string | "website" | "file" | "behinder" | "godzilla" // 默认website
     searchVal?: string // 搜索树值
-    searchInputDisabled?: boolean
+    searchYakURL?: YakURL // 搜索树yakurl
+    height: number // 树高度 用于虚拟滚动
     searchPlaceholder?: string // 搜索框提示文案
-    treeExtraQueryparams: string // 树查询参数是一个json字符串
+    treeQueryparams?: string // 树查询参数是一个json字符串
     refreshTreeWithSearchVal?: boolean // 是否带搜索条件刷新树
     refreshTreeFlag?: boolean // 选中树节点后 表格参数改变导致树查询参数改变 是否需要刷新树 默认->不刷新
     onSelectNodes?: (selectedNodes: TreeNode[]) => void // 选中节点得nodes
     onSelectKeys?: (selectedKeys: TreeKey[]) => void // 选中节点得keys
-    onGetUrl?: (searchURL: string, includeInUrl: string) => void // 获取选中后节点得url信息 用于表格查询
+    onGetUrl?: (searchURL: string, includeInUrl: string) => void // 获取选中后节点得url信息 用于表格查询 website树有用
     resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
-
-    /** runtime-id 网站树的过滤条件(runtime_id) */
-    runTimeId?: string
+    isExtendTree?: boolean
 }
 
 /**
- * 该网站树暂不支持复选框 select选中只支持单选
+ * 该树暂不支持复选框 select选中只支持单选
+ * 文件树暂时不支持搜索文件功能
  */
 export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     const {
         height,
         searchVal = "",
-        searchInputDisabled = false,
+        searchYakURL,
         refreshTreeWithSearchVal = false,
+        schema = "website",
         searchPlaceholder = "请输入关键词搜索",
-        treeExtraQueryparams,
+        treeQueryparams = "",
         refreshTreeFlag = false,
         onSelectNodes,
         onSelectKeys,
         onGetUrl,
         resetTableAndEditorShow,
-        runTimeId = ""
+        isExtendTree
     } = props
-
-    const [treeLoading, setTreeLoading] = useState<boolean>(false)
-    // 未搜索情况时的网站树
+    const [treeLoading, setTreeLoading] = useState<boolean>(true)
+    const [defaultWebTreeData, setDefaultWebTreeData, getDefaultWebTreeData] = useGetState<TreeNode[]>([]) // 默认网站树
     const [webTreeData, setWebTreeData] = useState<TreeNode[]>([])
-    // 已搜索情况时的网站树
-    const [searchWebTreeData, setSearchWebTreeData] = useState<TreeNode[]>([])
-    /** 判断当前是否为已搜索的情况 */
-    const searchTreeFlag = useRef<boolean>(!!searchVal)
-
+    const [searchWebTreeData, setSearchWebTreeData] = useState<TreeNode[]>([]) // 搜索框有值时得网站树
+    const [searchTreeFlag, setSearchTreeFlag, getSearchTreeFlag] = useGetState<boolean>(!!searchVal.length) // 判断是否是搜索树
     const [searchValue, setSearchValue] = useState<string>(searchVal)
     const [expandedKeys, setExpandedKeys] = useState<TreeKey[]>([]) // 展开树节点key集合
     const [selectedKeys, setSelectedKeys] = useState<TreeKey[]>([]) // select树节点key集合
@@ -81,42 +79,44 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
 
     const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
         const iconsEle = {
-            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon' />,
-            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon' />,
-            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon' />
+            ["file"]: <OutlineDocumentIcon className='yakitTreeNode-icon'/>,
+            ["query"]: <OutlineVariableIcon className='yakitTreeNode-icon'/>,
+            ["path"]: <OutlineLink2Icon className='yakitTreeNode-icon'/>
         }
         return iconsEle[treeNodeType] || <></>
     }
 
-    const getTreeData = useMemoizedFn((yakurl: string) => {
-        if(treeLoading)return
+    const handleFilterParams = () => {
+        return treeQueryparams
+    }
 
+    const getTreeData = (yakurl: string) => {
         // 由于这里会有闭包 30毫秒后再掉接口
         setTreeLoading(true)
         setTimeout(() => {
-            let params: string = ""
-            if (treeExtraQueryparams) {
-                params = `params=${treeExtraQueryparams}`
-            }
-
-            let search: string = ""
-            if (searchTreeFlag.current) {
+            let search = ""
+            if (getSearchTreeFlag()) {
                 setSearchWebTreeData([])
-                search = params ? `&search=${1}` : `search=${1}`
+                search = `&search=${1}`
             } else {
                 setWebTreeData([])
             }
 
-            let runTime_id: string = ""
-            if (runTimeId) {
-                runTime_id = params || search ? `&runtime_id=${runTimeId}` : `runtime_id=${runTimeId}`
+            const extraInfo = {
+                website: `?params=${handleFilterParams()}` + search
             }
-
-            loadFromYakURLRaw(`${yakurl}?${params}${search}${runTime_id}`, (res) => {
+            console.log("loadFromYakURLRaw---", yakurl, schema, yakurl + `${extraInfo[schema] || ""}`);
+            console.log("searchYakURL", searchYakURL)
+            searchYakURL&&requestYakURLList({url:searchYakURL,method:"GET"}, (res) => {
                 // 判断是否是搜索树
-                if (searchTreeFlag.current) {
+                if (getSearchTreeFlag()) {
+                    console.log("searchVal", props.searchVal)
+                    console.log("8888", res.Resources)
+                    console.log("7777", getDefaultWebTreeData())
+                    // setSearchWebTreeData(defaultWebTreeData)
                     setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
                 } else {
+                    console.log("9999", res.Resources)
                     setWebTreeData(assembleFirstTreeNode(res.Resources))
                 }
                 setTimeout(() => {
@@ -127,8 +127,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 yakitFailed(`加载失败: ${error}`)
             })
         }, 30)
-    })
-
+    }
+    const cacheExpanded = useRef<TreeKey[]>([])
     const addChildrenToBinNode = (tree, binContents) => {
         cacheExpanded.current = []
         // 递归搜索 'bin' 节点的函数
@@ -150,41 +150,107 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }
 
     // 树节点第一层组装树
-    const assembleFirstTreeNode = (arr: YakURLResource[]) => {
-        return arr.map((item, index) => {
-            const id = item.VerboseName
+    const assembleFirstTreeNode = (arr) => {
+        let newArr = arr.map((item: YakURLResource, index: number) => {
+            const idObj = {
+                website: item.VerboseName,
+                behinder: item.Path,
+                godzilla: item.Path
+            }
+            // console.log("------",schema,idObj);
+
             return {
                 title: item.VerboseName,
-                key: id,
+                key: idObj[schema],
                 isLeaf: !item.HaveChildrenNodes,
                 data: item,
                 icon: ({expanded}) => {
                     if (item.ResourceType === "dir") {
                         return expanded ? (
-                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                            <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
                         ) : (
-                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                            <SolidFolderaddIcon className='yakitTreeNode-icon'/>
                         )
                     }
                     return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
                 }
-            } as TreeNode
+            }
         })
+        if (isExtendTree) {
+            const {tree, defaultExpandedKeys} = addChildrenToBinNode(getDefaultWebTreeData(), newArr)
+            setExpandedKeys([...expandedKeys, ...defaultExpandedKeys])
+            return tree
+        }
+
+        return newArr
     }
+    useEffect(() => {
+        const buildTree = (parts, tree, currentPath = "") => {
+            if (parts.length === 0) return;
+            let part = parts.shift();
+            let node = tree.find(n => n.title === part);
+            currentPath += (currentPath ? '/' : '') + part; // 更新路径
+            const item: YakURLResource = {
+                ResourceType: "dir",
+                VerboseType: "dir",
+                ResourceName: part,
+                VerboseName: part,
+                Size: 0,
+                SizeVerbose: "",
+                ModifiedTimestamp: 0,
+                Path: currentPath,
+                YakURLVerbose: "",
+                Url: {
+                    FromRaw: "",
+                    Schema: searchYakURL?.Schema || "",
+                    User: "",
+                    Pass: "",
+                    Location: "",
+                    Path: currentPath,
+                    Query: [...(searchYakURL?.Query || []).filter((item)=>item.Key!=="path"),{Key: "path", Value: currentPath},],
+                },
+                Extra: [],
+                HaveChildrenNodes: true,
+            }
+            if (!node) {
+                node = {title: part, key: currentPath, isLeaf: parts.length === 0, children: [], data: item};
+                tree.push(node);
+            }
+            buildTree(parts, node.children, currentPath);
+        };
+
+        if (!props.searchVal) return;
+        // 初始化根节点
+        let tree: TreeNode[] = [];
+        [props.searchVal!].forEach(path => {
+            // 清理路径中的查询字符串部分
+            let cleanPath = path.split('?')[0]; // 获取 '?' 前的部分
+
+            // 分割路径，处理盘符
+            let parts = cleanPath.includes('/') ? cleanPath.split('/') : cleanPath.split('\\');
+            // 单独处理盘符
+            if (parts[0].length === 2 && parts[0][1] === ':') {
+                parts[0] += '/'; // 将盘符与后面的路径分隔符合并
+            }
+            buildTree(parts, tree);
+        });
+        console.log("tree", tree)
+        setDefaultWebTreeData(tree)
+    }, [props.searchVal])
 
     const refreshChildrenByParent = useMemoizedFn((origin: TreeNode[], parentKey: string, nodes: TreeNode[]) => {
-        const arr: TreeNode[] = origin.map((node) => {
+        const arr = origin.map((node) => {
             if (node.key === parentKey) {
                 return {
                     ...node,
                     children: nodes
-                } as TreeNode
+                }
             }
             if (node.children) {
                 return {
                     ...node,
                     children: refreshChildrenByParent(node.children, parentKey, nodes)
-                } as TreeNode
+                }
             }
             return node
         })
@@ -198,37 +264,43 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 reject("node.data is empty")
                 return
             }
-            const obj: YakURL = {...data.Url, Query: []}
-            if (treeExtraQueryparams) {
-                obj.Query.push({Key: "params", Value: treeExtraQueryparams})
+
+            const url = {
+                ...data.Url
             }
 
-            if (key.startsWith("https://")) {
-                obj.Query.push({Key: "schema", Value: "https"})
-            } else if (key.startsWith("http://")) {
-                obj.Query.push({Key: "schema", Value: "http"})
+            console.log("url", url)
+            if (schema === "website") {
+                url.Query = [{Key: "params", Value: handleFilterParams()}]
+                if (key.startsWith("https://")) {
+                    url.Query.push({Key: "schema", Value: "https"})
+                } else if (key.startsWith("http://")) {
+                    url.Query.push({Key: "schema", Value: "http"})
+                }
             }
-
-            if (runTimeId) {
-                obj.Query.push({Key: "runtime_id", Value: runTimeId})
-            }
-
+            console.log("url", url)
             requestYakURLList(
-                obj,
+                {url},
                 (rsp) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
-                        const id = key + "/" + i.ResourceName
+                        // console.log("i", i)
+                        const idObj = {
+                            website: key + "/" + i.ResourceName,
+                            behinder: i.Path,
+                            godzilla: i.Path
+                        }
+                        // console.log("idObj", idObj)
                         return {
                             title: i.VerboseName,
-                            key: id,
+                            key: idObj[schema],
                             isLeaf: !i.HaveChildrenNodes,
                             data: i,
                             icon: ({expanded}) => {
                                 if (i.ResourceType === "dir") {
                                     return expanded ? (
-                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon'/>
                                     ) : (
-                                        <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                                        <SolidFolderaddIcon className='yakitTreeNode-icon'/>
                                     )
                                 }
                                 return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
@@ -236,7 +308,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         }
                     })
                     // 判断是否是搜索树
-                    if (searchTreeFlag.current) {
+                    if (getSearchTreeFlag()) {
                         setSearchWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
                     } else {
                         setWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
@@ -252,7 +324,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     const onSearchTree = useMemoizedFn((value: string) => {
         const val = value.trim()
         const flag = val === "/" ? false : !!val.trim()
-        searchTreeFlag.current = flag
+        setSearchTreeFlag(flag)
         setExpandedKeys([])
         setSelectedKeys([])
         if (val === "" && selectedNodes.length) {
@@ -260,7 +332,13 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             resetTableAndEditorShow && resetTableAndEditorShow(true, false)
         }
         setSearchValue(val)
-        getTreeData("website://" + `${val ? val : "/"}`)
+
+        const yakUrl = {
+            website: schema + "://" + `${val ? val : "/"}`,
+            behinder: schema + ":///" + val,
+            godzilla: schema + ":///" + val,
+        }
+        getTreeData(yakUrl[schema])
     })
 
     useEffect(() => {
@@ -268,28 +346,29 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }, [searchVal])
 
     useEffect(() => {
-        if (treeExtraQueryparams) {
+        if (treeQueryparams) {
             if (selectedKeys.length) {
                 if (refreshTreeFlag) {
-                    if (searchTreeFlag.current) {
+                    if (searchTreeFlag) {
                         setSelectedKeys([])
                         setSelectedNodes([])
                         setExpandedKeys([])
-                        getTreeData(props.schema + "://" + searchValue)
+                        getTreeData(schema + "://" + searchValue)
                     } else {
                         refreshTree()
                     }
                 }
             } else {
-                if (searchTreeFlag.current) {
+                if (searchTreeFlag) {
                     setExpandedKeys([])
+                    setSelectedNodes([])
                     getTreeData(schema + "://" + searchValue)
                 } else {
                     refreshTree()
                 }
             }
         }
-    }, [treeExtraQueryparams, refreshTreeFlag, inViewport])
+    }, [treeQueryparams, refreshTreeFlag, inViewport])
 
     // 刷新网站树
     const refreshTree = useMemoizedFn(() => {
@@ -299,20 +378,25 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         }
         if (!refreshTreeWithSearchVal) {
             setSearchValue("")
-            searchTreeFlag.current = false
+            setSearchTreeFlag(false)
         }
         setExpandedKeys([])
         setSelectedKeys([])
         setSelectedNodes([])
-        getTreeData("website://" + `${refreshTreeWithSearchVal ? `${searchValue ? searchValue : "/"}` : "/"}`)
+        const yakUrl = {
+            website: schema + "://" + `${refreshTreeWithSearchVal ? `${searchValue ? searchValue : "/"}` : "/"}`,
+            behinder: schema + ":///" + `${refreshTreeWithSearchVal ? `${searchValue ? searchValue : ""}` : ""}`,
+            godzilla: schema + ":///" + `${refreshTreeWithSearchVal ? `${searchValue ? searchValue : ""}` : ""}`
+        }
+        getTreeData(yakUrl[schema])
     })
 
     // 网站树跳转 -> 带到搜索框查询
     const onJumpWebTree = (value: string) => {
-        searchTreeFlag.current = true
+        setSearchTreeFlag(true)
         setSelectedKeys([])
         setSearchValue(value)
-        getTreeData("website://" + value)
+        getTreeData(schema + "://" + value)
     }
 
     // 点击Select选中树
@@ -373,7 +457,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }, [treeTopWrapRef.current])
 
     // 搜索框
-    const onSearchChange = useMemoizedFn((e: {target: {value: string}}) => {
+    const onSearchChange = useMemoizedFn((e: { target: { value: string } }) => {
         const value = e.target.value
         setSearchValue(value)
     })
@@ -382,24 +466,23 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         <div className={styles.webTree} ref={webTreeRef}>
             <div className={styles["tree-top-wrap"]} ref={treeTopWrapRef}>
                 <YakitInput.Search
-                    wrapperStyle={{width: "calc(100% - 40px)", marginBottom: 15}}
+                    style={{marginBottom: 15, width: "calc(100% - 40px)"}}
                     placeholder={searchPlaceholder}
                     allowClear
                     onChange={onSearchChange}
                     onSearch={onSearchTree}
                     value={searchValue}
-                    disabled={searchInputDisabled}
                 />
-                <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshTree} style={{marginBottom: 15}} />
+                <YakitButton type='text2' icon={<RefreshIcon/>} onClick={refreshTree} style={{marginBottom: 15}}/>
             </div>
             <div className={styles["tree-wrap"]}>
                 {treeLoading ? (
-                    <YakitSpin />
+                    <YakitSpin/>
                 ) : (
                     <YakitTree
                         height={height !== undefined ? height - treeTopWrapHeight : undefined}
                         multiple={false}
-                        treeData={searchTreeFlag.current ? searchWebTreeData : webTreeData}
+                        treeData={searchTreeFlag ? searchWebTreeData : webTreeData}
                         loadData={onLoadWebTreeData}
                         expandedKeys={expandedKeys}
                         onExpand={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
