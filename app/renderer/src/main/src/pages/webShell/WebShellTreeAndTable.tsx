@@ -50,8 +50,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [selected, setSelected] = useState<TreeNode>({} as TreeNode)
     const [selectedNode, setSelectedNode] = useState<TreeNode[]>([])
-    const [data, setData] = useState<TreeNode[]>([])
-    // const [treeData, setTreeData] = useState<TreeNode[]>([])
     const [loading, setLoading] = useState<boolean>(false)
 
     const TreeBoxRef = useRef<any>()
@@ -348,6 +346,8 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                 }
             })
             setcurrentPathAllTree(arr)
+            console.log("1111111");
+            
             setSelectedNode(arr)
             setLoading(false)
         }).catch((error) => {
@@ -373,10 +373,12 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                         setLoading(false)
                         if (nodes.length) {
                             const url = nodes[0]?.data?.Url as YakURL
-                            console.log("url ", url)
-                            requestYakURLList({url}, (rsp) => {
-                                console.log("rsp ", rsp)
-                                const newNodes: TreeNode[] = rsp.Resources.map((i) => {
+                            console.log("nodes", nodes)
+                            // @ts-ignore
+                            const data:YakURLResource[] = (nodes||[]).map((item)=>item.data)
+                            // requestYakURLList({url}, (rsp) => {
+                            //     console.log("rsp ", rsp)
+                                const newNodes: TreeNode[] = data.map((i) => {
                                     return {
                                         title: i.VerboseName,
                                         key: i.Path,
@@ -384,9 +386,11 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                         data: i
                                     }
                                 })
+                                console.log("22222222");
                                 setSelectedNode(newNodes)
-                            })
+                            // })
                         } else {
+                            console.log("33333333");
                             setSelectedNode(currentPathAllTree)
                         }
                     }}
@@ -446,7 +450,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                         }
                         isRefresh={isRefresh}
                         renderKey='key'
-                        data={selectedNode.length > 0 ? selectedNode : data}
+                        data={selectedNode.length > 0 ? selectedNode : []}
                         loading={loading}
                         enableDrag={true}
                         columns={columns}

@@ -140,7 +140,7 @@ const [inViewport] = useInViewport(cvePageRef)
 const [visible,setVisible] = useState<boolean>(false)
 const [drawerData,setDrawerData] = useState<WebShellDetail>()
 const heightDrawer = useMemo(() => {
-    return menuBodyHeight.firstTabMenuBodyHeight - 128
+    return menuBodyHeight.firstTabMenuBodyHeight - 110
 }, [menuBodyHeight.firstTabMenuBodyHeight])
 
 
