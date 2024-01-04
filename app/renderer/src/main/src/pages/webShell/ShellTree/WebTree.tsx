@@ -8,9 +8,9 @@ import {
     OutlineLink2Icon,
     OutlineVariableIcon
 } from "@/assets/icon/outline"
-import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
+import {loadFromYakURLRaw, requestYakURLList} from "../yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
-import {YakURL, YakURLResource} from "@/pages/yakURLTree/data"
+import {YakURL, YakURLResource} from "../yakURLTree/data"
 import {SolidFolderaddIcon} from "@/assets/icon/solid"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"

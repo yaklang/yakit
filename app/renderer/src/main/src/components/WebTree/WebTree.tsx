@@ -129,26 +129,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         }, 30)
     })
 
-    const addChildrenToBinNode = (tree, binContents) => {
-        cacheExpanded.current = []
-        // 递归搜索 'bin' 节点的函数
-        const findAndAddBinChildren = (nodes) => {
-            nodes.forEach(node => {
-                if (node.title === 'bin') {
-                    // 假定 binContents 是一个包含子节点的数组
-                    node.children = [...binContents]
-                    return tree;
-                } else if (node.children && node.children.length) {
-                    cacheExpanded.current.push(node.key)
-                    findAndAddBinChildren(node.children); // 继续递归搜索子节点
-                }
-            });
-        };
-        findAndAddBinChildren(tree)
-        return {tree, defaultExpandedKeys: [...expandedKeys, ...cacheExpanded.current]}
-        // ||binContents;
-    }
-
     // 树节点第一层组装树
     const assembleFirstTreeNode = (arr: YakURLResource[]) => {
         return arr.map((item, index) => {
@@ -275,7 +255,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         setSelectedKeys([])
                         setSelectedNodes([])
                         setExpandedKeys([])
-                        getTreeData(props.schema + "://" + searchValue)
+                        getTreeData("website://" + searchValue)
                     } else {
                         refreshTree()
                     }
@@ -283,7 +263,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             } else {
                 if (searchTreeFlag.current) {
                     setExpandedKeys([])
-                    getTreeData(schema + "://" + searchValue)
+                    setSelectedNodes([])
+                    getTreeData("website://" + searchValue)
                 } else {
                     refreshTree()
                 }

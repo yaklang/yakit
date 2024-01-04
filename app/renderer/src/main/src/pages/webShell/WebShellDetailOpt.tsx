@@ -7,7 +7,7 @@ import {TERMINAL_INPUT_KEY, YakitCVXterm} from "@/components/yakitUI/YakitCVXter
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {failed} from "@/utils/notification"
 import {writeXTerm, xtermClear, xtermFit} from "@/utils/xtermUtils"
-import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
+import {loadFromYakURLRaw, requestYakURLList} from "./yakURLTree/netif"
 import ReactResizeDetector from "react-resize-detector"
 import path from "path"
 import {YakURL} from "@/pages/yakURLTree/data"

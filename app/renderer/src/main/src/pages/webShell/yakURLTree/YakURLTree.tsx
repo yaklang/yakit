@@ -4,7 +4,7 @@ import {useMemoizedFn} from "ahooks";
 import {debugYakitModal, debugYakitModalAny} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {yakitFailed, yakitInfo} from "@/utils/notification";
 import {pathExists} from "fs-extra";
-import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif";
+import {loadFromYakURLRaw, requestYakURLList} from "./netif";
 import {YakURLResource} from "@/pages/yakURLTree/data";
 import {AutoCard} from "@/components/AutoCard";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
@@ -85,8 +85,8 @@ export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
                                 reject("node.data is empty")
                                 return
                             }
-
-                            requestYakURLList(originData.Url, rsp => {
+                            console.log("originData.Url", originData.Url)
+                            requestYakURLList({ url: originData.Url }, rsp => {
                                 const newNodes: TreeNode[] = rsp.Resources.map((i, index) => ({
                                     title: i.VerboseName,
                                     key: `${node.key}-${index}`,

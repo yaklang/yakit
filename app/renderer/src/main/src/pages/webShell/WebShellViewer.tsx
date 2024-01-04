@@ -205,7 +205,6 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                         activeKey={activeKey}
                         onChange={(key) => onSwitchCollapse(key)}
                         destroyInactivePanel={true}
-                        type='grey'
                     >
                         <YakitPanel
                             header={
