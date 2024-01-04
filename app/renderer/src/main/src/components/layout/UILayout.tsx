@@ -1051,7 +1051,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         getRemoteValue(RemoteGV.KnowChatCS).then((value: any) => {
             if (!value) return
             else setShowChatCS(false)
-        })
+        }).catch(()=>{})
     }, [engineLink])
     const onChatCS = useMemoizedFn(() => {
         setShowChatCS(false)
