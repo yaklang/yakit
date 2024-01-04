@@ -113,7 +113,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     console.log("searchVal", props.searchVal)
                     console.log("8888", res.Resources)
                     console.log("7777", getDefaultWebTreeData())
-                    // setSearchWebTreeData(defaultWebTreeData)
                     setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
                 } else {
                     console.log("9999", res.Resources)
@@ -234,13 +233,14 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             }
             buildTree(parts, tree);
         });
-        console.log("tree", tree)
+        console.log("tree--", tree)
         setDefaultWebTreeData(tree)
     }, [props.searchVal])
 
-    const refreshChildrenByParent = useMemoizedFn((origin: TreeNode[], parentKey: string, nodes: TreeNode[]) => {
+    const refreshChildrenByParent = useMemoizedFn((origin: TreeNode[], parentKey: string, nodes: TreeNode[],isClick?:boolean) => {
         const arr = origin.map((node) => {
             if (node.key === parentKey) {
+                isClick && onSelectNodes && onSelectNodes(nodes)
                 return {
                     ...node,
                     children: nodes
@@ -249,7 +249,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             if (node.children) {
                 return {
                     ...node,
-                    children: refreshChildrenByParent(node.children, parentKey, nodes)
+                    children: refreshChildrenByParent(node.children, parentKey, nodes,isClick)
                 }
             }
             return node
@@ -258,7 +258,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     })
 
     // 树子节点异步加载组装树
-    const onLoadWebTreeData = ({key, children, data}: any) => {
+    const onLoadWebTreeData = ({key, children, data}: any,isClick?:boolean) => {
         return new Promise<void>((resolve, reject) => {
             if (data === undefined) {
                 reject("node.data is empty")
@@ -268,8 +268,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             const url = {
                 ...data.Url
             }
-
-            console.log("url", url)
             if (schema === "website") {
                 url.Query = [{Key: "params", Value: handleFilterParams()}]
                 if (key.startsWith("https://")) {
@@ -282,7 +280,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             requestYakURLList(
                 {url},
                 (rsp) => {
-                    const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
+                    const newNodes: TreeNode[] = rsp.Resources.filter((item)=>item.ResourceType==="dir").map((i, index) => {
                         // console.log("i", i)
                         const idObj = {
                             website: key + "/" + i.ResourceName,
@@ -309,9 +307,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     })
                     // 判断是否是搜索树
                     if (getSearchTreeFlag()) {
-                        setSearchWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
+                        setSearchWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes,isClick))
                     } else {
-                        setWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
+                        setWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes,isClick))
                     }
                     resolve()
                 },
@@ -399,14 +397,28 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         getTreeData(schema + "://" + value)
     }
 
+    // 数组去重
+    const filter = arr => arr.filter((item,index) => arr.indexOf(item) === index)
+
     // 点击Select选中树
     const onSelectedKeys = useMemoizedFn(
         (
             selectedKeys: TreeKey[],
             info: {
+                selected,
                 selectedNodes: TreeNode[]
+                node,
             }
         ) => {
+            const {selected,node} = info
+            if(selected){
+                setExpandedKeys(filter([...expandedKeys,...selectedKeys]))
+                onLoadWebTreeData(node,true)
+            }
+            if(!selected){
+                setExpandedKeys((pre)=>pre.filter((item)=>item!==node.key))
+                onSelectNodes && onSelectNodes([])
+            }
             setSelectedKeys(selectedKeys)
             setSelectedNodes(info.selectedNodes)
             resetTableAndEditorShow && resetTableAndEditorShow(true, false)
@@ -414,7 +426,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     )
 
     useEffect(() => {
-        onSelectNodes && onSelectNodes(selectedNodes)
+        // onSelectNodes && onSelectNodes(selectedNodes)
         const node = selectedNodes[0]
         if (node) {
             const urlItem = node.data?.Extra.find((item) => item.Key === "url")
@@ -466,7 +478,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         <div className={styles.webTree} ref={webTreeRef}>
             <div className={styles["tree-top-wrap"]} ref={treeTopWrapRef}>
                 <YakitInput.Search
-                    style={{marginBottom: 15, width: "calc(100% - 40px)"}}
+                    wrapperStyle={{marginBottom: 15, width: "calc(100% - 40px)"}}
                     placeholder={searchPlaceholder}
                     allowClear
                     onChange={onSearchChange}
@@ -483,9 +495,17 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         height={height !== undefined ? height - treeTopWrapHeight : undefined}
                         multiple={false}
                         treeData={searchTreeFlag ? searchWebTreeData : webTreeData}
-                        loadData={onLoadWebTreeData}
+                        // loadData={onLoadWebTreeData}
                         expandedKeys={expandedKeys}
-                        onExpand={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
+                        onExpand={(expandedKeys: TreeKey[],info:{
+                            expanded: boolean,
+                            node
+                        }) => {
+                            setExpandedKeys(expandedKeys)
+                            if(info.expanded){
+                                onLoadWebTreeData(info.node)
+                            }
+                        }}
                         selectedKeys={selectedKeys}
                         onSelect={onSelectedKeys}
                     ></YakitTree>
