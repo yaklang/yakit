@@ -324,7 +324,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 onSetHijackResponseType={onSetHijackResponseType}
                                 currentIsForResponse={currentIsForResponse}
                                 requestPacket={requestPacket}
-                                onSetCalloutColor={setCalloutColor}
                             />
                         </div>
                     </div>

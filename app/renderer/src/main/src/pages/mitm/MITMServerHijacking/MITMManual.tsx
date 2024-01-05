@@ -205,7 +205,6 @@ interface MITMManualEditorProps {
     onSetHijackResponseType: (s: string) => void
     currentIsForResponse: boolean
     requestPacket: Uint8Array
-    onSetCalloutColor: (calloutColor: string) => void
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
     const {
@@ -221,8 +220,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         status,
         onSetHijackResponseType,
         currentIsForResponse,
-        requestPacket,
-        onSetCalloutColor
+        requestPacket
     } = props
     // 操作系统类型
     const [system, setSystem] = useState<string>()
