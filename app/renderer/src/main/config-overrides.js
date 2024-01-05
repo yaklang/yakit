@@ -7,6 +7,7 @@ const {
     addWebpackAlias,
     addWebpackModuleRule,
     overrideDevServer,
+    removeModuleScopePlugin,
     watchAll
 } = require('customize-cra')
 const path = require('path')
@@ -45,6 +46,7 @@ module.exports = {
         addWebpackExternals(
             { "./cptable": "var cptable" },
         ),
+        removeModuleScopePlugin(),
         (config) => {
             if (config.mode !== 'development') {
                 config.output.path = OUTPUT_PATH
