@@ -520,6 +520,7 @@ export const availableColors = [
         tag_title: "红色",
         className: TableRowColor("RED"),
         searchWord: "YAKIT_COLOR_RED",
+        extraClassName: "color-bg-red",
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-red")}></div>
@@ -533,6 +534,7 @@ export const availableColors = [
         tag_title: "绿色",
         className: TableRowColor("GREEN"),
         searchWord: "YAKIT_COLOR_GREEN",
+        extraClassName: "color-bg-green",
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-green")}></div>
@@ -546,6 +548,7 @@ export const availableColors = [
         tag_title: "蓝色",
         className: TableRowColor("BLUE"),
         searchWord: "YAKIT_COLOR_BLUE",
+        extraClassName: "color-bg-blue",
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>
@@ -558,6 +561,7 @@ export const availableColors = [
         title: "黄色[#FFD583]",
         tag_title: "黄色",
         searchWord: "YAKIT_COLOR_YELLOW",
+        extraClassName: "color-bg-yellow",
         className: TableRowColor("YELLOW"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -571,7 +575,9 @@ export const availableColors = [
         title: "橙色[#FFB660]",
         tag_title: "橙色",
         searchWord: "YAKIT_COLOR_ORANGE",
+        extraClassName: "color-bg-orange",
         className: TableRowColor("ORANGE"),
+        classname: "",
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-orange")}></div>
@@ -584,6 +590,7 @@ export const availableColors = [
         title: "紫色[#8863F7]",
         tag_title: "紫色",
         searchWord: "YAKIT_COLOR_PURPLE",
+        extraClassName: "color-bg-purple",
         className: TableRowColor("PURPLE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -597,6 +604,7 @@ export const availableColors = [
         title: "天蓝色[#35D8EE]",
         tag_title: "天蓝色",
         searchWord: "YAKIT_COLOR_CYAN",
+        extraClassName: "color-bg-cyan",
         className: TableRowColor("CYAN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -610,6 +618,7 @@ export const availableColors = [
         title: "灰色[#B4BBCA]",
         tag_title: "灰色",
         searchWord: "YAKIT_COLOR_GREY",
+        extraClassName: "color-bg-grey",
         className: TableRowColor("GREY"),
         render: (
             <div className={classNames(style["history-color-tag"])}>

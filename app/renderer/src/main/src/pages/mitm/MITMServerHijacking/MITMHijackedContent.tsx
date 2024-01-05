@@ -71,13 +71,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const {setIsRefreshHistory} = useStore()
 
     const [calloutColor, setCalloutColor] = useState<string>("")
-    useEffect(() => {
-        getRemoteValue(RemoteGV.MitmManualCalloutColor).then((calloutColor: string) => {
-            if (calloutColor !== null) {
-                setCalloutColor(calloutColor)
-            }
-        })
-    }, [])
 
     const isManual = useCreation(() => {
         return autoForward === "manual"
@@ -203,6 +196,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         } else {
             ipcRenderer.invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId, [calloutColor]).finally(() => {
                 clearCurrentPacket()
+                setCalloutColor("")
                 // setTimeout(() => setLoading(false))
             })
         }
@@ -262,6 +256,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             })
         }
         setForResponse(false)
+        setCalloutColor("")
         setUrlInfo("监听中...")
         setIpInfo("")
     })

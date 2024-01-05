@@ -180,16 +180,15 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                         calloutColor && (
                             <YakitTag
                                 style={{
-                                    alignSelf: "center",
+                                    cursor: "pointer"
                                 }}
                                 size='small'
                                 closable
                                 onClose={e => {
                                     onSetCalloutColor("")
-                                    setRemoteValue(RemoteGV.MitmManualCalloutColor, "")
                                 }}
                             >
-                                标注颜色：{availableColors?.find(item => item.searchWord === calloutColor)?.tag_title}
+                                标注颜色：<div className={classNames(styles["tag-color-display"], availableColors?.find(item => item.searchWord === calloutColor)?.extraClassName)}></div>
                             </YakitTag>
                         )
                     }
@@ -241,7 +240,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
     // 标注颜色
     const editorCalloutColor = (color: string) => {
         onSetCalloutColor(color)
-        setRemoteValue(RemoteGV.MitmManualCalloutColor, color)
     }
 
 

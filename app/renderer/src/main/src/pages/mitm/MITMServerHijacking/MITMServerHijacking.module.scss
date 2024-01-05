@@ -167,6 +167,12 @@
         color: var(--yakit-header-color);
         align-items: center;
     }
+    
+    .tag-color-display {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
 }
 .mitm-log-heard {
     display: flex;
