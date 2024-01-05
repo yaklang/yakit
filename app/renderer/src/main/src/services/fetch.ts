@@ -36,6 +36,10 @@ export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
         ipcRenderer
             .invoke("axios-api", params)
             .then((res) => {
+                // 埋点接口 不论结果如何 不可影响页面及交互
+                if(params.url==="tourist"){
+                    return
+                }
                 handleAxios(res, resolve, reject)
             })
             .catch((err: any) => {

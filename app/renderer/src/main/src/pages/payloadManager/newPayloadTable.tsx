@@ -343,7 +343,11 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             title: "字典内容",
             dataIndex: "Content",
             editable: true,
-            render: (text) => <div className={styles["basic"]}>{text}</div>
+            render: (text) => (
+                <div className={styles["basic"]} style={{wordBreak: "break-all", wordWrap: "break-word"}}>
+                    {text}
+                </div>
+            )
         },
         {
             title: () => <Tooltip title={"新增命中次数字段，命中次数越高，在爆破时优先级也会越高"}>命中次数</Tooltip>,
