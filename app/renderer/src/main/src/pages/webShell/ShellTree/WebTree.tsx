@@ -17,7 +17,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import styles from "@/components/WebTree/WebTree.module.scss"
-
+import path from "path"
+import emiter from "@/utils/eventBus/eventBus"
 type TreeNodeType = "dir" | "file" | "query" | "path"
 
 export interface TreeNode extends DataNode {
@@ -82,7 +83,42 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         return iconsEle[treeNodeType] || <></>
     }
 
-    const getTreeData = (path:string) => {
+    useEffect(() => {
+        emiter.on("onWebShellBackTree", goBack)
+        return () => {
+            emiter.off("onWebShellBackTree", goBack)
+        }
+    }, [])
+
+    // 根据名称寻找node
+    const getNodeByFileName = useMemoizedFn((tree, name) => {
+        if (tree?.title === name) return tree
+        else {
+            if (Array.isArray(tree.children) && tree.children.length > 0) {
+                return getNodeByFileName(tree.children[0], name)
+            } else {
+                return null
+            }
+        }
+    })
+
+    // 返回上一级
+    const goBack = useMemoizedFn(() => {
+        const parts = searchValue.split("\\")
+        const parentDirectory = parts.slice(0, -1).join("\\")
+        setSearchValue(parentDirectory)
+        const lastIndex = parentDirectory.lastIndexOf("\\")
+        const fileName = parentDirectory.substring(lastIndex + 1)
+        if (getDefaultWebTreeData().length > 0) {
+            const node = getNodeByFileName(getDefaultWebTreeData()[0], fileName)
+            if (node) {
+                onLoadWebTreeData(node, true)
+                setSelectedKeys([node.key])
+            }
+        }
+    })
+
+    const getTreeData = (path: string) => {
         // 由于这里会有闭包 30毫秒后再掉接口
         setTreeLoading(true)
         setTimeout(() => {
@@ -106,16 +142,16 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         return i
                     })
                 }
-                console.log("newSearchYakURL",newSearchYakURL);
-                
+                console.log("newSearchYakURL", newSearchYakURL)
+
                 requestYakURLList({url: newSearchYakURL, method: "GET"}, (res) => {
                     // 判断是否是搜索树
                     if (getSearchTreeFlag()) {
                         console.log("8888", res.Resources)
-                        console.log("7777", getDefaultWebTreeData())
+                        console.log("6666", assembleFirstTreeNode(res.Resources))
+
                         setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
                     } else {
-                        console.log("9999", res.Resources)
                         setWebTreeData(assembleFirstTreeNode(res.Resources))
                     }
                     setTimeout(() => {
@@ -130,11 +166,13 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     }
     const cacheExpanded = useRef<TreeKey[]>([])
     const addChildrenToBinNode = (tree, binContents) => {
+        const lastIndex = searchValue.lastIndexOf("\\")
+        const fileName = searchValue.substring(lastIndex + 1)
         cacheExpanded.current = []
-        // 递归搜索 'bin' 节点的函数
+        // 递归搜索 最后 节点的函数
         const findAndAddBinChildren = (nodes) => {
             nodes.forEach((node) => {
-                if (node.title === "bin") {
+                if (node.title === fileName) {
                     // 假定 binContents 是一个包含子节点的数组
                     node.children = [...binContents]
                     return tree
@@ -216,7 +254,20 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 HaveChildrenNodes: true
             }
             if (!node) {
-                node = {title: part, key: currentPath, isLeaf: parts.length === 0, children: [], data: item}
+                node = {
+                    title: part,
+                    key: currentPath,
+                    isLeaf: parts.length === 0,
+                    children: [],
+                    data: item,
+                    icon: ({expanded}) => {
+                        return expanded ? (
+                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                        ) : (
+                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                        )
+                    }
+                }
                 tree.push(node)
             }
             buildTree(parts, node.children, currentPath)
@@ -278,7 +329,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 ...data.Url
             }
             try {
-                url.Query = url.Query.map((i)=>{
+                url.Query = url.Query.map((i) => {
                     if (i.Key === "path") {
                         return {
                             Key: "path",
@@ -292,38 +343,48 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             requestYakURLList(
                 {url},
                 (rsp) => {
-                    const newNodes: TreeNode[] = rsp.Resources.filter((item) => item.ResourceType === "dir").map(
-                        (i, index) => {
-                            // console.log("i", i)
-                            const idObj = {
-                                website: key + "/" + i.ResourceName,
-                                behinder: i.Path,
-                                godzilla: i.Path
-                            }
-                            // console.log("idObj", idObj)
-                            return {
-                                title: i.VerboseName,
-                                key: idObj[schema],
-                                isLeaf: !i.HaveChildrenNodes,
-                                data: i,
-                                icon: ({expanded}) => {
-                                    if (i.ResourceType === "dir") {
-                                        return expanded ? (
-                                            <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
-                                        ) : (
-                                            <SolidFolderaddIcon className='yakitTreeNode-icon' />
-                                        )
-                                    }
-                                    return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
+                    const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
+                        // console.log("i", i)
+                        const idObj = {
+                            website: key + "/" + i.ResourceName,
+                            behinder: i.Path,
+                            godzilla: i.Path
+                        }
+                        // console.log("idObj", idObj)
+                        return {
+                            title: i.VerboseName,
+                            key: idObj[schema],
+                            isLeaf: !i.HaveChildrenNodes,
+                            data: i,
+                            icon: ({expanded}) => {
+                                if (i.ResourceType === "dir") {
+                                    return expanded ? (
+                                        <OutlineFolderremoveIcon className='yakitTreeNode-icon' />
+                                    ) : (
+                                        <SolidFolderaddIcon className='yakitTreeNode-icon' />
+                                    )
                                 }
+                                return renderTreeNodeIcon(i.ResourceType as TreeNodeType)
                             }
                         }
-                    )
+                    })
+                    // 将文件夹排在前 文件在后
+                    const newNodesDir: TreeNode[] = []
+                    const newNodesFile: TreeNode[] = []
+                    newNodes.forEach((item) => {
+                        if (item?.data?.ResourceType === "dir") {
+                            newNodesDir.push(item)
+                        } else {
+                            newNodesFile.push(item)
+                        }
+                    })
+                    const newNodesSort = [...newNodesDir, ...newNodesFile]
+
                     // 判断是否是搜索树
                     if (getSearchTreeFlag()) {
-                        setSearchWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes, isClick))
+                        setSearchWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodesSort, isClick))
                     } else {
-                        setWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodes, isClick))
+                        setWebTreeData((origin) => refreshChildrenByParent(origin, key, newNodesSort, isClick))
                     }
                     resolve()
                 },
