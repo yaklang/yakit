@@ -45,10 +45,33 @@ module.exports = {
             }
         )),
         addWebpackPlugin(new NodePolyfillPlugin()),
-        addWebpackModuleRule({
-            test: [/\.css$/, /\.scss$/], // 可以打包后缀为sass/scss/css的文件
-            use: ["style-loader", "css-loader", "sass-loader"]
-        }),
+        addWebpackModuleRule(
+            {
+                test: [/\.css$/, /\.scss$/], // 可以打包后缀为scss/css的文件
+                exclude: [/\.module\.(css|scss)/],
+                use: [
+                    "style-loader",
+                    "css-loader",
+                    "sass-loader"
+                ]
+            },
+            {
+                test: /\.module\.(css|scss)/,
+                use: [
+                    "style-loader",
+                    {
+
+                        loader: "css-loader",
+                        options: {
+                            modules: {
+                                localIdentName: '[name]_[local]_[hash:base64:5]',
+                            }
+                        }
+                    },
+                    "sass-loader"
+                ]
+            }
+        ),
         addWebpackExternals(
             { "./cptable": "var cptable" },
         ),
