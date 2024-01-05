@@ -86,6 +86,8 @@ export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
                     setFirstEnter(false)
                     emiter.emit("closePage", JSON.stringify({route: YakitRoute.Beta_WebShellManager}))
                 }}
+                okButtonText='同意'
+                cancelButtonText='不同意'
             />
         </div>
     )
