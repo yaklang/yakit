@@ -12,6 +12,8 @@ import {SolidCalendarIcon, SolidTrendingdownIcon, SolidTrendingupIcon} from "@/a
 import * as echarts from "echarts"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import numeral from "numeral"
 const {ipcRenderer} = window.require("electron")
 
 interface PieChartProps {
@@ -169,43 +171,41 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     }, [])
 
     const getPluginSearch = useMemoizedFn(() => {
-        // NetWorkApi<PluginSearchStatisticsRequest, API.YakitSearch>({
-        //     method: "get",
-        //     url: "plugin/search",
-        //     params: {
-        //         bind_me: false
-        //     }
-        // })
-        //     .then((res: API.YakitSearch) => {
-        //         if (res.plugin_type) {
-        //             const chartListCache = res.plugin_type.map((item) => ({
-        //                 name: PluginType[item.value] ?? "未识别",
-        //                 value: item.count
-        //             }))
-        //             // console.log("chartListCache",chartListCache,res.plugin_type)
-        //             // @ts-ignore
-        const chartListCache = [
-            {name: "北京", value: 5678},
-            {name: "成都", value: 4832},
-            {name: "上海", value: 4695},
-            {name: "深圳", value: 1024},
-            {name: "西安", value: 952},
-            {name: "其它", value: 2187}
-        ]
+        NetWorkApi<null, API.TouristCityResponse>({
+            method: "get",
+            url: "tourist/city"
+        })
+            .then((res: API.TouristCityResponse) => {
+                console.log("tourist/city",res);
+                
+                if (res.data) {
+                    const chartListCache = res.data.map((item) => ({
+                        name: item.city,
+                        value: item.count
+                    }))
+        // @ts-ignore
+        // const chartListCache = [
+        //     {name: "北京", value: 5678},
+        //     {name: "成都", value: 4832},
+        //     {name: "上海", value: 4695},
+        //     {name: "深圳", value: 1024},
+        //     {name: "西安", value: 952},
+        //     {name: "其它", value: 2187}
+        // ]
         optionRef.current.series[0].data = chartListCache
         optionRef.current.title.text = chartListCache.map((item) => item.value).reduce((a, b) => a + b, 0)
         optionRef.current.title.show = true
         setChartList(chartListCache)
         setEcharts(optionRef.current)
-        //         }
-        //     })
-        //     .catch((err) => {
-        //         if (setEchartsError) setEchartsError(true)
-        //         // failed("线上统计数据获取失败:" + err)
-        //     })
-        //     .finally(() => {
+                }
+            })
+            .catch((err) => {
+                if (setEchartsError) setEchartsError(true)
+                // failed("线上统计数据获取失败:" + err)
+            })
+            .finally(() => {
         setIsShowEcharts(true)
-        //     })
+            })
     })
 
     const setEcharts = (options) => {
@@ -249,51 +249,81 @@ export interface DataStatisticsProps {}
 export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
+    const [userData, setUserData] = useState<API.TouristAndUserResponse>()
+    const [loading, setLoading] = useState<boolean>(false)
+    useEffect(() => {
+        getUserData()
+    }, [])
+
+    const getUserData = useMemoizedFn(() => {
+        setLoading(true)
+        NetWorkApi<null, API.TouristAndUserResponse>({
+            url: "tourist",
+            method: "get"
+        })
+            .then((data) => {
+                console.log("opop", data)
+                setUserData(data)
+            })
+            .catch((err) => {})
+            .finally(() => {
+                setLoading(false)
+            })
+    })
     return (
         <div className={styles["data-statistics"]} ref={ref}>
             <div className={styles["left-box"]}>
-                <div className={styles["user-sum"]}>
-                    <div className={styles["all-user"]}>
-                        <div className={styles["user-icon"]}>
-                            <UserIcon />
+                <div className={styles["user-box"]}>
+                    <YakitSpin spinning={loading}>
+                        <div className={styles["user-sum"]}>
+                            <div className={styles["all-user"]}>
+                                <div className={styles["user-icon"]}>
+                                    <UserIcon />
+                                </div>
+                                <div className={styles["count-box"]}>
+                                    <div className={styles["count"]}>
+                                        {userData ? numeral(userData.touristTotal).format("0,0") : ""}
+                                    </div>
+                                    <div className={styles["sub-title"]}>总用户数</div>
+                                </div>
+                            </div>
+                            <div className={styles["login-user"]}>
+                                <div className={styles["count"]}>
+                                    {userData ? numeral(userData.loginTotal).format("0,0") : ""}
+                                </div>
+                                <div className={styles["sub-title"]}>登录用户总数</div>
+                            </div>
                         </div>
-                        <div className={styles["count-box"]}>
-                            <div className={styles["count"]}>24,067</div>
-                            <div className={styles["sub-title"]}>总用户数</div>
-                        </div>
-                    </div>
-                    <div className={styles["login-user"]}>
-                        <div className={styles["count"]}>24,067</div>
-                        <div className={styles["sub-title"]}>登录用户总数</div>
-                    </div>
-                </div>
-                <div className={styles["card-box"]}>
-                    <div className={classNames(styles["day-card"], styles["user-card"])}>
-                        <div className={styles["line"]} />
-                        <div className={styles["header"]}>
-                            <div className={styles["count"]}>6</div>
-                            <UpsOrDowns type='up' value='0.36' />
-                        </div>
+                        <div className={styles["card-box"]}>
+                            <div className={classNames(styles["day-card"], styles["user-card"])}>
+                                <div className={styles["line"]} />
+                                <div className={styles["header"]}>
+                                    <div className={styles["count"]}>{userData?.dayNew ?? ""}</div>
+                                    <UpsOrDowns type='up' value='0.36' />
+                                </div>
 
-                        <div className={styles["title"]}>今日新增用户</div>
-                    </div>
-                    <div className={classNames(styles["week-card"], styles["user-card"])}>
-                        <div className={styles["line"]} />
-                        <div className={styles["header"]}>
-                            <div className={styles["count"]}>32</div>
-                            <UpsOrDowns type='down' value='2' />
+                                <div className={styles["title"]}>今日新增用户</div>
+                            </div>
+                            <div className={classNames(styles["week-card"], styles["user-card"])}>
+                                <div className={styles["line"]} />
+                                <div className={styles["header"]}>
+                                    <div className={styles["count"]}>{userData?.weekNew ?? ""}</div>
+                                    <UpsOrDowns type='down' value='2' />
+                                </div>
+                                <div className={styles["title"]}>本周新增用户</div>
+                            </div>
+                            <div className={classNames(styles["month-card"], styles["user-card"])}>
+                                <div className={styles["line"]} />
+                                <div className={styles["header"]}>
+                                    <div className={styles["count"]}>{userData?.monthNew ?? ""}</div>
+                                    <UpsOrDowns type='up' value='6.8' />
+                                </div>
+                                <div className={styles["title"]}>本月新增用户</div>
+                            </div>
                         </div>
-                        <div className={styles["title"]}>本周新增用户</div>
-                    </div>
-                    <div className={classNames(styles["month-card"], styles["user-card"])}>
-                        <div className={styles["line"]} />
-                        <div className={styles["header"]}>
-                            <div className={styles["count"]}>85</div>
-                            <UpsOrDowns type='up' value='6.8' />
-                        </div>
-                        <div className={styles["title"]}>本月新增用户</div>
-                    </div>
+                    </YakitSpin>
                 </div>
+
                 <div className={styles["v-line"]} />
                 <div className={styles["pie-charts-box"]}>
                     <div className={styles["header"]}>

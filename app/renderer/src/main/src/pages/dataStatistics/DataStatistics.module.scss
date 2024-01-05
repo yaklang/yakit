@@ -13,7 +13,9 @@
         display: flex;
         gap: 20px;
         flex-direction: column;
-        .user-sum {
+        .user-box{
+           .user-sum {
+            margin-bottom: 20px;
             padding-top: 8px;
             display: flex;
             flex-direction: row;
@@ -124,7 +126,9 @@
                     background: rgba(53, 216, 238, 0.2);
                 }
             }
+        } 
         }
+        
         .v-line {
             height: 1px;
             width: 100%;
