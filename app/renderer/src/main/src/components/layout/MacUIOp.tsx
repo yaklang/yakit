@@ -155,6 +155,12 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                 {/* 退出临时项目确认弹框 */}
                 {closeTemporaryProjectVisible && (
                     <TemporaryProjectPop
+                        title='关闭Yakit'
+                        content={
+                            <>
+                                关闭Yakit会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据
+                            </>
+                        }
                         ref={temporaryProjectPopRef}
                         onOk={async () => {
                             setTemporaryProjectNoPromptFlag(temporaryProjectPopRef.current.temporaryProjectNoPrompt)
