@@ -278,10 +278,14 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         // 初始化根节点
         const val = searchYakURL.Query.filter((i) => i.Key === "path")[0].Value
 
-        let tree: TreeNode[] = []
-        ;[val!].forEach((path) => {
+        let tree: TreeNode[] = [];
+        [val!].forEach((p) => {
+            if (p.endsWith('/') || p.endsWith('\\'))  {
+               p = p.slice(0, -1);
+            }
+            let cleanPath = path.normalize(p)
             // 清理路径中的查询字符串部分
-            let cleanPath = path.split("?")[0] // 获取 '?' 前的部分
+            cleanPath = p.split("?")[0] // 获取 '?' 前的部分
 
             // 分割路径，处理盘符
             let parts = cleanPath.includes("/") ? cleanPath.split("/") : cleanPath.split("\\")
