@@ -2122,11 +2122,13 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                         type='text2'
                         size='small'
                         icon={
-                            <OutlineAnnotationIcon
-                                onClick={() => setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)}
-                            />
+                            <OutlineAnnotationIcon />
                         }
                         isActive={showResponseInfoSecondEditor}
+                        onClick={() => {
+                            setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
+                            setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
+                        }}
                     />
                 </Tooltip>
             </div>
