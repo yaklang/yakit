@@ -33,6 +33,7 @@ import {goBack} from "@/pages/webShell/FileManager";
 import {TreeNode, WebTree} from "./ShellTree/WebTree";
 import { TreeKey } from "@/components/yakitUI/YakitTree/YakitTree";
 import path from "path"
+import emiter from "@/utils/eventBus/eventBus";
 
 interface WebShellURLTreeAndTableProp {
     Id: string
@@ -427,8 +428,9 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                     <Button size={"small"}
                                             type={"link"}
                                             onClick={() => {
-                                                console.log("goBackTree ", selected.data!.Url)
-                                                goBack(selected.data!.Url, setLoading, setGoBackTree)
+                                                // console.log("goBackTree ", selected.data!.Url)
+                                                // goBack(selected.data!.Url, setLoading, setGoBackTree)
+                                                emiter.emit("onWebShellBackTree")
                                             }}
                                             icon={<ChevronLeftIcon/>}
                                     />
