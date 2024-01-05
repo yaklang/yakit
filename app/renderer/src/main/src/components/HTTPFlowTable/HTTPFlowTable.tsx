@@ -517,7 +517,6 @@ export const availableColors = [
     {
         color: "RED",
         title: "红色[#F4736B]",
-        tag_title: "红色",
         className: TableRowColor("RED"),
         searchWord: "YAKIT_COLOR_RED",
         extraClassName: "color-bg-red",
@@ -531,7 +530,6 @@ export const availableColors = [
     {
         color: "GREEN",
         title: "绿色[#56C991]",
-        tag_title: "绿色",
         className: TableRowColor("GREEN"),
         searchWord: "YAKIT_COLOR_GREEN",
         extraClassName: "color-bg-green",
@@ -545,7 +543,6 @@ export const availableColors = [
     {
         color: "BLUE",
         title: "蓝色[#4A94F8]",
-        tag_title: "蓝色",
         className: TableRowColor("BLUE"),
         searchWord: "YAKIT_COLOR_BLUE",
         extraClassName: "color-bg-blue",
@@ -559,7 +556,6 @@ export const availableColors = [
     {
         color: "YELLOW",
         title: "黄色[#FFD583]",
-        tag_title: "黄色",
         searchWord: "YAKIT_COLOR_YELLOW",
         extraClassName: "color-bg-yellow",
         className: TableRowColor("YELLOW"),
@@ -573,7 +569,6 @@ export const availableColors = [
     {
         color: "ORANGE",
         title: "橙色[#FFB660]",
-        tag_title: "橙色",
         searchWord: "YAKIT_COLOR_ORANGE",
         extraClassName: "color-bg-orange",
         className: TableRowColor("ORANGE"),
@@ -588,7 +583,6 @@ export const availableColors = [
     {
         color: "PURPLE",
         title: "紫色[#8863F7]",
-        tag_title: "紫色",
         searchWord: "YAKIT_COLOR_PURPLE",
         extraClassName: "color-bg-purple",
         className: TableRowColor("PURPLE"),
@@ -602,7 +596,6 @@ export const availableColors = [
     {
         color: "CYAN",
         title: "天蓝色[#35D8EE]",
-        tag_title: "天蓝色",
         searchWord: "YAKIT_COLOR_CYAN",
         extraClassName: "color-bg-cyan",
         className: TableRowColor("CYAN"),
@@ -616,7 +609,6 @@ export const availableColors = [
     {
         color: "GREY",
         title: "灰色[#B4BBCA]",
-        tag_title: "灰色",
         searchWord: "YAKIT_COLOR_GREY",
         extraClassName: "color-bg-grey",
         className: TableRowColor("GREY"),
