@@ -102,21 +102,11 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
         setVisible(false)
     }
 
-    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
-    const handleTemporaryProject = async () => {
-        if (temporaryProjectId) {
-            try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
-                setTemporaryProjectId("")
-            } catch (error) {
-                yakitFailed(error + "")
-            }
-        }
-    }
+    const {delTemporaryProject} = useTemporaryProjectStore()
 
     const onOK = async () => {
         // 删掉临时项目
-        await handleTemporaryProject()
+        await delTemporaryProject()
         fetchProcess(() => {
             onExecute()
         })

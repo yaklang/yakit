@@ -1012,7 +1012,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const [available, setAvailable] = useState(false) // cve数据库是否可用
     const [isDiffUpdate, setIsDiffUpdate] = useState(false)
     const {dynamicStatus} = yakitDynamicStatus()
-    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
+    const {delTemporaryProject} = useTemporaryProjectStore()
         
     useEffect(() => {
         onIsCVEDatabaseReady()
@@ -1123,7 +1123,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 addToTab("**beta-codec")
                 return
             case "invalidCache":
-                invalidCacheAndUserData(temporaryProjectId, setTemporaryProjectId)
+                invalidCacheAndUserData(delTemporaryProject)
                 return
             case "pcapfix":
                 showPcapPermission()
@@ -1184,18 +1184,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
 const UIDevTool: React.FC = React.memo(() => {
     const [show, setShow] = useState<boolean>(false)
 
-    const {temporaryProjectId, setTemporaryProjectId} = useTemporaryProjectStore()
-
-    const handleTemporaryProject = async () => {
-        if (temporaryProjectId) {
-            try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
-                setTemporaryProjectId("")
-            } catch (error) {
-                yakitFailed(error + "")
-            }
-        }
-    }
+    const {delTemporaryProject} = useTemporaryProjectStore()
 
     const menuSelect = useMemoizedFn(async (type: string) => {
         switch (type) {
@@ -1203,11 +1192,11 @@ const UIDevTool: React.FC = React.memo(() => {
                 ipcRenderer.invoke("trigger-devtool")
                 return
             case "reload":
-                await handleTemporaryProject()
+                await delTemporaryProject()
                 ipcRenderer.invoke("trigger-reload")
                 return
             case "reloadCache":
-                await handleTemporaryProject()
+                await delTemporaryProject()
                 ipcRenderer.invoke("trigger-reload-cache")
                 return
 

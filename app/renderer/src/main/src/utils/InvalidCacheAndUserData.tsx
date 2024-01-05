@@ -1,24 +1,12 @@
 import React from "react";
-import {info, yakitFailed} from "@/utils/notification";
+import {info} from "@/utils/notification";
 import {showModal} from "@/utils/showModal";
 import {Alert, Button, Space} from "antd";
 import { getReleaseEditionName } from "./envfile";
-import emiter from "./eventBus/eventBus";
 
 const {ipcRenderer} = window.require("electron");
 
-export const invalidCacheAndUserData = (temporaryProjectId: string, setTemporaryProjectId) => {
-    const handleTemporaryProject = async () => {
-        if (temporaryProjectId) {
-            try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
-                setTemporaryProjectId("")
-            } catch (error) {
-                yakitFailed(error + "")
-            }
-        }
-    }
-
+export const invalidCacheAndUserData = (delTemporaryProject) => {
     const m = showModal({
         title: "重置用户数据与缓存",
         content: (
@@ -27,7 +15,7 @@ export const invalidCacheAndUserData = (temporaryProjectId: string, setTemporary
                 <Alert type={"error"} message={"注意，本操作将永久删除缓存数据，难以恢复，请谨慎操作"}/>
                 <Button type={"primary"} danger={true} onClick={async () => {
                     m.destroy()
-                    await handleTemporaryProject()
+                    await delTemporaryProject()
                     ipcRenderer.invoke("ResetAndInvalidUserData", {}).then(() => {
                     }).catch(e => {
                     }).finally(() => {

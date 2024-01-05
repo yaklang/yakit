@@ -275,60 +275,19 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     })
 
     /** 切换模式 */
-    const changeMode = useMemoizedFn((val: boolean) => {
-        if (val) clearInterval(readyTime.current)
-        else {
-            readyTime.current = setInterval(() => {
-                setEngineReady(getEngineReady() - 1)
-                if (getEngineReady() <= 0) {
-                    clearInterval(readyTime.current)
-                    readyTime.current = null
-                    ipcRenderer.invoke("engine-ready-link").finally(() => {
-                        engineTime("log")
-                    })
-                }
-            }, 1000)
-        }
+    const changeMode = useMemoizedFn(() => {
+        clearInterval(readyTime.current)
+        readyTime.current = setInterval(() => {
+            setEngineReady(getEngineReady() - 1)
+            if (getEngineReady() <= 0) {
+                clearInterval(readyTime.current)
+                readyTime.current = null
+                ipcRenderer.invoke("engine-ready-link").finally(() => {
+                    engineTime("log")
+                })
+            }
+        }, 1000)
     })
-
-    const menu = useMemo(() => {
-        return (
-            <YakitMenu
-                selectedKeys={[engineMode]}
-                width={280}
-                data={[
-                    {
-                        key: "local",
-                        label:
-                            engineMode === "local" ? (
-                                <div className={styles["engine-mode-change-menu-item"]}>
-                                    本地模式
-                                    <CheckIcon />
-                                </div>
-                            ) : (
-                                "本地模式"
-                            )
-                    },
-                    {
-                        key: "remote",
-                        label:
-                            engineMode === "remote" ? (
-                                <div className={styles["engine-mode-change-menu-item"]}>
-                                    远程模式
-                                    <CheckIcon />
-                                </div>
-                            ) : (
-                                "远程模式"
-                            )
-                    }
-                ]}
-                onClick={({key}) => {
-                    if (key === engineMode && key === "local") return
-                    selectEngineMode(key)
-                }}
-            />
-        )
-    }, [engineMode])
 
     const [isRefresh,setRefresh] = useState<boolean>(false)
     useEffect(()=>{
@@ -422,11 +381,12 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             跳过倒计时
                         </YakitButton>
 
-                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
-                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
-                                切换连接模式
-                            </YakitButton>
-                        </Dropdown>
+                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
+                            selectEngineMode(engineMode === "local" ? "remote": "local")
+                            changeMode()
+                        }}>
+                            切换为{engineMode === "local" ? "远程": "本地"}模式
+                        </YakitButton>
                     </>
                 )
             }
@@ -442,11 +402,14 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         >
                             手动连接引擎
                         </YakitButton>
-                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
-                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
-                                切换连接模式
-                            </YakitButton>
-                        </Dropdown>
+
+                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
+                            selectEngineMode(engineMode === "local" ? "remote": "local")
+                            changeMode()
+                        }}>
+                            切换为{engineMode === "local" ? "远程": "本地"}模式
+                        </YakitButton>
+
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
@@ -474,11 +437,14 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         >
                             手动连接引擎
                         </YakitButton>
-                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
-                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
-                                切换连接模式
-                            </YakitButton>
-                        </Dropdown>
+
+                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
+                            selectEngineMode(engineMode === "local" ? "remote": "local")
+                            changeMode()
+                        }}>
+                            切换为{engineMode === "local" ? "远程": "本地"}模式
+                        </YakitButton>
+
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
@@ -507,11 +473,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         >
                             手动连接引擎
                         </YakitButton>
-                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
-                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
-                                切换连接模式
-                            </YakitButton>
-                        </Dropdown>
+
+                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
+                            selectEngineMode(engineMode === "local" ? "remote": "local")
+                            changeMode()
+                        }}>
+                            切换为{engineMode === "local" ? "远程": "本地"}模式
+                        </YakitButton>
                     </>
                 )
             }
@@ -527,11 +495,14 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         >
                             手动连接引擎
                         </YakitButton>
-                        <Dropdown overlay={menu} placement='bottom' trigger={["click"]} onVisibleChange={changeMode}>
-                            <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading}>
-                                切换连接模式
-                            </YakitButton>
-                        </Dropdown>
+
+                        <YakitButton className={styles["btn-style"]} size='max' type='outline2' disabled={loading} onClick={() => {
+                            selectEngineMode(engineMode === "local" ? "remote": "local")
+                            changeMode()
+                        }}>
+                            切换为{engineMode === "local" ? "远程": "本地"}模式
+                        </YakitButton>
+
                         <YakitButton
                             className={styles["btn-style"]}
                             size='max'
@@ -558,9 +529,9 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         skipTime,
         changeMode,
         manuallyStartEngine,
-        menu,
         showEngineLog,
-        restartLoading
+        restartLoading,
+        engineMode
     ])
 
     /** 加载页随机宣传语 */

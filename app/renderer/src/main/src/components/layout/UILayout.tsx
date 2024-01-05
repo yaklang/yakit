@@ -70,10 +70,8 @@ import yakitSE from "@/assets/yakitSE.png"
 import yakitCattle from "@/assets/yakitCattle.png"
 import {NetWorkApi} from "@/services/fetch"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
-import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
-import { showYakitModal } from "../yakitUI/YakitModal/YakitModalConfirm"
-import { visitorsStatisticsFun } from "@/utils/visitorsStatistics"
+import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -412,17 +410,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [engineMode, localPort, adminPort])
 
-    const handleTemporaryProject = async () => {
-        if (temporaryProjectId) {
-            try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
-                setTemporaryProjectId("")
-            } catch (error) {
-                yakitFailed(error + "")
-            }
-        }
-    }
-
     /** yaklang引擎切换启动模式 */
     const changeEngineMode = useMemoizedFn(async (type: YaklangEngineMode, keepalive?: boolean) => {
         info(`引擎状态切换为: ${EngineModeVerbose(type as YaklangEngineMode)}`)
@@ -444,7 +431,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
         const res = await getLocalValue(LocalGV.YaklangEngineMode)
         if (!(res === "local" && type === "local")) {
-            handleTemporaryProject()
+            delTemporaryProject()
         }
 
         // 修改状态，重连引擎
@@ -617,9 +604,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         temporaryProjectId,
         temporaryProjectNoPromptFlag,
         isExportTemporaryProjectFlag,
-        setTemporaryProjectId,
         setTemporaryProjectNoPromptFlag,
-        setIsExportTemporaryProjectFlag
+        setIsExportTemporaryProjectFlag,
+        delTemporaryProject
     } = useTemporaryProjectStore()
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
     const temporaryProjectPopRef = useRef<any>(null)
@@ -885,11 +872,22 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           if (flag) {
                               setTemporaryProjectNoPromptFlag(flag === "true")
                           }
+                          // INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
+                          if (isDev.current) {
+                              const res = await ipcRenderer.invoke("GetDefaultProject")
+                              if (res) {
+                                  ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id})
+                                  setLinkDatabase(false)
+                                  setYakitMode("")
+                                  setProjectName(res.ProjectName)
+                              }
+                          } else {
+                              setLinkDatabase(true)
+                              setYakitMode("soft")
+                          }
                       } catch (error) {
                           yakitFailed(error + "")
                       }
-                      setLinkDatabase(true)
-                      setYakitMode("soft")
                       setTimeout(() => setEngineLink(true), 100)
                   })()
         }

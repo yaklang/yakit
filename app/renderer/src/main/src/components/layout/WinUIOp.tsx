@@ -40,7 +40,7 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
 
     const {runNodeList, clearRunNodeList} = useRunNodeStore()
     const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
-    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectId, setTemporaryProjectNoPromptFlag} =
+    const {temporaryProjectId, temporaryProjectNoPromptFlag, setTemporaryProjectNoPromptFlag} =
         useTemporaryProjectStore()
     const lastTemporaryProjectIdRef = useRef<string>("")
     const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
@@ -140,6 +140,12 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
                 {/* 退出临时项目确认弹框 */}
                 {closeTemporaryProjectVisible && (
                     <TemporaryProjectPop
+                        title='关闭Yakit'
+                        content={
+                            <>
+                                关闭Yakit会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据
+                            </>
+                        }
                         ref={temporaryProjectPopRef}
                         onOk={async () => {
                             setTemporaryProjectNoPromptFlag(temporaryProjectPopRef.current.temporaryProjectNoPrompt)
@@ -160,6 +166,8 @@ interface TemporaryProjectPopProp {
     ref: React.Ref<any>
     onOk: () => void
     onCancel: () => void
+    title?: string
+    content?: any
 }
 
 export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = React.forwardRef((props, ref) => {
@@ -172,7 +180,7 @@ export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = React.forw
     return (
         <YakitHint
             visible={true}
-            title='退出临时项目'
+            title={props.title || "退出临时项目"}
             footerExtra={
                 <YakitCheckbox
                     value={temporaryProjectNoPrompt}
@@ -182,10 +190,16 @@ export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = React.forw
                 </YakitCheckbox>
             }
             content={
-                <>
-                    <div>确认退出后，临时项目所有数据都不会保存，包括流量数据、端口数据、域名数据和漏洞数据等。</div>
-                    <div>退出前可在设置-项目管理中导出数据</div>
-                </>
+                props.content ? (
+                    props.content
+                ) : (
+                    <>
+                        <div>
+                            确认退出后，临时项目所有数据都不会保存，包括流量数据、端口数据、域名数据和漏洞数据等。
+                        </div>
+                        <div>退出前可在设置-项目管理中导出数据</div>
+                    </>
+                )
             }
             onOk={props.onOk}
             onCancel={props.onCancel}
