@@ -240,7 +240,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setHijackResponseType(val)
     })
     /**
-     * @description 丢弃请求
+     * @description 丢弃数据
      */
     const onDiscardRequest = useMemoizedFn(() => {
         hijacking()
@@ -307,8 +307,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 currentIsWebsocket={currentIsWebsocket}
                                 currentIsForResponse={currentIsForResponse}
                                 className={styles["mitm-hijacked-manual-content-url"]}
-                                calloutColor={calloutColor}
-                                onSetCalloutColor={setCalloutColor}
                             />
                         )}
                         <div className={styles["mitm-hijacked-manual-content-editor"]}>

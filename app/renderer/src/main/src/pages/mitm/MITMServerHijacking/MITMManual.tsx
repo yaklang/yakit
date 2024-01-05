@@ -13,8 +13,6 @@ import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented
 import { OtherMenuListProps, YakitEditorKeyCode } from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import { availableColors } from "@/components/HTTPFlowTable/HTTPFlowTable"
-import { setRemoteValue } from "@/utils/kv"
-import { RemoteGV } from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -56,8 +54,6 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                     status={status}
                     currentIsWebsocket={currentIsWebsocket}
                     currentIsForResponse={currentIsForResponse}
-                    calloutColor={calloutColor}
-                    onSetCalloutColor={onSetCalloutColor}
                 />
             )}
             <div
@@ -65,6 +61,22 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                     [styles["autoForward-manual-right-sm"]]: width < 900
                 })}
             >
+                <div className={styles["manual-select"]}>
+                    <div className={styles["manual-select-label"]} style={{ minWidth: 60 }}>标注颜色:</div>
+                    <YakitSelect
+                        size="small"
+                        value={calloutColor}
+                        wrapperStyle={{width: 100}}
+                        onChange={(value) => {
+                            onSetCalloutColor(value || "")
+                        }}
+                        allowClear
+                    >
+                        {
+                            availableColors.map(item => <YakitSelect.Option value={item.searchWord} key={item.searchWord}>{item.render}</YakitSelect.Option>)
+                        }
+                    </YakitSelect>
+                </div>
                 <div className={styles["manual-select"]}>
                     <span className={styles["manual-select-label"]}>劫持响应:</span>
                     {/* <YakitSegmented
@@ -100,7 +112,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                     disabled={status === "hijacking"}
                     onClick={() => onDiscardRequest()}
                 >
-                    丢弃请求
+                    丢弃数据
                 </YakitButton>
                 <YakitButton disabled={status === "hijacking"} onClick={() => onSubmitData()}>
                     提交数据
@@ -117,11 +129,9 @@ interface ManualUrlInfoProps {
     currentIsWebsocket: boolean
     currentIsForResponse: boolean
     className?: string
-    calloutColor: string
-    onSetCalloutColor: (calloutColor: string) => void
 }
 export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) => {
-    const {urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse, className, calloutColor, onSetCalloutColor} = props
+    const {urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse, className} = props
     return (
         <div className={classNames(styles["autoForward-manual-urlInfo"], className)}>
             <div className={classNames(styles["manual-url-info"], "content-ellipsis")}>
@@ -176,22 +186,6 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                     >
                         HTTP 请求
                     </YakitTag>
-                    {
-                        calloutColor && (
-                            <YakitTag
-                                style={{
-                                    cursor: "pointer"
-                                }}
-                                size='small'
-                                closable
-                                onClose={e => {
-                                    onSetCalloutColor("")
-                                }}
-                            >
-                                标注颜色：<div className={classNames(styles["tag-color-display"], availableColors?.find(item => item.searchWord === calloutColor)?.extraClassName)}></div>
-                            </YakitTag>
-                        )
-                    }
                 </>
             )}
         </div>
@@ -236,12 +230,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
     }, [])
-
-    // 标注颜色
-    const editorCalloutColor = (color: string) => {
-        onSetCalloutColor(color)
-    }
-
 
     const mitmManualRightMenu: OtherMenuListProps  = useMemo(() => {
         if(forResponse){
@@ -322,16 +310,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                         {
                             key:"hijack-current-response",
                             label: "劫持该 Request 对应的响应",
-                        },
-                        {
-                            key: "lable-color",
-                            label: "标注颜色",
-                            children: availableColors.map((i) => {
-                                return {
-                                    key: i.color,
-                                    label: i.render,
-                                }
-                            })
                         }
                     ],
                     onRun: (editor:any, key) => {
@@ -357,16 +335,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                             case "hijack-current-response":
                                 onSetHijackResponseType("onlyOne")
                                 setTimeout(()=>{forward()},200)
-                                break;
-                            case "RED":
-                            case "GREEN":
-                            case "BLUE":
-                            case "YELLOW":
-                            case "ORANGE":
-                            case "PURPLE":
-                            case "CYAN":
-                            case "GREY":
-                                editorCalloutColor("YAKIT_COLOR_" + key)
                                 break;
                             default:
                                 break;
