@@ -1,0 +1,70 @@
+
+.tool-container {
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+}
+
+.tool-nohidden-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tool-hidden-container {
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.tool-body {
+  margin-top: 8px;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  gap: 8px;
+
+}
+
+.switch-op-wrapper {
+  box-sizing: border-box;
+  width: 51px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+
+  .border-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100%;
+    background-color: #eaecf3;
+  }
+
+  .tab-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 20px;
+    background: #f0f1f3;
+    border-width: 1px 1px 1px 0px;
+    border-style: solid;
+    border-color: #eaecf3;
+    border-radius: 0px 4px 4px 0px;
+    font-size: 11px;
+    color: #31343f;
+    cursor: pointer;
+    z-index: 99;
+  }
+
+  .active-tab-bar {
+    background: #f28b44;
+    border-color: #f28b44;
+    color: #ffffff;
+  }
+}

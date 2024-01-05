@@ -27,7 +27,6 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const {dynamicStatus} = yakitDynamicStatus()
     const onFinish = useMemoizedFn((values:API.UpUserInfoRequest) => {
-        console.log("values",values)
         const {old_pwd,pwd,confirm_pwd} = values
         if(getFieldValue("confirm_pwd")!==getFieldValue("pwd")){
             warn("新密码两次输入内容不匹配，请检查重试")

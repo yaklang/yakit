@@ -113,6 +113,9 @@ import {NewCodecPage} from "@/pages/new-codec/NewCodecPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
+import {WebShellViewer} from "@/pages/webShell/WebShellViewer";
+import {WebShellDetail} from "@/pages/webShell/models";
+import {WebShellDetailOpt} from "@/pages/webShell/WebShellDetailOpt";
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps
@@ -216,7 +219,10 @@ export enum YakitRoute {
     //新版codec
     Beta_Codec = "beta-codec",
     // 插件管理
-    Plugin_Audit = "plugin-audit"
+    Plugin_Audit = "plugin-audit",
+    // WebShell 管理
+    Beta_WebShellManager = "beta-webshell-manager",
+    Beta_WebShellOpt = "beta-webshell-opt",
 }
 /**
  * @description 页面路由对应的页面信息
@@ -297,7 +303,9 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-config-network": {label: "全局网络配置"},
     "beta-codec": {label: "新版codec"},
     "plugin-audit": {label: "插件管理"},
-    "**beta-debug-traffic-analize": {label: "流量分析"}
+    "**beta-debug-traffic-analize": {label: "流量分析"},
+    "beta-webshell-manager": {label: "网站管理"},
+    "beta-webshell-opt": {label: "WebShell 实例"},
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -337,7 +345,9 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_ConfigNetwork,
     YakitRoute.Beta_DebugTrafficAnalize,
     YakitRoute.Beta_Codec,
-    YakitRoute.Plugin_Audit
+    YakitRoute.Plugin_Audit,
+    YakitRoute.Beta_WebShellManager,
+
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -430,8 +440,12 @@ export interface ComponentParams {
     // 新建插件
     moduleType?: string
     content?: string
+
     // 编辑插件
     editPluginId?: number
+
+    // webshell info
+    webshellInfo?: WebShellDetail
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -621,6 +635,10 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                     <PluginManage />
                 </OnlineJudgment>
             )
+        case YakitRoute.Beta_WebShellManager:
+            return <WebShellViewer/>
+        case YakitRoute.Beta_WebShellOpt:
+            return <WebShellDetailOpt id={(params?.id||"") + ""} webshellInfo={params?.webshellInfo as WebShellDetail}/>
         default:
             return <div />
     }

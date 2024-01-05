@@ -1255,8 +1255,8 @@ interface TerminalPopoverProps extends YakitPopoverProp {
 /**
  * @description 属于一个测试性组件，暂时不建议全局使用。为解决antd Popover箭头无法正确指向目标元素问题
  */
-const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
-    const {popoverContent, visiblePopover, setVisiblePopover} = props
+export const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
+    const { popoverContent, visiblePopover, setVisiblePopover } = props
     const popoverContentRef = useRef<any>()
     const terminalIconRef = useRef<any>()
     const onSetArrowTop = useMemoizedFn(() => {

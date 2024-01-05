@@ -353,7 +353,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         setRunPluginCount(getPortParams().ScriptNames.length)
 
         reset()
-        console.log("params11----", getPortParams(), getBruteParams())
         setRunTaskName(TaskName)
         setExecuting(true)
         let newParams: PortScanParams = {...getPortParams()}
@@ -390,11 +389,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         setRunTaskNameEx(runTaskNameEx)
         let PortScanRequest = {...newParams, TaskName: runTaskNameEx}
         setAllowDownloadReport(true)
-        console.log({
-            LastRecord,
-            StartBruteParams,
-            PortScanRequest
-        })
         ipcRenderer.invoke(
             "SimpleDetect",
             {
@@ -450,7 +444,6 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             setPortParams({...getPortParams(),ScriptNames:[]})
             run(OnlineGroup, TaskName)
         } else {
-            console.log(OnlineGroup)
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
                 .then((data: {Data: YakScript[]}) => {

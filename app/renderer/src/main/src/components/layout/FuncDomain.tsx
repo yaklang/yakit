@@ -943,7 +943,11 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "run-node",
                     label: "运行节点"
-                }
+                },
+                {
+                    key: "webshell-manager",
+                    label: "网站管理"
+                },
             ]
         },
         {type: "divider"},
@@ -1128,6 +1132,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "debug-traffic-analize":
                 addToTab("**beta-debug-traffic-analize")
+                return
+            case "webshell-manaer":
+                addToTab("**webshell-manaer")
                 return
             case "invalidCache":
                 invalidCacheAndUserData(delTemporaryProject)

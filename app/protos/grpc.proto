@@ -391,6 +391,14 @@ service Yak {
   rpc GenerateYsoBytes(YsoOptionsRequerstWithVerbose) returns (YsoBytesResponse);
   rpc YsoDump(YsoBytesObject)returns(YsoDumpResponse);
 
+  // WebShell
+  rpc CreateWebShell(WebShell) returns (WebShell);
+  rpc DeleteWebShell(DeleteWebShellRequest) returns (Empty);
+  rpc UpdateWebShell(WebShell) returns (WebShell);
+  rpc QueryWebShells(QueryWebShellsRequest) returns (QueryWebShellsResponse);
+  rpc Ping(WebShellRequest) returns (WebShellResponse);
+  rpc GetBasicInfo(WebShellRequest) returns (WebShellResponse);
+
   // DNSLog / ICMP / RandomTrigger
   rpc SetYakBridgeLogServer(YakDNSLogBridgeAddr) returns (Empty);
   rpc GetCurrentYakBridgeLogServer(Empty) returns (YakDNSLogBridgeAddr);
@@ -906,8 +914,11 @@ message RequestYakURLParams {
 
   YakURL Url = 2;
 
-  int64 Page = 3;
-  int64 PageSize = 4;
+  bytes Body = 3; // 用于存储文件的内容
+  int64 Page = 4;
+
+  int64 PageSize = 5;
+
 }
 
 message YakURL {
@@ -2452,6 +2463,85 @@ message ExecuteBatchPacketYakScriptParams {
   double PerTaskTimeout = 6;
 }
 
+
+// WebShell
+enum ShellType {
+  Behinder = 0;
+  Godzilla = 1;
+}
+enum ShellScript {
+  JSP = 0;
+  JSPX = 1;
+  ASP = 2;
+  ASPX = 3;
+  PHP = 4;
+}
+enum EncMode {
+  Raw = 0;
+  Base64 = 1;
+  AesRaw = 2;
+  AesBase64 = 3;
+  XorRaw = 4;
+  XorBase64 = 5;
+}
+
+message WebShell {
+  int64 Id = 1;
+  string Url = 2;
+  string Pass = 3;
+  string SecretKey = 4;
+  string EncMode = 5;
+  string Charset = 6;
+  string ShellType = 7;
+  string ShellScript = 8;
+  bool Status = 9;
+  string Tag = 10;
+  //    Proxy
+  string Proxy = 11;
+  map<string, string> Headers = 12;
+  string Remark =13;
+  int64 CreatedAt = 14;
+  int64 UpdatedAt = 15;
+  string PacketCodecName = 16;
+  string PayloadCodecName = 17;
+}
+message WebShellRequest {
+  int64 Id = 1;
+}
+message WebShellResponse {
+  bool State = 1;
+  bytes Data = 2;
+}
+
+message QueryWebShellsRequest {
+  Paging Pagination = 1;
+  string Tag = 2;
+}
+
+message QueryWebShellsResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated WebShell Data = 3;
+}
+
+message UpdateWebShellRequest {
+  int64 Id = 1;
+  string Url = 2;
+  string Pass = 3;
+  string SecretKey = 4;
+  string EncMode = 5;
+  string Charset = 6;
+  string ShellType = 7;
+  string ShellScript = 8;
+  string Tag = 10;
+}
+
+message DeleteWebShellRequest {
+  int64 Id = 1;
+  repeated int64 Ids = 2;
+}
+
+
 message YakDNSLogBridgeAddr {
   string DNSLogAddr = 1;
   string DNSLogAddrSecret = 2;
@@ -3824,6 +3914,7 @@ message FuzzerRequest {
 message KVPair {
   string Key = 1;
   string Value = 2;
+  bytes ValueBytes = 3;
 }
 
 message FuzzerResponseFilter {

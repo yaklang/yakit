@@ -160,6 +160,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
             type={props.type}
             required={!!props.required}
             disabled={!!props.disable}
+            spellCheck={false}
             placeholder={props.placeholder}
             allowClear={props.allowClear}
             value={props.value} onChange={e => {
