@@ -48,7 +48,6 @@
         "monaco-editor-webpack-plugin": "^7.1.0",
         "monaco-themes": "^0.4.4",
         "prettier": "^3.0.1",
-        "prettier-plugin-xml": "^0.1.0",
         "re-resizable": "^6.9.9",
         "react": "^18.2.0",
         "react-app-rewired": "^2.1.8",
@@ -107,7 +106,8 @@
         "build-test-simple-enterprise": "env-cmd -e simpleEE,devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-breachtrace": "env-cmd -e breachtrace -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "test": "react-app-rewired test",
-        "eject": "react-app-rewired eject"
+        "eject": "react-app-rewired eject",
+        "analyzer": "env-cmd -e analyzer -f cross-env react-app-rewired build"
     },
     "eslintConfig": {
         "extends": [
@@ -133,7 +133,8 @@
         "path-browserify": "^1.0.1",
         "progress-bar-webpack-plugin": "^2.1.0",
         "sass": "^1.54.8",
-        "sass-loader": "^13.3.3"
+        "sass-loader": "^13.3.3",
+        "webpack-bundle-analyzer": "^4.10.1"
     },
     "resolutions": {
         "//": "See https://github.com/facebook/create-react-app/issues/11773",

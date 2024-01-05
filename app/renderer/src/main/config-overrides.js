@@ -14,6 +14,7 @@ const path = require('path')
 const ProgressBarPlugin = require('progress-bar-webpack-plugin'); // 打包进度
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin")
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 const OUTPUT_PATH = path.resolve(__dirname, "..", "..", "pages", "main")
 
@@ -37,7 +38,12 @@ module.exports = {
         addWebpackPlugin(new MonacoWebpackPlugin({
             languages: ["json", "javascript", "go", "markdown", "html", "yaml", "java"],
         })),
-        // addWebpackPlugin(new HotModuleReplacementPlugin()),
+        process.env.REACT_APP_ANALYZER &&
+        addWebpackPlugin(new BundleAnalyzerPlugin(
+            {
+                analyzerPort: 3000
+            }
+        )),
         addWebpackPlugin(new NodePolyfillPlugin()),
         addWebpackModuleRule({
             test: [/\.css$/, /\.scss$/], // 可以打包后缀为sass/scss/css的文件
@@ -54,7 +60,6 @@ module.exports = {
             }
             // 去掉打包生产map 文件
             config.devtool = config.mode === 'development' ? 'cheap-module-source-map' : false;
-            // console.log('config-webpack', config)
             return config
         }
     ),
