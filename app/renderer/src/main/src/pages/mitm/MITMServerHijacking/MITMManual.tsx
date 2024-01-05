@@ -71,10 +71,10 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                             onSetCalloutColor(value || "")
                         }}
                     >
+                        <YakitSelect.Option value={""}><div style={{ paddingLeft: 20 }}>无</div></YakitSelect.Option>
                         {
                             availableColors.map(item => <YakitSelect.Option value={item.searchWord} key={item.searchWord}>{item.render}</YakitSelect.Option>)
                         }
-                        <YakitSelect.Option value={""}>无</YakitSelect.Option>
                     </YakitSelect>
                 </div>
                 <div className={styles["manual-select"]}>
