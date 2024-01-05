@@ -13,6 +13,8 @@ import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented
 import { OtherMenuListProps, YakitEditorKeyCode } from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import { availableColors } from "@/components/HTTPFlowTable/HTTPFlowTable"
+import { setRemoteValue } from "@/utils/kv"
+import { RemoteGV } from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -184,6 +186,7 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                                 closable
                                 onClose={e => {
                                     onSetCalloutColor("")
+                                    setRemoteValue(RemoteGV.MitmManualCalloutColor, "")
                                 }}
                             >
                                 标注颜色：{availableColors?.find(item => item.searchWord === calloutColor)?.tag_title}
@@ -238,6 +241,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
     // 标注颜色
     const editorCalloutColor = (color: string) => {
         onSetCalloutColor(color)
+        setRemoteValue(RemoteGV.MitmManualCalloutColor, color)
     }
 
 

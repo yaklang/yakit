@@ -78,9 +78,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             }
         })
     }, [])
-    useEffect(() => {
-        setRemoteValue(RemoteGV.MitmManualCalloutColor, calloutColor)
-    }, [calloutColor])
 
     const isManual = useCreation(() => {
         return autoForward === "manual"
