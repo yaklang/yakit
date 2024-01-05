@@ -572,7 +572,6 @@ export const availableColors = [
         searchWord: "YAKIT_COLOR_ORANGE",
         extraClassName: "color-bg-orange",
         className: TableRowColor("ORANGE"),
-        classname: "",
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-orange")}></div>
