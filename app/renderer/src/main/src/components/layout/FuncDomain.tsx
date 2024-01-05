@@ -1133,8 +1133,8 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "debug-traffic-analize":
                 addToTab("**beta-debug-traffic-analize")
                 return
-            case "webshell-manaer":
-                addToTab("**webshell-manaer")
+            case "webshell-manager":
+                addToTab("**webshell-manager")
                 return
             case "invalidCache":
                 invalidCacheAndUserData(delTemporaryProject)
