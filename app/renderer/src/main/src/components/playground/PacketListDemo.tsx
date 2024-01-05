@@ -17,7 +17,8 @@ import {DemoTCPReassembled} from "@/components/playground/traffic/DemoTCPReassem
 import {DemoTrafficSessionTable} from "@/components/playground/traffic/DemoTrafficSessionTable"
 import {DemoItemRadioButton} from "@/demoComponents/itemRadioAndCheckbox/RadioAndCheckbox"
 import {Tooltip, Tree} from "antd"
-import YakitTree, {TreeNode} from "@/components/yakitUI/YakitTree/YakitTree"
+import type {DataNode as TreeNode} from "antd/es/tree"
+import YakitTree from "@/components/yakitUI/YakitTree/YakitTree"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {DownOutlined} from "@ant-design/icons"
 import {number} from "echarts"
@@ -240,8 +241,8 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                                             //     })
                                             // }}
                                             height={treeHeight}
-                                            showSearch={false}
-                                            onSelectedKeys={(selectedKeys, info) => {
+                                            // showSearch={false}
+                                            onSelect={(selectedKeys, info) => {
                                                 console.log("select keys", selectedKeys)
                                                 console.log("info", info)
                                                 console.log("keyToScope", keyToScope)
