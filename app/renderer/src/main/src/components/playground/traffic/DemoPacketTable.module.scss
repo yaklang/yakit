@@ -1,0 +1,13 @@
+.demo-packet-table-box{
+    height: 100%;
+    width: 100%;
+    :global {
+        .row-wrapper{
+            cursor: pointer;
+            &:hover{
+                background: var(--yakit-card-background-color);
+                
+            }
+        }
+    }
+}

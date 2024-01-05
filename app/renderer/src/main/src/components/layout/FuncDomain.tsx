@@ -372,7 +372,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "plugin-aduit", title: "插件管理"},
                 {key: "sign-out", title: "退出登录"}
             ]
-            if(!userInfo.checkPlugin){
+            if (!userInfo.checkPlugin) {
                 cacheMenu = cacheMenu.filter((item) => item.key !== "plugin-aduit")
             }
             if (isEnpriTraceAgent()) {
@@ -937,9 +937,13 @@ const GetUIOpSettingMenu = () => {
                     label: "新版Codec"
                 },
                 {
+                    key: "debug-traffic-analize",
+                    label: "流量分析"
+                },
+                {
                     key: "run-node",
                     label: "运行节点"
-                },
+                }
             ]
         },
         {type: "divider"},
@@ -985,11 +989,11 @@ const GetUIOpSettingMenu = () => {
             key: "systemSet",
             label: "系统设置",
             children: [
-                { key: "reverse",label: "全局反连" },
-                { key: "agent",label: "系统代理" },
+                {key: "reverse", label: "全局反连"},
+                {key: "agent", label: "系统代理"},
                 // { key: "engineAgent",label: "引擎扫描代理" },
                 // { key: "engineVar",label: "引擎环境变量" },
-                { key: "config-network", label: "全局网络配置" },
+                {key: "config-network", label: "全局网络配置"}
             ]
         },
         {
@@ -1121,6 +1125,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "new-codec":
                 addToTab("**beta-codec")
+                return
+            case "debug-traffic-analize":
+                addToTab("**beta-debug-traffic-analize")
                 return
             case "invalidCache":
                 invalidCacheAndUserData(delTemporaryProject)
@@ -2157,7 +2164,10 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                                             {item.Verbose}
                                         </div>
                                         <Badge dot={!item.IsRead} offset={[3, 0]}>
-                                            <YakitEllipsis text={item.TitleVerbose||item.Title} width={type === "info" ? 280 : 310}/>
+                                            <YakitEllipsis
+                                                text={item.TitleVerbose || item.Title}
+                                                width={type === "info" ? 280 : 310}
+                                            />
                                         </Badge>
                                     </div>
                                 )

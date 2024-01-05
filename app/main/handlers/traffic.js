@@ -80,4 +80,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryTrafficTCPReassembled", async (e, params) => {
         return await asyncQueryTrafficTCPReassembled(params)
     })
+
+    // asyncParseTraffic wrapper
+    const asyncParseTraffic = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ParseTraffic(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ParseTraffic", async (e, params) => {
+        return await asyncParseTraffic(params)
+    })
 }

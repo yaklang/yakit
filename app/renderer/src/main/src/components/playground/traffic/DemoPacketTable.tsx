@@ -1,116 +1,91 @@
-import React, {useEffect, useState} from "react";
-import {TrafficPacket, TrafficSession} from "@/models/Traffic";
-import {DemoVirtualTable} from "@/demoComponents/virtualTable/VirtualTable";
-import {info} from "@/utils/notification";
-import {Paging} from "@/utils/yakQueryHTTPFlow";
-import {TrafficViewerControlIf} from "@/components/playground/traffic/base";
+import React, {useEffect, useState} from "react"
+import {TrafficPacket, TrafficSession} from "@/models/Traffic"
+import {DemoVirtualTable} from "@/demoComponents/virtualTable/VirtualTable"
+import {info} from "@/utils/notification"
+import {Paging} from "@/utils/yakQueryHTTPFlow"
+import {TrafficViewerControlIf} from "@/components/playground/traffic/base"
+import Item from "antd/lib/list/Item"
+import {useMemoizedFn} from "ahooks"
+import styles from "./DemoPacketTable.module.scss"
+export interface DemoPacketTableProp extends TrafficViewerControlIf {}
 
-export interface DemoPacketTableProp extends TrafficViewerControlIf {
-
-}
-
-const {ipcRenderer} = window.require("electron");
+const {ipcRenderer} = window.require("electron")
 
 export const DemoPacketTable: React.FC<DemoPacketTableProp> = (props) => {
-    const [selected, setSelected] = useState<TrafficPacket>();
-
-    useEffect(() => {
-        if (!selected) {
+    const onSelectFun = useMemoizedFn((data: TrafficPacket) => {
+        if (!data) {
             return
         }
+        props.onClick && props.onClick(data)
+    })
 
-        if (props.onClick !== undefined) {
-            props.onClick(selected)
-        }
-    }, [selected])
-
-    return <DemoVirtualTable<TrafficPacket>
-        isStop={!props.realtime}
-        isScrollUpdate={!props.realtime}
-        columns={[
-            {
-                headerTitle: "Id",
-                key: "Id",
-                width: 90,
-                colRender: (item) => (item.Id),
-            },
-            {headerTitle: "链路层", key: "LinkLayerType", width: 60, colRender: (item) => item.LinkLayerType},
-            {
-                headerTitle: "网络层",
-                key: "NetworkLayerType",
-                width: 50,
-                colRender: (item) => item.NetworkLayerType
-            },
-            {
-                headerTitle: "传输层",
-                key: "TransportLayerType",
-                width: 50,
-                colRender: (item) => item.TransportLayerType
-            },
-            {
-                headerTitle: "源IP",
-                key: "NetworkEndpointIPSrc",
-                width: 120,
-                colRender: (item) => item.NetworkEndpointIPSrc
-            },
-            {
-                headerTitle: "源端口",
-                key: "TransportEndpointPortSrc",
-                width: 60,
-                colRender: (item) => item.TransportEndpointPortSrc
-            },
-            {
-                headerTitle: "目的IP",
-                key: "NetworkEndpointIPDst",
-                width: 120,
-                colRender: (item) => item.NetworkEndpointIPDst
-            },
-            {
-                headerTitle: "目的端口",
-                key: "TransportEndpointPortDst",
-                width: 60,
-                colRender: (item) => item.TransportEndpointPortDst
-            },
-        ]}
-        rowClick={data => {
-            setSelected(data)
-        }}
-        loadMore={(data: TrafficPacket | undefined) => {
-            return new Promise((resolve, reject) => {
-                if (!data) {
-                    // info("加载初始化数据")
-                    ipcRenderer.invoke("QueryTrafficPacket", {
-                        TimestampNow: props.fromTimestamp,
-                        Pagination: {Limit: 10, Page: 1, OrderBy: 'id', Order: "asc"}, // genDefaultPagination(),
-                        FromId: 0,
-                    }).then((rsp: {
-                        Data: TrafficPacket[],
-                    }) => {
-                        resolve({
-                            data: rsp.Data,
-                        })
-                        return
+    return (
+        <div className={styles["demo-packet-table-box"]}>
+            <DemoVirtualTable<TrafficPacket>
+                isStop={!props.realtime}
+                isScrollUpdate={!props.realtime}
+                columns={[
+                    {
+                        headerTitle: "ID",
+                        key: "Id",
+                        width: 90,
+                        colRender: (item) => item.Id
+                    },
+                    {
+                        headerTitle: "来源",
+                        key: "source",
+                        width: 160,
+                        colRender: (i) => i.NetworkEndpointIPSrc + ":" + i.TransportEndpointPortSrc
+                    },
+                    {
+                        headerTitle: "目标",
+                        key: "destination",
+                        width: 160,
+                        colRender: (i) => i.NetworkEndpointIPDst + ":" + i.TransportEndpointPortDst
+                    },
+                    {headerTitle: "协议", key: "Protocol", width: 160, colRender: (i) => i.Protocol},
+                    {headerTitle: "长度", key: "Length", width: 80, colRender: (i) => (i.Raw || []).length},
+                    {headerTitle: "信息", key: "Info", width: 160, colRender: (i) => i.Info}
+                ]}
+                rowClick={(data) => {
+                    onSelectFun(data)
+                }}
+                loadMore={(data: TrafficPacket | undefined) => {
+                    return new Promise((resolve, reject) => {
+                        if (!data) {
+                            // info("加载初始化数据")
+                            ipcRenderer
+                                .invoke("QueryTrafficPacket", {
+                                    TimestampNow: props.fromTimestamp,
+                                    Pagination: {Limit: 10, Page: 1, OrderBy: "id", Order: "asc"}, // genDefaultPagination(),
+                                    FromId: 0
+                                })
+                                .then((rsp: {Data: TrafficPacket[]}) => {
+                                    resolve({
+                                        data: rsp.Data
+                                    })
+                                    return
+                                })
+                            return
+                        } else {
+                            ipcRenderer
+                                .invoke("QueryTrafficPacket", {
+                                    TimestampNow: props.fromTimestamp,
+                                    Pagination: {Limit: 10, Page: 1, OrderBy: "id", Order: "asc"},
+                                    FromId: data.Id
+                                })
+                                .then((rsp: {Data: TrafficPacket[]; Total: number; Pagination: Paging}) => {
+                                    resolve({
+                                        data: rsp.Data
+                                    })
+                                    return
+                                })
+                            return
+                        }
                     })
-                    return
-                } else {
-                    ipcRenderer.invoke("QueryTrafficPacket", {
-                        TimestampNow: props.fromTimestamp,
-                        Pagination: {Limit: 10, Page: 1, OrderBy: 'id', Order: "asc"},
-                        FromId: data.Id,
-                    }).then((rsp: {
-                        Data: TrafficPacket[],
-                        Total: number,
-                        Pagination: Paging,
-                    }) => {
-                        resolve({
-                            data: rsp.Data,
-                        })
-                        return
-                    })
-                    return
-                }
-            })
-        }}
-        rowKey={"Id"}
-    />
-};
+                }}
+                rowKey={"Id"}
+            />
+        </div>
+    )
+}

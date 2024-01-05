@@ -213,7 +213,7 @@ export interface YakitResizeBoxProps {
     /** 不允许拖动时 拖拽线样式 */
     lineStyle?: React.CSSProperties
     /** 鼠标抬起时的回调 */
-    onMouseUp?: () => void
+    onMouseUp?: (firstSize:number,secondSizeNum:number) => void
 }
 
 export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) => {
@@ -303,8 +303,10 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         if (!secondRef || !secondRef.current) return
         const first = firstRef.current
         const second = secondRef.current
-        const firstSize = `${isVer ? first.clientHeight + size : first.clientWidth + size}px`
-        const secondSize = `${isVer ? second.clientHeight - size : second.clientWidth - size}px`
+        const firstSizeNum = isVer ? first.clientHeight + size : first.clientWidth + size
+        const secondSizeNum = isVer ? second.clientHeight - size : second.clientWidth - size
+        const firstSize = `${firstSizeNum}px`
+        const secondSize = `${secondSizeNum}px`
 
         if (isVer) {
             first.style.height = firstSize
@@ -314,7 +316,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
             second.style.width = secondSize
         }
 
-        if (onMouseUp) onMouseUp()
+        if (onMouseUp) onMouseUp(firstSizeNum,secondSizeNum)
     })
     // 页面大小变化时重新计算 第一/第二 块内容宽高
     const bodyResize = (bodysize?: number) => {

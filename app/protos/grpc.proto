@@ -115,6 +115,7 @@ message GetYakScriptByOnlineIDRequest {
 service Yak {
   // version
   rpc Version(Empty) returns (VersionResponse);
+  rpc YakVersionAtLeast(YakVersionAtLeastRequest) returns (GeneralResponse);
 
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
@@ -238,26 +239,26 @@ service Yak {
   // Payload 相关接口
   // database payload group
   rpc QueryPayload(QueryPayloadRequest) returns (QueryPayloadResponse); // query by [keyword/group/folder]
-  rpc QueryPayloadFromFile(QueryPayloadFromFileRequest) returns (QueryPayloadFromFileResponse);  
+  rpc QueryPayloadFromFile(QueryPayloadFromFileRequest) returns (QueryPayloadFromFileResponse);
   // delete by [id/group/folder]
   rpc DeletePayloadByFolder(NameRequest) returns (Empty);
   rpc DeletePayloadByGroup(DeletePayloadByGroupRequest) returns (Empty);
-  rpc DeletePayload(DeletePayloadRequest) returns (Empty); 
+  rpc DeletePayload(DeletePayloadRequest) returns (Empty);
   // save payload to database
   rpc SavePayload(SavePayloadRequest) returns (Empty);
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   rpc SavePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress); // 两次stream
   // update group/folder/payload
   rpc RenamePayloadFolder(RenameRequest) returns (Empty);
-  rpc RenamePayloadGroup(RenameRequest) returns (Empty); // rename 
+  rpc RenamePayloadGroup(RenameRequest) returns (Empty); // rename
   rpc UpdatePayload(UpdatePayloadRequest) returns (Empty); // edit
   rpc UpdatePayloadToFile(UpdatePayloadToFileRequest) returns (Empty);
-  rpc BackUpOrCopyPayloads(BackUpOrCopyPayloadsRequest) returns (Empty); 
+  rpc BackUpOrCopyPayloads(BackUpOrCopyPayloadsRequest) returns (Empty);
   // Folder and Group
   // get and update all group with order
   rpc GetAllPayloadGroup(Empty) returns (GetAllPayloadGroupResponse);
   rpc UpdateAllPayloadGroup(UpdateAllPayloadGroupRequest) returns (Empty);
-  // get payload 
+  // get payload
   rpc GetAllPayload(GetAllPayloadRequest) returns (GetAllPayloadResponse); // !已弃用 get payload by [group/folder]
   rpc GetAllPayloadFromFile(GetAllPayloadRequest) returns (stream GetAllPayloadFromFileResponse); // !已弃用 get payload by [group/folder] from file
   // export payload
@@ -281,6 +282,7 @@ service Yak {
 
   rpc YaklangLanguageSuggestion(YaklangLanguageSuggestionRequest) returns (YaklangLanguageSuggestionResponse);
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
+  rpc YaklangGetCliCodeFromDatabase(YaklangGetCliCodeFromDatabaseRequest) returns (YaklangGetCliCodeFromDatabaseResponse);
 
   // 端口扫描的封装
   rpc PortScan(PortScanRequest) returns (stream ExecResult);
@@ -505,8 +507,8 @@ service Yak {
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
   rpc GetDefaultProject(Empty) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
   rpc ExportProject(ExportProjectRequest) returns (stream ProjectIOProgress);
@@ -568,6 +570,7 @@ service Yak {
   // rpc DeleteHTTPRequestBuilder(DeleteHTTPRequestBuilderRequest) returns (Empty);
   rpc DebugPlugin(DebugPluginRequest) returns (stream ExecResult);
   rpc SmokingEvaluatePlugin(SmokingEvaluatePluginRequest) returns (SmokingEvaluatePluginResponse);
+  rpc SmokingEvaluatePluginBatch(SmokingEvaluatePluginBatchRequest) returns (stream SmokingEvaluatePluginBatchResponse);
   rpc GetSystemDefaultDnsServers(Empty) returns (DefaultDnsServerResponse);
 
   // 诊断网络发生的问题
@@ -588,10 +591,10 @@ service Yak {
   rpc QueryTrafficSession(QueryTrafficSessionRequest) returns (QueryTrafficSessionResponse);
   rpc QueryTrafficPacket(QueryTrafficPacketRequest) returns (QueryTrafficPacketResponse);
   rpc QueryTrafficTCPReassembled(QueryTrafficTCPReassembledRequest) returns (QueryTrafficTCPReassembledResponse);
+  rpc ParseTraffic(ParseTrafficRequest) returns (ParseTrafficResponse);
 
   rpc DuplexConnection(stream DuplexConnectionRequest) returns (stream DuplexConnectionResponse);
 
-  rpc SmokingEvaluatePluginBatch(SmokingEvaluatePluginBatchRequest) returns (stream SmokingEvaluatePluginBatchResponse);
 
   // 混合批量扫描
   rpc HybridScan(stream HybridScanRequest) returns (stream HybridScanResponse);
@@ -601,7 +604,6 @@ service Yak {
   rpc GetSpaceEngineStatus(GetSpaceEngineStatusRequest) returns(SpaceEngineStatus);
   rpc FetchPortAssetFromSpaceEngine(FetchPortAssetFromSpaceEngineRequest) returns (stream ExecResult);
   
-  rpc YakVersionAtLeast(YakVersionAtLeastRequest) returns (GeneralResponse);
 }
 
 message GetSpaceEngineStatusRequest {
@@ -836,6 +838,8 @@ message TrafficPacket {
 
   string SessionId = 15;
   int64 Id = 16;
+  string Protocol = 17;
+  string Info = 18;
 }
 
 message QueryTrafficPacketResponse {
@@ -850,6 +854,9 @@ message TrafficTCPReassembled {
   bytes Raw = 3;
   int64 Seq = 4;
   int64 Timestamp = 5;
+  string Source = 6;
+  string Destination = 7;
+  string Protocol = 8;
 }
 
 message QueryTrafficTCPReassembledResponse {
@@ -1089,6 +1096,7 @@ message SmokingEvaluateResult {
   string Item = 1;
   string Suggestion = 2;
   bytes ExtraInfo = 3;
+  Range Range = 4;
 }
 
 message SmokingEvaluatePluginResponse {
@@ -1791,14 +1799,14 @@ message Range {
 
 message YaklangInspectInformationRequest {
     string YakScriptType = 1;
-    string YakScriptCode = 2; 
+    string YakScriptCode = 2;
     Range Range = 3;
 }
 
 message YaklangLanguageSuggestionRequest {
     string InspectType = 1;// completion(补全) / hover(提示) / signature(签名)
     string YakScriptType = 2;
-    string YakScriptCode = 3; 
+    string YakScriptCode = 3;
     Range Range = 4;
 }
 
@@ -1813,7 +1821,7 @@ message YaklangLanguageSuggestionRequest {
 
 message YaklangInformationKV {
   string Key = 1;
-  bytes Value = 2; 
+  bytes Value = 2;
   repeated YaklangInformationKV Extern = 3;
 }
 
@@ -1828,6 +1836,15 @@ message YaklangLanguageSuggestionResponse {
 
 message YaklangInspectInformationResponse {
   repeated YaklangInformation Information = 1;
+  repeated YakScriptParam CliParameter  = 2;
+}
+message YaklangGetCliCodeFromDatabaseResponse {
+  string Code = 1;
+}
+
+message YaklangGetCliCodeFromDatabaseRequest {
+  string ScriptName = 1;
+
 }
 
 message StaticAnalyzeErrorRequest {
@@ -3264,11 +3281,11 @@ message SavePayloadRequest {
 
 
 message UpdatePayloadRequest {
-  // old 
+  // old
   string Group = 1;   // old
   string OldGroup = 2; // old
 
-  // new, please use this 
+  // new, please use this
   int64 Id = 3;
   Payload Data = 4;
 }
@@ -3279,7 +3296,7 @@ message UpdatePayloadToFileRequest {
 }
 
 // copy payload(get by id) to group
-message BackUpOrCopyPayloadsRequest { 
+message BackUpOrCopyPayloadsRequest {
   repeated int64 Ids = 1;
   string Group = 2;
   string Folder = 3;
@@ -3297,7 +3314,7 @@ message DeletePayloadRequest {
 
 message QueryPayloadFromFileRequest {
   string Group = 1;
-  string Folder = 2; 
+  string Folder = 2;
 }
 message QueryPayloadFromFileResponse {
   bytes Data = 1;
@@ -3308,7 +3325,7 @@ message QueryPayloadRequest {
   Paging Pagination = 1;
   string Group = 2;
   string Keyword = 3;
-  string Folder = 4; 
+  string Folder = 4;
 }
 
 message QueryPayloadResponse {
@@ -4515,4 +4532,13 @@ message GenerateURLResponse{
 message YakVersionAtLeastRequest{
  string AtLeastVersion = 1;
  string YakVersion = 2;
+}
+message ParseTrafficRequest{
+  int64 Id = 1;
+  string Type = 2;
+}
+message ParseTrafficResponse{
+    bool OK = 1;
+  string Result = 2;
+  string Message = 3;
 }
