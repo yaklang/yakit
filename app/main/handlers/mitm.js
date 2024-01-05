@@ -119,11 +119,12 @@ module.exports = (win, getClient) => {
     })
 
     // MITM 转发
-    ipcMain.handle("mitm-forward-modified-request", (e, request, id) => {
+    ipcMain.handle("mitm-forward-modified-request", (e, request, id, tags) => {
         if (stream) {
             stream.write({
                 id,
                 request: Buffer.from(request),
+                Tags: tags
             })
         }
     })

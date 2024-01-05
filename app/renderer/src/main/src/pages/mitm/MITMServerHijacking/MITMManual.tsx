@@ -261,16 +261,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                         {
                             key:"drop-response",
                             label: "丢弃该 HTTP Response",
-                        },
-                        {
-                            key: "lable-color",
-                            label: "标注颜色",
-                            children: availableColors.map((i) => {
-                                return {
-                                    key: i.color,
-                                    label: i.render,
-                                }
-                            })
                         }
                     ],
                     onRun: (editor, key) => {
@@ -289,16 +279,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                                     //     300
                                     // )
                                 })
-                                break;
-                            case "RED":
-                            case "GREEN":
-                            case "BLUE":
-                            case "YELLOW":
-                            case "ORANGE":
-                            case "PURPLE":
-                            case "CYAN":
-                            case "GREY":
-                                editorCalloutColor(key)
                                 break;
                             default:
                                 break;
@@ -393,8 +373,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 }
             }
         }
-        
-    },[])
+    }, [forResponse])
     return (
         <NewHTTPPacketEditor
             originValue={currentPacket}

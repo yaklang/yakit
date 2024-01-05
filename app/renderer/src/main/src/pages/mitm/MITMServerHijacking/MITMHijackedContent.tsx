@@ -198,14 +198,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             setHijackResponseType("never")
         }
         setForResponse(false)
-        // TODO 需要将calloutColor传给后端
         if (forResponse) {
             ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacket, currentPacketId).finally(() => {
                 clearCurrentPacket()
                 // setTimeout(() => setLoading(false))
             })
         } else {
-            ipcRenderer.invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId).finally(() => {
+            ipcRenderer.invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId, [calloutColor]).finally(() => {
                 clearCurrentPacket()
                 // setTimeout(() => setLoading(false))
             })
@@ -265,6 +264,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 // setTimeout(() => setLoading(false), 300)
             })
         }
+        setForResponse(false)
         setUrlInfo("监听中...")
         setIpInfo("")
     })
