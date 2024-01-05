@@ -638,7 +638,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Beta_WebShellManager:
             return <WebShellViewer/>
         case YakitRoute.Beta_WebShellOpt:
-            return <WebShellDetailOpt id={params?.id + ""} webshellInfo={params?.webshellInfo as WebShellDetail}/>
+            return <WebShellDetailOpt id={(params?.id||"") + ""} webshellInfo={params?.webshellInfo as WebShellDetail}/>
         default:
             return <div />
     }

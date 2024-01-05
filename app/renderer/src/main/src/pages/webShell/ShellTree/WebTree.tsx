@@ -142,13 +142,10 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                         return i
                     })
                 }
-                console.log("newSearchYakURL", newSearchYakURL)
 
                 requestYakURLList({url: newSearchYakURL, method: "GET"}, (res) => {
                     // 判断是否是搜索树
                     if (getSearchTreeFlag()) {
-                        console.log("8888", res.Resources)
-                        console.log("6666", assembleFirstTreeNode(res.Resources))
 
                         setSearchWebTreeData(assembleFirstTreeNode(res.Resources))
                     } else {
@@ -195,7 +192,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 behinder: item.Path,
                 godzilla: item.Path
             }
-            // console.log("------",schema,idObj);
 
             return {
                 title: item.VerboseName,
@@ -295,7 +291,6 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
             }
             buildTree(parts, tree)
         })
-        console.log("tree--", tree)
         setDefaultWebTreeData(tree)
     }, [searchYakURL])
 
@@ -343,18 +338,15 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                     return i
                 })
             } catch (error) {}
-            console.log("url", url)
             requestYakURLList(
                 {url},
                 (rsp) => {
                     const newNodes: TreeNode[] = rsp.Resources.map((i, index) => {
-                        // console.log("i", i)
                         const idObj = {
                             website: key + "/" + i.ResourceName,
                             behinder: i.Path,
                             godzilla: i.Path
                         }
-                        // console.log("idObj", idObj)
                         return {
                             title: i.VerboseName,
                             key: idObj[schema],

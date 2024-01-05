@@ -62,7 +62,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     const onRowClick = useMemoizedFn((record: TreeNode) => {
         setSelected(record) // 更新当前选中的行
         // setWebShell(record)
-        console.log(record)
     })
     const [pagination
         , setPagination] = useState<PaginationSchema>({
@@ -219,13 +218,11 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                         }
                     });
 
-                    console.log("content: ", contentRef.current)  // 使用 ref 的值
                     requestYakURLList({
                         url: newYakUrl,
                         method: "PUT",
                         body: Buffer.from(contentRef.current)
                     }).then((r) => {
-                        console.log(r);
                         edit.destroy();
                     }).catch((e) => {
                             yakitFailed(`更新失败: ${e}`);
@@ -248,7 +245,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
 
     const showFile = (url: YakURL) => {
         const newYakUrl = {...url};  // 创建一个新的对象，复制 yakUrl 的所有属性
-        console.log("newYakUrl", newYakUrl)
         newYakUrl.Query = newYakUrl.Query.map(queryItem => {
             if (queryItem.Key === 'mode') {
                 return {...queryItem, Value: 'show'};  // 如果键是 'mode'，则将值改为 'show'
@@ -262,7 +258,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                 // const newContent = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.ValueBytes || '';
                 // const contentStr = Buffer.from(newContent).toString()
                 const contentStr = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.Value || '';
-                console.log(contentStr);
                 setContent(contentStr);
                 setShouldEdit(true);  // 设置 shouldEdit 为 true
             }
@@ -277,7 +272,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         switch (key) {
             case "file-curd-open":
                 const url = selected.data!.Url
-                console.log("selected.data!.Url ", selected.data!.Url)
                 setYakUrl(url);
                 showFile(url)
                 break
@@ -335,7 +329,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
 
     useEffect(() => {
         requestYakURLList({url:getYakURL(), method: "GET"}, (res) => {
-            console.log("res ", res)
             const arr = res.Resources.map((item: YakURLResource, index: number) => {
                 return {
                     title: item.VerboseName,
@@ -345,7 +338,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                 }
             })
             setcurrentPathAllTree(arr)
-            console.log("1111111");
             
             setSelectedNode(arr)
             setLoading(false)
@@ -371,7 +363,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                         setLoading(false)
                         if (Array.isArray(nodes)) {
                             // const url = nodes[0]?.data?.Url as YakURL
-                            console.log("nodes", nodes)
                             // @ts-ignore
                             const data:YakURLResource[] = (nodes||[]).map((item)=>item.data)
                             // requestYakURLList({url}, (rsp) => {
@@ -384,11 +375,9 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                                         data: i
                                     }
                                 })
-                                console.log("22222222");
                                 setSelectedNode(newNodes)
                             // })
                         } else {
-                            console.log("33333333");
                             setSelectedNode(currentPathAllTree)
                         }
                     }}

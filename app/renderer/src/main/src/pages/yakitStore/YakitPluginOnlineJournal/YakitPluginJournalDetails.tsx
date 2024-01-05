@@ -154,7 +154,6 @@ export const YakitPluginJournalDetails: React.FC<YakitPluginJournalDetailsProps>
             content: modifiedCode,
             merge_plugin,
         }
-        console.log('log-modify-api,api:merge/apply,method:post',JSON.stringify(mergePlugin))
         setLoading(true)
         NetWorkApi<API.MergePluginRequest, API.ActionSucceeded>({
             method: "post",

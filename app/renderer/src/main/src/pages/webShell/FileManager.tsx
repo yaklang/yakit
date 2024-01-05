@@ -106,7 +106,6 @@ const {ipcRenderer} = window.require("electron");
 
 // 返回上一层
 export const goBack = (url: YakURL, setLoading: (value: boolean) => void, setGoBackTree: (data: TreeNode[]) => void) => {
-    console.log("goBack ", url)
     url.Path = url.Path + "../"
     setLoading(true);  // 开始请求前，设置加载状态为 true
 
@@ -149,7 +148,6 @@ export const updateFile = (url: YakURL, setLoading: (value: boolean) => void) =>
     requestYakURLList({url}, rsp => {
         const content = rsp.Resources[0]?.Extra.find(extra => extra.Key === 'content')?.Value || '';
         // 找到回显的结果，并将其值赋给 'content'
-        console.log(content)
         setLoading(false);  // 请求结束后，设置加载状态为 false
         const edit = showModal({
             title: "编辑 Shell",

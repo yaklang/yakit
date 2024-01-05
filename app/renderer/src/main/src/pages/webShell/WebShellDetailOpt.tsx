@@ -97,7 +97,6 @@ ${msg.currentPath}`
                         setDefaultPath(obj.CurrentDir)
                         const helloMsg = `OS: ${obj.OS}        
 ${obj.CurrentDir}`
-console.log("wuwuwuuw",helloMsg);
 
                             setDefaultXterm(helloMsg + ">")
                         const sortedKeys = Object.keys(obj)
@@ -138,8 +137,6 @@ console.log("wuwuwuuw",helloMsg);
         }
         requestYakURLList({url, method: "POST"})
             .then((res) => {
-                console.log(res) // 打印整个响应以供调试
-
                 // 遍历响应中的 Resources 数组
                 res.Resources.forEach((resource) => {
                     // 遍历每个资源的 Extra 数组
@@ -148,7 +145,6 @@ console.log("wuwuwuuw",helloMsg);
                     resource.Extra.forEach((item) => {
                         // 检查键是否匹配 'content'
                         if (item.Key === "content") {
-                            console.log(item.Value) // 打印找到的值
                             writeXTerm(xtermRef, item.Value)
                             writeXTerm(xtermRef, "\n")
                             writeXTerm(xtermRef, cp + ">")
@@ -220,7 +216,6 @@ console.log("wuwuwuuw",helloMsg);
                             }}
                             isWrite={false}
                             onData={(data) => {
-                                // console.log("onData---",data);
                                 if (data.replace(/[\x7F]/g, "").length > 0) {
                                     writeXTerm(xtermRef, data)
                                     // 处理用户输入的数据
@@ -230,7 +225,6 @@ console.log("wuwuwuuw",helloMsg);
                             onKey={(e) => {
                                 const {key} = e
                                 const {keyCode} = e.domEvent
-                                // console.log("onKey---",key,keyCode);
                                 // 删除
                                 if (keyCode === TERMINAL_INPUT_KEY.BACK && xtermRef?.current) {
                                     // 如只剩初始值则不删除
@@ -244,7 +238,6 @@ console.log("wuwuwuuw",helloMsg);
                                 }
                                 // 回车
                                 if (keyCode === TERMINAL_INPUT_KEY.ENTER && xtermRef?.current) {
-                                    console.log("gg", inputValue)
                                     // 此处调用接口
                                     commandExec(inputValue)
                                     xtermRef.current.terminal.write("\n")

@@ -161,10 +161,8 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
         return menuBodyHeight.firstTabMenuBodyHeight - 40
     }, [menuBodyHeight.firstTabMenuBodyHeight])
     const onOkImport = useMemoizedFn(() => {
-        console.log("onOkImport")
     })
     const onSaveToDataBase = useMemoizedFn(() => {
-        console.log("onSaveToDataBase", currCodec)
         if (!currCodec.ScriptName) {
             warn("请输入插件模块名!")
             return
@@ -192,7 +190,6 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
             })
     })
     const onExecute = useMemoizedFn(() => {
-        console.log("onExecute")
     })
 
     const [modified, setModified] = useState<YakScript | undefined>()
@@ -350,7 +347,6 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
             setDePayloadValue(defPayloadDecoder)
         } else if (editAction) {
             let codec = params.Content.split("##############################################")
-            console.log(codec)
             if (packetMode && codec.length === 2) {
                 setEnPacketValue(codec[0])
                 setDePacketValue(codec[1])

@@ -43,7 +43,6 @@ export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
         setAvailable(true)
         setTimeout(() => setLoading(false), 200)
     })
-    console.log(loading, available, advancedQuery)
 
     useEffect(() => {
         // 页面初次进入时
@@ -120,7 +119,6 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
 
     const [activeKey, setActiveKey] = useState<string[]>() // Collapse打开的key
     const onSwitchCollapse = useMemoizedFn((key) => {
-        console.log("onSwitchCollapse ", key)
         setActiveKey(key)
     })
     const [title, setTitle] = useState<string>("")
@@ -145,7 +143,6 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
-                console.log("searchForCodecPacketCodecPlugin", i)
 
                 if (!total || total == 0) {
                     return
@@ -166,7 +163,6 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
-                console.log("searchForCodecPayloadCodecPlugin", i)
                 if (!total || total == 0) {
                     return
                 }
@@ -244,7 +240,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                             <CustomCodecList
                                 customCodecList={packetCodecs}
                                 onRemove={() => {
-                                    console.log(2222)
+                                    
                                 }}
                                 onEdit={(index) => {
                                     setResultMode(false)
@@ -295,7 +291,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                             <CustomCodecList
                                 customCodecList={payloadCodecs}
                                 onRemove={() => {
-                                    console.log(2222)
+                                    
                                 }}
                                 onEdit={(index) => {
                                     setPacketMode(false)
@@ -338,7 +334,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                     size='small'
                                     type='outline1'
                                     onClick={() => {
-                                        console.log("on")
+                                        
                                     }}
                                     icon={<PlusSmIcon/>}
                                 >

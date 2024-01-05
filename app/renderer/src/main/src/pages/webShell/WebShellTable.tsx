@@ -278,7 +278,6 @@ const onClose = useMemoizedFn(()=>{
     const onRowClick = useMemoizedFn((record: WebShellDetail) => {
         setSelected(record) // 更新当前选中的行
         // setWebShell(record)
-        console.log(record)
     })
     const [pagination, setPagination] = useState<PaginationSchema>({
         ...genDefaultPagination(20, 1),
@@ -332,7 +331,6 @@ const onClose = useMemoizedFn(()=>{
             }
             ipcRenderer.invoke("QueryWebShells", finalParams)
                 .then((r: QueryGeneralResponse<WebShellDetail>) => {
-                    console.log("QueryWebShells", r)
                     const d = Number(paginationProps.Page) === 1 ? r.Data : data.concat(r.Data)
                     setData(d)
                     setPagination(r.Pagination)
@@ -419,10 +417,8 @@ const onClose = useMemoizedFn(()=>{
                 deleteWebShell(selected.Id, selected.Url, refList)
                 break
             case "webshell-curd-copy":
-                console.log("webshell-curd-copy")
                 break
             case "webshell-curd-share":
-                console.log("webshell-curd-share")
                 break
             case "webshell-feature-ping":
                 featurePing(selected.Id, refList)
@@ -497,7 +493,6 @@ const onClose = useMemoizedFn(()=>{
                                             valueBeforeOption={searchType}
                                             afterModuleType='input'
                                             onSelectBeforeOption={(o) => {
-                                                console.log(o)
                                             }}
                                             addonBeforeOption={[
                                                 {
@@ -514,10 +509,10 @@ const onClose = useMemoizedFn(()=>{
                                                 value: params[searchType],
                                                 placeholder: searchType === "Keywords" ? "CVE编号或关键字搜索" : "CEW编号搜索",
                                                 onChange: (e) => {
-                                                    console.log("inputSearchModuleTypeProps onChange ", e)
+                                                   
                                                 },
                                                 onSearch: (value) => {
-                                                    console.log("inputSearchModuleTypeProps onSearch ", value)
+                                                   
                                                 }
                                             }}
                                         />

@@ -72,7 +72,6 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = (props) => {
         setLoading(true)
         apiFetchPluginDetailCheck({uuid: uuid, list_type: "log", up_log_id: log})
             .then((res) => {
-                console.log("log-detail", res)
                 if (res) {
                     // 所有信息
                     setPlugin({...res})
@@ -357,8 +356,6 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = (props) => {
                     if (callback) callback()
                     return
                 }
-
-                console.log("log-api", {...data, ...audit})
             } else {
                 callback()
             }

@@ -59,7 +59,6 @@ export const WebShellCreatorForm: React.FC<WebShellCreatorFormProp> = (props) =>
 
     const createOrUpdateWebShell = useMemoizedFn(() => {
         setCreateLoading(true)
-        console.log("createWebShell ", params)
         ipcRenderer.invoke(props.isCreate ? "CreateWebShell" : "UpdateWebShell", params).then((data: WebShellDetail) => {
             success(props.isCreate ? "创建" : "编辑" + " 网站管理 成功")
             setParams(data)
@@ -167,11 +166,9 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
     const [packetScriptList, setPacketScriptList] = useState<SelectOptionProps[]>([])
     const [payloadScriptList, setPayloadScriptList] = useState<SelectOptionProps[]>([])
     const handleQueryYakScriptList = (tag: string, setScriptList: Function) => {
-        console.log("handleQueryYakScriptList", shellScript, tag)
         queryYakScriptList(
             "codec",
             (i: YakScript[], total) => {
-                console.log("YakScript", i, total)
                 if (!total || total == 0) {
                     setScriptList([])
                     return
@@ -201,7 +198,6 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
         )
     }
     useEffect(() => {
-        console.log("shellScript", shellScript)
         handleQueryYakScriptList("webshell-packet-codec", setPacketScriptList);
         handleQueryYakScriptList("webshell-payload-codec", setPayloadScriptList);
     }, [shellScript])

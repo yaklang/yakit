@@ -30,7 +30,6 @@ export const deleteWebShell = (id: string, url: string, refList: () => void, ids
 
 export const featurePing = (id : string, refList: () => void) => {
     ipcRenderer.invoke("Ping", {Id: id}).then((r) => {
-        console.log(r)
         success(`FeaturePing success: ${id}`)
         refList()
     }).catch((e) => {
