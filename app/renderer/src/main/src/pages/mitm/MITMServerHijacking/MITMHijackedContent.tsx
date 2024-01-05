@@ -17,6 +17,7 @@ import classNames from "classnames"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useStore} from "@/store/mitmState"
 import { HTTPHistory } from "@/components/HTTPHistory"
+import { RemoteGV } from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -68,6 +69,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [width, setWidth] = useState<number>(0)
 
     const {setIsRefreshHistory} = useStore()
+
+    const [calloutColor, setCalloutColor] = useState<string>("")
 
     const isManual = useCreation(() => {
         return autoForward === "manual"
@@ -185,15 +188,15 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             setHijackResponseType("never")
         }
         setForResponse(false)
-
         if (forResponse) {
             ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacket, currentPacketId).finally(() => {
                 clearCurrentPacket()
                 // setTimeout(() => setLoading(false))
             })
         } else {
-            ipcRenderer.invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId).finally(() => {
+            ipcRenderer.invoke("mitm-forward-modified-request", modifiedPacket, currentPacketId, [calloutColor]).finally(() => {
                 clearCurrentPacket()
+                setCalloutColor("")
                 // setTimeout(() => setLoading(false))
             })
         }
@@ -237,7 +240,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setHijackResponseType(val)
     })
     /**
-     * @description 丢弃请求
+     * @description 丢弃数据
      */
     const onDiscardRequest = useMemoizedFn(() => {
         hijacking()
@@ -252,6 +255,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 // setTimeout(() => setLoading(false), 300)
             })
         }
+        setForResponse(false)
+        setCalloutColor("")
         setUrlInfo("监听中...")
         setIpInfo("")
     })
@@ -277,6 +282,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         onDiscardRequest={onDiscardRequest}
                         onSubmitData={forward}
                         width={width}
+                        calloutColor={calloutColor}
+                        onSetCalloutColor={setCalloutColor}
                     />
                 )
             case "log":

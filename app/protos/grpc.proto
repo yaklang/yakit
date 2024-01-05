@@ -4367,6 +4367,9 @@ message MITMRequest {
 
   // max content-length
   int64 maxContentLength = 55;
+  
+  // 提前为此次flow设置tags
+  repeated string Tags = 56;
 }
 
 message Certificate {

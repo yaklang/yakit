@@ -12,6 +12,7 @@ import {useResponsive} from "ahooks"
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import { OtherMenuListProps, YakitEditorKeyCode } from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import { YakitSwitch } from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import { availableColors } from "@/components/HTTPFlowTable/HTTPFlowTable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,6 +27,8 @@ interface MITMManualHeardExtraProps {
     onDiscardRequest: () => void
     onSubmitData: () => void
     width: number
+    calloutColor: string
+    onSetCalloutColor: (calloutColor: string) => void
 }
 export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.memo((props) => {
     const {
@@ -38,7 +41,9 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
         setHijackResponseType,
         onDiscardRequest,
         onSubmitData,
-        width
+        width,
+        calloutColor,
+        onSetCalloutColor
     } = props
     return (
         <div className={styles["autoForward-manual"]}>
@@ -56,6 +61,22 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                     [styles["autoForward-manual-right-sm"]]: width < 900
                 })}
             >
+                <div className={styles["manual-select"]}>
+                    <div className={styles["manual-select-label"]} style={{ minWidth: 60 }}>标注颜色:</div>
+                    <YakitSelect
+                        size="small"
+                        value={calloutColor}
+                        wrapperStyle={{width: 100}}
+                        onChange={(value) => {
+                            onSetCalloutColor(value || "")
+                        }}
+                    >
+                        <YakitSelect.Option value={""}><div style={{ paddingLeft: 20 }}>无</div></YakitSelect.Option>
+                        {
+                            availableColors.map(item => <YakitSelect.Option value={item.searchWord} key={item.searchWord}>{item.render}</YakitSelect.Option>)
+                        }
+                    </YakitSelect>
+                </div>
                 <div className={styles["manual-select"]}>
                     <span className={styles["manual-select-label"]}>劫持响应:</span>
                     {/* <YakitSegmented
@@ -91,7 +112,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                     disabled={status === "hijacking"}
                     onClick={() => onDiscardRequest()}
                 >
-                    丢弃请求
+                    丢弃数据
                 </YakitButton>
                 <YakitButton disabled={status === "hijacking"} onClick={() => onSubmitData()}>
                     提交数据
@@ -152,18 +173,20 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
                     HTTP 响应
                 </YakitTag>
             ) : (
-                <YakitTag
-                    color='success'
-                    style={{
-                        marginLeft: 8,
-                        alignSelf: "center",
-                        maxWidth: 140,
-                        cursor: "pointer"
-                    }}
-                    size='small'
-                >
-                    HTTP 请求
-                </YakitTag>
+                <>
+                    <YakitTag
+                        color='success'
+                        style={{
+                            marginLeft: 8,
+                            alignSelf: "center",
+                            maxWidth: 140,
+                            cursor: "pointer"
+                        }}
+                        size='small'
+                    >
+                        HTTP 请求
+                    </YakitTag>
+                </>
             )}
         </div>
     )
@@ -206,7 +229,6 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
     }, [])
 
-
     const mitmManualRightMenu: OtherMenuListProps  = useMemo(() => {
         if(forResponse){
             return {
@@ -227,7 +249,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                         {
                             key:"drop-response",
                             label: "丢弃该 HTTP Response",
-                        },
+                        }
                     ],
                     onRun: (editor, key) => {
                         switch (key) {
@@ -286,7 +308,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                         {
                             key:"hijack-current-response",
                             label: "劫持该 Request 对应的响应",
-                        },
+                        }
                     ],
                     onRun: (editor:any, key) => {
                         switch (key) {
@@ -319,8 +341,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 }
             }
         }
-        
-    },[])
+    }, [forResponse])
     return (
         <NewHTTPPacketEditor
             originValue={currentPacket}
