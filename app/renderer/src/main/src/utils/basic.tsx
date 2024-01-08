@@ -438,8 +438,6 @@ export const startExecYakCode = (
         params: YakScriptParam,
         successInfo: boolean = true
     ) => {
-    console.log('startExecYakCode', '弹窗出现')
-
     let m = showModal({
         width: "60%", maskClosable: false,
         title: `正在执行：${verbose}`,
@@ -463,7 +461,6 @@ const StartToExecYakScriptViewer = React.memo((props: {
         verbose, "ExecYakCode",
         token, () => setTimeout(() => setLoading(false), 300),
         () => {
-            console.log('后端接口真正执行');
             ipcRenderer.invoke("ExecYakCode", script, token).then(() => {
                 successInfo && info(`执行 ${verbose} 成功`)
             }).catch(e => {

@@ -765,6 +765,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
     const locallogListInfoRef = useRef<LogListInfo[]>([])
     const autoCloseImportModalRef = useRef<boolean>(true) // 当导入本地插件的所有文件都成功时，弹窗自动关闭
+    const [loading, setLoading] = useState<boolean>(false)
 
     useEffect(() => {
         if (visible) {
@@ -938,6 +939,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 failed(`请输入Nuclei PoC 本地路径`)
                 return
             }
+            setLoading(true)
             startExecYakCode("导入本地Nuclei", {
                 Script: loadNucleiPoCFromLocal,
                 Params: [{Key: "local-path", Value: formValue.localNucleiPath}],
@@ -963,6 +965,14 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         const obj = loadModeInfo.find((item) => item.value === loadPluginMode)
         return obj ? obj[key] : "导入"
     }
+
+    // 确认按钮disabled
+    const okBtnDisabled = useMemo(() => {
+        if (loadMode === "local") {
+            return !localUploadList.length
+        }
+        return false
+    }, [loadMode, localUploadList])
 
     return (
         <YakitModal
@@ -1006,7 +1016,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 </YakitButton>,
                 <YakitButton
                     style={{marginLeft: 12, display: localStreamData ? "none" : "block"}}
-                    disabled={loadMode === "local" && !localUploadList.length}
+                    disabled={okBtnDisabled}
                     onClick={() => onOk()}
                 >
                     {getLoadModeInfo("okText")}
