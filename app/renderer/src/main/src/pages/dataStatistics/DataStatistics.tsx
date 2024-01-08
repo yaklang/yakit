@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {} from "antd"
+import {DatePicker} from "antd"
 import {} from "@ant-design/icons"
 import {useGetState, useInViewport, useMemoizedFn, useSize} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -14,22 +14,337 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import numeral from "numeral"
+import moment from "moment"
+import {OutlineClockIcon} from "@/assets/icon/outline"
+import "moment/locale/zh-cn"
+import locale from "antd/es/date-picker/locale/zh_CN"
+const {RangePicker} = DatePicker
 const {ipcRenderer} = window.require("electron")
+const dateFormat = "YYYY/MM/DD"
 
+interface RiseLineEchartsProps {
+    inViewport?: boolean
+}
+
+const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
+    const {inViewport} = props
+    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
+    const [_, setChartList, getChartList] = useGetState<echartListProps[]>([])
+    const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
+    const optionRef = useRef<any>({
+        color: "#4A3AFF", // 设置折线的颜色
+        tooltip: {
+            trigger: "axis",
+            axisPointer: {
+                type: "line"
+            },
+            formatter: "{b} : {c}"
+        },
+        xAxis: {
+            type: "category",
+            boundaryGap: false,
+            data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+        },
+        yAxis: {
+            type: "value",
+            splitLine: {
+                lineStyle: {
+                    type: "dashed" // 设置横向线条类型为虚线
+                }
+            },
+            axisLabel: {
+                formatter: (value) => {
+                    // 将纵坐标数值除以 1000 并添加 'k' 后缀
+                    if (value < 1000) {
+                        return value
+                    } else {
+                        return `${value / 1000}k`
+                    }
+                }
+            }
+        },
+        series: [
+            {
+                data: [820, 932, 901, 934, 529, 633, 732, 820, 932, 901, 934, 1290],
+                type: "line",
+                symbol: "circle", // 设置连接点的形状为圆形
+                symbolSize: 14, // 设置连接点的大小为 14
+                itemStyle: {
+                    color: "#4A3AFF", // 设置连接点的颜色为黑色
+                    borderColor: "#FFFFFF", // 设置连接点的边框颜色
+                    borderWidth: 2 // 设置连接点的边框宽度
+                },
+                lineStyle: {
+                    color: "#C893FD" // 设置折线的颜色
+                }
+            },
+            {
+                type: "bar",
+                stack: "1",
+                barWidth: 8,
+                data: [820, 932, 901, 934, 529, 633, 732, 820, 932, 901, 934, 1290],
+                itemStyle: {
+                    color: "#EAECF3" // 设置柱状图的背景颜色，这里使用灰色的背景
+                }
+            }
+        ],
+        grid: {
+            top: "5%", // 上留白距离
+            bottom: "10%", // 下留白距离
+            left: "5%", // 左留白距离
+            right: "5%" // 右留白距离
+        }
+    })
+    const echartsRef = useRef<any>()
+    useEffect(() => {
+        if (width >= 1380) {
+            // optionRef.current.series[0].center = ["24%", "50%"]
+            // optionRef.current.title.left = "23%"
+            // setEcharts(optionRef.current)
+        } else {
+            // optionRef.current.legend.show = false
+            // optionRef.current.series[0].center = ["50%", "50%"]
+            // optionRef.current.title.left = "48%"
+            // setEcharts(optionRef.current)
+        }
+        echartsRef.current && echartsRef.current.resize()
+    }, [width])
+
+    useEffect(() => {
+        if (inViewport) {
+            echartsRef.current && echartsRef.current.resize()
+            getActiveLine()
+        }
+    }, [inViewport])
+
+    useEffect(() => {
+        if (!echartsRef.current) return
+        //先解绑事件，防止事件重复触发
+        // echartsRef.current.off("click")
+        // echartsRef.current.off("legendselectchanged")
+        // echartsRef.current.on("click", function (params) {
+        //     // console.log("点击", params)
+        // })
+        // echartsRef.current.on("legendselectchanged", (e) => {
+        //     // console.log("点击了", e) // 如果不加off事件，就会叠加触发
+        // })
+    }, [])
+    const getActiveLine = useMemoizedFn(() => {
+        setEcharts(optionRef.current)
+        NetWorkApi<null, API.TouristCityResponse>({
+            method: "get",
+            url: ""
+        })
+            .then((res: API.TouristCityResponse) => {
+                console.log("", res)
+                // if (res.data) {
+                //     const chartListCache = res.data.map((item) => ({
+                //         name: item.city,
+                //         value: item.count
+                //     }))
+                //     optionRef.current.series[0].data = chartListCache
+                //     optionRef.current.title.text = chartListCache.map((item) => item.value).reduce((a, b) => a + b, 0)
+                //     optionRef.current.title.show = true
+                //     setChartList(chartListCache)
+                //     setEcharts(optionRef.current)
+                // }
+            })
+            .catch((err) => {
+                // failed("线上统计数据获取失败:" + err)
+            })
+            .finally(() => {
+                setIsShowEcharts(true)
+            })
+    })
+    const setEcharts = (options) => {
+        const chartDom = document.getElementById("data-statistics-risk-line")!
+        if (chartDom) {
+            echartsRef.current = echarts.init(chartDom)
+            options && echartsRef.current.setOption(options)
+        }
+    }
+    return (
+        <div
+            id='data-statistics-risk-line'
+            className={classNames(styles["echarts-box"], isShowEcharts && styles["echarts-box-show"])}
+        />
+    )
+}
+
+interface ActiveLineEchartsProps {
+    inViewport?: boolean
+}
+
+const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
+    const {inViewport} = props
+    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
+    const [_, setChartList, getChartList] = useGetState<echartListProps[]>([])
+    const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
+    const optionRef = useRef<any>({
+        color: "#4A3AFF", // 设置折线的颜色
+        tooltip: {
+            trigger: "axis",
+            axisPointer: {
+                type: "line"
+            },
+            formatter: "{b} : {c}"
+        },
+        xAxis: {
+            type: "category",
+            boundaryGap: false,
+            data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+        },
+        yAxis: {
+            type: "value",
+            splitLine: {
+                lineStyle: {
+                    type: "dashed" // 设置横向线条类型为虚线
+                }
+            },
+            axisLabel: {
+                formatter: (value) => {
+                    // 将纵坐标数值除以 1000 并添加 'k' 后缀
+                    if (value < 1000) {
+                        return value
+                    } else {
+                        return `${value / 1000}k`
+                    }
+                }
+            }
+        },
+        series: [
+            {
+                data: [820, 932, 901, 934, 1290, 1330, 1320, 820, 932, 901, 934, 1290],
+                type: "line",
+                areaStyle: {
+                    color: {
+                        type: "linear",
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [
+                            {
+                                offset: 0,
+                                color: "rgba(74, 58, 255, 0.5)" // 起始颜色
+                            },
+                            {
+                                offset: 1,
+                                color: "rgba(255, 255, 255, 0.5)" // 结束颜色
+                            }
+                        ]
+                    }
+                }
+            }
+        ],
+        grid: {
+            top: "5%", // 上留白距离
+            bottom: "10%", // 下留白距离
+            left: "5%", // 左留白距离
+            right: "5%" // 右留白距离
+        }
+    })
+    const echartsRef = useRef<any>()
+    useEffect(() => {
+        if (width >= 1380) {
+            // optionRef.current.series[0].center = ["24%", "50%"]
+            // optionRef.current.title.left = "23%"
+            // setEcharts(optionRef.current)
+        } else {
+            // optionRef.current.legend.show = false
+            // optionRef.current.series[0].center = ["50%", "50%"]
+            // optionRef.current.title.left = "48%"
+            // setEcharts(optionRef.current)
+        }
+        echartsRef.current && echartsRef.current.resize()
+    }, [width])
+
+    useEffect(() => {
+        if (inViewport) {
+            echartsRef.current && echartsRef.current.resize()
+            getActiveLine()
+        }
+    }, [inViewport])
+
+    useEffect(() => {
+        if (!echartsRef.current) return
+        //先解绑事件，防止事件重复触发
+        // echartsRef.current.off("click")
+        // echartsRef.current.off("legendselectchanged")
+        // echartsRef.current.on("click", function (params) {
+        //     // console.log("点击", params)
+        // })
+        // echartsRef.current.on("legendselectchanged", (e) => {
+        //     // console.log("点击了", e) // 如果不加off事件，就会叠加触发
+        // })
+    }, [])
+    const getActiveLine = useMemoizedFn(() => {
+        console.log("909090")
+        setIsShowEcharts(true)
+        setEcharts(optionRef.current)
+        NetWorkApi<null, API.TouristCityResponse>({
+            method: "get",
+            url: ""
+        })
+            .then((res: API.TouristCityResponse) => {
+                console.log("", res)
+                // if (res.data) {
+                //     const chartListCache = res.data.map((item) => ({
+                //         name: item.city,
+                //         value: item.count
+                //     }))
+                //     optionRef.current.series[0].data = chartListCache
+                //     optionRef.current.title.text = chartListCache.map((item) => item.value).reduce((a, b) => a + b, 0)
+                //     optionRef.current.title.show = true
+                //     setChartList(chartListCache)
+                //     setEcharts(optionRef.current)
+                // }
+            })
+            .catch((err) => {
+                // failed("线上统计数据获取失败:" + err)
+            })
+            .finally(() => {
+                setIsShowEcharts(true)
+            })
+    })
+    const setEcharts = (options) => {
+        const chartDom = document.getElementById("data-statistics-active-line")!
+        if (chartDom) {
+            echartsRef.current = echarts.init(chartDom)
+            options && echartsRef.current.setOption(options)
+        }
+    }
+    return (
+        <div
+            id='data-statistics-active-line'
+            className={classNames(styles["echarts-box"], isShowEcharts && styles["echarts-box-show"])}
+        />
+    )
+}
 interface PieChartProps {
     inViewport?: boolean
-    setEchartsError?: (flag: boolean) => any
 }
 interface echartListProps {
     name: string
     value: number
 }
 const PieEcharts: React.FC<PieChartProps> = (props) => {
-    const {inViewport, setEchartsError} = props
+    const {inViewport} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     const [_, setChartList, getChartList] = useGetState<echartListProps[]>([])
     const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
-    const colorList = ["#31343F", "#4A3AFF", "#962DFF", "#E0C6FD", "#C6D2FD", "#CCD2DE"]
+    const colorList = [
+        "#8863F7",
+        "#DA5FDD",
+        "#4A94F8",
+        "#29BCD0",
+        "#35D8EE",
+        "#56C991",
+        "#F4736B",
+        "#FFB660",
+        "#FFD583",
+        "#B4BBCA"
+    ]
     const optionRef = useRef<any>({
         color: colorList,
         title: {
@@ -55,15 +370,16 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             }
         },
         tooltip: {
-            trigger: "item"
+            trigger: "item",
+            formatter: "{b} : {c} ({d}%)"
         },
         legend: {
             show: false,
-            bottom: 10, // 设置图例距离底部的距离
+            bottom: 0, // 设置图例距离底部的距离
             left: "center",
             orient: "horizontal",
             icon: "circle",
-            width: 300, // 设置图例的宽度
+            // width: 300, // 设置图例的宽度
             padding: [0, 0, 0, 0],
             // 点的大小位置
             itemWidth: 13,
@@ -112,16 +428,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
                 avoidLabelOverlap: false,
                 type: "pie",
                 label: {
-                    show: true,
-                    position: "inner",
-                    formatter: function (params) {
-                        // 使用 toFixed 将小数四舍五入为整数
-                        return params.percent.toFixed(0) + "%"
-                    },
-                    color: "#FFFFFF",
-                    fontSize: 22,
-                    fontWeight: 700,
-                    lineHeight: 28
+                    show: false
                 },
                 labelLine: {
                     show: false
@@ -151,23 +458,21 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     useEffect(() => {
         if (inViewport) {
             echartsRef.current && echartsRef.current.resize()
-            if (setEchartsError) setEchartsError(false)
             getPluginSearch()
         }
     }, [inViewport])
 
     useEffect(() => {
-        if (setEchartsError) setEchartsError(false)
-        getPluginSearch()
+        if (!echartsRef.current) return
         //先解绑事件，防止事件重复触发
-        echartsRef.current.off("click")
-        echartsRef.current.off("legendselectchanged")
-        echartsRef.current.on("click", function (params) {
-            // console.log("点击", params)
-        })
-        echartsRef.current.on("legendselectchanged", (e) => {
-            // console.log("点击了", e) // 如果不加off事件，就会叠加触发
-        })
+        // echartsRef.current.off("click")
+        // echartsRef.current.off("legendselectchanged")
+        // echartsRef.current.on("click", function (params) {
+        //     // console.log("点击", params)
+        // })
+        // echartsRef.current.on("legendselectchanged", (e) => {
+        //     // console.log("点击了", e) // 如果不加off事件，就会叠加触发
+        // })
     }, [])
 
     const getPluginSearch = useMemoizedFn(() => {
@@ -176,35 +481,25 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             url: "tourist/city"
         })
             .then((res: API.TouristCityResponse) => {
-                console.log("tourist/city",res);
-                
+                console.log("tourist/city", res)
+
                 if (res.data) {
                     const chartListCache = res.data.map((item) => ({
                         name: item.city,
                         value: item.count
                     }))
-        // @ts-ignore
-        // const chartListCache = [
-        //     {name: "北京", value: 5678},
-        //     {name: "成都", value: 4832},
-        //     {name: "上海", value: 4695},
-        //     {name: "深圳", value: 1024},
-        //     {name: "西安", value: 952},
-        //     {name: "其它", value: 2187}
-        // ]
-        optionRef.current.series[0].data = chartListCache
-        optionRef.current.title.text = chartListCache.map((item) => item.value).reduce((a, b) => a + b, 0)
-        optionRef.current.title.show = true
-        setChartList(chartListCache)
-        setEcharts(optionRef.current)
+                    optionRef.current.series[0].data = chartListCache
+                    optionRef.current.title.text = chartListCache.map((item) => item.value).reduce((a, b) => a + b, 0)
+                    optionRef.current.title.show = true
+                    setChartList(chartListCache)
+                    setEcharts(optionRef.current)
                 }
             })
             .catch((err) => {
-                if (setEchartsError) setEchartsError(true)
                 // failed("线上统计数据获取失败:" + err)
             })
             .finally(() => {
-        setIsShowEcharts(true)
+                setIsShowEcharts(true)
             })
     })
 
@@ -219,7 +514,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
         <div
             id='data-statistics-pie'
             className={classNames(styles["echarts-box"], isShowEcharts && styles["echarts-box-show"])}
-        ></div>
+        />
     )
 }
 
@@ -327,7 +622,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 <div className={styles["v-line"]} />
                 <div className={styles["pie-charts-box"]}>
                     <div className={styles["header"]}>
-                        <div className={styles["title"]}>用户地理位置分布 Top5</div>
+                        <div className={styles["title"]}>用户地理位置分布 Top10</div>
                         <div className={styles["extra"]}>
                             <div className={styles["icon"]}>
                                 <SolidCalendarIcon />
@@ -346,8 +641,24 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                     <div className={styles["header"]}>
                         <div className={styles["title"]}>用户活跃度统计</div>
                         <div className={styles["extra"]}>
+                            <div className={styles["range-picker"]}>
+                                <RangePicker
+                                    locale={locale}
+                                    defaultValue={[moment("2015/01/01", dateFormat), moment("2015/01/01", dateFormat)]}
+                                    format={dateFormat}
+                                    suffixIcon={
+                                        <div className={styles["picker-icon"]}>
+                                            <OutlineClockIcon />
+                                        </div>
+                                    }
+                                    allowClear={false}
+                                    dropdownClassName={styles["range-picker-dropdaown"]}
+                                />
+                            </div>
+
                             <YakitSegmented
                                 // value={userPluginType}
+
                                 onChange={(v) => {}}
                                 options={[
                                     {
@@ -370,9 +681,105 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                             />
                         </div>
                     </div>
-                    <div className={styles["card-box"]}></div>
+                    <div className={styles["card-box"]}>
+                        <div className={styles["card-item"]}>
+                            <div className={styles["show"]}>
+                                <div className={styles["count"]}>327</div>
+                                <UpsOrDowns type='up' value='6.8' />
+                            </div>
+                            <div className={styles["title"]}>日活</div>
+                        </div>
+                        <div className={styles["card-item"]}>
+                            <div className={styles["show"]}>
+                                <div className={styles["count"]}>2632</div>
+                                <UpsOrDowns type='down' value='2' />
+                            </div>
+                            <div className={styles["title"]}>周活</div>
+                        </div>
+                        <div className={styles["card-item"]}>
+                            <div className={styles["show"]}>
+                                <div className={styles["count"]}>
+                                    {userData ? numeral(userData.touristTotal).format("0,0") : ""}
+                                </div>
+                                <UpsOrDowns type='up' value='6.8' />
+                            </div>
+                            <div className={styles["title"]}>月活</div>
+                        </div>
+                    </div>
+                    <div className={styles["active-line-charts"]}>
+                        <ActiveLineEcharts inViewport={inViewport} />
+                    </div>
                 </div>
-                <div className={styles["user-rise"]}></div>
+                <div className={styles["user-rise"]}>
+                    <div className={styles["header"]}>
+                        <div className={styles["title"]}>
+                            <div className={styles["text"]}>用户数量变化趋势</div>
+                            <div className={styles["radio-btn"]}>
+                                <YakitRadioButtons
+                                    // size='large'
+                                    value={"all"}
+                                    onChange={(e) => {
+                                        // setFormat(e.target.value)
+                                    }}
+                                    buttonStyle='solid'
+                                    options={[
+                                        {
+                                            value: "all",
+                                            label: "总数"
+                                        },
+                                        {
+                                            value: "add",
+                                            label: "增长数"
+                                        }
+                                    ]}
+                                />
+                            </div>
+                        </div>
+                        <div className={styles["extra"]}>
+                            <div className={styles["range-picker"]}>
+                                <RangePicker
+                                    locale={locale}
+                                    defaultValue={[moment("2015/01/01", dateFormat), moment("2015/01/01", dateFormat)]}
+                                    format={dateFormat}
+                                    suffixIcon={
+                                        <div className={styles["picker-icon"]}>
+                                            <OutlineClockIcon />
+                                        </div>
+                                    }
+                                    allowClear={false}
+                                    dropdownClassName={styles["range-picker-dropdaown"]}
+                                />
+                            </div>
+
+                            <YakitSegmented
+                                // value={userPluginType}
+
+                                onChange={(v) => {}}
+                                options={[
+                                    {
+                                        label: "日",
+                                        value: "myOnlinePlugin"
+                                    },
+                                    {
+                                        label: "周",
+                                        value: "recycle"
+                                    },
+                                    {
+                                        label: "月",
+                                        value: "recycle1"
+                                    },
+                                    {
+                                        label: "年",
+                                        value: "recycle2"
+                                    }
+                                ]}
+                            />
+                        </div>
+                    </div>
+                    <div className={styles["user-rise-charts"]}>
+                        <RiseLineEcharts inViewport={inViewport} />
+                    </div>
+                </div>
             </div>
         </div>
     )
