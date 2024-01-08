@@ -19,7 +19,6 @@ import {InputItem} from "@/utils/inputUtil";
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {ShellType, WebShellDetail} from "@/pages/webShell/models";
-import {showByCustom} from "@/components/functionTemplate/showByContext";
 import mitmStyles from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking.module.scss";
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu";
 import {showModal} from "@/utils/showModal";
@@ -34,6 +33,7 @@ import {TreeNode, WebTree} from "./ShellTree/WebTree";
 import { TreeKey } from "@/components/yakitUI/YakitTree/YakitTree";
 import path from "path"
 import emiter from "@/utils/eventBus/eventBus";
+import { showByRightContext } from "@/components/yakitUI/YakitMenu/showByRightContext";
 
 interface WebShellURLTreeAndTableProp {
     Id: string
@@ -285,21 +285,33 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         if (rowData) {
             setSelected(rowData)
         }
-        showByCustom(
+        // showByCustom已废弃，删除，更换为 showByRightContext
+        // showByCustom(
+        //     {
+        //         reactNode: (
+        //             <div className={mitmStyles["context-menu-custom"]}>
+        //                 <YakitMenu
+        //                     data={fileMenuData as YakitMenuItemProps[]}
+        //                     width={150}
+        //                     onClick={({key}) => {
+        //                         fileMenuSelect(key)
+        //                     }}
+        //                 />
+        //             </div>
+        //         ),
+        //         height: 266,
+        //         width: 158
+        //     },
+        //     event.clientX,
+        //     event.clientY
+        // )
+        showByRightContext(
             {
-                reactNode: (
-                    <div className={mitmStyles["context-menu-custom"]}>
-                        <YakitMenu
-                            data={fileMenuData as YakitMenuItemProps[]}
-                            width={150}
-                            onClick={({key}) => {
-                                fileMenuSelect(key)
-                            }}
-                        />
-                    </div>
-                ),
-                height: 266,
-                width: 158
+                width: 158,
+                data:fileMenuData as YakitMenuItemProps[],
+                onClick:({key}) => {
+                    fileMenuSelect(key)
+                }
             },
             event.clientX,
             event.clientY
