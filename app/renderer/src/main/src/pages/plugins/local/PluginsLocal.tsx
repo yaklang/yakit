@@ -641,7 +641,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     /**导出插件 */
     const onExport = useMemoizedFn(async (Ids: number[], callback?: () => void) => {
         try {
-            const showSaveDialogRes = await ipcRenderer.invoke("show-save-dialog", "")
+            const showSaveDialogRes = await ipcRenderer.invoke("openDialog", { properties: ['openDirectory'] })
             if (showSaveDialogRes.canceled) return
             let params: ExportParamsProps = {
                 OutputDir: showSaveDialogRes.filePath
