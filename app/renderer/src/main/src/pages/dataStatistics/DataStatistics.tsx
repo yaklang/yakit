@@ -26,10 +26,18 @@ interface RiseLineEchartsProps {
     inViewport?: boolean
 }
 
+interface RiseLineProps {
+    // 天月年展示
+    showType?: string
+    // 自选起始时间
+    startTime?: number
+    // 自选结束时间
+    endTime?: number
+}
+
 const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
     const {inViewport} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
-    const [_, setChartList, getChartList] = useGetState<echartListProps[]>([])
     const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
     const optionRef = useRef<any>({
         color: "#4A3AFF", // 设置折线的颜色
@@ -43,7 +51,7 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
         xAxis: {
             type: "category",
             boundaryGap: false,
-            data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+            data: []
         },
         yAxis: {
             type: "value",
@@ -65,7 +73,7 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
         },
         series: [
             {
-                data: [820, 932, 901, 934, 529, 633, 732, 820, 932, 901, 934, 1290],
+                data: [],
                 type: "line",
                 symbol: "circle", // 设置连接点的形状为圆形
                 symbolSize: 14, // 设置连接点的大小为 14
@@ -82,7 +90,7 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
                 type: "bar",
                 stack: "1",
                 barWidth: 8,
-                data: [820, 932, 901, 934, 529, 633, 732, 820, 932, 901, 934, 1290],
+                data: [],
                 itemStyle: {
                     color: "#EAECF3" // 设置柱状图的背景颜色，这里使用灰色的背景
                 }
@@ -97,15 +105,17 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
     })
     const echartsRef = useRef<any>()
     useEffect(() => {
-        if (width >= 1380) {
-            // optionRef.current.series[0].center = ["24%", "50%"]
-            // optionRef.current.title.left = "23%"
-            // setEcharts(optionRef.current)
-        } else {
-            // optionRef.current.legend.show = false
-            // optionRef.current.series[0].center = ["50%", "50%"]
-            // optionRef.current.title.left = "48%"
-            // setEcharts(optionRef.current)
+        if(width>=1920){
+            optionRef.current.grid.left = "3%"
+            setEcharts(optionRef.current)
+        }
+        else if(width>1050){
+            optionRef.current.grid.left = "5%"
+            setEcharts(optionRef.current)
+        }
+        else{
+            optionRef.current.grid.left = "8%"
+            setEcharts(optionRef.current)
         }
         echartsRef.current && echartsRef.current.resize()
     }, [width])
@@ -113,7 +123,7 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
     useEffect(() => {
         if (inViewport) {
             echartsRef.current && echartsRef.current.resize()
-            getActiveLine()
+            getRiseLine()
         }
     }, [inViewport])
 
@@ -129,28 +139,30 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
         //     // console.log("点击了", e) // 如果不加off事件，就会叠加触发
         // })
     }, [])
-    const getActiveLine = useMemoizedFn(() => {
+    const getRiseLine = useMemoizedFn(() => {
         setEcharts(optionRef.current)
-        NetWorkApi<null, API.TouristCityResponse>({
+        NetWorkApi<RiseLineProps, API.TouristActiveResponse>({
             method: "get",
-            url: ""
+            url: "tourist/active",
+            params: {}
         })
-            .then((res: API.TouristCityResponse) => {
-                console.log("", res)
-                // if (res.data) {
-                //     const chartListCache = res.data.map((item) => ({
-                //         name: item.city,
-                //         value: item.count
-                //     }))
-                //     optionRef.current.series[0].data = chartListCache
-                //     optionRef.current.title.text = chartListCache.map((item) => item.value).reduce((a, b) => a + b, 0)
-                //     optionRef.current.title.show = true
-                //     setChartList(chartListCache)
-                //     setEcharts(optionRef.current)
-                // }
+            .then((res: API.TouristActiveResponse) => {
+                console.log("tourist/active", res)
+                if (res.data) {
+                    let XData:string[] = []
+                    let YData:number[] = []
+                    res.data.forEach((item) => {
+                        XData.push(item.searchTime)
+                        YData.push(item.count)
+                    })
+                    optionRef.current.xAxis.data = XData
+                    optionRef.current.series[0].data = YData
+                    optionRef.current.series[1].data = YData
+                    setEcharts(optionRef.current)
+                }
             })
             .catch((err) => {
-                // failed("线上统计数据获取失败:" + err)
+                failed("线上统计数据获取失败:" + err)
             })
             .finally(() => {
                 setIsShowEcharts(true)
@@ -174,11 +186,20 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
 interface ActiveLineEchartsProps {
     inViewport?: boolean
 }
+interface ActiveLineProp {
+    // 天月年展示
+    showType?: string
+    // 总数/增长数 total 总数 incr增长数
+    changeType?: string
+    // 自选起始时间
+    startTime?: number
+    // 自选结束时间
+    endTime?: number
+}
 
 const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
     const {inViewport} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
-    const [_, setChartList, getChartList] = useGetState<echartListProps[]>([])
     const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
     const optionRef = useRef<any>({
         color: "#4A3AFF", // 设置折线的颜色
@@ -192,7 +213,7 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
         xAxis: {
             type: "category",
             boundaryGap: false,
-            data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+            data: []
         },
         yAxis: {
             type: "value",
@@ -246,15 +267,17 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
     })
     const echartsRef = useRef<any>()
     useEffect(() => {
-        if (width >= 1380) {
-            // optionRef.current.series[0].center = ["24%", "50%"]
-            // optionRef.current.title.left = "23%"
-            // setEcharts(optionRef.current)
-        } else {
-            // optionRef.current.legend.show = false
-            // optionRef.current.series[0].center = ["50%", "50%"]
-            // optionRef.current.title.left = "48%"
-            // setEcharts(optionRef.current)
+        if(width>=1920){
+            optionRef.current.grid.left = "3%"
+            setEcharts(optionRef.current)
+        }
+        else if(width>1050){
+            optionRef.current.grid.left = "5%"
+            setEcharts(optionRef.current)
+        }
+        else{
+            optionRef.current.grid.left = "8%"
+            setEcharts(optionRef.current)
         }
         echartsRef.current && echartsRef.current.resize()
     }, [width])
@@ -279,26 +302,25 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
         // })
     }, [])
     const getActiveLine = useMemoizedFn(() => {
-        console.log("909090")
-        setIsShowEcharts(true)
         setEcharts(optionRef.current)
-        NetWorkApi<null, API.TouristCityResponse>({
+        NetWorkApi<ActiveLineProp, API.TouristIncrResponse>({
             method: "get",
-            url: ""
+            url: "tourist/change",
+            params: {}
         })
-            .then((res: API.TouristCityResponse) => {
-                console.log("", res)
-                // if (res.data) {
-                //     const chartListCache = res.data.map((item) => ({
-                //         name: item.city,
-                //         value: item.count
-                //     }))
-                //     optionRef.current.series[0].data = chartListCache
-                //     optionRef.current.title.text = chartListCache.map((item) => item.value).reduce((a, b) => a + b, 0)
-                //     optionRef.current.title.show = true
-                //     setChartList(chartListCache)
-                //     setEcharts(optionRef.current)
-                // }
+            .then((res: API.TouristIncrResponse) => {
+                console.log("tourist/change", res)
+                if (res.data) {
+                    let XData:string[] = []
+                    let YData:number[] = []
+                    res.data.forEach((item) => {
+                        XData.push(item.searchTime)
+                        YData.push(item.count)
+                    })
+                    optionRef.current.xAxis.data = XData
+                    optionRef.current.series[0].data = YData
+                    setEcharts(optionRef.current)
+                }
             })
             .catch((err) => {
                 // failed("线上统计数据获取失败:" + err)
@@ -441,16 +463,12 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
     })
     const echartsRef = useRef<any>()
     useEffect(() => {
-        if (width >= 1380) {
+        if (width >= 1100) {
             optionRef.current.legend.show = true
-            // optionRef.current.series[0].center = ["24%", "50%"]
-            // optionRef.current.title.left = "23%"
-            // setEcharts(optionRef.current)
+            setEcharts(optionRef.current)
         } else {
-            // optionRef.current.legend.show = false
-            // optionRef.current.series[0].center = ["50%", "50%"]
-            // optionRef.current.title.left = "48%"
-            // setEcharts(optionRef.current)
+            optionRef.current.legend.show = false
+            setEcharts(optionRef.current)
         }
         echartsRef.current && echartsRef.current.resize()
     }, [width])
@@ -658,16 +676,11 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
 
                             <YakitSegmented
                                 // value={userPluginType}
-
                                 onChange={(v) => {}}
                                 options={[
                                     {
-                                        label: "日",
+                                        label: "天",
                                         value: "myOnlinePlugin"
-                                    },
-                                    {
-                                        label: "周",
-                                        value: "recycle"
                                     },
                                     {
                                         label: "月",
@@ -684,14 +697,14 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                     <div className={styles["card-box"]}>
                         <div className={styles["card-item"]}>
                             <div className={styles["show"]}>
-                                <div className={styles["count"]}>327</div>
+                                <div className={styles["count"]}>{userData ? numeral(userData.dayActive).format("0,0") : ""}</div>
                                 <UpsOrDowns type='up' value='6.8' />
                             </div>
                             <div className={styles["title"]}>日活</div>
                         </div>
                         <div className={styles["card-item"]}>
                             <div className={styles["show"]}>
-                                <div className={styles["count"]}>2632</div>
+                                <div className={styles["count"]}>{userData ? numeral(userData.weekActive).format("0,0") : ""}</div>
                                 <UpsOrDowns type='down' value='2' />
                             </div>
                             <div className={styles["title"]}>周活</div>
@@ -699,7 +712,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                         <div className={styles["card-item"]}>
                             <div className={styles["show"]}>
                                 <div className={styles["count"]}>
-                                    {userData ? numeral(userData.touristTotal).format("0,0") : ""}
+                                    {userData ? numeral(userData.monthActive).format("0,0") : ""}
                                 </div>
                                 <UpsOrDowns type='up' value='6.8' />
                             </div>
@@ -757,12 +770,8 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                 onChange={(v) => {}}
                                 options={[
                                     {
-                                        label: "日",
+                                        label: "天",
                                         value: "myOnlinePlugin"
-                                    },
-                                    {
-                                        label: "周",
-                                        value: "recycle"
                                     },
                                     {
                                         label: "月",

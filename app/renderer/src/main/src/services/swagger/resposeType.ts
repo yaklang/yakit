@@ -218,6 +218,14 @@ export declare namespace API {
     searchTime: string;
   }
   export interface TouristCityResponse {
+    /**
+     * 总数
+     */
+    total: number;
+    /**
+     * 日期
+     */
+    date: number;
     data: TouristCityCount[];
   }
   export interface TouristCityCount {
