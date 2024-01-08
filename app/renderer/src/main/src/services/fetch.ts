@@ -32,7 +32,7 @@ export interface requestConfig<T = any> extends AxiosRequestConfig<T> {
 
 export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
     return new Promise((resolve, reject) => {
-        console.log("request-params", params)
+        // console.log("request-params", params)
         ipcRenderer
             .invoke("axios-api", params)
             .then((res) => {
@@ -44,7 +44,7 @@ export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
                 handleAxios(res, resolve, reject)
             })
             .catch((err: any) => {
-                console.log("request-err", err)
+                // console.log("request-err", err)
                 reject(err)
             })
     })
@@ -52,7 +52,7 @@ export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
 
 export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, resolve, reject) => {
     const {code, message, data} = res
-    console.log("返回", res)
+    // console.log("返回", res)
     if (!code) {
         failed("请求超时，请重试")
         reject("请求超时，请重试")
