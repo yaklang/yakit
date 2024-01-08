@@ -33,7 +33,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useStore} from "@/store"
 import {PluginsLocalDetail} from "./PluginsLocalDetail"
 import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
-import {yakitNotify} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {TypeSelectOpt} from "../funcTemplateType"
 import {API} from "@/services/swagger/resposeType"
 import {Tooltip} from "antd"
@@ -57,7 +57,6 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {OutputPluginForm} from "@/pages/yakitStore/PluginOperator"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginLocalUpload, PluginLocalUploadSingle} from "./PluginLocalUpload"
 import {YakitRoute} from "@/routes/newRoute"
@@ -75,6 +74,17 @@ import styles from "./PluginsLocal.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 const defaultFilters = {plugin_type: [], tags: []}
+
+interface ExportParamsProps {
+    OutputDir: string
+    OutputPluginDir?: string
+    YakScriptIds?: number[]
+    Keywords?: string
+    Type?: string
+    UserName?: string
+    Tags?: string
+}
+
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
     /** 是否为加载更多 */
@@ -629,25 +639,27 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         })
     })
     /**导出插件 */
-    const onExport = useMemoizedFn((Ids: number[], callback?: () => void) => {
-        showYakitModal({
-            title: "导出插件配置",
-            width: "40%",
-            footer: null,
-            content: (
-                <div style={{padding: 24}}>
-                    <OutputPluginForm
-                        YakScriptIds={Ids}
-                        isSelectAll={allCheck}
-                        queryFetchList={queryFetchList}
-                    />
-                </div>
-            ),
-            modalAfterClose: () => {
-                if (callback) callback()
-                onCheck(false)
+    const onExport = useMemoizedFn(async (Ids: number[], callback?: () => void) => {
+        try {
+            const showSaveDialogRes = await ipcRenderer.invoke("show-save-dialog", "")
+            if (showSaveDialogRes.canceled) return
+            let params: ExportParamsProps = {
+                OutputDir: showSaveDialogRes.filePath
             }
-        })
+            params.YakScriptIds = Ids
+            if (queryFetchList) {
+                params.Keywords = queryFetchList.Keyword
+                params.Type = queryFetchList.Type
+                params.UserName = queryFetchList.UserName
+                params.Tags = queryFetchList.Tag + ""
+            }
+            await ipcRenderer.invoke("ExportLocalYakScript", params)
+            yakitNotify("success", "导出成功")
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+        callback && callback()
+        onCheck(false)
     })
     const checkList = useMemo(() => {
         return selectList.map((ele) => ele.ScriptName)

@@ -770,15 +770,17 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
             <Button
                 size={"small"}
                 onClick={() => {
-                    showModal({
-                        title: "导出插件配置",
-                        width: "40%",
-                        content: (
-                            <>
-                                <OutputPluginForm YakScriptId={script.Id} YakScriptName={script.ScriptName} />
-                            </>
-                        )
-                    })
+                    // INFO OutputPluginForm 该导出组件已删除
+                    
+                    // showModal({
+                    //     title: "导出插件配置",
+                    //     width: "40%",
+                    //     content: (
+                    //         <>
+                    //             <OutputPluginForm YakScriptId={script.Id} YakScriptName={script.ScriptName} />
+                    //         </>
+                    //     )
+                    // })
                 }}
             >
                 导出插件
@@ -853,142 +855,6 @@ export const PluginManagement: React.FC<PluginManagementProps> = React.memo<Plug
     )
 })
 
-interface OutputPluginFormProp {
-    YakScriptId?: number
-    YakScriptName?: string
-    YakScriptIds?: number[]
-    isSelectAll?: boolean
-    queryFetchList?: QueryYakScriptRequest
-}
-
-interface ParamsProps {
-    OutputDir: string
-    OutputPluginDir?: string
-    YakScriptIds?: number[]
-    Keywords?: string
-    Type?: string
-    UserName?: string
-    Tags?: string
-}
-
-export const OutputPluginForm: React.FC<OutputPluginFormProp> = React.memo((props) => {
-    const {YakScriptId, YakScriptName, YakScriptIds, isSelectAll, queryFetchList} = props
-    const [_, setLocalPath, getLocalPath] = useGetState("")
-    const [pluginDirName, setPluginDirName, getPluginDirName] = useGetState(YakScriptName || "")
-    const [cachePath, setCachePath, getCachePath] = useGetState<string[]>([])
-    useEffect(() => {
-        getLocalValue("YAKIT_DEFAULT_LOAD_LOCAL_PATH").then((e) => {
-            if (e) {
-                setLocalPath(e)
-            }
-        })
-
-        getLocalValue("YAKIT_CACHE_LOAD_LOCAL_PATH").then((data) => {
-            if (data) {
-                setCachePath(JSON.parse(data))
-            }
-        })
-    }, [])
-
-    return (
-        <>
-            <Form
-                onSubmitCapture={(e) => {
-                    e.preventDefault()
-                    let params: ParamsProps = {
-                        OutputDir: getLocalPath()
-                    }
-                    if (YakScriptId) {
-                        params.OutputPluginDir = getPluginDirName()
-                    }
-                    params.YakScriptIds = YakScriptIds?.length ? YakScriptIds : YakScriptId ? [YakScriptId] : []
-                    if (queryFetchList) {
-                        params.Keywords = queryFetchList.Keyword
-                        params.Type = queryFetchList.Type
-                        params.UserName = queryFetchList.UserName
-                        params.Tags = queryFetchList.Tag + ""
-                    }
-                    console.log('导出接口传参', params);
-                    ipcRenderer
-                        .invoke("ExportLocalYakScript", params)
-                        .then((data: {OutputDir: string}) => {
-                            const newCachePath = Array.from(new Set([...getCachePath(), getLocalPath()]))
-                            const savePath = newCachePath.slice(-5)
-                            setLocalValue("YAKIT_CACHE_LOAD_LOCAL_PATH", JSON.stringify(savePath))
-                            showModal({
-                                title: "导出成功!",
-                                width: 520,
-                                content: (
-                                    <>
-                                        <Space direction={"vertical"}>
-                                            <CopyableField text={data.OutputDir} maxWidth='470px' />
-                                            <Button
-                                                type={"link"}
-                                                onClick={() => {
-                                                    openABSFile(data.OutputDir)
-                                                }}
-                                            >
-                                                在文件夹中打开
-                                            </Button>
-                                        </Space>
-                                    </>
-                                )
-                            })
-                        })
-                        .catch((e: any) => {
-                            failed(`导出失败: ${e}`)
-                        })
-                }}
-            >
-                <div style={{position: "relative"}}>
-                    <InputItem
-                        style={{width: "calc(100% - 20px)"}}
-                        label={"本地仓库路径"}
-                        help={"可在【导出】或仓库配置中配置"}
-                        value={getLocalPath()}
-                        setValue={setLocalPath}
-                        required={true}
-                        autoComplete={getCachePath()}
-                    />
-                    <Tooltip title={"选择导出路径"}>
-                        <CloudUploadOutlined
-                            onClick={() => {
-                                ipcRenderer
-                                    .invoke("openDialog", {
-                                        title: "请选择文件夹",
-                                        properties: ["openDirectory"]
-                                    })
-                                    .then((data: any) => {
-                                        if (data.filePaths.length) {
-                                            let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
-                                            setLocalPath(absolutePath)
-                                        }
-                                    })
-                            }}
-                            style={{position: "absolute", right: 0, top: 8, cursor: "pointer"}}
-                        />
-                    </Tooltip>
-                </div>
-
-                {YakScriptId && (
-                    <InputItem
-                        label={"插件文件夹名"}
-                        help={"插件文件夹名，尽量精简，无特殊字符"}
-                        value={getPluginDirName()}
-                        setValue={setPluginDirName}
-                        required={true}
-                    />
-                )}
-                <Form.Item colon={false} label={" "}>
-                    <Button type='primary' htmlType='submit'>
-                        {" "}
-                        导出到目标路径{" "}
-                    </Button>
-                </Form.Item>
-            </Form>
-        </>
-    )
-})
 interface LocalPluginExecutorProps {
     script: YakScript
     isEdit: boolean
