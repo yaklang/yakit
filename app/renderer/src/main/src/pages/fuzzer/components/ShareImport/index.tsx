@@ -10,8 +10,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitRoute} from "@/routes/newRoute"
-import {ImportLocalPlugin, LoadPluginMode, localModeInfo} from "@/pages/mitm/MITMPage"
-import emiter from "@/utils/eventBus/eventBus"
 
 const layout = {
     labelCol: {span: 5},
