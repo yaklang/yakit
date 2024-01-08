@@ -15,10 +15,15 @@ export interface SaveProgressStream {
     RestDurationVerbose?: string
 }
 
+export interface LogListInfo {
+    message: string
+    isError?: boolean
+}
+
 interface UploadStatusInfoProps {
     title: string
     streamData: SaveProgressStream
-    logListInfo: string[]
+    logListInfo: LogListInfo[]
     /** @name 是否显示-剩余时间-耗时-下载速度 */
     showDownloadDetail: boolean
 }
@@ -61,8 +66,8 @@ const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                     )}
                     <div className={styles["log-info"]}>
                         {logListInfo.map((item, index) => (
-                            <div key={index} className={styles["log-item"]}>
-                                {item}
+                            <div key={index} className={styles["log-item"]} style={{ color: item.isError ? '#f00': '#85899e' }}>
+                                {item.message}
                             </div>
                         ))}
                     </div>
@@ -88,7 +93,7 @@ export interface YakitUploadComponentProps {
     /** @name 步骤2-导入流数据 */
     streamData?: SaveProgressStream
     /** @name 导入中的日志信息 */
-    logListInfo?: string[]
+    logListInfo?: LogListInfo[]
 }
 
 export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props) => {

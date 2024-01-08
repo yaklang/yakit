@@ -39,7 +39,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {PluginGV} from "../plugins/builtInData"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {UploadList, YakitUploadComponent} from "@/components/YakitUploadModal/YakitUploadModal"
+import {LogListInfo, UploadList, YakitUploadComponent} from "@/components/YakitUploadModal/YakitUploadModal"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
 const {ipcRenderer} = window.require("electron")
@@ -718,7 +718,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 })
 
 export type LoadPluginMode = "giturl" | "local" | "local-nuclei" | "uploadId"
-export const localModeInfo = [
+export const loadModeInfo = [
     {
         value: "giturl",
         label: "线上 Nuclei",
@@ -762,8 +762,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const [localImportStep, setLocalImportStep] = useState<1 | 2>(1)
     const [localUploadList, setLocalUploadList] = useState<UploadList[]>([])
     const [localStreamData, setLocalStreamData] = useState<ImportYakScriptResult>()
-    const [locallogListInfo, setLocallogListInfo] = useState<string[]>([])
-    const locallogListInfoRef = useRef<string[]>([])
+    const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
+    const locallogListInfoRef = useRef<LogListInfo[]>([])
     const autoCloseImportModalRef = useRef<boolean>(true) // 当导入本地插件的所有文件都成功时，弹窗自动关闭
 
     useEffect(() => {
@@ -811,7 +811,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         ipcRenderer.on("import-yak-script-data", async (e, data: ImportYakScriptResult) => {
             setLocalImportStep(2)
             setLocalStreamData(data)
-            locallogListInfoRef.current = [...locallogListInfoRef.current, data.Message]
+            locallogListInfoRef.current = [...locallogListInfoRef.current, { message: data.Message, isError: data.MessageType === 'error' }]
             setLocallogListInfo(locallogListInfoRef.current)
         })
 
@@ -959,9 +959,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
     })
 
-    const getLocalModeInfo = (key: string) => {
-        const obj = localModeInfo.find((item) => item.value === loadPluginMode)
-        return obj ? obj[key] : ""
+    const getLoadModeInfo = (key: string) => {
+        const obj = loadModeInfo.find((item) => item.value === loadPluginMode)
+        return obj ? obj[key] : "导入"
     }
 
     return (
@@ -969,9 +969,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             type='white'
             visible={visible}
             onCancel={() => setVisible(false)}
-            width={getLocalModeInfo("width") || 680}
+            width={getLoadModeInfo("width") || 680}
             closable={true}
-            title={!loadPluginMode ? "导入插件方式" : <>导入{getLocalModeInfo("label")}</>}
+            title={!loadPluginMode ? "导入插件方式" : <>导入{getLoadModeInfo("label")}</>}
             className={style["import-local-plugin-modal"]}
             subTitle={
                 loadPluginMode ? (
@@ -984,7 +984,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                         onChange={(e) => {
                             setLoadMode(e.target.value)
                         }}
-                        options={localModeInfo.map((item) => ({value: item.value, label: item.label}))}
+                        options={loadModeInfo.map((item) => ({value: item.value, label: item.label}))}
                     ></YakitRadioButtons>
                 )
             }
@@ -1002,14 +1002,14 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                         setVisible(false)
                     }}
                 >
-                    取消
+                    {loadPluginMode === "local" && !autoCloseImportModalRef.current ? "完成" : "取消"}
                 </YakitButton>,
                 <YakitButton
                     style={{marginLeft: 12, display: localStreamData ? "none" : "block"}}
                     disabled={loadMode === "local" && !localUploadList.length}
                     onClick={() => onOk()}
                 >
-                    {getLocalModeInfo("okText") || "导入"}
+                    {getLoadModeInfo("okText")}
                 </YakitButton>
             ]}
         >
