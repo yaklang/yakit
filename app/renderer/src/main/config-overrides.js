@@ -84,7 +84,7 @@ module.exports = {
             // 去掉打包生产map 文件
             config.devtool = config.mode === 'development' ? 'cheap-module-source-map' : false;
             config.ignoreWarnings = [/Failed to parse source map/]
-            console.log('config-webpack', config)
+            // console.log('config-webpack', config)
             return config
         }
     ),
