@@ -25,11 +25,11 @@ module.exports = {
                 fs: false,
             },
         }),
-        // fixBabelImports('import', {
-        //     libraryName: 'antd',
-        //     libraryDirectory: 'es',
-        //     style: 'css'
-        // }),
+        fixBabelImports('import', {
+            libraryName: 'antd',
+            libraryDirectory: 'es',
+            style: 'css'
+        }),
         addWebpackAlias({
             '@': path.resolve(__dirname, 'src')
         }),
