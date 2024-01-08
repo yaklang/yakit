@@ -178,6 +178,7 @@ export const ControlMyself: React.FC<ControlMyselfProps> = (props) => {
         <div className={styles["control-myself"]}>
             <Spin spinning={loading}>
                 <TextArea
+                    spellCheck={false}
                     value={textArea}
                     className={styles["text-area"]}
                     autoSize={{minRows: 3, maxRows: 10}}
