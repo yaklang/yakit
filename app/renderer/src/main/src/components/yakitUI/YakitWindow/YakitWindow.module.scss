@@ -1,0 +1,138 @@
+.yakit-window-wrapper {
+    z-index: 998;
+    position: absolute;
+    top: 20%;
+}
+
+.yakit-window-hidden-wrapper {
+    display: none;
+}
+
+// --------------- Layout Start ---------------
+.yakit-window-center {
+    left: 50%;
+}
+.yakit-window-topLeft {
+    top: 6px;
+    left: 6px;
+}
+.yakit-window-topRight {
+    top: 6px;
+    right: 6px;
+}
+.yakit-window-bottomLeft {
+    bottom: 6px;
+    left: 6px;
+    top: unset;
+}
+.yakit-window-bottomRight {
+    bottom: 6px;
+    right: 6px;
+    top: unset;
+}
+// --------------- Layout End ---------------
+
+// --------------- YakitWindowContent Start ---------------
+.yakit-window-body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    border: 1px solid #ccd2de;
+    background: #fff;
+    box-shadow:
+        0px 8px 10px -6px rgba(49, 52, 63, 0.1),
+        0px 20px 25px -5px rgba(49, 52, 63, 0.1);
+}
+
+.yakit-window-body-header {
+    overflow: hidden;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 4px 4px 0px 0px;
+    border-bottom: 1px solid #eaecf3;
+    background: #f8f8f8;
+    cursor: pointer;
+    .header-left {
+        margin-right: 4px;
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .title-wrapper {
+            color: #31343f;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 20px;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .subtitle-wrapper {
+            flex: 1;
+            overflow: hidden;
+            color: #b4bbca;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            white-space: nowrap;
+            user-select: none;
+        }
+    }
+
+    .header-right {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 6px;
+    }
+}
+
+.yakit-window-body-content {
+    padding: 20px 16px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.yakit-window-body-footer {
+    overflow: hidden;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #eaecf3;
+    background: #f8f8f8;
+    .btn-group {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+    }
+}
+// --------------- YakitWindowContent End ---------------
+
+// -------------------- WindowPositionOP Start --------------------
+.window-position-op-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.window-position-op-popover {
+    :global {
+        .ant-popover-title {
+            border-bottom: 0;
+            min-width: unset;
+        }
+        .ant-popover-inner-content {
+            padding-top: 0;
+        }
+        .ant-popover-arrow {
+            right: 1px !important;
+        }
+    }
+}
+// -------------------- WindowPositionOP End --------------------

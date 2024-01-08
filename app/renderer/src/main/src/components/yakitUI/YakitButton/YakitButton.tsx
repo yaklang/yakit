@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo} from "react"
+import React, {useMemo} from "react"
 import {Button, ButtonProps} from "antd"
 
 import styles from "./yakitButton.module.scss"

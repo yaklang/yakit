@@ -1,21 +1,11 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {useDebounce, useGetState, useMemoizedFn} from "ahooks"
+import React, {useEffect, useRef, useState} from "react"
+import {useMemoizedFn} from "ahooks"
 import Draggable from "react-draggable"
 import {useSize} from "ahooks"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import classNames from "classnames"
-import {
-    YakitConsoleShrinkSvgIcon,
-    YakitConsoleLeftSvgIcon,
-    YakitConsoleRightSvgIcon,
-    YakitConsoleBottomSvgIcon,
-    YakitConsoleDotsSvgIcon
-} from "../layout/icons"
-import {Space, Tooltip} from "antd"
-import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {Resizable} from "re-resizable"
 import styles from "./baseConsole.module.scss"
-import {CloseOutlined} from "@ant-design/icons"
 import {ExecResult} from "@/pages/invoker/schema"
 import {failed, info} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
@@ -25,11 +15,15 @@ import {XTerm} from "xterm-for-react"
 import ReactResizeDetector from "react-resize-detector"
 import {useStore} from "../../store/baseConsole"
 import {YakitSystem} from "@/yakitGVDefine"
+import {WindowPositionOP, WindowPositionOPMenu} from "../yakitUI/YakitWindow/YakitWindow"
+import {WindowPositionType} from "../yakitUI/YakitWindow/YakitWindowType"
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {OutlineXIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
 export interface EngineConsoleProp {
-    isMini:boolean
+    isMini: boolean
 }
 
 export const defaultXTermOptions = {
@@ -63,7 +57,7 @@ export const defaultXTermOptions = {
         white: "#eae3cb",
         brightWhite: "#fcf4dc"
     }
-};
+}
 
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     const {isMini} = props
@@ -114,9 +108,11 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     }, [xtermRef])
 
     return (
-        <div className={classNames(styles["engine-console"],{
-            [styles["engine-console-noMini"]]: !isMini,
-        }) }>
+        <div
+            className={classNames(styles["engine-console"], {
+                [styles["engine-console-noMini"]]: !isMini
+            })}
+        >
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) return
@@ -130,122 +126,14 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
                 refreshMode={"debounce"}
                 refreshRate={50}
             />
-            <XTerm
-                ref={xtermRef}
-                options={defaultXTermOptions}
-            />
-        </div>
-    )
-}
-
-export interface RightIconMenuProps {
-    callBackSource?: (v: OperationProps) => void
-}
-export const RightIconMenu: React.FC<RightIconMenuProps> = (props) => {
-    const {callBackSource} = props
-    const [show, setShow] = useState<boolean>(false)
-    const menu = (
-        <RightIconBox
-            activeSource={"shrink"}
-            callBackSource={(v: OperationProps) => {
-                setShow(false)
-                callBackSource && callBackSource(v)
-            }}
-        />
-    )
-    return (
-        <YakitPopover
-            overlayClassName={classNames(styles["right-icon-menu"])}
-            title={<span>停靠方位</span>}
-            placement={"bottom"}
-            content={menu}
-            trigger='hover'
-            visible={show}
-            onVisibleChange={(visible) => setShow(visible)}
-        >
-            <YakitConsoleDotsSvgIcon className={styles["right-dots-icon"]} />
-        </YakitPopover>
-    )
-}
-export type OperationProps = "shrink" | "left" | "bottom" | "right"
-export interface RightIconBoxProps {
-    activeSource: OperationProps
-    callBackSource?: (v: OperationProps) => void
-}
-export const RightIconBox: React.FC<RightIconBoxProps> = (props) => {
-    const {activeSource, callBackSource} = props
-    const clickType = (v: OperationProps) => {
-        if (v !== activeSource) {
-            callBackSource && callBackSource(v)
-        }
-    }
-    return (
-        <div className={styles["right-icon-box"]}>
-            <Space size={10} style={{padding: "3px 0"}}>
-                <Tooltip title={"浮窗"}>
-                    <span
-                        onClick={() => {
-                            clickType("shrink")
-                        }}
-                        className={styles["span-icon-box"]}
-                    >
-                        <YakitConsoleShrinkSvgIcon
-                            className={classNames(styles["item-icon"], {
-                                [styles["item-icon-active"]]: activeSource === "shrink"
-                            })}
-                        />
-                    </span>
-                </Tooltip>
-                <Tooltip title={"向左"}>
-                    <span
-                        onClick={() => {
-                            clickType("left")
-                        }}
-                        className={styles["span-icon-box"]}
-                    >
-                        <YakitConsoleLeftSvgIcon
-                            className={classNames(styles["item-icon"], {
-                                [styles["item-icon-active"]]: activeSource === "left"
-                            })}
-                        />
-                    </span>
-                </Tooltip>
-                <Tooltip title={"向下"}>
-                    <span
-                        onClick={() => {
-                            clickType("bottom")
-                        }}
-                        className={styles["span-icon-box"]}
-                    >
-                        <YakitConsoleBottomSvgIcon
-                            className={classNames(styles["item-icon"], {
-                                [styles["item-icon-active"]]: activeSource === "bottom"
-                            })}
-                        />
-                    </span>
-                </Tooltip>
-                <Tooltip title={"向右"}>
-                    <span
-                        onClick={() => {
-                            clickType("right")
-                        }}
-                        className={styles["span-icon-box"]}
-                    >
-                        <YakitConsoleRightSvgIcon
-                            className={classNames(styles["item-icon"], {
-                                [styles["item-icon-active"]]: activeSource === "right"
-                            })}
-                        />
-                    </span>
-                </Tooltip>
-            </Space>
+            <XTerm ref={xtermRef} options={defaultXTermOptions} />
         </div>
     )
 }
 
 export interface BaseConsoleTitleProps {
     setIsShowBaseConsole: (v: boolean) => void
-    callBackSource: (v: OperationProps) => void
+    callBackSource: (v: WindowPositionType) => void
     direction: "left" | "bottom" | "right"
 }
 
@@ -256,9 +144,10 @@ export const BaseConsoleTitle: React.FC<BaseConsoleTitleProps> = (props) => {
         <div className={styles["base-console-title"]}>
             <div className={styles["title"]}>引擎 Console</div>
             <div className={styles["operation"]}>
-                <RightIconBox activeSource={direction} callBackSource={callBackSource} />
-                <CloseOutlined
-                    className={styles["close"]}
+                <WindowPositionOP activeDockSide={direction} onDockSide={callBackSource} />
+                <YakitButton
+                    type='text2'
+                    icon={<OutlineXIcon />}
                     onClick={() => {
                         setConsoleInfo("")
                         setIsFirst(true)
@@ -278,7 +167,7 @@ export interface BaseConsoleProps {
 export const BaseConsole: React.FC<BaseConsoleProps> = (props) => {
     const {setIsShowBaseConsole, directionBaseConsole} = props
     const [direction, setDirection] = useState<"left" | "bottom" | "right">(directionBaseConsole)
-    const callBackSource = (v: OperationProps) => {
+    const callBackSource = (v: WindowPositionType) => {
         if (v === "shrink") {
             setIsShowBaseConsole(false)
             ipcRenderer.invoke("shrink-console-log", {open: true})
@@ -294,7 +183,7 @@ export const BaseConsole: React.FC<BaseConsoleProps> = (props) => {
                 callBackSource={callBackSource}
             />
             <div className={styles["console-content"]}>
-                <EngineConsole isMini={false}/>
+                <EngineConsole isMini={false} />
             </div>
         </div>
     )
@@ -348,7 +237,7 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
     const draggleRef = useRef<HTMLDivElement>(null)
     const size = useSize(draggleRef)
     const [disabled, setDisabled] = useState<boolean>(true)
-    const [bounds, setBounds, getBounds] = useGetState({left: 0, top: 0, bottom: 0, right: 0})
+    const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
 
     const [system, setSystem] = useState<YakitSystem>()
     useEffect(() => {
@@ -367,24 +256,8 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
             bottom: clientHeight - (targetRect.bottom - uiData.y)
         })
     })
-    const onResizeStart = (e) => {
-        // console.log("onResizeStart执行")
-        // console.log(e)
-    }
-    const onResize = (e, direction, ref, d) => {
-        // console.log("onResize执行")
-        // console.log(direction, d)
-        // if (direction === "left") {
-        // }
-        // else if(direction === "top"){
-        // }
-    }
-    const onResizeStop = (e, direction, ref, d) => {
-        // console.log("onResizeStop执行")
-        // console.log(e, direction, ref, d)
-    }
 
-    const callBackSource = (v: OperationProps) => {
+    const callBackSource = (v: WindowPositionType) => {
         setVisible(false)
         ipcRenderer.invoke("direction-console-log", {direction: v})
     }
@@ -398,16 +271,10 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
             disabled={disabled}
             bounds={bounds}
             onStart={(event, uiData) => onStart(event, uiData)}
-            // onDrag={(event, uiData)=>{
-            //     console.log("uiData",uiData.x,uiData.y)
-            // }}
         >
             <div ref={draggleRef}>
                 <Resizable
                     defaultSize={{width: 400, height: 400}}
-                    // onResize={onResize}
-                    // onResizeStart={(e) => onResizeStart(e)}
-                    // onResizeStop={onResizeStop}
                     minWidth={256}
                     minHeight={176}
                     bounds={"window"}
@@ -436,20 +303,19 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                         <div className={styles["header-center"]}>引擎 Console</div>
                                         <div className={styles["header-right"]}>
                                             {size && size.width > 400 && (
-                                                <RightIconBox activeSource={"shrink"} callBackSource={callBackSource} />
+                                                <WindowPositionOP activeDockSide='shrink' onDockSide={callBackSource} />
                                             )}
                                             {size && size.width <= 400 && (
-                                                <RightIconMenu callBackSource={callBackSource} />
+                                                <WindowPositionOPMenu
+                                                    activeDockSide='shrink'
+                                                    onDockSide={callBackSource}
+                                                />
                                             )}
 
                                             {size && (
-                                                <CloseOutlined
-                                                    className={classNames(
-                                                        styles["header-close"],
-                                                        size.width > 400
-                                                            ? styles["header-close-long"]
-                                                            : styles["header-close-short"]
-                                                    )}
+                                                <YakitButton
+                                                    type='text2'
+                                                    icon={<OutlineXIcon />}
                                                     onClick={() => {
                                                         setConsoleInfo("")
                                                         setIsFirst(true)
@@ -474,16 +340,21 @@ export const BaseMiniConsole: React.FC<BaseConsoleMiniProps> = (props) => {
                                         <div className={styles["header-center"]}>引擎 Console</div>
                                         <div className={styles["header-right"]}>
                                             {size && size.width > 400 && (
-                                                <RightIconBox activeSource={"shrink"} callBackSource={callBackSource} />
+                                                <WindowPositionOP activeDockSide='shrink' onDockSide={callBackSource} />
                                             )}
                                             {size && size.width <= 400 && (
-                                                <RightIconMenu callBackSource={callBackSource} />
+                                                <WindowPositionOPMenu
+                                                    activeDockSide='shrink'
+                                                    onDockSide={callBackSource}
+                                                />
                                             )}
                                         </div>
                                     </div>
                                 )}
                             </div>
-                            <div className={styles["console-draggle-body"]}>{visible && <EngineConsole isMini={true}/>}</div>
+                            <div className={styles["console-draggle-body"]}>
+                                {visible && <EngineConsole isMini={true} />}
+                            </div>
                         </div>
                     </div>
                 </Resizable>

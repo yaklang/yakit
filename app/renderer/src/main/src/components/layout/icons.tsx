@@ -732,72 +732,7 @@ export const CheckedSvgIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={CheckedSvg} {...props} />
 }
 
-/** --------------------引擎Console相关图标---------------------- **/
-const YakitConsoleShrinkSvg = () => (
-    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <rect x='2.8999' y='2.90002' width='11.8' height='10.2' rx='0.5' stroke='currentColor' />
-        <rect x='1.6001' y='1.59998' width='9.6' height='7.2' rx='1' fill='currentColor' />
-        <rect x='0.800049' y='0.800049' width='9.6' height='7.2' rx='1' fill='currentColor' />
-    </svg>
-)
-/** @name 缩小 */
-export const YakitConsoleShrinkSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-    return <Icon component={YakitConsoleShrinkSvg} {...props} />
-}
 
-const YakitConsoleLeftSvg = () => (
-    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <rect x='1.6001' y='2.40002' width='4.8' height='11.2' rx='1' fill='currentColor' />
-        <rect x='2.1001' y='2.90002' width='11.8' height='10.2' rx='0.5' stroke='currentColor' />
-    </svg>
-)
-/** @name 靠左 */
-export const YakitConsoleLeftSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-    return <Icon component={YakitConsoleLeftSvg} {...props} />
-}
-
-const YakitConsoleRightSvg = () => (
-    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <rect x='9.6001' y='2.40002' width='4.8' height='11.2' rx='1' fill='currentColor' />
-        <rect x='2.1001' y='2.90002' width='11.8' height='10.2' rx='0.5' stroke='currentColor' />
-    </svg>
-)
-/** @name 靠右 */
-export const YakitConsoleRightSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-    return <Icon component={YakitConsoleRightSvg} {...props} />
-}
-
-const YakitConsoleBottomSvg = () => (
-    <svg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <rect x='1.6001' y='8.80005' width='12.8' height='4.8' rx='1' fill='currentColor' />
-        <rect x='2.1001' y='2.90002' width='11.8' height='10.2' rx='0.5' stroke='currentColor' />
-    </svg>
-)
-/** @name 靠下 */
-export const YakitConsoleBottomSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-    return <Icon component={YakitConsoleBottomSvg} {...props} />
-}
-
-const YakitConsoleDotsSvg = () => (
-    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
-        <path
-            d='M6 10C6 11.1046 5.10457 12 4 12C2.89543 12 2 11.1046 2 10C2 8.89543 2.89543 8 4 8C5.10457 8 6 8.89543 6 10Z'
-            fill='currentColor'
-        />
-        <path
-            d='M12 10C12 11.1046 11.1046 12 10 12C8.89543 12 8 11.1046 8 10C8 8.89543 8.89543 8 10 8C11.1046 8 12 8.89543 12 10Z'
-            fill='currentColor'
-        />
-        <path
-            d='M16 12C17.1046 12 18 11.1046 18 10C18 8.89543 17.1046 8 16 8C14.8954 8 14 8.89543 14 10C14 11.1046 14.8954 12 16 12Z'
-            fill='currentColor'
-        />
-    </svg>
-)
-/** @name 靠下 */
-export const YakitConsoleDotsSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-    return <Icon component={YakitConsoleDotsSvg} {...props} />
-}
 
 const Loading3QuartersSvg = () => (
     <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg'>
