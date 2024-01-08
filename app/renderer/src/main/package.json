@@ -134,6 +134,7 @@
         "progress-bar-webpack-plugin": "^2.1.0",
         "sass": "^1.54.8",
         "sass-loader": "^12.6.0",
+        "source-map-loader": "^4.0.2",
         "webpack-bundle-analyzer": "^4.10.1"
     },
     "resolutions": {

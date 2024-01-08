@@ -14611,6 +14611,14 @@ source-map-loader@^3.0.0:
     iconv-lite "^0.6.3"
     source-map-js "^1.0.1"
 
+source-map-loader@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/source-map-loader/-/source-map-loader-4.0.2.tgz#1b378721b65adb21e874928a9fb22e8a340d06a5"
+  integrity sha512-oYwAqCuL0OZhBoSgmdrLa7mv9MjommVMiQIWgcztf+eS4+8BfcUee6nenFnDhKOhzAVnk5gpZdfnz1iiBv+5sg==
+  dependencies:
+    iconv-lite "^0.6.3"
+    source-map-js "^1.0.2"
+
 source-map-support@^0.3.2:
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.3.3.tgz#34900977d5ba3f07c7757ee72e73bb1a9b53754f"
