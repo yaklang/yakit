@@ -1,4 +1,4 @@
-import React, {ReactNode, useMemo} from "react"
+import React, {ReactNode, useMemo, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {Menu, MenuProps, Tooltip} from "antd"
 import {ItemType} from "antd/lib/menu/hooks/useItems"
@@ -49,6 +49,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         size = "default",
         ...restMenu
     } = props
+
+    const [openKeys, setOpenKeys] = useState<string[]>([])
 
     const menuTypeClass = useMemo(() => {
         if (type === "grey") return styles["yakit-menu-grey"]
@@ -168,13 +170,20 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
 
     let items: ItemType[] = []
     if (data.length > 0) for (let item of data) items.push(generateMenuInfo(item))
-
+    
     return (
         <div className={classNames(styles["yakit-menu-div-wrapper"], menuTypeClass, menuSizeClass)}>
             <Menu
+                openKeys={openKeys}
                 {...restMenu}
                 className={classNames(styles["yakit-menu-wrapper"], className || "")}
                 items={data && data.length > 0 ? items : restMenu.items}
+                onOpenChange={(openKey) => {
+                    setOpenKeys(openKey.filter((key, index) => index === openKey.length - 1))
+                    if (props.onOpenChange) {
+                        props.onOpenChange(openKey)
+                    }
+                }}
             ></Menu>
         </div>
     )
