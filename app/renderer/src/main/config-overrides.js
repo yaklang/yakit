@@ -25,11 +25,6 @@ module.exports = {
                 fs: false,
             },
         }),
-        fixBabelImports('import', {
-            libraryName: 'antd',
-            libraryDirectory: 'es',
-            style: 'css'
-        }),
         addWebpackAlias({
             '@': path.resolve(__dirname, 'src')
         }),
@@ -72,6 +67,11 @@ module.exports = {
                 ]
             }
         ),
+        // fixBabelImports('import', {
+        //     libraryName: 'antd',
+        //     libraryDirectory: 'es',
+        //     style: 'css'
+        // }),
         addWebpackExternals(
             { "./cptable": "var cptable" },
         ),
