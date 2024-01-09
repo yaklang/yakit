@@ -167,7 +167,7 @@ service Yak {
   rpc YakScriptRiskTypeList(Empty) returns (YakScriptRiskTypeListResponse);
   rpc SaveNewYakScript(SaveNewYakScriptRequest) returns (YakScript);
   rpc SaveYakScriptToOnline(SaveYakScriptToOnlineRequest) returns (stream SaveYakScriptToOnlineResponse);
-  rpc ExportLocalYakScript(ExportLocalYakScriptRequest) returns (ExportLocalYakScriptResponse);
+  rpc ExportLocalYakScript(ExportLocalYakScriptRequest) returns (stream ExportLocalYakScriptResponse);
   rpc ImportYakScript(ImportYakScriptRequest) returns (stream ImportYakScriptResult);
 
   // HTTPFlow
@@ -3606,6 +3606,9 @@ message ExportLocalYakScriptRequest {
 
 message ExportLocalYakScriptResponse {
   string OutputDir = 1;
+  double Progress = 2;
+  string Message = 3;
+  string MessageType = 4;
 }
 
 message ImportYakScriptRequest {

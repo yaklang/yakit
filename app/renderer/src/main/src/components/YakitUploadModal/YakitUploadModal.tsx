@@ -1,4 +1,4 @@
-import React, {useEffect} from "react"
+import React from "react"
 import {Progress} from "antd"
 import {useDebounceFn} from "ahooks"
 import styles from "./YakitUploadModal.module.scss"
@@ -20,15 +20,14 @@ export interface LogListInfo {
     isError?: boolean
 }
 
-interface UploadStatusInfoProps {
+export interface ImportAndExportStatusInfo {
     title: string
     streamData: SaveProgressStream
     logListInfo: LogListInfo[]
-    /** @name 是否显示-剩余时间-耗时-下载速度 */
-    showDownloadDetail: boolean
+    showDownloadDetail: boolean // 是否显示-下载详细信息
 }
 
-const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
+export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = (props) => {
     const {title, streamData, logListInfo, showDownloadDetail} = props
 
     return (
@@ -53,20 +52,48 @@ const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                     </div>
                     {showDownloadDetail && (
                         <div className={styles["download-info-wrapper"]}>
-                            <div>剩余时间 : {streamData.Progress === 1 ? "0s" : streamData.RestDurationVerbose}</div>
-                            <div className={styles["divider-wrapper"]}>
-                                <div className={styles["divider-style"]}></div>
-                            </div>
-                            <div>耗时 : {streamData.CostDurationVerbose}</div>
-                            <div className={styles["divider-wrapper"]}>
-                                <div className={styles["divider-style"]}></div>
-                            </div>
-                            <div>下载速度 : {streamData.Speed}M/s</div>
+                            <>
+                                {streamData.RestDurationVerbose && (
+                                    <>
+                                        <div>
+                                            剩余时间 :{" "}
+                                            {streamData.Progress === 1 ? "0s" : streamData.RestDurationVerbose}
+                                        </div>
+                                        <div className={styles["divider-wrapper"]}>
+                                            <div className={styles["divider-style"]}></div>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                            <>
+                                {streamData.CostDurationVerbose && (
+                                    <>
+                                        <div>耗时 : {streamData.CostDurationVerbose}</div>
+                                        <div className={styles["divider-wrapper"]}>
+                                            <div className={styles["divider-style"]}></div>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                            <>
+                                {streamData.Speed && (
+                                    <>
+                                        <div>下载速度 : {streamData.Speed}M/s</div>
+                                        <div className={styles["divider-wrapper"]}>
+                                            <div className={styles["divider-style"]}></div>
+                                        </div>
+                                    </>
+                                )}
+                            </>
                         </div>
                     )}
                     <div className={styles["log-info"]}>
                         {logListInfo.map((item, index) => (
-                            <div key={index} className={styles["log-item"]} style={{ color: item.isError ? '#f00': '#85899e' }}>
+                            <div
+                                key={index}
+                                className={styles["log-item"]}
+                                style={{color: item.isError ? "#f00" : "#85899e"}}
+                            >
                                 {item.message}
                             </div>
                         ))}
@@ -81,29 +108,35 @@ export interface UploadList {
     path: string
     name: string
 }
+
+interface FileRegexInfo {
+    fileType?: string[] // 上传文件类型
+    fileTypeErrorMsg?: string
+    fileNameRegex?: RegExp // 文件名正则
+    fileNameErrorMsg?: string
+}
+
 export interface YakitUploadComponentProps {
     step: 1 | 2 // 步骤1或2 步骤1为上传 步骤2为进度条显示
-    fileType?: string[] // 上传文件类型
-    uploadList: UploadList[]
+    stepOneSubTitle: React.ReactElement | string // 步骤1-子标题
+    fileRegexInfo?: FileRegexInfo // 文件校验相关信息
+    uploadList: UploadList[] // 上传列表
     onUploadList: (uploadList: UploadList[]) => void
-    /** @name 步骤2标题 */
-    nextTitle?: string
-    /** @name 步骤2显示进度条-剩余时间-耗时-下载速度 */
-    showDownloadDetail?: boolean
-    /** @name 步骤2-导入流数据 */
-    streamData?: SaveProgressStream
-    /** @name 导入中的日志信息 */
-    logListInfo?: LogListInfo[]
+    nextTitle?: string // 步骤2-标题
+    showDownloadDetail?: boolean // 步骤2-显示进度条-剩余时间-耗时-下载速度
+    streamData?: SaveProgressStream // 步骤2-导入流数据
+    logListInfo?: LogListInfo[] // 步骤2-导入中的日志信息
 }
 
 export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props) => {
     const {
         step,
-        fileType = [],
+        stepOneSubTitle,
+        fileRegexInfo,
         uploadList = [],
         onUploadList,
         nextTitle = "导入中",
-        showDownloadDetail = false,
+        showDownloadDetail = true,
         streamData,
         logListInfo
     } = props
@@ -115,10 +148,25 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                 name: string
             }[] = []
             fileList.forEach((f) => {
-                if (fileType.length && !fileType.includes(f.type)) {
-                    failed(`${f.name}非${fileType.join("、")}文件，请上传正确格式文件！`)
-                    return false
+                // 格式校验
+                if (fileRegexInfo) {
+                    const {
+                        fileType = [],
+                        fileNameRegex,
+                        fileTypeErrorMsg = "不符合上传要求，请上传正确格式文件",
+                        fileNameErrorMsg = "不符合上传要求，请上传正确格式文件"
+                    } = fileRegexInfo
+
+                    if (fileType.length && !fileType.includes(f.type)) {
+                        failed(`${f.name}${fileTypeErrorMsg}`)
+                        return false
+                    }
+                    if (fileNameRegex && !fileNameRegex.test(f.name)) {
+                        failed(`${f.name}${fileNameErrorMsg}`)
+                        return
+                    }
                 }
+
                 if (uploadList.map((item) => item.path).includes(f.path)) {
                     warn(`${f.path}已选择`)
                     return
@@ -163,10 +211,7 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                                                     可将文件拖入框内，或
                                                     <span className={styles["hight-light"]}>点击此处导入</span>
                                                 </div>
-                                                <div className={styles["sub-title"]}>
-                                                    支持文件夹批量上传
-                                                    {fileType.length ? `(支持文件类型${fileType.join("、")})` : ""}
-                                                </div>
+                                                <div className={styles["sub-title"]}>{stepOneSubTitle}</div>
                                             </div>
                                         </div>
                                     </Dragger>
@@ -199,7 +244,7 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
             )}
 
             {step === 2 && streamData && (
-                <UploadStatusInfo
+                <ImportAndExportStatusInfo
                     title={nextTitle}
                     streamData={streamData}
                     showDownloadDetail={showDownloadDetail}

@@ -97,18 +97,31 @@ module.exports = (win, getClient) => {
     })
 
     // 批量导出本地插件
-    const asyncExportLocalYakScript = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().ExportLocalYakScript(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
+    let exportYakScriptStream
     ipcMain.handle("ExportLocalYakScript", async (e, params) => {
-        return await asyncExportLocalYakScript(params)
+        exportYakScriptStream = getClient().ExportLocalYakScript(params)
+        exportYakScriptStream.on("data", (e) => {
+            if (!win) {
+                return
+            }
+            win.webContents.send("export-yak-script-data", e)
+        })
+        exportYakScriptStream.on("error", (e) => {
+            if (!win) {
+                return
+            }
+            win.webContents.send("export-yak-script-error", e)
+        })
+        exportYakScriptStream.on("end", () => {
+            exportYakScriptStream.cancel()
+            exportYakScriptStream = null
+            if (!win) {
+                return
+            }
+            win.webContents.send("export-yak-script-end")
+        })
+    })
+    ipcMain.handle("cancel-exportYakScript", async () => {
+        if (exportYakScriptStream) exportYakScriptStream.cancel()
     })
 }

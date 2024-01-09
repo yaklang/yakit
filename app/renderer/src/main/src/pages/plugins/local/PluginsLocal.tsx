@@ -71,6 +71,8 @@ import {SavePluginInfoSignalProps} from "../editDetails/PluginEditDetails"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
+import {ImportAndExportStatusInfo, LogListInfo} from "@/components/YakitUploadModal/YakitUploadModal"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 
 const {ipcRenderer} = window.require("electron")
 const defaultFilters = {plugin_type: [], tags: []}
@@ -83,6 +85,13 @@ interface ExportParamsProps {
     Type?: string
     UserName?: string
     Tags?: string
+}
+
+interface ExportLocalYakScriptResponse {
+    OutputDir: string
+    Progress: number
+    Message: string
+    MessageType: string
 }
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
@@ -131,6 +140,14 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
 
     // 判断是否在详情页执行打导入
     const [importInDetail, setImportInDetail] = useState<boolean>(false)
+
+    // 导出本地插件
+    const [exportStatusModalVisible, setExportStatusModalVisible] = useState<boolean>(false)
+    const [localStreamData, setLocalStreamData] = useState<ExportLocalYakScriptResponse>()
+    const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
+    const [exportFinishCallback, setExportFinishCallback] = useState<() => void>()
+    const locallogListInfoRef = useRef<LogListInfo[]>([])
+    const autoCloseExportModalRef = useRef<boolean>(true) // 当导出本地插件的所有文件都成功时，弹窗自动关闭
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -300,6 +317,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         searchDetailRef.current = undefined
         setFilters(defaultFilters)
         setSearch(cloneDeep(defaultSearch))
+        getInitTotal()
         setTimeout(() => {
             fetchList(true)
         }, 200)
@@ -638,10 +656,54 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 .catch(reject)
         })
     })
-    /**导出插件 */
+
+    useEffect(() => {
+        ipcRenderer.on("export-yak-script-data", (e, data: ExportLocalYakScriptResponse) => {
+            setLocalStreamData(data)
+            locallogListInfoRef.current = [
+                {message: data.Message, isError: data.MessageType === "error"},
+                ...locallogListInfoRef.current
+            ]
+            setLocallogListInfo(locallogListInfoRef.current)
+        })
+
+        return () => {
+            ipcRenderer.removeAllListeners("export-yak-script-data")
+        }
+    }, [locallogListInfoRef])
+
+    useEffect(() => {
+        if (localStreamData?.MessageType === "error") {
+            autoCloseExportModalRef.current = false
+        }
+        if (
+            autoCloseExportModalRef.current === true &&
+            localStreamData?.Progress === 1 &&
+            localStreamData?.MessageType === "success"
+        ) {
+            // 该处表示导出的所有本地插件完全导出成功
+            handleExportLocalPluginFinish()
+        }
+    }, [localStreamData])
+
+    const resetLocalExport = () => {
+        setLocalStreamData(undefined)
+        locallogListInfoRef.current = []
+        setLocallogListInfo([])
+        autoCloseExportModalRef.current = true
+    }
+
+    const handleExportLocalPluginFinish = () => {
+        resetLocalExport()
+        setExportStatusModalVisible(false)
+        exportFinishCallback && exportFinishCallback()
+        onCheck(false)
+    }
+
+    // TODO 限制导出数量
     const onExport = useMemoizedFn(async (Ids: number[], callback?: () => void) => {
         try {
-            const showSaveDialogRes = await ipcRenderer.invoke("openDialog", { properties: ['openDirectory'] })
+            const showSaveDialogRes = await ipcRenderer.invoke("openDialog", {properties: ["openDirectory"]})
             if (showSaveDialogRes.canceled) return
             let params: ExportParamsProps = {
                 OutputDir: showSaveDialogRes.filePath
@@ -653,13 +715,12 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 params.UserName = queryFetchList.UserName
                 params.Tags = queryFetchList.Tag + ""
             }
+            setExportStatusModalVisible(true)
             await ipcRenderer.invoke("ExportLocalYakScript", params)
-            yakitNotify("success", "导出成功")
         } catch (error) {
             yakitFailed(error + "")
         }
-        callback && callback()
-        onCheck(false)
+        setExportFinishCallback(callback)
     })
     const checkList = useMemo(() => {
         return selectList.map((ele) => ele.ScriptName)
@@ -796,6 +857,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 />
             )}
             <PluginsLayout
+                pageWrapId="plugins-local"
                 title='本地插件'
                 hidden={!!plugin}
                 subTitle={<TypeSelect active={pluginTypeSelect} list={DefaultTypeList} setActive={onSetActive} />}
@@ -974,9 +1036,53 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     </YakitCheckbox>
                 }
             />
+            <YakitExportStatusModal
+                visible={exportStatusModalVisible}
+                getContainer={document.getElementById("plugins-local") || document.body}
+                onClose={() => {
+                    ipcRenderer.invoke("cancel-exportYakScript")
+                    handleExportLocalPluginFinish()
+                }}
+                title='导出中'
+                streamData={localStreamData || {Progress: 0}}
+                showDownloadDetail={false}
+                logListInfo={locallogListInfo}
+            ></YakitExportStatusModal> 
         </>
     )
 })
+
+declare type getContainerFunc = () => HTMLElement
+interface YakitExportStatusModalProps extends ImportAndExportStatusInfo {
+    visible: boolean
+    onClose: () => void
+    getContainer?: string | HTMLElement | getContainerFunc | false
+}
+const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) => {
+    const {visible, onClose, getContainer, streamData, ...restProps} = props
+
+    return (
+        <YakitModal
+            visible={visible}
+            getContainer={getContainer}
+            type='white'
+            title='导出本地插件'
+            onCancel={onClose}
+            width={680}
+            closable={true}
+            maskClosable={false}
+            bodyStyle={{padding: 0}}
+            footerStyle={{justifyContent: "flex-end"}}
+            footer={[
+                <YakitButton type={"outline2"} onClick={onClose}>
+                    {streamData.Progress === 1 ? "完成" : "取消"}
+                </YakitButton>
+            ]}
+        >
+            <ImportAndExportStatusInfo streamData={streamData} {...restProps}></ImportAndExportStatusInfo>
+        </YakitModal>
+    )
+}
 
 export const LocalExtraOperate: React.FC<LocalExtraOperateProps> = React.memo((props) => {
     const {data, isOwn, onRemovePlugin, onExportPlugin, onEditPlugin, onUploadPlugin} = props

@@ -5,6 +5,8 @@ import {PluginBaseParamProps, PluginParamDataProps, PluginSettingParamProps} fro
 import {API} from "@/services/swagger/resposeType"
 
 export interface PluginsLayoutProps {
+    /** 页面id */
+    pageWrapId?: string
     /** 页面标题 */
     title?: ReactNode | string
     /** 页面副标题，在标题右边 */

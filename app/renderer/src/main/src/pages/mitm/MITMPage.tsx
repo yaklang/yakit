@@ -21,7 +21,7 @@ import {loadNucleiPoCFromLocal, loadYakitPluginCode} from "../yakitStore/YakitSt
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {startExecYakCode} from "@/utils/basic"
+import {StartExecYakCodeModal, YakScriptParam} from "@/utils/basic"
 import {DownloadOnlinePluginProps} from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {queryYakScriptList} from "../yakitStore/network"
@@ -722,26 +722,22 @@ export const loadModeInfo = [
     {
         value: "giturl",
         label: "线上 Nuclei",
-        width: 544,
-        okText: "停用"
+        width: 544
     },
     {
         value: "local",
         label: "本地插件",
-        width: 680,
-        okText: "导入"
+        width: 680
     },
     {
         value: "local-nuclei",
         label: "本地 Nuclei",
-        width: 680,
-        okText: "导入"
+        width: 680
     },
     {
         value: "uploadId",
         label: "插件 ID",
-        width: 448,
-        okText: "导入"
+        width: 448
     }
 ]
 interface ImportYakScriptResult {
@@ -765,7 +761,10 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
     const locallogListInfoRef = useRef<LogListInfo[]>([])
     const autoCloseImportModalRef = useRef<boolean>(true) // 当导入本地插件的所有文件都成功时，弹窗自动关闭
-    const [loading, setLoading] = useState<boolean>(false)
+
+    const [startExecYakCodeModalVisible, setStartExecYakCodeModalVisible] = useState<boolean>(false)
+    const [startExecYakCodeVerbose, setStartExecYakCodeVerbose] = useState<string>("")
+    const [startExecYakCodeParams, setStartExecYakCodeParams] = useState<YakScriptParam>()
 
     useEffect(() => {
         if (visible) {
@@ -798,27 +797,32 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             localStreamData?.Progress === 1 &&
             localStreamData?.MessageType === "success"
         ) {
-            /**
-             * 该处表示导入的所有本地插件完全导入成功
-             */
-            resetLocalImport()
-            setVisible(false)
-            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
-            emiter.emit("onImportRefLocalPluginList", "")
+            // 该处表示导入的所有本地插件完全导入成功
+            handleImportLocalPluginFinish()
         }
     }, [localStreamData])
+
+    // 导入本地插件后执行操作
+    const handleImportLocalPluginFinish = () => {
+        resetLocalImport()
+        setVisible(false)
+        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
+        emiter.emit("onImportRefLocalPluginList", "")
+    }
 
     useEffect(() => {
         ipcRenderer.on("import-yak-script-data", async (e, data: ImportYakScriptResult) => {
             setLocalImportStep(2)
             setLocalStreamData(data)
-            locallogListInfoRef.current = [...locallogListInfoRef.current, { message: data.Message, isError: data.MessageType === 'error' }]
+            locallogListInfoRef.current = [
+                {message: data.Message, isError: data.MessageType === "error"},
+                ...locallogListInfoRef.current
+            ]
             setLocallogListInfo(locallogListInfoRef.current)
         })
 
         return () => {
             ipcRenderer.removeAllListeners("import-yak-script-data")
-            ipcRenderer.removeAllListeners("import-yak-script-end")
         }
     }, [locallogListInfoRef])
 
@@ -866,6 +870,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 return (
                     <YakitUploadComponent
                         step={localImportStep}
+                        stepOneSubTitle={<>请选择以插件类型命名的文件夹，支持批量上传</>}
+                        fileRegexInfo={{
+                            fileNameRegex: /^(yak_codec|yak_mitm|yak_module|yak_nuclei)$/,
+                            fileNameErrorMsg: "不符合插件类型命名文件夹，请上传正确格式文件"
+                        }}
                         uploadList={localUploadList}
                         onUploadList={setLocalUploadList}
                         nextTitle='插件导入中'
@@ -907,10 +916,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 break
         }
     })
+
     const onOk = useMemoizedFn(async () => {
         const formValue = form.getFieldsValue()
 
-        if (["giturl"].includes(loadMode)) {
+        if (loadMode === "giturl") {
             const params: YakExecutorParam[] = [
                 {Key: "giturl", Value: ""},
                 {Key: "nuclei-templates-giturl", Value: formValue.nucleiGitUrl}
@@ -918,10 +928,13 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             if (formValue.proxy?.trim() !== "") {
                 params.push({Value: formValue.proxy?.trim(), Key: "proxy"})
             }
-            startExecYakCode("导入线上Nuclei", {
+
+            setStartExecYakCodeModalVisible(true)
+            setStartExecYakCodeVerbose("导入线上Nuclei")
+            setStartExecYakCodeParams({
                 Script: loadYakitPluginCode,
-                Params: params,
-            }, false)
+                Params: params
+            })
         }
 
         if (loadMode === "local") {
@@ -939,11 +952,13 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 failed(`请输入Nuclei PoC 本地路径`)
                 return
             }
-            setLoading(true)
-            startExecYakCode("导入本地Nuclei", {
+
+            setStartExecYakCodeModalVisible(true)
+            setStartExecYakCodeVerbose("导入本地Nuclei")
+            setStartExecYakCodeParams({
                 Script: loadNucleiPoCFromLocal,
-                Params: [{Key: "local-path", Value: formValue.localNucleiPath}],
-            }, false)
+                Params: [{Key: "local-path", Value: formValue.localNucleiPath}]
+            })
         }
 
         if (loadMode === "uploadId") {
@@ -961,9 +976,19 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         }
     })
 
+    const onCancel = useMemoizedFn(() => {
+        if (loadMode === "local") {
+            ipcRenderer.invoke("cancel-importYakScript")
+            setTimeout(() => {
+                localStreamData && handleImportLocalPluginFinish()
+            }, 10)
+        }
+        setVisible(false)
+    })
+
     const getLoadModeInfo = (key: string) => {
         const obj = loadModeInfo.find((item) => item.value === loadPluginMode)
-        return obj ? obj[key] : "导入"
+        return obj ? obj[key] : ""
     }
 
     // 确认按钮disabled
@@ -974,59 +999,69 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         return false
     }, [loadMode, localUploadList])
 
+    const execYakCodeReset = useMemoizedFn(() => {
+        setVisible(false)
+        setStartExecYakCodeModalVisible(false)
+        setStartExecYakCodeVerbose("")
+        setStartExecYakCodeParams(undefined)
+    })
+
     return (
-        <YakitModal
-            type='white'
-            visible={visible}
-            onCancel={() => setVisible(false)}
-            width={getLoadModeInfo("width") || 680}
-            closable={true}
-            title={!loadPluginMode ? "导入插件方式" : <>导入{getLoadModeInfo("label")}</>}
-            className={style["import-local-plugin-modal"]}
-            subTitle={
-                loadPluginMode ? (
-                    <></>
-                ) : (
-                    <YakitRadioButtons
-                        wrapClassName={style["import-local-plugin-subTitle"]}
-                        buttonStyle='solid'
-                        value={loadMode}
-                        onChange={(e) => {
-                            setLoadMode(e.target.value)
-                        }}
-                        options={loadModeInfo.map((item) => ({value: item.value, label: item.label}))}
-                    ></YakitRadioButtons>
-                )
-            }
-            bodyStyle={{padding: 0}}
-            footerStyle={{justifyContent: "flex-end"}}
-            footer={[
-                <YakitButton
-                    type={"outline2"}
-                    onClick={() => {
-                        loadMode === "local" &&
-                            (() => {
-                                ipcRenderer.invoke("cancel-importYakScript")
-                                resetLocalImport()
-                            })()
-                        setVisible(false)
-                    }}
-                >
-                    {loadPluginMode === "local" && !autoCloseImportModalRef.current ? "完成" : "取消"}
-                </YakitButton>,
-                <YakitButton
-                    style={{marginLeft: 12, display: localStreamData ? "none" : "block"}}
-                    disabled={okBtnDisabled}
-                    onClick={() => onOk()}
-                >
-                    {getLoadModeInfo("okText")}
-                </YakitButton>
-            ]}
-        >
-            <Form form={form} className={style["import-local-plugin-form"]}>
-                {getRenderByLoadMode(loadMode)}
-            </Form>
-        </YakitModal>
+        <>
+            <YakitModal
+                type='white'
+                visible={visible}
+                onCancel={onCancel}
+                width={getLoadModeInfo("width") || 680}
+                closable={true}
+                title={!loadPluginMode ? "导入插件方式" : <>导入{getLoadModeInfo("label")}</>}
+                className={style["import-local-plugin-modal"]}
+                subTitle={
+                    loadPluginMode ? (
+                        <></>
+                    ) : (
+                        <YakitRadioButtons
+                            wrapClassName={style["import-local-plugin-subTitle"]}
+                            buttonStyle='solid'
+                            value={loadMode}
+                            onChange={(e) => {
+                                setLoadMode(e.target.value)
+                            }}
+                            options={loadModeInfo.map((item) => ({value: item.value, label: item.label}))}
+                        ></YakitRadioButtons>
+                    )
+                }
+                bodyStyle={{padding: 0}}
+                footerStyle={{justifyContent: "flex-end"}}
+                footer={[
+                    <YakitButton type={"outline2"} onClick={onCancel}>
+                        {loadPluginMode === "local" && localStreamData?.Progress === 1 ? "完成" : "取消"}
+                    </YakitButton>,
+                    <YakitButton
+                        style={{marginLeft: 12, display: localStreamData ? "none" : "block"}}
+                        disabled={okBtnDisabled}
+                        onClick={onOk}
+                    >
+                        导入
+                    </YakitButton>
+                ]}
+            >
+                <Form form={form} className={style["import-local-plugin-form"]}>
+                    {getRenderByLoadMode(loadMode)}
+                </Form>
+            </YakitModal>
+            <StartExecYakCodeModal
+                visible={startExecYakCodeModalVisible}
+                verbose={startExecYakCodeVerbose}
+                params={startExecYakCodeParams as YakScriptParam}
+                onClose={execYakCodeReset}
+                noErrorsLogCallBack={() => {
+                    emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
+                    emiter.emit("onImportRefLocalPluginList", "")
+                }}
+                successInfo={false}
+            ></StartExecYakCodeModal>
+        </>
     )
 })
 

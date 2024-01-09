@@ -7,7 +7,7 @@ import {saveABSFileToOpen} from "../../../utils/openWebsite";
 import moment from "moment";
 import {YakScriptParamsSetter} from "../YakScriptParamsSetter";
 import {ImportMenuConfig} from "./consts_importConfigYakCode";
-import {startExecYakCode} from "../../../utils/basic";
+import {StartExecYakCodeModal, YakScriptParam} from "../../../utils/basic";
 
 export interface SaveConfigProp {
     QueryConfig: SimpleQueryYakScriptSchema
@@ -55,15 +55,32 @@ export interface ImportConfigProp {
 }
 
 export const ImportConfig: React.FC<ImportConfigProp> = (props) => {
+    const [startExecYakCodeModalVisible, setStartExecYakCodeModalVisible] = useState<boolean>(false)
+    const [startExecYakCodeVerbose, setStartExecYakCodeVerbose] = useState<string>("")
+    const [startExecYakCodeParams, setStartExecYakCodeParams] = useState<YakScriptParam>()
+    
     return <div>
         <YakScriptParamsSetter
             Params={ImportMenuConfig.Params} primaryParamsOnly={true}
             onParamsConfirm={params => {
-                startExecYakCode("导入配置", {
+                setStartExecYakCodeModalVisible(true)
+                setStartExecYakCodeVerbose("导入配置")
+                setStartExecYakCodeParams({
                     Script: ImportMenuConfig.Code,
                     Params: params,
                 })
             }}
         />
+         <StartExecYakCodeModal
+            visible={startExecYakCodeModalVisible}
+            verbose={startExecYakCodeVerbose}
+            params={startExecYakCodeParams as YakScriptParam}
+            onClose={() => {
+                setStartExecYakCodeModalVisible(false)
+                setStartExecYakCodeVerbose("")
+                setStartExecYakCodeParams(undefined)
+            }}
+            successInfo={false}
+        ></StartExecYakCodeModal>
     </div>
 };
