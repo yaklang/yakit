@@ -36,6 +36,7 @@ export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) =>
     const [domain, setDomain] = useState("www.example.com")
     const [loading, setLoading] = useState(false)
     const [preHop, setPreHop, GetPreHop] = useGetState(0)
+    const [preIp, setPreIp, GetPreIp] = useGetState("")
     const xtermRef = useRef(null)
 
     const submit = useMemoizedFn((params: DiagnoseNetworkParams) => {
@@ -55,6 +56,7 @@ export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) =>
     const submitTraceroute = useMemoizedFn((params: {Host: string}) => {
         ipcRenderer.invoke("Traceroute", params, token + "-traceroute").then(() => {
             setPreHop(0)
+            setPreIp("")
             setLoading(true)
             yakitInfo("[Traceroute] started")
         })
@@ -67,20 +69,27 @@ export const DiagnoseNetworkPage: React.FC<DiagnoseNetworkPageProp> = (props) =>
                 if (data.Hop !== GetPreHop()) {
                     writeXTerm(xtermRef, `hop ${data.Hop}\t`)
                 } else {
-                    writeXTerm(xtermRef, `\t`)
+                    if (data.Ip !== GetPreIp()) {
+                        writeXTerm(xtermRef, `\t`)
+                    }
                 }
                 if (data.Reason) {
-                    writeXTerm(xtermRef, `error: ${data.Reason}` + "\n")
+                    writeXTerm(xtermRef, `*` + "\n")
+                    setPreHop(data.Hop)
+                    setPreIp("*")
                 } else {
-                    writeXTerm(xtermRef, `${data.Ip} ${data.Rtt}ms` + "\n")
+                    if (data.Ip !== GetPreIp()) {
+                        writeXTerm(xtermRef, `${data.Ip}\t${data.Rtt}ms` + "\n")
+                    }
+                    setPreHop(data.Hop)
+                    setPreIp(data.Ip)
                 }
-                setPreHop(data.Hop)
             }
         )
-        ipcRenderer.on(`${tracerouteToken}-error-traceroute`, (e, error) => {
+        ipcRenderer.on(`${tracerouteToken}-error`, (e, error) => {
             failed(`[Traceroute] error:  ${error}`)
         })
-        ipcRenderer.on(`${tracerouteToken}-end-traceroute`, (e, data) => {
+        ipcRenderer.on(`${tracerouteToken}-end`, (e, data) => {
             setTimeout(() => {
                 yakitInfo("[Traceroute] finished")
                 setLoading(false)

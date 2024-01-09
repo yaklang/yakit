@@ -8,7 +8,7 @@ export interface TracerouteFormProp {
 }
 
 export const TracerouteForm: React.FC<TracerouteFormProp> = (props) => {
-    const [params, setParams] = useState<{Host: string}>({Host: "www.baidu.com"})
+    const [params, setParams] = useState<{Host: string}>({Host: "8.8.8.8"})
     return (
         <Form
             size={"small"}
