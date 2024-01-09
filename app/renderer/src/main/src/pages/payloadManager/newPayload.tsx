@@ -1652,7 +1652,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         [styles["folder-menu"]]: menuOpen,
                         [styles["folder-combine"]]: isCombine,
                         [styles["folder-no-combine"]]: !isCombine,
-                        [styles["folder-border"]]: !isCombine && !menuOpen && !isDragging
+                        [styles["folder-border"]]: !isCombine && !menuOpen && !isDragging && notExpandArr.includes(folder.id)
                     })}
                     onClick={() => {
                         if (onlyInsert) {
@@ -1808,6 +1808,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                 onQueryGroup={onQueryGroup}
                                 setContentType={setContentType}
                                 onlyInsert={onlyInsert}
+                                endBorder={(folder.node?.length||0)-1===index}
                             />
                         ))}
                 </>
@@ -1872,6 +1873,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                             codePath={codePath}
                                                             onQueryGroup={onQueryGroup}
                                                             setContentType={setContentType}
+                                                            endBorder={(folder.node?.length||0)-1===index}
                                                         />
                                                     </div>
                                                 )}
@@ -1967,6 +1969,8 @@ interface FileComponentProps {
     onlyInsert?: boolean
     // 是否拖拽中
     isDragging?: boolean
+    // 是否在其底部显示border
+    endBorder?: boolean
 }
 
 export const FileComponent: React.FC<FileComponentProps> = (props) => {
@@ -1983,7 +1987,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
         codePath = "",
         setContentType,
         onlyInsert,
-        isDragging
+        isDragging,
+        endBorder
     } = props
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
@@ -2331,7 +2336,8 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         [styles["file-combine"]]: isCombine,
                         [styles["file-outside"]]: !isInside,
                         [styles["file-inside"]]: isInside,
-                        [styles["file-dragging"]]: !isInside && !isDragging
+                        [styles["file-dragging"]]: !isInside && !isDragging,
+                        [styles["file-end-border"]]: endBorder
                     })}
                     onClick={() => {
                         setSelectItem(file.id)
@@ -2339,9 +2345,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     onContextMenu={handleRightClick}
                 >
                     <div className={styles["file-header"]}>
-                        <div className={styles["drag-icon"]}>
+                        {!onlyInsert&&<div className={styles["drag-icon"]}>
                             <SolidDragsortIcon />
-                        </div>
+                        </div>}
                         {file.type === "DataBase" ? (
                             <div className={classNames(styles["file-icon"], styles["file-icon-database"])}>
                                 <SolidDatabaseIcon />

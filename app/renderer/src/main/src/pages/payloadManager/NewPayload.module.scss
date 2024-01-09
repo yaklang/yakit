@@ -48,8 +48,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-radius: 0px 0px 4px 4px;
-            border-top: 1px solid #eaecf3;
+            border-radius: 0px 0px 0px 4px;
+            border-top: 1px solid var(--yakit-border-color);
+            border-right: 1px solid var(--yakit-border-color);
             background: #f8f8f8;
             .show {
                 display: flex;
@@ -525,6 +526,9 @@
     }
 }
 .file-dragging {
+    border-bottom: 1px solid #eaecf3;
+}
+.file-end-border{
     border-bottom: 1px solid #eaecf3;
 }
 .file-active {
