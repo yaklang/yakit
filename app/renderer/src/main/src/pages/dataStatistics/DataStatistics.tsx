@@ -167,7 +167,7 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
                 }
             })
             .catch((err) => {
-                failed("线上统计数据获取失败:" + err)
+                failed("用户数量变化获取失败:" + err)
             })
             .finally(() => {
                 setIsShowEcharts(true)
@@ -239,7 +239,7 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
         },
         series: [
             {
-                data: [820, 932, 901, 934, 1290, 1330, 1320, 820, 932, 901, 934, 1290],
+                data: [],
                 type: "line",
                 areaStyle: {
                     color: {
@@ -329,7 +329,7 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
                 }
             })
             .catch((err) => {
-                // failed("线上统计数据获取失败:" + err)
+                failed("用户活跃度获取失败:" + err)
             })
             .finally(() => {
                 setIsShowEcharts(true)
@@ -520,7 +520,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
                 }
             })
             .catch((err) => {
-                // failed("线上统计数据获取失败:" + err)
+                failed("用户地理位置获取失败:" + err)
             })
             .finally(() => {
                 setIsShowEcharts(true)
