@@ -43,7 +43,7 @@ module.exports = {
             }
         )),
         addWebpackPlugin(new NodePolyfillPlugin()),
-        addWebpackPlugin(new MiniCssExtractPlugin({
+        !devMode && addWebpackPlugin(new MiniCssExtractPlugin({
             filename: '[name].css',
             chunkFilename: '[id].css'
         })),
