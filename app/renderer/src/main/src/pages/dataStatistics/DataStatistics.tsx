@@ -1,5 +1,4 @@
 import React, {useEffect, useRef, useState} from "react"
-import {DatePicker} from "antd"
 import {} from "@ant-design/icons"
 import {useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -15,11 +14,11 @@ import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import numeral from "numeral"
 import moment, {Moment} from "moment"
-import {OutlineClockIcon} from "@/assets/icon/outline"
 import "moment/locale/zh-cn"
 import locale from "antd/es/date-picker/locale/zh_CN"
 import {RangePickerProps} from "antd/lib/date-picker"
-const {RangePicker} = DatePicker
+import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
+const {RangePicker} = YakitDatePicker
 const {ipcRenderer} = window.require("electron")
 const dateFormat = "YYYY/MM/DD"
 
@@ -688,31 +687,22 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                     <div className={styles["header"]}>
                         <div className={styles["title"]}>用户活跃度统计</div>
                         <div className={styles["extra"]}>
-                            <div className={styles["range-picker"]}>
-                                <RangePicker
-                                    locale={locale}
-                                    defaultValue={[thirtyDaysAgo, today]}
-                                    format={dateFormat}
-                                    suffixIcon={
-                                        <div className={styles["picker-icon"]}>
-                                            <OutlineClockIcon />
-                                        </div>
+                            <RangePicker
+                                locale={locale}
+                                defaultValue={[thirtyDaysAgo, today]}
+                                format={dateFormat}
+                                allowClear={false}
+                                onChange={(time) => {
+                                    const dates = time as [Moment, Moment] | null
+                                    if (dates) {
+                                        setActiveLineParams({
+                                            ...activeLineParams,
+                                            startTime: moment(dates[0]).unix(),
+                                            endTime: moment(dates[1]).unix()
+                                        })
                                     }
-                                    allowClear={false}
-                                    dropdownClassName={styles["range-picker-dropdaown"]}
-                                    onChange={(time) => {
-                                        const dates = time as [Moment, Moment] | null
-                                        if (dates) {
-                                            setActiveLineParams({
-                                                ...activeLineParams,
-                                                startTime: moment(dates[0]).unix(),
-                                                endTime: moment(dates[1]).unix()
-                                            })
-                                        }
-                                    }}
-                                />
-                            </div>
-
+                                }}
+                            />
                             <YakitSegmented
                                 value={activeLineParams?.showType}
                                 onChange={(v) => {
@@ -798,13 +788,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                     locale={locale}
                                     defaultValue={[thirtyDaysAgo, today]}
                                     format={dateFormat}
-                                    suffixIcon={
-                                        <div className={styles["picker-icon"]}>
-                                            <OutlineClockIcon />
-                                        </div>
-                                    }
                                     allowClear={false}
-                                    dropdownClassName={styles["range-picker-dropdaown"]}
                                     // disabledDate={disabledDate}
                                     onChange={(time) => {
                                         const dates = time as [Moment, Moment] | null
