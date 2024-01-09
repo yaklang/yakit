@@ -1,6 +1,6 @@
 appId: 'io.yaklang.yakit'
 productName: 'Yakit'
-copyright: Copyright © 2021 v1ll4n
+copyright: Copyright © 2024 yaklang.io
 
 extraFiles:
   - from: "bins/flag.txt"
