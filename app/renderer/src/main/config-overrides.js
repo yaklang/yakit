@@ -67,11 +67,11 @@ module.exports = {
                 ]
             }
         ),
-        // fixBabelImports('import', {
-        //     libraryName: 'antd',
-        //     libraryDirectory: 'es',
-        //     style: 'css'
-        // }),
+        fixBabelImports('import', {
+            libraryName: 'antd',
+            libraryDirectory: 'es',
+            style: 'css'
+        }),
         addWebpackExternals(
             { "./cptable": "var cptable" },
         ),
