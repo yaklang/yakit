@@ -15,6 +15,9 @@ const ProgressBarPlugin = require('progress-bar-webpack-plugin'); // 打包进�
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin")
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
+const devMode = process.env.NODE_ENV !== 'production';
 
 const OUTPUT_PATH = path.resolve(__dirname, "..", "..", "pages", "main")
 
@@ -40,12 +43,16 @@ module.exports = {
             }
         )),
         addWebpackPlugin(new NodePolyfillPlugin()),
+        addWebpackPlugin(new MiniCssExtractPlugin({
+            filename: '[name].css',
+            chunkFilename: '[id].css'
+        })),
         addWebpackModuleRule(
             {
                 test: [/\.css$/, /\.scss$/], // 可以打包后缀为scss/css的文件
                 exclude: [/\.module\.(css|scss)/],
                 use: [
-                    "style-loader",
+                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
                     "css-loader",
                     "sass-loader"
                 ]
@@ -53,9 +60,9 @@ module.exports = {
             {
                 test: /\.module\.(css|scss)/,
                 use: [
+                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
                     "style-loader",
                     {
-
                         loader: "css-loader",
                         options: {
                             modules: {
@@ -67,11 +74,11 @@ module.exports = {
                 ]
             }
         ),
-        // fixBabelImports('import', {
-        //     libraryName: 'antd',
-        //     libraryDirectory: 'es',
-        //     style: 'css'
-        // }),
+        fixBabelImports('import', {
+            libraryName: 'antd',
+            libraryDirectory: 'es',
+            style: 'css'
+        }),
         addWebpackExternals(
             { "./cptable": "var cptable" },
         ),
