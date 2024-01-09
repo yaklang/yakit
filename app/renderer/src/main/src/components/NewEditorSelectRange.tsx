@@ -3,9 +3,8 @@ import {monaco} from "react-monaco-editor"
 import ReactDOM from "react-dom"
 import {editor} from "monaco-editor"
 import {IMonacoEditor, NewHTTPPacketEditor, NewHTTPPacketEditorProp} from "@/utils/editors"
-import { CountDirectionProps, EditorDetailInfoProps } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
-
-
+import {CountDirectionProps, EditorDetailInfoProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
+import {createRoot} from "react-dom/client"
 
 export interface NewEditorSelectRangeProps extends NewHTTPPacketEditorProp {
     // 编辑器点击弹窗的唯一Id
@@ -45,7 +44,7 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                 const domNode = document.createElement("div")
                 // 解决弹窗内鼠标滑轮无法滚动的问题
                 domNode.onwheel = (e) => e.stopPropagation()
-                selectNode && ReactDOM.render(selectNode(closeFizzSelectWidget, editorInfo.current), domNode)
+                selectNode && createRoot(domNode).render(selectNode(closeFizzSelectWidget, editorInfo.current))
                 return domNode
             },
             getPosition: function () {
@@ -75,7 +74,7 @@ export const NewEditorSelectRange: React.FC<NewEditorSelectRangeProps> = (props)
                 const domNode = document.createElement("div")
                 // 解决弹窗内鼠标滑轮无法滚动的问题
                 domNode.onwheel = (e) => e.stopPropagation()
-                rangeNode && ReactDOM.render(rangeNode(closeFizzRangeWidget, editorInfo.current), domNode)
+                rangeNode && createRoot(domNode).render(rangeNode(closeFizzRangeWidget, editorInfo.current))
                 return domNode
             },
             getPosition: function () {

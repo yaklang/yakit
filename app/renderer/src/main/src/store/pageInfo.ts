@@ -312,7 +312,7 @@ try {
                 })
                 // console.log("saveFuzzerCache", cache)
                 // console.table(pageList)
-                setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache))
+                setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) =>{})
             } catch (error) {
                 yakitNotify("error", "webFuzzer缓存数据失败:" + error)
             }

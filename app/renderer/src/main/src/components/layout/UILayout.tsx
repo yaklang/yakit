@@ -954,7 +954,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         // 获取操作系统、架构、Yakit 版本、Yak 版本
         ipcRenderer.invoke("fetch-local-basic-info").then((data: LocalInfoProps) => {
             setLocalInfo(data)
-        })
+        }).catch(()=>{})
     }, [])
     useEffect(() => {
         // 用户退出 - 验证license=>展示企业登录
@@ -1051,7 +1051,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         getRemoteValue(RemoteGV.KnowChatCS).then((value: any) => {
             if (!value) return
             else setShowChatCS(false)
-        })
+        }).catch(()=>{})
     }, [engineLink])
     const onChatCS = useMemoizedFn(() => {
         setShowChatCS(false)

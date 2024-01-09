@@ -4,9 +4,9 @@ import {YakitDrawerProps} from "./YakitDrawerType"
 import styles from "./YakitDrawer.module.scss"
 import classNames from "classnames"
 import {RemoveIcon} from "@/assets/newIcon"
-import { ShowDrawerProps } from "@/utils/showModal"
-import ReactDOM from "react-dom"
-import { ErrorBoundary } from "react-error-boundary"
+import {ShowDrawerProps} from "@/utils/showModal"
+import {ErrorBoundary} from "react-error-boundary"
+import {createRoot} from "react-dom/client"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -38,7 +38,6 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
     )
 }
 
-
 const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
     const {onVisibleSetter,...resProps}=props
     const [visible, setVisible] = useState<boolean>(true)
@@ -68,22 +67,19 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
     document.body.appendChild(div)
 
     let setter: (r: boolean) => any = () => {}
+    let yakitDrawerRootDiv
     const render = (targetConfig: ShowDrawerProps) => {
         setTimeout(() => {
-            ReactDOM.render(
+            if (!yakitDrawerRootDiv) {
+                yakitDrawerRootDiv = createRoot(div)
+            }
+            yakitDrawerRootDiv.render(
                 <>
                     <YakitBaseDrawer
                         {...(targetConfig as YakitDrawerProps)}
                         onVisibleSetter={(r) => {
                             setter = r
                         }}
-                        // afterClose={() => {
-                        //     if (props.modalAfterClose) props.modalAfterClose()
-                        //     const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                        //     if (unmountResult && div.parentNode) {
-                        //         div.parentNode.removeChild(div)
-                        //     }
-                        // }}
                     >
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {
@@ -101,8 +97,7 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
                             {targetConfig.content}
                         </ErrorBoundary>
                     </YakitBaseDrawer>
-                </>,
-                div
+                </>
             )
         })
     }
@@ -113,9 +108,8 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
                 setter(false)
             }
             setTimeout(() => {
-                const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                if (unmountResult && div.parentNode) {
-                    div.parentNode.removeChild(div)
+                if (yakitDrawerRootDiv) {
+                    yakitDrawerRootDiv.unmount()
                 }
             }, 400)
         }

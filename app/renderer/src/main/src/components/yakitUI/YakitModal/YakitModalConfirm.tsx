@@ -7,7 +7,7 @@ import {YakitModal, YakitModalProp} from "./YakitModal"
 import {ErrorBoundary} from "react-error-boundary"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {OutlineXIcon} from "@/assets/icon/outline"
-
+import {createRoot} from "react-dom/client"
 export interface YakitModalConfirmProps extends YakitBaseModalProp {
     title?: React.ReactNode | string
     content?: React.ReactNode | string
@@ -22,10 +22,13 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
     const div = document.createElement("div")
     document.body.appendChild(div)
     let setter: (r: boolean) => any = () => {}
-
+    let yakitModalConfirmRootDiv
     const render = (targetConfig: ShowModalProps) => {
         setTimeout(() => {
-            ReactDOM.render(
+            if (!yakitModalConfirmRootDiv) {
+                yakitModalConfirmRootDiv = createRoot(div)
+            }
+            yakitModalConfirmRootDiv.render(
                 <>
                     <YakitBaseModal
                         {...(targetConfig as YakitModalProp)}
@@ -34,10 +37,11 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                         }}
                         afterClose={() => {
                             if (props.modalAfterClose) props.modalAfterClose()
-                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                            if (unmountResult && div.parentNode) {
-                                div.parentNode.removeChild(div)
-                            }
+                            setTimeout(() => {
+                                if (yakitModalConfirmRootDiv) {
+                                    yakitModalConfirmRootDiv.unmount()
+                                }
+                            })
                         }}
                         title={null}
                         headerStyle={{paddingBottom: 0}}
@@ -83,8 +87,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                             </div>
                         </ErrorBoundary>
                     </YakitBaseModal>
-                </>,
-                div
+                </>
             )
         })
     }
@@ -95,9 +98,8 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                 setter(false)
             }
             setTimeout(() => {
-                const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                if (unmountResult && div.parentNode) {
-                    div.parentNode.removeChild(div)
+                if (yakitModalConfirmRootDiv) {
+                    yakitModalConfirmRootDiv.unmount()
                 }
             }, 400)
         }
@@ -204,9 +206,13 @@ export const showYakitModal = (props: ShowModalProps) => {
     document.body.appendChild(div)
 
     let setter: (r: boolean) => any = () => {}
+    let yakitModalRootDiv
     const render = (targetConfig: ShowModalProps) => {
         setTimeout(() => {
-            ReactDOM.render(
+            if (!yakitModalRootDiv) {
+                yakitModalRootDiv = createRoot(div)
+            }
+            yakitModalRootDiv.render(
                 <>
                     <YakitBaseModal
                         bodyStyle={{padding: 0}}
@@ -216,10 +222,11 @@ export const showYakitModal = (props: ShowModalProps) => {
                         }}
                         afterClose={() => {
                             if (props.modalAfterClose) props.modalAfterClose()
-                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                            if (unmountResult && div.parentNode) {
-                                div.parentNode.removeChild(div)
-                            }
+                            setTimeout(() => {
+                                if (yakitModalRootDiv) {
+                                    yakitModalRootDiv.unmount()
+                                }
+                            })
                         }}
                     >
                         <ErrorBoundary
@@ -238,8 +245,7 @@ export const showYakitModal = (props: ShowModalProps) => {
                             {targetConfig.content}
                         </ErrorBoundary>
                     </YakitBaseModal>
-                </>,
-                div
+                </>
             )
         })
     }
@@ -250,9 +256,8 @@ export const showYakitModal = (props: ShowModalProps) => {
                 setter(false)
             }
             setTimeout(() => {
-                const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                if (unmountResult && div.parentNode) {
-                    div.parentNode.removeChild(div)
+                if (yakitModalRootDiv) {
+                    yakitModalRootDiv.unmount()
                 }
             }, 400)
         }

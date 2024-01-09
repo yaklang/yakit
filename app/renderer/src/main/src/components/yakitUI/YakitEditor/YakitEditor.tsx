@@ -54,6 +54,7 @@ import {onInsertYakFuzzer, showDictsAndSelect} from "@/pages/fuzzer/HTTPFuzzerPa
 import {openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
 import {GetPluginLanguage} from "@/pages/plugins/builtInData"
+import {createRoot} from "react-dom/client"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -775,9 +776,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 // 解决弹窗内鼠标滑轮无法滚动的问题
                 domNode.onwheel = (e) => e.stopPropagation()
                 if (selectNode) {
-                    ReactDOM.render(selectNode(closeFizzSelectWidget, editorInfo.current), domNode)
+                    createRoot(domNode).render(selectNode(closeFizzSelectWidget, editorInfo.current))
                 } else {
-                    ReactDOM.render(
+                    createRoot(domNode).render(
                         <HTTPFuzzerClickEditorMenu
                             editorInfo={editorInfo.current}
                             close={() => closeFizzSelectWidget()}
@@ -790,8 +791,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 closeFizzSelectWidget()
                                 onInsertYakFuzzer(editor)
                             }}
-                        />,
-                        domNode
+                        />
                     )
                 }
                 return domNode
@@ -824,10 +824,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 // 解决弹窗内鼠标滑轮无法滚动的问题
                 domNode.onwheel = (e) => e.stopPropagation()
                 if (rangeNode) {
-                    ReactDOM.render(rangeNode(closeFizzRangeWidget, editorInfo.current), domNode)
+                    createRoot(domNode).render(rangeNode(closeFizzRangeWidget, editorInfo.current))
                 } else {
                     readOnly
-                        ? ReactDOM.render(
+                        ? createRoot(domNode).render(
                               <HTTPFuzzerRangeReadOnlyEditorMenu
                                   editorInfo={editorInfo.current}
                                   rangeValue={
@@ -835,10 +835,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                   }
                                   close={() => closeFizzRangeWidget()}
                                   fizzRangeTimeoutId={fizzRangeTimeoutId}
-                              />,
-                              domNode
+                              />
                           )
-                        : ReactDOM.render(
+                        : createRoot(domNode).render(
                               <HTTPFuzzerRangeEditorMenu
                                   editorInfo={editorInfo.current}
                                   close={() => closeFizzRangeWidget()}
@@ -893,8 +892,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                                 }
                                             }
                                   }
-                              />,
-                              domNode
+                              />
                           )
                 }
                 return domNode

@@ -2,7 +2,7 @@ import ReactDOM from "react-dom"
 import React, {memo, ReactNode, useEffect, useRef} from "react"
 import {coordinate} from "@/pages/globalVariable"
 import {YakitMenu, YakitMenuProp} from "./YakitMenu"
-
+import {createRoot} from "react-dom/client"
 import styles from "./showByRightContext.module.scss"
 
 const roundDown = (value: number) => {
@@ -54,6 +54,8 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
     /** 右键展示元素宽高 */
     const divWidth = roundDown(div.getBoundingClientRect().width || 0)
     const divHeight = roundDown(div.getBoundingClientRect().height || 0)
+    /**RightContext 根节点 */
+    let rightContextRootDiv
 
     if (divWidth > 0 && divHeight > 0) {
         // y坐标计算
@@ -74,9 +76,8 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
     document.body.appendChild(div)
 
     const destory = () => {
-        const unmountResult = ReactDOM.unmountComponentAtNode(div)
-        if (unmountResult && div.parentNode) {
-            div.parentNode.removeChild(div)
+        if (rightContextRootDiv) {
+            rightContextRootDiv.unmount()
         }
     }
 
@@ -95,7 +96,14 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
                 destory()
                 document.removeEventListener("click", onClickOutsize)
             })
-            ReactDOM.render(<RightContext data={props} callback={offsetPosition} />, div)
+            document.addEventListener("contextmenu", function onContextMenuOutsize() {
+                destory()
+                document.removeEventListener("contextmenu", onContextMenuOutsize)
+            })
+            if (!rightContextRootDiv) {
+                rightContextRootDiv = createRoot(div)
+            }
+            rightContextRootDiv.render(<RightContext data={props} callback={offsetPosition} />)
         })
     }
     render()

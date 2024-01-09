@@ -3,7 +3,7 @@ import ReactDOM from "react-dom"
 import {ModalProps} from "antd/lib/modal"
 import {Drawer, DrawerProps, Modal} from "antd"
 import {ErrorBoundary} from "react-error-boundary"
-
+import {createRoot} from "react-dom/client"
 const {ipcRenderer} = window.require("electron")
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
@@ -43,11 +43,14 @@ export interface ShowModalProps extends BaseModalProp {
 export const showModal = (props: ShowModalProps) => {
     const div = document.createElement("div")
     document.body.appendChild(div)
-
+    let modalRootDiv
     let setter: (r: boolean) => any = () => {}
     const render = (targetConfig: ShowModalProps) => {
         setTimeout(() => {
-            ReactDOM.render(
+            if (!modalRootDiv) {
+                modalRootDiv = createRoot(div)
+            }
+            modalRootDiv.render(
                 <>
                     <BaseModal
                         {...(targetConfig as ModalProps)}
@@ -56,10 +59,11 @@ export const showModal = (props: ShowModalProps) => {
                         }}
                         afterClose={() => {
                             if (props.modalAfterClose) props.modalAfterClose()
-                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                            if (unmountResult && div.parentNode) {
-                                div.parentNode.removeChild(div)
-                            }
+                            setTimeout(() => {
+                                if (modalRootDiv) {
+                                    modalRootDiv.unmount()
+                                }
+                            })
                         }}
                     >
                         <ErrorBoundary
@@ -78,8 +82,7 @@ export const showModal = (props: ShowModalProps) => {
                             {targetConfig.content}
                         </ErrorBoundary>
                     </BaseModal>
-                </>,
-                div
+                </>
             )
         })
     }
@@ -90,9 +93,8 @@ export const showModal = (props: ShowModalProps) => {
                 setter(false)
             }
             setTimeout(() => {
-                const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                if (unmountResult && div.parentNode) {
-                    div.parentNode.removeChild(div)
+                if (modalRootDiv) {
+                    modalRootDiv.unmount()
                 }
             }, 400)
         }
@@ -151,10 +153,13 @@ export const showDrawer = (props: ShowDrawerProps) => {
     document.body.appendChild(div)
 
     let onDestroy: ((i: boolean) => any) | undefined = () => undefined
-
+    let drawerRootDiv
     const render = (targetConfig: ShowModalProps) => {
         setTimeout(() => {
-            ReactDOM.render(
+            if (!drawerRootDiv) {
+                drawerRootDiv = createRoot(div)
+            }
+            drawerRootDiv.render(
                 <>
                     <BaseDrawer
                         {...(targetConfig as BaseDrawerProp)}
@@ -162,16 +167,16 @@ export const showDrawer = (props: ShowDrawerProps) => {
                             onDestroy = setter
                         }}
                         afterClose={() => {
-                            const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                            if (unmountResult && div.parentNode) {
-                                div.parentNode.removeChild(div)
-                            }
+                            setTimeout(() => {
+                                if (drawerRootDiv) {
+                                    drawerRootDiv.unmount()
+                                }
+                            })
                         }}
                     >
                         {targetConfig.content}
                     </BaseDrawer>
-                </>,
-                div
+                </>
             )
         })
     }
@@ -180,9 +185,8 @@ export const showDrawer = (props: ShowDrawerProps) => {
         destroy: () => {
             onDestroy && onDestroy(false)
             setTimeout(() => {
-                const unmountResult = ReactDOM.unmountComponentAtNode(div)
-                if (unmountResult && div.parentNode) {
-                    div.parentNode.removeChild(div)
+                if (drawerRootDiv) {
+                    drawerRootDiv.unmount()
                 }
             }, 500)
         }

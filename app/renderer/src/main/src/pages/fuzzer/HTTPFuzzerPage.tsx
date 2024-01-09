@@ -101,7 +101,7 @@ import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import { PayloadGroupNodeProps, ReadOnlyNewPayload } from "../payloadManager/newPayload"
-
+import {createRoot} from "react-dom/client"
 const {ipcRenderer} = window.require("electron")
 
 interface ShareValueProps {
@@ -2507,7 +2507,7 @@ export const onAddOverlayWidget = (editor, rsp, isShow?: boolean) => {
     const fizzOverlayWidget = {
         getDomNode() {
             const domNode = document.createElement("div")
-            ReactDOM.render(<EditorOverlayWidget rsp={rsp} />, domNode)
+            createRoot(domNode).render(<EditorOverlayWidget rsp={rsp} />)
             return domNode
         },
         getId() {

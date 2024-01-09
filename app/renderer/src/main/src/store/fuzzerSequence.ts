@@ -184,7 +184,7 @@ try {
         (selectedState) => {
             const sequenceCache = selectedState.filter((ele) => ele.cacheData.length > 0)
             // console.log("saveFuzzerSequenceCache", sequenceCache)
-            setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(sequenceCache))
+            setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(sequenceCache)).catch((error) => {})
         },
         500,
         {leading: true}

@@ -106,7 +106,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
             setDownloadProgress(state)
         })
 
-        ipcRenderer.invoke("GetBuildInEngineVersion").then(ver => setBuildInEngineVersion(ver))
+        ipcRenderer.invoke("GetBuildInEngineVersion").then(ver => setBuildInEngineVersion(ver)).catch(()=>{})
 
         return () => {
             ipcRenderer.removeAllListeners("download-yak-engine-progress")

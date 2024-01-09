@@ -24,7 +24,6 @@ import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pa
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss";
 import {showDrawer, showModal} from "@/utils/showModal";
 import {RemarkDetail, WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
-import {showByCustom} from "@/components/functionTemplate/showByContext";
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu";
 import {
     availableColors,
@@ -52,6 +51,7 @@ import {
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer';
 import { WebShellDetailOpt } from './WebShellDetailOpt';
 import {menuBodyHeight} from "@/pages/globalVariable"
+import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext';
 
 export interface WebShellManagerProp {
     available: boolean
@@ -430,21 +430,33 @@ const onClose = useMemoizedFn(()=>{
         if (rowData) {
             setSelected(rowData)
         }
-        showByCustom(
+        // showByCustom已废弃，删除，更换为 showByRightContext
+        // showByCustom(
+        //     {
+        //         reactNode: (
+        //             <div className={mitmStyles["context-menu-custom"]}>
+        //                 <YakitMenu
+        //                     data={wsmMenuData as YakitMenuItemProps[]}
+        //                     width={150}
+        //                     onClick={({key}) => {
+        //                         wsmMenuSelect(key)
+        //                     }}
+        //                 />
+        //             </div>
+        //         ),
+        //         height: 266,
+        //         width: 158
+        //     },
+        //     event.clientX,
+        //     event.clientY
+        // )
+        showByRightContext(
             {
-                reactNode: (
-                    <div className={mitmStyles["context-menu-custom"]}>
-                        <YakitMenu
-                            data={wsmMenuData as YakitMenuItemProps[]}
-                            width={150}
-                            onClick={({key}) => {
-                                wsmMenuSelect(key)
-                            }}
-                        />
-                    </div>
-                ),
-                height: 266,
-                width: 158
+                width: 158,
+                data:wsmMenuData as YakitMenuItemProps[],
+                onClick:({key}) => {
+                    wsmMenuSelect(key)
+                }
             },
             event.clientX,
             event.clientY

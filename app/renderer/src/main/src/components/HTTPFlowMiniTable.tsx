@@ -2,8 +2,8 @@ import React, {useEffect, useRef, useState} from "react";
 import {YakQueryHTTPFlowRequest} from "../utils/yakQueryHTTPFlow";
 import {genDefaultPagination, QueryGeneralResponse} from "../pages/invoker/schema";
 import {HTTPFlow, onExpandHTTPFlow, StatusCodeToColor} from "./HTTPFlowTable/HTTPFlowTable";
-import * as antd from "antd";
-import {Button, Space, Tag} from "antd";
+// import * as antd from "antd";
+import {Button, Space, Tag,Tooltip} from "antd";
 import {BaseTable, features, useTablePipeline} from "../alibaba/ali-react-table-dist";
 import {CopyableField} from "../utils/inputUtil";
 import {showDrawer} from "../utils/showModal";
@@ -36,7 +36,9 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
     const [inViewport] = useInViewport(ref);
 
     const pipeline = useTablePipeline({
-        components: antd,
+        components: {
+            'Tooltip':Tooltip
+        },
     }).input({
         dataSource: response.Data,
         columns: props.simple ? [

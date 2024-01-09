@@ -1,85 +1,116 @@
+const {
+    override,
+    fixBabelImports,
+    addWebpackResolve,
+    addWebpackExternals,
+    addWebpackPlugin,
+    addWebpackAlias,
+    addWebpackModuleRule,
+    overrideDevServer,
+    removeModuleScopePlugin,
+    watchAll
+} = require('customize-cra')
+const path = require('path')
+const ProgressBarPlugin = require('progress-bar-webpack-plugin'); // 打包进度
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin")
-const path = require("path")
-const OUTPUT_PATH = path.resolve(__dirname, "..", "..", "pages", "main")
-// const { override, addWebpackAlias } = require('customize-cra')
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-// 配置全局公共scss变量
-/* const styleLoader = (rule) => {
-    if (rule.test.toString().includes("scss")) {
-        rule.use.push({
-            loader: require.resolve("sass-resources-loader"),
-            options: {resources: "./src/assets/index.scss"}
-        })
-    }
-} */
+const devMode = process.env.NODE_ENV !== 'production';
+
+const OUTPUT_PATH = path.resolve(__dirname, "..", "..", "pages", "main")
 
 module.exports = {
-    webpack: function (config, env) {
-        config.output.path = OUTPUT_PATH
-        config.output.publicPath = "./"
-        config.externals = [{"./cptable": "var cptable"}]
-        config.plugins.push(
-            new MonacoWebpackPlugin({
-                languages: ["json", "javascript", "go", "markdown", "html", "yaml", "java"]
-            })
-        )
-
-        // 支持别名
-        config.resolve.alias = {
-            "@": path.resolve(__dirname, "src")
-        }
-        // 支持scss预处理器
-        let loaderList = config.module.rules[1].oneOf
-        loaderList.splice(loaderList.length - 1, 0, {
-            test: /\.scss$/,
-            use: ["style-loader", "css-loader", "sass-loader"]
-        })
-        //配置全局公共scss变量
-        /* const mode = process.env.NODE_ENV === "production" ? "prod" : "dev"
-        const loader = mode === "prod" ? "css-extract-plugin" : "style-loader"
-        const loaders = config.module.rules.find((rule) => Array.isArray(rule.oneOf)).oneOf
-        const styleLoaders = loaders.filter(({use}) => use && use[0] && (use[0].loader || use[0]).includes(loader))
-        styleLoaders.forEach((loader) => styleLoader(loader)) */
-
-        return config
-    },
-    devServer: function (configFunction) {
-        return function (proxy, allowedHost) {
-            const config = configFunction(proxy, allowedHost)
-
-            // 将文件输出到硬盘
-            config.writeToDisk = true
-            // 修改sock相关配置保证热更新功能正常
-            config.host = process.env.HOST || "0.0.0.0"
-            config.sockHost = process.env.WDS_SOCKET_HOST
-            config.sockPath = process.env.WDS_SOCKET_PATH // default: '/sockjs-node'
-            config.sockPort = process.env.WDS_SOCKET_PORT
-
+    webpack: override(
+        addWebpackResolve({
+            fallback: {
+                fs: false,
+            },
+        }),
+        addWebpackAlias({
+            '@': path.resolve(__dirname, 'src')
+        }),
+        // 打包进度条
+        addWebpackPlugin(new ProgressBarPlugin()),
+        addWebpackPlugin(new MonacoWebpackPlugin({
+            languages: ["json", "javascript", "go", "markdown", "html", "yaml", "java"],
+        })),
+        process.env.REACT_APP_ANALYZER &&
+        addWebpackPlugin(new BundleAnalyzerPlugin(
+            {
+                analyzerPort: 3000
+            }
+        )),
+        addWebpackPlugin(new NodePolyfillPlugin()),
+        !devMode && addWebpackPlugin(new MiniCssExtractPlugin({
+            filename: '[name].css',
+            chunkFilename: '[id].css'
+        })),
+        addWebpackModuleRule(
+            {
+                test: [/\.css$/, /\.scss$/], // 可以打包后缀为scss/css的文件
+                exclude: [/\.module\.(css|scss)/],
+                use: [
+                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
+                    "css-loader",
+                    "sass-loader"
+                ]
+            },
+            {
+                test: /\.module\.(css|scss)/,
+                use: [
+                    devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
+                    "style-loader",
+                    {
+                        loader: "css-loader",
+                        options: {
+                            modules: {
+                                localIdentName: '[name]_[local]_[hash:base64:5]',
+                            }
+                        }
+                    },
+                    "sass-loader"
+                ]
+            }
+        ),
+        fixBabelImports('import', {
+            libraryName: 'antd',
+            libraryDirectory: 'es',
+            style: 'css'
+        }),
+        addWebpackExternals(
+            { "./cptable": "var cptable" },
+        ),
+        removeModuleScopePlugin(),
+        (config) => {
+            if (config.mode !== 'development') {
+                config.output.path = OUTPUT_PATH
+                config.output.publicPath = "./"
+            }
+            // 去掉打包生产map 文件
+            config.devtool = config.mode === 'development' ? 'cheap-module-source-map' : false;
+            config.ignoreWarnings = [/Failed to parse source map/]
+            // console.log('config-webpack', config)
             return config
         }
-    },
+    ),
+    devServer: overrideDevServer(
+        config => {
+            const newConfig = {
+                ...config,
+                hot: true,
+                devMiddleware: {
+                    writeToDisk: true,
+                },
+            }
+            return newConfig
+        },
+        watchAll()
+    ),
     paths: function (paths, env) {
         // 修改build下的输出目录
         paths.appBuild = OUTPUT_PATH
         return paths
     }
-    // addWebpackAlias: () => {
-    //     return {
-    //         ['@']: path.resolve(__dirname, './src'),
-    //         ['@components']: path.resolve(__dirname, './src/components')
-    //     }
-    // }
 }
-
-// module.exports = override(
-//     addWebpackAlias({
-//         ['@']: path.resolve(__dirname, './src'),
-//         ['@components']: path.resolve(__dirname, './src/components')
-//     })
-// )
-// module.exports = function override(config, env) {
-//     config.plugins.push(new MonacoWebpackPlugin({
-//         languages: ['json', "javascript", 'go', 'markdown', 'html']
-//     }));
-//     return config;
-// }
