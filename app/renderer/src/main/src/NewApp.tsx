@@ -282,7 +282,7 @@ function NewApp() {
             const showCloseMessageBox = !(Array.from(runNodeList).length || temporaryProjectIdRef.current)
             // 关闭前的所有接口调用都放到allSettled里面
             try {
-                await Promise.allSettled([handleKillAllRunNode(), delTemporaryProject(), visitorsStatisticsFun()])
+                await Promise.allSettled([handleKillAllRunNode(), delTemporaryProject(), visitorsStatisticsFun("close")])
             } catch (error) {
             }
             // 通知应用退出
