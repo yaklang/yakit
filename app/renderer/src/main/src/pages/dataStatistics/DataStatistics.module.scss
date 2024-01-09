@@ -385,8 +385,8 @@
             .ant-picker-cell-inner::after {
             background: #fbe7d9;
         }
-        .ant-picker-cell-range-hover {
-            border-color: #ff0000;
+        .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before{
+            border: 1px solid var(--yakit-primary-5);
         }
         // Edge start
         tr > .ant-picker-cell-in-view.ant-picker-cell-range-hover:first-child::after,

@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {DatePicker} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState, useInViewport, useMemoizedFn, useSize} from "ahooks"
+import {useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./DataStatistics.module.scss"
@@ -14,21 +14,25 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import numeral from "numeral"
-import moment from "moment"
+import moment, {Moment} from "moment"
 import {OutlineClockIcon} from "@/assets/icon/outline"
 import "moment/locale/zh-cn"
 import locale from "antd/es/date-picker/locale/zh_CN"
+import {RangePickerProps} from "antd/lib/date-picker"
 const {RangePicker} = DatePicker
 const {ipcRenderer} = window.require("electron")
 const dateFormat = "YYYY/MM/DD"
 
 interface RiseLineEchartsProps {
+    riseLineParams?: RiseLineProps
     inViewport?: boolean
 }
 
 interface RiseLineProps {
     // 天月年展示
-    showType?: string
+    showType?: "day" | "month" | "year"
+    // 总数/增长数 total 总数 incr增长数
+    changeType?: "total" | "incr"
     // 自选起始时间
     startTime?: number
     // 自选结束时间
@@ -36,7 +40,7 @@ interface RiseLineProps {
 }
 
 const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
-    const {inViewport} = props
+    const {inViewport, riseLineParams} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
     const optionRef = useRef<any>({
@@ -105,15 +109,13 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
     })
     const echartsRef = useRef<any>()
     useEffect(() => {
-        if(width>=1920){
+        if (width >= 1920) {
             optionRef.current.grid.left = "3%"
             setEcharts(optionRef.current)
-        }
-        else if(width>1050){
+        } else if (width > 1050) {
             optionRef.current.grid.left = "5%"
             setEcharts(optionRef.current)
-        }
-        else{
+        } else {
             optionRef.current.grid.left = "8%"
             setEcharts(optionRef.current)
         }
@@ -126,6 +128,10 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
             getRiseLine()
         }
     }, [inViewport])
+
+    useUpdateEffect(() => {
+        getRiseLine()
+    }, [riseLineParams])
 
     useEffect(() => {
         if (!echartsRef.current) return
@@ -143,14 +149,14 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
         setEcharts(optionRef.current)
         NetWorkApi<RiseLineProps, API.TouristActiveResponse>({
             method: "get",
-            url: "tourist/active",
-            params: {}
+            url: "tourist/change",
+            params: {...riseLineParams}
         })
             .then((res: API.TouristActiveResponse) => {
-                console.log("tourist/active", res)
+                console.log("tourist/change", res)
                 if (res.data) {
-                    let XData:string[] = []
-                    let YData:number[] = []
+                    let XData: string[] = []
+                    let YData: number[] = []
                     res.data.forEach((item) => {
                         XData.push(item.searchTime)
                         YData.push(item.count)
@@ -184,13 +190,12 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
 }
 
 interface ActiveLineEchartsProps {
+    activeLineParams?: ActiveLineProp
     inViewport?: boolean
 }
 interface ActiveLineProp {
     // 天月年展示
-    showType?: string
-    // 总数/增长数 total 总数 incr增长数
-    changeType?: string
+    showType?: "day" | "month" | "year"
     // 自选起始时间
     startTime?: number
     // 自选结束时间
@@ -198,7 +203,7 @@ interface ActiveLineProp {
 }
 
 const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
-    const {inViewport} = props
+    const {inViewport, activeLineParams} = props
     const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
     const [isShowEcharts, setIsShowEcharts] = useState<boolean>(false)
     const optionRef = useRef<any>({
@@ -267,15 +272,13 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
     })
     const echartsRef = useRef<any>()
     useEffect(() => {
-        if(width>=1920){
+        if (width >= 1920) {
             optionRef.current.grid.left = "3%"
             setEcharts(optionRef.current)
-        }
-        else if(width>1050){
+        } else if (width > 1050) {
             optionRef.current.grid.left = "5%"
             setEcharts(optionRef.current)
-        }
-        else{
+        } else {
             optionRef.current.grid.left = "8%"
             setEcharts(optionRef.current)
         }
@@ -288,6 +291,10 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
             getActiveLine()
         }
     }, [inViewport])
+
+    useUpdateEffect(() => {
+        getActiveLine()
+    }, [activeLineParams])
 
     useEffect(() => {
         if (!echartsRef.current) return
@@ -305,14 +312,14 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
         setEcharts(optionRef.current)
         NetWorkApi<ActiveLineProp, API.TouristIncrResponse>({
             method: "get",
-            url: "tourist/change",
-            params: {}
+            url: "tourist/active",
+            params: {...activeLineParams}
         })
             .then((res: API.TouristIncrResponse) => {
-                console.log("tourist/change", res)
+                console.log("tourist/active", res)
                 if (res.data) {
-                    let XData:string[] = []
-                    let YData:number[] = []
+                    let XData: string[] = []
+                    let YData: number[] = []
                     res.data.forEach((item) => {
                         XData.push(item.searchTime)
                         YData.push(item.count)
@@ -562,8 +569,24 @@ export interface DataStatisticsProps {}
 export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
+    // 获取当前日期
+    const today = moment()
+    // 计算 30 天前的日期
+    const thirtyDaysAgo = today.clone().subtract(30, "days")
+
     const [userData, setUserData] = useState<API.TouristAndUserResponse>()
     const [loading, setLoading] = useState<boolean>(false)
+    const [activeLineParams, setActiveLineParams] = useState<ActiveLineProp>({
+        showType: "day",
+        startTime: moment(thirtyDaysAgo).unix(),
+        endTime: moment(today).unix()
+    })
+    const [riseLineParams, setRiseLineParams] = useState<RiseLineProps>({
+        changeType: "total",
+        showType: "day",
+        startTime: moment(thirtyDaysAgo).unix(),
+        endTime: moment(today).unix()
+    })
     useEffect(() => {
         getUserData()
     }, [])
@@ -583,6 +606,12 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 setLoading(false)
             })
     })
+
+    const disabledDate: RangePickerProps["disabledDate"] = (current) => {
+        // Can not select days before today and today
+        return current && current < moment().endOf("day")
+    }
+
     return (
         <div className={styles["data-statistics"]} ref={ref}>
             <div className={styles["left-box"]}>
@@ -662,7 +691,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                             <div className={styles["range-picker"]}>
                                 <RangePicker
                                     locale={locale}
-                                    defaultValue={[moment("2015/01/01", dateFormat), moment("2015/01/01", dateFormat)]}
+                                    defaultValue={[thirtyDaysAgo, today]}
                                     format={dateFormat}
                                     suffixIcon={
                                         <div className={styles["picker-icon"]}>
@@ -671,24 +700,36 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                     }
                                     allowClear={false}
                                     dropdownClassName={styles["range-picker-dropdaown"]}
+                                    onChange={(time) => {
+                                        const dates = time as [Moment, Moment] | null
+                                        if (dates) {
+                                            setActiveLineParams({
+                                                ...activeLineParams,
+                                                startTime: moment(dates[0]).unix(),
+                                                endTime: moment(dates[1]).unix()
+                                            })
+                                        }
+                                    }}
                                 />
                             </div>
 
                             <YakitSegmented
-                                // value={userPluginType}
-                                onChange={(v) => {}}
+                                value={activeLineParams?.showType}
+                                onChange={(v) => {
+                                    setActiveLineParams({...activeLineParams, showType: v as "day" | "month" | "year"})
+                                }}
                                 options={[
                                     {
                                         label: "天",
-                                        value: "myOnlinePlugin"
+                                        value: "day"
                                     },
                                     {
                                         label: "月",
-                                        value: "recycle1"
+                                        value: "month"
                                     },
                                     {
                                         label: "年",
-                                        value: "recycle2"
+                                        value: "year"
                                     }
                                 ]}
                             />
@@ -697,14 +738,18 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                     <div className={styles["card-box"]}>
                         <div className={styles["card-item"]}>
                             <div className={styles["show"]}>
-                                <div className={styles["count"]}>{userData ? numeral(userData.dayActive).format("0,0") : ""}</div>
+                                <div className={styles["count"]}>
+                                    {userData ? numeral(userData.dayActive).format("0,0") : ""}
+                                </div>
                                 <UpsOrDowns type='up' value='6.8' />
                             </div>
                             <div className={styles["title"]}>日活</div>
                         </div>
                         <div className={styles["card-item"]}>
                             <div className={styles["show"]}>
-                                <div className={styles["count"]}>{userData ? numeral(userData.weekActive).format("0,0") : ""}</div>
+                                <div className={styles["count"]}>
+                                    {userData ? numeral(userData.weekActive).format("0,0") : ""}
+                                </div>
                                 <UpsOrDowns type='down' value='2' />
                             </div>
                             <div className={styles["title"]}>周活</div>
@@ -720,7 +765,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                         </div>
                     </div>
                     <div className={styles["active-line-charts"]}>
-                        <ActiveLineEcharts inViewport={inViewport} />
+                        <ActiveLineEcharts inViewport={inViewport} activeLineParams={activeLineParams} />
                     </div>
                 </div>
                 <div className={styles["user-rise"]}>
@@ -729,19 +774,18 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                             <div className={styles["text"]}>用户数量变化趋势</div>
                             <div className={styles["radio-btn"]}>
                                 <YakitRadioButtons
-                                    // size='large'
-                                    value={"all"}
+                                    value={riseLineParams.changeType}
                                     onChange={(e) => {
-                                        // setFormat(e.target.value)
+                                        setRiseLineParams({...riseLineParams, changeType: e.target.value})
                                     }}
                                     buttonStyle='solid'
                                     options={[
                                         {
-                                            value: "all",
+                                            value: "total",
                                             label: "总数"
                                         },
                                         {
-                                            value: "add",
+                                            value: "incr",
                                             label: "增长数"
                                         }
                                     ]}
@@ -752,7 +796,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                             <div className={styles["range-picker"]}>
                                 <RangePicker
                                     locale={locale}
-                                    defaultValue={[moment("2015/01/01", dateFormat), moment("2015/01/01", dateFormat)]}
+                                    defaultValue={[thirtyDaysAgo, today]}
                                     format={dateFormat}
                                     suffixIcon={
                                         <div className={styles["picker-icon"]}>
@@ -761,32 +805,44 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                     }
                                     allowClear={false}
                                     dropdownClassName={styles["range-picker-dropdaown"]}
+                                    // disabledDate={disabledDate}
+                                    onChange={(time) => {
+                                        const dates = time as [Moment, Moment] | null
+                                        if (dates) {
+                                            setRiseLineParams({
+                                                ...riseLineParams,
+                                                startTime: moment(dates[0]).unix(),
+                                                endTime: moment(dates[1]).unix()
+                                            })
+                                        }
+                                    }}
                                 />
                             </div>
 
                             <YakitSegmented
-                                // value={userPluginType}
-
-                                onChange={(v) => {}}
+                                value={riseLineParams?.showType}
+                                onChange={(v) => {
+                                    setRiseLineParams({...riseLineParams, showType: v as "day" | "month" | "year"})
+                                }}
                                 options={[
                                     {
                                         label: "天",
-                                        value: "myOnlinePlugin"
+                                        value: "day"
                                     },
                                     {
                                         label: "月",
-                                        value: "recycle1"
+                                        value: "month"
                                     },
                                     {
                                         label: "年",
-                                        value: "recycle2"
+                                        value: "year"
                                     }
                                 ]}
                             />
                         </div>
                     </div>
                     <div className={styles["user-rise-charts"]}>
-                        <RiseLineEcharts inViewport={inViewport} />
+                        <RiseLineEcharts inViewport={inViewport} riseLineParams={riseLineParams} />
                     </div>
                 </div>
             </div>
