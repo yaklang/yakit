@@ -26,6 +26,7 @@ function generateWindowsSudoCommand(file, args) {
 }
 
 const getLatestYakLocalEngine = require("./upgradeUtil").getLatestYakLocalEngine
+const homedir = require("./upgradeUtil").homedir
 
 function sudoExec(cmd, opt, callback) {
     if (isWindows) {
@@ -35,7 +36,7 @@ function sudoExec(cmd, opt, callback) {
     } else {
         _sudoPrompt.exec(
             cmd,
-            {...opt, env: {YAKIT_HOME: path.join(os.homedir(), "yakit-projects/"), YAK_DEFAULT_DATABASE_NAME: dbFile}},
+            {...opt, env: {YAK_DEFAULT_DATABASE_NAME: dbFile}},
             callback
         )
     }
@@ -268,7 +269,7 @@ module.exports = {
                     return
                 }
                 try {
-                    const info = fs.statSync(path.join(os.homedir(), `yakit-projects/${dbFile}`))
+                    const info = fs.statSync(path.join(homedir, $dbFile))
                     if ((info.mode & 0o200) > 0) {
                         resolve("")
                     } else {
@@ -291,7 +292,7 @@ module.exports = {
                     resolve(true)
                     return
                 }
-                const databaseFile = path.join(os.homedir(), `yakit-projects/${dbFile}`)
+                const databaseFile = path.join(homedir, $dbFile)
 
                 try {
                     fs.chmodSync(databaseFile, 0o644)

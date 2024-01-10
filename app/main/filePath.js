@@ -1,10 +1,10 @@
-const {app} = require("electron");
+const { app } = require("electron");
 const electronIsDev = require("electron-is-dev");
 const os = require("os")
 const path = require("path")
 const process = require("process")
 /** 软件关联项目相关目录路径 */
-const homeDir = path.join(os.homedir(), "yakit-projects")
+const homeDir = process.env.YAKIT_HOME || path.join(os.homedir(), "yakit-projects")
 /** 引擎和软件安装包路径 */
 const yaklangEngineDir = path.join(homeDir, "yak-engine")
 /**

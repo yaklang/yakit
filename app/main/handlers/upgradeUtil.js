@@ -11,7 +11,7 @@ const request = require("request");
 const zip = require('node-stream-zip');
 const electronIsDev = require("electron-is-dev");
 
-const homeDir = path.join(os.homedir(), "yakit-projects");
+const homeDir = process.env.YAKIT_HOME || path.join(os.homedir(), "yakit-projects")
 const secretDir = path.join(homeDir, "auth");
 
 const yakEngineDir = path.join(homeDir, "yak-engine")

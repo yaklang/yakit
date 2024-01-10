@@ -3,7 +3,7 @@ const {launch, killAll, getChromePath} = require("chrome-launcher")
 const fs = require("fs")
 const path = require("path")
 const os = require("os")
-const homeDir = path.join(os.homedir(), "yakit-projects")
+const homeDir = process.env.YAKIT_HOME || path.join(os.homedir(), "yakit-projects")
 const myUserDataDir = path.join(homeDir, "chrome-profile")
 
 const disableExtensionsExceptStr = (host, port, username, password) => `

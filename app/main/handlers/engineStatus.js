@@ -64,7 +64,7 @@ function sudoExec(cmd, opt, callback) {
             callback(err)
         })
     } else {
-        _sudoPrompt.exec(cmd, { ...opt, env: { YAKIT_HOME: path.join(os.homedir(), "yakit-projects/") } }, callback)
+        _sudoPrompt.exec(cmd, { ...opt}, callback)
     }
 }
 

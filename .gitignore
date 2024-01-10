@@ -16,7 +16,6 @@ bins/yak_windows_amd64.exe
 *.sock
 *.exe
 *.exe~
-build/
 releases/*
 releases/
 release-node/
