@@ -301,6 +301,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             setUserMenu([
                 // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "plugin-aduit", title: "插件管理"},
+                {key: "data-statistics", title: "数据统计"},
                 {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
             ])
         }
@@ -310,7 +311,15 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "trust-list", title: "用户管理"},
                 {key: "license-admin", title: "License管理"},
                 {key: "plugin-aduit", title: "插件管理"},
+                {key: "data-statistics", title: "数据统计"},
                 {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
+            ])
+        }
+        // 非企业操作员
+        else if (userInfo.role === "operate" && userInfo.platform !== "company") {
+            setUserMenu([
+                {key: "data-statistics", title: "数据统计"},
+                {key: "sign-out", title: "退出登录"}
             ])
         }
         // 非企业license管理员
@@ -387,7 +396,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             setUserMenu(cacheMenu)
         } else {
             setUserMenu([
-                {key: "data-statistics", title: "数据统计"},
                 {key: "sign-out", title: "退出登录"}
             ])
         }

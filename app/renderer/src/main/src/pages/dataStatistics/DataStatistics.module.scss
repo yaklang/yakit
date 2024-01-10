@@ -201,10 +201,12 @@
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
+                gap: 8px;
                 .title {
                     font-size: 16px;
                     font-weight: 600;
                     line-height: 24px;
+                    white-space: nowrap;
                 }
                 .extra {
                     display: flex;
@@ -308,7 +310,9 @@
 .ups-or-downs {
     display: flex;
     flex-direction: row;
+    height: 16px;
     gap: 4px;
+    align-items: center;
     .content {
         font-size: 12px;
         font-weight: 400;
@@ -331,5 +335,11 @@
     .icon,
     .content {
         color: #56c991;
+    }
+}
+.type-keep {
+    .icon,
+    .content {
+        color: #85899e;
     }
 }
