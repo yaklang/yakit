@@ -706,7 +706,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             const showSaveDialogRes = await ipcRenderer.invoke("openDialog", {properties: ["openDirectory"]})
             if (showSaveDialogRes.canceled) return
             let params: ExportParamsProps = {
-                OutputDir: showSaveDialogRes.filePath
+                OutputDir: showSaveDialogRes.filePaths[0]
             }
             params.YakScriptIds = Ids
             if (queryFetchList) {
