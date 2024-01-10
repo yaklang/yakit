@@ -318,6 +318,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         setFilters(defaultFilters)
         setSearch(cloneDeep(defaultSearch))
         getInitTotal()
+        getPluginGroupListLocal()
         setTimeout(() => {
             fetchList(true)
         }, 200)
