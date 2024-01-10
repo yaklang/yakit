@@ -281,7 +281,9 @@ service Yak {
   rpc YaklangCompileAndFormat(YaklangCompileAndFormatRequest) returns (YaklangCompileAndFormatResponse);
 
   rpc YaklangLanguageSuggestion(YaklangLanguageSuggestionRequest) returns (YaklangLanguageSuggestionResponse);
+  // 从代码中提取yaklang数据
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
+  // 进行数据迁移使用 
   rpc YaklangGetCliCodeFromDatabase(YaklangGetCliCodeFromDatabaseRequest) returns (YaklangGetCliCodeFromDatabaseResponse);
 
   // 端口扫描的封装
@@ -584,6 +586,7 @@ service Yak {
   // 诊断网络发生的问题
   rpc DiagnoseNetwork(DiagnoseNetworkRequest) returns (stream DiagnoseNetworkResponse);
   rpc DiagnoseNetworkDNS(DiagnoseNetworkDNSRequest) returns (stream DiagnoseNetworkResponse);
+  rpc TraceRoute(TraceRouteRequest) returns (stream TraceRouteResponse);
 
   // Global Network Config
   rpc GetGlobalNetworkConfig(GetGlobalNetworkConfigRequest) returns (GlobalNetworkConfig);
@@ -1848,9 +1851,21 @@ message YaklangLanguageSuggestionResponse {
 message YaklangInspectInformationResponse {
   repeated YaklangInformation Information = 1;
   repeated YakScriptParam CliParameter  = 2;
+  repeated YakRiskInfo RiskInfo = 3;
 }
+
+message YakRiskInfo {
+  string Level = 1;
+  string TypeVerbose = 2;
+  string CVE = 3;
+  string Description = 4; 
+  string Solution = 5;
+}
+
+
 message YaklangGetCliCodeFromDatabaseResponse {
   string Code = 1;
+  bool NeedHandle = 2;
 }
 
 message YaklangGetCliCodeFromDatabaseRequest {
@@ -3914,7 +3929,6 @@ message FuzzerRequest {
 message KVPair {
   string Key = 1;
   string Value = 2;
-  bytes ValueBytes = 3;
 }
 
 message FuzzerResponseFilter {
@@ -4367,7 +4381,7 @@ message MITMRequest {
 
   // max content-length
   int64 maxContentLength = 55;
-  
+
   // 提前为此次flow设置tags
   repeated string Tags = 56;
 }
@@ -4635,4 +4649,13 @@ message ParseTrafficResponse{
     bool OK = 1;
   string Result = 2;
   string Message = 3;
+}
+message TraceRouteRequest{
+  string Host = 1;
+}
+message TraceRouteResponse{
+  string Ip = 1;
+  int64 Rtt = 2;
+  string Reason = 3;
+  int64 Hop = 4;
 }

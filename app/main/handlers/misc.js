@@ -576,6 +576,13 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamDiagnoseNetworkDNSMap, token)
     })
 
+    const streamTracerouteMap = new Map();
+    ipcMain.handle("cancel-Traceroute", handlerHelper.cancelHandler(streamTracerouteMap));
+    ipcMain.handle("Traceroute", (e, params, token) => {
+        let stream = getClient().TraceRoute(params);
+        handlerHelper.registerHandler(win, stream, streamTracerouteMap, token)
+    })
+
     // asyncRequestYakURL wrapper
     const asyncRequestYakURL = (params) => {
         return new Promise((resolve, reject) => {
