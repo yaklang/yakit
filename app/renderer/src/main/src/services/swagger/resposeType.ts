@@ -231,10 +231,6 @@ export declare namespace API {
   export interface TouristCityCount {
     city: string;
     count: number;
-    /**
-     * 百分比
-     */
-    percent?: string;
   }
   export interface TouristAndUserResponse {
     /**
@@ -254,6 +250,10 @@ export declare namespace API {
      */
     dayGain: string;
     /**
+     * up 增 down 减
+     */
+    dayGainUpOrDown?: string;
+    /**
      * 日活
      */
     dayActive: number;
@@ -261,6 +261,10 @@ export declare namespace API {
      * 日活增率
      */
     dayActiveGain: string;
+    /**
+     * up 增 down 减
+     */
+    dayActiveGainUpOrDown?: string;
     /**
      * 周增量
      */
@@ -270,6 +274,10 @@ export declare namespace API {
      */
     weekGain: string;
     /**
+     * up 增 down 减
+     */
+    weekGainUpOrDown?: string;
+    /**
      * 周活
      */
     weekActive: number;
@@ -277,6 +285,10 @@ export declare namespace API {
      * 周活增率
      */
     weekActiveGain: string;
+    /**
+     * up 增 down 减
+     */
+    weekActiveGainUpOrDown?: string;
     /**
      * 月增量
      */
@@ -286,6 +298,10 @@ export declare namespace API {
      */
     monthGain: string;
     /**
+     * up 增 down 减
+     */
+    monthGainUpOrDown?: string;
+    /**
      * 月活
      */
     monthActive: number;
@@ -293,6 +309,10 @@ export declare namespace API {
      * 月活增率
      */
     monthActiveGain: string;
+    /**
+     * up 增 down 减
+     */
+    monthActiveGainUpOrDown?: string;
   }
   export interface TouristActiveResponse {
     data: TouristActiveDetail[];
