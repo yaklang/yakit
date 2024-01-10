@@ -73,7 +73,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     const {
         size,
         inputProps = {},
-        help,
+        help = "可将文件拖入框内或点击此处",
         value: fileName,
         onChange: setFileName,
         setContent,
@@ -232,7 +232,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                         [styles["dragger-help-large"]]: size === "large"
                     })}
                 >
-                    {(help && help) || (showDefHelp && <>{helpNode}</>) || <></>}
+                    {(showDefHelp && <>{helpNode}</>) || <></>}
                 </div>
             </Spin>
         )
@@ -359,7 +359,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
-                                可将文件拖入框内或点击此处
+                                {help}
                                 <span
                                     className={classNames(styles["dragger-help-active"], {
                                         [styles["dragger-help-active-disabled"]]: disabled
@@ -397,7 +397,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
-                                可将文件拖入框内或点击此处
+                                {help}
                                 <span
                                     className={classNames(styles["dragger-help-active"], {
                                         [styles["dragger-help-active-disabled"]]: disabled
@@ -433,7 +433,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
-                                可将文件拖入框内或点击此处
+                                {help}
                                 <span
                                     className={classNames(styles["dragger-help-active"], {
                                         [styles["dragger-help-active-disabled"]]: disabled
@@ -605,12 +605,12 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
             >
                 {renderContent(
                     <div className={classNames(styles["form-item-help"], styles["form-item-content-help"])}>
-                        {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
                         <label
                             onClick={(e) => {
                                 e.stopPropagation()
                             }}
                         >
+                            {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
                             <span
                                 className={classNames(styles["dragger-help-active"], {
                                     [styles["dragger-help-active-disabled"]]: disabled
