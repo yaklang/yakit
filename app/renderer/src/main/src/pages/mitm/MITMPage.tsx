@@ -758,9 +758,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const [localImportStep, setLocalImportStep] = useState<1 | 2>(1)
     const [localUploadList, setLocalUploadList] = useState<UploadList[]>([])
     const [localStreamData, setLocalStreamData] = useState<ImportYakScriptResult>()
+    const localStreamDataRef = useRef<ImportYakScriptResult>()
     const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
     const locallogListInfoRef = useRef<LogListInfo[]>([])
-    const autoCloseImportModalRef = useRef<boolean>(true) // 当导入本地插件的所有文件都成功时，弹窗自动关闭
 
     const [startExecYakCodeModalVisible, setStartExecYakCodeModalVisible] = useState<boolean>(false)
     const [startExecYakCodeVerbose, setStartExecYakCodeVerbose] = useState<string>("")
@@ -783,20 +783,14 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         setLocalImportStep(1)
         setLocalUploadList([])
         setLocalStreamData(undefined)
+        localStreamDataRef.current = undefined
         locallogListInfoRef.current = []
         setLocallogListInfo([])
-        autoCloseImportModalRef.current = true
     }
 
     useEffect(() => {
-        if (localStreamData?.MessageType === "error") {
-            autoCloseImportModalRef.current = false
-        }
-        if (
-            autoCloseImportModalRef.current === true &&
-            localStreamData?.Progress === 1 &&
-            localStreamData?.MessageType === "success"
-        ) {
+        if (!localStreamData) return
+        if (localStreamData.Progress === 1 && ["success", "finished"].includes(localStreamData.MessageType)) {
             // 该处表示导入的所有本地插件完全导入成功
             handleImportLocalPluginFinish()
         }
@@ -811,20 +805,27 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     }
 
     useEffect(() => {
-        ipcRenderer.on("import-yak-script-data", async (e, data: ImportYakScriptResult) => {
-            setLocalImportStep(2)
-            setLocalStreamData(data)
-            locallogListInfoRef.current = [
-                {message: data.Message, isError: data.MessageType === "error"},
-                ...locallogListInfoRef.current
-            ]
-            setLocallogListInfo(locallogListInfoRef.current)
-        })
-
+        let timer
+        if (visible) {
+            timer = setInterval(() => {
+                setLocalStreamData(localStreamDataRef.current)
+                setLocallogListInfo(locallogListInfoRef.current)
+            }, 300)
+            ipcRenderer.on("import-yak-script-data", async (e, data: ImportYakScriptResult) => {
+                setLocalImportStep(2)
+                localStreamDataRef.current = data
+                locallogListInfoRef.current = [
+                    {message: data.Message, isError: data.MessageType === "error" || data.MessageType === "finalError"},
+                    ...locallogListInfoRef.current
+                ]
+                console.log(123, data)
+            })
+        }
         return () => {
+            clearInterval(timer)
             ipcRenderer.removeAllListeners("import-yak-script-data")
         }
-    }, [locallogListInfoRef])
+    }, [visible])
 
     const getRenderByLoadMode = useMemoizedFn((type: string) => {
         switch (type) {
@@ -872,8 +873,8 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                         step={localImportStep}
                         stepOneSubTitle={<>请选择以插件类型命名的文件夹，支持批量上传</>}
                         fileRegexInfo={{
-                            fileNameRegex: /^(yak_codec|yak_mitm|yak_module|yak_nuclei)$/,
-                            fileNameErrorMsg: "不符合插件类型命名文件夹，请上传正确格式文件"
+                            fileNameRegex: /^(yak_codec|yak_mitm|yak_module|yak_nuclei|yak_portscan)$/,
+                            fileNameErrorMsg: "不符合文件夹格式要求，请重新上传"
                         }}
                         uploadList={localUploadList}
                         onUploadList={setLocalUploadList}

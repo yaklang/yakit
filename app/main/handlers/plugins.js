@@ -71,6 +71,7 @@ module.exports = (win, getClient) => {
     let importYakScriptStream
     ipcMain.handle("ImportYakScript", async (e, params) => {
         importYakScriptStream = getClient().ImportYakScript(params)
+
         importYakScriptStream.on("data", (e) => {
             if (!win) {
                 return

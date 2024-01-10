@@ -1,6 +1,6 @@
-import React from "react"
+import React, {useRef} from "react"
 import {Progress} from "antd"
-import {useDebounceFn} from "ahooks"
+import {useDebounceFn, useVirtualList} from "ahooks"
 import styles from "./YakitUploadModal.module.scss"
 import {failed, warn} from "@/utils/notification"
 import {OutlinePaperclipIcon} from "@/assets/icon/outline"
@@ -29,6 +29,16 @@ export interface ImportAndExportStatusInfo {
 
 export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = (props) => {
     const {title, streamData, logListInfo, showDownloadDetail} = props
+
+    const containerRef = useRef<any>(null)
+    const wrapperRef = useRef<any>(null)
+    
+    const [list] = useVirtualList(logListInfo, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 24,
+        overscan: 5
+    })
 
     return (
         <div className={styles["yaklang-engine-hint-wrapper"]}>
@@ -87,16 +97,18 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = (p
                             </>
                         </div>
                     )}
-                    <div className={styles["log-info"]}>
-                        {logListInfo.map((item, index) => (
-                            <div
-                                key={index}
-                                className={styles["log-item"]}
-                                style={{color: item.isError ? "#f00" : "#85899e"}}
-                            >
-                                {item.message}
-                            </div>
-                        ))}
+                    <div className={styles["log-info"]} ref={containerRef} style={{ height: list.length > 5 ? 200 : 50 }}>
+                        <div ref={wrapperRef}>
+                            {list.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className={styles["log-item"]}
+                                    style={{color: item.data.isError ? "#f00" : "#85899e"}}
+                                >
+                                    {item.data.message}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -254,36 +266,3 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
         </div>
     )
 }
-
-// declare type getContainerFunc = () => HTMLElement
-// export interface YakitUploadModalProps extends YakitUploadComponentProps {
-//     /** @name 控制Modal是否打开 */
-//     visible: boolean
-//     /** @name 控制Modal不全占据页面 */
-//     getContainer?: string | HTMLElement | getContainerFunc | false
-// }
-
-// /**
-//  * @description: 新样式上传Modal（包含2个步骤，步骤1选择上传，步骤2展示上传内容）
-//  */
-// export const YakitUploadModal: React.FC<YakitUploadModalProps> = (props) => {
-//     const {visible, getContainer, ...restProps} = props
-//     return (
-//         <div>
-//             <YakitModal
-//                 // document.getElementById("new-payload") || document.body
-//                 getContainer={getContainer}
-//                 title={null}
-//                 footer={null}
-//                 width={520}
-//                 type={"white"}
-//                 closable={false}
-//                 maskClosable={false}
-//                 hiddenHeader={true}
-//                 visible={visible}
-//             >
-//                 <YakitUploadComponent {...restProps} />
-//             </YakitModal>
-//         </div>
-//     )
-// }

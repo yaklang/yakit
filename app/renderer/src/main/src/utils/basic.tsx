@@ -450,6 +450,7 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
 
     const onCancel = () => {
         ipcRenderer.invoke("cancel-ExecYakCode", startToExecYakScriptViewerRef.current.token)
+        noErrorsLogCallBack && noErrorsLogCallBack()
         onClose()
     }
 
@@ -471,8 +472,7 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
                     script={params} 
                     verbose={verbose} 
                     successInfo={successInfo} 
-                    onCancel={onCancel} 
-                    noErrorsLogCallBack={noErrorsLogCallBack}
+                    onCancel={onCancel}
                 />
             </div>
         </YakitModal>
@@ -485,9 +485,8 @@ const StartToExecYakScriptViewer = React.forwardRef((props: {
     script: YakScriptParam,
     successInfo?: boolean
     onCancel: () => void
-    noErrorsLogCallBack?: () => void
 }, ref) => {
-    const {script, verbose, successInfo = true, onCancel, noErrorsLogCallBack} = props;
+    const {script, verbose, successInfo = true, onCancel} = props;
     const [token, setToken] = useState(randomString(40));
     const [loading, setLoading] = useState(true);
     const [messageStateStr, setMessageStateStr] = useState<string>("");
@@ -525,7 +524,6 @@ const StartToExecYakScriptViewer = React.forwardRef((props: {
             // 导入日志都没有错误
             if (!checkErrorsFlagRef.current && !loading) {
                 onCancel()
-                noErrorsLogCallBack && noErrorsLogCallBack()
             }
         }
     }, [messageStateStr, loading])
