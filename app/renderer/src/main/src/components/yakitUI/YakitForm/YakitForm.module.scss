@@ -102,4 +102,7 @@
 
 .form-item-content-help {
     justify-content: flex-start;
+    label {
+        cursor: pointer;
+    }
 }

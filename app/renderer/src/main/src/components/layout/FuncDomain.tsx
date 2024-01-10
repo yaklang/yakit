@@ -1685,7 +1685,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const fetchYaklangLastVersion = useMemoizedFn(() => {
         ipcRenderer.invoke("fetch-latest-yaklang-version").then((data: string) => {
             if (yaklangVersion !== data) setYaklangLastVersion(data)
-        })
+        }).catch((err) => {})
         ipcRenderer.invoke("get-current-yak").then((data: string) => {
             !isRemoteMode && setYaklangLocalVersion(data)
         })
