@@ -60,6 +60,8 @@ export interface SetRemoteValuesBaseProps {
     cacheHistoryDataKey: string
     newValue: string
     cacheHistoryListLength?: number
+    /**是否缓存默认值 */
+    isCacheDefaultValue?: boolean
 }
 /**
  * 缓存 cacheHistoryDataKey 对应的数据
@@ -68,7 +70,7 @@ export interface SetRemoteValuesBaseProps {
  */
 export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promise<CacheDataHistoryProps> = (params) => {
     return new Promise((resolve, reject) => {
-        const {cacheHistoryDataKey, newValue, cacheHistoryListLength = 10} = params
+        const {cacheHistoryDataKey, newValue, cacheHistoryListLength = 10, isCacheDefaultValue} = params
         onGetRemoteValuesBase(cacheHistoryDataKey).then((oldCacheHistoryData) => {
             const index = oldCacheHistoryData.options.findIndex((l) => l.value === newValue)
             let cacheHistory: CacheDataHistoryProps = {
@@ -88,7 +90,7 @@ export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promis
             } else {
                 cacheHistory = {
                     options: oldCacheHistoryData.options,
-                    defaultValue: newValue
+                    defaultValue: isCacheDefaultValue !== false ? newValue : ""
                 }
             }
             setRemoteValue(cacheHistoryDataKey, JSON.stringify(cacheHistory))
