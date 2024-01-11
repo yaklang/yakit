@@ -461,19 +461,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         <TabPane tab='执行' key='execute'>
                             <div className={styles["plugin-execute-wrapper"]}>
                                 {executorShow ? (
-                                    // <LocalPluginExecutor
-                                    //     script={plugin}
-                                    //     isEdit={false}
-                                    //     setIsEdit={() => {}}
-                                    //     isShowPrivateDom={false}
-                                    //     settingShow={false}
-                                    //     setSettingShow={() => {}}
-                                    //     extraParams={[]}
-                                    //     setExtraParams={() => {}}
-                                    //     groups={[]}
-                                    //     updateGroups={() => {}}
-                                    //     patternMenu='expert'
-                                    // />
                                     <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} />
                                 ) : (
                                     <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />

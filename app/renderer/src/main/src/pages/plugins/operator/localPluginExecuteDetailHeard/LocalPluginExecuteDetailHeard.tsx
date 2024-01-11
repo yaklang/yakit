@@ -661,7 +661,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
     }
 }
 
-const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((props) => {
+export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((props) => {
     const {percent, name} = props
     return (
         <div className={styles["plugin-execute-progress-wrapper"]}>
@@ -695,7 +695,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
     }, [])
     return (
         <>
-            <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked'>
+            <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' initialValue={false}>
                 <YakitSwitch size='large' disabled={disabled} />
             </Form.Item>
             <Form.Item label='请求类型' name='IsRawHTTPRequest' initialValue={false}>

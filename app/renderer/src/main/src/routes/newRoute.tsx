@@ -132,6 +132,7 @@ import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
 import { NewPayload } from "@/pages/payloadManager/newPayload"
 import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
+import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -377,7 +378,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.AddYakitScript,
     YakitRoute.ModifyYakitScript,
     YakitRoute.PayloadManager,
-    YakitRoute.Data_Statistics
+    YakitRoute.Data_Statistics,
+    YakitRoute.BatchExecutorPage,
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -533,7 +535,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Plugin_Local:
             return <PluginsLocal />
         case YakitRoute.BatchExecutorPage:
-            return <BatchExecutorPageEx />
+            return <PluginBatchExecutor />
         case YakitRoute.DNSLog:
             return <DNSLogPage />
         case YakitRoute.ICMPSizeLog:

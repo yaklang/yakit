@@ -1,0 +1,80 @@
+@use "../plugins.scss";
+%display-align-start {
+    display: flex;
+    align-items: flex-start;
+}
+.plugin-batch-executor {
+    @extend %display-align-start;
+    flex: 1;
+    overflow: hidden;
+    :global {
+        .plugin-details-item-wrapper {
+            cursor: pointer;
+        }
+    }
+}
+
+.plugin-batch-executor-header {
+    padding: 0px 0px 4px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eaecf3;
+    .plugin-batch-executor-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .plugin-batch-executor-title-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #31343f;
+            line-height: 16px;
+        }
+    }
+    .plugin-batch-executor-btn {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        .divider-style {
+            width: 1px;
+            height: 12px;
+            background-color: #eaecf3;
+        }
+    }
+}
+.plugin-batch-execute-form-wrapper {
+    @extend %display-column-center;
+    padding-top: 24px;
+    .plugin-execute-form-item {
+        width: 100%;
+    }
+    .plugin-execute-form-operate {
+        @extend %display-flex-center;
+        .plugin-execute-form-operate-start {
+            margin-right: 8px;
+        }
+    }
+}
+.plugin-batch-execute-form-wrapper-hidden {
+    display: none;
+}
+
+.plugin-batch-execute-extra-params-drawer {
+    :global {
+        .ant-drawer-body {
+            padding: 0;
+        }
+        .ant-collapse-item:first-child > .ant-collapse-header {
+            border-top: 0;
+        }
+    }
+}
+
+.to-end {
+    text-align: center;
+    color: var(--yakit-disable-text-color);
+    font-size: 11px;
+    padding-top: 12px;
+    padding-bottom: 24px;
+}

@@ -64,6 +64,11 @@ export interface PluginDetailsProps<T> {
     children: ReactNode
     /** 查询第一页的loading */
     spinLoading?: boolean
+    /**右边头部组件 */
+    rightHeardNode?: ReactNode
+    /**隐藏右边的部分 */
+    hidden?: boolean
+    setHidden?: (value: boolean) => void
 }
 
 export interface PluginDetailHeaderProps {
