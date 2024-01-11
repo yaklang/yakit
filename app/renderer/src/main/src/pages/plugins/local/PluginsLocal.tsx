@@ -71,8 +71,13 @@ import {SavePluginInfoSignalProps} from "../editDetails/PluginEditDetails"
 
 import "../plugins.scss"
 import styles from "./PluginsLocal.module.scss"
-import {ImportAndExportStatusInfo, LogListInfo} from "@/components/YakitUploadModal/YakitUploadModal"
+import {
+    ImportAndExportStatusInfo,
+    LogListInfo,
+    SaveProgressStream
+} from "@/components/YakitUploadModal/YakitUploadModal"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {v4 as uuidv4} from "uuid"
 
 const {ipcRenderer} = window.require("electron")
 const defaultFilters = {plugin_type: [], tags: []}
@@ -1010,26 +1015,33 @@ interface YakitExportStatusModalProps {
 }
 const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) => {
     const {visible, onClose, getContainer} = props
-
-    const [localStreamData, setLocalStreamData] = useState<ExportLocalYakScriptResponse>()
-    const localStreamDataRef = useRef<ExportLocalYakScriptResponse>()
+    const [localStreamData, setLocalStreamData] = useState<SaveProgressStream>()
+    const localStreamDataRef = useRef<SaveProgressStream>()
     const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
     const locallogListInfoRef = useRef<LogListInfo[]>([])
+    const [close, setClose] = useState<boolean>(false) // 判断是否自动关闭弹窗
 
     useEffect(() => {
         let timer
         if (visible) {
             timer = setInterval(() => {
                 setLocalStreamData(localStreamDataRef.current)
-                setLocallogListInfo(locallogListInfoRef.current)
+                setLocallogListInfo([...locallogListInfoRef.current])
             }, 300)
             ipcRenderer.on("export-yak-script-data", (e, data: ExportLocalYakScriptResponse) => {
-                localStreamDataRef.current = data
+                localStreamDataRef.current = {Progress: data.Progress}
+                console.log('导出数据', data);
+                // 展示错误日志
                 if (data.MessageType === "error" || data.Progress === 1) {
-                    locallogListInfoRef.current = [
-                        {message: data.Message, isError: data.MessageType === "error" || data.MessageType === "finalError"},
-                        ...locallogListInfoRef.current
-                    ]
+                    locallogListInfoRef.current.unshift({
+                        message: data.Message,
+                        isError: data.MessageType === "error",
+                        key: uuidv4()
+                    })
+                }
+
+                if (["success", "finished"].includes(data.MessageType) && data.Progress === 1) {
+                    setClose(true)
                 }
             })
         }
@@ -1041,18 +1053,15 @@ const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) =>
     }, [visible])
 
     useEffect(() => {
-        if (!localStreamData) return
-        if (localStreamData.Progress === 1 && ["success", "finished"].includes(localStreamData.MessageType)) {
-            // 该处表示导出的所有本地插件完全导出成功
-            handleExportLocalPluginFinish()
-        }
-    }, [localStreamData])
+        if (close) handleExportLocalPluginFinish()
+    }, [close])
 
     const resetLocalExport = () => {
         setLocalStreamData(undefined)
         setLocallogListInfo([])
         localStreamDataRef.current = undefined
         locallogListInfoRef.current = []
+        setClose(false)
     }
 
     const handleExportLocalPluginFinish = () => {

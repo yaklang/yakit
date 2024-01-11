@@ -39,9 +39,10 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {PluginGV} from "../plugins/builtInData"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {LogListInfo, UploadList, YakitUploadComponent} from "@/components/YakitUploadModal/YakitUploadModal"
+import {LogListInfo, SaveProgressStream, UploadList, YakitUploadComponent} from "@/components/YakitUploadModal/YakitUploadModal"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/routes/newRoute"
+import {v4 as uuidv4} from "uuid"
 const {ipcRenderer} = window.require("electron")
 
 export interface MITMPageProp {}
@@ -758,14 +759,15 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const [localNucleiPath, setLocalNucleiPath] = useState<string>("") // localNucleiPath
     const [localImportStep, setLocalImportStep] = useState<1 | 2>(1)
     const [localUploadList, setLocalUploadList] = useState<UploadList[]>([])
-    const [localStreamData, setLocalStreamData] = useState<ImportYakScriptResult>()
-    const localStreamDataRef = useRef<ImportYakScriptResult>()
+    const [localStreamData, setLocalStreamData] = useState<SaveProgressStream>()
+    const localStreamDataRef = useRef<SaveProgressStream>()
     const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
     const locallogListInfoRef = useRef<LogListInfo[]>([])
 
     const [startExecYakCodeModalVisible, setStartExecYakCodeModalVisible] = useState<boolean>(false)
     const [startExecYakCodeVerbose, setStartExecYakCodeVerbose] = useState<string>("")
     const [startExecYakCodeParams, setStartExecYakCodeParams] = useState<YakScriptParam>()
+    const [close, setClose] = useState<boolean>(false) // 判断是否自动关闭弹窗
 
     useEffect(() => {
         if (visible) {
@@ -786,16 +788,13 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         setLocalStreamData(undefined)
         localStreamDataRef.current = undefined
         locallogListInfoRef.current = []
+        setClose(false)
         setLocallogListInfo([])
     }
 
     useEffect(() => {
-        if (!localStreamData) return
-        if (localStreamData.Progress === 1 && ["success", "finished"].includes(localStreamData.MessageType)) {
-            // 该处表示导入的所有本地插件完全导入成功
-            handleImportLocalPluginFinish()
-        }
-    }, [localStreamData])
+        if (close) handleImportLocalPluginFinish()
+    }, [close])
 
     // 导入本地插件后执行操作
     const handleImportLocalPluginFinish = () => {
@@ -817,16 +816,23 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         if (visible) {
             timer = setInterval(() => {
                 setLocalStreamData(localStreamDataRef.current)
-                setLocallogListInfo(locallogListInfoRef.current)
+                setLocallogListInfo([...locallogListInfoRef.current])
             }, 300)
             ipcRenderer.on("import-yak-script-data", async (e, data: ImportYakScriptResult) => {
                 setLocalImportStep(2)
-                localStreamDataRef.current = data
+                localStreamDataRef.current = {Progress: data.Progress}
+                console.log('导入数据', data);
+                // 展示错误日志
                 if (data.MessageType === "error" || data.Progress === 1) {
-                    locallogListInfoRef.current = [
-                        {message: data.Message, isError: data.MessageType === "error" || data.MessageType === "finalError"},
-                        ...locallogListInfoRef.current
-                    ]
+                    locallogListInfoRef.current.unshift({
+                        message: data.Message,
+                        isError: data.MessageType === "error",
+                        key: uuidv4()
+                    })
+                }
+
+                if (["success", "finished"].includes(data.MessageType) && data.Progress === 1) {
+                    setClose(true)
                 }
             })
         }
@@ -1024,6 +1030,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 onCancel={onCancel}
                 width={getLoadModeInfo("width") || 680}
                 closable={true}
+                maskClosable={false}
                 title={!loadPluginMode ? "导入插件方式" : <>导入{getLoadModeInfo("label")}</>}
                 className={style["import-local-plugin-modal"]}
                 subTitle={

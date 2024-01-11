@@ -1,4 +1,4 @@
-import React, {useRef} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {Progress} from "antd"
 import {useDebounceFn, useVirtualList} from "ahooks"
 import styles from "./YakitUploadModal.module.scss"
@@ -18,6 +18,7 @@ export interface SaveProgressStream {
 export interface LogListInfo {
     message: string
     isError?: boolean
+    key: string
 }
 
 export interface ImportAndExportStatusInfo {
@@ -27,18 +28,23 @@ export interface ImportAndExportStatusInfo {
     showDownloadDetail: boolean // 是否显示-下载详细信息
 }
 
-export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = (props) => {
+export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = memo((props) => {
     const {title, streamData, logListInfo, showDownloadDetail} = props
 
     const containerRef = useRef<any>(null)
     const wrapperRef = useRef<any>(null)
-    
+
     const [list] = useVirtualList(logListInfo, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 24,
         overscan: 5
     })
+
+    const height = useMemo(() => {
+        if (list.length < 2) return 24
+        return 200
+    }, [list])
 
     return (
         <div className={styles["yaklang-engine-hint-wrapper"]}>
@@ -97,11 +103,11 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = (p
                             </>
                         </div>
                     )}
-                    <div className={styles["log-info"]} ref={containerRef} style={{ height: list.length > 5 ? 200 : 30 }}>
+                    <div className={styles["log-info"]} ref={containerRef} style={{height: height, marginTop: list.length !== 0 ? 10 : 0}}>
                         <div ref={wrapperRef}>
-                            {list.map((item, index) => (
+                            {list.map((item) => (
                                 <div
-                                    key={index}
+                                    key={item.data.key}
                                     className={styles["log-item"]}
                                     style={{color: item.data.isError ? "#f00" : "#85899e"}}
                                 >
@@ -114,7 +120,7 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = (p
             </div>
         </div>
     )
-}
+})
 
 export interface UploadList {
     path: string
@@ -148,7 +154,7 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
         uploadList = [],
         onUploadList,
         nextTitle = "导入中",
-        showDownloadDetail = true,
+        showDownloadDetail = false,
         streamData,
         logListInfo
     } = props
