@@ -338,6 +338,8 @@ const onClose = useMemoizedFn(()=>{
                     if (Number(paginationProps.Page) === 1) {
                         setIsRefresh(!isRefresh)
                     }
+                }).catch((e) => {
+
                 })
                 .finally(() => setTimeout(() => setLoading(false), 300))
         }

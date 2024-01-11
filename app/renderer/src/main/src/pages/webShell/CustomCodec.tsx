@@ -54,7 +54,8 @@ export const CustomCodecList: React.FC<CustomCodecListProps> = React.memo((props
                             <span style={{"color": "#f69c5d"}}>{item.ScriptName}</span>
                             <span className={httpQueryStyles["item-number"]}>
                                 {
-                                    item.Tags.split(",").filter((i) => i !== "webshell-packet-codec" && i !== "webshell-payload-codec").join(",")
+
+                                    (item.Tags||"").split(",").filter((i) => i !== "webshell-packet-codec" && i !== "webshell-payload-codec").join(",")
                                 }
                             </span>
 
@@ -167,7 +168,8 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
             warn("请输入插件模块名!")
             return
         }
-        if (!currCodec.Content || currCodec.Tags.split(",").length != 2) {
+        if (!currCodec.Content || (currCodec.Tags||"").split(",").length != 2) {
+
             warn("请输入插件内容/选择类型!")
             return
         }
@@ -375,7 +377,7 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
     const [shellScript, setShellScript] = useState<string>("")
 
     useEffect(() => {
-        let ss = params.Tags.split(",").filter((item) => item !== "webshell-packet-codec" && item !== "webshell-payload-codec").join(",");
+        let ss =( params.Tags|| "").split(",").filter((item) => item !== "webshell-packet-codec" && item !== "webshell-payload-codec").join(",");
         if (ss) {
             setShellScript(ss);
         }
