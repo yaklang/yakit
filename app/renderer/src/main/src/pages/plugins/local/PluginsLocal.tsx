@@ -1025,10 +1025,12 @@ const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) =>
             }, 300)
             ipcRenderer.on("export-yak-script-data", (e, data: ExportLocalYakScriptResponse) => {
                 localStreamDataRef.current = data
-                locallogListInfoRef.current = [
-                    {message: data.Message, isError: data.MessageType === "error" || data.MessageType === "finalError"},
-                    ...locallogListInfoRef.current
-                ]
+                if (data.MessageType === "error" || data.Progress === 1) {
+                    locallogListInfoRef.current = [
+                        {message: data.Message, isError: data.MessageType === "error" || data.MessageType === "finalError"},
+                        ...locallogListInfoRef.current
+                    ]
+                }
             })
         }
         return () => {

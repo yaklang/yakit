@@ -97,7 +97,7 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = (p
                             </>
                         </div>
                     )}
-                    <div className={styles["log-info"]} ref={containerRef} style={{ height: list.length > 5 ? 200 : 50 }}>
+                    <div className={styles["log-info"]} ref={containerRef} style={{ height: list.length > 5 ? 200 : 30 }}>
                         <div ref={wrapperRef}>
                             {list.map((item, index) => (
                                 <div

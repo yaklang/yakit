@@ -749,9 +749,10 @@ interface ImportLocalPluginProps {
     visible: boolean
     setVisible: (b: boolean) => void
     loadPluginMode?: LoadPluginMode
+    sendPluginLocal?: boolean
 }
 export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((props) => {
-    const {visible, setVisible, loadPluginMode} = props
+    const {visible, setVisible, loadPluginMode, sendPluginLocal = false} = props
     const [form] = Form.useForm()
     const [loadMode, setLoadMode] = useState<LoadPluginMode>(loadPluginMode || "giturl")
     const [localNucleiPath, setLocalNucleiPath] = useState<string>("") // localNucleiPath
@@ -800,8 +801,15 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     const handleImportLocalPluginFinish = () => {
         resetLocalImport()
         setVisible(false)
-        emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
-        emiter.emit("onImportRefLocalPluginList", "")
+        sendMsgToLocalPlugin()
+    }
+
+    // 发送事件到本地
+    const sendMsgToLocalPlugin = () => {
+        if (sendPluginLocal) {
+            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
+            emiter.emit("onImportRefLocalPluginList", "")
+        }
     }
 
     useEffect(() => {
@@ -814,11 +822,12 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             ipcRenderer.on("import-yak-script-data", async (e, data: ImportYakScriptResult) => {
                 setLocalImportStep(2)
                 localStreamDataRef.current = data
-                locallogListInfoRef.current = [
-                    {message: data.Message, isError: data.MessageType === "error" || data.MessageType === "finalError"},
-                    ...locallogListInfoRef.current
-                ]
-                console.log(123, data)
+                if (data.MessageType === "error" || data.Progress === 1) {
+                    locallogListInfoRef.current = [
+                        {message: data.Message, isError: data.MessageType === "error" || data.MessageType === "finalError"},
+                        ...locallogListInfoRef.current
+                    ]
+                }
             })
         }
         return () => {
@@ -1056,10 +1065,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 verbose={startExecYakCodeVerbose}
                 params={startExecYakCodeParams as YakScriptParam}
                 onClose={execYakCodeReset}
-                noErrorsLogCallBack={() => {
-                    emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
-                    emiter.emit("onImportRefLocalPluginList", "")
-                }}
+                noErrorsLogCallBack={sendMsgToLocalPlugin}
                 successInfo={false}
             ></StartExecYakCodeModal>
         </>

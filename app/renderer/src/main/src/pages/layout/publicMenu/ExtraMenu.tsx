@@ -120,6 +120,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     setVisibleImport(v)
                 }}
                 loadPluginMode={loadPluginMode}
+                sendPluginLocal={true}
             />
         </div>
     )
