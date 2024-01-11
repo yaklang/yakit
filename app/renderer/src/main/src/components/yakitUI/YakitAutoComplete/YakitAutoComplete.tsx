@@ -19,7 +19,15 @@ export const defYakitAutoCompleteRef = {
  * @param {number} cacheHistoryListLength 缓存的历史记录list长度
  */
 export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forwardRef((props, ref) => {
-    const {size, className, cacheHistoryDataKey, cacheHistoryListLength = 10, ref: forwardRef, ...restProps} = props
+    const {
+        size,
+        className,
+        cacheHistoryDataKey,
+        cacheHistoryListLength = 10,
+        isCacheDefaultValue=true,
+        ref: forwardRef,
+        ...restProps
+    } = props
     const [show, setShow] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
     const [cacheHistoryData, setCacheHistoryData] = useState<YakitAutoCompleteCacheDataHistoryProps>({
@@ -46,7 +54,6 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     const onSetRemoteValues = useMemoizedFn((newValue: string) => {
         if (!cacheHistoryDataKey) return
         onSetRemoteValuesBase({cacheHistoryDataKey, newValue}).then((value) => {
-            // onGetRemoteValues()
             setCacheHistoryData({
                 defaultValue: value.defaultValue || "",
                 options: value.options
