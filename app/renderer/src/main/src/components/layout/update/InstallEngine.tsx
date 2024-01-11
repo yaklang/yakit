@@ -62,7 +62,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     const [isShake, setIsShake] = useState<boolean>(false)
 
     /** 远端最新yaklang引擎版本 */
-    const [__latestVersion, setLatestVersion, getLatestVersion] = useGetState("")
+    const latestVersionRef = useRef<string>("")
     /** 下载进度条数据 */
     const [downloadProgress, setDownloadProgress, getDownloadProgress] = useGetState<DownloadingState>()
     /** 是否中断下载记录 */
@@ -125,7 +125,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
             .invoke("fetch-latest-yaklang-version")
             .then((data: string) => {
                 if (isBreakDownload.current) return
-                setLatestVersion(data.startsWith("v") ? data.slice(1) : data)
+                latestVersionRef.current = data.startsWith("v") ? data.slice(1) : data
                 if (callback) callback()
             })
             .catch((e: any) => {
@@ -136,7 +136,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
 
     const downloadEngine = useMemoizedFn(() => {
         ipcRenderer
-            .invoke("download-latest-yak", `v${getLatestVersion()}`)
+            .invoke("download-latest-yak", `v${latestVersionRef.current}`)
             .then(() => {
                 if (isBreakDownload.current) return
 
@@ -154,7 +154,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                 success("下载完毕")
                 /** 安装yaklang引擎 */
                 ipcRenderer
-                    .invoke("install-yak-engine", `v${getLatestVersion()}`)
+                    .invoke("install-yak-engine", `v${latestVersionRef.current}`)
                     .then(() => {
                         success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
                         if (isBreakDownload.current) return

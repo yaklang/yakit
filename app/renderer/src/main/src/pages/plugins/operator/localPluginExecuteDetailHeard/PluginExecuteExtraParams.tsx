@@ -10,18 +10,15 @@ import {
     YakExtraParamProps
 } from "./LocalPluginExecuteDetailHeardType"
 import {yakitFailed} from "@/utils/notification"
-import {FormContentItemByType, defPluginExecuteFormValue} from "./LocalPluginExecuteDetailHeard"
+import {FormContentItemByType} from "./LocalPluginExecuteDetailHeard"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
-import {OutlineTrashIcon} from "@/assets/icon/outline"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {SolidPlusIcon} from "@/assets/icon/solid"
 import {KVPair} from "@/models/kv"
 import {PluginGV} from "../../builtInData"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -135,7 +132,7 @@ interface ExtraParamsNodeByTypeProps {
     extraParamsGroup: YakExtraParamProps[]
     pluginType: string
 }
-const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((props) => {
+export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((props) => {
     const {extraParamsGroup, pluginType} = props
     const defaultActiveKey = useMemo(() => {
         return extraParamsGroup.map((ele) => ele.group)
@@ -206,8 +203,7 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
         }
     }
     // 删除
-    const handleRemove = (e: React.MouseEvent<Element, MouseEvent>, i: number, field: Fields) => {
-        e.stopPropagation()
+    const handleRemove = (i: number, field: Fields) => {
         const v = form.getFieldsValue()
         const variables = (v[field] || []) as KVPair[]
         variables.splice(i, 1)
@@ -271,20 +267,8 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                     <VariableList
                         ref={getParamsRef}
                         field='GetParams'
-                        yakitPanelClassName={styles["form-list-panel"]}
-                        extra={(i: number) => {
-                            return (
-                                <YakitButton
-                                    type='text2'
-                                    danger
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleRemove(e, i, "GetParams")
-                                    }}
-                                    icon={<OutlineTrashIcon />}
-                                    className={styles["panel-list-extra-remove"]}
-                                />
-                            )
+                        onDel={(i) => {
+                            handleRemove(i, "GetParams")
                         }}
                     ></VariableList>
                 </YakitPanel>
@@ -317,20 +301,8 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                     <VariableList
                         ref={postParamsRef}
                         field='PostParams'
-                        yakitPanelClassName={styles["form-list-panel"]}
-                        extra={(i: number) => {
-                            return (
-                                <YakitButton
-                                    type='text2'
-                                    danger
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleRemove(e, i, "GetParams")
-                                    }}
-                                    icon={<OutlineTrashIcon />}
-                                    className={styles["panel-list-extra-remove"]}
-                                />
-                            )
+                        onDel={(i) => {
+                            handleRemove(i, "PostParams")
                         }}
                     ></VariableList>
                 </YakitPanel>
@@ -363,20 +335,8 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                     <VariableList
                         ref={headersRef}
                         field='Headers'
-                        yakitPanelClassName={styles["form-list-panel"]}
-                        extra={(i: number) => {
-                            return (
-                                <YakitButton
-                                    type='text2'
-                                    danger
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleRemove(e, i, "GetParams")
-                                    }}
-                                    icon={<OutlineTrashIcon />}
-                                    className={styles["panel-list-extra-remove"]}
-                                />
-                            )
+                        onDel={(i) => {
+                            handleRemove(i, "Headers")
                         }}
                     ></VariableList>
                 </YakitPanel>
@@ -409,20 +369,8 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                     <VariableList
                         ref={cookieRef}
                         field='Cookie'
-                        yakitPanelClassName={styles["form-list-panel"]}
-                        extra={(i: number) => {
-                            return (
-                                <YakitButton
-                                    type='text2'
-                                    danger
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleRemove(e, i, "GetParams")
-                                    }}
-                                    icon={<OutlineTrashIcon />}
-                                    className={styles["panel-list-extra-remove"]}
-                                />
-                            )
+                        onDel={(i) => {
+                            handleRemove(i, "Cookie")
                         }}
                     ></VariableList>
                 </YakitPanel>

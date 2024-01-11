@@ -1,7 +1,5 @@
 import {
     InformationCircleIcon,
-    SolidChevronDownIcon,
-    SolidChevronRightIcon,
     PlusSmIcon,
     PlusIcon,
     TrashIcon,
@@ -18,7 +16,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {useInViewport, useMemoizedFn} from "ahooks"
-import {Form, Tooltip, Collapse, Space, Divider, Descriptions} from "antd"
+import {Form, Tooltip, Space, Divider, Descriptions} from "antd"
 import React, {useState, useRef, useEffect, useMemo, ReactNode} from "react"
 import {inputHTTPFuzzerHostConfigItem} from "../HTTPFuzzerHosts"
 import {HttpQueryAdvancedConfigProps, AdvancedConfigValueProps} from "./HttpQueryAdvancedConfigType"
@@ -51,7 +49,8 @@ import "hint.css"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {CopyableField} from "@/utils/inputUtil"
 import emiter from "@/utils/eventBus/eventBus"
-import { AgentConfigModal } from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
+import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
+import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -214,43 +213,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         setActiveKey(key)
         setRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey, JSON.stringify(key))
     })
-    /**
-     * @description 变量预览
-     */
-    const onRenderVariables = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("RenderVariables", {
-                Params: form.getFieldValue("params") || [],
-                HTTPResponse: StringToUint8Array(defaultHttpResponse || defMatcherAndExtractionCode)
-            })
-            .then((rsp: {Results: {Key: string; Value: string}[]}) => {
-                showYakitModal({
-                    title: "渲染后变量内容",
-                    footer: <></>,
-                    content: (
-                        <div className={styles["render-variables-modal-content"]}>
-                            <Descriptions size={"small"} column={1} bordered={true}>
-                                {rsp.Results.filter((i) => {
-                                    return !(i.Key === "" && i.Value === "")
-                                }).map((data, index) => {
-                                    return (
-                                        <Descriptions.Item
-                                            label={<CopyableField text={data.Key} maxWidth={100} />}
-                                            key={`${data.Key}-${data.Value}`}
-                                        >
-                                            <CopyableField text={data.Value} maxWidth={300} />
-                                        </Descriptions.Item>
-                                    )
-                                })}
-                            </Descriptions>
-                        </div>
-                    )
-                })
-            })
-            .catch((err) => {
-                yakitNotify("error", "预览失败:" + err)
-            })
-    })
     const onReset = useMemoizedFn((restValue) => {
         const v = form.getFieldsValue()
         onSetValue({
@@ -370,6 +332,91 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
 
+    const variableRef = useRef<any>()
+    /** 变量重置 */
+    const handleVariableReset = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+        e.stopPropagation()
+        onReset({
+            params: [{Key: "", Value: "", Type: "raw"}]
+        })
+        if (variableRef && variableRef.current) {
+            variableRef.current?.setVariableActiveKey(["0"])
+        }
+    })
+    /** @description 变量预览 */
+    const onRenderVariables = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+        e.stopPropagation()
+        ipcRenderer
+            .invoke("RenderVariables", {
+                Params: form.getFieldValue("params") || [],
+                HTTPResponse: StringToUint8Array(defaultHttpResponse || defMatcherAndExtractionCode)
+            })
+            .then((rsp: {Results: {Key: string; Value: string}[]}) => {
+                showYakitModal({
+                    title: "渲染后变量内容",
+                    footer: <></>,
+                    content: (
+                        <div className={styles["render-variables-modal-content"]}>
+                            <Descriptions size={"small"} column={1} bordered={true}>
+                                {rsp.Results.filter((i) => {
+                                    return !(i.Key === "" && i.Value === "")
+                                }).map((data, index) => {
+                                    return (
+                                        <Descriptions.Item
+                                            label={<CopyableField text={data.Key} maxWidth={100} />}
+                                            key={`${data.Key}-${data.Value}`}
+                                        >
+                                            <CopyableField text={data.Value} maxWidth={300} />
+                                        </Descriptions.Item>
+                                    )
+                                })}
+                            </Descriptions>
+                        </div>
+                    )
+                })
+            })
+            .catch((err) => {
+                yakitNotify("error", "预览失败:" + err)
+            })
+    })
+    /** 变量添加 */
+    const handleVariableAdd = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>) => {
+        e.stopPropagation()
+        const v = form.getFieldsValue()
+        const variables = v.params || []
+        const index = variables.findIndex((ele) => !ele || (!ele.Key && !ele.Value))
+        if (index === -1) {
+            form.setFieldsValue({
+                params: [...variables, {Key: "", Value: "", Type: "raw"}]
+            })
+            onSetValue({
+                ...v,
+                params: [...variables, {Key: "", Value: "", Type: "raw"}]
+            })
+            if (variableRef && variableRef.current) {
+                variableRef.current?.setVariableActiveKey([...(variableActiveKey || []), `${variables?.length || 0}`])
+            }
+        } else {
+            yakitNotify("error", `请将已添加【变量${index}】设置完成后再进行添加`)
+        }
+        if (activeKey?.findIndex((ele) => ele === "设置变量") === -1) {
+            onSwitchCollapse([...activeKey, "设置变量"])
+        }
+    })
+    /** 变量删除 */
+    const handleVariableDel = useMemoizedFn((i: number) => {
+        const v = form.getFieldsValue()
+        const variables = v.params || []
+        variables.splice(i, 1)
+        form.setFieldsValue({
+            params: [...variables]
+        })
+        onSetValue({
+            ...v,
+            params: [...variables]
+        })
+    })
+
     return (
         <div
             className={classNames(styles["http-query-advanced-config"])}
@@ -397,16 +444,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <Form.Item label='国密TLS' name='isGmTLS' valuePropName='checked'>
                         <YakitSwitch />
                     </Form.Item>
-                    <Form.Item label={
-                        <span className={styles["advanced-config-form-label"]}>
-                            真实Host
-                            <Tooltip
-                                title='如需Host碰撞，请配置真实Host'
-                                overlayStyle={{width: 150}}
-                            >
-                                <InformationCircleIcon className={styles["info-icon"]} />
-                            </Tooltip>
-                        </span>
+                    <Form.Item
+                        label={
+                            <span className={styles["advanced-config-form-label"]}>
+                                真实Host
+                                <Tooltip title='如需Host碰撞，请配置真实Host' overlayStyle={{width: 150}}>
+                                    <InformationCircleIcon className={styles["info-icon"]} />
+                                </Tooltip>
+                            </span>
                         }
                         name='actualHost'
                     >
@@ -425,7 +470,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             </span>
                         }
                         name='proxy'
-                        style={{ marginBottom: 5 }}
+                        style={{marginBottom: 5}}
                     >
                         <YakitSelect
                             allowClear
@@ -442,7 +487,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         type='text'
                         onClick={() => setAgentConfigModalVisible(true)}
                         icon={<PlusSmIcon />}
-                        style={{ marginLeft: 100, marginBottom: 12 }}
+                        style={{marginLeft: 100, marginBottom: 12}}
                     >
                         配置代理认证
                     </YakitButton>
@@ -904,59 +949,17 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         key='设置变量'
                         extra={
                             <>
-                                <YakitButton
-                                    type='text'
-                                    colors='danger'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        const restValue = {
-                                            params: [{Key: "", Value: "", Type: "raw"}]
-                                        }
-                                        onReset(restValue)
-                                        setVariableActiveKey(["0"])
-                                    }}
-                                    size='small'
-                                >
+                                <YakitButton type='text' colors='danger' onClick={handleVariableReset} size='small'>
                                     重置
                                 </YakitButton>
                                 <Divider type='vertical' style={{margin: 0}} />
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onRenderVariables()
-                                    }}
-                                    size='small'
-                                >
+                                <YakitButton type='text' onClick={onRenderVariables} size='small'>
                                     预览
                                 </YakitButton>
                                 <Divider type='vertical' style={{margin: 0}} />
                                 <YakitButton
                                     type='text'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        const v = form.getFieldsValue()
-                                        const variables = v.params || []
-                                        const index = variables.findIndex((ele) => !ele || (!ele.Key && !ele.Value))
-                                        if (index === -1) {
-                                            form.setFieldsValue({
-                                                params: [...variables, {Key: "", Value: "", Type: "raw"}]
-                                            })
-                                            onSetValue({
-                                                ...v,
-                                                params: [...variables, {Key: "", Value: "", Type: "raw"}]
-                                            })
-                                            setVariableActiveKey([
-                                                ...(variableActiveKey || []),
-                                                `${variables?.length || 0}`
-                                            ])
-                                        } else {
-                                            yakitNotify("error", `请将已添加【变量${index}】设置完成后再进行添加`)
-                                        }
-                                        if (activeKey?.findIndex((ele) => ele === "设置变量") === -1) {
-                                            onSwitchCollapse([...activeKey, "设置变量"])
-                                        }
-                                    }}
+                                    onClick={handleVariableAdd}
                                     className={styles["btn-padding-right-0"]}
                                     size='small'
                                 >
@@ -966,89 +969,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             </>
                         }
                     >
-                        <Form.List name='params'>
-                            {(fields, {add}) => {
-                                return (
-                                    <>
-                                        <YakitCollapse
-                                            activeKey={variableActiveKey}
-                                            onChange={(key) => {
-                                                setVariableActiveKey(key as string[])
-                                            }}
-                                            className={styles["variable-list"]}
-                                            destroyInactivePanel={true}
-                                            bordered={false}
-                                        >
-                                            {fields.map(({key, name}, i) => (
-                                                <YakitPanel
-                                                    key={`${key}`}
-                                                    header={`变量${name}`}
-                                                    className={styles["variable-list-panel"]}
-                                                    extra={
-                                                        <div
-                                                            className={styles["variable-list-panel-extra"]}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                            }}
-                                                        >
-                                                            <TrashIcon
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation()
-                                                                    const v = form.getFieldsValue()
-                                                                    const variables = v.params || []
-                                                                    variables.splice(i, 1)
-                                                                    form.setFieldsValue({
-                                                                        params: [...variables]
-                                                                    })
-                                                                    onSetValue({
-                                                                        ...v,
-                                                                        params: [...variables]
-                                                                    })
-                                                                }}
-                                                                className={styles["variable-list-remove"]}
-                                                            />
-
-                                                            <Form.Item
-                                                                name={[name, "Type"]}
-                                                                noStyle
-                                                                wrapperCol={{span: 24}}
-                                                            >
-                                                                <YakitRadioButtons
-                                                                    buttonStyle='solid'
-                                                                    options={variableModeOptions}
-                                                                    size={"small"}
-                                                                />
-                                                            </Form.Item>
-                                                        </div>
-                                                    }
-                                                >
-                                                    <SetVariableItem name={name} />
-                                                </YakitPanel>
-                                            ))}
-                                        </YakitCollapse>
-                                        {fields?.length === 0 && (
-                                            <>
-                                                <YakitButton
-                                                    type='outline2'
-                                                    onClick={() => {
-                                                        add({Key: "", Value: ""})
-                                                        setVariableActiveKey([
-                                                            ...(variableActiveKey || []),
-                                                            `${variableActiveKey?.length}`
-                                                        ])
-                                                    }}
-                                                    icon={<PlusIcon />}
-                                                    className={styles["plus-button-bolck"]}
-                                                    block
-                                                >
-                                                    添加
-                                                </YakitButton>
-                                            </>
-                                        )}
-                                    </>
-                                )
-                            }}
-                        </Form.List>
+                        <VariableList
+                            ref={variableRef}
+                            field='params'
+                            onDel={handleVariableDel}
+                            extra={(i, info) => (
+                                <Form.Item name={[info.name, "Type"]} noStyle wrapperCol={{span: 24}}>
+                                    <YakitRadioButtons
+                                        style={{marginLeft: 4}}
+                                        buttonStyle='solid'
+                                        options={variableModeOptions}
+                                        size={"small"}
+                                    />
+                                </Form.Item>
+                            )}
+                        ></VariableList>
                     </YakitPanel>
                 </YakitCollapse>
                 <div className={styles["to-end"]}>已经到底啦～</div>
@@ -1068,8 +1003,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 onCloseModal={() => setAgentConfigModalVisible(false)}
                 generateURL={(url) => {
                     const copyProxyList = structuredClone(proxyListRef.current)
-                    copyProxyList.push({ label: url, value: url })
-                    proxyListRef.current = copyProxyList.filter((item, index, self) => self.findIndex(t => (t.value === item.value)) === index)
+                    copyProxyList.push({label: url, value: url})
+                    proxyListRef.current = copyProxyList.filter(
+                        (item, index, self) => self.findIndex((t) => t.value === item.value) === index
+                    )
                     const v = form.getFieldsValue()
                     const copyProxyArr = structuredClone(v.proxy)
                     copyProxyArr.push(url)
@@ -1256,7 +1193,7 @@ interface TerminalPopoverProps extends YakitPopoverProp {
  * @description 属于一个测试性组件，暂时不建议全局使用。为解决antd Popover箭头无法正确指向目标元素问题
  */
 export const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
-    const { popoverContent, visiblePopover, setVisiblePopover } = props
+    const {popoverContent, visiblePopover, setVisiblePopover} = props
     const popoverContentRef = useRef<any>()
     const terminalIconRef = useRef<any>()
     const onSetArrowTop = useMemoizedFn(() => {

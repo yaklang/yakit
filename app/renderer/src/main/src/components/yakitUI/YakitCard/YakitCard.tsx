@@ -1,8 +1,8 @@
-import React, {CSSProperties, ReactNode} from "react"
+import React from "react"
+import {YakitCardProps} from "./YakitCardType"
 
 import styles from "./YakitCard.module.scss"
 import classNames from "classnames"
-import {YakitCardProps} from "./YakitCardType"
 
 export const YakitCard: React.FC<YakitCardProps> = (props) => {
     const {title, extra, className, style, headStyle, bodyStyle, headClassName, bodyClassName, bordered} = props

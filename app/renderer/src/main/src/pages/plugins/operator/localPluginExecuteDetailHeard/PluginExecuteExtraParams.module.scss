@@ -52,16 +52,6 @@
             @extend %icon;
         }
     }
-    .form-list-panel {
-        &:hover {
-            .panel-list-extra-remove {
-                display: flex;
-            }
-        }
-        .panel-list-extra-remove {
-            display: none;
-        }
-    }
 }
 .extra-params-node-type {
     :global {

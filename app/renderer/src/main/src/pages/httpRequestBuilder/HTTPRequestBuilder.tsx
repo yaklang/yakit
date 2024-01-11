@@ -8,10 +8,9 @@ import {NewHTTPPacketEditor} from "@/utils/editors"
 import {StringToUint8Array} from "@/utils/str"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {PlusIcon, ResizerIcon, TrashIcon} from "@/assets/newIcon"
+import {PlusIcon, TrashIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {yakitFailed} from "@/utils/notification"
-import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
 import styles from "./HTTPRequestBuilder.module.scss"
 import {PluginTypes} from "../pluginDebugger/PluginDebuggerPage"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
@@ -125,8 +124,7 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
     }
 
     // 删除
-    const handleRemove = (e: React.MouseEvent<Element, MouseEvent>, i: number, field: fields) => {
-        e.stopPropagation()
+    const handleRemove = (i: number, field: fields) => {
         const v = form.getFieldsValue()
         const variables = v[field] || []
         variables.splice(i, 1)
@@ -275,20 +273,8 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                                     <VariableList
                                         ref={getParamsRef}
                                         field='GetParams'
-                                        extra={(i: number) => {
-                                            return (
-                                                <div
-                                                    className={styles["variable-list-panel-extra"]}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                    }}
-                                                >
-                                                    <TrashIcon
-                                                        onClick={(e) => handleRemove(e, i, "GetParams")}
-                                                        className={styles["variable-list-remove"]}
-                                                    />
-                                                </div>
-                                            )
+                                        onDel={(i) => {
+                                            handleRemove(i, "GetParams")
                                         }}
                                     ></VariableList>
                                 </YakitPanel>
@@ -321,20 +307,8 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                                     <VariableList
                                         ref={postParamsRef}
                                         field='PostParams'
-                                        extra={(i: number) => {
-                                            return (
-                                                <div
-                                                    className={styles["variable-list-panel-extra"]}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                    }}
-                                                >
-                                                    <TrashIcon
-                                                        onClick={(e) => handleRemove(e, i, "PostParams")}
-                                                        className={styles["variable-list-remove"]}
-                                                    />
-                                                </div>
-                                            )
+                                        onDel={(i) => {
+                                            handleRemove(i, "PostParams")
                                         }}
                                     ></VariableList>
                                 </YakitPanel>
@@ -367,20 +341,8 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                                     <VariableList
                                         ref={headersRef}
                                         field='Headers'
-                                        extra={(i: number) => {
-                                            return (
-                                                <div
-                                                    className={styles["variable-list-panel-extra"]}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                    }}
-                                                >
-                                                    <TrashIcon
-                                                        onClick={(e) => handleRemove(e, i, "Headers")}
-                                                        className={styles["variable-list-remove"]}
-                                                    />
-                                                </div>
-                                            )
+                                        onDel={(i) => {
+                                            handleRemove(i, "Headers")
                                         }}
                                     ></VariableList>
                                 </YakitPanel>
@@ -413,20 +375,8 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
                                     <VariableList
                                         ref={cookieRef}
                                         field='Cookie'
-                                        extra={(i: number) => {
-                                            return (
-                                                <div
-                                                    className={styles["variable-list-panel-extra"]}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                    }}
-                                                >
-                                                    <TrashIcon
-                                                        onClick={(e) => handleRemove(e, i, "Cookie")}
-                                                        className={styles["variable-list-remove"]}
-                                                    />
-                                                </div>
-                                            )
+                                        onDel={(i) => {
+                                            handleRemove(i, "Cookie")
                                         }}
                                     ></VariableList>
                                 </YakitPanel>
@@ -440,13 +390,14 @@ export const HTTPRequestBuilder: React.FC<HTTPRequestBuilderProp> = (props) => {
 }
 
 interface VariableListProps {
-    field: fields
-    extra: (i: number) => React.ReactNode
+    field: fields | string
+    extra?: (i: number, info: {key; name}) => React.ReactNode
     ref: React.Ref<any>
-    yakitPanelClassName?: string
+    collapseWrapperClassName?: string
+    onDel?: (i: number) => any
 }
 export const VariableList: React.FC<VariableListProps> = React.forwardRef(
-    ({extra, field, yakitPanelClassName = ""}, ref) => {
+    ({extra, field, collapseWrapperClassName = "", onDel}, ref) => {
         const [variableActiveKey, setVariableActiveKey] = useState<string[]>(["0"])
 
         useImperativeHandle(ref, () => ({
@@ -464,17 +415,28 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
                                 defaultActiveKey={variableActiveKey}
                                 activeKey={variableActiveKey}
                                 onChange={(key) => setVariableActiveKey(key as string[])}
-                                className={styles["variable-list"]}
+                                className={classNames(styles["variable-list"], collapseWrapperClassName)}
                                 bordered={false}
                             >
                                 {fields.map(({key, name}, i) => (
                                     <YakitPanel
                                         key={`${key + ""}`}
                                         header={`变量 ${name}`}
-                                        className={classNames(styles["variable-list-panel"], yakitPanelClassName)}
-                                        extra={extra(i)}
+                                        className={styles['variable-list-panel']}
+                                        extra={
+                                            <div className={styles["extra-wrapper"]}>
+                                                <TrashIcon
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        if (onDel) onDel(i)
+                                                    }}
+                                                    className={styles["variable-list-remove"]}
+                                                />
+                                                {extra ? extra(i, {key, name}) : null}
+                                            </div>
+                                        }
                                     >
-                                        <SetVariableItem name={name}/>
+                                        <SetVariableItem name={name} />
                                     </YakitPanel>
                                 ))}
                             </YakitCollapse>
