@@ -86,6 +86,7 @@ win:
 nsis:
   oneClick: false 
   perMachine: true 
+  deleteAppDataOnUninstall: true
   allowToChangeInstallationDirectory: true 
   installerIcon: app/assets/yakitlogo.ico 
   uninstallerIcon: app/assets/yakitlogo.ico 
