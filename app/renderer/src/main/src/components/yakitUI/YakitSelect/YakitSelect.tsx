@@ -30,6 +30,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         cacheHistoryDataKey = "",
         isCacheDefaultValue = true,
         cacheHistoryListLength = 10,
+        defaultOptions,
         ...props
     }: YakitSelectProps<OptionType>,
     ref: React.Ref<YakitBaseSelectRef>
@@ -111,8 +112,8 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         let newOption: DefaultOptionType[] = []
         if (options.length > 0) {
             newOption = options as DefaultOptionType[]
-        } else if (props?.defaultOptions?.length > 0) {
-            newOption = (props.defaultOptions || []) as DefaultOptionType[]
+        } else if (defaultOptions?.length > 0) {
+            newOption = (defaultOptions || []) as DefaultOptionType[]
         } else if ((props?.options?.length || 0) > 0) {
             newOption = props.options as DefaultOptionType[]
         }
