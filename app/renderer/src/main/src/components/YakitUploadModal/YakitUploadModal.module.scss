@@ -315,7 +315,7 @@
             }
             .log-info {
                 margin-top: 16px;
-                // height: 200px;
+                transition: height 0.2s ease;
                 overflow-y: auto;
                 .log-item {
                     font-size: 14px;
