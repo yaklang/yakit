@@ -334,63 +334,6 @@
     flex-direction: column;
     gap: 8px;
 }
-.variable-list {
-    color: var(--yakit-helper-text-color);
-
-    .variable-list-panel-extra {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .variable-list-panel {
-        border-bottom: 0 !important;
-        margin-bottom: 0;
-        &:hover {
-            .variable-list-remove {
-                display: flex;
-            }
-        }
-
-        .variable-list-remove {
-            display: none;
-            @include HTTPFuzzerPageShare.base-icon-card;
-            color: var(--yakit-danger-5);
-
-            &:hover {
-                color: var(--yakit-danger-5);
-            }
-        }
-        .variable-fuzzer-tag {
-            color: var(--yakit-header-color);
-            font-size: 12px;
-            font-weight: 400;
-            line-height: 16px;
-        }
-        :global {
-            .ant-collapse-header {
-                .ant-collapse-header-text {
-                    overflow: hidden;
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                }
-            }
-
-            .ant-radio-button-wrapper {
-                padding: 0px 8px;
-            }
-
-            .ant-collapse-content > .ant-collapse-content-box {
-                padding-bottom: 0;
-            }
-        }
-    }
-
-    .variable-plus-button {
-        width: 100%;
-        padding-right: 6px;
-    }
-}
 .variable-item {
     border: 1px solid var(--yakit-border-color);
     border-radius: 4px;

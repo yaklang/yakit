@@ -118,6 +118,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                             {SettingsMenu.map((item) => {
                                 return (
                                     <div
+                                        key={item.key}
                                         className={classNames(
                                             styles["list-opt-body"],
                                             currentKey === item.key ? styles["list-opt-selected"] : styles["list-opt"]

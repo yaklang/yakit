@@ -38,6 +38,7 @@ export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
             .then((res) => {
                 // 埋点接口 不论结果如何 不可影响页面及交互
                 if(params.url==="tourist"){
+                    resolve("" as any)
                     return
                 }
                 handleAxios(res, resolve, reject)
@@ -54,6 +55,7 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
     // console.log("返回", res)
     if (!code) {
         failed("请求超时，请重试")
+        reject("请求超时，请重试")
         return
     }
     switch (code) {

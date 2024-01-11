@@ -16,31 +16,25 @@
 
 .variable-list {
     color: var(--yakit-helper-text-color);
-
-    .variable-list-panel-extra {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
     .variable-list-panel {
-        border-bottom: 0 !important;
-        margin-bottom: 0;
         &:hover {
             .variable-list-remove {
                 display: flex;
             }
         }
 
+        .extra-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
         .variable-list-remove {
             display: none;
             @include HTTPFuzzerPageShare.base-icon-card;
             color: var(--yakit-danger-5);
-
-            &:hover {
-                color: var(--yakit-danger-5);
-            }
         }
+
         .variable-fuzzer-tag {
             color: var(--yakit-header-color);
             font-size: 12px;

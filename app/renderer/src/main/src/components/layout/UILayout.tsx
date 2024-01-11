@@ -210,7 +210,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                 ipcRenderer.invoke("get-current-yak").then((data: string) => {
                     setCurrentYaklang(data)
-                })
+                }).catch(()=>{})
                 ipcRenderer.invoke("fetch-latest-yaklang-version").then((data: string) => {
                     setLatestYaklang(data)
                 }).catch((err) => {})

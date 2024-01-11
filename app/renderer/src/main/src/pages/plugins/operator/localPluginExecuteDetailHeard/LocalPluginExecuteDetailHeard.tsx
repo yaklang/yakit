@@ -475,7 +475,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
 })
 
 /**执行的入口通过插件参数生成组件 */
-const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsProps> = React.memo((props) => {
+export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsProps> = React.memo((props) => {
     const {paramsList, pluginType, isExecuting} = props
 
     return (
@@ -678,7 +678,7 @@ const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((
     )
 })
 /**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
-const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
+export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
     const {form, disabled} = props
 
     const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
