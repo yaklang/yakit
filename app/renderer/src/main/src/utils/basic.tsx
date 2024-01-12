@@ -454,6 +454,11 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
         onClose()
     }
 
+    const [refresh, setRefresh] = useState<number>(Math.random())
+    useEffect(() => {
+        setRefresh(Math.random())
+    }, [visible])
+
     return (
         <YakitModal
             visible={visible}
@@ -467,7 +472,7 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
         >
             <div style={{height: 400, overflowY: "auto"}}>
                 <StartToExecYakScriptViewer
-                    key={Math.random() * 100}
+                    key={refresh}
                     ref={startToExecYakScriptViewerRef} 
                     script={params} 
                     verbose={verbose} 
