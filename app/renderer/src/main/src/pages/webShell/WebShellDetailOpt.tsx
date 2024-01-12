@@ -175,7 +175,8 @@ ${obj.CurrentDir}`
                                     return (
                                         <div style={{display: "flex", flexDirection: "row"}}>
                                             <div style={{marginRight: 10}}>{item.key}:</div>
-                                            <div dangerouslySetInnerHTML={{__html: item.content}} />
+                                            <div style={{marginRight: 10}}>{item.content}:</div>
+                                            {/*<div dangerouslySetInnerHTML={{__html: item.content}} />*/}
                                         </div>
                                     )
                                 })}
@@ -186,7 +187,8 @@ ${obj.CurrentDir}`
                                     return (
                                         <div style={{display: "flex", flexDirection: "row"}}>
                                             <div style={{marginRight: 10}}>{item.key}:</div>
-                                            <div dangerouslySetInnerHTML={{__html: item.content}} />
+                                            <div style={{marginRight: 10}}>{item.content}:</div>
+                                            {/*<div dangerouslySetInnerHTML={{__html: item.content}} />*/}
                                         </div>
                                     )
                                 })}
