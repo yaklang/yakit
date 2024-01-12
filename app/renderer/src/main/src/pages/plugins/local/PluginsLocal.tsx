@@ -1035,7 +1035,7 @@ const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) =>
                 if (data.MessageType === "error" || data.Progress === 1) {
                     locallogListInfoRef.current.unshift({
                         message: data.Message,
-                        isError: data.MessageType === "error",
+                        isError: ["error", "finalError"].includes(data.MessageType),
                         key: uuidv4()
                     })
                 }
