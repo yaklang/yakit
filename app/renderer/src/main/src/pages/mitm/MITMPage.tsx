@@ -821,7 +821,6 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             ipcRenderer.on("import-yak-script-data", async (e, data: ImportYakScriptResult) => {
                 setLocalImportStep(2)
                 localStreamDataRef.current = {Progress: data.Progress}
-                console.log('导入数据', data);
                 // 展示错误日志
                 if (data.MessageType === "error" || data.Progress === 1) {
                     locallogListInfoRef.current.unshift({

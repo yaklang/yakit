@@ -1,12 +1,13 @@
-import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, useMemo, useRef} from "react"
 import {Progress} from "antd"
-import {useDebounceFn, useVirtualList} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useVirtualList} from "ahooks"
 import styles from "./YakitUploadModal.module.scss"
-import {failed, warn} from "@/utils/notification"
+import {failed, warn, yakitFailed} from "@/utils/notification"
 import {OutlinePaperclipIcon} from "@/assets/icon/outline"
 import Dragger from "antd/lib/upload/Dragger"
 import {PropertyIcon} from "@/pages/payloadManager/icon"
 import {SolidDocumentdownloadIcon, SolidXcircleIcon} from "@/assets/icon/solid"
+const {ipcRenderer} = window.require("electron")
 
 export interface SaveProgressStream {
     Progress: number
@@ -42,8 +43,9 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
     })
 
     const height = useMemo(() => {
-        if (list.length < 2) return 24
-        return 200
+        if (list.length === 0) return 24
+        if (list.length < 10) return list.length * 24
+        return 240
     }, [list])
 
     return (
@@ -103,7 +105,11 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
                             </>
                         </div>
                     )}
-                    <div className={styles["log-info"]} ref={containerRef} style={{height: height, marginTop: list.length !== 0 ? 10 : 0}}>
+                    <div
+                        className={styles["log-info"]}
+                        ref={containerRef}
+                        style={{height: height, marginTop: list.length !== 0 ? 10 : 0}}
+                    >
                         <div ref={wrapperRef}>
                             {list.map((item) => (
                                 <div
@@ -128,7 +134,7 @@ export interface UploadList {
 }
 
 interface FileRegexInfo {
-    fileType?: string[] // 上传文件类型
+    fileType?: string[] // 上传文件后缀类型
     fileTypeErrorMsg?: string
     fileNameRegex?: RegExp // 文件名正则
     fileNameErrorMsg?: string
@@ -138,6 +144,7 @@ export interface YakitUploadComponentProps {
     step: 1 | 2 // 步骤1或2 步骤1为上传 步骤2为进度条显示
     stepOneSubTitle: React.ReactElement | string // 步骤1-子标题
     fileRegexInfo?: FileRegexInfo // 文件校验相关信息
+    directory?: boolean // 是否上传文件夹 默认文件夹
     uploadList: UploadList[] // 上传列表
     onUploadList: (uploadList: UploadList[]) => void
     nextTitle?: string // 步骤2-标题
@@ -146,11 +153,15 @@ export interface YakitUploadComponentProps {
     logListInfo?: LogListInfo[] // 步骤2-导入中的日志信息
 }
 
+/**
+ * 暂不支持同时传文件或文件夹
+ */
 export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props) => {
     const {
         step,
         stepOneSubTitle,
         fileRegexInfo,
+        directory = true,
         uploadList = [],
         onUploadList,
         nextTitle = "导入中",
@@ -166,7 +177,6 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                 name: string
             }[] = []
             fileList.forEach((f) => {
-                // 格式校验
                 if (fileRegexInfo) {
                     const {
                         fileType = [],
@@ -175,10 +185,23 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                         fileNameErrorMsg = "不符合上传要求，请上传正确格式文件"
                     } = fileRegexInfo
 
-                    if (fileType.length && !fileType.includes(f.type)) {
-                        failed(`${f.name}${fileTypeErrorMsg}`)
-                        return false
+                    if (!directory) {
+                        const index = f.name.indexOf('.')
+                        
+                        if (index === -1) {
+                            failed("请误上传文件夹")
+                            return false
+                        } else {
+                            // 校验文件名后缀
+                            const extname = f.name.split('.').pop()
+                            if (fileType.length && !fileType.includes('.' + extname)) {
+                                failed(`${f.name}${fileTypeErrorMsg}`)
+                                return false
+                            }
+                        }
                     }
+
+                    // 校验文件名或文件夹名
                     if (fileNameRegex && !fileNameRegex.test(f.name)) {
                         failed(`${f.name}${fileNameErrorMsg}`)
                         return
@@ -202,6 +225,49 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
         }
     ).run
 
+    const onUploadFolder = useMemoizedFn(async () => {
+        try {
+            const data: {filePaths: string[]} = await ipcRenderer.invoke("openDialog", {
+                title: "请选择文件夹",
+                properties: ["openDirectory", "multiSelections"]
+            })
+            if (data.filePaths.length) {
+                let arr: {
+                    path: string
+                    name: string
+                }[] = []
+
+                const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\"))
+                const setAllPath = new Set(uploadList.map((item) => item.path))
+                absolutePath.forEach((path) => {
+                    const name = path.split("\\").pop() || ""
+                    if (fileRegexInfo && name) {
+                        const {fileNameRegex, fileNameErrorMsg = "不符合上传要求，请上传正确格式文件"} = fileRegexInfo
+
+                        if (fileNameRegex && !fileNameRegex.test(name)) {
+                            failed(`${name}${fileNameErrorMsg}`)
+                            return
+                        }
+                    }
+
+                    if (setAllPath.has(path)) {
+                        warn(`${path}已选择`)
+                        return
+                    }
+
+                    name &&
+                        arr.push({
+                            path: path,
+                            name
+                        })
+                })
+                onUploadList([...uploadList, ...arr])
+            }
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    })
+
     return (
         <div className={styles["yakit-upload-component"]}>
             {step === 1 && (
@@ -210,9 +276,10 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                         <div className={styles["card-box"]}>
                             <>
                                 <div className={styles["upload-dragger-box"]}>
+                                    {/* 不要设置directory属性 会导致前端很卡 */}
                                     <Dragger
                                         className={styles["upload-dragger"]}
-                                        // accept={FileType.join(",")}
+                                        // accept={fileRegexInfo?.fileType?.join(',')} 不在这里给限制 由于前端需要给msg提示
                                         multiple={true}
                                         showUploadList={false}
                                         beforeUpload={(f: any, fileList: any) => {
@@ -227,7 +294,17 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                                             <div className={styles["content"]}>
                                                 <div className={styles["title"]}>
                                                     可将文件拖入框内，或
-                                                    <span className={styles["hight-light"]}>点击此处导入</span>
+                                                    <span
+                                                        className={styles["hight-light"]}
+                                                        onClick={(e) => {
+                                                            if (directory) {
+                                                                e.stopPropagation()
+                                                                onUploadFolder()
+                                                            }
+                                                        }}
+                                                    >
+                                                        点击此处导入
+                                                    </span>
                                                 </div>
                                                 <div className={styles["sub-title"]}>{stepOneSubTitle}</div>
                                             </div>

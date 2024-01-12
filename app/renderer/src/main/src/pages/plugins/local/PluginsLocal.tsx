@@ -1030,7 +1030,6 @@ const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) =>
             }, 300)
             ipcRenderer.on("export-yak-script-data", (e, data: ExportLocalYakScriptResponse) => {
                 localStreamDataRef.current = {Progress: data.Progress}
-                console.log('导出数据', data);
                 // 展示错误日志
                 if (data.MessageType === "error" || data.Progress === 1) {
                     locallogListInfoRef.current.unshift({
