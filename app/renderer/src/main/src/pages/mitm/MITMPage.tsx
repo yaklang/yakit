@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, useMemo} from "react"
-import {Form, Modal, notification, Typography} from "antd"
+import {Form, notification} from "antd"
 import {failed, info, success, yakitFailed} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
 import {ExecResult} from "../invoker/schema"
@@ -9,21 +9,19 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import style from "./MITMPage.module.scss"
 import {useCreation, useGetState, useInViewport, useLatest, useMemoizedFn} from "ahooks"
 import {StatusCardProps} from "../yakitStore/viewers/base"
-import {ResizeBox} from "../../components/ResizeBox"
 import {enableMITMPluginMode, MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking"
 import {Uint8ArrayToString} from "@/utils/str"
 import {MITMRule} from "./MITMRule/MITMRule"
-import ReactResizeDetector from "react-resize-detector"
 import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {RemoveIcon} from "@/assets/newIcon"
-import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {loadLocalYakitPluginCode, loadNucleiPoCFromLocal, loadYakitPluginCode} from "../yakitStore/YakitStorePage"
+import {loadNucleiPoCFromLocal, loadYakitPluginCode} from "../yakitStore/YakitStorePage"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {startExecYakCode} from "@/utils/basic"
+import {StartExecYakCodeModal, YakScriptParam} from "@/utils/basic"
 import {DownloadOnlinePluginProps} from "../yakitStore/YakitPluginInfoOnline/YakitPluginInfoOnline"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {queryYakScriptList} from "../yakitStore/network"
@@ -37,14 +35,14 @@ import {
     YakModuleListHeard
 } from "./MITMServerHijacking/MITMPluginLocalList"
 import {ClientCertificate, MITMServerStartForm} from "./MITMServerStartForm/MITMServerStartForm"
-import classNames from "classnames"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import { ExclamationCircleOutlined } from "@ant-design/icons"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {PluginGV} from "../plugins/builtInData"
-
-const {Text} = Typography
-const {Item} = Form
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {LogListInfo, SaveProgressStream, UploadList, YakitUploadComponent} from "@/components/YakitUploadModal/YakitUploadModal"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/routes/newRoute"
+import {v4 as uuidv4} from "uuid"
 const {ipcRenderer} = window.require("electron")
 
 export interface MITMPageProp {}
@@ -315,7 +313,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
 
     useEffect(() => {
-        if (status !== 'idle') {
+        if (status !== "idle") {
             getRules()
         }
     }, [status, visible])
@@ -324,13 +322,15 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-                const findOpenRepRule = newRules.find(item => (!item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)))
+                const findOpenRepRule = newRules.find(
+                    (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
+                )
                 if (findOpenRepRule !== undefined) {
-                    if (tip.indexOf('启用替换规则') === -1) {
-                        setTip(tip + '|启用替换规则')
+                    if (tip.indexOf("启用替换规则") === -1) {
+                        setTip(tip + "|启用替换规则")
                     }
                 } else {
-                    setTip(tip.replace('|启用替换规则', ''))
+                    setTip(tip.replace("|启用替换规则", ""))
                 }
             })
             .catch((e) => yakitFailed("获取规则列表失败:" + e))
@@ -338,7 +338,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     return (
         <>
-            <div className={style["mitm-page"]} ref={mitmPageRef} style={status==="idle"?{padding: "0px 16px"}:{padding:"8px 16px 13px"}}>
+            <div
+                className={style["mitm-page"]}
+                ref={mitmPageRef}
+                style={status === "idle" ? {padding: "0px 16px"} : {padding: "8px 16px 13px"}}
+            >
                 {onRenderMITM()}
             </div>
             <MITMRule status={status} visible={visible && !!inViewport} setVisible={setVisible} />
@@ -701,75 +705,198 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     {onRenderSecondNode()}
                 </div>
             )}
-            secondNodeStyle={{padding: isFullScreenFirstNode ? 0 : undefined,display:isFullScreenFirstNode?"none":""}}
-            firstNodeStyle={{padding: isFullScreenSecondNode ? 0 : undefined,display:isFullScreenSecondNode?"none":""}}
+            secondNodeStyle={{
+                padding: isFullScreenFirstNode ? 0 : undefined,
+                display: isFullScreenFirstNode ? "none" : ""
+            }}
+            firstNodeStyle={{
+                padding: isFullScreenSecondNode ? 0 : undefined,
+                display: isFullScreenSecondNode ? "none" : ""
+            }}
             {...ResizeBoxProps}
         />
     )
 })
 
+export type LoadPluginMode = "giturl" | "local" | "local-nuclei" | "uploadId"
+export const loadModeInfo = [
+    {
+        value: "giturl",
+        label: "线上 Nuclei",
+        width: 544
+    },
+    {
+        value: "local",
+        label: "本地插件",
+        width: 680
+    },
+    {
+        value: "local-nuclei",
+        label: "本地 Nuclei",
+        width: 680
+    },
+    {
+        value: "uploadId",
+        label: "插件 ID",
+        width: 448
+    }
+]
+interface ImportYakScriptResult {
+    Progress: number
+    Message: string
+    MessageType: string
+}
 interface ImportLocalPluginProps {
     visible: boolean
     setVisible: (b: boolean) => void
+    loadPluginMode?: LoadPluginMode
+    sendPluginLocal?: boolean
 }
-
-const YAKIT_DEFAULT_LOAD_GIT_PROXY = "YAKIT_DEFAULT_LOAD_GIT_PROXY"
-const YAKIT_DEFAULT_LOAD_LOCAL_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_PATH"
-const YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH = "YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH"
 export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((props) => {
-    const {visible, setVisible} = props
+    const {visible, setVisible, loadPluginMode, sendPluginLocal = false} = props
     const [form] = Form.useForm()
-    const [loadMode, setLoadMode] = useState<"giturl" | "local" | "local-nuclei" | "uploadId">("giturl")
-    const [localPath, setLocalPath] = useState<string>("") // local
+    const [loadMode, setLoadMode] = useState<LoadPluginMode>(loadPluginMode || "giturl")
     const [localNucleiPath, setLocalNucleiPath] = useState<string>("") // localNucleiPath
+    const [localImportStep, setLocalImportStep] = useState<1 | 2>(1)
+    const [localUploadList, setLocalUploadList] = useState<UploadList[]>([])
+    const [localStreamData, setLocalStreamData] = useState<SaveProgressStream>()
+    const localStreamDataRef = useRef<SaveProgressStream>()
+    const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
+    const locallogListInfoRef = useRef<LogListInfo[]>([])
+
+    const [startExecYakCodeModalVisible, setStartExecYakCodeModalVisible] = useState<boolean>(false)
+    const [startExecYakCodeVerbose, setStartExecYakCodeVerbose] = useState<string>("")
+    const [startExecYakCodeParams, setStartExecYakCodeParams] = useState<YakScriptParam>()
+    const [close, setClose] = useState<boolean>(false) // 判断是否自动关闭弹窗
+
     useEffect(() => {
         if (visible) {
+            // 当打开弹窗 重置数据
             form.resetFields()
-            setLoadMode("giturl")
-            setLocalPath("")
             setLocalNucleiPath("")
+            resetLocalImport()
         }
     }, [visible])
+
+    useEffect(() => {
+        setLoadMode(loadPluginMode || "giturl")
+    }, [loadPluginMode])
+
+    const resetLocalImport = () => {
+        setLocalImportStep(1)
+        setLocalUploadList([])
+        setLocalStreamData(undefined)
+        localStreamDataRef.current = undefined
+        locallogListInfoRef.current = []
+        setClose(false)
+        setLocallogListInfo([])
+    }
+
+    useEffect(() => {
+        if (close) handleImportLocalPluginFinish()
+    }, [close])
+
+    // 导入本地插件后执行操作
+    const handleImportLocalPluginFinish = () => {
+        resetLocalImport()
+        setVisible(false)
+        sendMsgToLocalPlugin()
+    }
+
+    // 发送事件到本地
+    const sendMsgToLocalPlugin = () => {
+        if (sendPluginLocal) {
+            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.Plugin_Local}))
+            emiter.emit("onImportRefLocalPluginList", "")
+        }
+    }
+
+    useEffect(() => {
+        let timer
+        if (visible) {
+            timer = setInterval(() => {
+                setLocalStreamData(localStreamDataRef.current)
+                setLocallogListInfo([...locallogListInfoRef.current])
+            }, 300)
+            ipcRenderer.on("import-yak-script-data", async (e, data: ImportYakScriptResult) => {
+                setLocalImportStep(2)
+                localStreamDataRef.current = {Progress: data.Progress}
+                // 展示错误日志
+                if (data.MessageType === "error" || data.Progress === 1) {
+                    locallogListInfoRef.current.unshift({
+                        message: data.Message,
+                        isError: ["error", "finalError"].includes(data.MessageType),
+                        key: uuidv4()
+                    })
+                }
+
+                if (["success", "finished"].includes(data.MessageType) && data.Progress === 1) {
+                    setClose(true)
+                }
+            })
+            
+            return () => {
+                clearInterval(timer)
+                ipcRenderer.removeAllListeners("import-yak-script-data")
+            }
+        }
+    }, [visible])
+
     const getRenderByLoadMode = useMemoizedFn((type: string) => {
         switch (type) {
             case "giturl":
                 return (
                     <>
+                        <div className={style.giturlInfoBox}>
+                            如果因为网络问题无法访问 Github，请切换到第三方仓库源，选择Gitee镜像 ghproxy.com镜像
+                        </div>
                         <Form.Item
+                            labelCol={{span: 3}}
+                            wrapperCol={{span: 21}}
                             name='nucleiGitUrl'
-                            label='Yaml PoC URL'
+                            label='插件源'
                             rules={[{required: true, message: "该项为必填项"}]}
-                            help='无代理设置推荐使用 ghproxy.com / gitee 镜像源'
                             initialValue='https://github.com/projectdiscovery/nuclei-templates'
                         >
-                            <YakitInput />
+                            <YakitSelect
+                                options={[
+                                    {
+                                        label: "https://github.com/projectdiscovery/nuclei-templates",
+                                        value: "https://github.com/projectdiscovery/nuclei-templates"
+                                    },
+                                    {
+                                        label: "https://ghproxy.com/https://github.com/projectdiscovery/nuclei-templates",
+                                        value: "https://ghproxy.com/https://github.com/projectdiscovery/nuclei-templates"
+                                    }
+                                ]}
+                            />
                         </Form.Item>
-                        <Form.Item name='proxy' label='代理' help='通过代理访问中国大陆无法访问的代码仓库'>
+                        <Form.Item
+                            labelCol={{span: 3}}
+                            wrapperCol={{span: 21}}
+                            name='proxy'
+                            label='代理'
+                            help='通过代理访问中国大陆无法访问的代码仓库：例如http://127.0.0.1:7890'
+                        >
                             <YakitInput />
                         </Form.Item>
                     </>
                 )
             case "local":
                 return (
-                    <>
-                        <YakitFormDragger
-                            key='localPath'
-                            formItemProps={{
-                                name: "localPath",
-                                label: "本地仓库地址"
-                            }}
-                            inputProps={{
-                                placeholder: "本地仓库地址需设置在yak-projects项目文件下"
-                            }}
-                            selectType='folder'
-                            showUploadList={false}
-                            onChange={(val) => {
-                                setLocalPath(val)
-                                form.setFieldsValue({localPath: val})
-                            }}
-                            value={localPath}
-                        />
-                    </>
+                    <YakitUploadComponent
+                        step={localImportStep}
+                        stepOneSubTitle={<>请选择以插件类型命名的文件夹，支持批量上传</>}
+                        fileRegexInfo={{
+                            fileNameRegex: /^(yak_codec|yak_mitm|yak_module|yak_nuclei|yak_portscan)$/,
+                            fileNameErrorMsg: "不符合文件夹格式要求，请重新上传"
+                        }}
+                        uploadList={localUploadList}
+                        onUploadList={setLocalUploadList}
+                        nextTitle='插件导入中'
+                        streamData={localStreamData}
+                        logListInfo={locallogListInfo}
+                    />
                 )
             case "local-nuclei":
                 return (
@@ -778,7 +905,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                             key='localNucleiPath'
                             formItemProps={{
                                 name: "localNucleiPath",
-                                label: "Nuclei PoC 本地路径"
+                                label: "Nuclei PoC 本地路径",
+                                labelCol: {span: 5},
+                                wrapperCol: {span: 19}
                             }}
                             selectType='folder'
                             showUploadList={false}
@@ -793,8 +922,9 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             case "uploadId":
                 return (
                     <>
-                        <Form.Item name='localId' label='插件ID'>
-                            <YakitInput />
+                        <Form.Item labelCol={{span: 3}} wrapperCol={{span: 21}} name='localId' label='插件ID'>
+                            {/* placeholder='请输入插件ID，多个ID用”英文逗号“或”换行“分割...' */}
+                            <YakitInput.TextArea />
                         </Form.Item>
                     </>
                 )
@@ -802,20 +932,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 break
         }
     })
-    const onOk = useMemoizedFn(() => {
+
+    const onOk = useMemoizedFn(async () => {
         const formValue = form.getFieldsValue()
-        if (formValue.proxy) {
-            setLocalValue(YAKIT_DEFAULT_LOAD_GIT_PROXY, formValue.proxy)
-        }
 
-        if (formValue.localPath) {
-            setLocalValue(YAKIT_DEFAULT_LOAD_LOCAL_PATH, formValue.localPath)
-        }
-
-        if (formValue.localNucleiPath) {
-            setLocalValue(YAKIT_DEFAULT_LOAD_LOCAL_NUCLEI_POC_PATH, formValue.localNucleiPath)
-        }
-        if (["official", "giturl"].includes(loadMode)) {
+        if (loadMode === "giturl") {
             const params: YakExecutorParam[] = [
                 {Key: "giturl", Value: ""},
                 {Key: "nuclei-templates-giturl", Value: formValue.nucleiGitUrl}
@@ -823,20 +944,23 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             if (formValue.proxy?.trim() !== "") {
                 params.push({Value: formValue.proxy?.trim(), Key: "proxy"})
             }
-            startExecYakCode("导入 Yak 插件", {
+
+            setStartExecYakCodeModalVisible(true)
+            setStartExecYakCodeVerbose("导入线上Nuclei")
+            setStartExecYakCodeParams({
                 Script: loadYakitPluginCode,
                 Params: params
             })
         }
+
         if (loadMode === "local") {
-            if (!formValue.localPath) {
-                failed(`请输入本地路径`)
-                return
+            try {
+                await ipcRenderer.invoke("ImportYakScript", {
+                    Dirs: localUploadList.map((item) => item.path)
+                })
+            } catch (error) {
+                yakitFailed(error + "")
             }
-            startExecYakCode("导入 Yak 插件（本地）", {
-                Script: loadLocalYakitPluginCode,
-                Params: [{Key: "local-path", Value: formValue.localPath}]
-            })
         }
 
         if (loadMode === "local-nuclei") {
@@ -844,7 +968,10 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 failed(`请输入Nuclei PoC 本地路径`)
                 return
             }
-            startExecYakCode("从 Nuclei Template Git 本地仓库更新", {
+
+            setStartExecYakCodeModalVisible(true)
+            setStartExecYakCodeVerbose("导入本地Nuclei")
+            setStartExecYakCodeParams({
                 Script: loadNucleiPoCFromLocal,
                 Params: [{Key: "local-path", Value: formValue.localNucleiPath}]
             })
@@ -864,54 +991,91 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 })
         }
     })
+
+    const onCancel = useMemoizedFn(() => {
+        if (loadMode === "local") {
+            ipcRenderer.invoke("cancel-importYakScript")
+            setTimeout(() => {
+                localStreamData && handleImportLocalPluginFinish()
+            }, 10)
+        }
+        setVisible(false)
+    })
+
+    const getLoadModeInfo = (key: string) => {
+        const obj = loadModeInfo.find((item) => item.value === loadPluginMode)
+        return obj ? obj[key] : ""
+    }
+
+    // 确认按钮disabled
+    const okBtnDisabled = useMemo(() => {
+        if (loadMode === "local") {
+            return !localUploadList.length
+        }
+        return false
+    }, [loadMode, localUploadList])
+
+    const execYakCodeReset = useMemoizedFn(() => {
+        setVisible(false)
+        setStartExecYakCodeModalVisible(false)
+        setStartExecYakCodeVerbose("")
+        setStartExecYakCodeParams(undefined)
+    })
+
     return (
-        <YakitModal
-            visible={visible}
-            onCancel={() => setVisible(false)}
-            onOk={() => onOk()}
-            width={680}
-            closable={true}
-            title='导入插件方式'
-            className={style["import-local-plugin-modal"]}
-            subTitle={
-                <YakitRadioButtons
-                    wrapClassName={style["import-local-plugin-subTitle"]}
-                    buttonStyle='solid'
-                    value={loadMode}
-                    onChange={(e) => {
-                        setLoadMode(e.target.value)
-                    }}
-                    options={[
-                        {
-                            label: "第三方仓库源",
-                            value: "giturl"
-                        },
-                        {
-                            label: "本地仓库",
-                            value: "local"
-                        },
-                        {
-                            label: "本地 Yaml PoC",
-                            value: "local-nuclei"
-                        },
-                        {
-                            label: "使用ID",
-                            value: "uploadId"
-                        }
-                    ]}
-                ></YakitRadioButtons>
-            }
-            bodyStyle={{padding: 0}}
-        >
-            <Form
-                form={form}
-                labelCol={{span: 5}}
-                wrapperCol={{span: 16}}
-                className={style["import-local-plugin-form"]}
+        <>
+            <YakitModal
+                type='white'
+                visible={visible}
+                onCancel={onCancel}
+                width={getLoadModeInfo("width") || 680}
+                closable={true}
+                maskClosable={false}
+                title={!loadPluginMode ? "导入插件方式" : <>导入{getLoadModeInfo("label")}</>}
+                className={style["import-local-plugin-modal"]}
+                subTitle={
+                    loadPluginMode ? (
+                        <></>
+                    ) : (
+                        <YakitRadioButtons
+                            wrapClassName={style["import-local-plugin-subTitle"]}
+                            buttonStyle='solid'
+                            value={loadMode}
+                            onChange={(e) => {
+                                setLoadMode(e.target.value)
+                            }}
+                            options={loadModeInfo.map((item) => ({value: item.value, label: item.label}))}
+                        ></YakitRadioButtons>
+                    )
+                }
+                bodyStyle={{padding: 0}}
+                footerStyle={{justifyContent: "flex-end"}}
+                footer={[
+                    <YakitButton type={"outline2"} onClick={onCancel}>
+                        {loadPluginMode === "local" && localStreamData?.Progress === 1 ? "完成" : "取消"}
+                    </YakitButton>,
+                    <YakitButton
+                        style={{marginLeft: 12, display: localStreamData ? "none" : "block"}}
+                        disabled={okBtnDisabled}
+                        onClick={onOk}
+                    >
+                        导入
+                    </YakitButton>
+                ]}
             >
-                {getRenderByLoadMode(loadMode)}
-            </Form>
-        </YakitModal>
+                <Form form={form} className={style["import-local-plugin-form"]}>
+                    {getRenderByLoadMode(loadMode)}
+                </Form>
+            </YakitModal>
+            <StartExecYakCodeModal
+                visible={startExecYakCodeModalVisible}
+                verbose={startExecYakCodeVerbose}
+                params={startExecYakCodeParams as YakScriptParam}
+                onClose={execYakCodeReset}
+                noErrorsLogCallBack={sendMsgToLocalPlugin}
+                successInfo={false}
+            ></StartExecYakCodeModal>
+        </>
     )
 })
 
@@ -977,7 +1141,14 @@ export const AddLocalPluginGroup: React.FC<AddPluginGroupProps> = React.memo((pr
         return cacheData.map((ele) => ({value: ele.name, label: ele.name})) || []
     }, [cacheData])
     return (
-        <YakitModal visible={visible} onCancel={() => setVisible(false)} footer={null} closable={false} hiddenHeader={true} bodyStyle={{padding: 0}}>
+        <YakitModal
+            visible={visible}
+            onCancel={() => setVisible(false)}
+            footer={null}
+            closable={false}
+            hiddenHeader={true}
+            bodyStyle={{padding: 0}}
+        >
             <div className={style["plugin-group-modal"]}>
                 <div className={style["plugin-group-heard"]}>
                     <div className={style["plugin-group-title"]}>添加至插件组</div>

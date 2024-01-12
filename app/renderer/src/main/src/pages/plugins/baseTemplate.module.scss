@@ -1,4 +1,15 @@
 // -------------------- PluginsLayout ↓↓↓ --------------------
+.plugins-mask-wrap {
+    position: relative;
+    :global {
+        .ant-modal-mask {
+            position: absolute;
+        }
+        .ant-modal-wrap {
+            position: absolute;
+        }
+    }
+}
 .plugins-layout {
     width: 100%;
     height: 100%;

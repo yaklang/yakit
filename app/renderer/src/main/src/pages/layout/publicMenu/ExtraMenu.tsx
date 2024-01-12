@@ -3,13 +3,14 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitRoute} from "@/routes/newRoute"
-import {onImportPlugin, onImportShare} from "@/pages/fuzzer/components/ShareImport"
+import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {useMemoizedFn} from "ahooks"
 import {RouteToPageProps} from "./PublicMenu"
 import { OutlineSaveIcon } from "@/assets/icon/outline"
 import { SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon } from "@/assets/icon/solid"
 
 import styles from "./ExtraMenu.module.scss"
+import { ImportLocalPlugin, LoadPluginMode } from "@/pages/mitm/MITMPage"
 
 interface ExtraMenuProps {
     onMenuSelect: (route: RouteToPageProps) => void
@@ -17,12 +18,17 @@ interface ExtraMenuProps {
 
 export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
     const {onMenuSelect} = props
-
+    const [visibleImport, setVisibleImport] = useState<boolean>(false)
+    const [loadPluginMode, setLoadPluginMode] = useState<LoadPluginMode>("giturl")
     const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
     const importMenuSelect = useMemoizedFn((type: string) => {
         switch (type) {
-            case "import-plugin":
-                onImportPlugin()
+            case "local":
+            case "uploadId":
+            case "giturl":
+            case "local-nuclei":
+                setVisibleImport(true)
+                setLoadPluginMode(type)
                 setImportMenuShow(false)
                 return
             case "import-share":
@@ -42,7 +48,13 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 data={[
                     {
                         key: "import-plugin",
-                        label: "导入插件"
+                        label: "导入插件",
+                        children: [
+                            { key: 'local', label: "本地插件" },
+                            { key: 'uploadId', label: "插件 ID" },
+                            { key: 'giturl', label: "线上 Nuclei" },
+                            { key: 'local-nuclei', label: "本地 Nuclei" },
+                        ]
                     },
                     {
                         key: "import-share",
@@ -102,6 +114,14 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
             >
                 Yak Runner
             </YakitButton>
+            <ImportLocalPlugin
+                visible={visibleImport}
+                setVisible={(v) => {
+                    setVisibleImport(v)
+                }}
+                loadPluginMode={loadPluginMode}
+                sendPluginLocal={true}
+            />
         </div>
     )
 })

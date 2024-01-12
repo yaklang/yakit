@@ -233,7 +233,6 @@
 }
 .yaklang-engine-hint-wrapper {
     width: 100%;
-    padding: 24px;
     display: flex;
     gap: 16px;
     position: relative;
@@ -314,9 +313,9 @@
                 }
             }
             .log-info {
-                margin-top: 16px;
+                transition: height 0.2s ease;
+                overflow-y: auto;
                 .log-item {
-                    color: #85899e;
                     font-size: 14px;
                     font-style: normal;
                     font-weight: 400;

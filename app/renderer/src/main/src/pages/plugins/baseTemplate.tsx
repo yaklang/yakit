@@ -76,7 +76,7 @@ const {ipcRenderer} = window.require("electron")
 
 /** @name 插件列表大框架组件 */
 export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
-    const {title, subTitle, extraHeader, hidden, children} = props
+    const {pageWrapId, title, subTitle, extraHeader, hidden, children} = props
 
     const titleNode = useMemo(() => {
         if (!title) return <div className={styles["title-style"]}>插件商店</div>
@@ -86,7 +86,7 @@ export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
     }, [title])
 
     return (
-        <div className={classNames(styles["plugins-layout"], {[styles["plugins-hidden"]]: !!hidden})}>
+        <div id={pageWrapId} className={classNames(styles["plugins-layout"], {[styles["plugins-mask-wrap"]]: !!pageWrapId}, {[styles["plugins-hidden"]]: !!hidden})}> 
             <div className={styles["plugins-layout-header"]}>
                 <div className={styles["header-body"]}>
                     {titleNode}

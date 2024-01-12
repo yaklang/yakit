@@ -1,42 +1,51 @@
-import React, {useEffect, useState} from "react"
+import React, {memo, useMemo, useRef} from "react"
 import {Progress} from "antd"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useVirtualList} from "ahooks"
 import styles from "./YakitUploadModal.module.scss"
-import {failed, warn} from "@/utils/notification"
-import {OutlinePaperclipIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {failed, warn, yakitFailed} from "@/utils/notification"
+import {OutlinePaperclipIcon} from "@/assets/icon/outline"
 import Dragger from "antd/lib/upload/Dragger"
 import {PropertyIcon} from "@/pages/payloadManager/icon"
 import {SolidDocumentdownloadIcon, SolidXcircleIcon} from "@/assets/icon/solid"
-import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
+const {ipcRenderer} = window.require("electron")
 
-interface SavePayloadProgress {
+export interface SaveProgressStream {
     Progress: number
-    Speed: string
-    CostDurationVerbose: string
-    RestDurationVerbose: string
+    Speed?: string
+    CostDurationVerbose?: string
+    RestDurationVerbose?: string
 }
 
-interface UploadStatusInfoProps {
+export interface LogListInfo {
+    message: string
+    isError?: boolean
+    key: string
+}
+
+export interface ImportAndExportStatusInfo {
     title: string
-    streamData: SavePayloadProgress
-    cancelRun: () => void
-    logListInfo: string[]
-    /** @name 是否显示-剩余时间-耗时-下载速度，默认显示 */
-    showDownloadDetail?: boolean
-    /** @name 是否自动关闭 */
-    autoClose?: boolean
-    /** @name 关闭Modal的回调 */
-    onClose: () => void
+    streamData: SaveProgressStream
+    logListInfo: LogListInfo[]
+    showDownloadDetail: boolean // 是否显示-下载详细信息
 }
 
-export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
-    const {title, streamData, logListInfo, cancelRun, onClose, showDownloadDetail = true, autoClose} = props
-    useEffect(() => {
-        if (autoClose && streamData.Progress === 1) {
-            onClose()
-        }
-    }, [autoClose, streamData.Progress, onClose])
+export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = memo((props) => {
+    const {title, streamData, logListInfo, showDownloadDetail} = props
+
+    const containerRef = useRef<any>(null)
+    const wrapperRef = useRef<any>(null)
+
+    const [list] = useVirtualList(logListInfo, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 24,
+        overscan: 5
+    })
+
+    const height = useMemo(() => {
+        if (list.length < 2) return 24
+        return 200
+    }, [list])
 
     return (
         <div className={styles["yaklang-engine-hint-wrapper"]}>
@@ -60,78 +69,106 @@ export const UploadStatusInfo: React.FC<UploadStatusInfoProps> = (props) => {
                     </div>
                     {showDownloadDetail && (
                         <div className={styles["download-info-wrapper"]}>
-                            <div>剩余时间 : {streamData.Progress === 1 ? "0s" : streamData.RestDurationVerbose}</div>
-                            <div className={styles["divider-wrapper"]}>
-                                <div className={styles["divider-style"]}></div>
-                            </div>
-                            <div>耗时 : {streamData.CostDurationVerbose}</div>
-                            <div className={styles["divider-wrapper"]}>
-                                <div className={styles["divider-style"]}></div>
-                            </div>
-                            <div>下载速度 : {streamData.Speed}M/s</div>
+                            <>
+                                {streamData.RestDurationVerbose && (
+                                    <>
+                                        <div>
+                                            剩余时间 :{" "}
+                                            {streamData.Progress === 1 ? "0s" : streamData.RestDurationVerbose}
+                                        </div>
+                                        <div className={styles["divider-wrapper"]}>
+                                            <div className={styles["divider-style"]}></div>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                            <>
+                                {streamData.CostDurationVerbose && (
+                                    <>
+                                        <div>耗时 : {streamData.CostDurationVerbose}</div>
+                                        <div className={styles["divider-wrapper"]}>
+                                            <div className={styles["divider-style"]}></div>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                            <>
+                                {streamData.Speed && (
+                                    <>
+                                        <div>下载速度 : {streamData.Speed}M/s</div>
+                                        <div className={styles["divider-wrapper"]}>
+                                            <div className={styles["divider-style"]}></div>
+                                        </div>
+                                    </>
+                                )}
+                            </>
                         </div>
                     )}
-                    <div className={styles["log-info"]}>
-                        {logListInfo.map((item) => (
-                            <div key={item} className={styles["log-item"]}>
-                                {item}
-                            </div>
-                        ))}
-                    </div>
-                    <div className={styles["download-btn"]}>
-                        <YakitButton loading={false} size='large' type='outline2' onClick={cancelRun}>
-                            取消
-                        </YakitButton>
+                    <div
+                        className={styles["log-info"]}
+                        ref={containerRef}
+                        style={{height: height, marginTop: list.length !== 0 ? 10 : 0}}
+                    >
+                        <div ref={wrapperRef}>
+                            {list.map((item) => (
+                                <div
+                                    key={item.data.key}
+                                    className={styles["log-item"]}
+                                    style={{color: item.data.isError ? "#f00" : "#85899e"}}
+                                >
+                                    {item.data.message}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     )
+})
+
+export interface UploadList {
+    path: string
+    name: string
+}
+
+interface FileRegexInfo {
+    fileType?: string[] // 上传文件后缀类型
+    fileTypeErrorMsg?: string
+    fileNameRegex?: RegExp // 文件名正则
+    fileNameErrorMsg?: string
 }
 
 export interface YakitUploadComponentProps {
-    /** @name 步骤1标题 */
-    title?: string
-    /** @name 步骤2标题 */
-    nextTitle?: string
-    /** @name 关闭Modal的回调 */
-    onClose?: () => void
-    /** @name 导入的回调 */
-    onSubmit?: (v: {path: string; name: string}[]) => void
-    /** @name 导入中取消的回调 */
-    cancelRun?: () => void
-    // 步骤1或2 步骤1为上传 步骤2为进度条显示
-    step: 1 | 2
-    /** @name 导入中的日志信息 */
-    logListInfo?: string[]
-    /** @name 步骤2-进度条-剩余时间-耗时-下载速度 */
-    streamData?: SavePayloadProgress
-    /** @name 是否自动关闭 */
-    autoClose?: boolean
+    step: 1 | 2 // 步骤1或2 步骤1为上传 步骤2为进度条显示
+    stepOneSubTitle: React.ReactElement | string // 步骤1-子标题
+    fileRegexInfo?: FileRegexInfo // 文件校验相关信息
+    directory?: boolean // 是否上传文件夹 默认文件夹
+    uploadList: UploadList[] // 上传列表
+    onUploadList: (uploadList: UploadList[]) => void
+    nextTitle?: string // 步骤2-标题
+    showDownloadDetail?: boolean // 步骤2-显示进度条-剩余时间-耗时-下载速度
+    streamData?: SaveProgressStream // 步骤2-导入流数据
+    logListInfo?: LogListInfo[] // 步骤2-导入中的日志信息
 }
 
-const defaultStreamData = {
-    Progress: 0,
-    Speed: "",
-    CostDurationVerbose: "",
-    RestDurationVerbose: ""
-}
-
+/**
+ * 暂不支持同时传文件或文件夹
+ */
 export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props) => {
     const {
-        title = "导入",
-        nextTitle = "导入中",
-        onClose,
-        cancelRun,
-        onSubmit,
         step,
-        logListInfo,
-        streamData = defaultStreamData,
-        autoClose
+        stepOneSubTitle,
+        fileRegexInfo,
+        directory = true,
+        uploadList = [],
+        onUploadList,
+        nextTitle = "导入中",
+        showDownloadDetail = false,
+        streamData,
+        logListInfo
     } = props
-    // 可上传文件类型
-    const FileType = ["text/plain", "text/csv"]
-    const [uploadList, setUploadList] = useState<{path: string; name: string}[]>([])
+
     const beforeUploadFun = useDebounceFn(
         (fileList: any[]) => {
             let arr: {
@@ -139,10 +176,37 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                 name: string
             }[] = []
             fileList.forEach((f) => {
-                if (!FileType.includes(f.type)) {
-                    failed(`${f.name}非txt、csv文件，请上传正确格式文件！`)
-                    return false
+                if (fileRegexInfo) {
+                    const {
+                        fileType = [],
+                        fileNameRegex,
+                        fileTypeErrorMsg = "不符合上传要求，请上传正确格式文件",
+                        fileNameErrorMsg = "不符合上传要求，请上传正确格式文件"
+                    } = fileRegexInfo
+
+                    if (!directory) {
+                        const index = f.name.indexOf('.')
+                        
+                        if (index === -1) {
+                            failed("请误上传文件夹")
+                            return false
+                        } else {
+                            // 校验文件名后缀
+                            const extname = f.name.split('.').pop()
+                            if (fileType.length && !fileType.includes('.' + extname)) {
+                                failed(`${f.name}${fileTypeErrorMsg}`)
+                                return false
+                            }
+                        }
+                    }
+
+                    // 校验文件名或文件夹名
+                    if (fileNameRegex && !fileNameRegex.test(f.name)) {
+                        failed(`${f.name}${fileNameErrorMsg}`)
+                        return
+                    }
                 }
+
                 if (uploadList.map((item) => item.path).includes(f.path)) {
                     warn(`${f.path}已选择`)
                     return
@@ -153,34 +217,68 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                     name
                 })
             })
-            setUploadList([...uploadList, ...arr])
+            onUploadList([...uploadList, ...arr])
         },
         {
             wait: 200
         }
     ).run
 
-    const onReadySubmit = useMemoizedFn(() => {
-        onSubmit && onSubmit(uploadList)
+    const onUploadFolder = useMemoizedFn(async () => {
+        try {
+            const data: {filePaths: string[]} = await ipcRenderer.invoke("openDialog", {
+                title: "请选择文件夹",
+                properties: ["openDirectory", "multiSelections"]
+            })
+            if (data.filePaths.length) {
+                let arr: {
+                    path: string
+                    name: string
+                }[] = []
+
+                const absolutePath = data.filePaths.map((p) => p.replace(/\\/g, "\\"))
+                const setAllPath = new Set(uploadList.map((item) => item.path))
+                absolutePath.forEach((path) => {
+                    const name = path.split("\\").pop() || ""
+                    if (fileRegexInfo && name) {
+                        const {fileNameRegex, fileNameErrorMsg = "不符合上传要求，请上传正确格式文件"} = fileRegexInfo
+
+                        if (fileNameRegex && !fileNameRegex.test(name)) {
+                            failed(`${name}${fileNameErrorMsg}`)
+                            return
+                        }
+                    }
+
+                    if (setAllPath.has(path)) {
+                        warn(`${path}已选择`)
+                        return
+                    }
+
+                    name &&
+                        arr.push({
+                            path: path,
+                            name
+                        })
+                })
+                onUploadList([...uploadList, ...arr])
+            }
+        } catch (error) {
+            yakitFailed(error + "")
+        }
     })
 
     return (
         <div className={styles["yakit-upload-component"]}>
             {step === 1 && (
                 <>
-                    <div className={styles["header"]}>
-                        <div className={styles["title"]}>{title}</div>
-                        <div className={styles["extra"]} onClick={onClose}>
-                            <OutlineXIcon />
-                        </div>
-                    </div>
                     <div className={styles["info-box"]}>
                         <div className={styles["card-box"]}>
                             <>
                                 <div className={styles["upload-dragger-box"]}>
+                                    {/* 不要设置directory属性 会导致前端很卡 */}
                                     <Dragger
                                         className={styles["upload-dragger"]}
-                                        // accept={FileType.join(",")}
+                                        // accept={fileRegexInfo?.fileType?.join(',')} 不在这里给限制 由于前端需要给msg提示
                                         multiple={true}
                                         showUploadList={false}
                                         beforeUpload={(f: any, fileList: any) => {
@@ -195,11 +293,19 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                                             <div className={styles["content"]}>
                                                 <div className={styles["title"]}>
                                                     可将文件拖入框内，或
-                                                    <span className={styles["hight-light"]}>点击此处导入</span>
+                                                    <span
+                                                        className={styles["hight-light"]}
+                                                        onClick={(e) => {
+                                                            if (directory) {
+                                                                e.stopPropagation()
+                                                                onUploadFolder()
+                                                            }
+                                                        }}
+                                                    >
+                                                        点击此处导入
+                                                    </span>
                                                 </div>
-                                                <div className={styles["sub-title"]}>
-                                                    支持文件夹批量上传(支持文件类型txt/csv)
-                                                </div>
+                                                <div className={styles["sub-title"]}>{stepOneSubTitle}</div>
                                             </div>
                                         </div>
                                     </Dragger>
@@ -219,7 +325,7 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                                             const newUploadList = uploadList.filter(
                                                 (itemIn) => itemIn.path !== item.path
                                             )
-                                            setUploadList(newUploadList)
+                                            onUploadList(newUploadList)
                                         }}
                                     >
                                         <SolidXcircleIcon />
@@ -228,61 +334,17 @@ export const YakitUploadComponent: React.FC<YakitUploadComponentProps> = (props)
                             ))}
                         </div>
                     </div>
-                    <div className={styles["submit-box"]}>
-                        <YakitButton size='large' disabled={uploadList.length === 0} type='outline1' onClick={onClose}>
-                            取消
-                        </YakitButton>
-                        <YakitButton size='large' disabled={uploadList.length === 0} onClick={onReadySubmit}>
-                            导入
-                        </YakitButton>
-                    </div>
                 </>
             )}
 
-            {step === 2 && (
-                <UploadStatusInfo
+            {step === 2 && streamData && (
+                <ImportAndExportStatusInfo
                     title={nextTitle}
                     streamData={streamData}
-                    cancelRun={() => cancelRun && cancelRun()}
+                    showDownloadDetail={showDownloadDetail}
                     logListInfo={logListInfo || []}
-                    autoClose={autoClose}
-                    onClose={() => {
-                        onClose && onClose()
-                    }}
                 />
             )}
-        </div>
-    )
-}
-declare type getContainerFunc = () => HTMLElement
-export interface YakitUploadModalProps extends YakitUploadComponentProps {
-    /** @name 控制Modal是否打开 */
-    visible: boolean
-    /** @name 控制Modal不全占据页面 */
-    getContainer?: string | HTMLElement | getContainerFunc | false
-}
-
-/**
- * @description: 新样式上传Modal（包含2个步骤，步骤1选择上传，步骤2展示上传内容）
- */
-export const YakitUploadModal: React.FC<YakitUploadModalProps> = (props) => {
-    const {visible, getContainer, ...restProps} = props
-    return (
-        <div>
-            <YakitModal
-                // document.getElementById("new-payload") || document.body
-                getContainer={getContainer}
-                title={null}
-                footer={null}
-                width={520}
-                type={"white"}
-                closable={false}
-                maskClosable={false}
-                hiddenHeader={true}
-                visible={visible}
-            >
-                <YakitUploadComponent {...restProps} />
-            </YakitModal>
         </div>
     )
 }

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useImperativeHandle, useRef, useState} from "react";
 import {Alert, Badge, Button, Card, Divider, Form, Popover, Space, Spin, Tag, Timeline, Typography} from "antd";
 import {ExecResult} from "../pages/invoker/schema";
 import {showDrawer, showModal} from "./showModal";
@@ -25,6 +25,7 @@ import {PluginResultUI} from "../pages/yakitStore/viewers/base";
 import {AutoCard} from "../components/AutoCard";
 import { getReleaseEditionName, isCommunityEdition } from "./envfile";
 import {NetInterface} from "@/models/Traffic";
+import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal";
 
 export interface YakVersionProp {
 
@@ -427,43 +428,108 @@ export const ConfigGlobalReverse = React.memo(() => {
     </div>
 });
 
-interface YakScriptParam {
+export interface YakScriptParam {
     Script: string
     Params: YakExecutorParam[]
 }
 
-export const startExecYakCode = (
+interface StartExecYakCodeModalProps {
+    visible: boolean
+    onClose: () => void
+    noErrorsLogCallBack?: () => void
     verbose: string,
-    params: YakScriptParam) => {
-    let m = showModal({
-        width: "60%", maskClosable: false,
-        title: `正在执行：${verbose}`,
-        content: <div style={{height: 400, overflowY: "auto"}}>
-            <AutoCard bodyStyle={{overflowY: "auto"}}>
-                <StartToExecYakScriptViewer script={params} verbose={verbose}/>
-            </AutoCard>
-        </div>
-    })
+    params: YakScriptParam,
+    successInfo?: boolean
+}
+export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (props) => {
+    const {visible, onClose, params, verbose, successInfo, noErrorsLogCallBack} = props
+
+    const startToExecYakScriptViewerRef = useRef<any>()
+
+    const onCancel = () => {
+        ipcRenderer.invoke("cancel-ExecYakCode", startToExecYakScriptViewerRef.current.token)
+        noErrorsLogCallBack && noErrorsLogCallBack()
+        onClose()
+    }
+
+    const [refresh, setRefresh] = useState<number>(Math.random())
+    useEffect(() => {
+        setRefresh(Math.random())
+    }, [visible])
+
+    return (
+        <YakitModal
+            visible={visible}
+            type='white'
+            width="60%"
+            maskClosable={false}
+            title={`正在执行：${verbose}`}
+            onCancel={onCancel}
+            closable={true}
+            footer={null}
+        >
+            <div style={{height: 400, overflowY: "auto"}}>
+                <StartToExecYakScriptViewer
+                    key={refresh}
+                    ref={startToExecYakScriptViewerRef} 
+                    script={params} 
+                    verbose={verbose} 
+                    successInfo={successInfo} 
+                    onCancel={onCancel}
+                />
+            </div>
+        </YakitModal>
+    )
 }
 
-const StartToExecYakScriptViewer = React.memo((props: {
+const StartToExecYakScriptViewer = React.forwardRef((props: {
+    ref: any
     verbose: string,
     script: YakScriptParam,
-}) => {
-    const {script, verbose} = props;
+    successInfo?: boolean
+    onCancel: () => void
+}, ref) => {
+    const {script, verbose, successInfo = true, onCancel} = props;
     const [token, setToken] = useState(randomString(40));
     const [loading, setLoading] = useState(true);
+    const [messageStateStr, setMessageStateStr] = useState<string>("");
+    const checkErrorsFlagRef = useRef<boolean>(false)
+
+    useImperativeHandle(ref, () => ({
+        token,
+    }))
+    
     const [infoState, {reset, setXtermRef}] = useHoldingIPCRStream(
         verbose, "ExecYakCode",
         token, () => setTimeout(() => setLoading(false), 300),
         () => {
             ipcRenderer.invoke("ExecYakCode", script, token).then(() => {
-                info(`执行 ${verbose} 成功`)
+                successInfo && info(`执行 ${verbose} 成功`)
             }).catch(e => {
                 failed(`执行 ${verbose} 遇到问题：${e}`)
             })
         }
     )
+    useEffect(() => {
+        setMessageStateStr(JSON.stringify(infoState.messageState))
+    }, [infoState.messageState])
+
+    useEffect(() => {
+        if (messageStateStr !== "") {
+            const messageState = JSON.parse(messageStateStr)
+            for (let i = 0; i < messageState.length; i++) {
+                const item = messageState[i];
+                if (item.level === "error") {
+                    checkErrorsFlagRef.current = true
+                    return
+                }
+            }
+            // 导入日志都没有错误
+            if (!checkErrorsFlagRef.current && !loading) {
+                onCancel()
+            }
+        }
+    }, [messageStateStr, loading])
 
     return (
         <PluginResultUI

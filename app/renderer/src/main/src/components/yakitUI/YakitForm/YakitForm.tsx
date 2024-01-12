@@ -222,7 +222,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         }
     })
 
-    const renderContent = useMemoizedFn((helpNode: ReactNode) => {
+    const renderContent = (helpNode: ReactNode) => {
         return (
             <Spin spinning={uploadLoading}>
                 {renderContentValue()}
@@ -236,7 +236,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                 </div>
             </Spin>
         )
-    })
+    }
     /**
      * @description 选择文件夹
      */
@@ -381,7 +381,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     )}
                 </Dragger>
             )}
-
+            {/* DEL directory该属性 用了该属性 当上传文件很大时 会导致渲染卡很久 */}
             {selectType === "folder" && (
                 <Dragger
                     {...restProps}
