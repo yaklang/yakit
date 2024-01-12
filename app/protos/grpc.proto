@@ -170,7 +170,7 @@ service Yak {
 
   rpc ExportLocalYakScript(ExportLocalYakScriptRequest) returns (ExportLocalYakScriptResponse);   // 结构变化,接口废弃
   rpc ImportYakScript(ImportYakScriptRequest) returns (stream ImportYakScriptResult);
-  rpc ExportYakScriptLocal(ExportLocalYakScriptRequest) returns (stream ExportYakScriptLocalResponse);
+  rpc ExportLocalYakScriptStream(ExportLocalYakScriptRequest) returns (stream ExportYakScriptLocalResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);

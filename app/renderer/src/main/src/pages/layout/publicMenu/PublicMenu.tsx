@@ -386,7 +386,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     })
     // 展开菜单的点击回调
     const onClickMenu = useMemoizedFn((route: RouteToPageProps, source: string) => {
-        console.log('展开菜单的点击回调', route, source);
         if (route.route !== YakitRoute.Plugin_OP) onMenuSelect(route)
         else {
             if (!route.pluginName) return

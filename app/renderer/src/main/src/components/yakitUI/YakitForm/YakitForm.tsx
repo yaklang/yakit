@@ -387,6 +387,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     {...restProps}
                     disabled={disabled}
                     showUploadList={false}
+                    directory
                     className={classNames(styles["yakit-dragger"], props.className)}
                     beforeUpload={() => {
                         return false

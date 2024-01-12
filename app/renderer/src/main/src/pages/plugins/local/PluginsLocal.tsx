@@ -674,7 +674,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 params.Tags = queryFetchList.Tag + ""
             }
             setExportStatusModalVisible(true)
-            await ipcRenderer.invoke("ExportYakScriptLocal", params)
+            await ipcRenderer.invoke("ExportLocalYakScriptStream", params)
         } catch (error) {
             yakitFailed(error + "")
         }
@@ -1043,11 +1043,12 @@ const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) =>
                     setClose(true)
                 }
             })
-        }
-        return () => {
-            clearInterval(timer)
-            ipcRenderer.invoke("cancel-exportYakScript")
-            ipcRenderer.removeAllListeners("export-yak-script-data")
+
+            return () => {
+                clearInterval(timer)
+                ipcRenderer.invoke("cancel-exportYakScript")
+                ipcRenderer.removeAllListeners("export-yak-script-data")
+            }
         }
     }, [visible])
 
@@ -1086,7 +1087,7 @@ const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) =>
                 </YakitButton>
             ]}
         >
-            <div style={{ padding: '0 16px' }}>
+            <div style={{padding: "0 16px"}}>
                 <ImportAndExportStatusInfo
                     title={localStreamData?.Progress === 1 ? "导出已完成" : "导出中"}
                     showDownloadDetail={false}

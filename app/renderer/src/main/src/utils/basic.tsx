@@ -6,7 +6,7 @@ import {ExecResultLog, ExecResultMessage} from "../pages/invoker/batch/ExecMessa
 import {LogLevelToCode} from "../components/HTTPFlowTable/HTTPFlowTable";
 import {YakitLogFormatter} from "../pages/invoker/YakitLogFormatter";
 import {InputItem, SwitchItem} from "./inputUtil";
-import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks";
+import {useGetState, useMemoizedFn} from "ahooks";
 import {ReloadOutlined} from "@ant-design/icons";
 import {getRemoteValue, setRemoteValue} from "./kv";
 import {
@@ -25,8 +25,6 @@ import {PluginResultUI} from "../pages/yakitStore/viewers/base";
 import {AutoCard} from "../components/AutoCard";
 import { getReleaseEditionName, isCommunityEdition } from "./envfile";
 import {NetInterface} from "@/models/Traffic";
-import { emit } from "process";
-import emiter from "./eventBus/eventBus";
 import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal";
 
 export interface YakVersionProp {

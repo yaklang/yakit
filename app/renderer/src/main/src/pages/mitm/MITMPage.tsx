@@ -834,10 +834,11 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                     setClose(true)
                 }
             })
-        }
-        return () => {
-            clearInterval(timer)
-            ipcRenderer.removeAllListeners("import-yak-script-data")
+            
+            return () => {
+                clearInterval(timer)
+                ipcRenderer.removeAllListeners("import-yak-script-data")
+            }
         }
     }, [visible])
 

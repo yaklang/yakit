@@ -99,8 +99,8 @@ module.exports = (win, getClient) => {
 
     // 批量导出本地插件
     let exportYakScriptStream
-    ipcMain.handle("ExportYakScriptLocal", async (e, params) => {
-        exportYakScriptStream = getClient().ExportYakScriptLocal(params)
+    ipcMain.handle("ExportLocalYakScriptStream", async (e, params) => {
+        exportYakScriptStream = getClient().ExportLocalYakScriptStream(params)
         exportYakScriptStream.on("data", (e) => {
             if (!win) {
                 return
