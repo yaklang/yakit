@@ -8,6 +8,7 @@ import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
 import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
 import {
     HybridScanRequest,
+    apiCancelHybridScan,
     apiHybridScan,
     apiQueryYakScript,
     convertHybridScanParams,
@@ -34,6 +35,8 @@ import {
 import {PluginExecuteExtraFormValue} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {randomString} from "@/utils/randomUtil"
+import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
+import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -67,6 +70,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const [isExpend, setIsExpend] = useState<boolean>(false)
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    const [runtimeId, setRuntimeId] = useState<string>("")
 
     /**额外参数弹出框 */
     const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
@@ -85,6 +89,19 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
 
     const [form] = Form.useForm()
     const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
+
+    const [streamInfo, debugPluginStreamEvent] = useHoldBatchGRPCStream({
+        taskName: "hybrid-scan",
+        apiKey: "HybridScan",
+        token: tokenRef.current,
+        onEnd: () => {
+            debugPluginStreamEvent.stop()
+            setTimeout(() => setIsExecuting(false), 300)
+        },
+        setRuntimeId: (rId) => {
+            setRuntimeId(rId)
+        }
+    })
 
     useEffect(() => {
         getPrivateDomainAndRefList()
@@ -219,7 +236,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         if (allCheck) return response.Total
         else return selectList.length
     }, [allCheck, selectList, response.Total])
-
+    const isShowResult = useCreation(() => {
+        return isExecuting || runtimeId
+    }, [isExecuting, runtimeId])
     /**开始执行 */
     const onStartExecute = useMemoizedFn((value) => {
         // 任务配置参数
@@ -250,14 +269,19 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             pluginInfo,
             typeRef.current
         )
-        apiHybridScan(hybridScanParams,tokenRef.current).then(() => {
+        apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
             setIsExecuting(true)
             setIsExpend(false)
+            debugPluginStreamEvent.start()
         })
-        console.log("hybridScanParams", hybridScanParams)
     })
     /**取消执行 */
-    const onStopExecute = useMemoizedFn(() => {})
+    const onStopExecute = useMemoizedFn(() => {
+        apiCancelHybridScan(tokenRef.current).then(() => {
+            debugPluginStreamEvent.stop()
+            setIsExecuting(false)
+        })
+    })
     const openExtraPropsDrawer = useMemoizedFn(() => {
         setExtraParamsVisible(true)
     })
@@ -266,6 +290,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         setExtraParamsValue({...v} as PluginBatchExecuteExtraFormValue)
         setExtraParamsVisible(false)
     })
+    console.log("streamInfo", streamInfo)
     return (
         <div className={styles["plugin-batch-executor"]}>
             <PluginDetails<YakScript>
@@ -405,6 +430,14 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                     </Form.Item>
                 </Form>
             </PluginDetails>
+            {isShowResult && (
+                <PluginExecuteResult
+                    streamInfo={streamInfo}
+                    runtimeId={runtimeId}
+                    loading={isExecuting}
+                    pluginType={typeRef.current}
+                />
+            )}
             <React.Suspense fallback={<div>loading...</div>}>
                 <PluginBatchExecuteExtraParamsDrawer
                     isRawHTTPRequest={isRawHTTPRequest}

@@ -1121,6 +1121,7 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
             let executeParams: HybridScanControlAfterRequest = {
                 ...params
             }
+            console.log('executeParams',executeParams)
             ipcRenderer
                 .invoke(
                     "HybridScan",

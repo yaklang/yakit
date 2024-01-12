@@ -214,7 +214,6 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
             riskState: risks,
             logState: logs
         }
-        console.log('info',info)
         setStreamInfo(info)
     })
 
