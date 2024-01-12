@@ -167,8 +167,10 @@ service Yak {
   rpc YakScriptRiskTypeList(Empty) returns (YakScriptRiskTypeListResponse);
   rpc SaveNewYakScript(SaveNewYakScriptRequest) returns (YakScript);
   rpc SaveYakScriptToOnline(SaveYakScriptToOnlineRequest) returns (stream SaveYakScriptToOnlineResponse);
-  rpc ExportLocalYakScript(ExportLocalYakScriptRequest) returns (stream ExportLocalYakScriptResponse);
+
+  rpc ExportLocalYakScript(ExportLocalYakScriptRequest) returns (ExportLocalYakScriptResponse);   // 结构变化,接口废弃
   rpc ImportYakScript(ImportYakScriptRequest) returns (stream ImportYakScriptResult);
+  rpc ExportYakScriptLocal(ExportLocalYakScriptRequest) returns (stream ExportYakScriptLocalResponse);
 
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
@@ -3606,10 +3608,15 @@ message ExportLocalYakScriptRequest {
 
 message ExportLocalYakScriptResponse {
   string OutputDir = 1;
+}
+
+message ExportYakScriptLocalResponse {
+  string OutputDir = 1;
   double Progress = 2;
   string Message = 3;
   string MessageType = 4;
 }
+
 
 message ImportYakScriptRequest {
   repeated string Dirs = 1;
@@ -3927,6 +3934,9 @@ message FuzzerRequest {
   // default 5M?
   // packet is too large (> MaxBodySize)
   int64 MaxBodySize = 49;
+
+  int64 PauseTaskID = 52;
+  bool IsPause = 53;
 }
 
 message KVPair {
