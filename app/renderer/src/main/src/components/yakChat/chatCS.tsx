@@ -160,7 +160,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             name: `临时对话窗-${randomString(4)}`,
             baseType,
             expInfo,
-            backCatch,
             history: [],
             time: formatDate(+new Date())
         }
@@ -197,7 +196,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     const [baseType, setBaseType] = useState<string>("cs_info")
     const [expInfo, setExpInfo] = useState<boolean>(false)
-    const [backCatch, setBackCatch] = useState<boolean>(false)
     const [question, setQuestion] = useState<string>("")
 
     const [loading, setLoading] = useState<boolean>(false)
@@ -257,7 +255,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         if (loading) return
         if (!question || question.trim() === "") return
 
-        if (!baseType && !expInfo && !backCatch) {
+        if (!baseType && !expInfo) {
             return yakitNotify("error", "请最少选择一个回答类型")
         }
 
@@ -268,8 +266,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             info: {
                 content: question,
                 baseType,
-                expInfo,
-                backCatch
+                expInfo
             }
         }
         onSubmit(data)
@@ -281,7 +278,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         const {content,baseType} = v
         if (!content || content.trim() === "") return
 
-        if (!baseType && !expInfo && !backCatch) {
+        if (!baseType && !expInfo) {
             return yakitNotify("error", "请最少选择一个回答类型")
         }
         const data: ChatInfoProps = {
@@ -292,7 +289,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 content,
                 baseType,
                 expInfo,
-                backCatch
             }
         }
         onSubmit(data)
@@ -466,7 +462,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                       name: `临时对话窗-${randomString(4)}`,
                       baseType,
                       expInfo,
-                      backCatch,
                       history: [],
                       time: formatDate(+new Date())
                   }
@@ -514,9 +509,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         setHistroy([...group])
         setStorage([...group])
         setTimeout(() => scrollToBottom(), 100)
-
-        const promises: Promise<any>[] = []
-
         /** 查询 cs_info或vuln_info */
         if (params.baseType) {
             /** 流式输出逻辑 */
@@ -560,29 +552,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             // controller.current.push(abort)
             // const promise = generatePromise(
             //     {prompt: params.content, intell_type: "exp_info", history: [], signal: abort.signal},
-            //     contents,
-            //     group
-            // )
-            // promises.push(promise)
-        }
-        /** 查询 back_catch */
-        if (params.backCatch) {
-            /** 流式输出逻辑 */
-            if (!isBreak.current) {
-                const abort = new AbortController()
-                controller.current = abort
-                await generatePromise(
-                    {prompt: params.content, intell_type: "back_catch", history: [], signal: abort.signal},
-                    contents,
-                    group
-                )
-            }
-            scrollToBottom()
-            /** 一次性输出逻辑 */
-            // const abort = new AbortController()
-            // controller.current.push(abort)
-            // const promise = generatePromise(
-            //     {prompt: params.content, intell_type: "back_catch", history: [], signal: abort.signal},
             //     contents,
             //     group
             // )
@@ -780,8 +749,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             info: {
                 content: info.content,
                 baseType: info.type,
-                expInfo: false,
-                backCatch: false
+                expInfo: false
             }
         }
 
@@ -1072,14 +1040,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                             >
                                                                 漏洞利用
                                                             </div>
-                                                            {/* <div
-                                                                className={classNames(styles["single-btn"], {
-                                                                    [styles["single-active-btn"]]: backCatch
-                                                                })}
-                                                                onClick={() => setBackCatch(!backCatch)}
-                                                            >
-                                                                背景知识
-                                                            </div> */}
                                                         </div>
                                                     </div>
                                                 }
@@ -1136,14 +1096,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                 >
                                                     漏洞利用
                                                 </div>
-                                                {/* <div
-                                                    className={classNames(styles["single-btn"], {
-                                                        [styles["single-active-btn"]]: backCatch
-                                                    })}
-                                                    onClick={() => setBackCatch(!backCatch)}
-                                                >
-                                                    背景知识
-                                                </div> */}
                                             </div>
                                         )}
                                         <div className={styles["footer-divider"]}></div>

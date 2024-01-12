@@ -59,6 +59,24 @@ export const chatCS = ({prompt, intell_type, token, history, signal, onDownloadP
     return http({prompt, intell_type, token, history, signal, onDownloadProgress})
 }
 
+function httpPlugin(){
+    return service({
+        url: "chat-plugin",
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        data: {},
+        // signal: signal,
+        // 浏览器专属
+        // onDownloadProgress: onDownloadProgress
+    })
+}
+
+export const chatCSPlugin = () => {
+    return httpPlugin()
+}
+
 export const chatGrade = (params: {uid: string; grade: "good" | "bad"}) => {
     return service({
         url: "chat-grade",

@@ -8,8 +8,6 @@ export interface CacheChatCSProps {
     baseType: string
     /** 开源漏洞EXP */
     expInfo: boolean
-    /** 背景知识 */
-    backCatch: boolean
     /** 对话内容历史 */
     history: ChatInfoProps[]
     /** 对话最新时间 */
@@ -27,7 +25,6 @@ export interface ChatMeInfoProps {
     content: string
     baseType: string
     expInfo: boolean
-    backCatch: boolean
 }
 /** 服务器信息属性 */
 export interface ChatCSMultipleInfoProps {
