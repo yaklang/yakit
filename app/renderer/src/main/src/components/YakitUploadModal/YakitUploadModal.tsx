@@ -43,9 +43,8 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
     })
 
     const height = useMemo(() => {
-        if (list.length === 0) return 24
-        if (list.length < 10) return list.length * 24
-        return 240
+        if (list.length < 2) return 24
+        return 200
     }, [list])
 
     return (
