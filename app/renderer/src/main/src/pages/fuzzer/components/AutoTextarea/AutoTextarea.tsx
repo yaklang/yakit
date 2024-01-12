@@ -26,6 +26,7 @@ export const AutoTextarea: React.FC<AutoTextareaProps> = React.memo((props) => {
             rows={1}
             ref={textareaRef}
             {...restProps}
+            spellCheck={false}
             className={classNames(styles["auto-textarea"], className)}
             onChange={(e) => {
                 e.stopPropagation()

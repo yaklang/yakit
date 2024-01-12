@@ -75,6 +75,7 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
             >
                 <TextArea
                     {...restTextarea}
+                    spellCheck={false}
                     onChange={(e) => {
                         if (restTextarea.onChange) restTextarea.onChange(e)
                         setValue && setValue(e.target.value)
@@ -111,6 +112,7 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
                     >
                         <TextArea
                             {...restTextarea}
+                            spellCheck={false}
                             onChange={(e) => {
                                 if (restTextarea.onChange) restTextarea.onChange(e)
                                 setValue && setValue(e.target.value)

@@ -92,6 +92,24 @@ function NewApp() {
         }
     }, [])
 
+    // 全局监听change事件 input & textrea 都去掉浏览器校验
+    useEffect(() => {
+        const handleInputEvent = (event) => {
+            const { target } = event
+            const isInput = target && (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)
+            if (isInput) {
+                const spellCheck = target.getAttribute("spellCheck")
+                if (spellCheck || spellCheck === null) {
+                    target.setAttribute("spellCheck", "false")
+                }
+            }
+        }
+        document.addEventListener('change', handleInputEvent)
+        return () => {
+            document.removeEventListener("change", handleInputEvent)
+        }
+    }, [])
+
     /** 是否展示用户协议 */
     useEffect(() => {
         ipcRenderer
