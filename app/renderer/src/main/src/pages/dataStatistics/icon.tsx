@@ -31,8 +31,8 @@ const User = () => (
                 d='M32 28C32.3489 28.4212 32.7432 28.7877 33.1733 29.0878C34.0048 29.668 34.9703 30 36 30C37.0297 30 37.9952 29.668 38.8267 29.0878C39.2568 28.7877 39.6511 28.4212 40 28'
                 stroke='white'
                 strokeWidth='1.5'
-                stroke-linecap='round'
-                stroke-linejoin='round'
+                strokeLinecap='round'
+                strokeLinejoin='round'
             />
         </g>
         <defs>
