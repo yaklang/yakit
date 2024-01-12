@@ -484,7 +484,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         return ""
     }
 
-    const [defaultExpand, setDefaultExpand] = useState<boolean>()
+    const [defaultExpand, setDefaultExpand] = useState<boolean>(true)
     useEffect(() => {
         getRemoteValue(CodeGV.MenuExpand).then((result: string) => {
             if (!result) setDefaultExpand(true)
@@ -574,20 +574,19 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         >
                             {isCommunityEdition() ? (
                                 <>
-                                    {typeof defaultExpand === "boolean" && (
-                                        <PublicMenu
-                                            defaultExpand={defaultExpand}
-                                            onMenuSelect={openMenu}
-                                            setRouteToLabel={(val) => {
-                                                val.forEach((value, key) => {
-                                                    routeKeyToLabel.current.set(key, value)
-                                                })
-                                            }}
-                                        />
-                                    )}
+                                    <PublicMenu
+                                        defaultExpand={defaultExpand}
+                                        onMenuSelect={openMenu}
+                                        setRouteToLabel={(val) => {
+                                            val.forEach((value, key) => {
+                                                routeKeyToLabel.current.set(key, value)
+                                            })
+                                        }}
+                                    />
                                 </>
                             ) : (
                                 <HeardMenu
+                                    defaultExpand={defaultExpand}
                                     onRouteMenuSelect={openMenu}
                                     setRouteToLabel={(val) => {
                                         val.forEach((value, key) => {

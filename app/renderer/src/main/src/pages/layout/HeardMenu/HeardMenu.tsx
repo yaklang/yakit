@@ -42,7 +42,7 @@ import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
 import {isEnpriTraceAgent} from "@/utils/envfile"
-import {RemoteGV} from "@/yakitGV"
+import {CodeGV, RemoteGV} from "@/yakitGV"
 import {
     DatabaseFirstMenuProps,
     DatabaseMenuItemProps,
@@ -67,12 +67,12 @@ import {
 import classNames from "classnames"
 import style from "./HeardMenu.module.scss"
 import {ExtraMenu} from "../publicMenu/ExtraMenu"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
-    const {onRouteMenuSelect, setRouteToLabel} = props
-
+    const {defaultExpand,onRouteMenuSelect, setRouteToLabel} = props
     // 专家模式菜单数据
     const ExpertMenus = useMemo(() => {
         return privateExchangeProps(PrivateExpertRouteMenu)
@@ -110,7 +110,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [number, setNumber] = useState<number>(-1)
     const [moreLeft, setMoreLeft] = useState<number>(0) // 更多文字的left
 
-    const [isExpand, setIsExpand] = useState<boolean>(true)
+    const [isExpand, setIsExpand] = useState<boolean>(defaultExpand)
 
     const [customizeVisible, setCustomizeVisible] = useState<boolean>(false)
 
@@ -496,8 +496,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         })
         setRouteMenuDataAfter(afterRoute)
     })
-    const onExpand = useMemoizedFn(() => {
-        setIsExpand(true)
+    const onExpand = useMemoizedFn((checked) => {
+        const value = JSON.stringify(checked)
+        setIsExpand(checked)
+        setRemoteValue(CodeGV.MenuExpand, value)
+        emiter.emit("menuExpandSwitch", value)
         if (!menuId && routeMenu.length > 0) {
             setSubMenuData(routeMenu[0]?.children || [])
             setMenuId(routeMenu[0]?.label || "")
@@ -760,7 +763,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         </>
                     )}
                     {!isExpand && (
-                        <div className={style["heard-menu-sort"]} onClick={() => onExpand()}>
+                        <div className={style["heard-menu-sort"]} onClick={() => onExpand(true)}>
                             {!isExpand && <SortDescendingIcon />}
                         </div>
                     )}
@@ -770,7 +773,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 <div className={style["heard-sub-menu-expand"]}>
                     <Tabs
                         tabBarExtraContent={
-                            <div className={style["heard-menu-sort"]} onClick={() => setIsExpand(false)}>
+                            <div className={style["heard-menu-sort"]} onClick={() => onExpand(false)}>
                                 <SortAscendingIcon />
                             </div>
                         }

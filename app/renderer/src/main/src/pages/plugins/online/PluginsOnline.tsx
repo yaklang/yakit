@@ -84,6 +84,7 @@ import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import classNames from "classnames"
 import "../plugins.scss"
+import {CodeGV} from "@/yakitGV"
 
 /**插件商店页面的处理缓存中的搜索参数 */
 const getPluginOnlinePageData = (pluginOnlinePageData) => {
@@ -158,7 +159,7 @@ export const PluginsOnline: React.FC<PluginsOnlineProps> = React.memo((props) =>
             if (id === "pluginsOnline") {
                 const {scrollHeight, clientHeight} = e.target
                 const maxScrollTop = Math.max(0, scrollHeight - clientHeight)
-                if (!Math.trunc(Math.abs(scrollTop - maxScrollTop))) {
+                if (Math.trunc(Math.abs(scrollTop - maxScrollTop)) <= 2) {
                     setIsShowRoll(false)
                 } else {
                     setIsShowRoll(true)
@@ -258,6 +259,8 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
 
     const [showFilter, setShowFilter] = useState<boolean>(true)
 
+    const [menuExpand, setMenuExpand] = useState<boolean>(true)
+
     /** 是否为初次加载 */
     const isLoadingRef = useRef<boolean>(true)
     const latestLoadingRef = useLatest(loading)
@@ -287,9 +290,11 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
     useEffect(() => {
         emiter.on("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)
         emiter.on("onRefOnlinePluginList", onRefOnlinePluginList)
+        emiter.on("menuExpandSwitch", onMenuExpandSwitch)
         return () => {
             emiter.off("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)
             emiter.off("onRefOnlinePluginList", onRefOnlinePluginList)
+            emiter.off("menuExpandSwitch", onMenuExpandSwitch)
         }
     }, [])
     useEffect(() => {
@@ -298,6 +303,20 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             onRefOnlinePluginListByQuery()
         }
     }, [pluginOnlinePageData])
+    useEffect(() => {
+        getRemoteValue(CodeGV.MenuExpand).then((result: string) => {
+            if (!result) setMenuExpand(true)
+            onMenuExpandSwitch(result)
+        })
+    }, [])
+    const onMenuExpandSwitch = useMemoizedFn((value) => {
+        try {
+            const expandResult: boolean = JSON.parse(value)
+            setMenuExpand(expandResult)
+        } catch (e) {
+            setMenuExpand(true)
+        }
+    })
     /**切换私有域，刷新初始化的total和列表数据,回到列表页 */
     const onSwitchPrivateDomainRefOnlinePluginInit = useMemoizedFn(() => {
         fetchList(true)
@@ -586,7 +605,9 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             {!!plugin && (
                 <div
                     className={classNames(styles["plugins-online-detail"], {
-                        [styles["plugins-online-detail-ee-or-es"]]: !isCommunityEdition()
+                        [styles["plugins-online-detail-ee-or-es"]]: !isCommunityEdition(),
+                        [styles["plugins-online-detail-ee-or-es-menu-retract"]]: !isCommunityEdition() && !menuExpand,
+                        [styles["plugins-online-detail-menu-retract"]]: isCommunityEdition() && !menuExpand
                     })}
                 >
                     <PluginsOnlineDetail

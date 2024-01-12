@@ -103,6 +103,13 @@ module.exports = {
                 devMiddleware: {
                     writeToDisk: true,
                 },
+                client: {
+                    overlay: {
+                        errors: true,
+                        warnings: false,
+                        runtimeErrors: false,
+                    },
+                }
             }
             return newConfig
         },
