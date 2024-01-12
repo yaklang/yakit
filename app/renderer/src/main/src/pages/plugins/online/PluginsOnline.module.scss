@@ -156,10 +156,17 @@
         height: 8px;
     }
 }
-
+.plugins-online-detail-menu-retract {
+    height: calc(100% - 97px);
+    top: 97px;
+}
 .plugins-online-detail-ee-or-es {
     height: calc(100% - 141px);
     top: 141px;
+}
+.plugins-online-detail-ee-or-es-menu-retract {
+    height: calc(100% - 97px);
+    top: 97px;
 }
 
 .yakit-combination-search-circle {

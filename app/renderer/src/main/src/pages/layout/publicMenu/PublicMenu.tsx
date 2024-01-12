@@ -13,7 +13,7 @@ import {SortAscendingIcon, SortDescendingIcon} from "@/assets/newIcon"
 import {MenuCodec} from "./MenuCodec"
 import {MenuDNSLog} from "./MenuDNSLog"
 import {MenuMode} from "./MenuMode"
-import {useMemoizedFn,useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {MenuPlugin} from "./MenuPlugin"
@@ -33,10 +33,11 @@ import {
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {getRemoteValue,setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
 import styles from "./PublicMenu.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -58,7 +59,7 @@ interface PublicMenuProps {
 }
 
 const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
-    const {onMenuSelect, setRouteToLabel,defaultExpand} = props
+    const {onMenuSelect, setRouteToLabel, defaultExpand} = props
     // 登录用户状态信息
     const {userInfo} = useStore()
     // 本地菜单数据
@@ -98,9 +99,12 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         setRouteToLabel(routeToName.current)
     })
 
-    useUpdateEffect(() => {
-        setRemoteValue(CodeGV.MenuExpand, JSON.stringify(isExpand))
-    }, [isExpand])
+    const onSetIsExpand = useMemoizedFn((checked: boolean) => {
+        const value = JSON.stringify(checked)
+        setIsExpand(checked)
+        setRemoteValue(CodeGV.MenuExpand, value)
+        emiter.emit("menuExpandSwitch", value)
+    })
 
     // 获取 基础工具菜单下的4个插件 是否存在于本地库内
     const fetchPluginToolInfo = useMemoizedFn(() => {
@@ -485,7 +489,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 <div className={styles["first-menu-extra-wrapper"]}>
                     <ExtraMenu onMenuSelect={onMenuSelect} />
                     {!isExpand && (
-                        <div className={styles["no-expand-wrapper"]} onClick={(e) => setIsExpand(true)}>
+                        <div className={styles["no-expand-wrapper"]} onClick={(e) => onSetIsExpand(true)}>
                             <SortDescendingIcon />
                         </div>
                     )}
@@ -579,7 +583,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                     </div>
                 </div>
                 <div className={styles["expand-wrapper"]}>
-                    <div className={styles["expand-body"]} onClick={(e) => setIsExpand(false)}>
+                    <div className={styles["expand-body"]} onClick={(e) => onSetIsExpand(false)}>
                         <SortAscendingIcon />
                     </div>
                 </div>

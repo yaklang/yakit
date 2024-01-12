@@ -11,6 +11,7 @@ import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {SendDatabaseFirstMenuProps} from "@/routes/newRouteType"
 
 export interface HeardMenuProps {
+    defaultExpand: boolean
     onRouteMenuSelect: (info: RouteToPageProps) => void
     setRouteToLabel: (data: Map<string, string>) => void
 }

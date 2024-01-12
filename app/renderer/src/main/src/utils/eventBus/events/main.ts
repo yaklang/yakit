@@ -5,4 +5,7 @@ export type MainOperatorEventProps = {
     closePage: string
     /** 从顶部菜单打开一个页面 */
     menuOpenPage: string
+
+    /** 菜单展开收起状态切换 */
+    menuExpandSwitch: string
 }

@@ -153,7 +153,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         .invoke("Codec", {Type: "base64", Text: v.pwd, Params: [], ScriptName: ""})
                         .then((res) => {
                             setRemoteValue(RemoteGV.HttpSetting, JSON.stringify({...values, pwd: res.Result}))
-                        })
+                        }).catch(()=>{})
                 } else {
                     setRemoteValue(RemoteGV.HttpSetting, JSON.stringify(values))
                 }
@@ -196,7 +196,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             pwd: res.Result
                         })
                         setFormValue({...value, pwd: res.Result})
-                    })
+                    }).catch(()=>{})
             } else {
                 form.setFieldsValue({
                     ...value
