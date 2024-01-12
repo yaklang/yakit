@@ -105,6 +105,9 @@ function NewApp() {
             }
         }
         document.addEventListener('change', handleInputEvent)
+        return () => {
+            document.removeEventListener("change", handleInputEvent)
+        }
     }, [])
 
     /** 是否展示用户协议 */
