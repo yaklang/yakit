@@ -1087,12 +1087,14 @@ const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) =>
                 </YakitButton>
             ]}
         >
-            <ImportAndExportStatusInfo
-                title={localStreamData?.Progress === 1 ? "导出已完成" : "导出中"}
-                showDownloadDetail={false}
-                streamData={localStreamData || {Progress: 0}}
-                logListInfo={locallogListInfo}
-            ></ImportAndExportStatusInfo>
+            <div style={{ padding: '0 16px' }}>
+                <ImportAndExportStatusInfo
+                    title={localStreamData?.Progress === 1 ? "导出已完成" : "导出中"}
+                    showDownloadDetail={false}
+                    streamData={localStreamData || {Progress: 0}}
+                    logListInfo={locallogListInfo}
+                ></ImportAndExportStatusInfo>
+            </div>
         </YakitModal>
     )
 }
