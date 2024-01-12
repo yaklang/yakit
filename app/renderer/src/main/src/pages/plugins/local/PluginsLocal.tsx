@@ -92,7 +92,7 @@ interface ExportParamsProps {
     Tags?: string
 }
 
-interface ExportLocalYakScriptResponse {
+interface ExportYakScriptLocalResponse {
     OutputDir: string
     Progress: number
     Message: string
@@ -674,7 +674,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                 params.Tags = queryFetchList.Tag + ""
             }
             setExportStatusModalVisible(true)
-            await ipcRenderer.invoke("ExportLocalYakScript", params)
+            await ipcRenderer.invoke("ExportYakScriptLocal", params)
         } catch (error) {
             yakitFailed(error + "")
         }
@@ -1028,7 +1028,7 @@ const YakitExportStatusModal: React.FC<YakitExportStatusModalProps> = (props) =>
                 setLocalStreamData(localStreamDataRef.current)
                 setLocallogListInfo([...locallogListInfoRef.current])
             }, 300)
-            ipcRenderer.on("export-yak-script-data", (e, data: ExportLocalYakScriptResponse) => {
+            ipcRenderer.on("export-yak-script-data", (e, data: ExportYakScriptLocalResponse) => {
                 localStreamDataRef.current = {Progress: data.Progress}
                 // 展示错误日志
                 if (data.MessageType === "error" || data.Progress === 1) {
