@@ -43,7 +43,7 @@ const User = () => (
                 width='63.4336'
                 height='66'
                 filterUnits='userSpaceOnUse'
-                color-interpolation-filters='sRGB'
+                colorInterpolationFilters='sRGB'
             >
                 <feFlood floodOpacity='0' result='BackgroundImageFix' />
                 <feColorMatrix
@@ -66,7 +66,7 @@ const User = () => (
                 width='36'
                 height='36'
                 filterUnits='userSpaceOnUse'
-                color-interpolation-filters='sRGB'
+                colorInterpolationFilters='sRGB'
             >
                 <feFlood floodOpacity='0' result='BackgroundImageFix' />
                 <feGaussianBlur in='BackgroundImageFix' stdDeviation='3' />
@@ -80,7 +80,7 @@ const User = () => (
                 width='36'
                 height='36'
                 filterUnits='userSpaceOnUse'
-                color-interpolation-filters='sRGB'
+                colorInterpolationFilters='sRGB'
             >
                 <feFlood floodOpacity='0' result='BackgroundImageFix' />
                 <feGaussianBlur in='BackgroundImageFix' stdDeviation='3' />
