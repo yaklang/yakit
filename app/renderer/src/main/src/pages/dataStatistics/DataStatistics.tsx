@@ -145,19 +145,12 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
     }, [])
     const getRiseLine = useMemoizedFn(() => {
         setEcharts(optionRef.current)
-        console.log(
-            "riseLineParams---",
-            riseLineParams,
-            moment.unix(riseLineParams.startTime).format("YYYY-MM-DD HH:mm:ss"),
-            moment.unix(riseLineParams.endTime).format("YYYY-MM-DD HH:mm:ss")
-        )
         NetWorkApi<RiseLineProps, API.TouristActiveResponse>({
             method: "get",
             url: "tourist/change",
             params: {...riseLineParams}
         })
             .then((res: API.TouristActiveResponse) => {
-                console.log("tourist/change", res)
                 if (res.data) {
                     let XData: string[] = []
                     let YData: number[] = []
@@ -315,20 +308,12 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
     }, [])
     const getActiveLine = useMemoizedFn(() => {
         setEcharts(optionRef.current)
-        console.log(
-            "activeLineParams---",
-            activeLineParams,
-            moment.unix(activeLineParams.startTime).format("YYYY-MM-DD HH:mm:ss"),
-            moment.unix(activeLineParams.endTime).format("YYYY-MM-DD HH:mm:ss")
-        )
-
         NetWorkApi<ActiveLineProp, API.TouristIncrResponse>({
             method: "get",
             url: "tourist/active",
             params: {...activeLineParams}
         })
             .then((res: API.TouristIncrResponse) => {
-                console.log("tourist/active", res)
                 if (res.data) {
                     let XData: string[] = []
                     let YData: number[] = []
@@ -520,8 +505,6 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             url: "tourist/city"
         })
             .then((res: API.TouristCityResponse) => {
-                console.log("tourist/city", res)
-
                 if (res.data) {
                     const chartListCache = res.data.map((item) => ({
                         name: item.city,
@@ -674,7 +657,6 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             method: "get"
         })
             .then((data) => {
-                console.log("tourist", data)
                 setUserData(data)
             })
             .catch((err) => {})
