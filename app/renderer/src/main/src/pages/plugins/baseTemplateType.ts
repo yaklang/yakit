@@ -37,6 +37,7 @@ export interface PluginsContainerProps {
 }
 
 export interface PluginDetailsProps<T> {
+    pageWrapId?: string
     title: string | ReactNode
     /**搜索内容 */
     search: PluginSearchParams
