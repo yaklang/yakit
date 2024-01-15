@@ -910,7 +910,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                                 wrapperCol: {span: 19}
                             }}
                             selectType='folder'
-                            showUploadList={false}
+                            // showUploadList={false}
                             onChange={(val) => {
                                 setLocalNucleiPath(val)
                                 form.setFieldsValue({localNucleiPath: val})
