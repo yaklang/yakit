@@ -1609,6 +1609,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     /** 获取最新Yakit版本号 */
     const fetchYakitLastVersion = useMemoizedFn(() => {
+        /** 社区版埋点 */
+        visitorsStatisticsFun()
         /** 社区版获取yakit最新版本号 */
         isCommunityEdition() &&
             ipcRenderer
@@ -1755,7 +1757,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     }, [isEngineLink])
 
     const onDownload = useMemoizedFn((type: "yakit" | "yaklang") => {
-        visitorsStatisticsFun()
         ipcRenderer.invoke("receive-download-yaklang-or-yakit", type)
     })
 
