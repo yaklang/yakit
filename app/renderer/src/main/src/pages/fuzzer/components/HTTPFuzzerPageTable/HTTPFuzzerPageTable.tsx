@@ -148,7 +148,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: "请求",
                           dataKey: "Count",
-                          render: (v, _, index) => index + 1,
+                          render: (v) => {
+                            return v + 1
+                          },
                           width: 80,
                           sorterProps: {
                               sorter: true
