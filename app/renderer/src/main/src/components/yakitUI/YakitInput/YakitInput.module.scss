@@ -452,7 +452,9 @@
     }
 }
 .yakit-textArea-resize-hide {
-    resize: none;
+    textarea {
+        resize: none;
+    }
 }
 
 // ========================== textArea disabled ==========================
