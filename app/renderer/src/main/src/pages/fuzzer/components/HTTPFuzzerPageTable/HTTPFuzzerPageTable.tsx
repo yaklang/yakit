@@ -264,6 +264,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           title: "Payloads",
                           dataKey: "Payloads",
                           width: 300,
+                          sorterProps: {
+                              sorter: true
+                          },
                           render: (v) => (v ? v.join(",") : "-")
                       },
                       {
@@ -426,6 +429,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: "Payloads",
                           dataKey: "Payloads",
+                          sorterProps: {
+                              sorter: true
+                          },
                           render: (v) => v.join(",")
                       }
                   ]

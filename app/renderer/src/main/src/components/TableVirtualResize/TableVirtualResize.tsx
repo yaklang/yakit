@@ -738,6 +738,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }
         sort.order = newOrder
         sort.orderBy = newOrder === "none" ? "" : s.orderBy
+
+        console.log(123, sort);
         setSort({...sort})
         if (props.onChange) props.onChange(1, pagination.limit, sort, filters)
     })
