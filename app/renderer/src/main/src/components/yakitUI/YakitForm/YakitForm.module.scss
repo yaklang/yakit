@@ -76,20 +76,8 @@
 
 // ========================== yakit-dragger ==========================
 .yakit-dragger {
-    :global {
-        .ant-upload.ant-upload-drag {
-            border: 0;
-            background: transparent;
-        }
-
-        .ant-upload.ant-upload-drag .ant-upload {
-            padding: 0;
-        }
-
-        .ant-upload.ant-upload-drag {
-            text-align: start;
-        }
-    }
+    width: 100%;
+    height: 100%;
 }
 
 .form-item-help {

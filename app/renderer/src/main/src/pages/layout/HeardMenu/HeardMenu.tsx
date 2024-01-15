@@ -874,8 +874,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     <YakitFormDragger
                         // accept='application/json,.json'
                         multiple={false}
-                        maxCount={1}
-                        showUploadList={false}
+                        // maxCount={1}
+                        // showUploadList={false}
                         setContent={(val) => {
                             setMenuDataString(val)
                             setRefreshTrigger(!refreshTrigger)

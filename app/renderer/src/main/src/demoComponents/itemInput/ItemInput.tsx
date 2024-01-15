@@ -250,9 +250,9 @@ export const DemoItemInputDraggerPath: React.FC<ItemInputDraggerPathProps> = mem
                 style: {...formItemStyle},
                 required: required
             }}
-            multiple={false}
-            maxCount={1}
-            showUploadList={false}
+            // multiple={false}
+            // maxCount={1}
+            // showUploadList={false}
             value={value}
             onChange={setValue}
             selectType={selectType}
