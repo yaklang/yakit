@@ -380,7 +380,8 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             text: 0,
             subtext: "Total",
             top: "32%",
-            left: "48%",
+            left: "49%",
+            // right: "50%",
             textAlign: "center",
             itemGap: 0,
             triggerEvent: true,
@@ -393,7 +394,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
             subtextStyle: {
                 color: "#B4BBCA",
                 fontSize: 18,
-                lineHeight: 32,
+                lineHeight: 30,
                 fontWeight: 400
             }
         },
@@ -445,7 +446,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
         series: [
             {
                 // 空心饼图内外径
-                radius: ["47%", "77%"],
+                radius: ["48%", "78%"],
                 // 饼图上下左右位置
                 center: ["50%", "40%"],
                 itemStyle: {
@@ -558,7 +559,7 @@ export const UpsOrDowns: React.FC<UpsOrDownsProps> = (props) => {
             <div className={classNames(styles["content"])}>
                 {type === "up" && "+"}
                 {type === "down" && "-"}
-                {value}%
+                {value?`${value}%`:""}
             </div>
             {["up", "down"].includes(type) && (
                 <div className={styles["icon"]}>
@@ -576,12 +577,14 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const [inViewport] = useInViewport(ref)
     // 获取当前日期
     const today = moment()
+    // 最早的启示时间
+    const beginDate = moment("2023-12-01")
     // 计算 30 天前的日期
     const thirtyDaysAgo = today.clone().subtract(30, "days")
     // 计算 上个月第一天0时0分0秒的日期
-    const previousMonthFirstDay = today.clone().subtract(1, "months").startOf("month")
-    // 计算 上一年第一天0时0分0秒的日期
-    const previousYearFirstDay = today.clone().subtract(1, "years").startOf("year")
+    // const previousMonthFirstDay = today.clone().subtract(1, "months").startOf("month")
+    // // 计算 上一年第一天0时0分0秒的日期
+    // const previousYearFirstDay = today.clone().subtract(1, "years").startOf("year")
     const [userData, setUserData] = useState<API.TouristAndUserResponse>()
     const [loading, setLoading] = useState<boolean>(false)
     const [activeLineParams, setActiveLineParams] = useState<ActiveLineProp>({
@@ -598,53 +601,96 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const [cityDate, setCityDate] = useState<number>()
 
     // 显示的选项
-    // const [activeShowType, setActiveShowType] = useState<(showTypeValue)[]>([])
-
-    // useEffect(() => {
-    //     const firstDate = moment.unix(activeLineParams.startTime)
-    //     const secondDate = moment.unix(activeLineParams.endTime)
-    //     // 计算两个时间对象的毫秒数差异
-    //     const timeDifferenceInMilliseconds = secondDate.diff(firstDate)
-    //     // 将毫秒数转换为天数
-    //     const timeDifferenceInDays = moment.duration(timeDifferenceInMilliseconds).asDays()
-    //     // 判断是否大于等于60天
-    //     const isDifferenceGreaterThan60Days = timeDifferenceInDays >= 60
-    //     // 判断是否隔年
-    //     const isDifferentYear = firstDate.year() !== secondDate.year()
-    //     // 判断是否隔月
-    //     const isDifferentMonth = firstDate.month() !== secondDate.month()
-    //     let arr: (showTypeValue)[] = []
-    //     // 小于60则可选天
-    //     if (!isDifferenceGreaterThan60Days) {
-    //         arr.push("day")
-    //     }
-    //     // 隔月则可选年月
-    //     if (isDifferentMonth) {
-    //         arr.push("month")
-    //     }
-    //     // 隔年则可选年
-    //     if (isDifferentYear) {
-    //         arr.push("year")
-    //     }
-    //     setActiveShowType(arr)
-    // }, [activeLineParams])
-
-    const getShowType = useMemo(() => {
+    const [activeNoShowType, setActiveNoShowType] = useState<showTypeValue[]>([])
+    useEffect(() => {
+        const firstDate = moment.unix(activeLineParams.startTime)
+        const secondDate = moment.unix(activeLineParams.endTime)
+        // 判断天数是否大于等于60
+        const isDifferenceGreaterThan60Days = firstDate.diff(secondDate, "days") > 60
+        // 判断月份是否大于等于60
+        const isDifferenceGreaterThan60Months = firstDate.diff(secondDate, "months") > 60
+        // 判断年份是否大于等于60
+        const isDifferenceGreaterThan60Years = firstDate.diff(secondDate, "years") > 60
+        let arr: showTypeValue[] = []
+        // 大于60则不可选天
+        if (isDifferenceGreaterThan60Days) {
+            arr.push("day")
+        }
+        // 大于60则不可选月
+        if (isDifferenceGreaterThan60Months) {
+            arr.push("month")
+        }
+        // 大于60则不可选年
+        if (isDifferenceGreaterThan60Years) {
+            arr.push("year")
+        }
+        setActiveNoShowType(arr)
+    }, [activeLineParams])
+    const getActiveShowType = useMemo(() => {
         return [
             {
                 label: "天",
-                value: "day"
+                value: "day",
+                disabled: activeNoShowType.includes("day")
             },
             {
                 label: "月",
-                value: "month"
+                value: "month",
+                disabled: activeNoShowType.includes("month")
             },
             {
                 label: "年",
-                value: "year"
+                value: "year",
+                disabled: activeNoShowType.includes("year")
             }
         ]
-    }, [])
+    }, [activeNoShowType])
+
+    // 显示的选项
+    const [riseNoShowType, setRiseNoShowType] = useState<showTypeValue[]>([])
+    useEffect(() => {
+        const firstDate = moment.unix(riseLineParams.startTime)
+        const secondDate = moment.unix(riseLineParams.endTime)
+        // 判断天数是否大于等于60
+        const isDifferenceGreaterThan60Days = firstDate.diff(secondDate, "days") > 60
+        // 判断月份是否大于等于60
+        const isDifferenceGreaterThan60Months = firstDate.diff(secondDate, "months") > 60
+        // 判断年份是否大于等于60
+        const isDifferenceGreaterThan60Years = firstDate.diff(secondDate, "years") > 60
+        let arr: showTypeValue[] = []
+        // 大于60则不可选天
+        if (isDifferenceGreaterThan60Days) {
+            arr.push("day")
+        }
+        // 大于60则不可选月
+        if (isDifferenceGreaterThan60Months) {
+            arr.push("month")
+        }
+        // 大于60则不可选年
+        if (isDifferenceGreaterThan60Years) {
+            arr.push("year")
+        }
+        setRiseNoShowType(arr)
+    }, [riseLineParams])
+    const getRiseShowType = useMemo(() => {
+        return [
+            {
+                label: "天",
+                value: "day",
+                disabled: riseNoShowType.includes("day")
+            },
+            {
+                label: "月",
+                value: "month",
+                disabled: riseNoShowType.includes("month")
+            },
+            {
+                label: "年",
+                value: "year",
+                disabled: riseNoShowType.includes("year")
+            }
+        ]
+    }, [riseNoShowType])
 
     useEffect(() => {
         getUserData()
@@ -675,12 +721,9 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             if (riseDates) {
                 const tooLate = (riseDates[0] && current.diff(riseDates[0], "days") > 60) || false
                 const tooEarly = (riseDates[1] && riseDates[1].diff(current, "days") > 60) || false
-                return (
-                    current &&
-                    (current < moment("2023-12-01") || current >= moment().endOf("day") || tooLate || tooEarly)
-                )
+                return current && (current < beginDate || current >= moment().endOf("day") || tooLate || tooEarly)
             }
-            return current && (current < moment("2023-12-01") || current >= moment().endOf("day"))
+            return current && (current < beginDate || current >= moment().endOf("day"))
         } else if (riseLineParams.showType === "month") {
             if (riseDates) {
                 const tooLate = (riseDates[0] && current.diff(riseDates[0], "months") > 60) || false
@@ -706,12 +749,9 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             if (activeDates) {
                 const tooLate = (activeDates[0] && current.diff(activeDates[0], "days") > 60) || false
                 const tooEarly = (activeDates[1] && activeDates[1].diff(current, "days") > 60) || false
-                return (
-                    current &&
-                    (current < moment("2023-12-01") || current >= moment().endOf("day") || tooLate || tooEarly)
-                )
+                return current && (current < beginDate || current >= moment().endOf("day") || tooLate || tooEarly)
             }
-            return current && (current < moment("2023-12-01") || current >= moment().endOf("day"))
+            return current && (current < beginDate || current >= moment().endOf("day"))
         } else if (activeLineParams.showType === "month") {
             if (activeDates) {
                 const tooLate = (activeDates[0] && current.diff(activeDates[0], "months") > 60) || false
@@ -851,16 +891,40 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                         let firstDate = riseDates[0]
                                         let secondDate = riseDates[1]
                                         if (activeLineParams.showType === "day") {
-                                            firstDate = moment(firstDate).startOf("day")
-                                            secondDate = moment(secondDate).endOf("day")
+                                            if (firstDate.isBefore(beginDate)) {
+                                                firstDate = beginDate
+                                            } else {
+                                                firstDate = moment(firstDate).startOf("day")
+                                            }
+                                            if (secondDate.isSame(today, "day")) {
+                                                secondDate = today
+                                            } else {
+                                                secondDate = moment(secondDate).endOf("day")
+                                            }
                                         }
                                         if (activeLineParams.showType === "month") {
-                                            firstDate = moment(firstDate).startOf("month")
-                                            secondDate = moment(secondDate).endOf("month")
+                                            if (firstDate.isBefore(beginDate)) {
+                                                firstDate = beginDate
+                                            } else {
+                                                firstDate = moment(firstDate).startOf("month")
+                                            }
+                                            if (secondDate.isSame(today, "month")) {
+                                                secondDate = today
+                                            } else {
+                                                secondDate = moment(secondDate).endOf("month")
+                                            }
                                         }
                                         if (activeLineParams.showType === "year") {
-                                            firstDate = moment(firstDate).startOf("year")
-                                            secondDate = moment(secondDate).endOf("year")
+                                            if (firstDate.isBefore(beginDate)) {
+                                                firstDate = beginDate
+                                            } else {
+                                                firstDate = moment(firstDate).startOf("year")
+                                            }
+                                            if (secondDate.isSame(today, "year")) {
+                                                secondDate = today
+                                            } else {
+                                                secondDate = moment(secondDate).endOf("year")
+                                            }
                                         }
                                         setActiveLineParams({
                                             ...activeLineParams,
@@ -874,30 +938,12 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                 value={activeLineParams?.showType}
                                 onChange={(v) => {
                                     const showType: showTypeValue = v as showTypeValue
-                                    if (showType === "day") {
-                                        setActiveLineParams({
-                                            ...activeLineParams,
-                                            showType,
-                                            startTime: moment(thirtyDaysAgo).unix(),
-                                            endTime: moment(today).unix()
-                                        })
-                                    } else if (showType === "month") {
-                                        setActiveLineParams({
-                                            ...activeLineParams,
-                                            showType,
-                                            startTime: moment(previousMonthFirstDay).unix(),
-                                            endTime: moment(today).unix()
-                                        })
-                                    } else {
-                                        setActiveLineParams({
-                                            ...activeLineParams,
-                                            showType,
-                                            startTime: moment(previousYearFirstDay).unix(),
-                                            endTime: moment(today).unix()
-                                        })
-                                    }
+                                    setActiveLineParams({
+                                        ...activeLineParams,
+                                        showType
+                                    })
                                 }}
-                                options={getShowType}
+                                options={getActiveShowType}
                             />
                         </div>
                     </div>
@@ -1000,16 +1046,40 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                             let firstDate = riseDates[0]
                                             let secondDate = riseDates[1]
                                             if (riseLineParams.showType === "day") {
-                                                firstDate = moment(firstDate).startOf("day")
-                                                secondDate = moment(secondDate).endOf("day")
+                                                if (firstDate.isBefore(beginDate)) {
+                                                    firstDate = beginDate
+                                                } else {
+                                                    firstDate = moment(firstDate).startOf("day")
+                                                }
+                                                if (secondDate.isSame(today, "day")) {
+                                                    secondDate = today
+                                                } else {
+                                                    secondDate = moment(secondDate).endOf("day")
+                                                }
                                             }
                                             if (riseLineParams.showType === "month") {
-                                                firstDate = moment(firstDate).startOf("month")
-                                                secondDate = moment(secondDate).endOf("month")
+                                                if (firstDate.isBefore(beginDate)) {
+                                                    firstDate = beginDate
+                                                } else {
+                                                    firstDate = moment(firstDate).startOf("month")
+                                                }
+                                                if (secondDate.isSame(today, "month")) {
+                                                    secondDate = today
+                                                } else {
+                                                    secondDate = moment(secondDate).endOf("month")
+                                                }
                                             }
                                             if (riseLineParams.showType === "year") {
-                                                firstDate = moment(firstDate).startOf("year")
-                                                secondDate = moment(secondDate).endOf("year")
+                                                if (firstDate.isBefore(beginDate)) {
+                                                    firstDate = beginDate
+                                                } else {
+                                                    firstDate = moment(firstDate).startOf("year")
+                                                }
+                                                if (secondDate.isSame(today, "year")) {
+                                                    secondDate = today
+                                                } else {
+                                                    secondDate = moment(secondDate).endOf("year")
+                                                }
                                             }
                                             setRiseLineParams({
                                                 ...riseLineParams,
@@ -1025,30 +1095,12 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                 value={riseLineParams?.showType}
                                 onChange={(v) => {
                                     const showType: showTypeValue = v as showTypeValue
-                                    if (showType === "day") {
-                                        setRiseLineParams({
-                                            ...riseLineParams,
-                                            showType,
-                                            startTime: moment(thirtyDaysAgo).unix(),
-                                            endTime: moment(today).unix()
-                                        })
-                                    } else if (showType === "month") {
-                                        setRiseLineParams({
-                                            ...riseLineParams,
-                                            showType,
-                                            startTime: moment(previousMonthFirstDay).unix(),
-                                            endTime: moment(today).unix()
-                                        })
-                                    } else {
-                                        setRiseLineParams({
-                                            ...riseLineParams,
-                                            showType,
-                                            startTime: moment(previousYearFirstDay).unix(),
-                                            endTime: moment(today).unix()
-                                        })
-                                    }
+                                    setRiseLineParams({
+                                        ...riseLineParams,
+                                        showType
+                                    })
                                 }}
-                                options={getShowType}
+                                options={getRiseShowType}
                             />
                         </div>
                     </div>
