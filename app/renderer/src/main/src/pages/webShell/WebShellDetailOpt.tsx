@@ -11,6 +11,7 @@ import {loadFromYakURLRaw, requestYakURLList} from "./yakURLTree/netif"
 import ReactResizeDetector from "react-resize-detector"
 import path from "path"
 import {YakURL} from "@/pages/yakURLTree/data"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
 
 interface MsgProps {
     arch: string
@@ -35,8 +36,8 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
     const [defaultPath, setDefaultPath] = useState<string>("")
     const [defaultXterm, setDefaultXterm] = useState<string>("")
     const [linePath, setLinePath] = useState<string>("")
-    const [baseInfo, setBaseInfo] = useState<{key: string; content: string}[]>([])
-    const [baseInfoObj, setBaseInfoObj] = useState<{key: string; content: string}[]>([])
+    const [behidnerBaseInfo, setBehinderBaseInfo] = useState<string>("")
+    const [godzillaBaseInfo, setGodzillaBaseInfo] = useState<string>("")
     const [activeKey, setActiveKey] = useState<string>("basicInfo")
     const [shellType, setShellType] = useState<"Behinder" | "Godzilla">("Behinder")
     /** 日志输出 */
@@ -48,7 +49,7 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
     }, [xtermRef])
 
     useUpdateEffect(() => {
-        if (activeKey === "vcmd"&&inputValue.length===0) {
+        if (activeKey === "vcmd" && inputValue.length === 0) {
             // xtermClear(xtermRef)
             setInputValue(defaultXterm)
             writeXTerm(xtermRef, defaultXterm)
@@ -61,7 +62,7 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
         const priorityValues = ["OsInfo", "OS", "CurrentDir"];
         const priorityA = priorityValues.indexOf(a.key);
         const priorityB = priorityValues.indexOf(b.key);
-        return priorityB-priorityA;
+        return priorityB - priorityA;
     };
 
     useEffect(() => {
@@ -73,7 +74,7 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
                 try {
                     setShellType(ShellType)
                     if (ShellType === "Behinder") {
-                        let obj: {status: string; msg: MsgProps} = JSON.parse(new Buffer(r.Data, "utf8").toString())
+                        let obj: { status: string; msg: MsgProps } = JSON.parse(new Buffer(r.Data, "utf8").toString())
                         const {status, msg} = obj
                         if (status === "success") {
                             setDefaultPath(msg.currentPath)
@@ -86,11 +87,15 @@ ${msg.currentPath}`
                             const sortedKeys = Object.keys(obj.msg).sort(
                                 (a, b) => obj.msg[a].length - obj.msg[b].length
                             )
-                            const resultString = sortedKeys.map((key) => ({
+                            const resultArr = sortedKeys.map((key) => ({
                                 key,
                                 content: obj.msg[key]
                             }))
-                            setBaseInfo(resultString)
+                            let resultString: string = ""
+                            resultArr.map((item) => {
+                                resultString += item.key + ": " + item.content
+                            })
+                            setBehinderBaseInfo(resultString)
                         }
                     } else {
                         let obj = JSON.parse(new Buffer(r.Data, "utf8").toString())
@@ -98,16 +103,17 @@ ${msg.currentPath}`
                         const helloMsg = `OS: ${obj.OS}        
 ${obj.CurrentDir}`
 
-                            setDefaultXterm(helloMsg + ">")
-                        const sortedKeys = Object.keys(obj)
-                        const resultString = sortedKeys.map((key) => ({
-                            key,
-                            content: obj[key]
-                        }))
-                        resultString.sort(sortByPriority);
-                        setBaseInfoObj(resultString)
+                        setDefaultXterm(helloMsg + ">")
+                        const resultString = Object.entries(obj) // 直接获取键值对数组
+                            .sort(([keyA, valueA], [keyB, valueB]) => sortByPriority(valueA, valueB))
+                            .reduce((resultString, [key, content]) => {
+                                return `${resultString}${key}: ${content}\n`;
+                            }, '');
+
+                        setGodzillaBaseInfo(resultString);
                     }
-                } catch (error) {}
+                } catch (error) {
+                }
             })
             .catch((e) => {
                 failed(`FeaturePing failed: ${e}`)
@@ -171,25 +177,16 @@ ${obj.CurrentDir}`
                     <div style={{overflow: "auto", height: "100%"}}>
                         {shellType === "Behinder" ? (
                             <>
-                                {baseInfo.map((item) => {
-                                    return (
-                                        <div style={{display: "flex", flexDirection: "row"}}>
-                                            <div style={{marginRight: 10}}>{item.key}:</div>
-                                            <div dangerouslySetInnerHTML={{__html: item.content}} />
-                                        </div>
-                                    )
-                                })}
+
+                                <YakitEditor
+                                    type={"html"} value={behidnerBaseInfo} readOnly={true}
+                                ></YakitEditor>
                             </>
                         ) : (
                             <>
-                                {baseInfoObj.map((item) => {
-                                    return (
-                                        <div style={{display: "flex", flexDirection: "row"}}>
-                                            <div style={{marginRight: 10}}>{item.key}:</div>
-                                            <div dangerouslySetInnerHTML={{__html: item.content}} />
-                                        </div>
-                                    )
-                                })}
+                                <YakitEditor
+                                    type={"html"} value={godzillaBaseInfo} readOnly={true}
+                                ></YakitEditor>
                             </>
                         )}
                     </div>
