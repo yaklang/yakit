@@ -360,7 +360,7 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
             if (editor) { // 修复在补全后的函数签名提示问题
                 const selection = editor.getSelection();
                 if (selection) {
-                    const selectionLastChar = model.getValueInRange({ startLineNumber: selection.startLineNumber, startColumn: selection.startColumn - 1, endLineNumber: selection.endLineNumber, endColumn: selection.startColumn });
+                    const selectionLastChar = model.getValueInRange({ startLineNumber: selection.startLineNumber, startColumn: selection.startColumn - 1, endLineNumber: selection.endLineNumber, endColumn: selection.endColumn });
                     if (selectionLastChar === "(") {
                         newPosition = new monaco.Position(selection.startLineNumber, selection.startColumn - 1);
                     }

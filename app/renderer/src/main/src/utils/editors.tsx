@@ -499,7 +499,7 @@ export const YakCodeEditor: React.FC<HTTPPacketEditorProp> = React.memo((props: 
     return (
         <HTTPPacketEditor
             noHeader={true}
-            language={"yak"}
+            language={props.language || "yak"}
             {...props}
             noPacketModifier={true}
             utf8={true}
