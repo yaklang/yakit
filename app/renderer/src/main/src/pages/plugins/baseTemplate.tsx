@@ -139,7 +139,8 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         onBack,
         children,
         spinLoading,
-        rightHeardNode
+        rightHeardNode,
+        bodyClassName
     } = props
 
     // 隐藏插件列表
@@ -221,7 +222,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                         </div>
                     </div>
                 )}
-                <div className={styles["details-body"]}>{children}</div>
+                <div className={classNames(styles["details-body"],bodyClassName)}>{children}</div>
             </div>
         </div>
     )

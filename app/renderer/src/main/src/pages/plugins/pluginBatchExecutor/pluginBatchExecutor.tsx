@@ -269,6 +269,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             pluginInfo,
             typeRef.current
         )
+        debugPluginStreamEvent.reset()
         apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
             setIsExecuting(true)
             setIsExpend(false)
@@ -290,6 +291,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         setExtraParamsValue({...v} as PluginBatchExecuteExtraFormValue)
         setExtraParamsVisible(false)
     })
+    const progressList = useCreation(() => {
+        return streamInfo.progressState
+    }, [streamInfo.progressState])
     console.log("streamInfo", streamInfo)
     return (
         <div className={styles["plugin-batch-executor"]}>
@@ -359,7 +363,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             )}
                         </div>
                         <div className={styles["plugin-batch-executor-btn"]}>
-                            <PluginExecuteProgress percent={0.6} name={"main"} />
+                            {progressList.length === 1 && (
+                                <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
+                            )}
                             {isExecuting ? (
                                 <>
                                     <YakitButton danger onClick={onStopExecute}>
@@ -391,6 +397,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 }
                 hidden={hidden}
                 setHidden={setHidden}
+                bodyClassName={styles['plugin-batch-executor-body']}
             >
                 <Form
                     form={form}
@@ -429,15 +436,15 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         </div>
                     </Form.Item>
                 </Form>
-            </PluginDetails>
-            {isShowResult && (
+                {/* {isShowResult && ( */}
                 <PluginExecuteResult
                     streamInfo={streamInfo}
                     runtimeId={runtimeId}
                     loading={isExecuting}
                     pluginType={typeRef.current}
                 />
-            )}
+                {/* )} */}
+            </PluginDetails>
             <React.Suspense fallback={<div>loading...</div>}>
                 <PluginBatchExecuteExtraParamsDrawer
                     isRawHTTPRequest={isRawHTTPRequest}

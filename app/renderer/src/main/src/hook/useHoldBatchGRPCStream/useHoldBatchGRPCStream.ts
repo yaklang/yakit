@@ -72,8 +72,18 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
     })
 
     useEffect(() => {
+        const processDataId = "main"
         ipcRenderer.on(`${token}-data`, async (e: any, res: PluginBatchExecutorResult) => {
+            console.log("res", res)
             const data = res.ExecResult
+            const {TotalTasks, FinishedTasks} = res
+            const progress = Number(TotalTasks) ? Number(FinishedTasks) / Number(TotalTasks) : 0
+
+            progressKVPair.current.set(
+                processDataId,
+                Math.max(progressKVPair.current.get(processDataId) || 0, progress)
+            )
+
             if (!data) return
             // run-time-id
             if (!!data?.RuntimeID) {
@@ -84,17 +94,6 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
                 try {
                     let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
                     console.log("obj", obj)
-                    // progress 进度条
-                    if (obj.type === "progress") {
-                        const processData = obj.content as StreamResult.Progress
-                        if (processData && processData.id) {
-                            progressKVPair.current.set(
-                                processData.id,
-                                Math.max(progressKVPair.current.get(processData.id) || 0, processData.progress)
-                            )
-                        }
-                        return
-                    }
 
                     const logData = obj.content as StreamResult.Log
 
@@ -145,6 +144,7 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
         })
         // token-end
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
+            console.log('end')
             info(`[Mod] ${taskName} finished`)
             handleResults()
             if (onEnd) {

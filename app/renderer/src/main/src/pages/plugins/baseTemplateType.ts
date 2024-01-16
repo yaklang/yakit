@@ -69,6 +69,8 @@ export interface PluginDetailsProps<T> {
     /**隐藏右边的部分 */
     hidden?: boolean
     setHidden?: (value: boolean) => void
+    /**内容的class */
+    bodyClassName?: string
 }
 
 export interface PluginDetailHeaderProps {
