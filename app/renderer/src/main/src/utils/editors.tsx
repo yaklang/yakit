@@ -31,7 +31,7 @@ import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
 import {callCopyToClipboard} from "@/utils/basic"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
 import ITextModel = editor.ITextModel
-import {YAK_FORMATTER_COMMAND_ID} from "@/utils/monacoSpec/yakEditor"
+import {YAK_FORMATTER_COMMAND_ID, setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import IModelDecoration = editor.IModelDecoration
@@ -125,6 +125,11 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         return GetPluginLanguage(props.type || "http")
     }, [props.type])
 
+    useMemo(()=>{
+        if (editor ){
+            setEditorContext(editor, "plugin", props.type ||"")
+        }
+    }, [props.type, editor])
 
     useEffect(() => {
         if (props.triggerId !== triggerId) {
@@ -318,7 +323,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         {wait: 500}
     )
 
-    const yakSyntaxChecking = useDebounceFn(
+    const yakStaticAnalyze = useDebounceFn(
         useMemoizedFn((editor: IMonacoEditor, model: ITextModel) => {
             const allContent = model.getValue()
             const type = props.type || ""
@@ -399,9 +404,9 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                                     if (editor) {
                                         const model = editor.getModel()
                                         if (model) {
-                                            yakSyntaxChecking.run(editor, model)
+                                            yakStaticAnalyze.run(editor, model)
                                             model.onDidChangeContent(() => {
-                                                yakSyntaxChecking.run(editor, model)
+                                                yakStaticAnalyze.run(editor, model)
                                             })
                                         }
                                     }

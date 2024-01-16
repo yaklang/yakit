@@ -55,6 +55,7 @@ import {openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
 import {GetPluginLanguage} from "@/pages/plugins/builtInData"
 import {createRoot} from "react-dom/client"
+import { setEditorContext } from "@/utils/monacoSpec/yakEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -113,11 +114,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         editorId
     } = props
 
-    /** 编辑器语言 */
-    const language = useMemo(() => {
-        return GetPluginLanguage(type || "http")
-    }, [type])
-
     const systemRef = useRef<YakitSystem>("Darwin")
     const wrapperRef = useRef<HTMLDivElement>(null)
     const isInitRef = useRef<boolean>(false)
@@ -125,6 +121,19 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const [editor, setEditor] = useState<YakitIMonacoEditor>()
     const preWidthRef = useRef<number>(0)
     const preHeightRef = useRef<number>(0)
+
+    /** 编辑器语言 */
+    const language = useMemo(() => {
+        return GetPluginLanguage(type || "http")
+    }, [type])
+
+    useMemo(()=>{
+        if (editor ){
+            setEditorContext(editor, "plugin", props.type ||"")
+        }
+    }, [props.type, editor])
+
+
 
     /** @name 记录右键菜单组信息 */
     const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTop, ...DefaultMenuBottom])
@@ -710,7 +719,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         {wait: 500, leading: true, trailing: false}
     )
     /** Yak语言 代码错误检查并显示提示标记 */
-    const yakSyntaxChecking = useDebounceFn(
+    const yakStaticAnalyze = useDebounceFn(
         useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
             if (language === "yak") {
                 const allContent = model.getValue()
@@ -1167,9 +1176,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             /** Yak语言 代码错误检查 */
                             const model = editor.getModel()
                             if (model) {
-                                yakSyntaxChecking.run(editor, model)
+                                yakStaticAnalyze.run(editor, model)
                                 model.onDidChangeContent(() => {
-                                    yakSyntaxChecking.run(editor, model)
+                                    yakStaticAnalyze.run(editor, model)
                                 })
                             }
                         }

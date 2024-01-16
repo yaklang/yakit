@@ -3,6 +3,7 @@ import { newYaklangCompletionHandlerProvider, yaklangCompletionHandlerProvider, 
 import { languages } from "monaco-editor";
 import CodeAction = languages.CodeAction;
 import CodeActionList = languages.CodeActionList;
+import { EditorContext } from "@uiw/react-md-editor";
 
 export const YaklangMonacoSpec = "yak";
 // export const GolangMonacoSpec = "go";
@@ -12,6 +13,30 @@ export const YAK_FORMATTER_COMMAND_ID = "yak-formatter";
 const { ipcRenderer } = window.require("electron");
 const { CompletionItemKind } = monaco.languages;
 var modelToEditorMap = new Map<monaco.editor.ITextModel, monaco.editor.ICodeEditor>();
+
+const editorContextMap = new Map<monaco.editor.ICodeEditor, Map<string, string>>();
+
+export function setEditorContext(editor: monaco.editor.IStandaloneCodeEditor, key: string, value: string) {
+    let context = editorContextMap.get(editor);
+    if (!context) {
+        context = new Map<string, string>();
+        editorContextMap.set(editor, context);
+    }
+    context.set(key, value);
+}
+
+export function getModelContext(model: monaco.editor.ITextModel, key: string): string {
+    const editor = modelToEditorMap.get(model);
+    if (editor) {
+        return getEditorContext(editor, key);
+    }
+    return "";
+}
+
+function getEditorContext(editor: monaco.editor.ICodeEditor, key: string): string {
+    const context = editorContextMap.get(editor);
+    return context?.get(key) || "";
+}
 
 monaco.languages.register({
     id: YaklangMonacoSpec,
@@ -316,20 +341,28 @@ monaco.editor.onDidCreateEditor((editor) => {
         }
         modelToEditorMap.set(model, editor);
     })
+    editor.onDidDispose(() => {
+        editorContextMap.delete(editor)
+    })
 })
+
+monaco.editor.onWillDisposeModel((model) => {
+    modelToEditorMap.delete(model);
+})
+
 
 monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
     provideSignatureHelp: (model, position, token, context) => {
-        
+
         return new Promise(async (resolve, reject) => {
             let newPosition = new monaco.Position(position.lineNumber, position.column - 1)
             const editor = modelToEditorMap.get(model);
             if (editor) { // 修复在补全后的函数签名提示问题
                 const selection = editor.getSelection();
                 if (selection) {
-                    const selectionLastChar = model.getValueInRange({startLineNumber: selection.startLineNumber, startColumn: selection.startColumn-1, endLineNumber: selection.endLineNumber, endColumn: selection.startColumn});
+                    const selectionLastChar = model.getValueInRange({ startLineNumber: selection.startLineNumber, startColumn: selection.startColumn - 1, endLineNumber: selection.endLineNumber, endColumn: selection.startColumn });
                     if (selectionLastChar === "(") {
-                        newPosition = new monaco.Position(selection.startLineNumber, selection.startColumn-1);
+                        newPosition = new monaco.Position(selection.startLineNumber, selection.startColumn - 1);
                     }
                 }
             }
@@ -337,9 +370,13 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
             let doc = "";
             let decl = "";
 
+
+
+            const type = getModelContext(model, "plugin") || "yak"
+
             await ipcRenderer.invoke("YaklangLanguageSuggestion", {
                 InspectType: "signature",
-                YakScriptType: "yak",
+                YakScriptType: type,
                 YakScriptCode: model.getValue(),
                 Range: {
                     Code: iWord.word,
@@ -387,9 +424,10 @@ monaco.languages.registerHoverProvider(YaklangMonacoSpec, {
         return new Promise(async (resolve, reject) => {
             const iWord = getWordWithPointAtPosition(model, position);
             let desc = "";
+            const type = getModelContext(model, "plugin") || "yak"
             await ipcRenderer.invoke("YaklangLanguageSuggestion", {
                 InspectType: "hover",
-                YakScriptType: "yak",
+                YakScriptType: type,
                 YakScriptCode: model.getValue(),
                 Range: {
                     Code: iWord.word,
