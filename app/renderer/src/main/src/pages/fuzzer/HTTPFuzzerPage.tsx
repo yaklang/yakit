@@ -1090,6 +1090,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }, 200)
 
         return () => {
+            console.log('前端主动发送取消流')
             ipcRenderer.invoke("cancel-HTTPFuzzer", token)
 
             clearInterval(updateDataId)
@@ -1654,6 +1655,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     type={"primary"}
                                     colors='danger'
                                     size='large'
+                                    style={{ marginLeft: -8 }}
                                 >
                                     停止
                                 </YakitButton>
@@ -1688,6 +1690,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <HTTPFuzzerHistorySelector
                                             currentSelectId={currentSelectId}
                                             onSelect={(e, page, showAll) => {
+                                                cancelCurrentHTTPFuzzer()
                                                 if (!showAll) setCurrentPage(page)
                                                 loadHistory(e)
                                             }}
