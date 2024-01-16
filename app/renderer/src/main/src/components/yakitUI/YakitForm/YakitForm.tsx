@@ -1,6 +1,7 @@
 import {Upload, Form, Spin, Divider} from "antd"
 import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {
+    FileDraggerProps,
     YakitDraggerContentProps,
     YakitDraggerProps,
     YakitFormDraggerContentProps,
@@ -53,7 +54,7 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
 /**
  * @description:YakitDragger  支持拖拽:文件/文件夹 文件路径只包括文件夹或者文件的第一级路径, 不包括文件夹下面的子文件路径数;
  * @description 如果需要显示文件中的内容，推荐使用组件:YakitDraggerContent
- * @augments YakitDraggerProps 继承antd的 DraggerProps 默认属性
+ * @augments YakitDraggerProps 
  * eg:  <YakitFormDraggerContent
         className={styles["plugin-execute-form-item"]}
         formItemProps={{
@@ -82,8 +83,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         renderType = "input",
         textareaProps = {},
         disabled,
-        isShowPathNumber = true,
-        ...restProps
+        isShowPathNumber = true
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>("")
@@ -222,7 +222,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         }
     })
 
-    const renderContent = (helpNode: ReactNode) => {
+    const renderContent = useMemoizedFn((helpNode: ReactNode) => {
         return (
             <Spin spinning={uploadLoading}>
                 {renderContentValue()}
@@ -236,7 +236,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                 </div>
             </Spin>
         )
-    }
+    })
     /**
      * @description 选择文件夹
      */
@@ -344,18 +344,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     return (
         <>
             {selectType === "file" && (
-                <Dragger
-                    {...restProps}
-                    disabled={disabled}
-                    showUploadList={false}
-                    directory={false}
-                    multiple={true}
-                    className={classNames(styles["yakit-dragger"], props.className)}
-                    beforeUpload={() => {
-                        return false
-                    }}
-                    onDrop={afterFileDrop}
-                >
+                <FileDragger onDrop={afterFileDrop}>
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
@@ -379,21 +368,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             )}
                         </div>
                     )}
-                </Dragger>
+                </FileDragger>
             )}
-            {/* DEL directory该属性 用了该属性 当上传文件很大时 会导致渲染卡很久 */}
             {selectType === "folder" && (
-                <Dragger
-                    {...restProps}
-                    disabled={disabled}
-                    showUploadList={false}
-                    directory
-                    className={classNames(styles["yakit-dragger"], props.className)}
-                    beforeUpload={() => {
-                        return false
-                    }}
-                    onDrop={afterFolderDrop}
-                >
+                <FileDragger onDrop={afterFolderDrop}>
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
@@ -417,19 +395,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             )}
                         </div>
                     )}
-                </Dragger>
+                </FileDragger>
             )}
             {selectType === "all" && (
-                <Dragger
-                    {...restProps}
-                    disabled={disabled}
-                    showUploadList={false}
-                    className={classNames(styles["yakit-dragger"], props.className)}
-                    beforeUpload={() => {
-                        return false
-                    }}
-                    onDrop={afterAllDrop}
-                >
+                <FileDragger onDrop={afterAllDrop}>
                     {renderContent(
                         <div className={styles["form-item-help"]}>
                             <span>
@@ -466,7 +435,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                             )}
                         </div>
                     )}
-                </Dragger>
+                </FileDragger>
             )}
         </>
     )
@@ -650,5 +619,28 @@ export const YakitFormDraggerContent: React.FC<YakitFormDraggerContentProps> = R
         >
             <YakitDraggerContent {...restProps} size={size} />
         </Form.Item>
+    )
+})
+
+const FileDragger: React.FC<FileDraggerProps> = React.memo((props) => {
+    const {disabled, multiple, onDrop, className, children} = props
+    return (
+        <div
+            onDropCapture={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                if (disabled) return
+                const {files = []} = e.dataTransfer
+                const filesLength = files.length
+                if (multiple === false && filesLength > 1) {
+                    yakitNotify("error", "不允许多选")
+                    return
+                }
+                if (onDrop) onDrop(e)
+            }}
+            className={classNames(styles["yakit-dragger"], className)}
+        >
+            {children}
+        </div>
     )
 })

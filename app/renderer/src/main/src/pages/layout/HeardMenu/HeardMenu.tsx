@@ -34,7 +34,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakCodeEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitFormDragger, YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {LoadingOutlined} from "@ant-design/icons"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {failed, yakitNotify} from "@/utils/notification"
@@ -72,7 +72,7 @@ import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
-    const {defaultExpand,onRouteMenuSelect, setRouteToLabel} = props
+    const {defaultExpand, onRouteMenuSelect, setRouteToLabel} = props
     // 专家模式菜单数据
     const ExpertMenus = useMemo(() => {
         return privateExchangeProps(PrivateExpertRouteMenu)
@@ -871,17 +871,17 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 bodyStyle={{padding: 0}}
             >
                 <Form className={style["json-import"]} layout='vertical'>
-                    <YakitFormDragger
-                        // accept='application/json,.json'
-                        multiple={false}
-                        maxCount={1}
-                        showUploadList={false}
-                        setContent={(val) => {
+                    <YakitFormDraggerContent
+                        accept='.json'
+                        textareaProps={{
+                            rows: 1,
+                            isShowResize: false
+                        }}
+                        value={""}
+                        onChange={(val) => {
                             setMenuDataString(val)
                             setRefreshTrigger(!refreshTrigger)
                         }}
-                        onChange={setFileName}
-                        value={fileName}
                     />
                     <Form.Item label='配置 JSON'>
                         <div style={{height: 400}}>
