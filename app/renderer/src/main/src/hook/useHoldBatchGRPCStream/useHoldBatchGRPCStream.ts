@@ -74,7 +74,6 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
     useEffect(() => {
         const processDataId = "main"
         ipcRenderer.on(`${token}-data`, async (e: any, res: PluginBatchExecutorResult) => {
-            console.log("res", res)
             const data = res.ExecResult
             const {TotalTasks, FinishedTasks} = res
             const progress = Number(TotalTasks) ? Number(FinishedTasks) / Number(TotalTasks) : 0
@@ -93,8 +92,6 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
             if (data.IsMessage) {
                 try {
                     let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
-                    console.log("obj", obj)
-
                     const logData = obj.content as StreamResult.Log
 
                     // feature-status-card-data 卡片展示
@@ -144,7 +141,6 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
         })
         // token-end
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-            console.log('end')
             info(`[Mod] ${taskName} finished`)
             handleResults()
             if (onEnd) {

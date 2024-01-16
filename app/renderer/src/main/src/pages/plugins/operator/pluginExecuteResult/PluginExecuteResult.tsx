@@ -528,7 +528,6 @@ const getSeverity = (type) => {
 /**风险与漏洞tab表 */
 const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
     const {riskState} = props
-    useEffect(() => {}, [])
 
     const columns: ColumnsTypeProps[] = useMemo(() => {
         return [

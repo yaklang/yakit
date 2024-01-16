@@ -294,7 +294,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const progressList = useCreation(() => {
         return streamInfo.progressState
     }, [streamInfo.progressState])
-    console.log("streamInfo", streamInfo)
     return (
         <div className={styles["plugin-batch-executor"]}>
             <PluginDetails<YakScript>
