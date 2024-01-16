@@ -644,8 +644,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     UserName: queryFetchList.UserName || "",
                     Tags: queryFetchList.Tag + ""
                 }
-                setExportStatusModalVisible(true)
                 setExportParams(params)
+                setExportStatusModalVisible(true)
                 exportCallbackRef.current = callback
             }
         } catch (error) {
