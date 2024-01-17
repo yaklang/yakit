@@ -3,6 +3,7 @@ const electronIsDev = require("electron-is-dev")
 const os = require("os")
 const path = require("path")
 const process = require("process")
+require('dotenv').config()
 /** 软件关联项目相关目录路径 */
 const YakitProjectPath = process.env.YAKIT_HOME || path.join(os.homedir(), "yakit-projects")
 /** 引擎和软件安装包路径 */

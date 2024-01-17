@@ -11,7 +11,7 @@ const request = require("request");
 const zip = require('node-stream-zip');
 const electronIsDev = require("electron-is-dev");
 const {YakitProjectPath} = require("../filePath")
-require('dotenv').config()
+
 
 const secretDir = path.join(YakitProjectPath, "auth");
 
@@ -51,6 +51,7 @@ const initMkbaseDir = async () => {
 
             try {
                 console.info("Start checking bins/resources")
+                console.log(111,process.env)
                 const extraResources = loadExtraFilePath(path.join("bins", "resources"));
                 const resourceBase = cacheDir;
                 if (!fs.existsSync(path.join(resourceBase, "flag.txt"))) {
