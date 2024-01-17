@@ -35,7 +35,7 @@ function sudoExec(cmd, opt, callback) {
     } else {
         _sudoPrompt.exec(
             cmd,
-            {...opt, env: {YAK_DEFAULT_DATABASE_NAME: dbFile}},
+            {...opt, env: {YAKIT_HOME: YakitProjectPath, YAK_DEFAULT_DATABASE_NAME: dbFile}},
             callback
         )
     }
