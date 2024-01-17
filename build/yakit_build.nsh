@@ -91,7 +91,6 @@ FunctionEnd
     FileOpen $9 "$INSTDIR\.env" w
     FileWrite $9 "YAKIT_HOME=$INSTDIR\yakit-projects"
     FileClose $9
-    MessageBox MB_OK "写入完毕: $INSTDIR\.env"
 !macroend
 
 Section "Main" SectionMain
