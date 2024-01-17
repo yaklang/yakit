@@ -2,9 +2,8 @@ const {ipcMain} = require("electron")
 const {launch, killAll, getChromePath} = require("chrome-launcher")
 const fs = require("fs")
 const path = require("path")
-const os = require("os")
-const homeDir = process.env.YAKIT_HOME || path.join(os.homedir(), "yakit-projects")
-const myUserDataDir = path.join(homeDir, "chrome-profile")
+const {YakitProjectPath} =require("../filePath")
+const myUserDataDir = path.join(YakitProjectPath, "chrome-profile")
 
 const disableExtensionsExceptStr = (host, port, username, password) => `
 var config = {
@@ -63,8 +62,8 @@ const tempFile = "yakit-proxy"
 const exceptFileName = "background.js"
 const manifestFileName = "manifest.json"
 // 创建临时文件的完整路径
-const exceptFilePath = path.join(homeDir, tempFile, exceptFileName)
-const manifestFilePath = path.join(homeDir, tempFile, manifestFileName)
+const exceptFilePath = path.join(YakitProjectPath, tempFile, exceptFileName)
+const manifestFilePath = path.join(YakitProjectPath, tempFile, manifestFileName)
 // 获取文件夹路径
 const commonFilePath = path.dirname(exceptFilePath)
 // 是否创建用户名/密码文件

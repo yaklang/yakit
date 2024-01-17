@@ -10,14 +10,14 @@ const request = require("request");
 
 const zip = require('node-stream-zip');
 const electronIsDev = require("electron-is-dev");
+const {YakitProjectPath} = require("../filePath")
 
-const homeDir = process.env.YAKIT_HOME || path.join(os.homedir(), "yakit-projects")
-const secretDir = path.join(homeDir, "auth");
+const secretDir = path.join(YakitProjectPath, "auth");
 
-const yakEngineDir = path.join(homeDir, "yak-engine")
-const codeDir = path.join(homeDir, "code");
-const cacheDir = path.join(homeDir, "base");
-const userChromeDataDir = path.join(homeDir, "chrome-profile");
+const yakEngineDir = path.join(YakitProjectPath, "yak-engine")
+const codeDir = path.join(YakitProjectPath, "code");
+const cacheDir = path.join(YakitProjectPath, "base");
+const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile");
 const secretFile = path.join(secretDir, "yakit-remote.json");
 const authMeta = [];
 
@@ -575,7 +575,7 @@ module.exports = {
 
         // 尝试初始化数据库
         ipcMain.handle("InitCVEDatabase", async (e) => {
-            const targetFile = path.join(homeDir, "default-cve.db.gzip")
+            const targetFile = path.join(YakitProjectPath, "default-cve.db.gzip")
             if (fs.existsSync(targetFile)) {
                 return
             }

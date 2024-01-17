@@ -7,7 +7,7 @@ const fs = require("fs")
 const os = require("os")
 const path = require("path")
 const {setLocalCache} = require("../localCache")
-const { async } = require("node-stream-zip")
+const {YakitProjectPath} =require("../filePath")
 const isWindows = process.platform === "win32"
 
 if (process.platform === "darwin" || process.platform === "linux") {
@@ -26,7 +26,6 @@ function generateWindowsSudoCommand(file, args) {
 }
 
 const getLatestYakLocalEngine = require("./upgradeUtil").getLatestYakLocalEngine
-const homedir = require("./upgradeUtil").homedir
 
 function sudoExec(cmd, opt, callback) {
     if (isWindows) {
@@ -269,7 +268,7 @@ module.exports = {
                     return
                 }
                 try {
-                    const info = fs.statSync(path.join(homedir, $dbFile))
+                    const info = fs.statSync(path.join(YakitProjectPath, dbFile))
                     if ((info.mode & 0o200) > 0) {
                         resolve("")
                     } else {
@@ -292,7 +291,7 @@ module.exports = {
                     resolve(true)
                     return
                 }
-                const databaseFile = path.join(homedir, $dbFile)
+                const databaseFile = path.join(YakitProjectPath, dbFile)
 
                 try {
                     fs.chmodSync(databaseFile, 0o644)
