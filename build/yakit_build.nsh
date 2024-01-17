@@ -70,6 +70,8 @@ FunctionEnd
         RMDir /r "$TEMP\temp-yakit-projects"
     ${EndIf}
     
+    ; 删除.env文件
+    Delete "$INSTDIR\.env"
     ; 删除开始菜单快捷方式
     Delete "$SMPROGRAMS\Yakit\*.*"
     Delete "$SMPROGRAMS\$StartMenuFolder\Yakit.lnk"
@@ -82,6 +84,14 @@ FunctionEnd
     DeleteRegKey HKCU "Software\Yakit"
     DeleteRegValue HKCU "Environment" "YAKIT_HOME"
 
+!macroend
+
+!macro customInstall 
+    DetailPrint "写入.env"
+    FileOpen $9 "$INSTDIR\.env" w
+    FileWrite $9 "YAKIT_HOME=$INSTDIR\yakit-projects"
+    FileClose $9
+    MessageBox MB_OK "写入完毕: $INSTDIR\.env"
 !macroend
 
 Section "Main" SectionMain
