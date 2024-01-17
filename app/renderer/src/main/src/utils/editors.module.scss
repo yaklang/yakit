@@ -13,13 +13,6 @@
         }
     }
 }
-.render-html-box {
-    height: 100%;
-    overflow: auto;
-    img {
-        max-width: 100%;
-    }
-}
 .monaco-editor-style {
     :global {
         .crlf::before {

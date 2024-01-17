@@ -73,7 +73,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     const [data, setData, getData] = useGetState<API.CompanyLicenseConfigList[]>([])
     const [selectData, setSelectData, getSelectData] = useGetState<SelectDataProps[]>([])
     // 企业名称分页
-    const [pagination, setPagination, getPagination] = useGetState<PaginationSchema>({
+    const [_, setPagination, getPagination] = useGetState<PaginationSchema>({
         Limit: 20,
         Order: "desc",
         OrderBy: "updated_at",
@@ -88,7 +88,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
         setSelectLoading(true)
         const paginationProps = {
             page: page || 1,
-            limit: limit || pagination.Limit
+            limit: limit || getPagination().Limit
         }
 
         NetWorkApi<QueryProps, API.CompanyLicenseConfigResponse>({
@@ -106,6 +106,9 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                     value: item.id,
                     label: item.company
                 }))
+                if(data.length>0){
+                    setPagination((v)=>({...v,Page:paginationProps.page}))
+                }
                 if (reload) {
                     setData([...data])
                     setSelectData([...newData])
