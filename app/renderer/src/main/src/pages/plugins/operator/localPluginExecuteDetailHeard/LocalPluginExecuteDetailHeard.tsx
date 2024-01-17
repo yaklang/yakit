@@ -731,6 +731,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                     }}
                     help='可将TXT、Excel文件拖入框内或'
                     disabled={disabled}
+                    valueSeparator={"\r\n"}
                 />
             )}
         </>
