@@ -11,6 +11,7 @@ const request = require("request");
 const zip = require('node-stream-zip');
 const electronIsDev = require("electron-is-dev");
 const {YakitProjectPath} = require("../filePath")
+require('dotenv').config()
 
 const secretDir = path.join(YakitProjectPath, "auth");
 
