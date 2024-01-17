@@ -321,7 +321,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
-    YakitRoute.BatchExecutorPage,
     YakitRoute.DNSLog,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
