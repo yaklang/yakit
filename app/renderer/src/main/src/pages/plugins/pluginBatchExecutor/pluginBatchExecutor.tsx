@@ -67,7 +67,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
     /**是否展开/收起 */
-    const [isExpend, setIsExpend] = useState<boolean>(false)
+    const [isExpend, setIsExpend] = useState<boolean>(true)
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
@@ -90,12 +90,12 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const [form] = Form.useForm()
     const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
 
-    const [streamInfo, debugPluginStreamEvent] = useHoldBatchGRPCStream({
+    const [streamInfo, hybridScanStreamEvent] = useHoldBatchGRPCStream({
         taskName: "hybrid-scan",
         apiKey: "HybridScan",
         token: tokenRef.current,
         onEnd: () => {
-            debugPluginStreamEvent.stop()
+            hybridScanStreamEvent.stop()
             setTimeout(() => setIsExecuting(false), 300)
         },
         setRuntimeId: (rId) => {
@@ -269,17 +269,17 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             pluginInfo,
             typeRef.current
         )
-        debugPluginStreamEvent.reset()
+        hybridScanStreamEvent.reset()
         apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
             setIsExecuting(true)
             setIsExpend(false)
-            debugPluginStreamEvent.start()
+            hybridScanStreamEvent.start()
         })
     })
     /**取消执行 */
     const onStopExecute = useMemoizedFn(() => {
         apiCancelHybridScan(tokenRef.current).then(() => {
-            debugPluginStreamEvent.stop()
+            hybridScanStreamEvent.stop()
             setIsExecuting(false)
         })
     })
@@ -396,13 +396,13 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 }
                 hidden={hidden}
                 setHidden={setHidden}
-                bodyClassName={styles['plugin-batch-executor-body']}
+                bodyClassName={styles["plugin-batch-executor-body"]}
             >
                 <Form
                     form={form}
                     onFinish={onStartExecute}
                     className={classNames(styles["plugin-batch-execute-form-wrapper"], {
-                        [styles["plugin-batch-execute-form-wrapper-hidden"]]: isExpend
+                        [styles["plugin-batch-execute-form-wrapper-hidden"]]: !isExpend
                     })}
                     labelCol={{span: 6}}
                     wrapperCol={{span: 12}} //这样设置是为了让输入框居中
@@ -435,14 +435,14 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         </div>
                     </Form.Item>
                 </Form>
-                {/* {isShowResult && ( */}
-                <PluginExecuteResult
-                    streamInfo={streamInfo}
-                    runtimeId={runtimeId}
-                    loading={isExecuting}
-                    pluginType={typeRef.current}
-                />
-                {/* )} */}
+                {isShowResult && (
+                    <PluginExecuteResult
+                        streamInfo={streamInfo}
+                        runtimeId={runtimeId}
+                        loading={isExecuting}
+                        pluginType={typeRef.current}
+                    />
+                )}
             </PluginDetails>
             <React.Suspense fallback={<div>loading...</div>}>
                 <PluginBatchExecuteExtraParamsDrawer

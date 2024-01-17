@@ -93,7 +93,6 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
                 try {
                     let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
                     const logData = obj.content as StreamResult.Log
-
                     // feature-status-card-data 卡片展示
                     if (obj.type === "log" && logData.level === "feature-status-card-data") {
                         try {
