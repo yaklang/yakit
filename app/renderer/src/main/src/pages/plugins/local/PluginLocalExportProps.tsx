@@ -40,40 +40,40 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
         () => {
             let timer
             if (visible) {
-                try {
-                    // 发送导出流信号
-                    const sendExportSignal = async () => {
+                // 发送导出流信号
+                const sendExportSignal = async () => {
+                    try {
                         await ipcRenderer.invoke("ExportLocalYakScriptStream", exportLocalParams)
+                    } catch (error) {
+                        yakitFailed(error + "")
                     }
-                    sendExportSignal()
-
-                    // 每200毫秒渲染一次数据
-                    timer = setInterval(() => {
-                        setLocalStreamData(localStreamDataRef.current)
-                        setLocallogListInfo([...locallogListInfoRef.current])
-                    }, 200)
-
-                    // 接收导出返回的流数据
-                    ipcRenderer.on("export-yak-script-data", (e, data: ExportYakScriptLocalResponse) => {
-                        localStreamDataRef.current = {Progress: data.Progress}
-                        // 只展示错误日志和最后一条日志
-                        if (data.MessageType === "error" || data.Progress === 1) {
-                            locallogListInfoRef.current.unshift({
-                                message: data.Message,
-                                isError: ["error", "finalError"].includes(data.MessageType),
-                                key: uuidv4()
-                            })
-                        }
-                        // 导出成功或状态为finished自动关闭弹窗
-                        if (["success", "finished"].includes(data.MessageType) && data.Progress === 1) {
-                            setTimeout(() => {
-                                handleExportLocalPluginFinish()
-                            }, 300)
-                        }
-                    })
-                } catch (error) {
-                    yakitFailed(error + "")
                 }
+                sendExportSignal()
+
+                // 每200毫秒渲染一次数据
+                timer = setInterval(() => {
+                    setLocalStreamData(localStreamDataRef.current)
+                    setLocallogListInfo([...locallogListInfoRef.current])
+                }, 200)
+
+                // 接收导出返回的流数据
+                ipcRenderer.on("export-yak-script-data", (e, data: ExportYakScriptLocalResponse) => {
+                    localStreamDataRef.current = {Progress: data.Progress}
+                    // 只展示错误日志和最后一条日志
+                    if (data.MessageType === "error" || data.Progress === 1) {
+                        locallogListInfoRef.current.unshift({
+                            message: data.Message,
+                            isError: ["error", "finalError"].includes(data.MessageType),
+                            key: uuidv4()
+                        })
+                    }
+                    // 导出成功或状态为finished自动关闭弹窗
+                    if (["success", "finished"].includes(data.MessageType) && data.Progress === 1) {
+                        setTimeout(() => {
+                            handleExportLocalPluginFinish()
+                        }, 300)
+                    }
+                })
 
                 return () => {
                     clearInterval(timer)
