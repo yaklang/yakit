@@ -160,13 +160,13 @@
         flex: 1 0 0;
         min-width: 556px;
         height: 100%;
-        padding-right: 16px;
-        padding-top: 12px;
+        // padding-right: 16px;
+        // padding-top: 12px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         .details-header {
-            padding: 0px 0px 4px 12px;
+            padding: 12px 0px 4px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -200,6 +200,7 @@
             width: 100%;
             flex: 1 0 0;
             overflow: hidden;
+            padding-right: 16px;
         }
     }
 }

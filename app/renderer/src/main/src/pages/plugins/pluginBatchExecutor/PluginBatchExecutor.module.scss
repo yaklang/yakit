@@ -15,11 +15,41 @@
 }
 
 .plugin-batch-executor-header {
-    padding: 0px 0px 4px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 12px 8px;
     border-bottom: 1px solid #eaecf3;
+    position: relative;
+    &:hover {
+        cursor: pointer;
+        background-color: var(--yakit-card-background-color);
+        border-bottom-color: var(--yakit-primary-3);
+        .plugin-batch-executor-header-icon-body {
+            border: 1px solid var(--yakit-primary-3);
+            color: var(--yakit-primary-5);
+        }
+    }
+    .plugin-batch-executor-header-icon-body {
+        @extend %display-flex-center;
+        justify-content: center;
+        position: absolute;
+        right: 50%;
+        left: 50%;
+        top: 75%;
+        background-color: #fff;
+        padding: 4px;
+        border: 1px solid var(--yakit-border-color);
+        border-radius: 50%;
+        flex-shrink: 0;
+        color: var(--yakit-body-text-color);
+        width: 24px;
+        height: 24px;
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
     .plugin-batch-executor-title {
         display: flex;
         align-items: center;

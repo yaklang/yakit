@@ -24,7 +24,13 @@ import {Form} from "antd"
 import "../plugins.scss"
 import styles from "./PluginBatchExecutor.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineChevrondownIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowscollapseIcon,
+    OutlineArrowsexpandIcon,
+    OutlineChevrondoubledownIcon,
+    OutlineChevrondoubleupIcon,
+    OutlineChevrondownIcon
+} from "@/assets/icon/outline"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import classNames from "classnames"
 import {
@@ -225,7 +231,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             fetchList(true)
         }, 200)
     })
-    const onRemove = useMemoizedFn(() => {
+    const onRemove = useMemoizedFn((e) => {
+        e.stopPropagation()
         setSelectList([])
     })
     const checkList = useCreation(() => {
@@ -277,7 +284,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         })
     })
     /**取消执行 */
-    const onStopExecute = useMemoizedFn(() => {
+    const onStopExecute = useMemoizedFn((e) => {
+        e.stopPropagation()
         apiCancelHybridScan(tokenRef.current).then(() => {
             hybridScanStreamEvent.stop()
             setIsExecuting(false)
@@ -290,6 +298,10 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const onSaveExtraParams = useMemoizedFn((v: PluginBatchExecuteExtraFormValue) => {
         setExtraParamsValue({...v} as PluginBatchExecuteExtraFormValue)
         setExtraParamsVisible(false)
+    })
+    const onExpand = useMemoizedFn((e) => {
+        e.stopPropagation()
+        setIsExpend(!isExpend)
     })
     const progressList = useCreation(() => {
         return streamInfo.progressState
@@ -352,7 +364,10 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 // spinLoading={spinLoading || removeLoading}
                 spinLoading={loading && isLoadingRef.current}
                 rightHeardNode={
-                    <div className={styles["plugin-batch-executor-header"]}>
+                    <div className={styles["plugin-batch-executor-header"]} onClick={onExpand}>
+                        <div className={styles["plugin-batch-executor-header-icon-body"]}>
+                            {isExpend ? <OutlineChevrondoubledownIcon /> : <OutlineChevrondoubleupIcon />}
+                        </div>
                         <div className={styles["plugin-batch-executor-title"]}>
                             <span className={styles["plugin-batch-executor-title-text"]}>已选插件</span>
                             {selectNum > 0 && (
@@ -375,12 +390,12 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                                 <></>
                             )}
                             {isExpend ? (
-                                <YakitButton type='text2' onClick={() => setIsExpend(false)}>
+                                <YakitButton type='text2' onClick={onExpand}>
                                     收起
                                     <OutlineChevrondownIcon />
                                 </YakitButton>
                             ) : (
-                                <YakitButton type='text2' onClick={() => setIsExpend(true)}>
+                                <YakitButton type='text2' onClick={onExpand}>
                                     展开
                                     <OutlineChevrondownIcon />
                                 </YakitButton>
