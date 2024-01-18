@@ -18,6 +18,7 @@ export const queryYakScriptList = (
     if (limit !== undefined && limit <= 0) {
         limit = 200
     }
+    
     ipcRenderer
         .invoke("QueryYakScript", {
             Type: pluginType,
