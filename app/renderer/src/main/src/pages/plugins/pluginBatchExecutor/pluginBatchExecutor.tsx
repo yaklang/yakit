@@ -73,7 +73,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
     /**是否展开/收起 */
-    const [isExpend, setIsExpend] = useState<boolean>(true)
+    const [isExpand, setIsExpand] = useState<boolean>(true)
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
@@ -279,7 +279,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         hybridScanStreamEvent.reset()
         apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
             setIsExecuting(true)
-            setIsExpend(false)
+            setIsExpand(false)
             hybridScanStreamEvent.start()
         })
     })
@@ -301,7 +301,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     })
     const onExpand = useMemoizedFn((e) => {
         e.stopPropagation()
-        setIsExpend(!isExpend)
+        setIsExpand(!isExpand)
     })
     const progressList = useCreation(() => {
         return streamInfo.progressState
@@ -366,7 +366,23 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 rightHeardNode={
                     <div className={styles["plugin-batch-executor-header"]} onClick={onExpand}>
                         <div className={styles["plugin-batch-executor-header-icon-body"]}>
-                            {isExpend ? <OutlineChevrondoubledownIcon /> : <OutlineChevrondoubleupIcon />}
+                            {isExpand ? (
+                                <>
+                                    <OutlineChevrondoubledownIcon />
+                                    <span className={styles["plugin-batch-executor-header-icon-text"]}>
+                                        <span style={{marginLeft: 4}} />
+                                        收起参数
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <OutlineChevrondoubleupIcon />
+                                    <span className={styles["plugin-batch-executor-header-icon-text"]}>
+                                        <span style={{marginLeft: 4}} />
+                                        展开参数
+                                    </span>
+                                </>
+                            )}
                         </div>
                         <div className={styles["plugin-batch-executor-title"]}>
                             <span className={styles["plugin-batch-executor-title-text"]}>已选插件</span>
@@ -404,7 +420,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             >
                 <div
                     className={classNames(styles["plugin-batch-execute-form-wrapper"], {
-                        [styles["plugin-batch-execute-form-wrapper-hidden"]]: !isExpend
+                        [styles["plugin-batch-execute-form-wrapper-hidden"]]: !isExpand
                     })}
                 >
                     <Form

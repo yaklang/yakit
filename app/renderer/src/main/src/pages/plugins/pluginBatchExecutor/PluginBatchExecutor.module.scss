@@ -21,14 +21,24 @@
     padding: 12px 8px;
     border-bottom: 1px solid #eaecf3;
     position: relative;
+    transition: background-color 0.3s ease;
     &:hover {
         cursor: pointer;
         background-color: var(--yakit-card-background-color);
         border-bottom-color: var(--yakit-primary-3);
         .plugin-batch-executor-header-icon-body {
+            width: 76px;
             border: 1px solid var(--yakit-primary-3);
             color: var(--yakit-primary-5);
+            .plugin-batch-executor-header-icon-text {
+                width: 48px;
+                opacity: 1;
+            }
         }
+    }
+    &:focus,
+    &:active {
+        background-color: var(--yakit-background-color);
     }
     .plugin-batch-executor-header-icon-body {
         @extend %display-flex-center;
@@ -40,11 +50,23 @@
         background-color: #fff;
         padding: 4px;
         border: 1px solid var(--yakit-border-color);
-        border-radius: 50%;
         flex-shrink: 0;
         color: var(--yakit-body-text-color);
         width: 24px;
         height: 24px;
+        border-radius: 12px;
+        transition: width 0.2s ease;
+
+        .plugin-batch-executor-header-icon-text {
+            @extend %display-flex-center;
+            justify-content: center;
+            word-break: keep-all;
+            width: 0;
+            opacity: 0;
+            transition:
+                width 0.3s ease,
+                opacity 0.2s ease;
+        }
         svg {
             width: 12px;
             height: 12px;
@@ -75,7 +97,7 @@
 }
 .plugin-batch-execute-form-wrapper {
     display: grid;
-    grid-template-rows: 0fr;
+    grid-template-rows: 1fr;
     transition: all 0.3s ease;
     padding-top: 16px;
     :global {
@@ -94,7 +116,8 @@
     }
 }
 .plugin-batch-execute-form-wrapper-hidden {
-    grid-template-rows: 1fr;
+    grid-template-rows: 0fr;
+    padding-top: 0;
 }
 
 .plugin-batch-execute-extra-params-drawer {
@@ -109,6 +132,8 @@
 }
 
 .plugin-batch-executor-body {
+    display: flex;
+    flex-direction: column;
     padding: 0 12px 16px;
     overflow: auto !important;
 }
