@@ -3963,7 +3963,7 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
                 m.destroy()
             }
         },
-        content: <div style={{paddingTop: 8}}>{props?.content}</div>
+        content: props?.content
     })
     return m
 }
