@@ -308,7 +308,7 @@ export const PluginList: React.FC<PluginListProp> = React.memo((props) => {
                     refreshMode={"debounce"}
                     refreshRate={50}
                 />
-                <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto"}}>
+                <div ref={containerRef as any} style={{height: vlistHeigth, overflow: "auto",overflowAnchor:"none"}}>
                     <div ref={wrapperRef as any}>
                         {list.map((i) => (
                             <YakScriptCheckbox
