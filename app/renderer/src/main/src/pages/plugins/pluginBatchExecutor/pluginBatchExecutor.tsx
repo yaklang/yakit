@@ -43,6 +43,7 @@ import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {randomString} from "@/utils/randomUtil"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
+import {ExpandAndRetract} from "../operator/expandAndRetract/ExpandAndRetract"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -364,26 +365,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 // spinLoading={spinLoading || removeLoading}
                 spinLoading={loading && isLoadingRef.current}
                 rightHeardNode={
-                    <div className={styles["plugin-batch-executor-header"]} onClick={onExpand}>
-                        <div className={styles["plugin-batch-executor-header-icon-body"]}>
-                            {isExpand ? (
-                                <>
-                                    <OutlineChevrondoubledownIcon />
-                                    <span className={styles["plugin-batch-executor-header-icon-text"]}>
-                                        <span style={{marginLeft: 4}} />
-                                        收起参数
-                                    </span>
-                                </>
-                            ) : (
-                                <>
-                                    <OutlineChevrondoubleupIcon />
-                                    <span className={styles["plugin-batch-executor-header-icon-text"]}>
-                                        <span style={{marginLeft: 4}} />
-                                        展开参数
-                                    </span>
-                                </>
-                            )}
-                        </div>
+                    <ExpandAndRetract isExpand={isExpand} onExpand={onExpand}>
                         <div className={styles["plugin-batch-executor-title"]}>
                             <span className={styles["plugin-batch-executor-title-text"]}>已选插件</span>
                             {selectNum > 0 && (
@@ -412,7 +394,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                                 onClick={() => setHidden(!hidden)}
                             />
                         </div>
-                    </div>
+                    </ExpandAndRetract>
                 }
                 hidden={hidden}
                 setHidden={setHidden}
