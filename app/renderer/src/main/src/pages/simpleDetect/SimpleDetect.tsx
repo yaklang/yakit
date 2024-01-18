@@ -1,4 +1,5 @@
 import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
+import {YakEditor} from "@/utils/editors"
 import {
     Space,
     Tag,
@@ -20,6 +21,9 @@ import {
     Tooltip,
     Timeline
 } from "antd"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon} from "@/assets/icon/outline"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {AutoCard} from "@/components/AutoCard"
 import {DeleteOutlined, PaperClipOutlined} from "@ant-design/icons"
 import styles from "./SimpleDetect.module.scss"
@@ -59,6 +63,16 @@ import {DownloadOnlinePluginsRequest, apiFetchQueryYakScriptGroupLocal} from "..
 const {ipcRenderer} = window.require("electron")
 const CheckboxGroup = Checkbox.Group
 
+const plainOptions = [
+    "操作系统类漏洞",
+    "WEB中间件漏洞",
+    "WEB应用漏洞",
+    "网络安全设备漏洞",
+    "OA产品漏洞",
+    "CMS产品漏洞",
+    "弱口令",
+    "CVE合规漏洞"
+]
 const layout = {
     labelCol: {span: 6},
     wrapperCol: {span: 16}
@@ -133,7 +147,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     } = props
     const [form] = Form.useForm()
     const [uploadLoading, setUploadLoading] = useState(false)
-
+    const [logContent, setLogContent, getLogContent] = useGetState("")
+    const [logEditorModelVisible, setLogEditorModelVisible] = useGetState(false)
+    const [logChannelToken, setLogChannelToken] = useState(randomString(40))
     const [portParams, setPortParams, getPortParams] = useGetState<PortScanParams>({
         Ports: "",
         Mode: "all",
@@ -277,6 +293,28 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         }
     }, [TaskName])
 
+    const stopListenLog = () => {
+        const token = logChannelToken
+        ipcRenderer.invoke("cancel-AttachCombinedOutput", token)
+        ipcRenderer.removeAllListeners(`${token}-data`)
+        ipcRenderer.removeAllListeners(`${token}-error`)
+        ipcRenderer.removeAllListeners(`${token}-end`)
+    }
+    const listenLog = () => {
+        const token = logChannelToken
+        ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {
+            setLogContent(getLogContent() + Uint8ArrayToString(data.Raw) + "\r\n")
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            failed(`[AttachCombinedOutput] error:  ${error}`)
+        })
+        ipcRenderer.on(`${token}-end`, (e, data) => {
+            info("[AttachCombinedOutput] finished")
+        })
+
+        ipcRenderer.invoke("AttachCombinedOutput", {}, token).then(() => {})
+    }
+
     // 保存任务
     const saveTask = (v?: string) => {
         const cacheData = v ? JSON.parse(v) : false
@@ -344,8 +382,17 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             SimpleCloseInfo[token]?.status && saveTask(SimpleCloseInfo[token].info)
         }
     }, [])
-
-    const run = (TaskName: string) => {
+    useEffect(() => {
+        if (executing) {
+            setLogContent("")
+            info("start log listener")
+            listenLog()
+        } else {
+            info("stop log listener")
+            stopListenLog()
+        }
+    }, [executing])
+    const run = (OnlineGroup: string, TaskName: string) => {
         setPercent(0)
         setRunPluginCount(getPortParams().ScriptNames.length)
 
@@ -426,21 +473,10 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             return
         }
 
-        let OnlineGroup: string = ""
-        if (getScanType() !== "专项扫描") {
-            OnlineGroup = getScanType()
-        } else {
-            // 当插件组内部没有弱口令的时候，查询插件需要排除爆破弱口令
-            if (!groupWeakPwdFlag) {
-                OnlineGroup = [...checkedList].filter((name) => name !== "弱口令").join(",")
-            } else {
-                OnlineGroup = [...checkedList].join(",")
-            }
-        }
-
-        // 是否仅勾选的弱口令仅代表爆破弱口令
-        const blastingWeakPwdFlag = checkedList.length === 1 && checkedList.includes("弱口令") && !groupWeakPwdFlag
-
+        const OnlineGroup: string =
+            getScanType() !== "专项扫描"
+                ? getScanType()
+                : [...checkedList].filter((name) => name !== "弱口令").join(",")
         // 继续任务 参数拦截
         if (Uid) {
             recoverRun()
@@ -450,9 +486,9 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
             run(TaskName)
         }
         // 只勾选了爆破弱口令的选项
-        else if (blastingWeakPwdFlag && OnlineGroup !== "基础扫描") {
+        else if (OnlineGroup.length === 0) {
             setPortParams({...getPortParams(), ScriptNames: []})
-            run(TaskName)
+            run(OnlineGroup, TaskName)
         } else {
             ipcRenderer
                 .invoke("QueryYakScriptByOnlineGroup", {OnlineGroup})
@@ -521,231 +557,267 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
     }, [inViewport, refreshPluginGroup])
 
     return (
-        <div className={styles["simple-detect-form"]} style={{marginTop: 20}} ref={simpleDetectRef}>
-            <Form
-                {...layout}
-                form={form}
-                onFinish={onFinish}
+        <>
+            <YakitModal
+                title='任务日志'
+                subTitle={
+                    <div className={styles["plugin-editor-modal-subtitle"]}>
+                        <span>按 Esc 即可退出全屏</span>
+                    </div>
+                }
+                type='white'
+                width='80%'
+                centered={true}
+                maskClosable={false}
+                closable={true}
+                closeIcon={<OutlineArrowscollapseIcon className={styles["plugin-editor-modal-close-icon"]} />}
+                footer={null}
+                visible={logEditorModelVisible}
+                onCancel={() => {
+                    setLogEditorModelVisible(false)
+                }}
+                bodyStyle={{padding: 0}}
             >
-                <Spin spinning={uploadLoading}>
-                    <ContentUploadInput
-                        type='textarea'
-                        dragger={{
-                            disabled: executing || shield
-                        }}
-                        beforeUpload={(f) => {
-                            const typeArr: string[] = [
-                                "text/plain",
-                                ".csv",
-                                ".xls",
-                                ".xlsx",
-                                "application/vnd.ms-excel",
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            ]
-                            if (!typeArr.includes(f.type)) {
-                                failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
+                <div style={{height: 700}}>
+                    <YakEditor type={"log"} value={getLogContent()} readOnly noMiniMap />
+                </div>
+            </YakitModal>
+            <div style={{float: "right", fontSize: 12, width: 300, height: 350}}>
+                <div style={{float: "right"}}>
+                    全屏查看
+                    <YakitButton
+                        type='text2'
+                        icon={<OutlineArrowsexpandIcon />}
+                        onClick={() => setLogEditorModelVisible(true)}
+                    />
+                </div>
+                <YakEditor type={"log"} value={getLogContent()} readOnly noMiniMap noLineNumber />
+            </div>
+            <div className={styles["simple-detect-form"]} style={{marginTop: 20}}>
+                <Form {...layout} form={form} onFinish={onFinish}>
+                    <Spin spinning={uploadLoading}>
+                        <ContentUploadInput
+                            type='textarea'
+                            dragger={{
+                                disabled: executing || shield
+                            }}
+                            beforeUpload={(f) => {
+                                const typeArr: string[] = [
+                                    "text/plain",
+                                    ".csv",
+                                    ".xls",
+                                    ".xlsx",
+                                    "application/vnd.ms-excel",
+                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                ]
+                                if (!typeArr.includes(f.type)) {
+                                    failed(`${f.name}非txt、Excel文件，请上传txt、Excel格式文件！`)
+                                    return false
+                                }
+                                setUploadLoading(true)
+                                const TargetsFile = getPortParams().TargetsFile
+                                const absPath: string = (f as any).path
+                                // 当已有文件上传时
+                                if (TargetsFile && TargetsFile?.length > 0) {
+                                    let arr = TargetsFile.split(",")
+                                    // 限制最多3个文件上传
+                                    if (arr.length >= 3) {
+                                        info("最多支持3个文件上传")
+                                        setUploadLoading(false)
+                                        return
+                                    }
+                                    // 当不存在时添加
+                                    if (!arr.includes(absPath)) {
+                                        setPortParams({...portParams, TargetsFile: `${TargetsFile},${absPath}`})
+                                    } else {
+                                        info("路径已存在，请勿重复上传")
+                                    }
+                                } // 当未上传过文件时
+                                else {
+                                    setPortParams({...portParams, TargetsFile: absPath})
+                                }
+                                setUploadLoading(false)
                                 return false
-                            }
-                            setUploadLoading(true)
-                            const TargetsFile = getPortParams().TargetsFile
-                            const absPath: string = (f as any).path
-                            // 当已有文件上传时
-                            if (TargetsFile && TargetsFile?.length > 0) {
-                                let arr = TargetsFile.split(",")
-                                // 限制最多3个文件上传
-                                if (arr.length >= 3) {
-                                    info("最多支持3个文件上传")
-                                    setUploadLoading(false)
-                                    return
-                                }
-                                // 当不存在时添加
-                                if (!arr.includes(absPath)) {
-                                    setPortParams({...portParams, TargetsFile: `${TargetsFile},${absPath}`})
-                                } else {
-                                    info("路径已存在，请勿重复上传")
-                                }
-                            } // 当未上传过文件时
-                            else {
-                                setPortParams({...portParams, TargetsFile: absPath})
-                            }
-                            setUploadLoading(false)
-                            return false
-                        }}
-                        item={{
-                            style: {textAlign: "left"},
-                            label: "扫描目标:"
-                        }}
-                        textarea={{
-                            isBubbing: true,
-                            setValue: (Targets) => setPortParams({...portParams, Targets}),
-                            value: portParams.Targets,
-                            rows: 1,
-                            placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
-                            disabled: executing || shield
-                        }}
-                        otherHelpNode={
-                            <>
-                                <span className={styles["help-hint-title"]}>
-                                    <Checkbox
-                                        onClick={(e) => {
-                                            setPortParams({
-                                                ...portParams,
-                                                SkippedHostAliveScan: !portParams.SkippedHostAliveScan
+                            }}
+                            item={{
+                                style: {textAlign: "left"},
+                                label: "扫描目标:"
+                            }}
+                            textarea={{
+                                isBubbing: true,
+                                setValue: (Targets) => setPortParams({...portParams, Targets}),
+                                value: portParams.Targets,
+                                rows: 1,
+                                placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
+                                disabled: executing || shield
+                            }}
+                            otherHelpNode={
+                                <>
+                                    <span className={styles["help-hint-title"]}>
+                                        <Checkbox
+                                            onClick={(e) => {
+                                                setPortParams({
+                                                    ...portParams,
+                                                    SkippedHostAliveScan: !portParams.SkippedHostAliveScan
+                                                })
+                                            }}
+                                            checked={portParams.SkippedHostAliveScan}
+                                        >
+                                            跳过主机存活检测
+                                        </Checkbox>
+                                    </span>
+                                    <span
+                                        onClick={() => {
+                                            let m = showDrawer({
+                                                title: "设置高级参数",
+                                                width: "60%",
+                                                onClose: () => {
+                                                    isSetSpeed.current = getScanDeep()
+                                                    m.destroy()
+                                                },
+                                                content: (
+                                                    <>
+                                                        <ScanPortForm
+                                                            isSetPort={isSetSpeed.current !== getScanDeep()}
+                                                            deepLevel={getScanDeep()}
+                                                            isSimpleDetectShow={true}
+                                                            defaultParams={portParams}
+                                                            setParams={(value) => {
+                                                                setPortParams(value)
+                                                            }}
+                                                            bruteParams={bruteParams}
+                                                            setBruteParams={setBruteParams}
+                                                        />
+                                                    </>
+                                                )
                                             })
                                         }}
-                                        checked={portParams.SkippedHostAliveScan}
+                                        className={styles["help-hint-title"]}
                                     >
-                                        跳过主机存活检测
-                                    </Checkbox>
-                                </span>
-                                <span
-                                    onClick={() => {
-                                        let m = showDrawer({
-                                            title: "设置高级参数",
-                                            width: "60%",
-                                            onClose: () => {
-                                                isSetSpeed.current = getScanDeep()
-                                                m.destroy()
-                                            },
-                                            content: (
-                                                <>
-                                                    <ScanPortForm
-                                                        isSetPort={isSetSpeed.current !== getScanDeep()}
-                                                        deepLevel={getScanDeep()}
-                                                        isSimpleDetectShow={true}
-                                                        defaultParams={portParams}
-                                                        setParams={(value) => {
-                                                            setPortParams(value)
-                                                        }}
-                                                        bruteParams={bruteParams}
-                                                        setBruteParams={setBruteParams}
-                                                    />
-                                                </>
+                                        更多参数
+                                    </span>
+                                    <span
+                                        onClick={() => {
+                                            showUnfinishedSimpleDetectTaskList(
+                                                (task: UnfinishedSimpleDetectBatchTask) => {
+                                                    ipcRenderer.invoke("send-to-tab", {
+                                                        type: "simple-batch-exec-recover",
+                                                        data: task
+                                                    })
+                                                }
                                             )
-                                        })
-                                    }}
-                                    className={styles["help-hint-title"]}
-                                >
-                                    更多参数
-                                </span>
-                                <span
-                                    onClick={() => {
-                                        showUnfinishedSimpleDetectTaskList((task: UnfinishedSimpleDetectBatchTask) => {
-                                            ipcRenderer.invoke("send-to-tab", {
-                                                type: "simple-batch-exec-recover",
-                                                data: task
-                                            })
-                                        })
-                                    }}
-                                    className={styles["help-hint-title"]}
-                                >
-                                    未完成任务
-                                </span>
-                            </>
-                        }
-                        suffixNode={
-                            executing ? (
-                                <Button type='primary' danger disabled={!executing} onClick={onCancel}>
-                                    立即停止任务
-                                </Button>
-                            ) : (
-                                <Button type='primary' htmlType='submit' disabled={isDownloadPlugin}>
-                                    开始检测
-                                </Button>
-                            )
-                        }
-                    />
-                </Spin>
-                {getPortParams().TargetsFile && (
-                    <Form.Item label=' ' colon={false}>
-                        {getPortParams()
-                            .TargetsFile?.split(",")
-                            .map((item: string) => {
-                                return (
-                                    <div className={styles["upload-file-item"]}>
-                                        <div className={styles["text"]}>
-                                            <PaperClipOutlined
-                                                style={{
-                                                    marginRight: 8,
-                                                    color: "#666666"
-                                                }}
-                                            />
-                                            {item.substring(item.lastIndexOf("\\") + 1)}
-                                        </div>
-                                        {!executing && !!!oldRunParams && (
-                                            <DeleteOutlined
-                                                className={styles["icon"]}
-                                                onClick={() => {
-                                                    let arr = getPortParams().TargetsFile?.split(",") || []
-                                                    let str = arr?.filter((itemIn: string) => itemIn !== item).join(",")
-                                                    setPortParams({...portParams, TargetsFile: str})
-                                                }}
-                                            />
-                                        )}
-                                    </div>
+                                        }}
+                                        className={styles["help-hint-title"]}
+                                    >
+                                        未完成任务
+                                    </span>
+                                </>
+                            }
+                            suffixNode={
+                                executing ? (
+                                    <Button type='primary' danger disabled={!executing} onClick={onCancel}>
+                                        立即停止任务
+                                    </Button>
+                                ) : (
+                                    <Button type='primary' htmlType='submit' disabled={isDownloadPlugin}>
+                                        开始检测
+                                    </Button>
                                 )
-                            })}
-                    </Form.Item>
-                )}
-                <div style={executing ? {display: "none"} : {}}>
-                    <Form.Item name='scan_type' label='扫描模式' extra={judgeExtra()}>
-                        <Radio.Group
-                            buttonStyle='solid'
-                            defaultValue={"基础扫描"}
-                            onChange={(e) => {
-                                setScanType(e.target.value)
-                            }}
-                            value={getScanType()}
-                            disabled={shield}
-                        >
-                            <Radio.Button value='基础扫描'>基础扫描</Radio.Button>
-                            <Radio.Button value='专项扫描'>专项扫描</Radio.Button>
-                        </Radio.Group>
-                    </Form.Item>
-
-                    {getScanType() === "专项扫描" && (
-                        <Form.Item label=' ' colon={false} style={{marginTop: "-16px"}}>
-                            <CheckboxGroup
-                                disabled={shield}
-                                options={plainOptions}
-                                value={checkedList}
-                                onChange={(list) => setCheckedList(list)}
-                            />
+                            }
+                        />
+                    </Spin>
+                    {getPortParams().TargetsFile && (
+                        <Form.Item label=' ' colon={false}>
+                            {getPortParams()
+                                .TargetsFile?.split(",")
+                                .map((item: string) => {
+                                    return (
+                                        <div className={styles["upload-file-item"]}>
+                                            <div className={styles["text"]}>
+                                                <PaperClipOutlined
+                                                    style={{
+                                                        marginRight: 8,
+                                                        color: "#666666"
+                                                    }}
+                                                />
+                                                {item.substring(item.lastIndexOf("\\") + 1)}
+                                            </div>
+                                            {!executing && !!!oldRunParams && (
+                                                <DeleteOutlined
+                                                    className={styles["icon"]}
+                                                    onClick={() => {
+                                                        let arr = getPortParams().TargetsFile?.split(",") || []
+                                                        let str = arr
+                                                            ?.filter((itemIn: string) => itemIn !== item)
+                                                            .join(",")
+                                                        setPortParams({...portParams, TargetsFile: str})
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    )
+                                })}
                         </Form.Item>
                     )}
-
-                    <div style={{display: "none"}}>
-                        <Form.Item name='TaskName' label='任务名称'>
-                            <Input
-                                disabled={shield}
-                                style={{width: 400}}
-                                placeholder='请输入任务名称'
-                                allowClear
-                                onChange={() => {
-                                    isInputValue.current = true
+                    <div style={executing ? {display: "none"} : {}}>
+                        <Form.Item name='scan_type' label='扫描模式' extra={judgeExtra()}>
+                            <Radio.Group
+                                buttonStyle='solid'
+                                defaultValue={"基础扫描"}
+                                onChange={(e) => {
+                                    setScanType(e.target.value)
                                 }}
+                                value={getScanType()}
+                                disabled={shield}
+                            >
+                                <Radio.Button value='基础扫描'>基础扫描</Radio.Button>
+                                <Radio.Button value='专项扫描'>专项扫描</Radio.Button>
+                            </Radio.Group>
+                        </Form.Item>
+
+                        {getScanType() === "专项扫描" && (
+                            <Form.Item label=' ' colon={false} style={{marginTop: "-16px"}}>
+                                <CheckboxGroup
+                                    disabled={shield}
+                                    options={plainOptions}
+                                    value={checkedList}
+                                    onChange={(list) => setCheckedList(list)}
+                                />
+                            </Form.Item>
+                        )}
+
+                        <div style={{display: "none"}}>
+                            <Form.Item name='TaskName' label='任务名称'>
+                                <Input
+                                    disabled={shield}
+                                    style={{width: 400}}
+                                    placeholder='请输入任务名称'
+                                    allowClear
+                                    onChange={() => {
+                                        isInputValue.current = true
+                                    }}
+                                />
+                            </Form.Item>
+                        </div>
+                        <Form.Item name='scan_deep' label='扫描速度' style={{position: "relative"}}>
+                            <Slider
+                                tipFormatter={null}
+                                value={getScanDeep()}
+                                onChange={(value) => setScanDeep(value)}
+                                style={{width: 400}}
+                                min={1}
+                                max={3}
+                                marks={marks}
+                                disabled={shield}
                             />
+                            <div style={{position: "absolute", top: 26, fontSize: 12, color: "gray"}}>
+                                扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择
+                            </div>
                         </Form.Item>
                     </div>
-
-                    <Form.Item name='scan_deep' label='扫描速度' style={{position: "relative"}}>
-                        <Slider
-                            tipFormatter={null}
-                            value={getScanDeep()}
-                            onChange={(value) => setScanDeep(value)}
-                            style={{width: 400}}
-                            min={1}
-                            max={3}
-                            marks={marks}
-                            disabled={shield}
-                        />
-                        <div style={{position: "absolute", top: 26, fontSize: 12, color: "gray"}}>
-                            扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择
-                        </div>
-                    </Form.Item>
-                </div>
-            </Form>
-        </div>
+                </Form>
+            </div>
+        </>
     )
 }
 
@@ -1135,10 +1207,10 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         }
     }, [taskToken])
     const AddAllPlugin = useMemoizedFn(() => {
-        if (!userInfo.isLogin) {
-            warn("我的插件需要先登录才能下载，请先登录")
-            return
-        }
+        // if (!userInfo.isLogin) {
+        //     warn("我的插件需要先登录才能下载，请先登录")
+        //     return
+        // }
         // 全部添加
         setAddLoading(true)
         setDownloadPlugin && setDownloadPlugin(true)
