@@ -25,14 +25,30 @@ Function ForceQuit
     Quit
 FunctionEnd
 
-!macro customWelcomePage
-    !insertmacro MUI_PAGE_WELCOME
-    !define MUI_PAGE_CUSTOMFUNCTION_SHOW DirectoryPageShow
-    !insertmacro MUI_PAGE_DIRECTORY
-    !insertmacro MUI_PAGE_INSTFILES
-    !define MUI_PAGE_CUSTOMFUNCTION_LEAVE ForceQuit
-    !insertmacro MUI_PAGE_FINISH
-!macroend
+
+!insertmacro MUI_PAGE_WELCOME
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW DirectoryPageShow
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE FinishLeave
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_SHOWREADME
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "创建桌面快捷方式"
+!define MUI_FINISHPAGE_LINK "Yakit官网"
+!define MUI_FINISHPAGE_LINK_LOCATION "https://yaklang.com"
+!insertmacro MUI_PAGE_FINISH
+
+Function FinishLeave 
+    ${NSD_GetState} $mui.FinishPage.Run $0
+    ${If} $0 <> 0 
+    Exec "$INSTDIR\Yakit.exe"
+    ${EndIf}
+    ${NSD_GetState} $mui.FinishPage.ShowReadme $0
+    ${If} $0 <> 0 
+    CreateShortCut "$DESKTOP\Yakit.lnk" "$INSTDIR\Yakit.exe"
+    ${EndIf}
+    Quit
+FunctionEnd
 
 !macro checkInstalled
     ; 判断是否已安装
@@ -62,6 +78,10 @@ FunctionEnd
 
 !macro customRemoveFiles
     ; 删除安装目录
+    MessageBox MB_YESNO "即将删除 $INSTDIR 文件夹，是否继续，选择否将取消卸载" IDYES continue IDNO cancelUninstall
+    cancelUninstall:
+        Quit
+    continue:
     RMDir /r "$INSTDIR"
     ; 如果保留了yakit-projects文件夹，将其从临时位置移回原始位置
     ${If} ${FileExists} `$TEMP\temp-yakit-projects\*.*`
@@ -94,9 +114,18 @@ FunctionEnd
 !macroend
 
 Section "Main" SectionMain
+    ; create new directory if $INSTDIR is not empty
+    Push $INSTDIR 
+    Call isEmptyDir
+    Pop $0
+    ${If} $0 == 0 ; $INSTDIR is not empty
+        StrCpy $INSTDIR "$INSTDIR\yakit"
+        CreateDirectory $INSTDIR
+    ${EndIf}
+
     ; Migrate yakit-projects folder
     ${If} $YAKIT_HOME != "" 
-    ${AndIf} $YAKIT_HOME != "$InstDir\yakit-projects"
+    ${AndIf} $YAKIT_HOME != "$INSTDIR\yakit-projects"
     ${AndIf} ${FileExists} "$YAKIT_HOME"
         ClearErrors
         CopyFiles /Silent $YAKIT_HOME "$INSTDIR\yakit-projects"
@@ -129,3 +158,28 @@ Section "Uninstall"
  continueUninstall:
 
 SectionEnd
+
+Function isEmptyDir
+  # Stack ->                    # Stack: <directory>
+  Exch $0                       # Stack: $0
+  Push $1                       # Stack: $1, $0
+  FindFirst $0 $1 "$0\*.*"
+  strcmp $1 "." 0 _notempty
+    FindNext $0 $1
+    strcmp $1 ".." 0 _notempty
+      ClearErrors
+      FindNext $0 $1
+      IfErrors 0 _notempty
+        FindClose $0
+        Pop $1                  # Stack: $0
+        StrCpy $0 1
+        Exch $0                 # Stack: 1 (true)
+        goto _end
+     _notempty:
+       FindClose $0
+       ClearErrors
+       Pop $1                   # Stack: $0
+       StrCpy $0 0
+       Exch $0                  # Stack: 0 (false)
+  _end:
+FunctionEnd

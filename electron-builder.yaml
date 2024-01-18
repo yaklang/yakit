@@ -85,7 +85,7 @@ win:
 
 nsis:
   oneClick: false 
-  perMachine: true 
+  perMachine: false
   deleteAppDataOnUninstall: true
   allowToChangeInstallationDirectory: true 
   installerIcon: app/assets/yakitlogo.ico 
@@ -94,6 +94,8 @@ nsis:
   include: build/yakit_build.nsh
   license: LICENSE.md
   warningsAsErrors: false
+  createDesktopShortcut: false
+  createStartMenuShortcut: true
 #publish:
 #  - provider: generic
 #    url: https://update.electron-builder.com
