@@ -463,6 +463,7 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
             type='white'
             width="60%"
             maskClosable={false}
+            destroyOnClose={true}
             title={`正在执行：${verbose}`}
             onCancel={onCancel}
             closable={true}

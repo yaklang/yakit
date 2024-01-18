@@ -44,6 +44,7 @@ const {TabPane} = PluginTabs
 
 export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => {
     const {
+        pageWrapId = "",
         info,
         defaultAllCheck,
         // onCheck,
@@ -371,6 +372,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     return (
         <>
             <PluginDetails<YakScript>
+                pageWrapId={pageWrapId}
                 title='本地插件'
                 filterNode={
                     <>

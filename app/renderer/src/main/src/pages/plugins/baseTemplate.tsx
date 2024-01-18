@@ -124,6 +124,7 @@ export const PluginsContainer: React.FC<PluginsContainerProps> = memo((props) =>
 /** @name 插件详情大框架组件(带左侧插件列表) */
 export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((props) => {
     const {
+        pageWrapId = "",
         title,
         search,
         setSearch,
@@ -159,7 +160,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
     }, [checked, selected])
 
     return (
-        <div className={styles["plugin-details-wrapper"]}>
+        <div id={pageWrapId} className={classNames(styles["plugin-details-wrapper"], {[styles["plugins-mask-wrap"]]: !!pageWrapId})}>
             <div className={classNames(styles["filter-wrapper"], {[styles["filter-hidden-wrapper"]]: hidden})}>
                 <div className={styles["filter-header"]}>
                     <div className={styles["header-search"]}>

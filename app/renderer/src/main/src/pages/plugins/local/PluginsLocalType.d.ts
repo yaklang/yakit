@@ -20,6 +20,7 @@ export interface LocalExtraOperateProps {
 }
 
 export interface PluginsLocalDetailProps {
+    pageWrapId?: string
     info: YakScript
     defaultAllCheck: boolean
     loading: boolean
@@ -95,4 +96,20 @@ export interface PluginExecutorProps {
 export interface LocalPluginExecuteProps{
     plugin:YakScript
     headExtraNode:ReactNode
+}
+
+export interface ExportParamsProps {
+    OutputDir: string
+    YakScriptIds: number[]
+    Keywords: string
+    Type: string
+    UserName: string
+    Tags: string
+}
+
+export interface ExportYakScriptLocalResponse {
+    OutputDir: string
+    Progress: number
+    Message: string
+    MessageType: string
 }
