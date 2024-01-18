@@ -116,7 +116,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             onDebug,
             pageId
         } = props
-        const [listTable, setListTable] = useState<FuzzerResponse[]>([...data])
+        const [listTable, setListTable] = useState<FuzzerResponse[]>([])
         const [loading, setLoading] = useState<boolean>(false)
         const [sorterTable, setSorterTable] = useState<SortProps>()
 
@@ -131,6 +131,34 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const bodyLengthRef = useRef<any>()
         const tableRef = useRef<any>(null)
+
+        const [scrollToIndex, setScrollToIndex] = useState<number>()
+
+        useThrottleEffect(
+            () => {
+                setListTable([...data]);
+                const dataLength = data.length
+                if(dataLength>0){scrollUpdate(dataLength)}
+            },
+            [data],
+            {
+              wait: 500,
+            },
+          );
+
+          const scrollUpdate = useMemoizedFn((dataLength) => {
+            const scrollTop = tableRef.current?.containerRef?.scrollTop
+            const clientHeight = tableRef.current?.containerRef?.clientHeight
+            const scrollHeight = tableRef.current?.containerRef?.scrollHeight
+            let scrollBottom: number|undefined = undefined
+            if (typeof scrollTop === "number" && typeof clientHeight === "number" && typeof scrollHeight === "number") {
+                scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
+                const isScroll:boolean = scrollHeight>clientHeight
+                if(scrollBottom===0&&isScroll){
+                    setScrollToIndex(dataLength)
+                }
+            }
+          })
 
         useImperativeHandle(
             ref,
@@ -678,6 +706,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 onViewExecResults(currentSelectItem.ExtractedResults)
             }
         })
+        
         return (
             <div className={styles['http-fuzzer-page-table']} style={{overflowY: "hidden", height: "100%"}}>
                 <YakitResizeBox
@@ -704,6 +733,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             currentSelectItem={currentSelectItem}
                             onSetCurrentRow={onSetCurrentRow}
                             useUpAndDown={true}
+                            scrollToIndex={scrollToIndex}
                         />
                     }
                     secondNode={
