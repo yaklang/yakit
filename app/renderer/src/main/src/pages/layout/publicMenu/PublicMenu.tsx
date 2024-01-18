@@ -432,11 +432,13 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                     return (
                         <YakitPopover
                             key={`${item.label}-${index}`}
+                            trigger={"click"}
                             overlayStyle={{paddingTop: 2}}
                             overlayClassName={styles["child-menu-popover"]}
                             placement={index === 0 ? "bottomLeft" : "bottom"}
                             content={
                                 <YakitMenu
+                                    triggerSubMenuAction="click"
                                     selectable={false}
                                     selectedKeys={[]}
                                     data={data}

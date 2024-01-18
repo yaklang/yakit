@@ -709,6 +709,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 placement={system === "Darwin" ? "bottomRight" : "bottomLeft"}
                 content={content}
                 visible={show}
+                trigger='click'
                 onVisibleChange={(visible) => setShow(visible)}
             >
                 <div className={classNames(styles["global-state-wrapper"], ShowColorClass[state])}>
