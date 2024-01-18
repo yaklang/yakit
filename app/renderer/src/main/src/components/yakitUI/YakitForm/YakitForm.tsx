@@ -83,7 +83,8 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         renderType = "input",
         textareaProps = {},
         disabled,
-        isShowPathNumber = true
+        isShowPathNumber = true,
+        multiple
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>("")
@@ -242,10 +243,14 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
      */
     const onUploadFolder = useMemoizedFn(() => {
         if (disabled) return
+        const properties = ["openDirectory"]
+        if (multiple !== false) {
+            properties.push("multiSelections")
+        }
         ipcRenderer
             .invoke("openDialog", {
                 title: "请选择文件夹",
-                properties: ["openDirectory", "multiSelections"]
+                properties
             })
             .then((data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
@@ -259,10 +264,14 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     /**选择文件 */
     const onUploadFile = useMemoizedFn(() => {
         if (disabled) return
+        const properties = ["openFile"]
+        if (multiple !== false) {
+            properties.push("multiSelections")
+        }
         ipcRenderer
             .invoke("openDialog", {
                 title: "请选择文件",
-                properties: ["openFile", "multiSelections"]
+                properties
             })
             .then((data: {filePaths: string[]}) => {
                 const filesLength = data.filePaths.length
@@ -285,6 +294,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         let paths: string[] = []
         let isNoFit: string[] = []
         const filesLength = files.length
+        if (multiple === false && filesLength > 1) {
+            yakitNotify("error", "不支持多选")
+            return
+        }
         for (let index = 0; index < filesLength; index++) {
             const element = files[index]
             const path = element.path || ""
@@ -306,6 +319,10 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         let paths: string[] = []
         let isNoFit: string[] = []
         const filesLength = files.length
+        if (multiple === false && filesLength > 1) {
+            yakitNotify("error", "不支持多选")
+            return
+        }
         for (let index = 0; index < filesLength; index++) {
             const element = files[index]
             const path = element.path || ""
@@ -324,7 +341,12 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     const afterAllDrop = useMemoizedFn((e) => {
         const {files = []} = e.dataTransfer
         let paths: string[] = []
-        for (let index = 0; index < files.length; index++) {
+        const filesLength = files.length
+        if (multiple === false && filesLength > 1) {
+            yakitNotify("error", "不支持多选")
+            return
+        }
+        for (let index = 0; index < filesLength; index++) {
             const element = files[index]
             const path = element.path || ""
             paths.push(path)
