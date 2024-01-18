@@ -1,0 +1,61 @@
+.expand-and-retract-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 8px;
+    border-bottom: 1px solid #eaecf3;
+    position: relative;
+    transition: background-color 0.3s ease;
+    &:hover {
+        cursor: pointer;
+        background-color: var(--yakit-card-background-color);
+        border-bottom-color: var(--yakit-primary-3);
+        .expand-and-retract-header-icon-body {
+            width: 76px;
+            border: 1px solid var(--yakit-primary-3);
+            color: var(--yakit-primary-5);
+            .expand-and-retract-header-icon-text {
+                width: 48px;
+                opacity: 1;
+            }
+        }
+    }
+    &:focus,
+    &:active {
+        background-color: var(--yakit-background-color);
+    }
+    .expand-and-retract-header-icon-body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        right: 50%;
+        left: 50%;
+        top: 75%;
+        background-color: #fff;
+        padding: 4px;
+        border: 1px solid var(--yakit-border-color);
+        flex-shrink: 0;
+        color: var(--yakit-body-text-color);
+        width: 24px;
+        height: 24px;
+        border-radius: 12px;
+        transition: width 0.2s ease;
+
+        .expand-and-retract-header-icon-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: keep-all;
+            width: 0;
+            opacity: 0;
+            transition:
+                width 0.3s ease,
+                opacity 0.2s ease;
+        }
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+}
