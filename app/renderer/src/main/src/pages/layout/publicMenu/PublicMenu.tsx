@@ -358,6 +358,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             closable: false,
             title: "插件加载失败",
             showConfirmLoading: true,
+            type: "white",
             content: (
                 <div className={styles["modal-content"]}>
                     {showName}菜单丢失，需点击重新下载，如仍无法下载，请前往插件商店查找
