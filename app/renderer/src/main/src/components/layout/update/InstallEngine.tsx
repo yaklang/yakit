@@ -373,9 +373,9 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 </YakitButton>
                                                 {haveBuildInEngine &&
                                                 <Popconfirm title={"网络安装需要公网环境，请知晓，请优先使用内置引擎（初始化引擎）"} onConfirm={installEngine}>
-                                                    <Button type={"link"} size='small' style={{fontSize: 12}} disabled={!agrCheck}>
+                                                    <YakitButton type={"text"} size='small' style={{fontSize: 12}} disabled={!agrCheck}>
                                                         联网安装
-                                                    </Button>
+                                                    </YakitButton>
                                                 </Popconfirm>}
                                             </div>
                                             <div className={styles["btn-group-wrapper"]}>
