@@ -154,7 +154,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             if (typeof scrollTop === "number" && typeof clientHeight === "number" && typeof scrollHeight === "number") {
                 scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
                 const isScroll:boolean = scrollHeight>clientHeight
-                if(scrollBottom===0&&isScroll){
+                if(scrollBottom <= 2 && isScroll){
                     setScrollToIndex(dataLength)
                 }
             }
