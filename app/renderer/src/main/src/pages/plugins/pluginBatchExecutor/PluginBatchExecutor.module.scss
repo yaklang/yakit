@@ -74,8 +74,15 @@
     }
 }
 .plugin-batch-execute-form-wrapper {
-    @extend %display-column-center;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: all 0.3s ease;
     padding-top: 16px;
+    :global {
+        .ant-form {
+            overflow: hidden;
+        }
+    }
     .plugin-execute-form-item {
         width: 100%;
     }
@@ -87,7 +94,7 @@
     }
 }
 .plugin-batch-execute-form-wrapper-hidden {
-    display: none;
+    grid-template-rows: 1fr;
 }
 
 .plugin-batch-execute-extra-params-drawer {
@@ -103,8 +110,7 @@
 
 .plugin-batch-executor-body {
     padding: 0 12px 16px;
-    display: flex;
-    flex-direction: column;
+    overflow: auto !important;
 }
 
 .to-end {

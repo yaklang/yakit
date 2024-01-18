@@ -385,22 +385,11 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                                     <YakitButton danger onClick={onStopExecute}>
                                         停止
                                     </YakitButton>
+                                    <div className={styles["divider-style"]}></div>
                                 </>
                             ) : (
                                 <></>
                             )}
-                            {isExpend ? (
-                                <YakitButton type='text2' onClick={onExpand}>
-                                    收起
-                                    <OutlineChevrondownIcon />
-                                </YakitButton>
-                            ) : (
-                                <YakitButton type='text2' onClick={onExpand}>
-                                    展开
-                                    <OutlineChevrondownIcon />
-                                </YakitButton>
-                            )}
-                            <div className={styles["divider-style"]}></div>
                             <YakitButton
                                 type='text2'
                                 icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
@@ -413,43 +402,51 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 setHidden={setHidden}
                 bodyClassName={styles["plugin-batch-executor-body"]}
             >
-                <Form
-                    form={form}
-                    onFinish={onStartExecute}
+                <div
                     className={classNames(styles["plugin-batch-execute-form-wrapper"], {
                         [styles["plugin-batch-execute-form-wrapper-hidden"]]: !isExpend
                     })}
-                    labelCol={{span: 6}}
-                    wrapperCol={{span: 12}} //这样设置是为了让输入框居中
-                    validateMessages={{
-                        /* eslint-disable no-template-curly-in-string */
-                        required: "${label} 是必填字段"
-                    }}
-                    labelWrap={true}
                 >
-                    <PluginFixFormParams form={form} disabled={isExecuting} />
-                    <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
-                        <div className={styles["plugin-execute-form-operate"]}>
-                            {isExecuting ? (
-                                <YakitButton danger onClick={onStopExecute} size='large'>
-                                    停止
-                                </YakitButton>
-                            ) : (
+                    <Form
+                        form={form}
+                        onFinish={onStartExecute}
+                        labelCol={{span: 6}}
+                        wrapperCol={{span: 12}} //这样设置是为了让输入框居中
+                        validateMessages={{
+                            /* eslint-disable no-template-curly-in-string */
+                            required: "${label} 是必填字段"
+                        }}
+                        labelWrap={true}
+                    >
+                        <PluginFixFormParams form={form} disabled={isExecuting} />
+                        <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                            <div className={styles["plugin-execute-form-operate"]}>
+                                {isExecuting ? (
+                                    <YakitButton danger onClick={onStopExecute} size='large'>
+                                        停止
+                                    </YakitButton>
+                                ) : (
+                                    <YakitButton
+                                        className={styles["plugin-execute-form-operate-start"]}
+                                        htmlType='submit'
+                                        size='large'
+                                        disabled={selectNum === 0}
+                                    >
+                                        开始执行
+                                    </YakitButton>
+                                )}
                                 <YakitButton
-                                    className={styles["plugin-execute-form-operate-start"]}
-                                    htmlType='submit'
+                                    type='text'
+                                    onClick={openExtraPropsDrawer}
+                                    disabled={isExecuting}
                                     size='large'
-                                    disabled={selectNum === 0}
                                 >
-                                    开始执行
+                                    额外参数
                                 </YakitButton>
-                            )}
-                            <YakitButton type='text' onClick={openExtraPropsDrawer} disabled={isExecuting} size='large'>
-                                额外参数
-                            </YakitButton>
-                        </div>
-                    </Form.Item>
-                </Form>
+                            </div>
+                        </Form.Item>
+                    </Form>
+                </div>
                 {isShowResult && (
                     <PluginExecuteResult
                         streamInfo={streamInfo}
