@@ -4,7 +4,6 @@ module.exports = {
             const stream = streamMap.get(token)
             stream && stream.cancel()
             streamMap.delete(token)
-            console.log('流已经被取消');
         }
     },
     registerHandler: (windows, stream, streamMap, token) => {
@@ -31,7 +30,6 @@ module.exports = {
             if (!windows) {
                 return
             }
-            console.log('流结束')
             windows.webContents.send(`${token}-end`)
         })
     }

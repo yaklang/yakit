@@ -1090,7 +1090,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }, 200)
 
         return () => {
-            console.log('前端主动发送取消流')
             ipcRenderer.invoke("cancel-HTTPFuzzer", token)
 
             clearInterval(updateDataId)
