@@ -863,7 +863,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
     const onReady = useMemoizedFn(() => {
         if (!getEngineLink()) {
-            visitorsStatisticsFun()
+            // visitorsStatisticsFun()
             isEnpriTraceAgent()
                 ? setEngineLink(true)
                 : (async () => {

@@ -1,0 +1,345 @@
+.data-statistics {
+    padding: 16px;
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    height: 100%;
+    min-height: 700px;
+    .left-box {
+        flex: 1;
+        border-radius: 8px;
+        border: 1px solid #eaecf3;
+        padding: 16px 20px;
+        display: flex;
+        gap: 20px;
+        flex-direction: column;
+        .user-box {
+            .user-sum {
+                margin-bottom: 20px;
+                padding-top: 8px;
+                display: flex;
+                flex-direction: row;
+                gap: 40px;
+                align-items: flex-end;
+                .all-user {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 12px;
+                    align-items: center;
+                    .user-icon {
+                        height: 76px;
+                        svg {
+                            height: 76px;
+                            width: 72px;
+                        }
+                    }
+                    .count-box {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                        .count {
+                            font-size: 32px;
+                            font-weight: 600;
+                            line-height: 40px;
+                        }
+                        .sub-title {
+                            font-size: 16px;
+                            font-weight: 600;
+                            line-height: 24px;
+                        }
+                    }
+                }
+                .login-user {
+                    padding-bottom: 8px;
+                    .count {
+                        font-size: 16px;
+                        font-weight: 600;
+                        line-height: 24px;
+                    }
+                    .sub-title {
+                        color: #85899e;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                }
+            }
+            .card-box {
+                display: flex;
+                flex-direction: row;
+                gap: 12px;
+                .user-card {
+                    display: flex;
+                    padding: 12px 16px;
+                    flex-direction: column;
+                    flex: 1;
+                    position: relative;
+                    overflow: hidden;
+                    .line {
+                        position: absolute;
+                        width: 2px;
+                        left: 0px;
+                        top: 0px;
+                        height: 100%;
+                    }
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        .count {
+                            font-size: 16px;
+                            font-weight: 600;
+                            line-height: 24px;
+                        }
+                    }
+                    @media screen and (max-width: 1150px) {
+                        .header {
+                            flex-direction: column;
+                            align-items: flex-start;
+                        }
+                    }
+                    .title {
+                        color: #85899e;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                }
+                .day-card {
+                    border-radius: 4px;
+                    background: rgba(136, 99, 247, 0.1);
+                    .line {
+                        background: rgba(136, 99, 247, 0.2);
+                    }
+                }
+                .week-card {
+                    border-radius: 4px;
+                    background: rgba(74, 148, 248, 0.1);
+                    .line {
+                        background: rgba(74, 148, 248, 0.2);
+                    }
+                }
+                .month-card {
+                    border-radius: 4px;
+                    background: rgba(53, 216, 238, 0.1);
+                    .line {
+                        background: rgba(53, 216, 238, 0.2);
+                    }
+                }
+            }
+        }
+
+        .v-line {
+            height: 1px;
+            width: 100%;
+            background-color: #eaecf3;
+        }
+        .pie-charts-box {
+            gap: 8px;
+            height: 100%;
+            .header {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding-bottom: 8px;
+                .title {
+                    font-size: 16px;
+                    font-weight: 600;
+                    line-height: 24px;
+                }
+                .extra {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 8px;
+                    align-items: center;
+                    .icon {
+                        color: #85899e;
+                        height: 18px;
+                        svg {
+                            height: 18px;
+                            width: 18px;
+                        }
+                    }
+                    .date {
+                        color: #85899e;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                }
+            }
+            .pie-charts {
+                margin-top: 8px;
+                height: calc(100% - 40px);
+                .echarts-box {
+                    height: 100%;
+                    width: 100%;
+                    opacity: 0;
+                }
+                .echarts-box-show {
+                    opacity: 1;
+                }
+            }
+        }
+    }
+    .right-box {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow: hidden;
+        .user-active {
+            flex: 3;
+            border-radius: 8px;
+            border: 1px solid #eaecf3;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            .header {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                gap: 8px;
+                .title {
+                    font-size: 16px;
+                    font-weight: 600;
+                    line-height: 24px;
+                    white-space: nowrap;
+                }
+                .extra {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 8px;
+                    align-items: center;
+                }
+            }
+            .card-box {
+                display: flex;
+                flex-direction: row;
+                gap: 12px;
+                .card-item {
+                    flex: 1;
+                    display: flex;
+                    padding: 12px 16px;
+                    flex-direction: column;
+                    gap: 4px;
+                    border-radius: 4px;
+                    background: #f8f8f8;
+                    .show {
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;
+                        align-items: center;
+                        .count {
+                            font-size: 16px;
+                            font-weight: 600;
+                            line-height: 24px;
+                        }
+                    }
+                    .title {
+                        color: #85899e;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                }
+            }
+            .active-line-charts {
+                height: calc(100% - 130px);
+                .echarts-box {
+                    height: 100%;
+                    width: 100%;
+                    opacity: 0;
+                }
+                .echarts-box-show {
+                    opacity: 1;
+                }
+            }
+        }
+        .user-rise {
+            flex: 2;
+            border-radius: 8px;
+            border: 1px solid #eaecf3;
+            padding: 16px 20px;
+            .header {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+                .title {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 8px;
+                    .text {
+                        font-size: 16px;
+                        font-weight: 600;
+                        line-height: 24px;
+                        flex: 1;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
+                    .radio-btn {
+                        margin-right: 8px;
+                    }
+                }
+                .extra {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 8px;
+                    align-items: center;
+                }
+            }
+            .user-rise-charts {
+                height: calc(100% - 38px);
+                .echarts-box {
+                    height: 100%;
+                    width: 100%;
+                    opacity: 0;
+                }
+                .echarts-box-show {
+                    opacity: 1;
+                }
+            }
+        }
+    }
+}
+.ups-or-downs {
+    display: flex;
+    flex-direction: row;
+    height: 16px;
+    gap: 4px;
+    align-items: center;
+    .content {
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+    .icon {
+        svg {
+            height: 12px;
+            width: 12px;
+        }
+    }
+}
+.type-up {
+    .icon,
+    .content {
+        color: #f4736b;
+    }
+}
+.type-down {
+    .icon,
+    .content {
+        color: #56c991;
+    }
+}
+.type-keep {
+    .icon,
+    .content {
+        color: #85899e;
+    }
+}

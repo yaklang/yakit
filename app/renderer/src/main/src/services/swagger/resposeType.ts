@@ -204,6 +204,129 @@ export declare namespace API {
   export interface TouristRequest {
     macCode: string;
   }
+  export interface TouristIncrResponse {
+    data: TouristIncrDetail[];
+  }
+  export interface TouristIncrDetail {
+    /**
+     * 图表纵坐标
+     */
+    count: number;
+    /**
+     * 图表横坐标
+     */
+    searchTime: string;
+  }
+  export interface TouristCityResponse {
+    /**
+     * 总数
+     */
+    total: number;
+    /**
+     * 日期
+     */
+    date: number;
+    data: TouristCityCount[];
+  }
+  export interface TouristCityCount {
+    city: string;
+    count: number;
+  }
+  export interface TouristAndUserResponse {
+    /**
+     * 总游客数
+     */
+    touristTotal: number;
+    /**
+     * 总登录用户数
+     */
+    loginTotal: number;
+    /**
+     * 日增量
+     */
+    dayNew: number;
+    /**
+     * 日增率
+     */
+    dayGain: string;
+    /**
+     * up 增 down 减
+     */
+    dayGainUpOrDown?: string;
+    /**
+     * 日活
+     */
+    dayActive: number;
+    /**
+     * 日活增率
+     */
+    dayActiveGain: string;
+    /**
+     * up 增 down 减
+     */
+    dayActiveGainUpOrDown?: string;
+    /**
+     * 周增量
+     */
+    weekNew: number;
+    /**
+     * 周增率
+     */
+    weekGain: string;
+    /**
+     * up 增 down 减
+     */
+    weekGainUpOrDown?: string;
+    /**
+     * 周活
+     */
+    weekActive: number;
+    /**
+     * 周活增率
+     */
+    weekActiveGain: string;
+    /**
+     * up 增 down 减
+     */
+    weekActiveGainUpOrDown?: string;
+    /**
+     * 月增量
+     */
+    monthNew: number;
+    /**
+     * 月增率
+     */
+    monthGain: string;
+    /**
+     * up 增 down 减
+     */
+    monthGainUpOrDown?: string;
+    /**
+     * 月活
+     */
+    monthActive: number;
+    /**
+     * 月活增率
+     */
+    monthActiveGain: string;
+    /**
+     * up 增 down 减
+     */
+    monthActiveGainUpOrDown?: string;
+  }
+  export interface TouristActiveResponse {
+    data: TouristActiveDetail[];
+  }
+  export interface TouristActiveDetail {
+    /**
+     * 图表纵坐标
+     */
+    count: number;
+    /**
+     * 图表横坐标
+     */
+    searchTime: string;
+  }
   export interface ShareResponse {
     share_id: string;
     extract_code?: string;

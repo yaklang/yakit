@@ -301,6 +301,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             setUserMenu([
                 // {key: "account-bind", title: "帐号绑定(监修)", disabled: true},
                 {key: "plugin-aduit", title: "插件管理"},
+                {key: "data-statistics", title: "数据统计"},
                 {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
             ])
         }
@@ -310,7 +311,15 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 {key: "trust-list", title: "用户管理"},
                 {key: "license-admin", title: "License管理"},
                 {key: "plugin-aduit", title: "插件管理"},
+                {key: "data-statistics", title: "数据统计"},
                 {key: "sign-out", title: "退出登录", render: () => LoginOutBox()}
+            ])
+        }
+        // 非企业操作员
+        else if (userInfo.role === "operate" && userInfo.platform !== "company") {
+            setUserMenu([
+                {key: "data-statistics", title: "数据统计"},
+                {key: "sign-out", title: "退出登录"}
             ])
         }
         // 非企业license管理员
@@ -386,7 +395,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             }
             setUserMenu(cacheMenu)
         } else {
-            setUserMenu([{key: "sign-out", title: "退出登录"}])
+            setUserMenu([
+                {key: "sign-out", title: "退出登录"}
+            ])
         }
     }, [userInfo.role, userInfo.checkPlugin, userInfo.companyHeadImg, dynamicConnect])
 
@@ -625,6 +636,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                             }
                                             if (key === "control-admin") {
                                                 onOpenPage({route: YakitRoute.ControlAdminPage})
+                                            }
+                                            if (key === "data-statistics") {
+                                                onOpenPage({route: YakitRoute.Data_Statistics})
                                             }
                                             if (key === "dynamic-control") {
                                                 setDynamicControlModal(true)
@@ -1595,6 +1609,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     /** 获取最新Yakit版本号 */
     const fetchYakitLastVersion = useMemoizedFn(() => {
+        /** 社区版埋点 */
+        visitorsStatisticsFun()
         /** 社区版获取yakit最新版本号 */
         isCommunityEdition() &&
             ipcRenderer
@@ -1741,7 +1757,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     }, [isEngineLink])
 
     const onDownload = useMemoizedFn((type: "yakit" | "yaklang") => {
-        visitorsStatisticsFun()
         ipcRenderer.invoke("receive-download-yaklang-or-yakit", type)
     })
 
