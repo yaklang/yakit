@@ -40,7 +40,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {PresetKeywordProps, presetList} from "./presetKeywords"
-import {Drawer, Input, Tooltip} from "antd"
+import {Divider, Drawer, Input, Tooltip} from "antd"
 import {
     CacheChatCSProps,
     ChatCSAnswerProps,
@@ -64,14 +64,15 @@ import {useStore} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {OutlineInformationcircleIcon, OutlinePaperairplaneIcon, OutlineXIcon} from "@/assets/icon/outline"
-import {SolidThumbupIcon} from "@/assets/icon/solid"
+import {SolidPlayIcon, SolidThumbupIcon} from "@/assets/icon/solid"
 
 import moment from "moment"
 import classNames from "classnames"
 import styles from "./chatCS.module.scss"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
-import { SolidYakitPluginGrayIcon, SolidYakitPluginIcon } from "@/assets/icon/colors"
+import {SolidYakitPluginGrayIcon, SolidYakitPluginIcon} from "@/assets/icon/colors"
+import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 
 const TypeToContent: Record<string, string> = {
     cs_info: "安全知识",
@@ -273,9 +274,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     })
 
     /** Prompt提问 */
-    const onPromptSubmit = useMemoizedFn((v:{content:string,baseType:string}) => {
+    const onPromptSubmit = useMemoizedFn((v: {content: string; baseType: string}) => {
         if (loading) return
-        const {content,baseType} = v
+        const {content, baseType} = v
         if (!content || content.trim() === "") return
 
         if (!baseType && !expInfo) {
@@ -288,7 +289,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             info: {
                 content,
                 baseType,
-                expInfo,
+                expInfo
             }
         }
         onSubmit(data)
@@ -340,22 +341,24 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     })
     /** 解析后端流内的内容数据 */
     const analysisFlowData: (flow: string) => ChatCSAnswerProps | undefined = useMemoizedFn((flow) => {
-            const objects: ChatCSAnswerProps[] = []
-            let answer: ChatCSAnswerProps | undefined = undefined
-            flow.split("data:").filter((item)=>item.length!==0).forEach((itemIn)=>{
+        const objects: ChatCSAnswerProps[] = []
+        let answer: ChatCSAnswerProps | undefined = undefined
+        flow.split("data:")
+            .filter((item) => item.length !== 0)
+            .forEach((itemIn) => {
                 try {
-                  objects.push(JSON.parse(itemIn))  
+                    objects.push(JSON.parse(itemIn))
                 } catch (error) {}
             })
-            let resultAll: string = ""
-            objects.map((item, index) => {
-                const {id = "", role = "", result = ""} = item
-                resultAll += result
-                if (objects.length === index + 1) {
-                    answer = {id,role,result:resultAll}
-                }
-            })
-            return answer
+        let resultAll: string = ""
+        objects.map((item, index) => {
+            const {id = "", role = "", result = ""} = item
+            resultAll += result
+            if (objects.length === index + 1) {
+                answer = {id, role, result: resultAll}
+            }
+        })
+        return answer
         // if (!flow) return undefined
         // const lastIndex = flow.lastIndexOf("data:")
         // if (lastIndex === -1) return undefined
@@ -411,9 +414,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     onDownloadProgress: ({event}) => {
                         if (!event.target) return
                         const {responseText} = event.target
-                        
+
                         let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
-                        
+
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
                         if (answer && answer.result.length !== 0) {
                             if (cs.content === answer.result) return
@@ -501,7 +504,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             token: randomString(10),
             isMe: false,
             time: formatDate(+new Date()),
-            info: contents
+            info: contents,
+            renderType: "plugin-list"
         }
         setLoadingToken(answers.token)
         lists.history.push(answers)
@@ -761,6 +765,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             setWidth("95vw")
         }
     }, [isShowPrompt])
+    console.log("currentChat---", currentChat)
 
     return (
         <Resizable
@@ -901,7 +906,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 ) : (
                                     <div ref={contentRef} className={styles["body-content"]}>
                                         {currentChat.map((item) => {
-                                            const {token, isMe, time, info} = item
+                                            const {token, isMe, time, info, renderType} = item
 
                                             if (isMe) {
                                                 return (
@@ -925,6 +930,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                         onStop={onStop}
                                                         onLike={(isLike) => onLikes(item, isLike)}
                                                         onDel={() => onDelContent(item)}
+                                                        renderType={renderType}
                                                     />
                                                 )
                                             }
@@ -1200,6 +1206,176 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
         </div>
     )
 })
+
+interface PluginRunStatusProps {
+    /*
+        loading: 加载中 显示进度
+        succee： 执行完成
+        fail： 执行失败
+        result： 显示结果
+    */
+    status: "loading" | "succee" | "fail" | "result"
+}
+const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
+    const {status} = props
+    return (
+        <div className={styles["plugin-run-status"]}>
+            {status === "loading" && <div className={styles["plugin-run"]}></div>}
+        </div>
+    )
+})
+interface PluginListContentProps {
+    setPluginRun: (v: boolean) => void
+}
+
+const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
+    const {setPluginRun} = props
+    // 选中项
+    const [checkedList, setCheckedList] = useState<string[]>([])
+    const defaultArr = [
+        {
+            script_name: "ActiveMQ 默认密码检查",
+            Fields: [
+                {
+                    Field: "target",
+                    DefaultValue: "",
+                    typeVerbose: "string",
+                    FieldVerbose: "扫描的目标",
+                    Required: true,
+                    Group: "",
+                    Help: ""
+                },
+                {
+                    Field: "ports",
+                    DefaultValue: "8081",
+                    typeVerbose: "string",
+                    FieldVerbose: "端口",
+                    Required: false,
+                    Group: "",
+                    Help: ""
+                }
+            ]
+        },
+        {
+            script_name: "HttP Web 目录爆破：敏感中间件",
+            Fields: [
+                {
+                    Field: "target",
+                    DefaultValue: "",
+                    typeVerbose: "string",
+                    FieldVerbose: "扫描的目标",
+                    Required: true,
+                    Group: "",
+                    Help: ""
+                },
+                {
+                    Field: "ports",
+                    DefaultValue: "80",
+                    typeVerbose: "string",
+                    FieldVerbose: "端口",
+                    Required: false,
+                    Group: "",
+                    Help: ""
+                }
+            ]
+        },
+        {
+            script_name: "/crossdomain.xml allow-access-from 检查",
+            Fields: [
+                {
+                    Field: "ports",
+                    DefaultValue: "80",
+                    typeVerbose: "string",
+                    FieldVerbose: "端口",
+                    Required: false,
+                    Group: "",
+                    Help: ""
+                },
+                {
+                    Field: "target",
+                    DefaultValue: "",
+                    typeVerbose: "string",
+                    FieldVerbose: "扫描的目标",
+                    Required: true,
+                    Group: "",
+                    Help: ""
+                }
+            ]
+        }
+    ]
+
+    return (
+        <div className={styles["plugin-list-content"]}>
+            <div className={styles["list"]}>
+                {defaultArr.map((item, index) => {
+                    const {script_name} = item
+                    return (
+                        <div className={classNames(styles["list-item"])} key={script_name}>
+                            <YakitCheckbox
+                                checked={checkedList.includes(script_name)}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        const list = Array.from(new Set([...checkedList, script_name]))
+                                        setCheckedList(list)
+                                    } else {
+                                        const list = checkedList.filter((item) => item !== script_name)
+                                        setCheckedList(list)
+                                    }
+                                }}
+                            />
+                            <div className={classNames(styles["content"], "yakit-content-single-ellipsis")}>
+                                {script_name}
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+            <div className={styles["footer"]}>
+                <div className={styles["count-box"]}>
+                    <div className={styles["check-box"]}>
+                        <YakitCheckbox
+                            checked={checkedList.length === defaultArr.length}
+                            indeterminate={checkedList.length > 0 && checkedList.length !== defaultArr.length}
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    let list = defaultArr.map((item) => item.script_name)
+                                    setCheckedList(list)
+                                } else {
+                                    setCheckedList([])
+                                }
+                            }}
+                        />
+                        <div className={styles["text"]}>全选</div>
+                    </div>
+                    <div className={styles["show-box"]}>
+                        <div className={styles["show"]}>
+                            <div className={styles["title"]}>Total</div>
+                            <div className={styles["count"]}>{defaultArr.length}</div>
+                        </div>
+                        <div className={styles["line"]} />
+                        <div className={styles["show"]}>
+                            <div className={styles["title"]}>Selected</div>
+                            <div className={styles["count"]}>{checkedList.length}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles["extra"]}>
+                    <YakitButton
+                        disabled={checkedList.length === 0}
+                        icon={<SolidPlayIcon />}
+                        onClick={() => {
+                            setPluginRun(true)
+                        }}
+                    >
+                        开始执行
+                    </YakitButton>
+                </div>
+            </div>
+        </div>
+    )
+})
+
 interface ChatCSContentProps {
     /** 唯一标识符 */
     token: string
@@ -1213,9 +1389,12 @@ interface ChatCSContentProps {
     onStop: () => any
     onLike: (isLike: boolean) => any
     onDel: () => any
+    renderType?: "plugin-list"
 }
 const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
-    const {token, loadingToken, loading, resTime, time, info, onStop, onLike, onDel} = props
+    const {token, loadingToken, loading, resTime, time, info, onStop, onLike, onDel, renderType} = props
+    // 插件是否执行中
+    const [pluginRun, setPluginRun] = useState<boolean>(false)
 
     const copyContent = useMemo(() => {
         let content: string = ""
@@ -1229,107 +1408,142 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
         return token === loadingToken && loading
     }, [token, loadingToken, loading])
 
+    console.log("renderType--", renderType)
+
     return (
         <div className={styles["content-opt-wrapper"]}>
-            <div className={styles["opt-header"]}>
-                <div className={styles["header-left"]}>
-                    <YakChatLogIcon />
-                    {showLoading ? resTime : time}
-                </div>
-                <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
-                    {showLoading ? (
-                        <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
-                            停止
-                        </YakitButton>
-                    ) : (
-                        <>
-                            {info.likeType !== "bad" && (
-                                <div
-                                    className={styles["right-btn"]}
-                                    onClick={() => {
-                                        if (info.likeType) return
-                                        onLike(true)
-                                    }}
-                                >
-                                    {info.likeType === "good" ? (
-                                        <SolidThumbupIcon className={styles["actived-icon"]} />
-                                    ) : (
-                                        <ThumbUpIcon />
-                                    )}
-                                </div>
-                            )}
-                            {info.likeType !== "good" && (
-                                <div
-                                    className={styles["right-btn"]}
-                                    onClick={() => {
-                                        if (info.likeType) return
-                                        onLike(false)
-                                    }}
-                                >
-                                    {info.likeType === "bad" ? (
-                                        <SolidThumbDownIcon className={styles["actived-icon"]} />
-                                    ) : (
-                                        <ThumbDownIcon />
-                                    )}
-                                </div>
-                            )}
-
-                            <div className={styles["right-btn"]}>
-                                <CopyComponents
-                                    className={classNames(styles["copy-icon-style"])}
-                                    copyText={copyContent}
-                                    iconColor={"#85899e"}
-                                />
-                            </div>
-
-                            <div className={styles["right-btn"]} onClick={onDel}>
-                                <TrashIcon />
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
-            <div className={styles["opt-content"]}>
-                {token === loadingToken ? (
-                    info.content.length !== 0 && (
-                        <div className={styles["content-style"]}>
-                            {info.content.map((item) => {
-                                return (
-                                    <React.Fragment key={item.type}>
-                                        <div className={styles["content-type-title"]}>{`# ${
-                                            TypeToContent[item.type]
-                                        }`}</div>
-                                        <ChatMarkdown content={item.content} />
-                                    </React.Fragment>
-                                )
-                            })}
+            {pluginRun ? (
+                <>
+                    <div className={styles["opt-header"]}>
+                        <div className={styles["header-left"]}>
+                            <YakChatLogIcon />
+                            {time}
                         </div>
-                    )
-                ) : (
-                    <div className={styles["content-style"]}>
-                        {info.content.length === 0
-                            ? "请求出现错误，请稍候再试"
-                            : info.content.map((item) => {
-                                  return (
-                                      <React.Fragment key={item.type}>
-                                          <div className={styles["content-type-title"]}>{`# ${
-                                              TypeToContent[item.type]
-                                          }`}</div>
-                                          <ChatMarkdown content={item.content} />
-                                      </React.Fragment>
-                                  )
-                              })}
+                        <div style={{display: "flex"}} className={styles["header-right"]}>
+                            <YakitButton
+                                type='primary'
+                                colors='danger'
+                                icon={<StopIcon />}
+                                onClick={() => {
+                                    setPluginRun(false)
+                                }}
+                            >
+                                停止
+                            </YakitButton>
+                        </div>
                     </div>
-                )}
+                    <div className={styles["opt-content"]}>
+                        <PluginRunStatus status='loading' />
+                    </div>
+                </>
+            ) : (
+                <>
+                    <div className={styles["opt-header"]}>
+                        <div className={styles["header-left"]}>
+                            <YakChatLogIcon />
+                            {showLoading ? resTime : time}
+                        </div>
+                        <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
+                            {showLoading ? (
+                                <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
+                                    停止
+                                </YakitButton>
+                            ) : (
+                                <>
+                                    {info.likeType !== "bad" && (
+                                        <div
+                                            className={styles["right-btn"]}
+                                            onClick={() => {
+                                                if (info.likeType) return
+                                                onLike(true)
+                                            }}
+                                        >
+                                            {info.likeType === "good" ? (
+                                                <SolidThumbupIcon className={styles["actived-icon"]} />
+                                            ) : (
+                                                <ThumbUpIcon />
+                                            )}
+                                        </div>
+                                    )}
+                                    {info.likeType !== "good" && (
+                                        <div
+                                            className={styles["right-btn"]}
+                                            onClick={() => {
+                                                if (info.likeType) return
+                                                onLike(false)
+                                            }}
+                                        >
+                                            {info.likeType === "bad" ? (
+                                                <SolidThumbDownIcon className={styles["actived-icon"]} />
+                                            ) : (
+                                                <ThumbDownIcon />
+                                            )}
+                                        </div>
+                                    )}
 
-                {showLoading && (
-                    <div className={styles["loading-wrapper"]}>
-                        <div className={classNames(styles["loading-style"], styles["loading-dot-before"])}></div>
-                        <div className={classNames(styles["loading-style"], styles["loading-dot"])}></div>
-                        <div className={classNames(styles["loading-style"], styles["loading-dot-after"])}></div>
+                                    <div className={styles["right-btn"]}>
+                                        <CopyComponents
+                                            className={classNames(styles["copy-icon-style"])}
+                                            copyText={copyContent}
+                                            iconColor={"#85899e"}
+                                        />
+                                    </div>
+
+                                    <div className={styles["right-btn"]} onClick={onDel}>
+                                        <TrashIcon />
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
-                )}
-            </div>
+                    <div className={styles["opt-content"]}>
+                        {token === loadingToken ? (
+                            info.content.length !== 0 && (
+                                <>
+                                    <div className={styles["content-style"]}>
+                                        {info.content.map((item) => {
+                                            return (
+                                                <React.Fragment key={item.type}>
+                                                    <div className={styles["content-type-title"]}>{`# ${
+                                                        TypeToContent[item.type]
+                                                    }`}</div>
+                                                    <ChatMarkdown content={item.content} />
+                                                </React.Fragment>
+                                            )
+                                        })}
+                                    </div>
+                                </>
+                            )
+                        ) : (
+                            <div className={styles["content-style"]}>
+                                {info.content.length === 0
+                                    ? "请求出现错误，请稍候再试"
+                                    : info.content.map((item) => {
+                                          return (
+                                              <React.Fragment key={item.type}>
+                                                  <div className={styles["content-type-title"]}>{`# ${
+                                                      TypeToContent[item.type]
+                                                  }`}</div>
+                                                  <ChatMarkdown content={item.content} />
+                                              </React.Fragment>
+                                          )
+                                      })}
+                                {renderType === "plugin-list" && <PluginListContent setPluginRun={setPluginRun} />}
+                            </div>
+                        )}
+
+                        {showLoading && (
+                            <div className={styles["loading-wrapper"]}>
+                                <div
+                                    className={classNames(styles["loading-style"], styles["loading-dot-before"])}
+                                ></div>
+                                <div className={classNames(styles["loading-style"], styles["loading-dot"])}></div>
+                                <div className={classNames(styles["loading-style"], styles["loading-dot-after"])}></div>
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     )
 })
@@ -1426,7 +1640,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
 interface PromptWidgetProps {
     setShowPrompt: (v: boolean) => void
     onSubmitPreset: (info: PresetKeywordProps) => void
-    onPromptSubmit?: (v:{content:string,baseType:string}) => void
+    onPromptSubmit?: (v: {content: string; baseType: string}) => void
 }
 
 interface PromptListProps {
@@ -1448,7 +1662,14 @@ interface PromptLabelProps {
     yak_memo: number
 }
 
-type PromptLabelItem = "Team_all" | "RedTeam_vuln" | "BlueTeam_com" | "RedTeam_code" | "BlueTeam_code" | "yak_memo" | "Team_other"
+type PromptLabelItem =
+    | "Team_all"
+    | "RedTeam_vuln"
+    | "BlueTeam_com"
+    | "RedTeam_code"
+    | "BlueTeam_code"
+    | "yak_memo"
+    | "Team_other"
 
 const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
     const {setShowPrompt, onSubmitPreset, onPromptSubmit} = props
@@ -1467,7 +1688,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
         "BlueTeam_com",
         "RedTeam_code",
         "BlueTeam_code",
-        "yak_memo",
+        "yak_memo"
         // "Team_other"
     ]
     useEffect(() => {
@@ -1595,7 +1816,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
     })
 
     const isOther = useMemoizedFn((v: string) => {
-        return !["RedTeam_vuln", "BlueTeam_com", "RedTeam_code", "BlueTeam_code","yak_memo"].includes(v)
+        return !["RedTeam_vuln", "BlueTeam_com", "RedTeam_code", "BlueTeam_code", "yak_memo"].includes(v)
     })
 
     const onPromptListByGroup = useMemoizedFn(() => {
@@ -1747,7 +1968,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
 interface ChatCsPromptFormProps {
     selectItem: PromptListProps
     onClose: () => void
-    onPromptSubmit?: (v:{content:string,baseType:string}) => void
+    onPromptSubmit?: (v: {content: string; baseType: string}) => void
 }
 
 interface InputObjProps<T> {
@@ -1770,7 +1991,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
             return inputObj[key] || match
         })
 
-        onPromptSubmit && onPromptSubmit({content:replacedStr,baseType:selectItem.api})
+        onPromptSubmit && onPromptSubmit({content: replacedStr, baseType: selectItem.api})
         setTimeout(() => {
             onClose()
         }, 500)

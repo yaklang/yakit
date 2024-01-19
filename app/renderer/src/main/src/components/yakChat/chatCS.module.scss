@@ -1249,3 +1249,80 @@
         }
     }
 }
+.plugin-list-content {
+    padding: 16px;
+    border-radius: 8px;
+    background: #f8f8f8;
+    .list {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 12px;
+        .list-item {
+            padding: 8px 0px;
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            height: 28px;
+            box-sizing: content-box;
+            align-items: center;
+            border-bottom: 1px solid #eaecf3;
+            .content {
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+                overflow: hidden;
+            }
+        }
+    }
+    .footer {
+        display: flex;
+        justify-content: space-between;
+        .count-box {
+            display: flex;
+            flex-direction: row;
+            gap: 16px;
+            .check-box {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 4px;
+                .text {
+                    color: #31343f;
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+            }
+            .show-box {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+                .show {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 2px;
+                    .title {
+                        color: #b4bbca;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                    .count {
+                        color: #f28b44;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                    }
+                }
+                .line {
+                    height: 12px;
+                    width: 1px;
+                    background-color: #eaecf3;
+                }
+            }
+        }
+    }
+}

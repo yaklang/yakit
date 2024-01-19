@@ -18,7 +18,9 @@ export interface ChatInfoProps {
     token: string
     isMe: boolean
     time: string
-    info: ChatMeInfoProps | ChatCSMultipleInfoProps
+    info: ChatMeInfoProps | ChatCSMultipleInfoProps | ChatPluginListProps
+    // 渲染类型
+    renderType?:"plugin-list"
 }
 /** 用户信息属性 */
 export interface ChatMeInfoProps {
@@ -30,6 +32,11 @@ export interface ChatMeInfoProps {
 export interface ChatCSMultipleInfoProps {
     likeType: string
     content: ChatCSSingleInfoProps[]
+}
+
+/** 服务器插件列表属性 */
+export interface ChatPluginListProps {
+
 }
 export interface ChatCSSingleInfoProps {
     type: string
