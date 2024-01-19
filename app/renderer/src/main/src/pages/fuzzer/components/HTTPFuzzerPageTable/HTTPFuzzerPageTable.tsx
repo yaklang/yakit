@@ -82,20 +82,35 @@ export interface HTTPFuzzerPageTableQuery {
     // bodyLengthUnit: "B" | "k" | "M"
 }
 
+// 判断数组值是否是数字 字符串类型数字也算
+const isNumericArray = (arr) => {
+    // 利用正则表达式进行匹配
+    var regex = /^\d+$/;
+    for (var i = 0; i < arr.length; i++) {
+        if (!regex.test(arr[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
     // ------------  排序 开始  ------------
     let newList = list
+    // 判断当前排序列是否既有数字又有字母的情况
+    const isNumber = isNumericArray(list.map(item => item[sorterTable?.orderBy] + ""))
+    
     // 重置
     if (sorterTable?.order === "none") {
-        newList = list.sort((a, b) => compareAsc(a, b, defSorter))
+        newList = list.sort((a, b) => compareAsc(a, b, defSorter, isNumber))
     }
     // 升序
     if (sorterTable?.order === "asc") {
-        newList = list.sort((a, b) => compareAsc(a, b, sorterTable?.orderBy))
+        newList = list.sort((a, b) => compareAsc(a, b, sorterTable?.orderBy, isNumber))
     }
     // 降序
     if (sorterTable?.order === "desc") {
-        newList = list.sort((a, b) => compareDesc(a, b, sorterTable?.orderBy))
+        newList = list.sort((a, b) => compareDesc(a, b, sorterTable?.orderBy, isNumber))
     }
     // ------------  排序 结束  ------------
     return newList
