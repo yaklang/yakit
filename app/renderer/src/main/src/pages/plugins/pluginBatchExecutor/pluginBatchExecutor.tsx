@@ -391,7 +391,10 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             <YakitButton
                                 type='text2'
                                 icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                                onClick={() => setHidden(!hidden)}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setHidden(!hidden)
+                                }}
                             />
                         </div>
                     </ExpandAndRetract>
