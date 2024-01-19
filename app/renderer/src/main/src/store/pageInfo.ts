@@ -92,6 +92,8 @@ interface PageInfoStoreProps {
     getCurrentSelectGroup: (key) => PageNodeItemProps | undefined
     clearAllData: () => void
     clearDataByRoute: (key: string) => void
+    /**只保留routeKey的数据，删除除此routeKey之外的数据 */
+    clearOtherDataByRoute: (routeKey: string) => void
 }
 const defPage: PageProps = {
     pageList: [],
@@ -236,6 +238,15 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                     set({
                         pages: new Map(pages),
                         selectGroupId: new Map(selectGroupId)
+                    })
+                },
+                clearOtherDataByRoute: (key) => {
+                    const {selectGroupId, pages} = get()
+                    const newSelectGroupId = selectGroupId.get(key)
+                    const newPages = pages.get(key)
+                    set({
+                        pages: new Map().set(key, newPages),
+                        selectGroupId: new Map().set(key, newSelectGroupId)
                     })
                 }
             }),
