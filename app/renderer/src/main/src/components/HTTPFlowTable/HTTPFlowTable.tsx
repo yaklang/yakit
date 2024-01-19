@@ -64,7 +64,7 @@ import {ExportSelect} from "../DataExport/DataExport"
 import emiter from "@/utils/eventBus/eventBus"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
-import { useHttpFlowStore } from "@/store/httpFlow"
+import {useHttpFlowStore} from "@/store/httpFlow"
 import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
@@ -1067,19 +1067,26 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setQueryParams(JSON.stringify(copyQuery))
     }
 
+    const extraTimerRef = useRef<any>() // 用于控制获取total和最大id的轮询
+    useEffect(() => {
+        return () => {
+            clearInterval(extraTimerRef.current)
+        }
+    }, [])
     // 方法请求
-    const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "offset" | "update") => {
+    const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
         // 插件执行中流量数据必有runTimeId
         if (toPlugin && !runTimeId) {
             setTimeout(() => {
                 setLoading(false)
                 isGrpcRef.current = false
-            }, 200)
+            }, 100)
             return
         }
 
         updateQueryParams(query)
         query = query.StatusCode ? {...query, StatusCode: query.StatusCode.join(",")} : query
+
         if (isGrpcRef.current) return
         isGrpcRef.current = true
 
@@ -1092,44 +1099,64 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const resData = rsp?.Data || []
                 const newData: HTTPFlow[] = getClassNameData(resData)
                 if (type === "top") {
-                    if (resData.length <= 0) {
+                    if (newData.length <= 0) {
                         // 没有数据
                         return
                     }
-                    // 有增量数据刷新total
-                    const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
-                    setTotal(newTotal)
-                    setData([...newData, ...data])
-                    maxIdRef.current = newData[0].Id
+
+                    if (["desc", "none"].includes(query.Pagination.Order)) {
+                        setData([...newData, ...data])
+                        maxIdRef.current = newData[0].Id
+                    } else {
+                        // 升序
+                        if (rsp.Pagination.Limit - data.length >= 0) {
+                            setData([...data, ...newData])
+                            maxIdRef.current = newData[newData.length - 1].Id
+                        }
+                    }
                 } else if (type === "bottom") {
-                    if (resData.length <= 0) {
+                    if (newData.length <= 0) {
                         // 没有数据
                         return
                     }
-                    // 滚轮触底时加载数据 total 已包含因此不更新total
-                    setData([...data, ...newData])
-                    minIdRef.current = newData[newData.length - 1].Id
+                    const arr = [...data, ...newData]
+                    setData(arr)
+                    if (["desc", "none"].includes(query.Pagination.Order)) {
+                        minIdRef.current = newData[newData.length - 1].Id
+                    } else {
+                        // 升序
+                        maxIdRef.current = newData[newData.length - 1].Id
+                    }
                 } else if (type === "offset") {
                     if (resData.length <= 0) {
                         // 没有数据
                         return
                     }
-                    // 有增量数据刷新total
-                    const newTotal: number = Math.ceil(total) + Math.ceil(rsp.Total)
-                    setTotal(newTotal)
-                    const newOffsetData = newData.concat(getOffsetData())
-                    maxIdRef.current = newOffsetData[0].Id
-                    setOffsetData(newOffsetData)
+                    if (["desc", "none"].includes(query.Pagination.Order)) {
+                        const newOffsetData = newData.concat(getOffsetData())
+                        maxIdRef.current = newOffsetData[0].Id
+                        setOffsetData(newOffsetData)
+                    }
                 } else {
                     // if (rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
                     setSelectedRowKeys([])
                     setSelectedRows([])
                     setIsRefresh(!isRefresh)
                     setPagination(rsp.Pagination)
-                    setData(newData)
-                    maxIdRef.current = newData.length > 0 ? newData[0].Id : 0
-                    minIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
+                    setData([...newData])
+                    if (["desc", "none"].includes(query.Pagination.Order)) {
+                        maxIdRef.current = newData.length > 0 ? newData[0].Id : 0
+                        minIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
+                    } else {
+                        maxIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
+                        minIdRef.current = newData.length > 0 ? newData[0].Id : 0
+                    }
                     setTotal(rsp.Total)
+                    // 开启定时器 用于算total和拿最新的最大id
+                    if (extraTimerRef.current) {
+                        clearInterval(extraTimerRef.current)
+                    }
+                    extraTimerRef.current = setInterval(() => getAddDataByGrpc(query), 1000)
                 }
             })
             .catch((e: any) => {
@@ -1139,14 +1166,31 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 setTimeout(() => {
                     setLoading(false)
                     isGrpcRef.current = false
-                }, 200)
+                }, 100)
             )
+    })
+
+    const getAddDataByGrpc = useMemoizedFn((query) => {
+        const copyQuery = structuredClone(query)
+        copyQuery.Pagination = {
+            Page: 1,
+            Limit: pagination.Limit,
+            Order: "desc",
+            OrderBy: "Id"
+        }
+
+        ipcRenderer.invoke("QueryHTTPFlows", copyQuery).then((rsp: YakQueryHTTPFlowResponse) => {
+            const resData = rsp?.Data || []
+            if (resData.length) {
+                setTotal(rsp.Total)
+            }
+        })
     })
 
     // 偏移量更新顶部数据
     const updateTopData = useMemoizedFn(() => {
-        // 有储存的偏移量 则直接使用
-        if (getOffsetData().length) {
+        // 倒序的时候有储存的偏移量 则直接使用
+        if (getOffsetData().length && ["desc", "none"].includes(sortRef.current.order)) {
             setData([...getOffsetData(), ...data])
             setOffsetData([])
             return
@@ -1202,8 +1246,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const query = {
             ...params,
             Tags: params.Tags,
+            BeforeId: ["desc", "none"].includes(paginationProps.Order) ? minIdRef.current : undefined,
+            AfterId: ["desc", "none"].includes(paginationProps.Order) ? undefined : maxIdRef.current,
             Pagination: {...paginationProps},
-            BeforeId: minIdRef.current,
             AfterBodyLength: params.AfterBodyLength
                 ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
                 : undefined,
@@ -1252,6 +1297,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 updateMITMPageQuery(query, "update")
                 return
             }
+            setIsRefresh(!isRefresh)
             getDataByGrpc(query, "update")
         }
     })
@@ -1289,7 +1335,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         getDataByGrpc(query, "offset")
     })
 
-    const updateMITMPageQuery = useMemoizedFn((query, type: "top" | "bottom" | "offset" | "update") => {
+    const updateMITMPageQuery = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
         getRemoteValue(MITMConsts.MITMStartTimeStamp).then((time: string) => {
             if (!data) return
             query.AfterUpdatedAt = parseInt(time)
@@ -1356,10 +1402,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         // 滚动条在中间 增量
         else {
-            if (data.length > 0) {
-                updateOffsetData()
-            } else {
+            if (data.length === 0) {
                 updateData()
+            } else {
+                // 倒序的时候才需要掉接口拿偏移数据
+                if (["desc", "none"].includes(sortRef.current.order)) {
+                    updateOffsetData()
+                }
             }
         }
     })
@@ -1399,6 +1448,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
          * 清空log表格数据
          */
         const cleanLogTableData = () => {
+            setOnlyShowFirstNode && setOnlyShowFirstNode(true)
             updateData()
         }
         pageType === "MITM" && emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
@@ -1482,7 +1532,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 fixed: "left",
                 ellipsis: false,
                 width: 96,
-                enableDrag: false
+                enableDrag: false,
+                sorterProps: {
+                    sorter: true
+                }
             },
             {
                 title: "方法",
@@ -1941,6 +1994,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         ipcRenderer
             .invoke("DeleteHTTPFlows", {DeleteAll: true})
             .then(() => {
+                setOnlyShowFirstNode && setOnlyShowFirstNode(true)
                 if (pageType === "History") {
                     props.onQueryParams && props.onQueryParams(queryParams, true)
                 }
@@ -1973,6 +2027,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         ipcRenderer
             .invoke("DeleteHTTPFlows", newParams)
             .then((i: HTTPFlow) => {
+                setOnlyShowFirstNode && setOnlyShowFirstNode(true)
                 const newParams: YakQueryHTTPFlowRequest = {
                     ...(props.params || {SourceType: "mitm"}),
                     SourceType: props.params?.SourceType || "mitm",

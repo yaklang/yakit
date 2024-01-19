@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     useClickAway,
     useCreation,
@@ -916,6 +916,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const moveRowEnd = useMemoizedFn(() => {
         if (onMoveRowEnd) onMoveRowEnd()
     })
+
     return (
         <div className={classNames(styles["virtual-table"])} ref={tableRef} tabIndex={-1} onMouseMove={(e) => onMouseMoveLine(e)}>
             <ReactResizeDetector
