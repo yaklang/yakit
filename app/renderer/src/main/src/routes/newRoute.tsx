@@ -134,6 +134,7 @@ import { NewPayload } from "@/pages/payloadManager/newPayload"
 import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
 import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import { PluginBatchExecutorPageInfoProps } from "@/store/pageInfo"
+import {SpaceEngine} from "@/pages/spaceEngine/SpaceEngine"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -228,7 +229,9 @@ export enum YakitRoute {
     Beta_WebShellManager = "beta-webshell-manager",
     Beta_WebShellOpt = "beta-webshell-opt",
     // 数据统计
-    Data_Statistics = "data_statistics"
+    Data_Statistics = "data_statistics",
+     /**空间引擎 */
+    Space_Engine = "space-engine"
 }
 /**
  * @description 页面路由对应的页面信息
@@ -312,7 +315,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "**beta-debug-traffic-analize": {label: "流量分析"},
     "beta-webshell-manager": {label: "网站管理"},
     "beta-webshell-opt": {label: "WebShell 实例"},
-    "data_statistics":{label: "数据统计"}
+    "data_statistics":{label: "数据统计"},
+    "space-engine": {label: "空间引擎"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -646,11 +650,13 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
                 </OnlineJudgment>
             )
         case YakitRoute.Beta_WebShellManager:
-            return <WebShellViewer/>
+            return <WebShellViewer />
         case YakitRoute.Beta_WebShellOpt:
             return <WebShellDetailOpt id={(params?.id||"") + ""} webshellInfo={params?.webshellInfo as WebShellDetail}/>
         case YakitRoute.Data_Statistics:
             return <DataStatistics />
+        case YakitRoute.Space_Engine:
+            return <SpaceEngine />
         default:
             return <div />
     }
@@ -662,7 +668,6 @@ export const RouteToPageItem = withRouteToPage(RouteToPage)
 export enum ResidentPluginName {
     SubDomainCollection = "子域名收集",
     BasicCrawler = "基础爬虫",
-    SpaceEngine = "空间引擎集成版本",
     DirectoryScanning = "综合目录扫描与爆破"
 }
 
@@ -813,7 +818,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
                 yakScripName: ResidentPluginName.BasicCrawler,
                 describe: "通过爬虫可快速了解网站的整体架构"
             },
-            {page: YakitRoute.Plugin_OP, label: "空间引擎", yakScripName: ResidentPluginName.SpaceEngine},
+            {page: YakitRoute.Space_Engine, ...YakitRouteToPageInfo[YakitRoute.Space_Engine]},
             {
                 page: undefined,
                 label: "爆破与未授权检测",
@@ -960,8 +965,6 @@ export const getFixedPluginIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
             return <PrivateOutlineBasicCrawlerIcon />
-        case "空间引擎集成版本":
-            return <PrivateOutlineSpaceEngineIcon />
         case "子域名收集":
             return <PrivateOutlineSubDomainCollectionIcon />
         case "综合目录扫描与爆破":
@@ -975,8 +978,6 @@ export const getFixedPluginHoverIcon = (name: string) => {
     switch (name) {
         case "基础爬虫":
             return <PrivateSolidBasicCrawlerIcon />
-        case "空间引擎集成版本":
-            return <PrivateSolidSpaceEngineIcon />
         case "子域名收集":
             return <PrivateSolidSubDomainCollectionIcon />
         case "综合目录扫描与爆破":
@@ -1155,6 +1156,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlineCVEIcon />,
         hoverIcon: <PrivateSolidCVEIcon />,
         ...YakitRouteToPageInfo[YakitRoute.DB_CVE]
+    },
+    [YakitRoute.Space_Engine]: {
+        page: YakitRoute.Space_Engine,
+        icon: <PrivateOutlineSpaceEngineIcon />,
+        hoverIcon: <PrivateSolidSpaceEngineIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.Space_Engine]
     }
 }
 // 通过传入的 YakitRoute数组 快速生成页面数据数组
@@ -1176,7 +1183,7 @@ export const InvalidFirstMenuItem = ""
  * @description 该菜单数据为开发者迭代版本所产生的已消失的页面菜单项
  * @description 每个菜单项由 '|' 字符进行分割
  */
-export const InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|api提取|"
+export const InvalidPageMenuItem = "项目管理(Beta*)|插件执行结果|api提取|空间引擎集成版本|"
 /**
  * @name private版专家模式菜单配置数据
  * @description 修改只对专家模式有效，别的模式需取对应模式数据进行修改
@@ -1200,14 +1207,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
                 describe: getFixedPluginDescribe(ResidentPluginName.BasicCrawler),
                 yakScripName: ResidentPluginName.BasicCrawler
             },
-            {
-                page: YakitRoute.Plugin_OP,
-                label: "空间引擎",
-                icon: getFixedPluginIcon(ResidentPluginName.SpaceEngine),
-                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SpaceEngine),
-                describe: getFixedPluginDescribe(ResidentPluginName.SpaceEngine),
-                yakScripName: ResidentPluginName.SpaceEngine
-            },
+            PrivateAllMenus[YakitRoute.Space_Engine],
             PrivateAllMenus[YakitRoute.Mod_ScanPort],
             {
                 page: YakitRoute.Plugin_OP,
@@ -1291,14 +1291,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
                 describe: getFixedPluginDescribe(ResidentPluginName.BasicCrawler),
                 yakScripName: ResidentPluginName.BasicCrawler
             },
-            {
-                page: YakitRoute.Plugin_OP,
-                label: "空间引擎",
-                icon: getFixedPluginIcon(ResidentPluginName.SpaceEngine),
-                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SpaceEngine),
-                describe: getFixedPluginDescribe(ResidentPluginName.SpaceEngine),
-                yakScripName: ResidentPluginName.SpaceEngine
-            },
+            PrivateAllMenus[YakitRoute.Space_Engine],
             PrivateAllMenus[YakitRoute.Mod_ScanPort],
             {
                 page: YakitRoute.Plugin_OP,

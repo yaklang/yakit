@@ -74,7 +74,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     const [pluginToId, setPluginToId] = useState<Record<ResidentPluginName, number>>({
         [ResidentPluginName.SubDomainCollection]: 0,
         [ResidentPluginName.BasicCrawler]: 0,
-        [ResidentPluginName.SpaceEngine]: 0,
         [ResidentPluginName.DirectoryScanning]: 0
     })
 
@@ -115,7 +114,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         const pluginTool = [
             ResidentPluginName.SubDomainCollection,
             ResidentPluginName.BasicCrawler,
-            ResidentPluginName.SpaceEngine,
             ResidentPluginName.DirectoryScanning
         ]
         ipcRenderer

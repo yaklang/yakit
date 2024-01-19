@@ -182,16 +182,8 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             <div className={styles["title-style"]}>基础爬虫</div>
                         </div>
                         <div
-                            className={classNames(styles["horizontal-menu-wrapper"], {
-                                [styles["disable-style"]]: pluginToId[ResidentPluginName.SpaceEngine] === 0
-                            })}
-                            onClick={() =>
-                                onMenu(
-                                    YakitRoute.Plugin_OP,
-                                    pluginToId[ResidentPluginName.SpaceEngine],
-                                    ResidentPluginName.SpaceEngine
-                                )
-                            }
+                            className={classNames(styles["horizontal-menu-wrapper"])}
+                            onClick={() => onMenu(YakitRoute.Space_Engine)}
                         >
                             <div className={styles["icon-wrapper"]}>
                                 <PublicSpaceEngineIcon />
