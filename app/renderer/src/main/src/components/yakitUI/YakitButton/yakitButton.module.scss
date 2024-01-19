@@ -19,9 +19,9 @@
     }
 
     &:focus {
-        background: fetch-color($type, "color-6");
+        background: fetch-color($type, "color-5");
         color: var(--ui-text-inverse-color);
-        border-color: fetch-color($type, "color-6");
+        border-color: fetch-color($type, "color-5");
     }
     &:hover {
         background: fetch-color($type, "color-4");
@@ -73,11 +73,11 @@
     }
 
     &:focus {
-        background: fetch-color($type, "color-1");
-        color: fetch-color($type, "color-6");
-        border-color: fetch-color($type, "color-1");
+        background: var(--yakit-background-color);
+        color: var(--ui-text-color);
+        border-color: var(--yakit-background-color);
         svg {
-            color: fetch-color($type, "color-6");
+            color: var(--ui-icon-color);
         }
     }
     &:hover {
@@ -133,9 +133,9 @@
     }
 
     &:focus {
-        background: fetch-color($type, "color-1");
-        color: fetch-color($type, "color-6");
-        border-color: fetch-color($type, "color-6");
+        background: transparent;
+        color: fetch-color($type, "color-5");
+        border-color: fetch-color($type, "color-3");
     }
     &:hover {
         background: fetch-color($type, "color-1");
@@ -192,10 +192,10 @@
 
     &:focus {
         background: var(--ui-background-color);
-        color: fetch-color($type, "color-6");
-        border-color: fetch-color($type, "color-6");
+        color: var(--ui-text-color);
+        border-color: var(--yakit-border-color);
         svg {
-            color: fetch-color($type, "color-6");
+            color: var(--ui-icon-color);
         }
     }
     &:hover {
@@ -252,7 +252,7 @@
 
     &:focus {
         background: transparent;
-        color: fetch-color($type, "color-6");
+        color: fetch-color($type, "color-5");
         border-color: transparent;
     }
     &:hover {
@@ -305,11 +305,11 @@
     }
 
     &:focus {
-        background: var(--yakit-background-color);
-        color: fetch-color($type, "color-5");
-        border-color: var(--yakit-background-color);
+        background: transparent;
+        color: var(--ui-text-color);
+        border-color: transparent;
         svg {
-            color: fetch-color($type, "color-5");
+            color: var(--ui-icon-color);
         }
     }
     &:hover {

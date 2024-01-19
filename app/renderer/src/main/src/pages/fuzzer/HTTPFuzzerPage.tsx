@@ -6,7 +6,7 @@ import {monacoEditorWrite} from "./fuzzerTemplates"
 import {QueryFuzzerLabelResponseProps, StringFuzzer} from "./StringFuzzer"
 import {FuzzerResponseToHTTPFlowDetail} from "../../components/HTTPFlowDetail"
 import {randomString} from "../../utils/randomUtil"
-import {failed, info, yakitFailed, yakitNotify,warn} from "../../utils/notification"
+import {failed, info, yakitFailed, yakitNotify, warn} from "../../utils/notification"
 import {
     useControllableValue,
     useCreation,
@@ -64,7 +64,12 @@ import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorTy
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {WebFuzzerResponseExtractor} from "@/utils/extractor"
 import {HttpQueryAdvancedConfig, WEB_FUZZ_PROXY_LIST} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig"
-import {FuzzerParamItem, AdvancedConfigValueProps, KVPair, FuzzTagMode} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import {
+    FuzzerParamItem,
+    AdvancedConfigValueProps,
+    KVPair,
+    FuzzTagMode
+} from "./HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
     ExtractorValueProps,
@@ -100,8 +105,9 @@ import {CopyableField} from "@/utils/inputUtil"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated} from "@/utils/openWebsite"
-import { PayloadGroupNodeProps, ReadOnlyNewPayload } from "../payloadManager/newPayload"
+import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPayload"
 import {createRoot} from "react-dom/client"
+import {SolidPauseIcon, SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
 const {ipcRenderer} = window.require("electron")
 
 interface ShareValueProps {
@@ -273,38 +279,37 @@ export interface FuzzerRequestProps {
 
 export const showDictsAndSelect = (fun: (i: string) => any) => {
     ipcRenderer
-            .invoke("GetAllPayloadGroup")
-            .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
-                if(res.Nodes.length===0){
-                    warn("暂无字典，请先添加后再使用")
-                }
-                else{
-                    const y = showYakitModal({
-                        title: null,
-                        footer: null,
-                        width: 1200,
-                        type: "white",
-                        closable: false,
-                        hiddenHeader: true,
-                        content: (
-                            <ReadOnlyNewPayload
-                                selectorHandle={(e) => {
-                                    fun(e)
-                                    y.destroy()
-                                }}
-                                onClose={() => {
-                                    y.destroy()
-                                }}
-                                Nodes={res.Nodes}
-                            />
-                        )
-                    })
-                }
-            })
-            .catch((e: any) => {
-                failed(`获取字典列表失败：${e}`)
-            })
-            .finally()
+        .invoke("GetAllPayloadGroup")
+        .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
+            if (res.Nodes.length === 0) {
+                warn("暂无字典，请先添加后再使用")
+            } else {
+                const y = showYakitModal({
+                    title: null,
+                    footer: null,
+                    width: 1200,
+                    type: "white",
+                    closable: false,
+                    hiddenHeader: true,
+                    content: (
+                        <ReadOnlyNewPayload
+                            selectorHandle={(e) => {
+                                fun(e)
+                                y.destroy()
+                            }}
+                            onClose={() => {
+                                y.destroy()
+                            }}
+                            Nodes={res.Nodes}
+                        />
+                    )
+                })
+            }
+        })
+        .catch((e: any) => {
+            failed(`获取字典列表失败：${e}`)
+        })
+        .finally()
 }
 
 interface FuzzResponseFilter {
@@ -699,8 +704,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [props.shareContent])
 
     // 保留数组中非重复数据
-    const filterNonUnique = arr => arr.filter(i => arr.indexOf(i) === arr.lastIndexOf(i))
-    const isSaveFuzzerLabelFun = useMemoizedFn(()=>{        
+    const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
+    const isSaveFuzzerLabelFun = useMemoizedFn(() => {
         // 常用标签默认存储
         ipcRenderer.invoke("QueryFuzzerLabel").then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
             const {Data} = data
@@ -710,31 +715,28 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 })
                 // 缓存标签数量 用于添加生成标签Description
                 setRemoteValue(FUZZER_LABEL_LIST_NUMBER, JSON.stringify({number: defaultLabel.length}))
-            }
-            else{
+            } else {
                 // 获取缓存的固有标签
-                let oldFixedArr:string[] = []
+                let oldFixedArr: string[] = []
                 // 获取最新的固有标签
-                let newFixedArr:string[] = defaultLabel.map((item)=>item.DefaultDescription)
-                Data.forEach((item)=>{
-                    if(item.DefaultDescription.endsWith("-fixed")){
+                let newFixedArr: string[] = defaultLabel.map((item) => item.DefaultDescription)
+                Data.forEach((item) => {
+                    if (item.DefaultDescription.endsWith("-fixed")) {
                         oldFixedArr.push(item.DefaultDescription)
                     }
                 })
-                let arr:string[] = filterNonUnique([...oldFixedArr,...newFixedArr])
-                arr.forEach((item)=>{
+                let arr: string[] = filterNonUnique([...oldFixedArr, ...newFixedArr])
+                arr.forEach((item) => {
                     // 需要新添的项
-                    if(newFixedArr.includes(item)){
-                        ipcRenderer
-                        .invoke("SaveFuzzerLabel", {
-                            Data: defaultLabel.filter((itemIn)=>itemIn.DefaultDescription===item)
+                    if (newFixedArr.includes(item)) {
+                        ipcRenderer.invoke("SaveFuzzerLabel", {
+                            Data: defaultLabel.filter((itemIn) => itemIn.DefaultDescription === item)
                         })
                     }
                     // 需要删除的项
-                    else{
-                        ipcRenderer
-                        .invoke("DeleteFuzzerLabel", {
-                            Hash: Data.filter((itemIn)=>itemIn.DefaultDescription===item)[0].Hash
+                    else {
+                        ipcRenderer.invoke("DeleteFuzzerLabel", {
+                            Hash: Data.filter((itemIn) => itemIn.DefaultDescription === item)[0].Hash
                         })
                     }
                 })
@@ -746,11 +748,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         // 此次重构不兼容之前数据 所以在第一次进入页面时清空
         getRemoteValue("IS_DELETE_FUZZ_LABEL").then((remoteData) => {
             if (!remoteData) {
-                ipcRenderer.invoke("DeleteFuzzerLabel", {}).then(()=>{
-                    isSaveFuzzerLabelFun()
-                }).catch((err)=>{
-                    failed(`清空老数据失败：${err}`)
-                })
+                ipcRenderer
+                    .invoke("DeleteFuzzerLabel", {})
+                    .then(() => {
+                        isSaveFuzzerLabelFun()
+                    })
+                    .catch((err) => {
+                        failed(`清空老数据失败：${err}`)
+                    })
                 setRemoteValue("IS_DELETE_FUZZ_LABEL", JSON.stringify({isDelete: false}))
                 return
             }
@@ -916,14 +921,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
             }
-        }
-        else if(matchRef.current){
+        } else if (matchRef.current) {
             matchRef.current = false
             const matchTaskID = successFuzzer.length > 0 ? successFuzzer[0].TaskId : undefined
-            const params = {...httpParams, ReMatch: true,HistoryWebFuzzerId:matchTaskID}
+            const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
-        } 
-        else {
+        } else {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
         }
     })
@@ -971,11 +974,25 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
     })
 
+    const [isPause, setIsPause] = useState<boolean>(true) // 暂停或继续请求标识
+    const resumeAndPause = useMemoizedFn(async () => {
+        try {
+            if (!taskIDRef.current) return
+            await ipcRenderer.invoke("HTTPFuzzer", {PauseTaskID: taskIDRef.current, IsPause: isPause}, tokenRef.current)
+            setLoading(!isPause)
+            setIsPause(!isPause)
+        } catch (error) {
+            yakitFailed(error + "")
+        }
+    })
+
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
     })
     const dCountRef = useRef<number>(0)
     const tokenRef = useRef<string>(randomString(60))
+    const taskIDRef = useRef<number>(0)
+
     useEffect(() => {
         const token = tokenRef.current
 
@@ -1017,6 +1034,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
+            taskIDRef.current = data.TaskId
             if (count === 0) {
                 // 重置extractedMap
                 reset()
@@ -1059,7 +1077,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             count = 0
             dCountRef.current = 0
             lastUpdateCount = 0
+            taskIDRef.current = 0
             setTimeout(() => {
+                setIsPause(true)
                 setLoading(false)
                 getTotal()
             }, 500)
@@ -1471,12 +1491,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         </>
     )
 
-    const matchSubmitFun = useMemoizedFn(()=>{
+    const matchSubmitFun = useMemoizedFn(() => {
         matchRef.current = true
         setRedirectedResponse(undefined)
         sendFuzzerSettingInfo()
         onValidateHTTPFuzzer()
-        getNewCurrentPage() 
+        getNewCurrentPage()
     })
 
     const secondNodeExtra = () => (
@@ -1506,7 +1526,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                 showSuccess={showSuccess}
                 retrySubmit={() => {
-                    if(failedFuzzer.length > 0){
+                    if (failedFuzzer.length > 0) {
                         retryRef.current = true
                         setRedirectedResponse(undefined)
                         sendFuzzerSettingInfo()
@@ -1514,13 +1534,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         getNewCurrentPage()
                     }
                 }}
-                isShowMatch = {!loading}
-                matchSubmit={()=>{
-                    if(advancedConfigValue.matchers.length>0){
+                isShowMatch={!loading}
+                matchSubmit={() => {
+                    if (advancedConfigValue.matchers.length > 0) {
                         matchSubmitFun()
-                    }
-                    else{
-                        emiter.emit("onOpenMatchingAndExtractionCard",props.id)
+                    } else {
+                        emiter.emit("onOpenMatchingAndExtractionCard", props.id)
                     }
                 }}
                 extractedMap={extractedMap}
@@ -1589,32 +1608,57 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             <div className={styles["http-fuzzer-page"]}>
                 <div className={styles["fuzzer-heard"]}>
                     <div className={styles["fuzzer-heard-left"]}>
-                        {loading ? (
-                            <YakitButton
-                                onClick={() => {
-                                    cancelCurrentHTTPFuzzer()
-                                }}
-                                icon={<StopIcon />}
-                                type={"primary"}
-                                colors='danger'
-                                size='large'
-                            >
-                                强制停止
-                            </YakitButton>
+                        {!loading ? (
+                            <>
+                                {!isPause ? (
+                                    <YakitButton
+                                        onClick={resumeAndPause}
+                                        icon={<SolidPlayIcon />}
+                                        type={"primary"}
+                                        size='large'
+                                    >
+                                        继续
+                                    </YakitButton>
+                                ) : (
+                                    <YakitButton
+                                        onClick={() => {
+                                            setRedirectedResponse(undefined)
+                                            sendFuzzerSettingInfo()
+                                            onValidateHTTPFuzzer()
+                                            getNewCurrentPage()
+                                        }}
+                                        icon={<PaperAirplaneIcon />}
+                                        type={"primary"}
+                                        size='large'
+                                    >
+                                        发送请求
+                                    </YakitButton>
+                                )}
+                            </>
                         ) : (
-                            <YakitButton
-                                onClick={() => {
-                                    setRedirectedResponse(undefined)
-                                    sendFuzzerSettingInfo()
-                                    onValidateHTTPFuzzer()
-                                    getNewCurrentPage()
-                                }}
-                                icon={<PaperAirplaneIcon />}
-                                type={"primary"}
-                                size='large'
-                            >
-                                发送请求
-                            </YakitButton>
+                            <>
+                                <YakitButton
+                                    disabled={cachedTotal <= 1}
+                                    onClick={resumeAndPause}
+                                    icon={<SolidPauseIcon />}
+                                    type={"primary"}
+                                    size='large'
+                                >
+                                    暂停
+                                </YakitButton>
+                                <YakitButton
+                                    onClick={() => {
+                                        cancelCurrentHTTPFuzzer()
+                                    }}
+                                    icon={<StopIcon />}
+                                    type={"primary"}
+                                    colors='danger'
+                                    size='large'
+                                    style={{ marginLeft: -8 }}
+                                >
+                                    停止
+                                </YakitButton>
+                            </>
                         )}
                         <div className={styles["fuzzer-heard-force"]}>
                             <span className={styles["fuzzer-heard-https"]}>强制 HTTPS</span>
@@ -1645,6 +1689,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         <HTTPFuzzerHistorySelector
                                             currentSelectId={currentSelectId}
                                             onSelect={(e, page, showAll) => {
+                                                cancelCurrentHTTPFuzzer()
                                                 if (!showAll) setCurrentPage(page)
                                                 loadHistory(e)
                                             }}
@@ -1991,21 +2036,20 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
 
     const onGetExportFuzzerCallBackEvent = useMemoizedFn((v) => {
         try {
-            const obj: {listTable: any; type: "all" | "payload",pageId:string} = JSON.parse(v)
-            if(obj.pageId === pageId){
+            const obj: {listTable: any; type: "all" | "payload"; pageId: string} = JSON.parse(v)
+            if (obj.pageId === pageId) {
                 const {listTable, type} = obj
-                const newListTable = listTable.map((item)=>({
+                const newListTable = listTable.map((item) => ({
                     ...item,
-                    RequestRaw:StringToUint8Array(item.RequestRaw),
-                    ResponseRaw:StringToUint8Array(item.ResponseRaw)
+                    RequestRaw: StringToUint8Array(item.RequestRaw),
+                    ResponseRaw: StringToUint8Array(item.ResponseRaw)
                 }))
                 if (type === "all") {
-                    exportHTTPFuzzerResponse(newListTable,extractedMap)
+                    exportHTTPFuzzerResponse(newListTable, extractedMap)
                 } else {
                     exportPayloadResponse(newListTable)
                 }
             }
-            
         } catch (error) {}
     })
 
@@ -2121,9 +2165,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                     <YakitButton
                         type='text2'
                         size='small'
-                        icon={
-                            <OutlineAnnotationIcon />
-                        }
+                        icon={<OutlineAnnotationIcon />}
                         isActive={showResponseInfoSecondEditor}
                         onClick={() => {
                             setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
@@ -2176,7 +2218,12 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             }
                         }}
                     >
-                        <YakitButton icon={<OutlineSearchIcon />} size={size} type='outline2' isHover={!!query?.keyWord} />
+                        <YakitButton
+                            icon={<OutlineSearchIcon />}
+                            size={size}
+                            type='outline2'
+                            isHover={!!query?.keyWord}
+                        />
                     </YakitPopover>
                 )}
                 <YakitPopover
@@ -2251,31 +2298,33 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 </YakitPopover>
 
                 <Divider type='vertical' style={{margin: 0, top: 1}} />
-                
-                {isShowMatch && <>
-                {+(secondNodeSize?.width || 0) >= 610 ? (
-                    <YakitButton
-                        type='outline2'
-                        size={size}
-                        onClick={() => {
-                            matchSubmit && matchSubmit()
-                        }}
-                    >
-                        仅匹配
-                    </YakitButton>
-                ) : (
-                    <Tooltip title='仅匹配'>
-                        <YakitButton
-                            type='outline2'
-                            size={size}
-                            icon={<OutlinePlugsIcon />}
-                            onClick={() => {
-                                matchSubmit && matchSubmit()
-                            }}
-                        />
-                    </Tooltip>
+
+                {isShowMatch && (
+                    <>
+                        {+(secondNodeSize?.width || 0) >= 610 ? (
+                            <YakitButton
+                                type='outline2'
+                                size={size}
+                                onClick={() => {
+                                    matchSubmit && matchSubmit()
+                                }}
+                            >
+                                仅匹配
+                            </YakitButton>
+                        ) : (
+                            <Tooltip title='仅匹配'>
+                                <YakitButton
+                                    type='outline2'
+                                    size={size}
+                                    icon={<OutlinePlugsIcon />}
+                                    onClick={() => {
+                                        matchSubmit && matchSubmit()
+                                    }}
+                                />
+                            </Tooltip>
+                        )}
+                    </>
                 )}
-                </>}
 
                 {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitButton
@@ -2326,10 +2375,13 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer", JSON.stringify({
-                                                pageId,
-                                                type:"all"
-                                            }))
+                                            emiter.emit(
+                                                "onGetExportFuzzer",
+                                                JSON.stringify({
+                                                    pageId,
+                                                    type: "all"
+                                                })
+                                            )
                                         }}
                                     >
                                         导出所有请求
@@ -2338,10 +2390,13 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer", JSON.stringify({
-                                                pageId,
-                                                type:"payload"
-                                            }))
+                                            emiter.emit(
+                                                "onGetExportFuzzer",
+                                                JSON.stringify({
+                                                    pageId,
+                                                    type: "payload"
+                                                })
+                                            )
                                         }}
                                     >
                                         仅导出 Payload
@@ -2365,10 +2420,13 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer", JSON.stringify({
-                                                pageId,
-                                                type:"all"
-                                            }))
+                                            emiter.emit(
+                                                "onGetExportFuzzer",
+                                                JSON.stringify({
+                                                    pageId,
+                                                    type: "all"
+                                                })
+                                            )
                                         }}
                                     >
                                         导出所有请求
@@ -2377,10 +2435,13 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
-                                            emiter.emit("onGetExportFuzzer", JSON.stringify({
-                                                pageId,
-                                                type:"payload"
-                                            }))
+                                            emiter.emit(
+                                                "onGetExportFuzzer",
+                                                JSON.stringify({
+                                                    pageId,
+                                                    type: "payload"
+                                                })
+                                            )
                                         }}
                                     >
                                         仅导出 Payload
@@ -2418,7 +2479,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 onClick={() => {
                     retrySubmit && retrySubmit()
                 }}
-                disabled={failedFuzzer.length===0}
+                disabled={failedFuzzer.length === 0}
             >
                 一键重试
             </YakitButton>
