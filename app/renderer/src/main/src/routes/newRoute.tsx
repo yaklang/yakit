@@ -656,7 +656,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Data_Statistics:
             return <DataStatistics />
         case YakitRoute.Space_Engine:
-            return <SpaceEngine />
+            return <SpaceEngine pageId={params?.id || ""} />
         default:
             return <div />
     }
