@@ -499,38 +499,6 @@ const onClose = useMemoizedFn(()=>{
                                         </Space>
                                     </div>
                                     <div className={cveStyles["cve-list-title-extra"]}>
-                                        <YakitCombinationSearch
-                                            selectProps={{
-                                                size: "small"
-                                            }}
-                                            beforeOptionWidth={68}
-                                            valueBeforeOption={searchType}
-                                            afterModuleType='input'
-                                            onSelectBeforeOption={(o) => {
-                                            }}
-                                            addonBeforeOption={[
-                                                {
-                                                    label: "CVE",
-                                                    value: "Keywords"
-                                                },
-                                                {
-                                                    label: "CWE",
-                                                    value: "CWE"
-                                                }
-                                            ]}
-                                            inputSearchModuleTypeProps={{
-                                                size: "middle",
-                                                value: params[searchType],
-                                                placeholder: searchType === "Keywords" ? "CVE编号或关键字搜索" : "CEW编号搜索",
-                                                onChange: (e) => {
-                                                   
-                                                },
-                                                onSearch: (value) => {
-                                                   
-                                                }
-                                            }}
-                                        />
-                                        <Divider type='vertical'/>
                                         <YakitButton
                                             type='primary'
                                             onClick={() => {

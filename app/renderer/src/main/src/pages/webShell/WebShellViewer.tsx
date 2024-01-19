@@ -168,7 +168,6 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                 if (!total || total == 0) {
                     return
                 }
-
                 setPayloadCodecs(i)
             },
             undefined,
@@ -184,6 +183,19 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
         searchForCodecPacketCodecPlugin()
         searchForCodecPayloadCodecPlugin()
     }, [onchange])
+
+    const onRemove = (index: number, type) => {
+        const delId = type === "packetCodecs" ? packetCodecs[index].Id : payloadCodecs[index].Id
+        ipcRenderer.invoke("DeleteYakScript", { Id: delId }).then(res => {
+            if (type === "packetCodecs") {
+                const newCodes = packetCodecs.filter(item => (item.Id !== delId))
+                setPacketCodecs(newCodes)
+            } else {
+                const newCodes = payloadCodecs.filter(item => (item.Id !== delId))
+                setPayloadCodecs(newCodes)
+            }
+        })
+    }
     return (
         <>
             <div className={fuzzerStyles["http-query-advanced-config"]}>
@@ -229,6 +241,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                             setAddAction(true)
                                             setPacketMode(true)
                                             setVisibleDrawer(true)
+                                            setCurrCodec({} as YakScript)
                                             // onAddMatchingAndExtractionCard("extractors")
                                         }}
                                         className={fuzzerStyles["btn-padding-right-0"]}
@@ -241,9 +254,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                         >
                             <CustomCodecList
                                 customCodecList={packetCodecs}
-                                onRemove={() => {
-                                    
-                                }}
+                                onRemove={(index) => onRemove(index, "packetCodecs")}
                                 onEdit={(index) => {
                                     setResultMode(false)
                                     setAddAction(false)
@@ -281,6 +292,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                             setResultMode(true)
                                             setAddAction(true)
                                             setVisibleDrawer(true)
+                                            setCurrCodec({} as YakScript)
                                         }}
                                         className={fuzzerStyles["btn-padding-right-0"]}
                                     >
@@ -292,9 +304,7 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                         >
                             <CustomCodecList
                                 customCodecList={payloadCodecs}
-                                onRemove={() => {
-                                    
-                                }}
+                                onRemove={(index) => onRemove(index, "payloadCodecs")}
                                 onEdit={(index) => {
                                     setPacketMode(false)
                                     setAddAction(false)
@@ -305,66 +315,6 @@ const WebShellQuery: React.FC<WebShellQueryProp> = (props) => {
                                     setVisibleDrawer(true)
                                 }}
                             />
-                        </YakitPanel>
-                        <YakitPanel
-                            header='网站生成'
-                            key='网站生成'
-                            extra={
-                                <YakitButton
-                                    type='text'
-                                    colors="danger"
-                                    className={fuzzerStyles["btn-padding-right-0"]}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        const restValue = {
-                                            forceFuzz: true,
-                                            isHttps: false,
-                                            noFixContentLength: false,
-                                            actualHost: "",
-                                            timeout: 30
-                                        }
-                                        // onReset(restValue)
-                                    }}
-                                    size='small'
-                                >
-                                    重置
-                                </YakitButton>
-                            }
-                        >
-                            <Form.Item label='Fuzztag 辅助'>
-                                <YakitButton
-                                    size='small'
-                                    type='outline1'
-                                    onClick={() => {
-                                        
-                                    }}
-                                    icon={<PlusSmIcon/>}
-                                >
-                                    插入 yak.fuzz 语法
-                                </YakitButton>
-                            </Form.Item>
-                            <Form.Item
-                                label={
-                                    <span className={fuzzerStyles["advanced-config-form-label"]}>
-                                    渲染 Fuzz
-                                    <Tooltip title='关闭之后，所有的 Fuzz 标签将会失效' overlayStyle={{width: 150}}>
-                                        <InformationCircleIcon className={fuzzerStyles["info-icon"]}/>
-                                    </Tooltip>
-                                </span>
-                                }
-                                name='forceFuzz'
-                                valuePropName='checked'
-                            >
-                                <YakitSwitch/>
-                            </Form.Item>
-
-                            <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
-                                <YakitSwitch/>
-                            </Form.Item>
-
-                            <Form.Item label='超时时长' name='timeout'>
-                                <YakitInputNumber type='horizontal' size='small'/>
-                            </Form.Item>
                         </YakitPanel>
                     </YakitCollapse>
 

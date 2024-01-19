@@ -173,13 +173,12 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
             warn("请输入插件内容/选择类型!")
             return
         }
-
         ipcRenderer
-            .invoke("SaveYakScript", currCodec)
+            .invoke("SaveYakScript", { ...currCodec, Type: "codec" })
             .then((data) => {
                 success(`创建 / 保存 ${title} 脚本成功`)
                 setCurrCodec(data)
-                setOnchange(true)
+                setOnchange(!onchange)
                 setTimeout(() => ipcRenderer.invoke("change-main-menu"), 100)
             })
             .catch((e: any) => {
@@ -195,6 +194,7 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
     })
 
     const [modified, setModified] = useState<YakScript | undefined>()
+
     return (
         <YakitDrawer
             placement='bottom'
@@ -390,6 +390,10 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
     const handleTabClick = (key: string) => {
         setSelectedTab(key);
     };
+
+    useEffect(() => {
+        // setShellScript("")
+    }, [])
 
     return (
         <div className={matcherStyles["matching-extraction-resize-box"]} style={{display: 'flex'}}>
