@@ -111,6 +111,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const [moreLeft, setMoreLeft] = useState<number>(0) // 更多文字的left
 
     const [isExpand, setIsExpand] = useState<boolean>(defaultExpand)
+    useEffect(() => {
+        setIsExpand(isExpand)
+    }, [defaultExpand])
 
     const [customizeVisible, setCustomizeVisible] = useState<boolean>(false)
 

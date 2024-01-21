@@ -156,7 +156,7 @@ export interface SorterProps {
  * @property {YakitInputProps}  filterInputProps  input的props属性
  */
 export interface FilterProps {
-    filterRender?: () => ReactNode
+    filterRender?: (closePopover: () => void) => ReactNode
     filterOptionRender?: (d: any) => ReactNode
     filterKey?: string
     filtersType?: "select" | "input" | "dateTime"

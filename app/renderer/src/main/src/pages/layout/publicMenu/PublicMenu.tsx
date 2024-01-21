@@ -85,6 +85,9 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     const [activeMenu, setActiveMenu] = useState<number>(0)
     const [activeTool, setActiveTool] = useState<"codec" | "dnslog">("codec")
     const [isExpand, setIsExpand] = useState<boolean>(defaultExpand)
+    useEffect(() => {
+        setIsExpand(defaultExpand)
+    }, [defaultExpand])
 
     const routeToName = useRef<Map<string, string>>(new Map<string, string>())
     useEffect(() => {
@@ -102,6 +105,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     const onSetIsExpand = useMemoizedFn((checked: boolean) => {
         const value = JSON.stringify(checked)
         setIsExpand(checked)
+        console.log('存', value);
         setRemoteValue(CodeGV.MenuExpand, value)
         emiter.emit("menuExpandSwitch", value)
     })

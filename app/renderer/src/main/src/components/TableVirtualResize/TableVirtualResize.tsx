@@ -47,6 +47,7 @@ import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitProtoCheckbox} from "./YakitProtoCheckbox/YakitProtoCheckbox"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {randomString} from "@/utils/randomUtil"
+import cloneDeep from "lodash/cloneDeep"
 const {RangePicker} = DatePicker
 
 /**
@@ -712,7 +713,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const [filters, setFilters] = useState<any>(query || {})
     const [opensPopover, setOpensPopover] = useState<any>({})
     useEffect(() => {
-        setFilters(query)
+        setFilters(cloneDeep(query))
     }, [query])
     useEffect(() => {
         setFilters({})
@@ -1230,7 +1231,12 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                                 content={
                                     <div className={styles["popover-content"]}>
                                         {columnsItem?.filterProps?.filterRender
-                                            ? columnsItem?.filterProps?.filterRender()
+                                            ? columnsItem?.filterProps?.filterRender(() => {
+                                                setOpensPopover({
+                                                    ...opensPopover,
+                                                    [filterKey]: false
+                                                })
+                                            })
                                             : renderFilterPopover(
                                                   columnsItem,
                                                   filterKey,
