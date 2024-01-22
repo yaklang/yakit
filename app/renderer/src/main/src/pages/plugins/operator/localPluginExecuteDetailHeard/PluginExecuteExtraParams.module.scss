@@ -60,3 +60,19 @@
         }
     }
 }
+
+.yakit-panel-heard {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .yakit-panel-heard-number {
+        display: flex;
+        margin-left: 4px;
+        padding: 2px 6px;
+        border-radius: 8px;
+        background: var(--yakit-background-color);
+        color: var(--yakit-body-text-color);
+        font-size: 10px;
+        line-height: 12px; /* 120% */
+    }
+}
