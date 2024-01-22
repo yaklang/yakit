@@ -455,7 +455,7 @@ export interface ComponentParams {
     // webshell info
     webshellInfo?: WebShellDetail
     /**批量执行页面参数 */
-    pluginBatchExecutorPageInfo: PluginBatchExecutorPageInfoProps
+    pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
