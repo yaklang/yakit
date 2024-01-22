@@ -1105,7 +1105,6 @@ export const convertHybridScanParams = (
     return data
 }
 export interface HybridScanRequest extends PluginBatchExecutorTaskProps {
-    Code: string
     Input: string
     HTTPRequestTemplate: HTTPRequestBuilderParams
 }
@@ -1121,7 +1120,6 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
             let executeParams: HybridScanControlAfterRequest = {
                 ...params
             }
-            console.log('executeParams',executeParams)
             ipcRenderer
                 .invoke(
                     "HybridScan",

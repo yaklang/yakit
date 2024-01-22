@@ -256,7 +256,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             Proxy: extraParamsValue.Proxy
         }
         const params: HybridScanRequest = {
-            Code: value.Code,
             Input: value.Input,
             ...taskParams,
             HTTPRequestTemplate: {
