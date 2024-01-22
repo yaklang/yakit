@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useGetState, useMemoizedFn, useScroll, useSize, useUpdateEffect} from "ahooks"
+import {useCreation, useGetState, useMemoizedFn, useScroll, useSize, useUpdateEffect} from "ahooks"
 import {Resizable} from "re-resizable"
 import {
     ChatAltIcon,
@@ -59,7 +59,7 @@ import {ArrowRightSvgIcon} from "../layout/icons"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {chatCS, chatGrade, getPromptList} from "@/services/yakChat"
-import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {ChatMarkdown} from "./ChatMarkdown"
 import {useStore} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -80,6 +80,18 @@ import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
 import {SolidYakitPluginGrayIcon, SolidYakitPluginIcon} from "@/assets/icon/colors"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
+import {HybridScanRequest, apiCancelHybridScan, apiHybridScan, convertHybridScanParams} from "@/pages/plugins/utils"
+import {HybridScanControlAfterRequest} from "@/models/HybridScan"
+import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
+import {
+    PluginBatchExecuteExtraFormValue,
+    PluginBatchExecutorTaskProps,
+    defPluginExecuteTaskValue
+} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
+import {cloneDeep} from "bizcharts/lib/utils"
+import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
+import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
 const TypeToContent: Record<string, string> = {
     cs_info: "安全知识",
@@ -1221,27 +1233,40 @@ interface PluginRunStatusProps {
         succee： 执行完成 - 无结果
         fail： 执行失败
     */
-    status: "loading" | "succee" | "fail" | "warn"
+    status: "loading" | "succee" | "fail" | "info"
+    progressList?: any
+    infoList?: StreamResult.Risk[]
 }
+
 const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
-    const {status} = props
+    const {status, progressList, infoList} = props
     return (
         <div className={styles["plugin-run-status"]}>
             {status === "loading" && (
                 <div className={styles["plugin-run"]}>
                     <div className={styles["title"]}>8个插件执行中，请耐心等待...</div>
-                    <div className={styles["sub-title"]}>一般来说，检测将会在 <span className={styles['highlight']}>10-20s</span> 内结束</div>
-                    <Progress style={{lineHeight:0}} strokeColor='#F28B44' trailColor='#F0F2F5' showInfo={false} percent={Math.floor((0.25 || 0) * 100)} />
+                    <div className={styles["sub-title"]}>
+                        一般来说，检测将会在 <span className={styles["highlight"]}>10-20s</span> 内结束
+                    </div>
+                    {progressList && progressList.length === 1 && (
+                        <Progress
+                            style={{lineHeight: 0}}
+                            strokeColor='#F28B44'
+                            trailColor='#F0F2F5'
+                            showInfo={false}
+                            percent={Math.trunc(progressList[0].progress * 100)}
+                        />
+                    )}
                 </div>
             )}
-            {status === "warn" && (
+            {status === "info" && (
                 <div className={styles["plugin-box"]}>
                     <div className={classNames(styles["header"], styles["warn"])}>
                         <div className={styles["title"]}>
                             <div className={styles["icon"]}>
                                 <SolidExclamationIcon />
                             </div>
-                            <div className={styles["text"]}>检测到 2 个风险项</div>
+                            <div className={styles["text"]}>检测到 {(infoList||[]).length} 个风险项</div>
                         </div>
                         <div className={styles["extra"]}>
                             <YakitButton type='text' style={{padding: 0}}>
@@ -1249,28 +1274,39 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                             </YakitButton>
                         </div>
                     </div>
-                    <div className={styles["content"]}>
-                        <div className={styles["item-box"]}>
-                            <div
-                                className={classNames(styles["label"], {
-                                    [styles["high"]]: true
-                                })}
-                            >
-                                高危
-                            </div>
-                            <div className={styles["text"]}>敏感信息泄漏: edge.microsoft.com:80</div>
+                    {infoList && (
+                        <div className={styles["content"]}>
+                            {infoList.map((item) => {
+                                console.log("vvv", item)
+
+                                /**获取风险等级的展示tag类型 */
+                                const getSeverity = (type) => {
+                                    switch (type) {
+                                        case "warning":
+                                            return "低危"
+                                        case "info":
+                                            return "中危"
+                                        case "danger":
+                                            return "高危"
+                                        case "serious":
+                                            return "严重"
+                                        default:
+                                            return undefined
+                                    }
+                                }
+                                return (
+                                    <div className={styles["item-box"]}>
+                                        <YakitTag color={item.Severity as "warning" | "info" | "danger" | "serious"}>
+                                            {getSeverity(item.Severity)}
+                                        </YakitTag>
+                                        <div className={classNames(styles["text"], "yakit-content-single-ellipsis")}>
+                                            {item.FromYakScript}：{item.Title}
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
-                        <div className={styles["item-box"]}>
-                            <div
-                                className={classNames(styles["label"], {
-                                    [styles["middle"]]: true
-                                })}
-                            >
-                                中危
-                            </div>
-                            <div className={styles["text"]}>Git 敏感信息泄漏: edge.microsoft.com:80</div>
-                        </div>
-                    </div>
+                    )}
                 </div>
             )}
             {status === "succee" && (
@@ -1318,12 +1354,17 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
 })
 interface PluginListContentProps {
     setPluginRun: (v: boolean) => void
+    onStartExecute: () => void
 }
-
+const defPluginBatchExecuteExtraFormValue: PluginBatchExecuteExtraFormValue = {
+    ...cloneDeep(defPluginExecuteFormValue),
+    ...cloneDeep(defPluginExecuteTaskValue)
+}
 const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
-    const {setPluginRun} = props
+    const {setPluginRun, onStartExecute} = props
     // 选中项
     const [checkedList, setCheckedList] = useState<string[]>([])
+
     const defaultArr = [
         {
             script_name: "ActiveMQ 默认密码检查",
@@ -1457,7 +1498,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                         disabled={checkedList.length === 0}
                         icon={<SolidPlayIcon />}
                         onClick={() => {
-                            setPluginRun(true)
+                            onStartExecute()
                         }}
                     >
                         开始执行
@@ -1485,9 +1526,92 @@ interface ChatCSContentProps {
 }
 const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     const {token, loadingToken, loading, resTime, time, info, onStop, onLike, onDel, renderType} = props
-    // 插件是否执行中
-    const [pluginRun, setPluginRun] = useState<boolean>(false)
 
+    const tokenRef = useRef<string>(randomString(40))
+    /**额外参数弹出框 */
+    const [extraParamsValue, setExtraParamsValue] = useState<PluginBatchExecuteExtraFormValue>({
+        ...cloneDeep(defPluginBatchExecuteExtraFormValue)
+    })
+    /**是否进入执行 */
+    const [pluginRun, setPluginRun] = useState<boolean>(false)
+    /**展示类型 */
+    const [showType, setShowType] = useState<"loading" | "succee" | "fail" | "info">("loading")
+    /**插件运行结果展示 */
+    const [streamInfo, hybridScanStreamEvent] = useHoldBatchGRPCStream({
+        taskName: "hybrid-scan",
+        apiKey: "HybridScan",
+        token: tokenRef.current,
+        onEnd: () => {
+            hybridScanStreamEvent.stop()
+            console.log("onEnd---", streamInfo)
+            onTypeByresult("succee")
+        },
+        onError: () => {
+            onTypeByresult("fail")
+        },
+        setRuntimeId: (rId) => {
+            // setRuntimeId(rId)
+        }
+    })
+    const onTypeByresult = useMemoizedFn((v: "succee" | "fail") => {
+        const info = streamInfo as HoldGRPCStreamInfo
+        if (info.riskState.length > 0) {
+            setShowType("info")
+        } else {
+            setShowType(v)
+        }
+    })
+
+    const infoList = useCreation(() => {
+        const info = streamInfo as HoldGRPCStreamInfo
+        return info.riskState
+    }, [streamInfo.riskState])
+
+    const progressList = useCreation(() => {
+        return streamInfo.progressState
+    }, [streamInfo.progressState])
+    /**开始执行 */
+    const onStartExecute = useMemoizedFn(() => {
+        // 任务配置参数
+        const taskParams: PluginBatchExecutorTaskProps = {
+            Concurrent: extraParamsValue.Concurrent,
+            TotalTimeoutSecond: extraParamsValue.Concurrent,
+            Proxy: extraParamsValue.Proxy
+        }
+        const params: HybridScanRequest = {
+            Input: "192.168.3.150:8080",
+            ...taskParams,
+            HTTPRequestTemplate: {
+                ...extraParamsValue,
+                IsRawHTTPRequest: false
+            }
+        }
+        const pluginInfo: {selectPluginName: string[]; search: PluginSearchParams} = {
+            selectPluginName: ["Swagger JSON 泄漏", "敏感信息检测", "敏感信息获取", "【端口扫描】主动信息探测"],
+            search: {
+                keyword: "",
+                userName: "",
+                type: "keyword"
+            }
+        }
+        const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(params, pluginInfo, "")
+        console.log("开始执行", hybridScanParams)
+
+        apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
+            setPluginRun(true)
+            setShowType("loading")
+            hybridScanStreamEvent.reset()
+            hybridScanStreamEvent.start()
+        })
+    })
+    /**取消执行 */
+    const onStopExecute = useMemoizedFn((e) => {
+        e.stopPropagation()
+        apiCancelHybridScan(tokenRef.current).then(() => {
+            hybridScanStreamEvent.stop()
+            setPluginRun(false)
+        })
+    })
     const copyContent = useMemo(() => {
         let content: string = ""
         for (let item of info.content) {
@@ -1500,8 +1624,6 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
         return token === loadingToken && loading
     }, [token, loadingToken, loading])
 
-    console.log("renderType--", renderType)
-
     return (
         <div className={styles["content-opt-wrapper"]}>
             {pluginRun ? (
@@ -1512,20 +1634,22 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                             {time}
                         </div>
                         <div style={{display: "flex"}} className={styles["header-right"]}>
+                            {/* {showType==="loading"&& */}
                             <YakitButton
                                 type='primary'
                                 colors='danger'
                                 icon={<StopIcon />}
-                                onClick={() => {
-                                    setPluginRun(false)
+                                onClick={(e) => {
+                                    onStopExecute(e)
                                 }}
                             >
                                 停止
                             </YakitButton>
+                            {/* } */}
                         </div>
                     </div>
                     <div className={styles["opt-content"]}>
-                        <PluginRunStatus status='loading' />
+                        <PluginRunStatus status={showType} progressList={progressList} infoList={infoList} />
                     </div>
                 </>
             ) : (
@@ -1620,7 +1744,9 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                               </React.Fragment>
                                           )
                                       })}
-                                {renderType === "plugin-list" && <PluginListContent setPluginRun={setPluginRun} />}
+                                {renderType === "plugin-list" && (
+                                    <PluginListContent setPluginRun={setPluginRun} onStartExecute={onStartExecute} />
+                                )}
                             </div>
                         )}
 
