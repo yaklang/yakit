@@ -188,7 +188,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 proxyUsername: params.proxyUsername,
                 proxyPassword: params.proxyPassword,
                 dnsServers: params.dnsServers,
-                hosts: params.etcHosts
+                hosts: params.etcHosts,
+                filterWebsocket: params.filterWebsocket
             }
         )
         const index = hostHistoryList.findIndex((ele) => ele === params.host)

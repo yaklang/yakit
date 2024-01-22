@@ -4397,6 +4397,10 @@ message MITMRequest {
 
   // 提前为此次flow设置tags
   repeated string Tags = 56;
+
+  // 过滤 ws
+  bool filterWebsocket = 57;
+  bool updateFilterWebsocket = 58;
 }
 
 message Certificate {

@@ -1,6 +1,6 @@
 import React, {Ref, useEffect, useState} from "react"
 import {Divider, Modal, notification, Typography} from "antd"
-import emiter from "@/utils/eventBus/eventBus";
+import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info} from "@/utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
@@ -17,6 +17,9 @@ import style from "./MITMServerHijacking.module.scss"
 import {QuitIcon} from "@/assets/newIcon"
 import classNames from "classnames"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {MITMConsts} from "../MITMConsts"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -51,6 +54,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
+    const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
 
     useEffect(() => {
         if (!!props.enableInitialMITMPlugin && (props?.defaultPlugins || []).length > 0) {
@@ -70,10 +74,19 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             .catch((e: any) => {
                 notification["error"]({message: `停止中间人劫持失败：${e}`})
             })
-            .finally(() =>{
+            .finally(() => {
                 // setLoading(false)
             })
     })
+
+    useEffect(() => {
+        // 获取 ws 开关状态
+        getRemoteValue(MITMConsts.MITMDefaultFilterWebsocket).then((e) => {
+            const v = e === "true" ? true : false
+            setFilterWebsocket(v)
+        })
+    }, [])
+
     return (
         <div className={style["mitm-server"]}>
             <div className={style["mitm-server-heard"]}>
@@ -96,6 +109,21 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 </div>
                 <div className={style["mitm-server-extra"]}>
                     <div className={style["mitm-server-links"]}>
+                        <div style={{display: "flex", alignItems: "center"}}>
+                            <label>
+                                过滤WebSocket：
+                                <YakitSwitch
+                                    size='middle'
+                                    checked={filterWebsocket}
+                                    onChange={(value) => {
+                                        setFilterWebsocket(value)
+                                        setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${value}`)
+                                        ipcRenderer.invoke("mitm-filter-websocket", value)
+                                    }}
+                                />
+                            </label>
+                        </div>
+                        <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <div className={style["link-item"]} onClick={() => setVisible(true)}>
                             规则配置
                         </div>

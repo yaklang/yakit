@@ -368,6 +368,8 @@ export interface ExtraMITMServerProps {
     proxyUsername: string
     dnsServers: string[]
     hosts: {Key: string; Value: string}[]
+    /**@name 过滤WebSocket */
+    filterWebsocket: boolean
 }
 
 interface MITMServerProps {
