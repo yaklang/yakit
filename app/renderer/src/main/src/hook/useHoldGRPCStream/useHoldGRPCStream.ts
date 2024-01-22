@@ -47,6 +47,8 @@ export interface HoldGRPCStreamParams {
     waitTime?: number
     /** @name 数据流结束的回调事件 */
     onEnd?: () => any
+    /** @name 数据流报错的回调事件 */
+    onError?: (e:any) => void
     /** @name 额外的数据过滤方法 */
     dataFilter?: (obj: StreamResult.Message, content: StreamResult.Log) => boolean
     /** @name 设置run-time-id值 */
