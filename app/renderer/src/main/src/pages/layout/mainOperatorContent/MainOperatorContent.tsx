@@ -613,6 +613,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === YakitRoute.DNSLog) {
                 openMenuPage({route: YakitRoute.DNSLog})
             }
+            if (type === YakitRoute.BatchExecutorPage) {
+                openMenuPage({route: YakitRoute.BatchExecutorPage},{
+                    pageParams:{
+                        ...data
+                    }
+                })
+            }
             console.info("send to tab: ", type)
         })
 
@@ -994,6 +1001,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     if (route === YakitRoute.HTTPFuzzer) {
                         addFuzzerList(node.id, node, order)
                     }
+                    if (route === YakitRoute.BatchExecutorPage) {
+                        onBatchExecutorPage(node, order)
+                    }
                     setPageCache([...pages])
                     setCurrentTabKey(key)
                 } else {
@@ -1021,6 +1031,22 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     )
+    const onBatchExecutorPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.BatchExecutorPage,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                pluginBatchExecutorPageInfo:node.pageParams?.pluginBatchExecutorPageInfo?{
+                    ...node.pageParams.pluginBatchExecutorPageInfo
+                }:undefined
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.BatchExecutorPage, newPageNode)
+    })
     /** @name 多开页面的额外处理逻辑(针对web-fuzzer页面) */
     const openMultipleMenuPage = useMemoizedFn((route: RouteToPageProps) => {
         if (route.route === YakitRoute.HTTPFuzzer) {

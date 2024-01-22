@@ -537,7 +537,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Plugin_Local:
             return <PluginsLocal />
         case YakitRoute.BatchExecutorPage:
-            return <PluginBatchExecutor />
+            return <PluginBatchExecutor id={params?.id || ""}/>
         case YakitRoute.DNSLog:
             return <DNSLogPage />
         case YakitRoute.ICMPSizeLog:
