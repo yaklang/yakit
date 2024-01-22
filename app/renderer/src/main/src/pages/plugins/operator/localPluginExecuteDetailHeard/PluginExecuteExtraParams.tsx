@@ -244,6 +244,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                 activeKey={activeKey}
                 onChange={(key) => setActiveKey(key as string[])}
                 bordered={false}
+                className={styles['kv-params-wrapper']}
             >
                 <YakitPanel
                     header={
@@ -286,7 +287,8 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                         onDel={(i) => {
                             handleRemove(i, "GetParams")
                         }}
-                    ></VariableList>
+                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                    />
                 </YakitPanel>
                 <YakitPanel
                     header={
@@ -329,7 +331,8 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                         onDel={(i) => {
                             handleRemove(i, "PostParams")
                         }}
-                    ></VariableList>
+                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                    />
                 </YakitPanel>
                 <YakitPanel
                     header={
@@ -372,7 +375,8 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                         onDel={(i) => {
                             handleRemove(i, "Headers")
                         }}
-                    ></VariableList>
+                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                    />
                 </YakitPanel>
                 <YakitPanel
                     header={
@@ -415,7 +419,8 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                         onDel={(i) => {
                             handleRemove(i, "Cookie")
                         }}
-                    ></VariableList>
+                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                    />
                 </YakitPanel>
             </YakitCollapse>
         </div>

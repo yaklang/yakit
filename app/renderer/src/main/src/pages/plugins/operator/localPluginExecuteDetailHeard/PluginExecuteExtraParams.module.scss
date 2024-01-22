@@ -52,6 +52,16 @@
             @extend %icon;
         }
     }
+    .kv-params-wrapper {
+        & > :global(.ant-collapse-item .ant-collapse-content > .ant-collapse-content-box) {
+            padding-right: 0;
+        }
+        .variable-list-wrapper {
+            & > :global(.ant-collapse-item .ant-collapse-content > .ant-collapse-content-box) {
+                padding-right: 16px;
+            }
+        }
+    }
 }
 .extra-params-node-type {
     :global {
