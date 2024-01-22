@@ -19,7 +19,8 @@ import {
     OutlineYakRunnerActiveIcon,
     OutlineWebFuzzerActiveIcon,
     OutlineChartPieActiveIcon,
-    OutlineSparklesActiveIcon
+    OutlineSparklesActiveIcon,
+    SolidExclamationIcon
 } from "./icon"
 import {
     ArrowDownIcon,
@@ -40,7 +41,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {PresetKeywordProps, presetList} from "./presetKeywords"
-import {Divider, Drawer, Input, Tooltip} from "antd"
+import {Divider, Drawer, Input, Progress, Tooltip} from "antd"
 import {
     CacheChatCSProps,
     ChatCSAnswerProps,
@@ -64,7 +65,13 @@ import {useStore} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {OutlineInformationcircleIcon, OutlinePaperairplaneIcon, OutlineXIcon} from "@/assets/icon/outline"
-import {SolidPlayIcon, SolidThumbupIcon} from "@/assets/icon/solid"
+import {
+    SolidCheckCircleIcon,
+    SolidPlayIcon,
+    SolidShieldexclamationIcon,
+    SolidThumbupIcon,
+    SolidXcircleIcon
+} from "@/assets/icon/solid"
 
 import moment from "moment"
 import classNames from "classnames"
@@ -1210,17 +1217,102 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
 interface PluginRunStatusProps {
     /*
         loading: 加载中 显示进度
-        succee： 执行完成
+        warn： 执行完成 - 有结果
+        succee： 执行完成 - 无结果
         fail： 执行失败
-        result： 显示结果
     */
-    status: "loading" | "succee" | "fail" | "result"
+    status: "loading" | "succee" | "fail" | "warn"
 }
 const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
     const {status} = props
     return (
         <div className={styles["plugin-run-status"]}>
-            {status === "loading" && <div className={styles["plugin-run"]}></div>}
+            {status === "loading" && (
+                <div className={styles["plugin-run"]}>
+                    <div className={styles["title"]}>8个插件执行中，请耐心等待...</div>
+                    <div className={styles["sub-title"]}>一般来说，检测将会在 <span className={styles['highlight']}>10-20s</span> 内结束</div>
+                    <Progress style={{lineHeight:0}} strokeColor='#F28B44' trailColor='#F0F2F5' showInfo={false} percent={Math.floor((0.25 || 0) * 100)} />
+                </div>
+            )}
+            {status === "warn" && (
+                <div className={styles["plugin-box"]}>
+                    <div className={classNames(styles["header"], styles["warn"])}>
+                        <div className={styles["title"]}>
+                            <div className={styles["icon"]}>
+                                <SolidExclamationIcon />
+                            </div>
+                            <div className={styles["text"]}>检测到 2 个风险项</div>
+                        </div>
+                        <div className={styles["extra"]}>
+                            <YakitButton type='text' style={{padding: 0}}>
+                                查看详情
+                            </YakitButton>
+                        </div>
+                    </div>
+                    <div className={styles["content"]}>
+                        <div className={styles["item-box"]}>
+                            <div
+                                className={classNames(styles["label"], {
+                                    [styles["high"]]: true
+                                })}
+                            >
+                                高危
+                            </div>
+                            <div className={styles["text"]}>敏感信息泄漏: edge.microsoft.com:80</div>
+                        </div>
+                        <div className={styles["item-box"]}>
+                            <div
+                                className={classNames(styles["label"], {
+                                    [styles["middle"]]: true
+                                })}
+                            >
+                                中危
+                            </div>
+                            <div className={styles["text"]}>Git 敏感信息泄漏: edge.microsoft.com:80</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {status === "succee" && (
+                <div className={styles["plugin-box"]}>
+                    <div className={classNames(styles["header"], styles["succee"])}>
+                        <div className={styles["title"]}>
+                            <div className={styles["icon"]}>
+                                <SolidCheckCircleIcon />
+                            </div>
+                            <div className={styles["text"]}>执行完成</div>
+                        </div>
+                        <div className={styles["extra"]}>
+                            <YakitButton type='text' style={{padding: 0}}>
+                                查看详情
+                            </YakitButton>
+                        </div>
+                    </div>
+                    <div className={styles["content"]}>
+                        <div className={styles["result"]}>无结果</div>
+                    </div>
+                </div>
+            )}
+            {status === "fail" && (
+                <div className={styles["plugin-box"]}>
+                    <div className={classNames(styles["header"], styles["fail"])}>
+                        <div className={styles["title"]}>
+                            <div className={styles["icon"]}>
+                                <SolidXcircleIcon />
+                            </div>
+                            <div className={styles["text"]}>执行失败</div>
+                        </div>
+                        <div className={styles["extra"]}>
+                            <YakitButton type='text' style={{padding: 0}}>
+                                查看日志
+                            </YakitButton>
+                        </div>
+                    </div>
+                    <div className={styles["content"]}>
+                        <div className={styles["result"]}>无结果</div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 })
