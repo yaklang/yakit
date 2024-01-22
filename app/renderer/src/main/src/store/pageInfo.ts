@@ -43,8 +43,15 @@ interface PageParamsInfoProps {
     pluginLocalPageInfo?: {uuid: string}
     /**YakitRoute.Plugin_Store 插件商店页面 */
     pluginOnlinePageInfo?: {keyword: string; plugin_type: string}
+    pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
 }
 
+export interface PluginBatchExecutorPageInfoProps {
+    /**执行批量执行的runtimeId */
+    runtimeId: string
+    /**批量执行结果的默认选中的tab默认值 */
+    defaultActiveKey: string
+}
 export interface WebFuzzerPageInfoProps {
     pageId: string
     advancedConfigValue: AdvancedConfigValueProps
@@ -312,7 +319,7 @@ try {
                 })
                 // console.log("saveFuzzerCache", cache)
                 // console.table(pageList)
-                setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) =>{})
+                setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
             } catch (error) {
                 yakitNotify("error", "webFuzzer缓存数据失败:" + error)
             }

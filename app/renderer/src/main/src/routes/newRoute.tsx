@@ -133,6 +133,7 @@ import {isCommunityEdition} from "@/utils/envfile"
 import { NewPayload } from "@/pages/payloadManager/newPayload"
 import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
 import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
+import { PluginBatchExecutorPageInfoProps } from "@/store/pageInfo"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -453,6 +454,8 @@ export interface ComponentParams {
 
     // webshell info
     webshellInfo?: WebShellDetail
+    /**批量执行页面参数 */
+    pluginBatchExecutorPageInfo: PluginBatchExecutorPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
