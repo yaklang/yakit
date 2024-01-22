@@ -18,4 +18,10 @@
             line-height: 24px; /* 150% */
         }
     }
+    .space-engine-form-operate {
+        @extend %flex-center;
+        .space-engine-form-operate-start {
+            margin-right: 8px;
+        }
+    }
 }
