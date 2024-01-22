@@ -52,7 +52,7 @@ interface YaklangInformationKV {
     Value: Uint8Array
     Extern: YaklangInformationKV[]
 }
-interface YaklangInformation {
+export interface YaklangInformation {
     Name: string
     Data: YaklangInformationKV[]
 }

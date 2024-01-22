@@ -11,7 +11,7 @@ const {Panel} = Collapse
  * @description: 折叠面板
  * @augments  继承antd的 CollapseProps 默认属性
  */
-export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
+const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
     const {expandIcon, bordered, className = "", ...restProps} = props
 
     return (
@@ -37,7 +37,7 @@ export const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
  * @description: 折叠面板
  * @augments  继承antd的CollapsePanelProps 默认属性
  */
-export const YakitPanel: React.FC<YakitPanelProps> = (props) => {
+const YakitPanel: React.FC<YakitPanelProps> = (props) => {
     const {...restProps} = props
     return <Panel {...restProps} />
 }

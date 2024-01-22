@@ -150,8 +150,8 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 left: true,
                 topRight: false,
                 bottomRight: false,
-                bottomLeft: true,
-                topLeft: false
+                bottomLeft: false,
+                topLeft: true
             }
         }
 
@@ -494,11 +494,11 @@ const YakitWindowContent: React.FC<YakitWindowContentProps> = memo((props) => {
             <div style={footerStyle} className={styles["yakit-window-body-footer"]}>
                 {footerExtra}
                 <div className={styles["btn-group"]}>
-                    <YakitButton type='outline2' size='large' onClick={onOk} {...okButtonProps}>
-                        {okButtonText}
-                    </YakitButton>
-                    <YakitButton colors='danger' size='large' onClick={onCancel} {...cancelButtonProps}>
+                    <YakitButton type='outline2' size='large' onClick={onCancel} {...cancelButtonProps}>
                         {cancelButtonText}
+                    </YakitButton>
+                    <YakitButton size='large' onClick={onOk} {...okButtonProps}>
+                        {okButtonText}
                     </YakitButton>
                 </div>
             </div>

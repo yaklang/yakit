@@ -1,5 +1,6 @@
 import {ResizableProps} from "re-resizable"
 import {CSSProperties} from "react"
+import {YakitButtonProp} from "../YakitButton/YakitButton"
 
 export interface YakitWindowProps
     extends Omit<YakitWindowContentProps, "callbackDrag" | "activeDockSide" | "onDockSide"> {
