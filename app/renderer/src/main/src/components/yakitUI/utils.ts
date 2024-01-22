@@ -66,7 +66,7 @@ export interface SetRemoteValuesBaseProps {
  * @param  {SetRemoteValuesBaseProps} params
  * @returns
  */
-export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promise<null> = (params) => {
+export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promise<CacheDataHistoryProps> = (params) => {
     return new Promise((resolve, reject) => {
         const {cacheHistoryDataKey, newValue, cacheHistoryListLength = 10} = params
         onGetRemoteValuesBase(cacheHistoryDataKey).then((oldCacheHistoryData) => {
@@ -93,7 +93,7 @@ export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promis
             }
             setRemoteValue(cacheHistoryDataKey, JSON.stringify(cacheHistory))
                 .then(() => {
-                    resolve(null)
+                    resolve(cacheHistory)
                 })
                 .catch((e) => {
                     yakitNotify("error", `${cacheHistoryDataKey}缓存字段保存数据出错:` + e)
