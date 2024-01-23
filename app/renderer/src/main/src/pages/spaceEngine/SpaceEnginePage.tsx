@@ -1,8 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
-import styles from "./SpaceEngine.module.scss"
-import {
-    OutlineInformationcircleIcon
-} from "@/assets/icon/outline"
+import styles from "./SpaceEnginePage.module.scss"
+import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
@@ -34,11 +32,11 @@ import {randomString} from "@/utils/randomUtil"
 import classNames from "classnames"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 
-interface SpaceEngineProps {
+interface SpaceEnginePageProps {
     /**页面id */
     pageId: string
 }
-export const SpaceEngine: React.FC<SpaceEngineProps> = React.memo((props) => {
+export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props) => {
     const {pageId} = props
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -55,7 +53,7 @@ export const SpaceEngine: React.FC<SpaceEngineProps> = React.memo((props) => {
     })
     const [form] = Form.useForm()
     /**是否展开/收起 */
-    const [isExpand, setIsExpand] = useState<boolean>(false)
+    const [isExpand, setIsExpand] = useState<boolean>(true)
     const [tabName, setTabName] = useState<string>(initSpaceEnginePageInfo())
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
@@ -141,51 +139,53 @@ export const SpaceEngine: React.FC<SpaceEngineProps> = React.memo((props) => {
                     )}
                 </div>
             </ExpandAndRetract>
-            <div
-                className={classNames(styles["space-engine-form-wrapper"], {
-                    [styles["space-engine-form-wrapper-hidden"]]: !isExpand
-                })}
-            >
-                <Form
-                    form={form}
-                    onFinish={onStartExecute}
-                    labelCol={{span: 6}}
-                    wrapperCol={{span: 12}} //这样设置是为了让输入框居中
-                    validateMessages={{
-                        /* eslint-disable no-template-curly-in-string */
-                        required: "${label} 是必填字段"
-                    }}
-                    labelWrap={true}
-                    initialValues={getDefaultSpaceEngineStartParams()}
+            <div className={styles["space-engine-content"]}>
+                <div
+                    className={classNames(styles["space-engine-form-wrapper"], {
+                        [styles["space-engine-form-wrapper-hidden"]]: !isExpand
+                    })}
                 >
-                    <SpaceEngineFormContent />
-                    <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
-                        <div className={styles["space-engine-form-operate"]}>
-                            {isExecuting ? (
-                                <YakitButton danger onClick={onStopExecute} size='large'>
-                                    停止
-                                </YakitButton>
-                            ) : (
-                                <YakitButton
-                                    className={styles["space-engine-form-operate-start"]}
-                                    htmlType='submit'
-                                    size='large'
-                                >
-                                    开始执行
-                                </YakitButton>
-                            )}
-                        </div>
-                    </Form.Item>
-                </Form>
+                    <Form
+                        form={form}
+                        onFinish={onStartExecute}
+                        labelCol={{span: 6}}
+                        wrapperCol={{span: 12}} //这样设置是为了让输入框居中
+                        validateMessages={{
+                            /* eslint-disable no-template-curly-in-string */
+                            required: "${label} 是必填字段"
+                        }}
+                        labelWrap={true}
+                        initialValues={getDefaultSpaceEngineStartParams()}
+                    >
+                        <SpaceEngineFormContent />
+                        <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                            <div className={styles["space-engine-form-operate"]}>
+                                {isExecuting ? (
+                                    <YakitButton danger onClick={onStopExecute} size='large'>
+                                        停止
+                                    </YakitButton>
+                                ) : (
+                                    <YakitButton
+                                        className={styles["space-engine-form-operate-start"]}
+                                        htmlType='submit'
+                                        size='large'
+                                    >
+                                        开始执行
+                                    </YakitButton>
+                                )}
+                            </div>
+                        </Form.Item>
+                    </Form>
+                </div>
+                {isShowResult && (
+                    <PluginExecuteResult
+                        streamInfo={streamInfo}
+                        runtimeId={runtimeId}
+                        loading={isExecuting}
+                        pluginType={""}
+                    />
+                )}
             </div>
-            {isShowResult && (
-                <PluginExecuteResult
-                    streamInfo={streamInfo}
-                    runtimeId={runtimeId}
-                    loading={isExecuting}
-                    pluginType={""}
-                />
-            )}
         </div>
     )
 })
@@ -260,7 +260,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             FieldVerbose: "搜索条件",
             Required: true,
             TypeVerbose: "yak",
-            DefaultValue: "",
+            DefaultValue: "title='ChatGPT'",
             Help: ""
         }
     }, [])
