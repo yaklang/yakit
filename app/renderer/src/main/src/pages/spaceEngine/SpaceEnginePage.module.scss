@@ -12,6 +12,7 @@
     overflow: hidden;
     .space-engine-heard {
         padding: 8px;
+        z-index: 9;
         .space-engine-heard-tabName {
             color: var(--yakit-header-color);
             font-size: 16px;
