@@ -68,7 +68,7 @@ export interface GlobalNetworkConfig {
 }
 
 export interface ThirdPartyApplicationConfig {
-    Type: "zoomeye" | "hunter" | "shodan" | "fofa" | "github" | "openai" | "skylark" | "aliyun" | "tencent" | string
+    Type: "zoomeye" | "hunter" | "shodan" | "fofa" | "github" | "openai" | "skylark" | "aliyun" | "tencent" |"quake"| string
     APIKey: string
     UserIdentifier: string
     UserSecret?: string
@@ -105,7 +105,7 @@ interface ClientCertificates {
 
 const {ipcRenderer} = window.require("electron")
 
-const defaultParams: GlobalNetworkConfig = {
+export const defaultParams: GlobalNetworkConfig = {
     DisableSystemDNS: false,
     CustomDNSServers: [],
     DNSFallbackTCP: false,
