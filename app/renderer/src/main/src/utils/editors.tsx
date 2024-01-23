@@ -169,6 +169,8 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             }
             let current: string[] = []
 
+            
+            
             const applyContentLength = () => {
                 const text = model.getValue()
                 const match = /\nContent-Length:\s*?\d+/.exec(text)
@@ -180,11 +182,28 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                 current = model.deltaDecorations(current, [
                     {
                         id: "keyword" + match.index,
-                        ownerId: 1,
+                        ownerId: 0,
                         range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
                         options: {afterContentClassName: "content-length"}
                     } as IModelDecoration
                 ])
+            }
+            const applyUnicodeDecode = () => {
+                const text = model.getValue()
+                    let match 
+                    const regex = /(\\u[\dabcdef]{4})+/ig
+    
+                    while ((match = regex.exec(text)) !== null) {
+                        const start = model.getPositionAt(match.index)
+                        const end = model.getPositionAt(match.index + match[0].length)
+                        const decoded = match[0].split("\\u").filter(Boolean).map(hex => String.fromCharCode(parseInt(hex, 16))).join("")
+                        current = model.deltaDecorations(current, [{
+                            id: "decode" + match.index,
+                            ownerId: 0,
+                            range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                            options: {className: "unicode-decode", hoverMessage: {value: decoded}, afterContentClassName: "unicode-decode", after: {content: decoded, inlineClassName: "unicode-decode-after"}}
+                        } as IModelDecoration])
+                    }
             }
             const applyKeywordDecoration = () => {
                 const text = model.getValue()
@@ -198,7 +217,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                     const end = model.getPositionAt(match.index + match[0].length)
                     decorations.push({
                         id: "keyword" + match.index,
-                        ownerId: 1,
+                        ownerId: 2,
                         range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
                         options: {beforeContentClassName: className}
                     } as IModelDecoration)
@@ -207,11 +226,13 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                 current = model.deltaDecorations(current, decorations)
             }
             model.onDidChangeContent((e) => {
-                applyKeywordDecoration()
                 applyContentLength()
+                applyUnicodeDecode()
+                applyKeywordDecoration()
             })
-            applyKeywordDecoration()
             applyContentLength()
+            applyUnicodeDecode()
+            applyKeywordDecoration()
         }
 
         if (language==="yak"){

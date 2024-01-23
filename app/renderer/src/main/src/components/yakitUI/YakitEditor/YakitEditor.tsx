@@ -572,12 +572,29 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             const end = model.getPositionAt(match.index + match[0].indexOf(":"))
                             dec.push({
                                 id: detail.classType + match.index,
-                                ownerId: 1,
+                                ownerId: 0,
                                 range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
                                 options: {afterContentClassName: detail.classType}
                             } as YakitIModelDecoration)
                         })
                     } catch (e) {}
+                })()
+                ;(() => {
+                    const text = model.getValue()
+                    let match 
+                    const regex = /(\\u[\dabcdef]{4})+/ig
+    
+                    while ((match = regex.exec(text)) !== null) {
+                        const start = model.getPositionAt(match.index)
+                        const end = model.getPositionAt(match.index + match[0].length)
+                        const decoded = match[0].split("\\u").filter(Boolean).map(hex => String.fromCharCode(parseInt(hex, 16))).join("")
+                        dec.push({
+                            id: "decode" + match.index,
+                            ownerId: 1,
+                            range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                            options: {className: "unicode-decode", hoverMessage: {value: decoded}, afterContentClassName: "unicode-decode", after: {content: decoded, inlineClassName: "unicode-decode-after"}}
+                        } as IModelDecoration)
+                    }
                 })()
                 ;(() => {
                     const keywordRegExp = /\r?\n/g
@@ -590,7 +607,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         const end = model.getPositionAt(match.index + match[0].length)
                         dec.push({
                             id: "keyword" + match.index,
-                            ownerId: 1,
+                            ownerId: 2,
                             range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
                             options: {beforeContentClassName: className}
                         } as YakitIModelDecoration)
