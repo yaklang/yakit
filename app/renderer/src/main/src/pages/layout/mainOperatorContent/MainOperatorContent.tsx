@@ -1773,9 +1773,9 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
                 clearFuzzerSequence()
                 m.destroy()
             },
-            onCancel: () => {
-                m.destroy()
-            },
+            // onCancel: () => {
+            //     m.destroy()
+            // },
             content: "是否关闭所有标签页"
         })
     })
@@ -1799,9 +1799,9 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
                 }
                 m.destroy()
             },
-            onCancel: () => {
-                m.destroy()
-            },
+            // onCancel: () => {
+            //     m.destroy()
+            // },
             content: "是否保留当前标签页，关闭其他标签页"
         })
     })
@@ -3079,9 +3079,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                         }
                         m.destroy()
                     },
-                    onCancel: () => {
-                        m.destroy()
-                    },
+                    // onCancel: () => {
+                    //     m.destroy()
+                    // },
                     content: "是否保留当前标签页，关闭其他标签页"
                 })
             } else {
@@ -3112,9 +3112,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                         }
                         m.destroy()
                     },
-                    onCancel: () => {
-                        m.destroy()
-                    },
+                    // onCancel: () => {
+                    //     m.destroy()
+                    // },
                     content: "是否仅保留当前标签页，关闭组内其他标签页"
                 })
             }
@@ -3263,9 +3263,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                         onCloseGroup(groupItem)
                         m.destroy()
                     },
-                    onCancel: () => {
-                        m.destroy()
-                    },
+                    // onCancel: () => {
+                    //     m.destroy()
+                    // },
                     content: <CloseGroupContent />
                 })
             } else {
@@ -3323,9 +3323,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     }
                     m.destroy()
                 },
-                onCancel: () => {
-                    m.destroy()
-                },
+                // onCancel: () => {
+                //     m.destroy()
+                // },
                 content: "是否保留当前组及其组内标签页，关闭其他组和标签页"
             })
         })
@@ -3955,6 +3955,7 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
         type: "white",
         onCancelText: "不保存",
         onOkText: "保存",
+        keyboard:false,
         ...(props || {}),
         onOk: () => {
             if (props?.onOk) {

@@ -374,7 +374,9 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     setAllCheck(false)
                     setSelectList([])
                     // 本地插件页面未打开，插件商店/我的插件点击去使用，先加载第一页的数据，再将数据中心的缓存数据添加到数组头部
-                    onJumpToLocalPluginDetailByUUID()
+                    setTimeout(() => {
+                        onJumpToLocalPluginDetailByUUID()
+                    }, 200)
                 }
             } catch (error) {}
             setTimeout(() => {

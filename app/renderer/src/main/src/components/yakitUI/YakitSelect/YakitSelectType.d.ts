@@ -13,6 +13,9 @@ import {type} from "os"
  * @param {string} wrapperClassName 装饰div的className
  * @param {CSSProperties} wrapperStyle 装饰div的style
  * @param {string} cacheHistoryDataKey 缓存数据 key值
+ * @param {number} cacheHistoryListLength 缓存数据 list长度
+ * @param {OptionType} defaultOptions 
+ * @param {boolean} isCacheDefaultValue false会缓存默认值，但是不会将默认值显示到页面上
  */
 
 export interface YakitSelectProps<
@@ -27,7 +30,7 @@ export interface YakitSelectProps<
     /**@name 缓存数据  list长度*/
     cacheHistoryListLength?: number
     defaultOptions?: OptionType
-    /**是否缓存默认值 */
+    /** false会缓存默认值，但是不会将默认值显示到页面上 */
     isCacheDefaultValue?: boolean
 }
 export interface YakitSelectOptionProps extends OptionProps {}

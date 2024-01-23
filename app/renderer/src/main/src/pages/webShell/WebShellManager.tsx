@@ -20,9 +20,9 @@ export const deleteWebShell = (id: string, url: string, refList: () => void, ids
             })
             deletes.destroy()
         },
-        onCancel: () => {
-            deletes.destroy()
-        },
+        // onCancel: () => {
+        //     deletes.destroy()
+        // },
         content: `是否删除 ${url} ?`
     })
 }

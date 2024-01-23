@@ -256,7 +256,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         },
                         onCancel: () => {
                             reject(false)
-                            m.destroy()
+                            // m.destroy()
                         },
                         content: "是否应用修改的内容"
                     })
@@ -461,7 +461,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                     },
                     onCancel: () => {
                         onClose()
-                        m.destroy()
+                        // m.destroy()
                     },
                     content: "是否应用修改的内容"
                 })

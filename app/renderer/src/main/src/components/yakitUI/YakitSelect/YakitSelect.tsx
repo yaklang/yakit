@@ -24,11 +24,11 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     {
         className,
         size = "middle",
-        wrapperClassName='',
+        wrapperClassName = "",
         wrapperStyle,
         dropdownRender,
         cacheHistoryDataKey = "",
-        isCacheDefaultValue,
+        isCacheDefaultValue = true,
         cacheHistoryListLength = 10,
         ...props
     }: YakitSelectProps<OptionType>,
@@ -67,12 +67,17 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                 ...cacheHistoryData.options
             ].filter((_, index) => index < cacheHistoryListLength)
             const cacheHistory: CacheDataHistoryProps = {
-                defaultValue: isCacheDefaultValue !== false ? newValue.join(",") : "",
+                // defaultValue: isCacheDefaultValue ? newValue.join(",") : "",
+                defaultValue: newValue.join(","),
                 options: newOption
             }
             setRemoteValue(cacheHistoryDataKey, JSON.stringify(cacheHistory))
                 .then(() => {
-                    onGetRemoteValues()
+                    // onGetRemoteValues()
+                    setCacheHistoryData({
+                        defaultValue: newValue,
+                        options: newOption
+                    })
                 })
                 .catch((e) => {
                     yakitNotify("error", `${cacheHistoryDataKey}缓存字段保存数据出错:` + e)
@@ -81,17 +86,22 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             // 多选;该情况下label和value 大多数时候不一样;暂不支持缓存
         } else {
             //  单选
-            onSetRemoteValuesBase({cacheHistoryDataKey, newValue: newValue.join(",")}).then(() => {
-                onGetRemoteValues()
-            })
+            onSetRemoteValuesBase({cacheHistoryDataKey, newValue: newValue.join(",")}).then(
+                (value: CacheDataHistoryProps) => {
+                    // onGetRemoteValues()
+                    setCacheHistoryData({
+                        defaultValue: value.defaultValue ? value.defaultValue.split(",") : [],
+                        options: value.options
+                    })
+                }
+            )
         }
     })
     /**@description 获取 cacheHistoryDataKey 对应的数据 */
     const onGetRemoteValues = useMemoizedFn(() => {
         if (!cacheHistoryDataKey) return
         onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
-            const value =
-                isCacheDefaultValue !== false && cacheData.defaultValue ? cacheData.defaultValue.split(",") : []
+            const value = isCacheDefaultValue && cacheData.defaultValue ? cacheData.defaultValue.split(",") : []
             let newOption: DefaultOptionType[] = getNewOption(cacheData.options)
             if (props.onChange) props.onChange(value, newOption)
             setCacheHistoryData({defaultValue: value, options: newOption as unknown as YakitOptionTypeProps})

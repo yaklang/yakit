@@ -93,6 +93,7 @@ import {
     PrivateSolidPocIcon,
     PrivateSolidPortsIcon,
     PrivateSolidReportIcon,
+    PrivateSolidReverseServerIcon,
     PrivateSolidRiskIcon,
     PrivateSolidScanPortIcon,
     PrivateSolidShellReceiverIcon,
@@ -1070,7 +1071,7 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
     [YakitRoute.ReverseServer_New]: {
         page: YakitRoute.ReverseServer_New,
         icon: <PrivateOutlineReverseServerIcon />,
-        hoverIcon: <PrivateSolidShellReceiverIcon />,
+        hoverIcon: <PrivateSolidReverseServerIcon />,
         ...YakitRouteToPageInfo[YakitRoute.ReverseServer_New]
     },
     [YakitRoute.DNSLog]: {

@@ -154,10 +154,6 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                     </YakitButton>
                 </div>
             }
-            onCancel={(e) => {
-                if (props.onCancel) props.onCancel(e)
-                setVisible(false)
-            }}
             visible={visible}
             closable={true}
             destroyOnClose={true}
@@ -173,6 +169,10 @@ const YakitBaseModal: React.FC<YakitBaseModalProp> = (props) => {
                 </div>
             }
             {...props}
+            onCancel={(e) => {
+                if (props.onCancel) props.onCancel(e)
+                setVisible(false)
+            }}
         />
     )
 }
