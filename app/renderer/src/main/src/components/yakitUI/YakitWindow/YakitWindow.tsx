@@ -204,7 +204,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 className={classNames({
                     [styles["yakit-window-hidden-wrapper"]]: !visible
                 })}
-                style={{position: "fixed", top: dockSideTop, left: 0, zIndex: 999}}
+                style={{position: "fixed", top: dockSideTop, left: 0, zIndex: 1002}}
                 defaultSize={{width: width, height: winMaxHeight.show}}
                 minHeight={winMaxHeight.show}
                 minWidth={minWidth}
@@ -239,7 +239,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 className={classNames({
                     [styles["yakit-window-hidden-wrapper"]]: !visible
                 })}
-                style={{position: "fixed", top: dockSideTop, right: 0, zIndex: 999}}
+                style={{position: "fixed", top: dockSideTop, right: 0, zIndex: 1002}}
                 defaultSize={{width: width, height: winMaxHeight.show}}
                 minHeight={winMaxHeight.show}
                 minWidth={minWidth}
@@ -274,7 +274,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 className={classNames({
                     [styles["yakit-window-hidden-wrapper"]]: !visible
                 })}
-                style={{position: "fixed", bottom: 0, left: 0, zIndex: 999}}
+                style={{position: "fixed", bottom: 0, left: 0, zIndex: 1002}}
                 defaultSize={{width: winMaxWidth.show, height: height}}
                 minWidth={winMaxWidth.show}
                 minHeight={minHeight}
@@ -458,8 +458,13 @@ const YakitWindowContent: React.FC<YakitWindowContentProps> = memo((props) => {
     const divRef = useRef<HTMLDivElement>(null)
     const winSize = useSize(divRef)
 
+    const docSideClassName = useMemo(() => {
+        if (activeDockSide === "shrink") return ""
+        return styles[`yakit-window-${activeDockSide}-body`]
+    }, [activeDockSide])
+
     return (
-        <div ref={divRef} className={classNames(styles["yakit-window-body"], wrapClassName)}>
+        <div ref={divRef} className={classNames(styles["yakit-window-body"], docSideClassName, wrapClassName)}>
             <div
                 style={headerStyle}
                 className={styles["yakit-window-body-header"]}

@@ -1,5 +1,5 @@
 .yakit-window-wrapper {
-    z-index: 998;
+    z-index: 1000;
     position: absolute;
     top: 20%;
 }
@@ -45,6 +45,24 @@
     box-shadow:
         0px 8px 10px -6px rgba(49, 52, 63, 0.1),
         0px 20px 25px -5px rgba(49, 52, 63, 0.1);
+}
+.yakit-window-left-body {
+    border-radius: 0;
+    border-top: 0;
+    border-bottom: 0;
+    border-left: 0;
+}
+.yakit-window-right-body {
+    border-radius: 0;
+    border-top: 0;
+    border-bottom: 0;
+    border-right: 0;
+}
+.yakit-window-bottom-body {
+    border-radius: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-right: 0;
 }
 
 .yakit-window-body-header {

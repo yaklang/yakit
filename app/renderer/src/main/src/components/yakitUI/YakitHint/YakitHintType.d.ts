@@ -9,7 +9,7 @@ export interface YakitHintProps extends YakitHintModalTypes {
     /** 多弹窗时的副窗口组 */
     childModal?: ChildModalProps[]
     /** 指定弹窗挂载的节点，默认为body节点 */
-    getContainer?: Element
+    getContainer?: HTMLElement
 }
 
 interface ChildModalProps {
