@@ -260,7 +260,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             FieldVerbose: "搜索条件",
             Required: true,
             TypeVerbose: "yak",
-            DefaultValue: "title='ChatGPT'",
+            DefaultValue: "",
             Help: ""
         }
     }, [])
