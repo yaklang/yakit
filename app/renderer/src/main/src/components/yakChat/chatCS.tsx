@@ -92,6 +92,8 @@ import {cloneDeep} from "bizcharts/lib/utils"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {YakitRoute} from "@/routes/newRoute"
+import {addToTab} from "@/pages/MainTabs"
 
 const TypeToContent: Record<string, string> = {
     cs_info: "安全知识",
@@ -1236,10 +1238,31 @@ interface PluginRunStatusProps {
     status: "loading" | "succee" | "fail" | "info"
     progressList?: any
     infoList?: StreamResult.Risk[]
+    runtimeId?: string
 }
 
 const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
-    const {status, progressList, infoList} = props
+    const {status, progressList, infoList, runtimeId} = props
+    const onDetail = useMemoizedFn(() => {
+        let defaultActiveKey: string = ""
+        switch (status) {
+            case "info":
+                defaultActiveKey = "漏洞与风险"
+                break
+            case "succee":
+                defaultActiveKey = "HTTP 流量"
+                break
+            case "fail":
+                defaultActiveKey = "Console"
+                break
+        }
+        addToTab(YakitRoute.BatchExecutorPage, {
+            pluginBatchExecutorPageInfo: {
+                runtimeId,
+                defaultActiveKey
+            }
+        })
+    })
     return (
         <div className={styles["plugin-run-status"]}>
             {status === "loading" && (
@@ -1266,10 +1289,10 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                             <div className={styles["icon"]}>
                                 <SolidExclamationIcon />
                             </div>
-                            <div className={styles["text"]}>检测到 {(infoList||[]).length} 个风险项</div>
+                            <div className={styles["text"]}>检测到 {(infoList || []).length} 个风险项</div>
                         </div>
                         <div className={styles["extra"]}>
-                            <YakitButton type='text' style={{padding: 0}}>
+                            <YakitButton type='text' style={{padding: 0}} onClick={onDetail}>
                                 查看详情
                             </YakitButton>
                         </div>
@@ -1277,8 +1300,6 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                     {infoList && (
                         <div className={styles["content"]}>
                             {infoList.map((item) => {
-                                console.log("vvv", item)
-
                                 /**获取风险等级的展示tag类型 */
                                 const getSeverity = (type) => {
                                     switch (type) {
@@ -1319,7 +1340,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                             <div className={styles["text"]}>执行完成</div>
                         </div>
                         <div className={styles["extra"]}>
-                            <YakitButton type='text' style={{padding: 0}}>
+                            <YakitButton type='text' style={{padding: 0}} onClick={onDetail}>
                                 查看详情
                             </YakitButton>
                         </div>
@@ -1339,7 +1360,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                             <div className={styles["text"]}>执行失败</div>
                         </div>
                         <div className={styles["extra"]}>
-                            <YakitButton type='text' style={{padding: 0}}>
+                            <YakitButton type='text' style={{padding: 0}} onClick={onDetail}>
                                 查看日志
                             </YakitButton>
                         </div>
@@ -1528,6 +1549,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     const {token, loadingToken, loading, resTime, time, info, onStop, onLike, onDel, renderType} = props
 
     const tokenRef = useRef<string>(randomString(40))
+    const [runtimeId, setRuntimeId] = useState<string>()
     /**额外参数弹出框 */
     const [extraParamsValue, setExtraParamsValue] = useState<PluginBatchExecuteExtraFormValue>({
         ...cloneDeep(defPluginBatchExecuteExtraFormValue)
@@ -1550,7 +1572,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             onTypeByresult("fail")
         },
         setRuntimeId: (rId) => {
-            // setRuntimeId(rId)
+            setRuntimeId(rId)
         }
     })
     const onTypeByresult = useMemoizedFn((v: "succee" | "fail") => {
@@ -1634,7 +1656,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                             {time}
                         </div>
                         <div style={{display: "flex"}} className={styles["header-right"]}>
-                            {/* {showType==="loading"&& */}
+                            {showType==="loading"&&
                             <YakitButton
                                 type='primary'
                                 colors='danger'
@@ -1645,11 +1667,16 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                             >
                                 停止
                             </YakitButton>
-                            {/* } */}
+                            }
                         </div>
                     </div>
                     <div className={styles["opt-content"]}>
-                        <PluginRunStatus status={showType} progressList={progressList} infoList={infoList} />
+                        <PluginRunStatus
+                            status={showType}
+                            progressList={progressList}
+                            infoList={infoList}
+                            runtimeId={runtimeId}
+                        />
                     </div>
                 </>
             ) : (
