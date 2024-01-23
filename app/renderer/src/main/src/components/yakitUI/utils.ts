@@ -70,7 +70,7 @@ export interface SetRemoteValuesBaseProps {
  */
 export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promise<CacheDataHistoryProps> = (params) => {
     return new Promise((resolve, reject) => {
-        const {cacheHistoryDataKey, newValue, cacheHistoryListLength = 10, isCacheDefaultValue} = params
+        const {cacheHistoryDataKey, newValue, cacheHistoryListLength = 10, isCacheDefaultValue=true} = params
         onGetRemoteValuesBase(cacheHistoryDataKey).then((oldCacheHistoryData) => {
             const index = oldCacheHistoryData.options.findIndex((l) => l.value === newValue)
             let cacheHistory: CacheDataHistoryProps = {
@@ -90,7 +90,7 @@ export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promis
             } else {
                 cacheHistory = {
                     options: oldCacheHistoryData.options,
-                    defaultValue: isCacheDefaultValue !== false ? newValue : ""
+                    defaultValue: isCacheDefaultValue ? newValue : ""
                 }
             }
             setRemoteValue(cacheHistoryDataKey, JSON.stringify(cacheHistory))

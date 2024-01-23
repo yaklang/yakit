@@ -24,7 +24,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         className,
         cacheHistoryDataKey,
         cacheHistoryListLength = 10,
-        isCacheDefaultValue=true,
+        isCacheDefaultValue = true,
         ref: forwardRef,
         ...restProps
     } = props
@@ -66,9 +66,10 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         if (init) setLoading(true)
         onGetRemoteValuesBase(cacheHistoryDataKey)
             .then((cacheData) => {
-                if (props.onChange)
-                    props.onChange(cacheData.defaultValue || "", cacheData.options || props.options || [])
-                setCacheHistoryData({...cacheData, options: cacheData.options || props.options || []})
+                const value = isCacheDefaultValue && cacheData.defaultValue ? cacheData.defaultValue : ""
+                let newOption = cacheData.options || props.options || []
+                if (props.onChange) props.onChange(value, newOption)
+                setCacheHistoryData({defaultValue: value, options: newOption})
             })
             .finally(() => {
                 setTimeout(() => {
