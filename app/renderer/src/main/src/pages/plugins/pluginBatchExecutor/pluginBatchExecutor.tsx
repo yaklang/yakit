@@ -47,7 +47,9 @@ import {ExpandAndRetract} from "../operator/expandAndRetract/ExpandAndRetract"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
-interface PluginBatchExecutorProps {}
+interface PluginBatchExecutorProps {
+    id:string
+}
 export interface PluginBatchExecutorTaskProps {
     Proxy: string
     Concurrent: number
