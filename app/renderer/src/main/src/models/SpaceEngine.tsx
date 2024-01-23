@@ -1,17 +1,16 @@
-import React from "react";
+import React from "react"
 
 export interface SpaceEngineStartParams {
-    Type: "zoomeye" | "fofa" | "hunter" | "shodan" | "",
+    Type: "zoomeye" | "fofa" | "hunter" | "shodan" | ""
     Filter: string
     MaxPage: number
     MaxRecord: number
     PageSize: number
     ScanBeforeSave: boolean
 }
-
 export interface SpaceEngineStatus {
-    Type: "zoomeye" | "fofa" | "hunter" | "shodan" | "",
-    Status: string
+    Type: "zoomeye" | "fofa" | "hunter" | "shodan" | "quake" | ""
+    Status: "normal" | "error" | "empty_key" | "invalid_type" | ""
     Info: string
     Raw: Uint8Array
     Used: number

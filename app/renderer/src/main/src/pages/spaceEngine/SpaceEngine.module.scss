@@ -9,6 +9,7 @@
 }
 .space-engine-wrapper {
     @extend %column-center;
+    overflow: hidden;
     .space-engine-heard {
         padding: 8px;
         .space-engine-heard-tabName {
@@ -23,5 +24,20 @@
         .space-engine-form-operate-start {
             margin-right: 8px;
         }
+    }
+
+    .space-engine-form-wrapper {
+        padding: 24px 0;
+        display: grid;
+        grid-template-rows: 1fr;
+        transition: all 0.3s ease;
+        :global {
+            .ant-form {
+                overflow: hidden;
+            }
+        }
+    }
+    .space-engine-form-wrapper-hidden {
+        grid-template-rows: 0fr;
     }
 }
