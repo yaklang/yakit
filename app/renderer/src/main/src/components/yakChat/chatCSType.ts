@@ -5,7 +5,7 @@ export interface CacheChatCSProps {
     /** 对话名称 */
     name: string
     /** 通用安全知识|漏洞情报知识 */
-    baseType: string
+    baseType: boolean
     /** 开源漏洞EXP */
     expInfo: boolean
     /** 对话内容历史 */
@@ -25,7 +25,7 @@ export interface ChatInfoProps {
 /** 用户信息属性 */
 export interface ChatMeInfoProps {
     content: string
-    baseType: string
+    baseType: boolean
     expInfo: boolean
 }
 /** 服务器信息属性 */

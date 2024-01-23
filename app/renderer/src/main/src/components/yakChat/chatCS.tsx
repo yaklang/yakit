@@ -58,7 +58,7 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {ArrowRightSvgIcon} from "../layout/icons"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {chatCS, chatGrade, getPromptList} from "@/services/yakChat"
+import {chatCS, chatCSPlugin, chatGrade, getPromptList} from "@/services/yakChat"
 import {CopyComponents, YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {ChatMarkdown} from "./ChatMarkdown"
 import {useStore} from "@/store"
@@ -94,12 +94,12 @@ import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitRoute} from "@/routes/newRoute"
 import {addToTab} from "@/pages/MainTabs"
-
+import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
+import { YakParamProps } from "@/pages/plugins/pluginsType"
+const {ipcRenderer} = window.require("electron")
 const TypeToContent: Record<string, string> = {
-    cs_info: "安全知识",
-    vuln_info: "威胁情报",
-    exp_info: "漏洞利用",
-    back_catch: "背景知识"
+    bing: "搜索引擎增强",
+    exp_info: "插件调试执行"
 }
 
 /** 将 new Date 转换为日期 */
@@ -110,6 +110,11 @@ const formatDate = (i: number) => {
 export interface YakChatCSProps {
     visible: boolean
     setVisible: (v: boolean) => any
+}
+
+export interface ScriptsProps {
+    script_name:string
+    Fields:YakParamProps[]
 }
 
 export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
@@ -216,7 +221,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }, 300)
     })
 
-    const [baseType, setBaseType] = useState<string>("cs_info")
+    // 搜索引擎增强
+    const [baseType, setBaseType] = useState<boolean>(false)
+    // 插件调试执行
     const [expInfo, setExpInfo] = useState<boolean>(false)
     const [question, setQuestion] = useState<string>("")
 
@@ -277,9 +284,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         if (loading) return
         if (!question || question.trim() === "") return
 
-        if (!baseType && !expInfo) {
-            return yakitNotify("error", "请最少选择一个回答类型")
-        }
+        // if (!baseType && !expInfo) {
+        //     return yakitNotify("error", "请最少选择一个回答类型")
+        // }
 
         const data: ChatInfoProps = {
             token: randomString(10),
@@ -351,7 +358,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             } else {
                 const info = item.info as ChatCSMultipleInfoProps
                 for (let el of info.content) {
-                    if (el.type === "cs_info" || el.type === "vuln_info") {
+                    if (el.type === "not_bing" || el.type === "bing") {
                         stag = el.content
                         break
                     }
@@ -409,12 +416,38 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             scrollToBottom()
         }
     )
+    /** 生成 Promise plugin 实例 */
+    const generatePluginPromise = useMemoizedFn(
+        async (params: {
+            prompt: string
+            is_bing: boolean
+            scripts:ScriptsProps[]
+        }) => {
+            return await new Promise((resolve, reject) => {
+                chatCSPlugin({
+                    ...params,
+                    token: userInfo.token,
+                    plugin_scope: 5,
+                }).then((data) => {
+                    console.log("chatCSPlugin",data);
+                    
+                })
+                .finally(()=>{
+                    console.log("finally---");
+                    
+                })
+                .catch((e) => {
+                    reject(`plugin|error|${e}`)
+                })
+            })
+        }
+    )
     /** 生成 Promise 实例 */
     const generatePromise = useMemoizedFn(
         async (
             params: {
                 prompt: string
-                intell_type: string
+                is_bing: boolean
                 history: {role: string; content: string}[]
                 signal: AbortSignal
             },
@@ -422,10 +455,14 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             group: CacheChatCSProps[]
         ) => {
             const cs: ChatCSSingleInfoProps = {
-                type: params.intell_type,
+                type: params.is_bing ? "bing" : "",
                 content: "",
                 id: ""
             }
+            console.log("params---", {
+                ...params,
+                token: userInfo.token
+            })
 
             return await new Promise((resolve, reject) => {
                 chatCS({
@@ -462,14 +499,14 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             cs.content = "暂无可用解答"
                             setContentList(cs, contents, group)
                         }
-                        resolve(`${params.intell_type}|success`)
+                        resolve(`${params.is_bing && "bing|"}success`)
                     })
                     .catch((e) => {
                         if (!cs.content) {
                             cs.content = "该类型请求异常，请稍后重试"
                             setContentList(cs, contents, group)
                         }
-                        resolve(`${params.intell_type}|error|${e}`)
+                        resolve(`${params.is_bing && "bing|"}error|${e}`)
                     })
             })
         }
@@ -534,15 +571,15 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         setHistroy([...group])
         setStorage([...group])
         setTimeout(() => scrollToBottom(), 100)
-        /** 查询 cs_info或vuln_info */
-        if (params.baseType) {
+
+        if (!params.expInfo) {
             /** 流式输出逻辑 */
             if (!isBreak.current) {
                 chatHistory.reverse()
                 const abort = new AbortController()
                 controller.current = abort
                 await generatePromise(
-                    {prompt: params.content, intell_type: params.baseType, history: chatHistory, signal: abort.signal},
+                    {prompt: params.content, is_bing: params.baseType, history: chatHistory, signal: abort.signal},
                     contents,
                     group
                 )
@@ -559,28 +596,23 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             // )
             // promises.push(promise)
         }
-        /** 查询 exp_info */
+        /** 插件调试与执行 - 新接口 */
         if (params.expInfo) {
-            /** 流式输出逻辑 */
             if (!isBreak.current) {
-                const abort = new AbortController()
-                controller.current = abort
-                await generatePromise(
-                    {prompt: params.content, intell_type: "exp_info", history: [], signal: abort.signal},
-                    contents,
-                    group
-                )
+                ipcRenderer.invoke("QueryYakScriptLocalAll").then(async(item: QueryYakScriptsResponse) => {
+                    let scripts:ScriptsProps[] =  item.Data.map((i)=>({
+                        script_name: i.ScriptName,
+                        Fields: i.Params
+                    }))
+                    console.log("获取所有数据", item)
+                    await generatePluginPromise(
+                        {prompt: params.content, is_bing: params.baseType, scripts}
+                        // contents,
+                        // group
+                    )
+                })
             }
             scrollToBottom()
-            /** 一次性输出逻辑 */
-            // const abort = new AbortController()
-            // controller.current.push(abort)
-            // const promise = generatePromise(
-            //     {prompt: params.content, intell_type: "exp_info", history: [], signal: abort.signal},
-            //     contents,
-            //     group
-            // )
-            // promises.push(promise)
         }
 
         /** 一次性输出逻辑 */
@@ -786,7 +818,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             setWidth("95vw")
         }
     }, [isShowPrompt])
-    console.log("currentChat---", currentChat)
+    // console.log("currentChat---", currentChat)
 
     return (
         <Resizable
@@ -1025,39 +1057,13 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                                 </Tooltip>
                                                                 :
                                                             </div>
-                                                            <div className={styles["multiple-btn"]}>
-                                                                <div
-                                                                    className={classNames(
-                                                                        styles["btn-style"],
-                                                                        styles["left-btn"],
-                                                                        {
-                                                                            [styles["active-btn-style"]]:
-                                                                                baseType === "cs_info"
-                                                                        }
-                                                                    )}
-                                                                    onClick={() => {
-                                                                        if (baseType === "cs_info") setBaseType("")
-                                                                        else setBaseType("cs_info")
-                                                                    }}
-                                                                >
-                                                                    安全知识
-                                                                </div>
-                                                                <div
-                                                                    className={classNames(
-                                                                        styles["btn-style"],
-                                                                        styles["right-btn"],
-                                                                        {
-                                                                            [styles["active-btn-style"]]:
-                                                                                baseType === "vuln_info"
-                                                                        }
-                                                                    )}
-                                                                    onClick={() => {
-                                                                        if (baseType === "vuln_info") setBaseType("")
-                                                                        else setBaseType("vuln_info")
-                                                                    }}
-                                                                >
-                                                                    威胁情报
-                                                                </div>
+                                                            <div
+                                                                className={classNames(styles["single-btn"], {
+                                                                    [styles["single-active-btn"]]: baseType
+                                                                })}
+                                                                onClick={() => setBaseType(!baseType)}
+                                                            >
+                                                                搜索引擎增强
                                                             </div>
                                                             <div
                                                                 className={classNames(styles["single-btn"], {
@@ -1065,7 +1071,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                                 })}
                                                                 onClick={() => setExpInfo(!expInfo)}
                                                             >
-                                                                漏洞利用
+                                                                插件调试执行
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1087,33 +1093,13 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                     </Tooltip>
                                                     :
                                                 </div>
-                                                <div className={styles["multiple-btn"]}>
-                                                    <div
-                                                        className={classNames(styles["btn-style"], styles["left-btn"], {
-                                                            [styles["active-btn-style"]]: baseType === "cs_info"
-                                                        })}
-                                                        onClick={() => {
-                                                            if (baseType === "cs_info") setBaseType("")
-                                                            else setBaseType("cs_info")
-                                                        }}
-                                                    >
-                                                        安全知识
-                                                    </div>
-                                                    <div
-                                                        className={classNames(
-                                                            styles["btn-style"],
-                                                            styles["right-btn"],
-                                                            {
-                                                                [styles["active-btn-style"]]: baseType === "vuln_info"
-                                                            }
-                                                        )}
-                                                        onClick={() => {
-                                                            if (baseType === "vuln_info") setBaseType("")
-                                                            else setBaseType("vuln_info")
-                                                        }}
-                                                    >
-                                                        威胁情报
-                                                    </div>
+                                                <div
+                                                    className={classNames(styles["single-btn"], {
+                                                        [styles["single-active-btn"]]: baseType
+                                                    })}
+                                                    onClick={() => setBaseType(!baseType)}
+                                                >
+                                                    搜索引擎增强
                                                 </div>
                                                 <div
                                                     className={classNames(styles["single-btn"], {
@@ -1121,7 +1107,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                     })}
                                                     onClick={() => setExpInfo(!expInfo)}
                                                 >
-                                                    漏洞利用
+                                                    插件调试执行
                                                 </div>
                                             </div>
                                         )}
@@ -1637,7 +1623,11 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     const copyContent = useMemo(() => {
         let content: string = ""
         for (let item of info.content) {
-            content = `${content}# ${TypeToContent[item.type]}\n${item.content}\n`
+            if (item.type.length === 0) {
+                content = `${content}${item.content}\n`
+            } else {
+                content = `${content}# ${TypeToContent[item.type]}\n${item.content}\n`
+            }
         }
         return content
     }, [resTime, info])
@@ -1656,18 +1646,18 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                             {time}
                         </div>
                         <div style={{display: "flex"}} className={styles["header-right"]}>
-                            {showType==="loading"&&
-                            <YakitButton
-                                type='primary'
-                                colors='danger'
-                                icon={<StopIcon />}
-                                onClick={(e) => {
-                                    onStopExecute(e)
-                                }}
-                            >
-                                停止
-                            </YakitButton>
-                            }
+                            {showType === "loading" && (
+                                <YakitButton
+                                    type='primary'
+                                    colors='danger'
+                                    icon={<StopIcon />}
+                                    onClick={(e) => {
+                                        onStopExecute(e)
+                                    }}
+                                >
+                                    停止
+                                </YakitButton>
+                            )}
                         </div>
                     </div>
                     <div className={styles["opt-content"]}>
@@ -1747,9 +1737,11 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                         {info.content.map((item) => {
                                             return (
                                                 <React.Fragment key={item.type}>
-                                                    <div className={styles["content-type-title"]}>{`# ${
-                                                        TypeToContent[item.type]
-                                                    }`}</div>
+                                                    {item.type.length > 0 && (
+                                                        <div className={styles["content-type-title"]}>{`# ${
+                                                            TypeToContent[item.type]
+                                                        }`}</div>
+                                                    )}
                                                     <ChatMarkdown content={item.content} />
                                                 </React.Fragment>
                                             )
@@ -1764,9 +1756,11 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                     : info.content.map((item) => {
                                           return (
                                               <React.Fragment key={item.type}>
-                                                  <div className={styles["content-type-title"]}>{`# ${
-                                                      TypeToContent[item.type]
-                                                  }`}</div>
+                                                  {item.type.length > 0 && (
+                                                      <div className={styles["content-type-title"]}>{`# ${
+                                                          TypeToContent[item.type]
+                                                      }`}</div>
+                                                  )}
                                                   <ChatMarkdown content={item.content} />
                                               </React.Fragment>
                                           )
