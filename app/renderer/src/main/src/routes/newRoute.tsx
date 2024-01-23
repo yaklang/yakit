@@ -134,7 +134,7 @@ import { NewPayload } from "@/pages/payloadManager/newPayload"
 import { DataStatistics } from "@/pages/dataStatistics/DataStatistics"
 import { PluginBatchExecutor } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import { PluginBatchExecutorPageInfoProps } from "@/store/pageInfo"
-import {SpaceEngine} from "@/pages/spaceEngine/SpaceEngine"
+import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const CodecPage = React.lazy(() => import("../pages/codec/CodecPage"))
@@ -656,7 +656,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Data_Statistics:
             return <DataStatistics />
         case YakitRoute.Space_Engine:
-            return <SpaceEngine pageId={params?.id || ""} />
+            return <SpaceEnginePage pageId={params?.id || ""} />
         default:
             return <div />
     }
