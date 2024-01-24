@@ -961,8 +961,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         getShieldList()
     }, [inViewport])
     useEffect(() => {
-        getHTTPFlowsFieldGroup(true)
-    }, [])
+        if (inViewport) {
+            getHTTPFlowsFieldGroup(true)
+        }
+    }, [inViewport])
 
     const getShieldList = useMemoizedFn(() => {
         getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA)
@@ -1366,7 +1368,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const tags = rsp.Tags
                 console.log(
                     "后端获取Tags",
-                    tags.map((ele) => ({label: ele.Value, value: ele.Value}))
+                    rsp.Tags
                 )
                 setTags(tags.map((ele) => ({label: ele.Value, value: ele.Value})))
             })
@@ -1649,6 +1651,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filterProps: {
                     filterKey: "Tags",
                     filterMultiple: true,
+                    filterIcon: (
+                        <OutlineSearchIcon
+                            className={style["filter-icon"]}
+                            onClick={() => getHTTPFlowsFieldGroup(true)}
+                        />
+                    ),
                     filterRender: (closePopover: () => void) => {
                         return (
                             <MultipleSelect
