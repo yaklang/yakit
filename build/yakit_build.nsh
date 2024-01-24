@@ -7,6 +7,7 @@ Unicode true
 Var /Global YAKIT_HOME
 Var /Global IS_INSTALLED
 Var /Global IS_UPDATED
+Var /Global InstallPath
 
 Function DirectoryPageShow
     ; MessageBox MB_OK "DirectoryPageShow"
@@ -55,32 +56,42 @@ FunctionEnd
     ${If} ${FileExists} `$INSTDIR\Yakit.exe`
         StrCpy $IS_INSTALLED "true"
     ${EndIf} 
+    ReadRegStr $InstallPath HKCU "Software\Yakit" "InstallPath"
+    ${If} $InstallPath != "" 
+        ; set install path
+        StrCpy $INSTDIR $InstallPath
+    ${EndIf}
+    MessageBox MB_OK "debug: install dir: $INSTDIR, install path: $InstallPath"
+!macroend
+
+!macro checkIsUpdated
+    ClearErrors
+    ${GetParameters} $0
+    ${GetOptions} $0 "--updated" $R0
+    ${IfNot} ${Errors} ; 是更新 
+        StrCpy $IS_UPDATED "true"
+    ${EndIf}
 !macroend
 
 !macro customInit 
-    ; Read the YAKIT_HOME environment variable from the registry, set Install directory
+    !insertmacro checkInstalled
+    !insertmacro checkIsUpdated
     ReadRegStr $YAKIT_HOME HKCU "Environment" "YAKIT_HOME"
-    ${If} $YAKIT_HOME != ""
-        ${GetParent} "$YAKIT_HOME" $INSTDIR
-    ${EndIf}
+
     ; Set Migrate yakit-projects folder
     ${If} $YAKIT_HOME == ""
         StrCpy $YAKIT_HOME "$PROFILE\yakit-projects"
     ${EndIf}
-
-    !insertmacro checkInstalled
 !macroend
 
 !macro customUnInit 
     !insertmacro checkInstalled
+    !insertmacro checkIsUpdated
 !macroend
 
 
 !macro customRemoveFiles
-    ClearErrors
-    ${GetParameters} $0
-    ${GetOptions} $0 "--updated" $R0
-    ${IfNot} ${Errors} ; 是更新，不卸载yakit-projects文件夹
+    ${If} $IS_UPDATED == "true"
         Goto continue
     ${EndIf}
     ; 删除安装目录
@@ -113,18 +124,20 @@ FunctionEnd
 !macroend
 
 !macro customInstall 
-    ; DetailPrint "写入.env"
-    ; FileOpen $9 "$INSTDIR\.env" w
-    ; FileWrite $9 "YAKIT_HOME=$INSTDIR\yakit-projects"
-    ; FileClose $9
+    ; 存储安装目录
+    DetailPrint "写入环境变量..."
+    WriteRegStr HKCU "Software\Yakit" "InstallPath" "$INSTDIR"
+    WriteRegStr HKCU "Environment" "YAKIT_HOME" "$INSTDIR\yakit-projects" 
+    ; 创建 yakit-projects 文件夹
+    DetailPrint "创建yakit-projects文件夹..."
+    CreateDirectory "$INSTDIR\yakit-projects"
+    DetailPrint "正在安装..."
 !macroend
 
 Section "Main" SectionMain
-    ; create new directory if $INSTDIR is not empty
-    Push $INSTDIR 
-    Call isEmptyDir
-    Pop $0
-    ${If} $0 == 0 ; $INSTDIR is not empty
+    ; create new directory if not installed 
+    ${If} $IS_INSTALLED != "true"
+    ${OrIf} $InstallPath == ""
         StrCpy $INSTDIR "$INSTDIR\yakit"
         CreateDirectory $INSTDIR
     ${EndIf}
@@ -142,17 +155,10 @@ Section "Main" SectionMain
             DetailPrint "删除旧的yakit-projects文件夹..."
         ${EndIf} 
     ${EndIf}
-
-    DetailPrint "写入环境变量..."
-    WriteRegStr HKCU "Environment" "YAKIT_HOME" "$INSTDIR\yakit-projects" 
-    DetailPrint "正在安装..."
 SectionEnd
 
 Section "Uninstall"
-    ClearErrors
-    ${GetParameters} $0
-    ${GetOptions} $0 "--updated" $R0
-    ${IfNot} ${Errors} ; 是更新，不卸载yakit-projects文件夹
+    ${If} $IS_UPDATED == "true"
         Goto keepFolder
     ${EndIf}
     MessageBox MB_YESNO "卸载时是否保留yakit-projects文件夹？" IDYES keepFolder IDNO continueUninstall
