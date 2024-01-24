@@ -7,7 +7,7 @@ import {DefaultTabs} from "./constant"
 const {ipcRenderer} = window.require("electron")
 
 /** @name 将缓冲区Map对象(卡片类) 转换成 hook数据数据(卡片集合) */
-const convertCardInfo = (maps: Map<string, HoldGRPCStreamProps.CacheCard>) => {
+export const convertCardInfo = (maps: Map<string, HoldGRPCStreamProps.CacheCard>) => {
     const cardArr: HoldGRPCStreamProps.InfoCard[] = []
     maps.forEach((value) => {
         let item: HoldGRPCStreamProps.InfoCard = {
@@ -34,7 +34,7 @@ const convertCardInfo = (maps: Map<string, HoldGRPCStreamProps.CacheCard>) => {
     return Object.values(cardObj)
 }
 
-interface HoldGRPCStreamParams {
+export interface HoldGRPCStreamParams {
     /** @name 执行结果展示的常驻tab页合集 */
     tabs?: HoldGRPCStreamProps.InfoTab[]
     /** @name 任务名称 */
@@ -47,6 +47,8 @@ interface HoldGRPCStreamParams {
     waitTime?: number
     /** @name 数据流结束的回调事件 */
     onEnd?: () => any
+    /** @name 数据流报错的回调事件 */
+    onError?: (e:any) => void
     /** @name 额外的数据过滤方法 */
     dataFilter?: (obj: StreamResult.Message, content: StreamResult.Log) => boolean
     /** @name 设置run-time-id值 */

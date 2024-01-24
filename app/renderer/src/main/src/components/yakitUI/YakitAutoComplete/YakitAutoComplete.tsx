@@ -19,7 +19,15 @@ export const defYakitAutoCompleteRef = {
  * @param {number} cacheHistoryListLength 缓存的历史记录list长度
  */
 export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forwardRef((props, ref) => {
-    const {size, className, cacheHistoryDataKey, cacheHistoryListLength = 10, ref: forwardRef, ...restProps} = props
+    const {
+        size,
+        className,
+        cacheHistoryDataKey,
+        cacheHistoryListLength = 10,
+        isCacheDefaultValue = true,
+        ref: forwardRef,
+        ...restProps
+    } = props
     const [show, setShow] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
     const [cacheHistoryData, setCacheHistoryData] = useState<YakitAutoCompleteCacheDataHistoryProps>({
@@ -46,7 +54,6 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     const onSetRemoteValues = useMemoizedFn((newValue: string) => {
         if (!cacheHistoryDataKey) return
         onSetRemoteValuesBase({cacheHistoryDataKey, newValue}).then((value) => {
-            // onGetRemoteValues()
             setCacheHistoryData({
                 defaultValue: value.defaultValue || "",
                 options: value.options
@@ -59,9 +66,10 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         if (init) setLoading(true)
         onGetRemoteValuesBase(cacheHistoryDataKey)
             .then((cacheData) => {
-                if (props.onChange)
-                    props.onChange(cacheData.defaultValue || "", cacheData.options || props.options || [])
-                setCacheHistoryData({...cacheData, options: cacheData.options || props.options || []})
+                const value = isCacheDefaultValue && cacheData.defaultValue ? cacheData.defaultValue : ""
+                let newOption = cacheData.options || props.options || []
+                if (props.onChange) props.onChange(value, newOption)
+                setCacheHistoryData({defaultValue: value, options: newOption})
             })
             .finally(() => {
                 setTimeout(() => {

@@ -1,40 +1,38 @@
-import React from "react";
-import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder";
-import {ExecResult, QueryYakScriptRequest} from "@/pages/invoker/schema";
+import React from "react"
+import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
+import {ExecResult, QueryYakScriptRequest} from "@/pages/invoker/schema"
 
-export interface HybridScanControlRequest {
+export interface HybridScanControlRequest extends HybridScanControlAfterRequest {
     // 控制帧字段
-    Control: true;
+    Control: true
     // new: 新任务
     // resume: 恢复任务
     // pause: 暂停任务
     // stop: 停止任务
-    HybridScanMode: "new" | "resume" | "pause" | "stop" | string;
-    ResumeTaskId: string;
+    HybridScanMode: "new" | "resume" | "pause" | "stop" | string
+    ResumeTaskId: string
+}
 
+/**再发送 HybridScanMode 后再传的参数*/
+export interface HybridScanControlAfterRequest {
     // 其他参数
-    Concurrent?: number;
-    TotalTimeoutSecond?: number;
-    Proxy?: string;
-    SingleTimeoutSecond?: number;
+    Concurrent?: number
+    TotalTimeoutSecond?: number
+    Proxy?: string
+    SingleTimeoutSecond?: number
+    Plugin?: HybridScanPluginConfig
+    Targets?: HybridScanInputTarget
 }
 
 export interface HybridScanInputTarget {
-    Input: string;
-    InputFile: string[];
-    HTTPRequestTemplate: HTTPRequestBuilderParams;
+    Input: string
+    InputFile: string[]
+    HTTPRequestTemplate: HTTPRequestBuilderParams
 }
-
-export interface HybridScanInputTarget {
-    Input: string;
-    InputFile: string[];
-    HTTPRequestTemplate: HTTPRequestBuilderParams;
-}
-
 
 export interface HybridScanPluginConfig {
-    PluginNames: string[];
-    Filter?: QueryYakScriptRequest;
+    PluginNames: string[]
+    Filter?: QueryYakScriptRequest
 }
 
 export interface HybridScanStatisticResponse {

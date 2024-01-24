@@ -473,6 +473,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         help,
         showDefHelp,
         fileLimit = 500,
+        valueSeparator = ",",
         ...restProps
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
@@ -523,6 +524,9 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
         if (disabled) return
         const {files = []} = e.dataTransfer
         const filesLength = files.length
+        if (filesLength > 1) {
+            yakitNotify("error", "多选的文件只会选择其中一个文件处理")
+        }
         if (filesLength > 0) {
             const item = files[0]
             if (item.size / 1024 > fileLimit) {
@@ -541,21 +545,24 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
     const onUploadFile = useMemoizedFn((e) => {
         e.stopPropagation()
         if (disabled) return
-        if (fileRef.current && fileRef.current.files) {
-            const file = fileRef.current.files[0] as FileItem
-            if (file) {
-                if (file.size / 1024 > fileLimit) {
-                    yakitNotify("error", `文件大小不能超过${fileLimit}KB`)
-                    return
-                }
-                const path = file.path.replace(/\\/g, "\\")
-                if (isAcceptEligible(path, props.accept || ".*")) {
-                    onGetContent(path)
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件",
+                properties: ["openFile"]
+            })
+            .then((data: {filePaths: string[]}) => {
+                const filesLength = data.filePaths.length
+                if (filesLength === 1) {
+                    const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                    if (isAcceptEligible(path, props.accept || ".*")) {
+                        onGetContent(path)
+                    } else {
+                        yakitNotify("error", "文件类型不支持")
+                    }
                 } else {
-                    yakitNotify("error", "文件类型不支持")
+                    yakitNotify("error", "只支持单文件上传")
                 }
-            }
-        }
+            })
     })
     /**通过文件路径获取文件内容 */
     const onGetContent = useMemoizedFn((path: string) => {
@@ -569,7 +576,8 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                     res.forEach((element) => {
                         data = data.concat(element.data)
                     })
-                    if (onChange) onChange(JSON.stringify(data).replace(/(\[|\]|\{|\}|\")/g, ""))
+                    const value = data.join(valueSeparator)
+                    if (onChange) onChange(value)
                 } else {
                     // 其他文件读取出来的
                     if (onChange) onChange(res)
@@ -596,27 +604,15 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
             >
                 {renderContent(
                     <div className={classNames(styles["form-item-help"], styles["form-item-content-help"])}>
-                        <label
-                            onClick={(e) => {
-                                e.stopPropagation()
-                            }}
+                        {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
+                        <span
+                            className={classNames(styles["dragger-help-active"], {
+                                [styles["dragger-help-active-disabled"]]: disabled
+                            })}
+                            onClick={onUploadFile}
                         >
-                            {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
-                            <span
-                                className={classNames(styles["dragger-help-active"], {
-                                    [styles["dragger-help-active-disabled"]]: disabled
-                                })}
-                            >
-                                点击此处上传
-                            </span>
-                            <input
-                                id='file'
-                                type='file'
-                                ref={fileRef}
-                                onChange={onUploadFile}
-                                style={{display: "none"}}
-                            />
-                        </label>
+                            点击此处上传
+                        </span>
                     </div>
                 )}
             </Dragger>

@@ -17,7 +17,7 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakScript} from "@/pages/invoker/schema"
 import {FilterPopoverBtn, FuncFilterPopover} from "../funcTemplate"
 import {YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import {PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
 import {yakitNotify} from "@/utils/notification"
@@ -461,19 +461,6 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                         <TabPane tab='执行' key='execute'>
                             <div className={styles["plugin-execute-wrapper"]}>
                                 {executorShow ? (
-                                    // <LocalPluginExecutor
-                                    //     script={plugin}
-                                    //     isEdit={false}
-                                    //     setIsEdit={() => {}}
-                                    //     isShowPrivateDom={false}
-                                    //     settingShow={false}
-                                    //     setSettingShow={() => {}}
-                                    //     extraParams={[]}
-                                    //     setExtraParams={() => {}}
-                                    //     groups={[]}
-                                    //     updateGroups={() => {}}
-                                    //     patternMenu='expert'
-                                    // />
                                     <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} />
                                 ) : (
                                     <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />

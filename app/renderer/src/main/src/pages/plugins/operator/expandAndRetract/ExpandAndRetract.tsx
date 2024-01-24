@@ -14,7 +14,7 @@ export const ExpandAndRetract: React.FC<ExpandAndRetractProps> = React.memo((pro
             <div className={styles["expand-and-retract-header-icon-body"]}>
                 {isExpand ? (
                     <>
-                        <OutlineChevrondoubledownIcon />
+                        <OutlineChevrondoubleupIcon />
                         <span className={styles["expand-and-retract-header-icon-text"]}>
                             <span style={{marginLeft: 4}} />
                             收起参数
@@ -22,7 +22,7 @@ export const ExpandAndRetract: React.FC<ExpandAndRetractProps> = React.memo((pro
                     </>
                 ) : (
                     <>
-                        <OutlineChevrondoubleupIcon />
+                        <OutlineChevrondoubledownIcon />
                         <span className={styles["expand-and-retract-header-icon-text"]}>
                             <span style={{marginLeft: 4}} />
                             展开参数

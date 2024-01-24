@@ -1,0 +1,88 @@
+@use "../plugins.scss";
+%display-align-start {
+    display: flex;
+    align-items: flex-start;
+}
+.plugin-batch-executor {
+    @extend %display-align-start;
+    flex: 1;
+    overflow: hidden;
+    :global {
+        .plugin-details-item-wrapper {
+            cursor: pointer;
+        }
+    }
+}
+
+.plugin-batch-executor-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .plugin-batch-executor-title-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: #31343f;
+        line-height: 16px;
+    }
+}
+.plugin-batch-executor-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    .divider-style {
+        width: 1px;
+        height: 12px;
+        background-color: #eaecf3;
+    }
+}
+.plugin-batch-execute-form-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: all 0.3s ease;
+    padding-top: 16px;
+    :global {
+        .ant-form {
+            overflow: hidden;
+        }
+    }
+    .plugin-execute-form-item {
+        width: 100%;
+    }
+    .plugin-execute-form-operate {
+        @extend %display-flex-center;
+        .plugin-execute-form-operate-start {
+            margin-right: 8px;
+        }
+    }
+}
+.plugin-batch-execute-form-wrapper-hidden {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+}
+
+.plugin-batch-execute-extra-params-drawer {
+    :global {
+        .ant-drawer-body {
+            padding: 0;
+        }
+        .ant-collapse-item:first-child > .ant-collapse-header {
+            border-top: 0;
+        }
+    }
+}
+
+.plugin-batch-executor-body {
+    display: flex;
+    flex-direction: column;
+    padding: 0 12px 16px;
+    overflow: auto !important;
+}
+
+.to-end {
+    text-align: center;
+    color: var(--yakit-disable-text-color);
+    font-size: 11px;
+    padding-top: 12px;
+    padding-bottom: 24px;
+}

@@ -45,7 +45,7 @@ import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
-import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useMemoizedFn,useControllableValue} from "ahooks"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {
@@ -138,11 +138,18 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
         listProps,
         onBack,
         children,
-        spinLoading
+        spinLoading,
+        rightHeardNode,
+        bodyClassName
     } = props
 
     // 隐藏插件列表
-    const [hidden, setHidden] = useState<boolean>(false)
+    const [hidden, setHidden] = useControllableValue<boolean>(props,{
+        defaultValue:false,
+        defaultValuePropName:'hidden',
+        valuePropName:'hidden',
+        trigger:'setHidden',
+    })
 
     // 关键词|用户搜索
     const onSearch = useDebounceFn(
@@ -194,24 +201,28 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
                 </YakitSpin>
             </div>
             <div className={styles["details-wrapper"]}>
-                <div className={styles["details-header"]}>
-                    <div className={styles["header-title"]}>
-                        插件详情
-                        <span className={styles["subtitle-style"]}>线上数据需要下载到本地才可执行</span>
+                {rightHeardNode ? (
+                    rightHeardNode
+                ) : (
+                    <div className={styles["details-header"]}>
+                        <div className={styles["header-title"]}>
+                            插件详情
+                            <span className={styles["subtitle-style"]}>线上数据需要下载到本地才可执行</span>
+                        </div>
+                        <div className={styles["header-btn"]}>
+                            <YakitButton type='text2' icon={<OutlineReplyIcon />} onClick={onBack}>
+                                返回列表
+                            </YakitButton>
+                            <div className={styles["divider-style"]}></div>
+                            <YakitButton
+                                type='text2'
+                                icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                                onClick={() => setHidden(!hidden)}
+                            />
+                        </div>
                     </div>
-                    <div className={styles["header-btn"]}>
-                        <YakitButton type='text2' icon={<OutlineReplyIcon />} onClick={onBack}>
-                            返回列表
-                        </YakitButton>
-                        <div className={styles["divider-style"]}></div>
-                        <YakitButton
-                            type='text2'
-                            icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                            onClick={() => setHidden(!hidden)}
-                        />
-                    </div>
-                </div>
-                <div className={styles["details-body"]}>{children}</div>
+                )}
+                <div className={classNames(styles["details-body"],bodyClassName)}>{children}</div>
             </div>
         </div>
     )

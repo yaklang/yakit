@@ -2,7 +2,7 @@ import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
 import {ExportParamsProps, LocalExtraOperateProps, PluginLocalBackProps, PluginsLocalProps} from "./PluginsLocalType"
 import {SolidChevrondownIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
 import {useMemoizedFn, useInViewport, useDebounceFn, useLatest, useUpdateEffect, useThrottleFn} from "ahooks"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 import {defaultSearch, PluginsLayout, PluginsContainer} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {

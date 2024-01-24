@@ -158,7 +158,7 @@ interface FixExtraParamsNodeProps {
     onReset: (fields) => void
 }
 type Fields = keyof HTTPRequestBuilderParams
-const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props) => {
+export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props) => {
     const {onReset, pathRef, form} = props
     const [activeKey, setActiveKey] = useState<string[]>(["GET 参数"])
 
@@ -166,6 +166,11 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
     const postParamsRef = useRef<any>()
     const headersRef = useRef<any>()
     const cookieRef = useRef<any>()
+
+    const getParams = Form.useWatch("GetParams", form)
+    const postParams = Form.useWatch("PostParams", form)
+    const headers = Form.useWatch("Headers", form)
+    const cookie = Form.useWatch("Cookie", form)
 
     // 重置
     const handleReset = (
@@ -219,6 +224,7 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                         value: item,
                         label: item
                     }))}
+                    size='small'
                 />
             </Form.Item>
             <Form.Item label='请求路径' name='Path'>
@@ -230,6 +236,7 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                     placeholder='请输入...'
                     cacheHistoryDataKey={PluginGV.LocalExecuteExtraPath}
                     isCacheDefaultValue={false}
+                    size='small'
                 />
             </Form.Item>
             <YakitCollapse
@@ -237,9 +244,19 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                 activeKey={activeKey}
                 onChange={(key) => setActiveKey(key as string[])}
                 bordered={false}
+                className={styles['kv-params-wrapper']}
             >
                 <YakitPanel
-                    header='GET 参数'
+                    header={
+                        <div className={styles["yakit-panel-heard"]}>
+                            GET 参数
+                            {getParams?.length ? (
+                                <span className={styles["yakit-panel-heard-number"]}>{getParams?.length}</span>
+                            ) : (
+                                ""
+                            )}
+                        </div>
+                    }
                     key='GET 参数'
                     extra={
                         <>
@@ -270,10 +287,20 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                         onDel={(i) => {
                             handleRemove(i, "GetParams")
                         }}
-                    ></VariableList>
+                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                    />
                 </YakitPanel>
                 <YakitPanel
-                    header='POST 参数'
+                    header={
+                        <div className={styles["yakit-panel-heard"]}>
+                            POST 参数
+                            {postParams?.length ? (
+                                <span className={styles["yakit-panel-heard-number"]}>{postParams?.length}</span>
+                            ) : (
+                                ""
+                            )}
+                        </div>
+                    }
                     key='POST 参数'
                     extra={
                         <>
@@ -304,10 +331,20 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                         onDel={(i) => {
                             handleRemove(i, "PostParams")
                         }}
-                    ></VariableList>
+                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                    />
                 </YakitPanel>
                 <YakitPanel
-                    header='Header'
+                    header={
+                        <div className={styles["yakit-panel-heard"]}>
+                            Header
+                            {headers?.length ? (
+                                <span className={styles["yakit-panel-heard-number"]}>{headers?.length}</span>
+                            ) : (
+                                ""
+                            )}
+                        </div>
+                    }
                     key='Header'
                     extra={
                         <>
@@ -338,10 +375,20 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                         onDel={(i) => {
                             handleRemove(i, "Headers")
                         }}
-                    ></VariableList>
+                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                    />
                 </YakitPanel>
                 <YakitPanel
-                    header='Cookie'
+                    header={
+                        <div className={styles["yakit-panel-heard"]}>
+                            Cookie
+                            {cookie?.length ? (
+                                <span className={styles["yakit-panel-heard-number"]}>{cookie?.length}</span>
+                            ) : (
+                                ""
+                            )}
+                        </div>
+                    }
                     key='Cookie'
                     extra={
                         <>
@@ -372,7 +419,8 @@ const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props)
                         onDel={(i) => {
                             handleRemove(i, "Cookie")
                         }}
-                    ></VariableList>
+                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                    />
                 </YakitPanel>
             </YakitCollapse>
         </div>

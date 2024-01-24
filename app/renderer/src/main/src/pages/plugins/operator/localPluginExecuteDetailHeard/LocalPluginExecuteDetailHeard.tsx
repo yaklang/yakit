@@ -661,7 +661,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
     }
 }
 
-const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((props) => {
+export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((props) => {
     const {percent, name} = props
     return (
         <div className={styles["plugin-execute-progress-wrapper"]}>
@@ -671,7 +671,7 @@ const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((
             <Progress
                 strokeColor='#F28B44'
                 trailColor='#F0F2F5'
-                percent={Math.ceil(percent * 100)}
+                percent={Math.trunc(percent * 100)}
                 format={(percent) => `${percent}%`}
             />
         </div>
@@ -695,7 +695,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
     }, [])
     return (
         <>
-            <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked'>
+            <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' initialValue={false}>
                 <YakitSwitch size='large' disabled={disabled} />
             </Form.Item>
             <Form.Item label='请求类型' name='IsRawHTTPRequest' initialValue={false}>
@@ -731,6 +731,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                     }}
                     help='可将TXT、Excel文件拖入框内或'
                     disabled={disabled}
+                    valueSeparator={"\r\n"}
                 />
             )}
         </>
