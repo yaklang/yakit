@@ -4,11 +4,21 @@ import {useMemoizedFn} from "ahooks"
 import {HoldGRPCStreamParams, convertCardInfo} from "../useHoldGRPCStream/useHoldGRPCStream"
 import {DefaultTabs} from "../useHoldGRPCStream/constant"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "../useHoldGRPCStream/useHoldGRPCStreamType"
-import {PluginBatchExecutorResult} from "./useHoldBatchGRPCStreamType"
+import {
+    HoldBatchGRPCStreamParams,
+    HybridScanInputValueProps,
+    PluginBatchExecutorResult
+} from "./useHoldBatchGRPCStreamType"
+import isEqual from "lodash/isEqual"
 
 const {ipcRenderer} = window.require("electron")
 
-export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
+/**判断两次输入模块的值是否全等 */
+const isEqualInputValue = (inputValue) => {
+    return isEqual(inputValue.cache, inputValue.sent)
+}
+
+export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams) {
     const {
         tabs: defaultTabs = DefaultTabs,
         taskName,
@@ -18,7 +28,8 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
         onEnd,
         onError,
         dataFilter,
-        setRuntimeId
+        setRuntimeId,
+        onGetInputValue
     } = params
 
     const [streamInfo, setStreamInfo] = useState<HoldGRPCStreamInfo>({
@@ -35,6 +46,17 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
 
     // runtime-id
     const runTimeId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
+    /** 输入模块值 */
+    const inputValueRef = useRef<{cache: HybridScanInputValueProps; sent: HybridScanInputValueProps}>({
+        cache: {
+            InputTarget: undefined,
+            PluginConfig: undefined
+        },
+        sent: {
+            InputTarget: undefined,
+            PluginConfig: undefined
+        }
+    })
     // progress
     let progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
     // card
@@ -75,6 +97,12 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
     useEffect(() => {
         const processDataId = "main"
         ipcRenderer.on(`${token}-data`, async (e: any, res: PluginBatchExecutorResult) => {
+            if (res.InputTarget) {
+                inputValueRef.current.cache.InputTarget = res.InputTarget
+            }
+            if (res.PluginConfig) {
+                inputValueRef.current.cache.PluginConfig = res.PluginConfig
+            }
             const data = res.ExecResult
             const {TotalTasks, FinishedTasks} = res
             const progress = Number(TotalTasks) ? Number(FinishedTasks) / Number(TotalTasks) : 0
@@ -89,7 +117,6 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
             if (!!data?.RuntimeID) {
                 runTimeId.current.cache = data.RuntimeID
             }
-
             if (data.IsMessage) {
                 try {
                     let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
@@ -167,6 +194,11 @@ export default function useHoldBatchGRPCStream(params: HoldGRPCStreamParams) {
         if (runTimeId.current.sent !== runTimeId.current.cache && setRuntimeId) {
             setRuntimeId(runTimeId.current.cache)
             runTimeId.current.sent = runTimeId.current.cache
+        }
+        // 输入模块值
+        if (!isEqualInputValue(inputValueRef.current) && onGetInputValue) {
+            onGetInputValue(inputValueRef.current.cache)
+            inputValueRef.current.sent = inputValueRef.current.cache
         }
         // progress
         const cacheProgress: StreamResult.Progress[] = []

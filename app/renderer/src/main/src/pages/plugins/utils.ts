@@ -19,8 +19,13 @@ import {YakitRoute} from "@/routes/newRoute"
 import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {HybridScanControlAfterRequest, HybridScanControlRequest} from "@/models/HybridScan"
-import {PluginBatchExecutorTaskProps} from "./pluginBatchExecutor/pluginBatchExecutor"
+import {
+    PluginBatchExecutorTaskProps,
+    defPluginBatchExecuteExtraFormValue
+} from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
+import {HybridScanInputValueProps} from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStreamType"
+import {defaultSearch} from "./baseTemplate"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1104,12 +1109,68 @@ export const convertHybridScanParams = (
     }
     return data
 }
+export interface PluginBatchExecutorInputValueProps {
+    params: HybridScanRequest
+    pluginInfo: {selectPluginName: string[]; search: PluginSearchParams}
+}
+/**
+ * @name HybridScan返回的输入参数参数转换为前端所需结构(后端数据转前端参数)
+ * @description HybridScan
+ */
+export const hybridScanParamsConvertInputValue = (
+    params: HybridScanInputValueProps
+): PluginBatchExecutorInputValueProps => {
+    const data: PluginBatchExecutorInputValueProps = {
+        params: {
+            Input: "",
+            HTTPRequestTemplate: {...cloneDeep(defPluginBatchExecuteExtraFormValue)},
+            Proxy: "",
+            Concurrent: 0,
+            TotalTimeoutSecond: 0
+        },
+        pluginInfo: {
+            selectPluginName: [],
+            search: {...cloneDeep(defaultSearch)}
+        }
+    }
+    // let InputTarget = params.InputTarget
+    // let PluginConfig = params.PluginConfig
+    // // 确保 PluginConfig InputTarget 一定会有初始值
+    // if (!PluginConfig) {
+    //     PluginConfig = {PluginNames: [], Filter: {Pagination: genDefaultPagination()}}
+    // }
+    // if (!InputTarget) {
+    //     InputTarget = {
+    //         InputFile: [],
+    //         Input: "",
+    //         HTTPRequestTemplate: {...cloneDeep(defPluginBatchExecuteExtraFormValue)}
+    //     }
+    // }
+    // //处理插件的输入值 1.勾选插件 2.全选(搜索条件)
+    // if ((PluginConfig.PluginNames.length || 0) > 0) {
+    //     data.pluginInfo.selectPluginName = PluginConfig.PluginNames
+    // } else {
+    //     const search: PluginSearchParams = {...cloneDeep(defaultSearch)}
+    //     if (PluginConfig.Filter?.Keyword) {
+    //         search.keyword = PluginConfig.Filter?.Keyword
+    //         search.type = "keyword"
+    //     }
+    //     if (PluginConfig.Filter?.UserName) {
+    //         search.userName = PluginConfig.Filter?.UserName
+    //         search.type = "userName"
+    //     }
+    //     data.pluginInfo.search = {...search}
+    // }
+    // 处理输入的参数，包括额外参数
+
+    return data
+}
 export interface HybridScanRequest extends PluginBatchExecutorTaskProps {
     Input: string
     HTTPRequestTemplate: HTTPRequestBuilderParams
 }
 /**
- * @description 本地插件详情执行方法
+ * @description HybridScan 批量执行
  */
 export const apiHybridScan: (params: HybridScanControlAfterRequest, token: string) => Promise<null> = (
     params,
@@ -1120,6 +1181,7 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
             let executeParams: HybridScanControlAfterRequest = {
                 ...params
             }
+            console.log('executeParams',executeParams)
             ipcRenderer
                 .invoke(
                     "HybridScan",
@@ -1162,6 +1224,29 @@ export const apiCancelHybridScan: (token: string) => Promise<null> = (token) => 
                 })
         } catch (error) {
             yakitNotify("error", "取消插件批量执行出错:" + error)
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @description HybridScan 批量执行查询详情
+ */
+export const apiQueryHybridScan: (runtimeId: string, token: string) => Promise<null> = (runtimeId, token) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const params: HybridScanControlRequest = {
+                Control: true,
+                HybridScanMode: "status",
+                ResumeTaskId: runtimeId
+            }
+            console.log("params", params)
+            ipcRenderer.invoke("HybridScan", params, token).then(() => {
+                info(`查询成功,任务ID: ${token}`)
+                resolve(null)
+            })
+        } catch (error) {
+            yakitNotify("error", "插件批量执行出错:" + error)
             reject(error)
         }
     })

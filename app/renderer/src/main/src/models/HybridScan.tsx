@@ -54,6 +54,8 @@ export interface HybridScanResponse extends HybridScanStatisticResponse {
     ExecResult: ExecResult
 
     UpdateActiveTask?: HybridScanActiveTask;
+    InputTarget?:HybridScanInputTarget
+    PluginConfig?:HybridScanPluginConfig
 }
 
 export interface HybridScanActiveTask {
