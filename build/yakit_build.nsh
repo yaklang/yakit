@@ -77,6 +77,12 @@ FunctionEnd
 
 
 !macro customRemoveFiles
+    ClearErrors
+    ${GetParameters} $0
+    ${GetOptions} $0 "--updated" $R0
+    ${IfNot} ${Errors} ; 是更新，不卸载yakit-projects文件夹
+        Goto continue
+    ${EndIf}
     ; 删除安装目录
     MessageBox MB_YESNO "即将删除 $INSTDIR 文件夹，是否继续，选择否将取消卸载" IDYES continue IDNO cancelUninstall
     cancelUninstall:
@@ -91,7 +97,7 @@ FunctionEnd
     ${EndIf}
     
     ; 删除.env文件
-    Delete "$INSTDIR\.env"
+    ; Delete "$INSTDIR\.env"
     ; 删除开始菜单快捷方式
     Delete "$SMPROGRAMS\Yakit\*.*"
     Delete "$SMPROGRAMS\$StartMenuFolder\Yakit.lnk"
@@ -107,10 +113,10 @@ FunctionEnd
 !macroend
 
 !macro customInstall 
-    DetailPrint "写入.env"
-    FileOpen $9 "$INSTDIR\.env" w
-    FileWrite $9 "YAKIT_HOME=$INSTDIR\yakit-projects"
-    FileClose $9
+    ; DetailPrint "写入.env"
+    ; FileOpen $9 "$INSTDIR\.env" w
+    ; FileWrite $9 "YAKIT_HOME=$INSTDIR\yakit-projects"
+    ; FileClose $9
 !macroend
 
 Section "Main" SectionMain
