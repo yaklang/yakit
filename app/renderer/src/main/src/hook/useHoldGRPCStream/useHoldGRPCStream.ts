@@ -106,6 +106,11 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     // logs
     let messages = useRef<StreamResult.Message[]>([])
 
+    /** 自定义tab页放前面还是后面 */
+    const placeTab = useMemoizedFn((isHead: boolean, info: HoldGRPCStreamProps.InfoTab) => {
+        topTabs.current.unshift(info)
+    })
+
     /** 放入日志队列 */
     const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
         messages.current.unshift(log)
@@ -185,11 +190,15 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
                             switch (info.feature) {
                                 case "website-trees":
                                     const website = info.params as StreamResult.WebSite
+                                    // tabInfo = {tabName: "网站树结构", type: "website"}
+                                    // placeTab(!!info.at_head, tabInfo)
                                     tabWebsite.current = website
                                     break
                                 case "fixed-table":
                                     const table = info.params as StreamResult.Table
                                     tabInfo = {tabName: table.table_name, type: "table"}
+
+                                    placeTab(!!info.at_head, tabInfo)
 
                                     if (tabTable.current.get(table.table_name)) {
                                         pushLogs(obj)
@@ -206,6 +215,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
                                 case "text":
                                     const text = info.params as StreamResult.Text
                                     tabInfo = {tabName: text.tab_name, type: "text"}
+
+                                    placeTab(!!info.at_head, tabInfo)
                                     if (tabsText.current.get(text.tab_name)) {
                                         pushLogs(obj)
                                         break
