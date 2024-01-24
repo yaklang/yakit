@@ -24,7 +24,6 @@ import {
     defPluginBatchExecuteExtraFormValue
 } from "./pluginBatchExecutor/pluginBatchExecutor"
 import cloneDeep from "lodash/cloneDeep"
-import {HybridScanInputValueProps} from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStreamType"
 import {defaultSearch} from "./baseTemplate"
 
 const {ipcRenderer} = window.require("electron")
@@ -1117,52 +1116,62 @@ export interface PluginBatchExecutorInputValueProps {
  * @name HybridScan返回的输入参数参数转换为前端所需结构(后端数据转前端参数)
  * @description HybridScan
  */
-export const hybridScanParamsConvertInputValue = (
-    params: HybridScanInputValueProps
-): PluginBatchExecutorInputValueProps => {
+export const hybridScanParamsConvertToInputValue = (value: string): PluginBatchExecutorInputValueProps => {
     const data: PluginBatchExecutorInputValueProps = {
         params: {
             Input: "",
             HTTPRequestTemplate: {...cloneDeep(defPluginBatchExecuteExtraFormValue)},
             Proxy: "",
-            Concurrent: 0,
-            TotalTimeoutSecond: 0
+            Concurrent: 30,
+            TotalTimeoutSecond: 7200
         },
         pluginInfo: {
             selectPluginName: [],
             search: {...cloneDeep(defaultSearch)}
         }
     }
-    // let InputTarget = params.InputTarget
-    // let PluginConfig = params.PluginConfig
-    // // 确保 PluginConfig InputTarget 一定会有初始值
-    // if (!PluginConfig) {
-    //     PluginConfig = {PluginNames: [], Filter: {Pagination: genDefaultPagination()}}
-    // }
-    // if (!InputTarget) {
-    //     InputTarget = {
-    //         InputFile: [],
-    //         Input: "",
-    //         HTTPRequestTemplate: {...cloneDeep(defPluginBatchExecuteExtraFormValue)}
-    //     }
-    // }
-    // //处理插件的输入值 1.勾选插件 2.全选(搜索条件)
-    // if ((PluginConfig.PluginNames.length || 0) > 0) {
-    //     data.pluginInfo.selectPluginName = PluginConfig.PluginNames
-    // } else {
-    //     const search: PluginSearchParams = {...cloneDeep(defaultSearch)}
-    //     if (PluginConfig.Filter?.Keyword) {
-    //         search.keyword = PluginConfig.Filter?.Keyword
-    //         search.type = "keyword"
-    //     }
-    //     if (PluginConfig.Filter?.UserName) {
-    //         search.userName = PluginConfig.Filter?.UserName
-    //         search.type = "userName"
-    //     }
-    //     data.pluginInfo.search = {...search}
-    // }
-    // 处理输入的参数，包括额外参数
-
+    try {
+        const resParams: HybridScanControlAfterRequest = JSON.parse(value)
+        let targets = resParams.Targets
+        let plugin = resParams.Plugin
+        // 确保 plugin targets 一定会有初始值
+        if (!plugin) {
+            plugin = {PluginNames: [], Filter: {Pagination: genDefaultPagination()}}
+        }
+        if (!targets) {
+            targets = {
+                InputFile: [],
+                Input: "",
+                HTTPRequestTemplate: {...cloneDeep(defPluginBatchExecuteExtraFormValue)}
+            }
+        }
+        //处理插件的输入值 1.勾选插件 2.全选(搜索条件)
+        if ((plugin.PluginNames?.length || 0) > 0) {
+            data.pluginInfo.selectPluginName = plugin.PluginNames
+        } else {
+            const search: PluginSearchParams = {...cloneDeep(defaultSearch)}
+            if (plugin.Filter?.Keyword) {
+                search.keyword = plugin.Filter?.Keyword
+                search.type = "keyword"
+            }
+            if (plugin.Filter?.UserName) {
+                search.userName = plugin.Filter?.UserName
+                search.type = "userName"
+            }
+            data.pluginInfo.search = {...search}
+        }
+        // 处理输入的参数，包括额外参数
+        data.params.Input = targets.Input
+        data.params.Proxy = resParams.Proxy || ""
+        data.params.Concurrent = resParams.Concurrent || 30
+        data.params.TotalTimeoutSecond = resParams.TotalTimeoutSecond || 7200
+        data.params.HTTPRequestTemplate = {
+            ...cloneDeep(defPluginBatchExecuteExtraFormValue),
+            ...targets.HTTPRequestTemplate
+        }
+    } catch (error) {
+        yakitNotify("error", "解析任务输入参数数据和插件勾选数据失败:" + error)
+    }
     return data
 }
 export interface HybridScanRequest extends PluginBatchExecutorTaskProps {
@@ -1181,7 +1190,6 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
             let executeParams: HybridScanControlAfterRequest = {
                 ...params
             }
-            console.log('executeParams',executeParams)
             ipcRenderer
                 .invoke(
                     "HybridScan",
@@ -1240,7 +1248,6 @@ export const apiQueryHybridScan: (runtimeId: string, token: string) => Promise<n
                 HybridScanMode: "status",
                 ResumeTaskId: runtimeId
             }
-            console.log("params", params)
             ipcRenderer.invoke("HybridScan", params, token).then(() => {
                 info(`查询成功,任务ID: ${token}`)
                 resolve(null)

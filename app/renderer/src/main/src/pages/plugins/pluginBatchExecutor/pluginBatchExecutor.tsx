@@ -7,13 +7,14 @@ import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
 import {PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
 import {
     HybridScanRequest,
+    PluginBatchExecutorInputValueProps,
     apiCancelHybridScan,
     apiHybridScan,
     apiQueryHybridScan,
     apiQueryYakScript,
     convertHybridScanParams,
     convertLocalPluginsRequestParams,
-    hybridScanParamsConvertInputValue
+    hybridScanParamsConvertToInputValue
 } from "../utils"
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
@@ -43,7 +44,7 @@ import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {addToTab} from "@/pages/MainTabs"
-import {HybridScanInputValueProps} from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStreamType"
+import {yakitNotify} from "@/utils/notification"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -138,9 +139,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
 
     useEffect(() => {
         getPrivateDomainAndRefList()
-        if (pageInfo.runtimeId) {
-            onQueryHybridScanByRuntimeId(pageInfo.runtimeId)
-        }
     }, [])
     // userInfo.isLogin, filters发生变化的时候触发；初始请求数据在 getPrivateDomainAndRefList
     useUpdateEffect(() => {
@@ -157,12 +155,37 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         }
     }, [inViewport])
     /**设置输入模块的初始值 */
-    const onInitInputValue = useMemoizedFn((value: HybridScanInputValueProps) => {
-        console.log("onInitInputValue", value)
-        const inputValue= hybridScanParamsConvertInputValue(value)
+    const onInitInputValue = useMemoizedFn((value: string) => {
+        try {
+            const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
+            const {pluginInfo, params} = inputValue
+            // 插件数据
+            if (pluginInfo.selectPluginName.length > 0) {
+                setSelectList(pluginInfo.selectPluginName)
+            } else {
+                setSelectList([])
+                setSearch(pluginInfo.search)
+                setAllCheck(true)
+            }
+            // form表单数据
+            const extraForm = {
+                ...params.HTTPRequestTemplate,
+                Proxy: params.Proxy,
+                Concurrent: params.Concurrent,
+                TotalTimeoutSecond: params.TotalTimeoutSecond
+            }
+            form.setFieldsValue({
+                Input: params.Input,
+                IsHttps: params.HTTPRequestTemplate.IsHttps,
+                IsRawHTTPRequest: !!params.HTTPRequestTemplate.IsRawHTTPRequest,
+                RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest
+            })
+            setExtraParamsValue(extraForm)
+        } catch (error) {}
     })
     /** 通过runtimeId查询该条记录详情 */
     const onQueryHybridScanByRuntimeId = useMemoizedFn((runtimeId: string) => {
+        if (!runtimeId) return
         hybridScanStreamEvent.reset()
         apiQueryHybridScan(runtimeId, tokenRef.current).then(() => {
             setIsExecuting(true)
@@ -231,6 +254,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                 if (+res.Pagination.Page === 1) {
                     setAllCheck(false)
                     setSelectList([])
+                    onQueryHybridScanByRuntimeId(pageInfo.runtimeId)
                 }
             } catch (error) {}
             setTimeout(() => {
@@ -299,7 +323,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         // 任务配置参数
         const taskParams: PluginBatchExecutorTaskProps = {
             Concurrent: extraParamsValue.Concurrent,
-            TotalTimeoutSecond: extraParamsValue.Concurrent,
+            TotalTimeoutSecond: extraParamsValue.TotalTimeoutSecond,
             Proxy: extraParamsValue.Proxy
         }
         const params: HybridScanRequest = {

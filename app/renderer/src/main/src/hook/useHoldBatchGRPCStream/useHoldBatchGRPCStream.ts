@@ -6,17 +6,11 @@ import {DefaultTabs} from "../useHoldGRPCStream/constant"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "../useHoldGRPCStream/useHoldGRPCStreamType"
 import {
     HoldBatchGRPCStreamParams,
-    HybridScanInputValueProps,
     PluginBatchExecutorResult
 } from "./useHoldBatchGRPCStreamType"
 import isEqual from "lodash/isEqual"
 
 const {ipcRenderer} = window.require("electron")
-
-/**判断两次输入模块的值是否全等 */
-const isEqualInputValue = (inputValue) => {
-    return isEqual(inputValue.cache, inputValue.sent)
-}
 
 export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams) {
     const {
@@ -47,15 +41,9 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     // runtime-id
     const runTimeId = useRef<{cache: string; sent: string}>({cache: "", sent: ""})
     /** 输入模块值 */
-    const inputValueRef = useRef<{cache: HybridScanInputValueProps; sent: HybridScanInputValueProps}>({
-        cache: {
-            InputTarget: undefined,
-            PluginConfig: undefined
-        },
-        sent: {
-            InputTarget: undefined,
-            PluginConfig: undefined
-        }
+    const inputValueRef = useRef<{cache: string; sent: string}>({
+        cache: '',
+        sent: ''
     })
     // progress
     let progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
@@ -97,11 +85,8 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     useEffect(() => {
         const processDataId = "main"
         ipcRenderer.on(`${token}-data`, async (e: any, res: PluginBatchExecutorResult) => {
-            if (res.InputTarget) {
-                inputValueRef.current.cache.InputTarget = res.InputTarget
-            }
-            if (res.PluginConfig) {
-                inputValueRef.current.cache.PluginConfig = res.PluginConfig
+            if (res.ScanConfig) {
+                inputValueRef.current.cache = res.ScanConfig
             }
             const data = res.ExecResult
             const {TotalTasks, FinishedTasks} = res
@@ -196,7 +181,7 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
             runTimeId.current.sent = runTimeId.current.cache
         }
         // 输入模块值
-        if (!isEqualInputValue(inputValueRef.current) && onGetInputValue) {
+        if (inputValueRef.current.sent !== inputValueRef.current.cache && onGetInputValue) {
             onGetInputValue(inputValueRef.current.cache)
             inputValueRef.current.sent = inputValueRef.current.cache
         }
