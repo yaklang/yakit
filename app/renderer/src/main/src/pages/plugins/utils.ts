@@ -20,7 +20,7 @@ import {KVPair} from "../httpRequestBuilder/HTTPRequestBuilder"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {HybridScanControlAfterRequest, HybridScanControlRequest} from "@/models/HybridScan"
 import {PluginBatchExecutorTaskProps} from "./pluginBatchExecutor/pluginBatchExecutor"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 
 const {ipcRenderer} = window.require("electron")
 
