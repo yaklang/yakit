@@ -40,7 +40,6 @@ import {
     ThumbUpIcon,
     TrashIcon
 } from "@/assets/newIcon"
-import {PresetKeywordProps, presetList} from "./presetKeywords"
 import {Divider, Drawer, Input, Progress, Tooltip} from "antd"
 import {
     CacheChatCSProps,
@@ -48,7 +47,8 @@ import {
     ChatCSMultipleInfoProps,
     ChatCSSingleInfoProps,
     ChatInfoProps,
-    ChatMeInfoProps
+    ChatMeInfoProps,
+    ChatPluginListProps
 } from "./chatCSType"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
@@ -72,7 +72,6 @@ import {
     SolidThumbupIcon,
     SolidXcircleIcon
 } from "@/assets/icon/solid"
-
 import moment from "moment"
 import classNames from "classnames"
 import styles from "./chatCS.module.scss"
@@ -95,12 +94,8 @@ import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHold
 import {YakitRoute} from "@/routes/newRoute"
 import {addToTab} from "@/pages/MainTabs"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
-import { YakParamProps } from "@/pages/plugins/pluginsType"
+import {YakParamProps} from "@/pages/plugins/pluginsType"
 const {ipcRenderer} = window.require("electron")
-const TypeToContent: Record<string, string> = {
-    bing: "搜索引擎增强",
-    exp_info: "插件调试执行"
-}
 
 /** 将 new Date 转换为日期 */
 const formatDate = (i: number) => {
@@ -113,8 +108,8 @@ export interface YakChatCSProps {
 }
 
 export interface ScriptsProps {
-    script_name:string
-    Fields:YakParamProps[]
+    script_name: string
+    Fields: YakParamProps[]
 }
 
 export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
@@ -140,6 +135,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     setStorage([])
                     return
                 }
+                console.log("获取缓存数据",data);
+                
                 setHistroy([...data.lists])
                 if (data.lists.length > 0) setActive(data.lists[0].token)
             } catch (error) {}
@@ -152,6 +149,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const setStorage = useMemoizedFn((data: CacheChatCSProps[]) => {
         let cache: string = ""
         if (data.length > 0) cache = JSON.stringify({lists: data, user_id: userInfo.user_id || 0})
+        console.log("更改缓存数据",data);
         setRemoteValue(RemoteGV.ChatCSStorage, cache)
     })
 
@@ -185,8 +183,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         const lists: CacheChatCSProps = {
             token: randomString(10),
             name: `临时对话窗-${randomString(4)}`,
-            baseType,
-            expInfo,
+            is_bing: isBing,
+            is_plugin: isPlugin,
             history: [],
             time: formatDate(+new Date())
         }
@@ -222,9 +220,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     })
 
     // 搜索引擎增强
-    const [baseType, setBaseType] = useState<boolean>(false)
+    const [isBing, setBing] = useState<boolean>(false)
     // 插件调试执行
-    const [expInfo, setExpInfo] = useState<boolean>(false)
+    const [isPlugin, setPlugin] = useState<boolean>(false)
     const [question, setQuestion] = useState<string>("")
 
     const [loading, setLoading] = useState<boolean>(false)
@@ -284,40 +282,33 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         if (loading) return
         if (!question || question.trim() === "") return
 
-        // if (!baseType && !expInfo) {
-        //     return yakitNotify("error", "请最少选择一个回答类型")
-        // }
-
         const data: ChatInfoProps = {
             token: randomString(10),
             isMe: true,
             time: formatDate(+new Date()),
             info: {
                 content: question,
-                baseType,
-                expInfo
+                is_bing: isBing,
+                is_plugin: isPlugin
             }
         }
         onSubmit(data)
     })
 
     /** Prompt提问 */
-    const onPromptSubmit = useMemoizedFn((v: {content: string; baseType: string}) => {
+    const onPromptSubmit = useMemoizedFn((v: PresetKeywordProps) => {
         if (loading) return
-        const {content, baseType} = v
+        const {content, is_bing, is_plugin} = v
         if (!content || content.trim() === "") return
 
-        if (!baseType && !expInfo) {
-            return yakitNotify("error", "请最少选择一个回答类型")
-        }
         const data: ChatInfoProps = {
             token: randomString(10),
             isMe: true,
             time: formatDate(+new Date()),
             info: {
                 content,
-                baseType,
-                expInfo
+                is_bing,
+                is_plugin
             }
         }
         onSubmit(data)
@@ -331,7 +322,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         // 新对话，暂无对话历史记录
         if (arr.length === 1) return chatHistory
         // 用户问题未选择cs或vuln，不获取历史记录
-        if (!(arr[0].info as ChatMeInfoProps)?.baseType) return chatHistory
+        // if (!(arr[0].info as ChatMeInfoProps)?.baseType) return chatHistory
         // 历史记录不包含用户刚问的问题
         arr.shift()
 
@@ -343,25 +334,25 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 const info = item.info as ChatMeInfoProps
 
                 // 用户历史操作的问题
-                if (!info.baseType) {
-                    stag = ""
-                    continue
-                } else {
-                    chatHistory.push({
-                        role: "assistant",
-                        content: ["暂无可用解答", "该类型请求异常，请稍后重试"].includes(stag)
-                            ? "回答中断"
-                            : stag || "回答中断"
-                    })
-                    chatHistory.push({role: "user", content: info.content})
-                }
+                // if (!info.baseType) {
+                //     stag = ""
+                //     continue
+                // } else {
+                chatHistory.push({
+                    role: "assistant",
+                    content: ["暂无可用解答", "该类型请求异常，请稍后重试"].includes(stag)
+                        ? "回答中断"
+                        : stag || "回答中断"
+                })
+                chatHistory.push({role: "user", content: info.content})
+                // }
             } else {
                 const info = item.info as ChatCSMultipleInfoProps
                 for (let el of info.content) {
-                    if (el.type === "not_bing" || el.type === "bing") {
-                        stag = el.content
-                        break
-                    }
+                    // if (el.type === "bing") {
+                    stag = el.content
+                    break
+                    // }
                 }
             }
         }
@@ -406,9 +397,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
         // return answer
     })
-    const setContentList = useMemoizedFn(
+    const setContentPluginList = useMemoizedFn(
         (info: ChatCSSingleInfoProps, contents: ChatCSMultipleInfoProps, group: CacheChatCSProps[]) => {
-            const lastIndex = contents.content.findIndex((item) => item.id === info.id && item.type === info.type)
+            const lastIndex = contents.content.findIndex((item) => item.id === info.id)
             if (lastIndex === -1) contents.content.push(info)
             setHistroy([...group])
             setStorage([...group])
@@ -418,28 +409,51 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     )
     /** 生成 Promise plugin 实例 */
     const generatePluginPromise = useMemoizedFn(
-        async (params: {
-            prompt: string
-            is_bing: boolean
-            scripts:ScriptsProps[]
-        }) => {
+        async (
+            params: {prompt: string; is_bing: boolean; is_plugin: boolean; scripts: ScriptsProps[]},
+            contents: ChatCSMultipleInfoProps,
+            group: CacheChatCSProps[]
+        ) => {
+            const cs: ChatCSSingleInfoProps = {
+                is_bing: params.is_bing,
+                is_plugin: params.is_plugin,
+                content: "",
+                id: ""
+            }
             return await new Promise((resolve, reject) => {
                 chatCSPlugin({
                     ...params,
                     token: userInfo.token,
-                    plugin_scope: 5,
-                }).then((data) => {
-                    console.log("chatCSPlugin",data);
-                    
+                    plugin_scope: 5
                 })
-                .finally(()=>{
-                    console.log("finally---");
-                    
-                })
-                .catch((e) => {
-                    reject(`plugin|error|${e}`)
-                })
+                    .then((res) => {
+                        console.log("res", res)
+                        const {data} = res
+                        const {result, id, status = true, message = ""} = data
+                        if (status && Array.isArray(result)) {
+                            if (!cs.id) cs.id = id
+                            cs.content = JSON.stringify(result)
+                            setContentPluginList(cs, contents, group)
+                        } else {
+                        }
+                    })
+                    .finally(() => {
+                        resolve(`plugin|success`)
+                    })
+                    .catch((e) => {
+                        reject(`plugin|error|${e}`)
+                    })
             })
+        }
+    )
+    const setContentList = useMemoizedFn(
+        (info: ChatCSSingleInfoProps, contents: ChatCSMultipleInfoProps, group: CacheChatCSProps[]) => {
+            const lastIndex = contents.content.findIndex((item) => item.id === info.id)
+            if (lastIndex === -1) contents.content.push(info)
+            setHistroy([...group])
+            setStorage([...group])
+            /** 流式输出逻辑 */
+            scrollToBottom()
         }
     )
     /** 生成 Promise 实例 */
@@ -448,6 +462,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             params: {
                 prompt: string
                 is_bing: boolean
+                is_plugin: boolean
                 history: {role: string; content: string}[]
                 signal: AbortSignal
             },
@@ -455,7 +470,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             group: CacheChatCSProps[]
         ) => {
             const cs: ChatCSSingleInfoProps = {
-                type: params.is_bing ? "bing" : "",
+                is_bing: params.is_bing,
+                is_plugin: params.is_plugin,
                 content: "",
                 id: ""
             }
@@ -521,8 +537,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 : {
                       token: randomString(10),
                       name: `临时对话窗-${randomString(4)}`,
-                      baseType,
-                      expInfo,
+                      is_bing: isBing,
+                      is_plugin: isPlugin,
                       history: [],
                       time: formatDate(+new Date())
                   }
@@ -562,8 +578,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             token: randomString(10),
             isMe: false,
             time: formatDate(+new Date()),
-            info: contents,
-            renderType: "plugin-list"
+            info: contents
+        }
+        if (params.is_plugin) {
+            answers.renderType = "plugin-list"
         }
         setLoadingToken(answers.token)
         lists.history.push(answers)
@@ -572,14 +590,20 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         setStorage([...group])
         setTimeout(() => scrollToBottom(), 100)
 
-        if (!params.expInfo) {
+        if (!params.is_plugin) {
             /** 流式输出逻辑 */
             if (!isBreak.current) {
                 chatHistory.reverse()
                 const abort = new AbortController()
                 controller.current = abort
                 await generatePromise(
-                    {prompt: params.content, is_bing: params.baseType, history: chatHistory, signal: abort.signal},
+                    {
+                        prompt: params.content,
+                        is_bing: params.is_bing,
+                        is_plugin: params.is_plugin,
+                        history: chatHistory,
+                        signal: abort.signal
+                    },
                     contents,
                     group
                 )
@@ -597,19 +621,22 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             // promises.push(promise)
         }
         /** 插件调试与执行 - 新接口 */
-        if (params.expInfo) {
+        if (params.is_plugin) {
             if (!isBreak.current) {
-                ipcRenderer.invoke("QueryYakScriptLocalAll").then(async(item: QueryYakScriptsResponse) => {
-                    let scripts:ScriptsProps[] =  item.Data.map((i)=>({
-                        script_name: i.ScriptName,
-                        Fields: i.Params
-                    }))
-                    console.log("获取所有数据", item)
-                    await generatePluginPromise(
-                        {prompt: params.content, is_bing: params.baseType, scripts}
-                        // contents,
-                        // group
-                    )
+                await new Promise((resolve, reject) => {
+                    ipcRenderer.invoke("QueryYakScriptLocalAll").then(async (item: QueryYakScriptsResponse) => {
+                        let scripts: ScriptsProps[] = item.Data.map((i) => ({
+                            script_name: i.ScriptName,
+                            Fields: i.Params
+                        }))
+                        console.log("获取所有数据", item)
+                        await generatePluginPromise(
+                            {prompt: params.content, is_bing: params.is_bing, is_plugin: params.is_plugin, scripts},
+                            contents,
+                            group
+                        )
+                        resolve(null)
+                    })
                 })
             }
             scrollToBottom()
@@ -793,11 +820,37 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }
     })
 
-    const [hintShow, setHintShow] = useState<boolean>(false)
+    /** 插件调试执行 - 运行结束 - 更改历史/缓存结果 */
+    const onPluginEnd = useMemoizedFn(({token,info,status,riskState}: PluginEndProps) => {
+        const data = [...history]
+        const filterIndex = data.findIndex((item) => item.token === active)
+        if (filterIndex === -1) return
+        const chat = data[filterIndex]
+        chat.history = chat.history.map((item) => {
+            if(item.token === token){
+                let itemInfo = item.info as ChatCSMultipleInfoProps
+                let content:ChatCSSingleInfoProps[] = itemInfo.content.map((item)=>{
+                    if(riskState){
+                        return {...item,status,riskState}
+                    }
+                    return {...item,status}
+                })
+                let info = {
+                    ...item.info,
+                    content
+                }
+                return {...item,info}
+            }
+            return item
+        }) as ChatInfoProps[]
+        chat.time = formatDate(+new Date())
+        setHistroy([...data])
+        setStorage([...data])
+    })
+
     /** 预设词提问 */
     const onSubmitPreset = useMemoizedFn((info: PresetKeywordProps) => {
         if (loading) return
-        if (hintShow) setHintShow(false)
 
         const data: ChatInfoProps = {
             token: randomString(10),
@@ -805,8 +858,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             time: formatDate(+new Date()),
             info: {
                 content: info.content,
-                baseType: info.type,
-                expInfo: false
+                is_bing: info.is_bing,
+                is_plugin: info.is_plugin
             }
         }
 
@@ -818,7 +871,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             setWidth("95vw")
         }
     }, [isShowPrompt])
-    // console.log("currentChat---", currentChat)
+    console.log("currentChat---", currentChat)
 
     return (
         <Resizable
@@ -881,19 +934,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                             <ClockIcon />
                                         </div>
                                     </Tooltip>
-                                    {/* <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"提示词"}>
-                                        <div
-                                            className={classNames(styles["big-btn"], styles["btn-style"], {
-                                                [styles["disable-style"]]: loading
-                                            })}
-                                            onClick={() => {
-                                                if (loading) return
-                                                setHintShow(true)
-                                            }}
-                                        >
-                                            <ClipboardListIcon />
-                                        </div>
-                                    </Tooltip> */}
                                     <div className={styles["divider-style"]}></div>
                                 </>
                             )}
@@ -936,18 +976,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                         </div>
                                         <div className={styles["welcome-preset-list"]}>
                                             <div className={styles["list-wrapper"]}>
-                                                {/* {presetList.map((item) => {
-                                                    return (
-                                                        <div
-                                                            className={styles["opt-wrapper"]}
-                                                            key={item.content}
-                                                            onClick={() => onSubmitPreset(item)}
-                                                        >
-                                                            {item.content}
-                                                            <ArrowNarrowRightIcon />
-                                                        </div>
-                                                    )
-                                                })} */}
                                                 <div className={styles["info-hint-wrapper"]}>
                                                     <OutlineInformationcircleIcon />
                                                     ChatCS模型参数：6.5b，训练Token: 1.5T
@@ -973,6 +1001,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                             } else {
                                                 return (
                                                     <ChatCSContent
+                                                        onPluginEnd={onPluginEnd}
                                                         key={token}
                                                         token={token}
                                                         loadingToken={loadingToken}
@@ -1059,17 +1088,17 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                             </div>
                                                             <div
                                                                 className={classNames(styles["single-btn"], {
-                                                                    [styles["single-active-btn"]]: baseType
+                                                                    [styles["single-active-btn"]]: isBing
                                                                 })}
-                                                                onClick={() => setBaseType(!baseType)}
+                                                                onClick={() => setBing(!isBing)}
                                                             >
                                                                 搜索引擎增强
                                                             </div>
                                                             <div
                                                                 className={classNames(styles["single-btn"], {
-                                                                    [styles["single-active-btn"]]: expInfo
+                                                                    [styles["single-active-btn"]]: isPlugin
                                                                 })}
-                                                                onClick={() => setExpInfo(!expInfo)}
+                                                                onClick={() => setPlugin(!isPlugin)}
                                                             >
                                                                 插件调试执行
                                                             </div>
@@ -1095,17 +1124,17 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                 </div>
                                                 <div
                                                     className={classNames(styles["single-btn"], {
-                                                        [styles["single-active-btn"]]: baseType
+                                                        [styles["single-active-btn"]]: isBing
                                                     })}
-                                                    onClick={() => setBaseType(!baseType)}
+                                                    onClick={() => setBing(!isBing)}
                                                 >
                                                     搜索引擎增强
                                                 </div>
                                                 <div
                                                     className={classNames(styles["single-btn"], {
-                                                        [styles["single-active-btn"]]: expInfo
+                                                        [styles["single-active-btn"]]: isPlugin
                                                     })}
-                                                    onClick={() => setExpInfo(!expInfo)}
+                                                    onClick={() => setPlugin(!isPlugin)}
                                                 >
                                                     插件调试执行
                                                 </div>
@@ -1143,12 +1172,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     onCurrent={onCurrent}
                     onEdit={onEdit}
                     onDel={onDel}
-                />
-                <HintDrawer
-                    getContainer={divRef.current}
-                    visible={hintShow}
-                    setVisible={setHintShow}
-                    onSearch={onSubmitPreset}
                 />
 
                 <YakitHint
@@ -1360,94 +1383,34 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
     )
 })
 interface PluginListContentProps {
+    data: string
     setPluginRun: (v: boolean) => void
-    onStartExecute: () => void
+    onStartExecute: (v: string[]) => void
 }
 const defPluginBatchExecuteExtraFormValue: PluginBatchExecuteExtraFormValue = {
     ...cloneDeep(defPluginExecuteFormValue),
     ...cloneDeep(defPluginExecuteTaskValue)
 }
 const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
-    const {setPluginRun, onStartExecute} = props
+    const {data, setPluginRun, onStartExecute} = props
+    // 数据
+    const [datsSource, setDatsSource] = useState<ChatPluginListProps[]>([])
     // 选中项
     const [checkedList, setCheckedList] = useState<string[]>([])
 
-    const defaultArr = [
-        {
-            script_name: "ActiveMQ 默认密码检查",
-            Fields: [
-                {
-                    Field: "target",
-                    DefaultValue: "",
-                    typeVerbose: "string",
-                    FieldVerbose: "扫描的目标",
-                    Required: true,
-                    Group: "",
-                    Help: ""
-                },
-                {
-                    Field: "ports",
-                    DefaultValue: "8081",
-                    typeVerbose: "string",
-                    FieldVerbose: "端口",
-                    Required: false,
-                    Group: "",
-                    Help: ""
-                }
-            ]
-        },
-        {
-            script_name: "HttP Web 目录爆破：敏感中间件",
-            Fields: [
-                {
-                    Field: "target",
-                    DefaultValue: "",
-                    typeVerbose: "string",
-                    FieldVerbose: "扫描的目标",
-                    Required: true,
-                    Group: "",
-                    Help: ""
-                },
-                {
-                    Field: "ports",
-                    DefaultValue: "80",
-                    typeVerbose: "string",
-                    FieldVerbose: "端口",
-                    Required: false,
-                    Group: "",
-                    Help: ""
-                }
-            ]
-        },
-        {
-            script_name: "/crossdomain.xml allow-access-from 检查",
-            Fields: [
-                {
-                    Field: "ports",
-                    DefaultValue: "80",
-                    typeVerbose: "string",
-                    FieldVerbose: "端口",
-                    Required: false,
-                    Group: "",
-                    Help: ""
-                },
-                {
-                    Field: "target",
-                    DefaultValue: "",
-                    typeVerbose: "string",
-                    FieldVerbose: "扫描的目标",
-                    Required: true,
-                    Group: "",
-                    Help: ""
-                }
-            ]
+    useEffect(() => {
+        try {
+            const arr: ChatPluginListProps[] = JSON.parse(data)
+            setDatsSource(arr)
+        } catch (error) {
+            yakitNotify("error", `解析失败|${error}`)
         }
-    ]
+    }, [])
 
     return (
         <div className={styles["plugin-list-content"]}>
             <div className={styles["list"]}>
-                {defaultArr.map((item, index) => {
+                {datsSource.map((item, index) => {
                     const {script_name} = item
                     return (
                         <div className={classNames(styles["list-item"])} key={script_name}>
@@ -1474,11 +1437,11 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                 <div className={styles["count-box"]}>
                     <div className={styles["check-box"]}>
                         <YakitCheckbox
-                            checked={checkedList.length === defaultArr.length}
-                            indeterminate={checkedList.length > 0 && checkedList.length !== defaultArr.length}
+                            checked={checkedList.length === datsSource.length}
+                            indeterminate={checkedList.length > 0 && checkedList.length !== datsSource.length}
                             onChange={(e) => {
                                 if (e.target.checked) {
-                                    let list = defaultArr.map((item) => item.script_name)
+                                    let list = datsSource.map((item) => item.script_name)
                                     setCheckedList(list)
                                 } else {
                                     setCheckedList([])
@@ -1490,7 +1453,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                     <div className={styles["show-box"]}>
                         <div className={styles["show"]}>
                             <div className={styles["title"]}>Total</div>
-                            <div className={styles["count"]}>{defaultArr.length}</div>
+                            <div className={styles["count"]}>{datsSource.length}</div>
                         </div>
                         <div className={styles["line"]} />
                         <div className={styles["show"]}>
@@ -1505,7 +1468,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                         disabled={checkedList.length === 0}
                         icon={<SolidPlayIcon />}
                         onClick={() => {
-                            onStartExecute()
+                            onStartExecute(checkedList)
                         }}
                     >
                         开始执行
@@ -1516,7 +1479,16 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
     )
 })
 
+interface PluginEndProps {
+    token: string
+    info:  ChatCSMultipleInfoProps
+    status: "info"|"succee" | "fail"
+    riskState?: StreamResult.Risk[]
+}
+
 interface ChatCSContentProps {
+    /** 用于更改缓存 */
+    onPluginEnd: (v:PluginEndProps) => void
     /** 唯一标识符 */
     token: string
     /** 当前正在查询的那个回答的唯一标识符 */
@@ -1532,7 +1504,7 @@ interface ChatCSContentProps {
     renderType?: "plugin-list"
 }
 const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
-    const {token, loadingToken, loading, resTime, time, info, onStop, onLike, onDel, renderType} = props
+    const {onPluginEnd, token, loadingToken, loading, resTime, time, info, onStop, onLike, onDel, renderType} = props
 
     const tokenRef = useRef<string>(randomString(40))
     const [runtimeId, setRuntimeId] = useState<string>()
@@ -1544,6 +1516,24 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     const [pluginRun, setPluginRun] = useState<boolean>(false)
     /**展示类型 */
     const [showType, setShowType] = useState<"loading" | "succee" | "fail" | "info">("loading")
+    const [lastRiskState,setRiskState] = useState<StreamResult.Risk[]>()
+    // 渲染之前执行后的状态
+    useEffect(()=>{
+        console.log("info-ooo",info);
+        const {content} = info
+        if(Array.isArray(content)&&content.length>0){
+            const {status,riskState} = content[0]
+            if(status){
+                setPluginRun(true)
+                setShowType(status)
+            }
+            if(riskState){
+                setPluginRun(true)
+                setRiskState(riskState)
+            }
+        }
+    },[])
+
     /**插件运行结果展示 */
     const [streamInfo, hybridScanStreamEvent] = useHoldBatchGRPCStream({
         taskName: "hybrid-scan",
@@ -1562,24 +1552,27 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
         }
     })
     const onTypeByresult = useMemoizedFn((v: "succee" | "fail") => {
-        const info = streamInfo as HoldGRPCStreamInfo
-        if (info.riskState.length > 0) {
+        const newStreamInfo = streamInfo as HoldGRPCStreamInfo
+        if (newStreamInfo.riskState.length > 0) {
+            // 此处更改history为结果
+            onPluginEnd({token,info,status:"info",riskState:newStreamInfo.riskState})
             setShowType("info")
         } else {
+            onPluginEnd({token,info,status:v})
             setShowType(v)
         }
     })
 
     const infoList = useCreation(() => {
         const info = streamInfo as HoldGRPCStreamInfo
-        return info.riskState
-    }, [streamInfo.riskState])
+        return lastRiskState||info.riskState
+    }, [streamInfo.riskState,lastRiskState])
 
     const progressList = useCreation(() => {
         return streamInfo.progressState
     }, [streamInfo.progressState])
     /**开始执行 */
-    const onStartExecute = useMemoizedFn(() => {
+    const onStartExecute = useMemoizedFn((selectPluginName: string[]) => {
         // 任务配置参数
         const taskParams: PluginBatchExecutorTaskProps = {
             Concurrent: extraParamsValue.Concurrent,
@@ -1595,7 +1588,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             }
         }
         const pluginInfo: {selectPluginName: string[]; search: PluginSearchParams} = {
-            selectPluginName: ["Swagger JSON 泄漏", "敏感信息检测", "敏感信息获取", "【端口扫描】主动信息探测"],
+            selectPluginName,
             search: {
                 keyword: "",
                 userName: "",
@@ -1623,10 +1616,12 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     const copyContent = useMemo(() => {
         let content: string = ""
         for (let item of info.content) {
-            if (item.type.length === 0) {
-                content = `${content}${item.content}\n`
+            if (item.is_bing) {
+                content = `${content}# 搜索引擎增强\n${item.content}\n`
+            } else if (item.is_plugin) {
+                content = `${content}# "插件调试执行"\n${item.content}\n`
             } else {
-                content = `${content}# ${TypeToContent[item.type]}\n${item.content}\n`
+                content = `${content}${item.content}\n`
             }
         }
         return content
@@ -1645,8 +1640,9 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                             <YakChatLogIcon />
                             {time}
                         </div>
-                        <div style={{display: "flex"}} className={styles["header-right"]}>
+                        
                             {showType === "loading" && (
+                                <div style={{display: "flex"}} className={styles["header-right"]}>
                                 <YakitButton
                                     type='primary'
                                     colors='danger'
@@ -1657,8 +1653,15 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                 >
                                     停止
                                 </YakitButton>
+                                </div>
                             )}
-                        </div>
+                            {showType !== "loading" && 
+                            <div className={styles["header-right"]}>
+                            <div className={styles["right-btn"]} onClick={onDel}>
+                                        <TrashIcon />
+                              </div></div>
+                            }
+                        
                     </div>
                     <div className={styles["opt-content"]}>
                         <PluginRunStatus
@@ -1714,13 +1717,13 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                         </div>
                                     )}
 
-                                    <div className={styles["right-btn"]}>
+                                    {renderType !== "plugin-list" &&<div className={styles["right-btn"]}>
                                         <CopyComponents
                                             className={classNames(styles["copy-icon-style"])}
                                             copyText={copyContent}
                                             iconColor={"#85899e"}
                                         />
-                                    </div>
+                                    </div>}
 
                                     <div className={styles["right-btn"]} onClick={onDel}>
                                         <TrashIcon />
@@ -1734,13 +1737,18 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                             info.content.length !== 0 && (
                                 <>
                                     <div className={styles["content-style"]}>
-                                        {info.content.map((item) => {
+                                        {info.content.map((item, index) => {
                                             return (
-                                                <React.Fragment key={item.type}>
-                                                    {item.type.length > 0 && (
-                                                        <div className={styles["content-type-title"]}>{`# ${
-                                                            TypeToContent[item.type]
-                                                        }`}</div>
+                                                <React.Fragment key={item.id + index}>
+                                                    {item.is_bing && (
+                                                        <div
+                                                            className={styles["content-type-title"]}
+                                                        >{`# ${"搜索引擎增强"}`}</div>
+                                                    )}
+                                                    {item.is_plugin && (
+                                                        <div
+                                                            className={styles["content-type-title"]}
+                                                        >{`# ${"插件调试执行"}`}</div>
                                                     )}
                                                     <ChatMarkdown content={item.content} />
                                                 </React.Fragment>
@@ -1751,22 +1759,38 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                             )
                         ) : (
                             <div className={styles["content-style"]}>
-                                {info.content.length === 0
-                                    ? "请求出现错误，请稍候再试"
-                                    : info.content.map((item) => {
-                                          return (
-                                              <React.Fragment key={item.type}>
-                                                  {item.type.length > 0 && (
-                                                      <div className={styles["content-type-title"]}>{`# ${
-                                                          TypeToContent[item.type]
-                                                      }`}</div>
-                                                  )}
-                                                  <ChatMarkdown content={item.content} />
-                                              </React.Fragment>
-                                          )
-                                      })}
-                                {renderType === "plugin-list" && (
-                                    <PluginListContent setPluginRun={setPluginRun} onStartExecute={onStartExecute} />
+                                {info.content.length === 0 ? (
+                                    "请求出现错误，请稍候再试"
+                                ) : (
+                                    <>
+                                        <>
+                                            {info.content.map((item, index) => {
+                                                return (
+                                                    <React.Fragment key={index + item.id}>
+                                                        {item.is_bing && (
+                                                            <div
+                                                                className={styles["content-type-title"]}
+                                                            >{`# ${"搜索引擎增强"}`}</div>
+                                                        )}
+                                                        {item.is_plugin && (
+                                                            <div
+                                                                className={styles["content-type-title"]}
+                                                            >{`# ${"插件调试执行"}`}</div>
+                                                        )}
+                                                        {renderType === "plugin-list" ? (
+                                                            <PluginListContent
+                                                                setPluginRun={setPluginRun}
+                                                                onStartExecute={onStartExecute}
+                                                                data={item.content}
+                                                            />
+                                                        ) : (
+                                                            <ChatMarkdown content={item.content} />
+                                                        )}
+                                                    </React.Fragment>
+                                                )
+                                            })}
+                                        </>
+                                    </>
                                 )}
                             </div>
                         )}
@@ -1875,16 +1899,22 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
         </Drawer>
     )
 })
+interface PresetKeywordProps {
+    content: string
+    is_bing: boolean
+    is_plugin: boolean
+}
 
 interface PromptWidgetProps {
     setShowPrompt: (v: boolean) => void
     onSubmitPreset: (info: PresetKeywordProps) => void
-    onPromptSubmit?: (v: {content: string; baseType: string}) => void
+    onPromptSubmit?: (v: PresetKeywordProps) => void
 }
 
 interface PromptListProps {
     title: string
-    api: string
+    is_bing: boolean
+    is_plugin: boolean
     eg: string[]
     prompt_type: PromptLabelItem
     template: string
@@ -1951,6 +1981,8 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
             .then((result) => {
                 const {data} = result
                 if (data.status) {
+                    console.log("玉舍此", data)
+
                     let list: PromptListProps[] = []
                     const obj = data.data || {}
                     const label: PromptLabelProps = {
@@ -1966,7 +1998,8 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                         const item = obj[key]
                         let PromptListItem: PromptListProps = {
                             title: key,
-                            api: item.api,
+                            is_bing: item.is_bing,
+                            is_plugin: item.is_plugin,
                             eg: item.eg,
                             prompt_type: item.prompt_type,
                             template: item.template,
@@ -1995,18 +2028,6 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                                 break
                         }
                     })
-                    // 注入静态数据
-                    // label.Team_other += presetList.length
-                    // label.Team_all += presetList.length
-                    // const otherList: PromptListProps[] = presetList.map((item) => ({
-                    //     title: item.content,
-                    //     api: item.type,
-                    //     prompt_type: "Team_other",
-                    //     eg: [],
-                    //     template: "",
-                    //     templateArr: []
-                    // }))
-                    // console.log("list", label, [...list, ...otherList])
                     setPromptLabel(label)
                     setPromptList([...list])
                 }
@@ -2157,7 +2178,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                         className={styles["prompt-item"]}
                         onClick={() => {
                             if (isOther(item.prompt_type)) {
-                                onSubmitPreset({content: item.title, type: item.api})
+                                onSubmitPreset({content: item.title, is_bing: item.is_bing, is_plugin: item.is_plugin})
                             } else {
                                 onClickPromptItem(item)
                             }
@@ -2207,7 +2228,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
 interface ChatCsPromptFormProps {
     selectItem: PromptListProps
     onClose: () => void
-    onPromptSubmit?: (v: {content: string; baseType: string}) => void
+    onPromptSubmit?: (v: PresetKeywordProps) => void
 }
 
 interface InputObjProps<T> {
@@ -2230,7 +2251,8 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
             return inputObj[key] || match
         })
 
-        onPromptSubmit && onPromptSubmit({content: replacedStr, baseType: selectItem.api})
+        onPromptSubmit &&
+            onPromptSubmit({content: replacedStr, is_bing: selectItem.is_bing, is_plugin: selectItem.is_plugin})
         setTimeout(() => {
             onClose()
         }, 500)
@@ -2314,61 +2336,6 @@ const ExampleCard: React.FC<ExampleCardProps> = memo((props) => {
                 <ChatMarkdown content={highlightStr(content)} />
             </div>
         </div>
-    )
-})
-
-interface HintDrawerProps {
-    /** 是否被dom节点包含 */
-    getContainer: any
-    visible: boolean
-    setVisible: (visible: boolean) => any
-    onSearch: (info: PresetKeywordProps) => any
-}
-const HintDrawer: React.FC<HintDrawerProps> = memo((props) => {
-    const {getContainer, visible, setVisible, onSearch} = props
-
-    return (
-        <Drawer
-            getContainer={getContainer}
-            className={styles["drawer-wrapper"]}
-            closable={false}
-            placement='bottom'
-            visible={visible}
-            onClose={() => setVisible(false)}
-        >
-            <div className={styles["drawer-body"]}>
-                <div className={styles["body-header"]}>
-                    <div className={styles["header-title"]}>提示词</div>
-                    <div className={styles["header-close"]} onClick={() => setVisible(false)}>
-                        <RemoveIcon />
-                    </div>
-                </div>
-
-                <div className={styles["body-wrapper"]}>
-                    <div className={styles["body-layout"]}>
-                        <div className={styles["body-container"]}>
-                            {presetList.map((item) => {
-                                return (
-                                    <div
-                                        key={item.content}
-                                        className={styles["hitn-container-opt"]}
-                                        onClick={() => onSearch(item)}
-                                    >
-                                        <div className={classNames(styles["opt-title"], "content-ellipsis")}>
-                                            {item.content}
-                                        </div>
-                                        <div className={styles["opt-icon"]}>
-                                            <ArrowRightSvgIcon />
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                        <div className={styles["body-footer"]}>已经到底啦～</div>
-                    </div>
-                </div>
-            </div>
-        </Drawer>
     )
 })
 

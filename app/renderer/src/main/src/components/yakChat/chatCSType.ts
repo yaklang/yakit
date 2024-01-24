@@ -1,13 +1,15 @@
+import { StreamResult } from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+
 /** @name chat-cs聊天对话框信息 */
 export interface CacheChatCSProps {
     /** 唯一标识符 */
     token: string
     /** 对话名称 */
     name: string
-    /** 通用安全知识|漏洞情报知识 */
-    baseType: boolean
-    /** 开源漏洞EXP */
-    expInfo: boolean
+    /** 搜索引擎增强 */
+    is_bing: boolean
+    /** 插件调试执行 */
+    is_plugin: boolean
     /** 对话内容历史 */
     history: ChatInfoProps[]
     /** 对话最新时间 */
@@ -25,8 +27,8 @@ export interface ChatInfoProps {
 /** 用户信息属性 */
 export interface ChatMeInfoProps {
     content: string
-    baseType: boolean
-    expInfo: boolean
+    is_bing: boolean
+    is_plugin: boolean
 }
 /** 服务器信息属性 */
 export interface ChatCSMultipleInfoProps {
@@ -36,13 +38,20 @@ export interface ChatCSMultipleInfoProps {
 
 /** 服务器插件列表属性 */
 export interface ChatPluginListProps {
-
+    input:string
+    script_name:string
 }
+
 export interface ChatCSSingleInfoProps {
-    type: string
+    is_bing: boolean
+    is_plugin: boolean
     content: string
     /** 对话服务器唯一标识符 */
     id: string
+
+    /** 缓存插件执行结果 */
+    status?: "succee" | "fail" | "info"
+    riskState?: StreamResult.Risk[]
 }
 
 /** 后端返回的数据结构 */
