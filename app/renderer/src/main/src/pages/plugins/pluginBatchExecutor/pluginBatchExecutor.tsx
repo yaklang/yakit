@@ -1,11 +1,10 @@
 import React, {useRef, useState, useReducer, useEffect} from "react"
 import {PluginDetails, PluginDetailsListItem, defaultSearch} from "../baseTemplate"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
-import {PluginGroup, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {useMemoizedFn, useCreation, useDebounceFn, useUpdateEffect} from "ahooks"
-import {cloneDeep} from "bizcharts/lib/utils"
+import cloneDeep from "lodash/cloneDeep"
 import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
-import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
+import {PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
 import {
     HybridScanRequest,
     apiCancelHybridScan,
@@ -26,11 +25,7 @@ import styles from "./PluginBatchExecutor.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowscollapseIcon,
-    OutlineArrowsexpandIcon,
-    OutlineChevrondoubledownIcon,
-    OutlineChevrondoubleupIcon,
-    OutlineChevrondownIcon
-} from "@/assets/icon/outline"
+    OutlineArrowsexpandIcon} from "@/assets/icon/outline"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import classNames from "classnames"
 import {
