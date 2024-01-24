@@ -3,9 +3,14 @@ const electronIsDev = require("electron-is-dev")
 const os = require("os")
 const path = require("path")
 const process = require("process")
-require('dotenv').config()
+const fs = require("fs")
+/** 软件根目录 */
+const appPath = app.isPackaged ? path.dirname(app.getPath('exe')) : app.getAppPath();
 /** 软件关联项目相关目录路径 */
-const YakitProjectPath = process.env.YAKIT_HOME || path.join(os.homedir(), "yakit-projects")
+/** 优先使用家目录下的yakit-projects
+ * 在新版本中，windows自定义安装路径会将家目录的yakit-projects迁移到软件根目录下，则会使用该目录 */
+const defaultYakitProjectPath = path.join(os.homedir(), "yakit-projects")
+const YakitProjectPath = fs.existsSync(defaultYakitProjectPath)? defaultYakitProjectPath: path.join(appPath, "yakit-projects");
 /** 引擎和软件安装包路径 */
 const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
 /**
