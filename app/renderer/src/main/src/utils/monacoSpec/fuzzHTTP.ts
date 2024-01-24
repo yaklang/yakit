@@ -398,6 +398,7 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/\S/, "http.header.info"],
         ],
         sec_http_header: [
+            [/\n/, 'body.delimiter', '@pop'],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
             [/:/, "delimiter", "@http_header_value"],
             [/\S/, "http.header.warning"],
@@ -405,12 +406,13 @@ monaco.languages.setMonarchTokensProvider("http", {
         content_type: [
             [/\s+$/, "delimiter", "@pop"],
             [/\s+/, "delimiter"],
-            [/multipart\/form-data.*/, "http.header.mime.form", "@pop"],
+            [/^\n$/, 'body.delimiter', '@pop'],
+            [/multipart\/form-data[^\n]*/, "http.header.mime.form"],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
-            [/application\/xml/, "http.header.mime.xml", "@pop"],
-            [/application\/json/, "http.header.mime.json", "@pop"],
-            [/application\/x-www-form-urlencoded/, "http.header.mime.urlencoded", "@pop"],
-            [/\S/, "http.header.mime.default", "@pop"],
+            [/application\/xml/, "http.header.mime.xml"],
+            [/application\/json/, "http.header.mime.json"],
+            [/application\/x-www-form-urlencoded/, "http.header.mime.urlencoded"],
+            [/\S/, "http.header.mime.default"],
         ],
         query: [
             [/\s/, "delimiter", "@http_protocol"],
@@ -447,7 +449,7 @@ monaco.languages.setMonarchTokensProvider("http", {
             [/%[0-9ABCDEFabcdef]{2}/, "http.urlencoded"],
         ],
         http_header_value: [
-            [/\n/, "delimiter", "@pop"],
+            [/\n/,  { token: "delimiter", next: "@pop", goBack: 1 }],
             [/\s/, "delimiter"],
             [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
         ],
