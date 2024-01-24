@@ -68,11 +68,14 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                 ...cacheHistoryData.options
             ].filter((_, index) => index < cacheHistoryListLength)
             const cacheHistory: CacheDataHistoryProps = {
-                // defaultValue: isCacheDefaultValue ? newValue.join(",") : "",
                 defaultValue: newValue.join(","),
                 options: newOption
             }
-            setRemoteValue(cacheHistoryDataKey, JSON.stringify(cacheHistory))
+            const cacheData = {
+                options: cacheHistory.options,
+                defaultValue: isCacheDefaultValue ? cacheHistory.defaultValue : ""
+            }
+            setRemoteValue(cacheHistoryDataKey, JSON.stringify(cacheData))
                 .then(() => {
                     // onGetRemoteValues()
                     setCacheHistoryData({
@@ -87,7 +90,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             // 多选;该情况下label和value 大多数时候不一样;暂不支持缓存
         } else {
             //  单选
-            onSetRemoteValuesBase({cacheHistoryDataKey, newValue: newValue.join(",")}).then(
+            onSetRemoteValuesBase({cacheHistoryDataKey, newValue: newValue.join(","),isCacheDefaultValue}).then(
                 (value: CacheDataHistoryProps) => {
                     // onGetRemoteValues()
                     setCacheHistoryData({
@@ -102,7 +105,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     const onGetRemoteValues = useMemoizedFn(() => {
         if (!cacheHistoryDataKey) return
         onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
-            const value = isCacheDefaultValue && cacheData.defaultValue ? cacheData.defaultValue.split(",") : []
+            const value = cacheData.defaultValue ? cacheData.defaultValue.split(",") : []
             let newOption: DefaultOptionType[] = getNewOption(cacheData.options)
             if (props.onChange) props.onChange(value, newOption)
             setCacheHistoryData({defaultValue: value, options: newOption as unknown as YakitOptionTypeProps})

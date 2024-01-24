@@ -53,7 +53,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     /**@description 缓存 cacheHistoryDataKey 对应的数据 */
     const onSetRemoteValues = useMemoizedFn((newValue: string) => {
         if (!cacheHistoryDataKey) return
-        onSetRemoteValuesBase({cacheHistoryDataKey, newValue}).then((value) => {
+        onSetRemoteValuesBase({cacheHistoryDataKey, newValue,isCacheDefaultValue}).then((value) => {
             setCacheHistoryData({
                 defaultValue: value.defaultValue || "",
                 options: value.options
@@ -66,7 +66,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         if (init) setLoading(true)
         onGetRemoteValuesBase(cacheHistoryDataKey)
             .then((cacheData) => {
-                const value = isCacheDefaultValue && cacheData.defaultValue ? cacheData.defaultValue : ""
+                const value =  cacheData.defaultValue ? cacheData.defaultValue : ""
                 let newOption = cacheData.options || props.options || []
                 if (props.onChange) props.onChange(value, newOption)
                 setCacheHistoryData({defaultValue: value, options: newOption})
