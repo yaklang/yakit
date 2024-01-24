@@ -20,6 +20,26 @@
         opacity: 0.8;
     }
 
+    .unicode-decode {
+        background-color: rgba(173, 216, 230, 0.5);
+    }
+
+    .unicode-decode::after {
+        content: " ";
+        background-color: #F0F2F5;
+    }
+
+    .unicode-decode-after {
+        color: #ffffff; 
+        background-color: #808080;
+        padding-left: 2px;
+        border-radius: 3px;
+        opacity: 0.3;
+        font-weight: bold;
+        cursor: none;
+        user-select: none; 
+    }
+
     .crlf::before {
         content: "↵";
         background-color: rgba(255, 255, 255, 0.5);
