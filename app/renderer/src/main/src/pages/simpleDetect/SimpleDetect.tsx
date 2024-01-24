@@ -1178,10 +1178,10 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
         }
     }, [taskToken])
     const AddAllPlugin = useMemoizedFn(() => {
-        // if (!userInfo.isLogin) {
-        //     warn("我的插件需要先登录才能下载，请先登录")
-        //     return
-        // }
+        if (!userInfo.isLogin) {
+            warn("我的插件需要先登录才能下载，请先登录")
+            return
+        }
         // 全部添加
         setAddLoading(true)
         setDownloadPlugin && setDownloadPlugin(true)
