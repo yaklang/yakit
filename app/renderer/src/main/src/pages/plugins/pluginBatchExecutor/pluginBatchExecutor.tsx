@@ -67,10 +67,10 @@ export const defPluginBatchExecuteExtraFormValue: PluginBatchExecuteExtraFormVal
     ...cloneDeep(defPluginExecuteTaskValue)
 }
 export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.memo((props) => {
-    const {queryPagesDataById, clearDataByRoute} = usePageInfo(
+    const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
-            clearDataByRoute: s.clearDataByRoute
+            removePagesDataCacheById: s.removePagesDataCacheById
         }),
         shallow
     )
@@ -200,7 +200,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     })
     /** 查询后清除页面的缓存 */
     const onClearPageInfo = useMemoizedFn(() => {
-        clearDataByRoute(YakitRoute.BatchExecutorPage)
+        removePagesDataCacheById(YakitRoute.BatchExecutorPage, props.id)
     })
 
     const onRefLocalPluginList = useMemoizedFn(() => {
