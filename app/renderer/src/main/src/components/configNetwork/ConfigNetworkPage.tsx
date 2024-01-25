@@ -148,7 +148,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 }
                 const interfaceList = data.AvailablePcapDevices.map(
                     (item) => (
-                        {label: `${item.Description}-(${item.IP.length !== 0 ? item.IP : "无地址"})`, value: item.Name})
+                        {label: `${item.NetInterfaceName}-(${item.IP})`, value: item.Name})
                 )
                 if (SynScanNetInterface.length === 0) {
                     setParams({...params, SynScanNetInterface: data.DefaultPublicNetInterface.Description})

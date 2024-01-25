@@ -62,6 +62,7 @@ export interface TrafficPacket {
 export interface NetInterface {
     Name: string
     Description: string
+    NetInterfaceName: string
     Addr: string
     IP: string
     IsIpv4?: boolean

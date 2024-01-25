@@ -1903,6 +1903,7 @@ message StaticAnalyzeErrorResult {
   int64 EndColumn = 5;
   bytes RawMessage = 6;
   string Severity = 7;
+  string Tag = 8;
 }
 
 message StaticAnalyzeErrorResponse {
@@ -2623,6 +2624,7 @@ message NetInterface {
   string Description = 4;
   bool IsIpv4 = 5;
   bool IsIpv6 = 6;
+  string NetInterfaceName = 7;
 }
 
 message ConfigGlobalReverseParams {
@@ -4413,6 +4415,7 @@ message MITMRequest {
 
   // 过滤 ws
   bool filterWebsocket = 57;
+  bool updateFilterWebsocket = 58;
 }
 
 message Certificate {
