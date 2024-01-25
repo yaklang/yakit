@@ -28,7 +28,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 import classNames from "classnames"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-import {OutlineChevrondownIcon} from "@/assets/icon/outline"
+import {OutlineChevrondownIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
 import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../../utils"
@@ -539,7 +539,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
         className: styles["plugin-execute-form-item"],
         tooltip: item.Help
             ? {
-                  icon: <QuestionMarkCircleIcon />,
+                  icon: <OutlineInformationcircleIcon />,
                   title: item.Help
               }
             : null
