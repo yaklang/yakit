@@ -163,7 +163,9 @@ service Yak {
   rpc QueryYakScriptLocalAll(Empty) returns (QueryYakScriptLocalAndUserResponse);
   rpc QueryYakScriptByNames(QueryYakScriptByNamesRequest) returns (QueryYakScriptByNamesResponse);
   rpc QueryYakScriptByIsCore(QueryYakScriptByIsCoreRequest) returns (QueryYakScriptByIsCoreResponse);
+  // 接口废弃
   rpc QueryYakScriptRiskDetailByCWE(QueryYakScriptRiskDetailByCWERequest) returns (QueryYakScriptRiskDetailByCWEResponse);
+  // 接口废弃
   rpc YakScriptRiskTypeList(Empty) returns (YakScriptRiskTypeListResponse);
   rpc SaveNewYakScript(SaveNewYakScriptRequest) returns (YakScript);
   rpc SaveYakScriptToOnline(SaveYakScriptToOnlineRequest) returns (stream SaveYakScriptToOnlineResponse);
@@ -3523,6 +3525,8 @@ message YakScriptParam {
   string Group = 7;
 
   string ExtraSetting = 8;
+
+  string MethodType = 9;
 }
 
 message YakScript {
@@ -3558,10 +3562,12 @@ message YakScript {
   bool IsCorePlugin = 30;
   int64 UpdatedAt = 31;
   string RiskType = 32;
+  // 结构弃用
   QueryYakScriptRiskDetailByCWEResponse RiskDetail = 33;
   string RiskAnnotation = 34;
   // 协作者
   repeated Collaborator CollaboratorInfo = 35;
+  repeated YakRiskInfo RiskInfo = 36;
 }
 
 message Collaborator {
@@ -3587,9 +3593,11 @@ message SaveNewYakScriptRequest {
   string PluginSelectorTypes = 15;
   bool IsCorePlugin = 16;
   string RiskType = 17;
+  // 这个结构弃用,换成YakRiskInfo
   QueryYakScriptRiskDetailByCWEResponse RiskDetail = 18;
   string RiskAnnotation = 19;
   int64 Id = 20;
+  repeated YakRiskInfo RiskInfo = 21;
 }
 
 message SaveYakScriptToOnlineRequest {
