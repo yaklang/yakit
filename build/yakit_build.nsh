@@ -134,7 +134,7 @@ Section "Main" SectionMain
     ${If} "$PROFILE\yakit-projects" != "$INSTDIR\yakit-projects"
     ${AndIf} ${FileExists} "$PROFILE\yakit-projects"
         ClearErrors
-        CopyFiles /Silent $PROFILE\yakit-projects "$INSTDIR\yakit-projects"
+        CopyFiles $PROFILE\yakit-projects "$INSTDIR\yakit-projects"
         ${If} ${Errors} 
             DetailPrint "迁移yakit-projects文件夹失败..."
         ${Else}
