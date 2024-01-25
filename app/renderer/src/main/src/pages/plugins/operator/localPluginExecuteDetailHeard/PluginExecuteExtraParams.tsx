@@ -324,6 +324,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                             </YakitButton>
                         </>
                     }
+                    forceRender={true}
                 >
                     <VariableList
                         ref={postParamsRef}
@@ -368,6 +369,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                             </YakitButton>
                         </>
                     }
+                    forceRender={true}
                 >
                     <VariableList
                         ref={headersRef}
@@ -412,6 +414,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                             </YakitButton>
                         </>
                     }
+                    forceRender={true}
                 >
                     <VariableList
                         ref={cookieRef}

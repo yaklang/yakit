@@ -169,7 +169,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             } else {
                 setSelectList([])
                 setSearch(pluginInfo.search)
-                setAllCheck(true)
+                setTimeout(() => {
+                    fetchList(true,true)
+                }, 200)
             }
             // form表单数据
             const extraForm = {
@@ -223,7 +225,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     })
 
     const fetchList = useDebounceFn(
-        useMemoizedFn(async (reset?: boolean) => {
+        useMemoizedFn(async (reset?: boolean,isAllCheck:boolean=false) => {
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -256,7 +258,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                     }
                 })
                 if (+res.Pagination.Page === 1) {
-                    setAllCheck(false)
+                    setAllCheck(isAllCheck)
                     setSelectList([])
                     onQueryHybridScanByRuntimeId(pageInfo.runtimeId)
                 }
