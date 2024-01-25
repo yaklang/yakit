@@ -3272,6 +3272,8 @@ message PortScanRequest {
   string TaskName = 25;
 
   bool EnableBrute = 26;
+
+  string SynScanNetInterface = 27;
 }
 
 message DeletePortsRequest {

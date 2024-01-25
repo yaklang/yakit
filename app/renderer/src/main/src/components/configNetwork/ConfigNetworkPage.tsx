@@ -151,7 +151,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         {label: `${item.NetInterfaceName}-(${item.IP})`, value: item.Name})
                 )
                 if (SynScanNetInterface.length === 0) {
-                    setParams({...params, SynScanNetInterface: data.DefaultPublicNetInterface.Description})
+                    setParams({...params, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName})
                 }
                 setNetInterfaceList(interfaceList)
             })
