@@ -12,6 +12,7 @@ import {
     apiHybridScan,
     apiQueryHybridScan,
     apiQueryYakScript,
+    apiStopHybridScan,
     convertHybridScanParams,
     convertLocalPluginsRequestParams,
     hybridScanParamsConvertToInputValue
@@ -101,6 +102,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const [isExpand, setIsExpand] = useState<boolean>(true)
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    const [stopLoading, setStopLoading] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
 
     /**额外参数弹出框 */
@@ -129,7 +131,10 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         token: tokenRef.current,
         onEnd: () => {
             hybridScanStreamEvent.stop()
-            setTimeout(() => setIsExecuting(false), 300)
+            setTimeout(() => {
+                setIsExecuting(false)
+                setStopLoading(false)
+            }, 200)
         },
         setRuntimeId: (rId) => {
             setRuntimeId(rId)
@@ -357,10 +362,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     /**取消执行 */
     const onStopExecute = useMemoizedFn((e) => {
         e.stopPropagation()
-        apiCancelHybridScan(tokenRef.current).then(() => {
-            hybridScanStreamEvent.stop()
-            setIsExecuting(false)
-        })
+        setStopLoading(true)
+        apiStopHybridScan(runtimeId, tokenRef.current)
     })
     const openExtraPropsDrawer = useMemoizedFn(() => {
         setExtraParamsVisible(true)
@@ -459,7 +462,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             )}
                             {isExecuting ? (
                                 <>
-                                    <YakitButton danger onClick={onStopExecute}>
+                                    <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
                                         停止
                                     </YakitButton>
                                     <div className={styles["divider-style"]}></div>
@@ -502,7 +505,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["plugin-execute-form-operate"]}>
                                 {isExecuting ? (
-                                    <YakitButton danger onClick={onStopExecute} size='large'>
+                                    <YakitButton danger onClick={onStopExecute} size='large' loading={stopLoading}>
                                         停止
                                     </YakitButton>
                                 ) : (
@@ -534,6 +537,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         runtimeId={runtimeId}
                         loading={isExecuting}
                         pluginType={typeRef.current}
+                        defaultActiveKey={pageInfo.defaultActiveKey}
                     />
                 )}
             </PluginDetails>

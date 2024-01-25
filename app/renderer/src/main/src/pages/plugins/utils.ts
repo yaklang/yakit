@@ -1214,26 +1214,41 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
         }
     })
 }
-
+/**
+ * @description 停止 HybridScan
+ */
+export const apiStopHybridScan: (runtimeId: string, token: string) => Promise<null> = (runtimeId, token) => {
+    return new Promise((resolve, reject) => {
+        const params: HybridScanControlRequest = {
+            Control: true,
+            HybridScanMode: "stop",
+            ResumeTaskId: runtimeId
+        }
+        ipcRenderer
+            .invoke(`HybridScan`, params, token)
+            .then(() => {
+                resolve(null)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "停止插件批量执行出错:" + e)
+                reject(e)
+            })
+    })
+}
 /**
  * @description 取消 HybridScan
  */
 export const apiCancelHybridScan: (token: string) => Promise<null> = (token) => {
     return new Promise((resolve, reject) => {
-        try {
-            ipcRenderer
-                .invoke(`cancel-HybridScan`, token)
-                .then(() => {
-                    resolve(null)
-                })
-                .catch((e: any) => {
-                    yakitNotify("error", "取消插件批量执行出错:" + e)
-                    reject(e)
-                })
-        } catch (error) {
-            yakitNotify("error", "取消插件批量执行出错:" + error)
-            reject(error)
-        }
+        ipcRenderer
+            .invoke(`cancel-HybridScan`, token)
+            .then(() => {
+                resolve(null)
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "取消插件批量执行出错:" + e)
+                reject(e)
+            })
     })
 }
 
@@ -1242,19 +1257,20 @@ export const apiCancelHybridScan: (token: string) => Promise<null> = (token) => 
  */
 export const apiQueryHybridScan: (runtimeId: string, token: string) => Promise<null> = (runtimeId, token) => {
     return new Promise((resolve, reject) => {
-        try {
-            const params: HybridScanControlRequest = {
-                Control: true,
-                HybridScanMode: "status",
-                ResumeTaskId: runtimeId
-            }
-            ipcRenderer.invoke("HybridScan", params, token).then(() => {
+        const params: HybridScanControlRequest = {
+            Control: true,
+            HybridScanMode: "status",
+            ResumeTaskId: runtimeId
+        }
+        ipcRenderer
+            .invoke("HybridScan", params, token)
+            .then(() => {
                 info(`查询成功,任务ID: ${token}`)
                 resolve(null)
             })
-        } catch (error) {
-            yakitNotify("error", "插件批量执行出错:" + error)
-            reject(error)
-        }
+            .catch((error) => {
+                yakitNotify("error", "插件批量执行出错:" + error)
+                reject(error)
+            })
     })
 }

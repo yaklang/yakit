@@ -41,9 +41,7 @@ const PluginBatchExecuteExtraParamsDrawer: React.FC<PluginBatchExecuteExtraParam
     })
     useEffect(() => {
         if (visible) {
-            setTimeout(() => {
-                form.setFieldsValue({...extraParamsValue})
-            }, 200)
+            form.setFieldsValue({...extraParamsValue})
         }
     }, [visible, extraParamsValue])
     const onClose = useMemoizedFn(() => {
