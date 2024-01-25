@@ -69,6 +69,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
                 const value = cacheData.defaultValue ? cacheData.defaultValue : ""
                 let newOption = cacheData.options || props.options || []
                 //非form表单时,设置value
+                // 在表单使用时，如果该值为true，这设置值的优先级高于组件外部直接使用form.setfeildvalue设置(场景：初始化)
                 if (isCacheDefaultValue) {
                     if (props.onChange) props.onChange(value, newOption)
                 }
