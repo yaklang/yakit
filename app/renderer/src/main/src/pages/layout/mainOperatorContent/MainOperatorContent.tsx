@@ -1011,6 +1011,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     if (route === YakitRoute.HTTPFuzzer) {
                         addFuzzerList(node.id, node, 1)
                     }
+                    if (route === YakitRoute.BatchExecutorPage) {
+                        onBatchExecutorPage(node, 1)
+                    }
                     setPageCache([
                         ...pageCache,
                         {

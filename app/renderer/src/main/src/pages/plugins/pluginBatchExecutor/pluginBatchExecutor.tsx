@@ -1,17 +1,21 @@
 import React, {useRef, useState, useReducer, useEffect} from "react"
 import {PluginDetails, PluginDetailsListItem, defaultSearch} from "../baseTemplate"
 import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
-import {useMemoizedFn, useCreation, useDebounceFn, useUpdateEffect} from "ahooks"
+import {useMemoizedFn, useCreation, useDebounceFn, useUpdateEffect, useInViewport} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
 import {PluginListPageMeta, PluginSearchParams} from "../baseTemplateType"
 import {
     HybridScanRequest,
+    PluginBatchExecutorInputValueProps,
     apiCancelHybridScan,
     apiHybridScan,
+    apiQueryHybridScan,
     apiQueryYakScript,
+    apiStopHybridScan,
     convertHybridScanParams,
-    convertLocalPluginsRequestParams
+    convertLocalPluginsRequestParams,
+    hybridScanParamsConvertToInputValue
 } from "../utils"
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
@@ -23,9 +27,7 @@ import {Form} from "antd"
 import "../plugins.scss"
 import styles from "./PluginBatchExecutor.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {
-    OutlineArrowscollapseIcon,
-    OutlineArrowsexpandIcon} from "@/assets/icon/outline"
+import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon} from "@/assets/icon/outline"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import classNames from "classnames"
 import {
@@ -39,11 +41,15 @@ import {randomString} from "@/utils/randomUtil"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
 import {ExpandAndRetract} from "../operator/expandAndRetract/ExpandAndRetract"
+import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {YakitRoute} from "@/routes/newRoute"
+import {addToTab} from "@/pages/MainTabs"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
 interface PluginBatchExecutorProps {
-    id:string
+    id: string
 }
 export interface PluginBatchExecutorTaskProps {
     Proxy: string
@@ -56,16 +62,37 @@ export const defPluginExecuteTaskValue: PluginBatchExecutorTaskProps = {
     Concurrent: 30,
     TotalTimeoutSecond: 7200
 }
-const defPluginBatchExecuteExtraFormValue: PluginBatchExecuteExtraFormValue = {
+export const defPluginBatchExecuteExtraFormValue: PluginBatchExecuteExtraFormValue = {
     ...cloneDeep(defPluginExecuteFormValue),
     ...cloneDeep(defPluginExecuteTaskValue)
 }
 export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.memo((props) => {
+    const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById,
+            removePagesDataCacheById: s.removePagesDataCacheById
+        }),
+        shallow
+    )
+    /**获取数据中心中的页面数据 */
+    const initPluginBatchExecutorPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.BatchExecutorPage, props.id)
+        if (currentItem && currentItem.pageParamsInfo.pluginBatchExecutorPageInfo) {
+            return currentItem.pageParamsInfo.pluginBatchExecutorPageInfo
+        } else {
+            return {
+                runtimeId: "",
+                defaultActiveKey: ""
+            }
+        }
+    })
+    const [pageInfo, setPageInfo] = useState<PluginBatchExecutorPageInfoProps>(initPluginBatchExecutorPageInfo())
+
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [loading, setLoading] = useState<boolean>(false)
 
-    const [selectList, setSelectList] = useState<YakScript[]>([])
+    const [selectList, setSelectList] = useState<string[]>([])
     const [allCheck, setAllCheck] = useState<boolean>(false)
 
     // 隐藏插件列表
@@ -74,6 +101,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const [isExpand, setIsExpand] = useState<boolean>(true)
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    const [stopLoading, setStopLoading] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
 
     /**额外参数弹出框 */
@@ -90,6 +118,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const privateDomainRef = useRef<string>("") // 私有域地址
     const typeRef = useRef<string>("mitm,port-scan,nuclei")
     const tokenRef = useRef<string>(randomString(40))
+    const batchExecuteDomRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(batchExecuteDomRef)
 
     const [form] = Form.useForm()
     const isRawHTTPRequest = Form.useWatch("IsRawHTTPRequest", form)
@@ -100,11 +130,15 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         token: tokenRef.current,
         onEnd: () => {
             hybridScanStreamEvent.stop()
-            setTimeout(() => setIsExecuting(false), 300)
+            setTimeout(() => {
+                setIsExecuting(false)
+                setStopLoading(false)
+            }, 200)
         },
         setRuntimeId: (rId) => {
             setRuntimeId(rId)
-        }
+        },
+        onGetInputValue: (v) => onInitInputValue(v)
     })
 
     useEffect(() => {
@@ -115,13 +149,61 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         fetchList(true)
     }, [userInfo.isLogin])
     useEffect(() => {
-        emiter.on("onRefLocalPluginList", onRefLocalPluginList)
-        emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
+        if (inViewport) {
+            emiter.on("onRefLocalPluginList", onRefLocalPluginList)
+            emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
+        }
         return () => {
             emiter.off("onRefLocalPluginList", onRefLocalPluginList)
             emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
         }
-    }, [])
+    }, [inViewport])
+    /**设置输入模块的初始值 */
+    const onInitInputValue = useMemoizedFn((value: string) => {
+        try {
+            const inputValue: PluginBatchExecutorInputValueProps = hybridScanParamsConvertToInputValue(value)
+            const {pluginInfo, params} = inputValue
+            // 插件数据
+            if (pluginInfo.selectPluginName.length > 0) {
+                setSelectList(pluginInfo.selectPluginName)
+            } else {
+                setSelectList([])
+                setSearch(pluginInfo.search)
+                setTimeout(() => {
+                    fetchList(true,true)
+                }, 200)
+            }
+            // form表单数据
+            const extraForm = {
+                ...params.HTTPRequestTemplate,
+                Proxy: params.Proxy,
+                Concurrent: params.Concurrent,
+                TotalTimeoutSecond: params.TotalTimeoutSecond
+            }
+            form.setFieldsValue({
+                Input: params.Input,
+                IsHttps: params.HTTPRequestTemplate.IsHttps,
+                IsRawHTTPRequest: !!params.HTTPRequestTemplate.IsRawHTTPRequest,
+                RawHTTPRequest: params.HTTPRequestTemplate.RawHTTPRequest
+            })
+            setExtraParamsValue(extraForm)
+        } catch (error) {}
+    })
+    /** 通过runtimeId查询该条记录详情 */
+    const onQueryHybridScanByRuntimeId = useMemoizedFn((runtimeId: string) => {
+        if (!runtimeId) return
+        hybridScanStreamEvent.reset()
+        apiQueryHybridScan(runtimeId, tokenRef.current).then(() => {
+            setIsExecuting(true)
+            setIsExpand(false)
+            hybridScanStreamEvent.start()
+            onClearPageInfo()
+        })
+    })
+    /** 查询后清除页面的缓存 */
+    const onClearPageInfo = useMemoizedFn(() => {
+        removePagesDataCacheById(YakitRoute.BatchExecutorPage, props.id)
+    })
 
     const onRefLocalPluginList = useMemoizedFn(() => {
         setTimeout(() => {
@@ -143,7 +225,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     })
 
     const fetchList = useDebounceFn(
-        useMemoizedFn(async (reset?: boolean) => {
+        useMemoizedFn(async (reset?: boolean,isAllCheck:boolean=false) => {
             if (reset) {
                 isLoadingRef.current = true
             }
@@ -176,8 +258,9 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                     }
                 })
                 if (+res.Pagination.Page === 1) {
-                    setAllCheck(false)
+                    setAllCheck(isAllCheck)
                     setSelectList([])
+                    onQueryHybridScanByRuntimeId(pageInfo.runtimeId)
                 }
             } catch (error) {}
             setTimeout(() => {
@@ -196,19 +279,19 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
         // 全选情况时的取消勾选
         if (allCheck) {
-            setSelectList(response.Data.filter((item) => item.ScriptName !== data.ScriptName))
+            setSelectList(
+                response.Data.filter((item) => item.ScriptName !== data.ScriptName).map((item) => item.ScriptName)
+            )
             setAllCheck(false)
             return
         }
         // 单项勾选回调
-        if (value) setSelectList([...selectList, data])
-        else setSelectList(selectList.filter((item) => item.ScriptName !== data.ScriptName))
+        if (value) setSelectList([...selectList, data.ScriptName])
+        else setSelectList(selectList.filter((item) => item !== data.ScriptName))
     })
     const onPluginClick = useMemoizedFn((data: YakScript) => {
-        const value = selectList.findIndex((item) => item.ScriptName === data.ScriptName) === -1
-        // 单项勾选回调
-        if (value) setSelectList([...selectList, data])
-        else setSelectList(selectList.filter((item) => item.ScriptName !== data.ScriptName))
+        const value = allCheck || selectList.includes(data.ScriptName)
+        optCheck(data, !value)
     })
     // 滚动更多加载
     const onUpdateList = useMemoizedFn(() => {
@@ -233,9 +316,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         e.stopPropagation()
         setSelectList([])
     })
-    const checkList = useCreation(() => {
-        return selectList.map((ele) => ele.ScriptName)
-    }, [selectList])
     // 选中插件的数量
     const selectNum = useCreation(() => {
         if (allCheck) return response.Total
@@ -249,7 +329,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         // 任务配置参数
         const taskParams: PluginBatchExecutorTaskProps = {
             Concurrent: extraParamsValue.Concurrent,
-            TotalTimeoutSecond: extraParamsValue.Concurrent,
+            TotalTimeoutSecond: extraParamsValue.TotalTimeoutSecond,
             Proxy: extraParamsValue.Proxy
         }
         const params: HybridScanRequest = {
@@ -265,7 +345,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
             }
         }
         const pluginInfo = {
-            selectPluginName: selectList.map((ele) => ele.ScriptName),
+            selectPluginName: selectList,
             search
         }
         const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(
@@ -283,10 +363,8 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     /**取消执行 */
     const onStopExecute = useMemoizedFn((e) => {
         e.stopPropagation()
-        apiCancelHybridScan(tokenRef.current).then(() => {
-            hybridScanStreamEvent.stop()
-            setIsExecuting(false)
-        })
+        setStopLoading(true)
+        apiStopHybridScan(runtimeId, tokenRef.current)
     })
     const openExtraPropsDrawer = useMemoizedFn(() => {
         setExtraParamsVisible(true)
@@ -303,14 +381,23 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const progressList = useCreation(() => {
         return streamInfo.progressState
     }, [streamInfo.progressState])
+    const toHybridScan = useMemoizedFn(() => {
+        addToTab(YakitRoute.BatchExecutorPage, {
+            pluginBatchExecutorPageInfo: {
+                runtimeId,
+                defaultActiveKey: "漏洞与风险"
+            }
+        })
+    })
+
     return (
-        <div className={styles["plugin-batch-executor"]}>
+        <div className={styles["plugin-batch-executor"]} ref={batchExecuteDomRef}>
             <PluginDetails<YakScript>
                 title='选择插件'
                 filterNode={
                     <>
                         {/* <PluginGroup
-                            checkList={checkList}
+                            checkList={selectList}
                             selectGroup={selectGroup}
                             setSelectGroup={setSelectGroup}
                             isSelectAll={allCheck}
@@ -327,7 +414,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                     loadMoreData: onUpdateList,
                     classNameRow: "plugin-details-opt-wrapper",
                     renderRow: (info, i) => {
-                        const check = allCheck || checkList.includes(info.ScriptName)
+                        const check = allCheck || selectList.includes(info.ScriptName)
                         return (
                             <PluginDetailsListItem<YakScript>
                                 order={i}
@@ -376,7 +463,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                             )}
                             {isExecuting ? (
                                 <>
-                                    <YakitButton danger onClick={onStopExecute}>
+                                    <YakitButton danger onClick={onStopExecute} loading={stopLoading}>
                                         停止
                                     </YakitButton>
                                     <div className={styles["divider-style"]}></div>
@@ -419,7 +506,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["plugin-execute-form-operate"]}>
                                 {isExecuting ? (
-                                    <YakitButton danger onClick={onStopExecute} size='large'>
+                                    <YakitButton danger onClick={onStopExecute} size='large' loading={stopLoading}>
                                         停止
                                     </YakitButton>
                                 ) : (
@@ -432,6 +519,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                                         开始执行
                                     </YakitButton>
                                 )}
+                                <YakitButton onClick={toHybridScan}>查看详情</YakitButton>
                                 <YakitButton
                                     type='text'
                                     onClick={openExtraPropsDrawer}
@@ -450,6 +538,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                         runtimeId={runtimeId}
                         loading={isExecuting}
                         pluginType={typeRef.current}
+                        defaultActiveKey={pageInfo.defaultActiveKey}
                     />
                 )}
             </PluginDetails>

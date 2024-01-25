@@ -49,7 +49,7 @@ const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
-    const {streamInfo, runtimeId, loading, pluginType} = props
+    const {streamInfo, runtimeId, loading, pluginType, defaultActiveKey} = props
 
     const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
         switch (ele.type) {
@@ -111,7 +111,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 </div>
             )}
             {showTabs.length > 0 && (
-                <PluginTabs>
+                <PluginTabs defaultActiveKey={defaultActiveKey}>
                     {showTabs.map((ele) => (
                         <TabPane
                             tab={tabBarRender(ele, streamInfo.riskState.length)}

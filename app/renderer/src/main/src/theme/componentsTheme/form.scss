@@ -17,6 +17,10 @@
 
 .ant-form-item-label > label .ant-form-item-tooltip {
     color: var(--yakit-helper-text-color);
+    svg {
+        width: 16px;
+        height: 16px;
+    }
 }
 
 .ant-form-item-explain-error {

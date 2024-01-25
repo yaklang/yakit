@@ -4,12 +4,13 @@ import {ExecResult, QueryYakScriptRequest} from "@/pages/invoker/schema"
 
 export interface HybridScanControlRequest extends HybridScanControlAfterRequest {
     // 控制帧字段
-    Control: true
+    Control: boolean
     // new: 新任务
     // resume: 恢复任务
     // pause: 暂停任务
     // stop: 停止任务
-    HybridScanMode: "new" | "resume" | "pause" | "stop" | string
+    // status: 查询任务状态
+    HybridScanMode: "new" | "resume" | "pause" | "stop" | "status"
     ResumeTaskId: string
 }
 
@@ -53,7 +54,8 @@ export interface HybridScanResponse extends HybridScanStatisticResponse {
     CurrentPluginName: string;
     ExecResult: ExecResult
 
-    UpdateActiveTask?: HybridScanActiveTask;
+    UpdateActiveTask?: HybridScanActiveTask
+    ScanConfig?: string
 }
 
 export interface HybridScanActiveTask {
