@@ -323,15 +323,6 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
 
                     if (e && e.Errors.length > 0) {
                         const markers = e.Errors.map(ConvertYakStaticAnalyzeErrorToMarker)
-                        // console.info(markers)
-                        // markers.push({
-                        //     endColumn: 14,
-                        //     endLineNumber: 4,
-                        //     message: "test",
-                        //     severity: MarkerSeverity.Error,
-                        //     startColumn: 12,
-                        //     startLineNumber: 5,
-                        // })
                         monaco.editor.setModelMarkers(model, "owner", markers)
                     } else {
                         monaco.editor.setModelMarkers(model, "owner", [])
@@ -354,15 +345,6 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
                     .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
-                            // console.info(markers)
-                            // markers.push({
-                            //     endColumn: 14,
-                            //     endLineNumber: 4,
-                            //     message: "test",
-                            //     severity: MarkerSeverity.Error,
-                            //     startColumn: 12,
-                            //     startLineNumber: 5,
-                            // })
                             monaco.editor.setModelMarkers(model, "owner", markers)
                         } else {
                             monaco.editor.setModelMarkers(model, "owner", [])
