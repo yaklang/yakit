@@ -90,7 +90,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             // 多选;该情况下label和value 大多数时候不一样;暂不支持缓存
         } else {
             //  单选
-            onSetRemoteValuesBase({cacheHistoryDataKey, newValue: newValue.join(","),isCacheDefaultValue}).then(
+            onSetRemoteValuesBase({cacheHistoryDataKey, newValue: newValue.join(","), isCacheDefaultValue}).then(
                 (value: CacheDataHistoryProps) => {
                     // onGetRemoteValues()
                     setCacheHistoryData({
@@ -107,7 +107,10 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
             const value = cacheData.defaultValue ? cacheData.defaultValue.split(",") : []
             let newOption: DefaultOptionType[] = getNewOption(cacheData.options)
-            if (props.onChange) props.onChange(value, newOption)
+            //非form表单时,设置value
+            if (isCacheDefaultValue) {
+                if (props.onChange) props.onChange(value, newOption)
+            }
             setCacheHistoryData({defaultValue: value, options: newOption as unknown as YakitOptionTypeProps})
         })
     })
