@@ -1220,7 +1220,7 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
 export const apiStopHybridScan: (runtimeId: string, token: string) => Promise<null> = (runtimeId, token) => {
     return new Promise((resolve, reject) => {
         const params: HybridScanControlRequest = {
-            Control: true,
+            Control: false,
             HybridScanMode: "stop",
             ResumeTaskId: runtimeId
         }

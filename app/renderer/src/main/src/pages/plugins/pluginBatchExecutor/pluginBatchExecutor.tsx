@@ -45,7 +45,6 @@ import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
 import {addToTab} from "@/pages/MainTabs"
-import {yakitNotify} from "@/utils/notification"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
