@@ -1,15 +1,64 @@
 import {YakScript} from "@/pages/invoker/schema"
-import {PluginDataProps, YakParamProps, localYakInfo} from "../pluginsType"
+import {
+    CodeToInfoRequestProps,
+    CodeToInfoResponseProps,
+    PluginDataProps,
+    YakParamProps,
+    YakRiskInfoProps,
+    localYakInfo
+} from "../pluginsType"
 import {API} from "@/services/swagger/resposeType"
 import {NetWorkApi} from "@/services/fetch"
 import {GetYakScriptByOnlineIDRequest} from "@/pages/yakitStore/YakitStorePage"
 import {yakitNotify} from "@/utils/notification"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {apiDownloadPluginMine} from "../utils"
+import {YakExtraParamProps} from "../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
+import {Uint8ArrayToString} from "@/utils/str"
 
 const {ipcRenderer} = window.require("electron")
 
-/** ---------- 数据结构转换 start ---------- */
+/** -------------------- 数据结构转换 Start -------------------- */
+/**
+ * @name 本地插件风险数据(YakRiskInfoProps)-转换成-线上插件风险数据(API.PluginsRiskDetail)
+ */
+export const convertLocalToRemoteRisks = (risks?: YakRiskInfoProps[]) => {
+    const arr: API.PluginsRiskDetail[] = []
+    const local = risks || []
+    for (let item of local) {
+        if (item.Level && item.CVE && item.TypeVerbose) {
+            arr.push({
+                level: item.Level,
+                cve: item.CVE,
+                typeVerbose: item.TypeVerbose,
+                description: item.Description,
+                solution: item.Solution
+            })
+        }
+    }
+    return arr
+}
+/**
+ * @name 线上插件风险数据(API.PluginsRiskDetail)-转换成-本地插件风险数据(YakRiskInfoProps)
+ */
+export const convertRemoteToLocalRisks = (risks?: API.PluginsRiskDetail[]) => {
+    const arr: YakRiskInfoProps[] = []
+    const local = risks || []
+    for (let item of local) {
+        if (item.level && item.cve && item.typeVerbose) {
+            arr.push({
+                Level: item.level,
+                CVE: item.cve,
+                TypeVerbose: item.typeVerbose,
+                Description: item.description,
+                Solution: item.solution
+            })
+        }
+    }
+    return arr
+}
+
 /**
  * @name 本地插件参数数据(YakParamProps)-转换成-线上插件参数数据(API.YakitPluginParam)
  */
@@ -23,13 +72,14 @@ export const convertLocalToRemoteParams = (local: YakParamProps[]) => {
             default_value: item.DefaultValue,
             extra_setting: item.ExtraSetting,
             help: item.Help,
-            group: item.Group
+            group: item.Group,
+            method_type: item.MethodType || ""
         }
         return obj
     })
 }
 /**
- * @name 线上插件参数数据(API.YakitPluginParam)-转换成-本地插件参数数据(PluginParamDataProps)
+ * @name 线上插件参数数据(API.YakitPluginParam)-转换成-本地插件参数数据(YakParamProps)
  */
 export const convertRemoteToLocalParams = (online: API.YakitPluginParam[]) => {
     return online.map((item) => {
@@ -41,7 +91,8 @@ export const convertRemoteToLocalParams = (online: API.YakitPluginParam[]) => {
             DefaultValue: item.default_value,
             ExtraSetting: item.extra_setting,
             Help: item.help,
-            Group: item.group
+            Group: item.group,
+            MethodType: item.method_type || ""
         }
         return obj
     })
@@ -68,9 +119,7 @@ export const convertLocalToLocalInfo = (
             Content: info.Content,
             Type: info.Type,
             Help: info.Help,
-            RiskType: info.RiskType,
-            RiskDetail: info.RiskDetail,
-            RiskAnnotation: info.RiskAnnotation,
+            RiskInfo: info.RiskInfo,
             Tags: info.Tags,
             Params: info.Params,
             EnablePluginSelector: info.EnablePluginSelector,
@@ -90,27 +139,20 @@ export const convertLocalToLocalInfo = (
     request.ScriptName = modify.ScriptName
     request.Type = modify.Type
     request.Help = modify.Help
-    request.RiskType = modify.RiskType
-    request.RiskDetail = {
-        CWEId: modify.RiskDetail?.CWEId || "",
-        RiskType: modify.RiskDetail?.RiskType || "",
-        Description: modify.RiskDetail?.Description || "",
-        CWESolution: modify.RiskDetail?.CWESolution || ""
-    }
-    request.RiskAnnotation = modify.RiskAnnotation
+    request.RiskInfo = (modify.RiskDetail || []).filter((item) => item.CVE && item.TypeVerbose && item.Level)
     request.Tags = modify.Tags
     request.Params = modify.Params
     request.EnablePluginSelector = modify.EnablePluginSelector
     request.PluginSelectorTypes = modify.PluginSelectorTypes
     request.Content = modify.Content
 
-    if (!request.RiskType) {
-        // 非漏洞类型时，risk相关置为undefined
-        request.RiskDetail = undefined
-        request.RiskAnnotation = undefined
-    } else {
-        // 漏洞类型时，help置为undefined
-        request.Help = undefined
+    // 没有RiskDetail就赋值为undefined
+    if (request.RiskInfo.length === 0) {
+        request.RiskInfo = undefined
+    }
+    // 没有Params就赋值为undefined
+    if ((request.Params || []).length === 0) {
+        request.Params = undefined
     }
 
     return toolDelInvalidKV(request) as localYakInfo
@@ -135,14 +177,7 @@ export const convertLocalToRemoteInfo = (
             type: info.Type,
             script_name: info.ScriptName,
             help: info.Help,
-            riskType: info.RiskType,
-            riskDetail: {
-                cweId: info.RiskDetail?.CWEId || "",
-                riskType: info.RiskDetail?.RiskType || "",
-                description: info.RiskDetail?.Description || "",
-                solution: info.RiskDetail?.CWESolution || ""
-            },
-            annotation: info.RiskAnnotation,
+            riskInfo: convertLocalToRemoteRisks(info.RiskInfo),
             tags: (info.Tags || "").split(",") || [],
             params: convertLocalToRemoteParams(info.Params || []),
             enable_plugin_selector: info.EnablePluginSelector,
@@ -160,14 +195,7 @@ export const convertLocalToRemoteInfo = (
     request.script_name = modify.ScriptName
     request.type = modify.Type
     request.help = modify.Help
-    request.riskType = modify.RiskType
-    request.riskDetail = {
-        cweId: modify.RiskDetail?.CWEId || "",
-        riskType: modify.RiskDetail?.RiskType || "",
-        description: modify.RiskDetail?.Description || "",
-        solution: modify.RiskDetail?.CWESolution || ""
-    }
-    request.annotation = modify.RiskAnnotation
+    request.riskInfo = convertLocalToRemoteRisks(modify.RiskDetail)
     request.tags = modify.Tags?.split(",") || []
     request.params = modify.Params ? convertLocalToRemoteParams(modify.Params) : undefined
     request.enable_plugin_selector = modify.EnablePluginSelector
@@ -176,10 +204,10 @@ export const convertLocalToRemoteInfo = (
 
     // 没有tags就赋值为undefined
     if (request.tags?.length === 0) request.tags = undefined
-    // 非漏洞类型的插件清空漏洞类型详情
-    if (!request.riskType) request.riskDetail = undefined
     // 分组为空字符时清空值(影响后端数据处理)
     if (!request.group) request.group = undefined
+    // 没有riskInfo就赋值为undefined
+    if (request.riskInfo.length === 0) request.riskInfo = undefined
 
     return toolDelInvalidKV(request) as API.PluginsRequest
 }
@@ -187,13 +215,12 @@ export const convertLocalToRemoteInfo = (
 /**
  * @name 线上插件数据结构(API.PluginsDetail)-转换成-提交修改插件数据结构(API.PluginsRequest)
  * @param idModify 线上插件详细信息
- * @param modify 本地插件编辑信息
+ * @param modify 提交修改插件编辑信息
  */
 export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: PluginDataProps) => {
     // @ts-ignore
     const request: API.PluginsRequest = {
         ...info,
-        annotation: info.risk_annotation,
         tags: undefined,
         download_total: +info.downloaded_total || 0
     }
@@ -206,14 +233,7 @@ export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: Plug
         request.script_name = modify.ScriptName
         request.type = modify.Type
         request.help = modify.Help
-        request.riskType = modify.RiskType
-        request.riskDetail = {
-            cweId: modify.RiskDetail?.CWEId || "",
-            riskType: modify.RiskDetail?.RiskType || "",
-            description: modify.RiskDetail?.Description || "",
-            solution: modify.RiskDetail?.CWESolution || ""
-        }
-        request.annotation = modify.RiskAnnotation
+        request.riskInfo = convertLocalToRemoteRisks(modify.RiskDetail)
         request.tags = modify.Tags?.split(",") || []
         request.params = modify.Params ? convertLocalToRemoteParams(modify.Params) : undefined
         request.enable_plugin_selector = modify.EnablePluginSelector
@@ -223,18 +243,110 @@ export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: Plug
 
     // 没有tags就赋值为undefined
     if (request.tags?.length === 0) request.tags = undefined
-    // 非漏洞类型的插件清空漏洞类型详情
-    if (!request.riskType) {
-        request.riskType = undefined
-        request.riskDetail = undefined
-        request.annotation = undefined
-    }
     // 分组为空字符时清空值(影响后端数据处理)
     if (!request.group) request.group = undefined
+    // 没有riskInfo就赋值为undefined
+    if ((request.riskInfo || []).length === 0) request.riskInfo = undefined
+    // 没有params就赋值为undefined
+    if ((request.params || []).length === 0) request.params = undefined
 
     return toolDelInvalidKV(request) as API.PluginsRequest
 }
-/** ---------- 数据结构转换 end ---------- */
+/** -------------------- 数据结构转换 End -------------------- */
+
+/** -------------------- 插件参数数据处理工具 Start -------------------- */
+/**
+ * @description 根据组名将参数分组
+ * @returns 返回处理好分组后的数据
+ */
+export const ParamsToGroupByGroupName = (arr: YakParamProps[]): YakExtraParamProps[] => {
+    let map = {}
+    let paramsGroupList: YakExtraParamProps[] = []
+    for (var i = 0; i < arr.length; i++) {
+        var ai = arr[i]
+        if (!map[ai.Group || "default"]) {
+            paramsGroupList.push({
+                group: ai.Group || "default",
+                data: [ai]
+            })
+            map[ai.Group || "default"] = ai
+        } else {
+            for (var j = 0; j < paramsGroupList.length; j++) {
+                var dj = paramsGroupList[j]
+                if (dj.group === (ai.Group || "default")) {
+                    dj.data.push(ai)
+                    break
+                }
+            }
+        }
+    }
+    return paramsGroupList || []
+}
+
+/**
+ * @description 表单显示的值,根据类型返回对应的类型的值
+ */
+export const getValueByType = (defaultValue, type: string): number | string | boolean | string[] => {
+    let value
+    switch (type) {
+        case "uint":
+            value = parseInt(defaultValue || "0")
+            break
+        case "float":
+            value = parseFloat(defaultValue || "0.0")
+            break
+        case "boolean":
+            value = defaultValue === "true"
+            break
+        case "http-packet":
+        case "yak":
+            value = Buffer.from((defaultValue || "") as string, "utf8")
+            break
+        case "select":
+            // 考虑(defaultValue)的数据可能本身就是一个数组
+            if (Array.isArray(defaultValue)) {
+                value = defaultValue.length > 0 ? defaultValue : []
+            } else {
+                const newVal = defaultValue ? defaultValue.split(",") : []
+                value = newVal.length > 0 ? newVal : []
+            }
+            break
+        default:
+            value = defaultValue ? defaultValue : ""
+            break
+    }
+    return value
+}
+
+/**
+ * @description 处理最后的执行参数
+ * @param {{[string]:any}} object
+ * @returns {YakExecutorParam[]}
+ */
+export const getYakExecutorParam = (object) => {
+    let newValue: YakExecutorParam[] = []
+    Object.entries(object).forEach(([key, val]) => {
+        if (val instanceof Buffer) {
+            newValue = [
+                ...newValue,
+                {
+                    Key: key,
+                    Value: Uint8ArrayToString(val)
+                }
+            ]
+            return
+        }
+        newValue = [
+            ...newValue,
+            {
+                Key: key,
+                Value: val
+            }
+        ]
+    })
+    return newValue
+}
+/** -------------------- 插件参数数据处理工具 End -------------------- */
 
 /**
  * @name 插件上传到online-整体上传逻辑
@@ -246,6 +358,8 @@ export const uploadOnlinePlugin = (
     isModify: boolean,
     callback?: (plugin?: YakScript) => any
 ) => {
+    console.log("method:post|api:plugins", JSON.stringify(info))
+
     // 往线上上传插件
     NetWorkApi<API.PluginsEditRequest, API.PluginsResponse>({
         method: "post",
@@ -296,6 +410,8 @@ export const uploadOnlinePlugin = (
  * @param info 复制online的信息
  */
 export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugin?: YakScript) => any) => {
+    console.log("method:post|api:copy/plugins", JSON.stringify(info))
+
     // 往线上上传插件
     NetWorkApi<API.CopyPluginsRequest, API.PluginsResponse>({
         method: "post",
@@ -334,4 +450,33 @@ export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugi
             if (callback) callback()
             yakitNotify("error", "复制插件失败:" + err)
         })
+}
+
+/**
+ * @name 获取源码中的参数和风险信息
+ * @param type 插件类型
+ * @param code 插件源码
+ */
+export const onCodeToInfo: (type: string, code: string) => Promise<CodeToInfoResponseProps | null> = (type, code) => {
+    return new Promise((resolve, reject) => {
+        const request: CodeToInfoRequestProps = {
+            YakScriptType: type,
+            YakScriptCode: code
+        }
+        console.log("onCodeToInfo-request", JSON.stringify(request))
+        ipcRenderer
+            .invoke("YaklangInspectInformation", request)
+            .then((res: CodeToInfoResponseProps) => {
+                console.log("源码提取参数和风险信息", res)
+                resolve({
+                    Information: res.Information || [],
+                    CliParameter: res.CliParameter || [],
+                    RiskInfo: res.RiskInfo || []
+                })
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "源码提取参数及风险信息失败: " + e)
+                resolve(null)
+            })
+    })
 }

@@ -1,32 +1,22 @@
 import {API} from "@/services/swagger/resposeType"
+import {GRPCRange} from "./funcTemplateType"
+import {YaklangInformation} from "@/utils/monacoSpec/yakEditor"
 
-/** ---------- 前端插件数据结构定义 start ---------- */
-/** 插件类型信息 */
-export interface PluginTypeParamProps {
-    /** 插件脚本类型 */
-    Type: string
-    /** 插件种类类型(漏洞|其他) */
-    Kind: string
-}
+/** ---------- 前端插件数据结构定义 Start ---------- */
 /** 插件基础信息 */
 export interface PluginBaseParamProps {
     /** 插件名称 */
     ScriptName: string
     /** 插件描述 */
     Help?: string
-    /** 漏洞类型 */
-    RiskType?: string
     /** 漏洞类型详情 */
-    RiskDetail?: QueryYakScriptRiskDetailByCWEResponse
-    /** 漏洞补充说明 */
-    RiskAnnotation?: string
+    RiskDetail?: YakRiskInfoProps[]
     /** 插件tags */
     Tags?: string[]
 }
+
 /** 插件配置信息 */
 export interface PluginSettingParamProps {
-    /** 参数列表 */
-    Params: PluginParamDataProps[]
     /** 是否启用插件联动 */
     EnablePluginSelector?: boolean
     /** 联动插件类型 */
@@ -34,27 +24,24 @@ export interface PluginSettingParamProps {
     /** 源码 */
     Content: string
 }
-/** 插件参数详细信息 */
-export interface PluginParamDataProps extends Omit<YakParamProps, "ExtraSetting"> {
-    /** 类型附带额外参数 */
-    ExtraSetting?: PluginParamDataSelectProps
-}
+
+/** 插件参数-下拉框-配置数据 */
 export interface PluginParamDataSelectProps {
     double?: boolean
     data: {label: string; value: string}[]
 }
+/** 插件参数-编辑器-配置数据 */
+export interface PluginParamDataEditorProps {
+    language?: string
+}
+
 /** 可编辑插件配置数据 */
 export interface PluginDataProps {
     ScriptName: string
     Type: string
-    Kind: string
     Help?: string
-    /** 漏洞类型 */
-    RiskType?: string
     /** 漏洞类型详情 */
-    RiskDetail?: QueryYakScriptRiskDetailByCWEResponse
-    /** 漏洞补充说明 */
-    RiskAnnotation?: string
+    RiskDetail?: YakRiskInfoProps[]
     Tags?: string
     Params?: YakParamProps[]
     EnablePluginSelector?: boolean
@@ -63,15 +50,9 @@ export interface PluginDataProps {
     /** 修改插件的原因 */
     modifyDescription?: string
 }
+/** ---------- 前端插件数据结构定义 End ---------- */
 
-/** ---------- grpc插件数据结构定义 start ---------- */
-/** 漏洞类型的描述和修复建议 */
-export interface QueryYakScriptRiskDetailByCWEResponse {
-    CWEId: string
-    RiskType: string
-    Description: string
-    CWESolution: string
-}
+/** ---------- grpc插件数据结构定义 Start ---------- */
 /** 插件参数配置数据 */
 export interface YakParamProps {
     /** 参数名 */
@@ -90,9 +71,12 @@ export interface YakParamProps {
     Help: string
     /** 参数组(非必填时选项) */
     Group?: string
+    /**  */
+    MethodType?: string
     /** 值 */
     Value?: any
 }
+
 /** 本地插件信息 */
 export interface localYakInfo {
     Id?: number
@@ -101,9 +85,7 @@ export interface localYakInfo {
     Content: string
     Type: string
     Help?: string
-    RiskType?: string
-    RiskDetail?: QueryYakScriptRiskDetailByCWEResponse
-    RiskAnnotation?: string
+    RiskInfo?: YakRiskInfoProps[]
     Tags?: string
     Params?: YakParamProps[]
     EnablePluginSelector?: boolean
@@ -117,4 +99,28 @@ export interface localYakInfo {
     GeneralModuleKey?: string
     FromGit?: string
     IsCorePlugin?: boolean
+}
+/** ---------- grpc插件数据结构定义 End ---------- */
+
+/** 源码转换为参数和风险信息(request) */
+export interface CodeToInfoRequestProps {
+    YakScriptType: string
+    YakScriptCode: string
+    Range?: GRPCRange
+}
+
+/** 风险信息 */
+export interface YakRiskInfoProps {
+    Level: string
+    TypeVerbose: string
+    CVE: string
+    Description: string
+    Solution: string
+}
+
+/** 源码转换为参数和风险信息(response) */
+export interface CodeToInfoResponseProps {
+    Information: YaklangInformation[]
+    CliParameter: YakParamProps[]
+    RiskInfo: YakRiskInfoProps[]
 }

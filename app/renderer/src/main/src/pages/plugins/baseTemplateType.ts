@@ -1,7 +1,7 @@
 import {RollingLoadListProps} from "@/components/RollingLoadList/RollingLoadList"
 import {FilterPanelGroupItem} from "@/components/businessUI/FilterPanel/FilterPanelType"
 import {ReactNode} from "react"
-import {PluginBaseParamProps, PluginParamDataProps, PluginSettingParamProps} from "./pluginsType"
+import {PluginBaseParamProps, PluginSettingParamProps} from "./pluginsType"
 import {API} from "@/services/swagger/resposeType"
 
 export interface PluginsLayoutProps {
@@ -109,22 +109,15 @@ export interface CollaboratorInfoProps {
     userName: string
 }
 
-/** 漏洞类型列表-选项 */
-export interface RiskListOptProps {
-    RiskType: string
-    CWEId: string
-}
 // 插件基础信息组件
 export interface PluginModifyInfoProps {
     ref?: any
     /** 是否为编辑状态 */
     isEdit?: boolean
-    /** 插件种类(漏洞|其他) */
-    kind: string
     /** 插件基础信息 */
     data?: PluginBaseParamProps
     /** tags改变时的回调事件 */
-    tagsCallback?: () => any
+    tagsCallback?: (v: string[]) => any
 }
 // 插件基础信息ref可用方法
 export interface PluginInfoRefProps {
@@ -148,26 +141,13 @@ export interface PluginSettingRefProps {
     onSubmit: () => Promise<PluginSettingParamProps | undefined>
 }
 
-// 新增|编辑插件参数信息组件
-export interface PluginAddParamModalProps {
-    visible: boolean
-    setVisible: (show: boolean) => any
-    info?: PluginParamDataProps
-    onOK: (data: PluginParamDataProps) => any
-}
-// 插件参数列表组件
-export interface PluginParamListProps {
-    list: PluginParamDataProps[]
-    setList: (data: PluginParamDataProps[]) => any
-    onEdit: (index: number) => any
-}
-
 export interface PluginEditorDiffProps {
     isDiff: boolean
     newCode: string
     oldCode?: string
     setCode: (value: string) => any
     language: string
+    triggerUpdate?: boolean
 }
 
 /** ---------- 插件列表相关 start ---------- */

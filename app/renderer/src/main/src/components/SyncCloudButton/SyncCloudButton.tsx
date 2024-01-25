@@ -33,7 +33,8 @@ export const onLocalScriptToOnlinePlugin = (params: YakScript, type?: number) =>
                 // value:p.Value||'',
                 required: p.Required || false,
                 group: p.Group || "",
-                extra_setting: p.ExtraSetting || ""
+                extra_setting: p.ExtraSetting || "",
+                method_type: p.MethodType || ""
             })) || [],
         help: params.Help || "",
         contributors: params.OnlineContributors || params.Author || "",

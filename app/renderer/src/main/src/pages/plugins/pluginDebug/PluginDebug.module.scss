@@ -1,0 +1,162 @@
+@use "@/pages/plugins/plugins.scss";
+
+.plugin-debug-drawer {
+    :global {
+        .ant-drawer-body {
+            padding: 0;
+            overflow: hidden;
+        }
+    }
+
+    .header-title {
+        color: #31343f;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+    }
+    .header-extra-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+    }
+}
+
+.plugin-debug-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    .left-wrapper {
+        width: 302px;
+        height: 100%;
+        background-color: #f8f8f8;
+        .left-header-wrapper {
+            height: 49px;
+            padding: 12px;
+            .header-extra {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                .divider-wrapper {
+                    margin-right: 8px;
+                    width: 1px;
+                    height: 12px;
+                    background-color: #eaecf3;
+                }
+            }
+        }
+        .left-body-wrapper {
+            padding: 0;
+            .form-wrapper {
+                overflow: hidden auto;
+                padding-top: 8px;
+
+                :global {
+                    .ant-form-item-label > label {
+                        font-size: 12px;
+                    }
+                }
+
+                .custom-params-wrapper {
+                    padding: 0 12px;
+                }
+                .optional-params-wrapper {
+                    padding: 0 12px;
+                }
+                .additional-params-divider {
+                    margin: 16px 12px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 4px;
+                    .text-style {
+                        color: #b4bbca;
+                        font-size: 12px;
+                        font-weight: 600;
+                        line-height: 16px;
+                    }
+                    .divider-style {
+                        flex: 1;
+                        overflow: hidden;
+                        height: 1px;
+                        border-top: 1px dashed #eaecf3;
+                    }
+                }
+
+                .to-end {
+                    text-align: center;
+                    color: var(--yakit-disable-text-color);
+                    font-size: 11px;
+                    padding-top: 12px;
+                    padding-bottom: 24px;
+                }
+            }
+        }
+    }
+
+    .right-wrapper {
+        padding-left: 12px;
+        padding-right: 16px;
+        flex: 1;
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        .right-header-wrapper {
+            padding-top: 12px;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            .header-info {
+                flex: 1;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                .info-name {
+                    flex: 1;
+                    overflow: hidden;
+                    color: #85899e;
+                    font-size: 11px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+            }
+        }
+        .right-body-wrapper {
+            flex: 1;
+            overflow: hidden;
+            padding-bottom: 12px;
+            .tab-show {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                .plugin-executing-progress {
+                    @extend %display-flex-center;
+                    flex-wrap: wrap;
+                    gap: 16px;
+                    padding-top: 12px;
+                }
+                .result-body {
+                    flex: 1;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: column;
+                }
+            }
+            .tab-hidden {
+                display: none;
+            }
+        }
+    }
+}
+
+.diff-code-modal {
+    width: 100%;
+    height: 60vh;
+    overflow: hidden;
+}

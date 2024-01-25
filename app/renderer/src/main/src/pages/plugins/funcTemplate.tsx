@@ -15,6 +15,9 @@ import {
     ListShowContainerProps,
     OnlineExtraOperateProps,
     OnlineRecycleExtraOperateProps,
+    PluginDiffEditorModalProps,
+    PluginEditorModalProps,
+    PluginTypeTagProps,
     PluginsListProps,
     TagShowOpt,
     TagsListShowProps,
@@ -31,6 +34,7 @@ import {
     useVirtualList
 } from "ahooks"
 import {
+    OutlineArrowscollapseIcon,
     OutlineCalendarIcon,
     OutlineClouddownloadIcon,
     OutlineDatabasebackupIcon,
@@ -59,7 +63,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {Dropdown, Form, Tooltip} from "antd"
+import {Dropdown, Form, Radio, Tooltip} from "antd"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {formatDate} from "@/utils/timeUtil"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -86,6 +90,8 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {pluginTypeToName} from "./builtInData"
 import UnLogin from "@/assets/unLogin.png"
 import {v4 as uuidv4} from "uuid"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {YakitDiffEditor} from "@/components/yakitUI/YakitDiffEditor/YakitDiffEditor"
 
 import classNames from "classnames"
 import "./plugins.scss"
@@ -1552,7 +1558,15 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
 
 /** @name 插件源码评分模块(包含评分逻辑),可和别的模块组合成新UI一起使用 */
 export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
-    const {type, code, isStart, callback} = props
+    const {
+        type,
+        code,
+        isStart,
+        successWait = 1000,
+        successHint = "（表现良好，开始上传插件中...）",
+        failedHint = "（上传失败，请修复后再上传）",
+        callback
+    } = props
 
     const [loading, setLoading] = useState<boolean>(true)
     const [response, setResponse] = useState<CodeScoreSmokingEvaluateResponseProps>()
@@ -1568,7 +1582,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
             .invoke("SmokingEvaluatePlugin", {PluginType: type, Code: code})
             .then((rsp: CodeScoreSmokingEvaluateResponseProps) => {
                 if (!fetchStartState()) return
-                const newResults = rsp.Results.map((ele) => ({...ele, Id: uuidv4()}))
+                const newResults = rsp.Results.map((ele) => ({...ele, IdKey: uuidv4()}))
                 setResponse({
                     Score: rsp.Score,
                     Results: newResults
@@ -1576,7 +1590,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                 if (+rsp?.Score >= 60) {
                     setTimeout(() => {
                         callback(true)
-                    }, 1000)
+                    }, successWait)
                 } else {
                     callback(false)
                 }
@@ -1641,13 +1655,26 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                         {response && (
                             <div className={styles["list-body"]}>
                                 {(response?.Results || []).map((item) => {
+                                    let errorPosition: string = ""
+                                    try {
+                                        const {StartLine, StartColumn, EndLine, EndColumn} = item.Range || {}
+                                        if (StartLine && StartColumn && EndLine && EndColumn) {
+                                            errorPosition = `[${StartLine}:${StartColumn}-${EndLine}:${EndColumn}]`
+                                        }
+                                    } catch (error) {}
+
                                     return (
                                         <div className={styles["list-opt"]} key={item.IdKey}>
                                             <div className={styles["opt-header"]}>
                                                 <PluginTestErrorIcon />
                                                 {item.Item}
                                             </div>
-                                            <div className={styles["opt-content"]}>{item.Suggestion}</div>
+                                            <div className={styles["opt-content"]}>
+                                                {item.Suggestion}
+                                                {errorPosition && (
+                                                    <span className={styles["error-position"]}> {errorPosition}</span>
+                                                )}
+                                            </div>
                                         </div>
                                     )
                                 })}
@@ -1656,7 +1683,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                         {response && (+response?.Score || 0) < 60 && (
                             <div className={styles["opt-results"]}>
                                 <SolidExclamationIcon />
-                                <div className={styles["content-style"]}>（上传失败，请修复后再上传）</div>
+                                <div className={styles["content-style"]}>{failedHint}</div>
                             </div>
                         )}
                         {response && (+response?.Score || 0) >= 60 && (
@@ -1665,7 +1692,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                                     {+response?.Score}
                                     <span className={styles["suffix-style"]}>分</span>
                                 </div>
-                                <div className={styles["content-style"]}>（表现良好，开始上传插件中...）</div>
+                                <div className={styles["content-style"]}>{successHint}</div>
                             </div>
                         )}
                         {!response && (
@@ -1714,6 +1741,133 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
             bodyStyle={{padding: 0}}
         >
             {visible && <CodeScoreModule type={type} code={code} isStart={visible} callback={moduleCallback} />}
+        </YakitModal>
+    )
+})
+
+/** @name 插件类型标签 */
+export const PluginTypeTag: React.FC<PluginTypeTagProps> = memo((props) => {
+    const {checked, setCheck, disabled, icon, name, description} = props
+
+    return (
+        <div
+            className={classNames(styles["type-tag-wrapper"], {
+                [styles["type-tag-active"]]: checked,
+                [styles["type-tag-disabled"]]: disabled
+            })}
+            onClick={() => {
+                if (disabled) return
+                setCheck()
+            }}
+        >
+            <div className={styles["type-tag-header"]}>
+                {icon}
+                <Radio
+                    className='plugins-radio-wrapper'
+                    disabled={disabled}
+                    checked={checked}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        setCheck()
+                    }}
+                />
+            </div>
+            <div className={styles["type-tag-content"]}>
+                <div className={styles["content-title"]}>{name}</div>
+                <div className={styles["content-body"]}>{description}</div>
+            </div>
+        </div>
+    )
+})
+
+/** @name 源码放大版编辑器 */
+export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) => {
+    const {language = "yak", visible, setVisible, code} = props
+
+    const [content, setContent] = useState<string>("")
+
+    useEffect(() => {
+        if (visible) {
+            setContent(code || "")
+        } else {
+            setContent("")
+        }
+    }, [visible])
+
+    return (
+        <YakitModal
+            title='源码'
+            subTitle={
+                <div className={styles["plugin-editor-modal-subtitle"]}>
+                    <span>可在此定义插件输入原理，并编写输出 UI</span>
+                    <span>按 Esc 即可退出全屏</span>
+                </div>
+            }
+            type='white'
+            width='80%'
+            centered={true}
+            maskClosable={false}
+            closable={true}
+            closeIcon={<OutlineArrowscollapseIcon className={styles["plugin-editor-modal-close-icon"]} />}
+            footer={null}
+            visible={visible}
+            onCancel={() => setVisible(content)}
+            bodyStyle={{padding: 0}}
+        >
+            <div className={styles["plugin-editor-modal-body"]}>
+                <YakitEditor type={language} value={content} setValue={setContent} />
+            </div>
+        </YakitModal>
+    )
+})
+
+/** @name 对比器放大版编辑器 */
+export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo((props) => {
+    const {language = "yak", oldCode, newCode, visible, setVisible} = props
+
+    const [content, setContent] = useState<string>("")
+    const [update, setUpdate] = useState<boolean>(false)
+
+    useEffect(() => {
+        if (visible) {
+            setContent(newCode || "")
+            setUpdate(!update)
+            return () => {
+                setContent("")
+            }
+        }
+    }, [visible])
+
+    return (
+        <YakitModal
+            title='源码'
+            subTitle={
+                <div className={styles["plugin-editor-modal-subtitle"]}>
+                    <span>可在此定义插件输入原理，并编写输出 UI</span>
+                    <span>按 Esc 即可退出全屏</span>
+                </div>
+            }
+            type='white'
+            width='80%'
+            centered={true}
+            maskClosable={false}
+            closable={true}
+            closeIcon={<OutlineArrowscollapseIcon className={styles["plugin-editor-modal-close-icon"]} />}
+            footer={null}
+            visible={visible}
+            onCancel={() => setVisible(content)}
+            bodyStyle={{padding: 0}}
+        >
+            <div className={styles["plugin-editor-modal-body"]}>
+                <YakitDiffEditor
+                    leftDefaultCode={oldCode}
+                    leftReadOnly={true}
+                    rightDefaultCode={content}
+                    setRightCode={setContent}
+                    triggerUpdate={update}
+                    language={language}
+                />
+            </div>
         </YakitModal>
     )
 })

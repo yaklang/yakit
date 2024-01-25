@@ -11,7 +11,7 @@ import {
 import {SolidBadgecheckIcon, SolidBanIcon} from "@/assets/icon/solid"
 import {
     OutlineClouddownloadIcon,
-    OutlineCursorclickIcon,
+    OutlineCodeIcon,
     OutlineLightbulbIcon,
     OutlinePencilIcon,
     OutlineTrashIcon
@@ -24,21 +24,16 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginFilterParams, PluginInfoRefProps, PluginSearchParams, PluginSettingRefProps} from "../baseTemplateType"
 import {ReasonModal} from "./PluginManage"
 import {ApplicantIcon, AuthorImg, FilterPopoverBtn, FuncBtn} from "../funcTemplate"
-import {
-    PluginBaseParamProps,
-    PluginDataProps,
-    PluginParamDataProps,
-    PluginSettingParamProps,
-    YakParamProps
-} from "../pluginsType"
+import {PluginBaseParamProps, PluginDataProps, PluginSettingParamProps} from "../pluginsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {OnlinePluginAppAction} from "../pluginReducer"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {apiAuditPluginDetaiCheck, apiFetchPluginDetailCheck} from "../utils"
-import {convertRemoteToLocalParams, convertRemoteToRemoteInfo} from "../editDetails/utils"
+import {convertRemoteToLocalRisks, convertRemoteToRemoteInfo, onCodeToInfo} from "../editDetails/utils"
 import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
+import {PluginDebug} from "../pluginDebug/PluginDebug"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
@@ -143,6 +138,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
                 .then((res) => {
                     if (res) {
+                        console.log("插件管理的单个插件详情", res)
                         setPlugin({...res})
                         setOldContent("")
                         // 源码
@@ -158,31 +154,16 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         let infoData: PluginBaseParamProps = {
                             ScriptName: res.script_name,
                             Help: res.help,
-                            RiskType: res.riskType,
-                            RiskDetail: {
-                                CWEId: res.riskDetail?.cweId || "",
-                                RiskType: res.riskDetail?.riskType || "",
-                                Description: res.riskDetail?.description || "",
-                                CWESolution: res.riskDetail?.solution || ""
-                            },
-                            RiskAnnotation: res.risk_annotation,
+                            RiskDetail: convertRemoteToLocalRisks(res.riskInfo),
                             Tags: []
                         }
                         try {
                             infoData.Tags = (res.tags || "").split(",") || []
                         } catch (error) {}
-                        if (!infoData.RiskType) infoData.RiskDetail = undefined
                         setInfoParams({...infoData})
                         setCacheTags(infoData?.Tags || [])
                         // 设置配置信息
                         let settingData: PluginSettingParamProps = {
-                            Params: convertRemoteToLocalParams(res.params || []).map((item) => {
-                                const obj: PluginParamDataProps = {
-                                    ...item,
-                                    ExtraSetting: item.ExtraSetting ? JSON.parse(item.ExtraSetting) : undefined
-                                }
-                                return obj
-                            }),
                             EnablePluginSelector: !!res.enable_plugin_selector,
                             PluginSelectorTypes: res.plugin_selector_types,
                             Content: res.content || ""
@@ -285,11 +266,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         )
 
         const [plugin, setPlugin] = useState<API.PluginsAuditDetailResponse>()
-        // 插件类型(漏洞类型|其他类型)
-        const isRisk = useMemo(() => {
-            if ((plugin as any)?.riskType) return "bug"
-            return "other"
-        }, [plugin])
 
         // 修改者信息
         const [apply, setApply] = useState<{name: string; img: string; description: string}>()
@@ -309,8 +285,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
         const [cacheTags, setCacheTags] = useState<string[]>()
         // 删除某些tag 触发  DNSLog和HTTP数据包变形开关的改变
-        const onTagsCallback = useMemoizedFn(() => {
-            setCacheTags({...fetchInfoData()}?.Tags || [])
+        const onTagsCallback = useMemoizedFn((v: string[]) => {
+            setCacheTags(v || [])
         })
         // DNSLog和HTTP数据包变形开关的改变 影响 tag的增删
         const onSwitchToTags = useMemoizedFn((value: string[]) => {
@@ -324,10 +300,11 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         // 插件配置信息-相关逻辑
         const settingRef = useRef<PluginSettingRefProps>(null)
         const [settingParams, setSettingParams] = useState<PluginSettingParamProps>({
-            Params: [],
             Content: ""
         })
 
+        // 强制更新对比器
+        const [updateDiff, setUpdateDiff] = useState<boolean>(false)
         // 插件源码
         const [content, setContent] = useState<string>("")
         // 旧插件源码
@@ -345,7 +322,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             const data: PluginDataProps = {
                 ScriptName: plugin.script_name,
                 Type: plugin.type,
-                Kind: plugin.riskType ? "bug" : "other",
                 Content: plugin.content
             }
             // 基础信息
@@ -358,10 +334,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 yakitNotify("error", "请完善必填的基础信息")
                 return
             } else {
-                data.Help = data.Kind === "bug" ? undefined : info?.Help
-                data.RiskType = data.Kind === "bug" ? info?.RiskType : undefined
-                data.RiskDetail = data.Kind === "bug" ? info?.RiskDetail : undefined
-                data.RiskAnnotation = data.Kind === "bug" ? info?.RiskAnnotation : undefined
+                data.Help = info?.Help
                 data.Tags = (info?.Tags || []).join(",") || undefined
             }
             // 配置信息
@@ -374,19 +347,23 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 yakitNotify("error", "请完善必填的配置信息")
                 return
             } else {
-                data.Params = (setting?.Params || []).map((item) => {
-                    const obj: YakParamProps = {
-                        ...item,
-                        ExtraSetting: item.ExtraSetting ? JSON.stringify(item.ExtraSetting) : ""
-                    }
-                    return obj
-                })
                 data.EnablePluginSelector = setting?.EnablePluginSelector
                 data.PluginSelectorTypes = setting?.PluginSelectorTypes
             }
-            // 无参数情况
-            if (data.Params.length === 0) data.Params = undefined
             data.Content = content
+
+            // yak类型-进行源码分析出参数和风险
+            if (data.Type === "yak") {
+                const codeInfo = await onCodeToInfo(data.Type, data.Content)
+                if (codeInfo) {
+                    data.RiskDetail = codeInfo.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
+                    data.Params = codeInfo.CliParameter
+                }
+            } else {
+                // 非yak类型-排除参数和风险
+                data.RiskDetail = []
+                data.Params = []
+            }
 
             const obj = convertRemoteToRemoteInfo(plugin, data)
 
@@ -424,7 +401,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 callback({
                                     ...(info as any),
                                     tags: (info.tags || []).join(","),
-                                    risk_annotation: info.annotation,
                                     downloaded_total: info.download_total || 0
                                 })
                         })
@@ -507,8 +483,63 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 }, 200)
             })
         })
-        // 去使用
-        const onRun = useMemoizedFn(() => {})
+
+        /** --------------- 插件调试 Start --------------- */
+        const [debugPlugin, setDebugPlugin] = useState<PluginDataProps>()
+        const [debugShow, setDebugShow] = useState<boolean>(false)
+
+        const onCancelDebug = useMemoizedFn(() => {
+            if (debugShow) setDebugShow(false)
+        })
+        const onMerge = useMemoizedFn((v: string) => {
+            setContent(v)
+            setUpdateDiff(!updateDiff)
+            setDebugShow(false)
+            setDebugPlugin(undefined)
+        })
+
+        // 将页面数据转化为插件调试信息
+        const convertDebug = useMemoizedFn(() => {
+            return new Promise(async (resolve, reject) => {
+                setDebugPlugin(undefined)
+                try {
+                    if (!plugin) {
+                        resolve("false")
+                        return
+                    }
+
+                    const paramsList = await onCodeToInfo(plugin.type, content)
+                    if (!paramsList) {
+                        resolve("false")
+                        return
+                    }
+                    const info: PluginDataProps = {
+                        ScriptName: plugin.script_name,
+                        Type: plugin.type,
+                        Params: paramsList.CliParameter,
+                        Content: content
+                    }
+                    setDebugPlugin({...info})
+
+                    resolve("true")
+                } catch (error) {
+                    resolve("false")
+                }
+            })
+        })
+
+        // 调试
+        const onDebug = useMemoizedFn(async () => {
+            if (!plugin) return
+            if (debugShow) return
+
+            const result = await convertDebug()
+            // 获取插件信息错误
+            if (result === "false") return
+            setDebugShow(true)
+        })
+        /** --------------- 插件调试 End --------------- */
+
         // 返回
         const onPluginBack = useMemoizedFn(() => {
             onBack({allCheck, selectList, search: searchs, filter: filters})
@@ -522,6 +553,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
         return (
             <PluginDetails<YakitPluginOnlineDetail>
+                pageWrapId='plugin-manage-detail'
                 title='插件管理'
                 spinLoading={spinLoading}
                 search={searchs}
@@ -656,14 +688,14 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                             name={"通过"}
                                                             onClick={onPass}
                                                         />
+                                                        <FuncBtn
+                                                            maxWidth={1100}
+                                                            icon={<OutlineCodeIcon />}
+                                                            name={"调试"}
+                                                            onClick={onDebug}
+                                                        />
                                                     </>
                                                 )}
-                                                {/* <FuncBtn
-                                                    maxWidth={1100}
-                                                    icon={<OutlineCursorclickIcon />}
-                                                    name={"去使用"}
-                                                    onClick={onRun}
-                                                /> */}
                                             </div>
                                         }
                                         img={plugin.head_img}
@@ -705,7 +737,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                 <PluginModifyInfo
                                                     ref={infoRef}
                                                     isEdit={true}
-                                                    kind={isRisk}
                                                     data={infoParams}
                                                     tagsCallback={onTagsCallback}
                                                 />
@@ -721,11 +752,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                         data={settingParams}
                                                     />
                                                     <PluginEditorDiff
-                                                        language={ plugin.type}
+                                                        language={plugin.type}
                                                         isDiff={isApply}
                                                         newCode={content}
                                                         oldCode={oldContent}
                                                         setCode={setContent}
+                                                        triggerUpdate={updateDiff}
                                                     />
                                                 </div>
                                             </div>
@@ -734,6 +766,16 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                         <div className={styles["details-editor-wrapper"]}>
                                             <YakitEditor type={plugin.type} value={content} readOnly={true} />
                                         </div>
+                                    )}
+
+                                    {debugShow && (
+                                        <PluginDebug
+                                            getContainer={document.getElementById("plugin-manage-detail") || undefined}
+                                            plugin={debugPlugin}
+                                            visible={debugShow}
+                                            onClose={onCancelDebug}
+                                            onMerge={onMerge}
+                                        />
                                     )}
                                 </div>
                             </YakitSpin>

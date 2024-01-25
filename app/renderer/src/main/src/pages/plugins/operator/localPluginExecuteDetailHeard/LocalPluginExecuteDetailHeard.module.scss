@@ -12,12 +12,19 @@
     }
 }
 
+.plugin-execute-form-item {
+    width: 100%;
+    :global(.ant-form-item-tooltip) {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
 .plugin-execute-form-wrapper {
     @extend %display-column-center;
     padding-top: 24px;
-    .plugin-execute-form-item {
-        width: 100%;
-    }
     .plugin-execute-form-operate {
         @extend %display-flex-center;
         .plugin-execute-form-operate-start {
