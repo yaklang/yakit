@@ -201,6 +201,16 @@ module.exports = (win, getClient) => {
         }
     })
 
+    // 过滤 ws
+    ipcMain.handle("mitm-filter-websocket", (e, filterWebsocket) => {
+        if (stream) {
+            stream.write({
+                filterWebsocket,
+                updateFilterWebsocket: true
+            })
+        }
+    })
+
     // 开始调用 MITM，设置 stream
     let isFirstData = true
     ipcMain.handle("mitm-start-call", (e, host, port, downstreamProxy, enableHttp2, certificates, extra) => {

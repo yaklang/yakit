@@ -44,6 +44,7 @@ export interface AdvancedConfigurationFromValue {
     proxyPassword: string
     dnsServers: string[]
     etcHosts: any[]
+    filterWebsocket: boolean
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -60,6 +61,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [dnsServersDef,setDnsServersDef] = useState<string[]>(["8.8.8.8", "114.114.114.114"])
         const [etcHostsDef,setEtcHostsDef] = useState<any[]>([])
         const [etcHosts, setEtcHosts] = useState<any[]>([])
+        const [filterWebsocketDef, setFilterWebsocketDef] = useState<boolean>(false)
 
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -85,6 +87,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             dnsServers: dnsServersDef,
                             proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
                             proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
+                            filterWebsocket: filterWebsocketDef
                         }
                     }
                 }
@@ -97,6 +100,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 proxyUsernameDef,
                 proxyPasswordDef,
                 dnsServersDef,
+                filterWebsocketDef,
                 visible,
                 form
             ]
@@ -160,6 +164,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     setEtcHosts(etcHosts)
                     form.setFieldsValue({etcHosts})
                 }
+            })
+            // 过滤WebSocket
+            getRemoteValue(MITMConsts.MITMDefaultFilterWebsocket).then((e) => {
+                const v = e === "true" ? true : false
+                setFilterWebsocketDef(v)
+                form.setFieldsValue({filterWebsocket: v})
             })
         }, [visible])
         /**
@@ -242,7 +252,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(MITMConsts.MITMDefaultProxyUsername, params.proxyUsername)
                 setRemoteValue(MITMConsts.MITMDefaultProxyPassword, params.proxyPassword)
                 setRemoteValue(MITMConsts.MITMDefaultDnsServers, JSON.stringify(params.dnsServers))
-                setRemoteValue(MITMConsts.MITMDefaultEtcHosts, JSON.stringify(etcHosts)) 
+                setRemoteValue(MITMConsts.MITMDefaultEtcHosts, JSON.stringify(etcHosts))
+                setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${params.filterWebsocket}`)
                 onSave(params)
             })
         })
@@ -253,6 +264,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 dnsServers: dnsServersDef,
                 etcHosts:etcHostsDef,
                 enableProxyAuth: enableProxyAuthDef,
+                filterWebsocket: filterWebsocketDef,
                 proxyUsername: proxyUsernameDef,
                 proxyPassword: proxyPasswordDef,
             }
@@ -266,7 +278,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 proxyUsername:formValue.proxyUsername||'',
                 proxyPassword:formValue.proxyPassword||'',
                 etcHosts
-            }    
+            }
             if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
                 Modal.confirm({
                     title: "温馨提示",
@@ -416,6 +428,13 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             </Form.Item>
                         </>
                     )}
+                    <Form.Item
+                        label={"过滤WebSocket"}
+                        name='filterWebsocket'
+                        valuePropName='checked'
+                    >
+                        <YakitSwitch size='large' />
+                    </Form.Item>
                     <Form.Item label='客户端 TLS 导入' className={styles["advanced-configuration-drawer-TLS"]}>
                         <div className={styles["drawer-TLS-item"]}>
                             <YakitButton
