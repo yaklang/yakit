@@ -102,20 +102,20 @@ FunctionEnd
         RMDir /r "$TEMP\temp-yakit-projects"
     ${EndIf}
     
-    ; 删除.env文件
-    ; Delete "$INSTDIR\.env"
-    ; 删除开始菜单快捷方式
-    Delete "$SMPROGRAMS\Yakit\*.*"
-    Delete "$SMPROGRAMS\$StartMenuFolder\Yakit.lnk"
-    RMDir "$SMPROGRAMS\Yakit"
+    ; 非更新时才删除以下的东西
+    ${If} $IS_UPDATED != "true"
+        ; 删除开始菜单快捷方式
+        Delete "$SMPROGRAMS\Yakit\*.*"
+        Delete "$SMPROGRAMS\$StartMenuFolder\Yakit.lnk"
+        RMDir "$SMPROGRAMS\Yakit"
 
-    ; 删除桌面快捷方式
-    Delete "$DESKTOP\Yakit.lnk"
+        ; 删除桌面快捷方式
+        Delete "$DESKTOP\Yakit.lnk"
 
-    ; 删除注册表项
-    DeleteRegKey HKCU "Software\Yakit"
-    DeleteRegValue HKCU "Environment" "YAKIT_HOME"
-
+        ; 删除注册表项
+        DeleteRegKey HKCU "Software\Yakit"
+        DeleteRegValue HKCU "Environment" "YAKIT_HOME"
+    ${EndIf}
 !macroend
 
 !macro customInstall 
