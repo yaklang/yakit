@@ -1184,7 +1184,7 @@
     }
 }
 .plugin-list-content {
-    padding: 16px;
+    padding: 16px 16px 16px 8px;
     border-radius: 8px;
     background: #f8f8f8;
     margin-top: 8px;
@@ -1213,6 +1213,9 @@
     .footer {
         display: flex;
         justify-content: space-between;
+        padding-top: 12px;
+        padding-left: 8px;
+        border-top: 1px solid #eaecf3;
         .count-box {
             display: flex;
             flex-direction: row;
@@ -1257,6 +1260,16 @@
                     width: 1px;
                     background-color: #eaecf3;
                 }
+            }
+        }
+    }
+    :global {
+        .plugin-details-item-wrapper {
+            cursor: pointer;
+        }
+        .plugin-details-item-wrapper:first-child {
+            .plugin-details-item{
+                border-top:1px solid transparent;
             }
         }
     }

@@ -77,7 +77,12 @@ import classNames from "classnames"
 import styles from "./chatCS.module.scss"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
-import {SolidYakitPluginGrayIcon, SolidYakitPluginIcon} from "@/assets/icon/colors"
+import {
+    SolidCloudpluginIcon,
+    SolidPrivatepluginIcon,
+    SolidYakitPluginGrayIcon,
+    SolidYakitPluginIcon
+} from "@/assets/icon/colors"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {HybridScanRequest, apiCancelHybridScan, apiHybridScan, convertHybridScanParams} from "@/pages/plugins/utils"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
@@ -93,8 +98,9 @@ import {PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {HoldGRPCStreamInfo, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitRoute} from "@/routes/newRoute"
 import {addToTab} from "@/pages/MainTabs"
-import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
+import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
+import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
 const {ipcRenderer} = window.require("electron")
 
 /** 将 new Date 转换为日期 */
@@ -135,8 +141,11 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     setStorage([])
                     return
                 }
-                console.log("获取缓存数据",data);
-                
+                console.log("获取缓存数据", data)
+                // 不兼容之前版本 - 筛选掉之前缓存的对话内容(依据:之前版本存在baseType必选项)
+                // @ts-ignore
+                data.lists = data.lists.filter((item) => !item.baseType)
+
                 setHistroy([...data.lists])
                 if (data.lists.length > 0) setActive(data.lists[0].token)
             } catch (error) {}
@@ -149,7 +158,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const setStorage = useMemoizedFn((data: CacheChatCSProps[]) => {
         let cache: string = ""
         if (data.length > 0) cache = JSON.stringify({lists: data, user_id: userInfo.user_id || 0})
-        console.log("更改缓存数据",data);
+        console.log("更改缓存数据", data)
         setRemoteValue(RemoteGV.ChatCSStorage, cache)
     })
 
@@ -311,6 +320,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 is_plugin
             }
         }
+        console.log("Prompt提问", data)
         onSubmit(data)
     })
 
@@ -399,8 +409,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     })
     const setContentPluginList = useMemoizedFn(
         (info: ChatCSSingleInfoProps, contents: ChatCSMultipleInfoProps, group: CacheChatCSProps[]) => {
-            const lastIndex = contents.content.findIndex((item) => item.id === info.id)
-            if (lastIndex === -1) contents.content.push(info)
+            /** 插件调试执行由于接口不是流式，只存在一项 */
+            contents.content = [info]
             setHistroy([...group])
             setStorage([...group])
             /** 流式输出逻辑 */
@@ -410,9 +420,17 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     /** 生成 Promise plugin 实例 */
     const generatePluginPromise = useMemoizedFn(
         async (
-            params: {prompt: string; is_bing: boolean; is_plugin: boolean; scripts: ScriptsProps[]},
+            params: {
+                prompt: string
+                is_bing: boolean
+                is_plugin: boolean
+                scripts: ScriptsProps[]
+                history: {role: string; content: string}[]
+                signal: AbortSignal
+            },
             contents: ChatCSMultipleInfoProps,
-            group: CacheChatCSProps[]
+            group: CacheChatCSProps[],
+            yakData: YakScript[]
         ) => {
             const cs: ChatCSSingleInfoProps = {
                 is_bing: params.is_bing,
@@ -427,14 +445,21 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     plugin_scope: 5
                 })
                     .then((res) => {
-                        console.log("res", res)
+                        console.log("res", res, yakData)
                         const {data} = res
-                        const {result, id, status = true, message = ""} = data
-                        if (status && Array.isArray(result)) {
+                        const {result, id}: {result: {scripts: string[]; input: string}; id: string} = data
+                        const {scripts, input} = result
+                        if (Array.isArray(scripts)) {
                             if (!cs.id) cs.id = id
-                            cs.content = JSON.stringify(result)
+                            let mathYakData = yakData.filter((item) => scripts.includes(item.ScriptName))
+                            console.log("mathYakData", mathYakData)
+                            cs.content = JSON.stringify({
+                                input,
+                                data: mathYakData
+                            })
                             setContentPluginList(cs, contents, group)
                         } else {
+                            yakitNotify("error", `获取失败|result`)
                         }
                     })
                     .finally(() => {
@@ -623,17 +648,27 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         /** 插件调试与执行 - 新接口 */
         if (params.is_plugin) {
             if (!isBreak.current) {
+                chatHistory.reverse()
+                const abort = new AbortController()
+                controller.current = abort
                 await new Promise((resolve, reject) => {
                     ipcRenderer.invoke("QueryYakScriptLocalAll").then(async (item: QueryYakScriptsResponse) => {
                         let scripts: ScriptsProps[] = item.Data.map((i) => ({
                             script_name: i.ScriptName,
                             Fields: i.Params
                         }))
-                        console.log("获取所有数据", item)
                         await generatePluginPromise(
-                            {prompt: params.content, is_bing: params.is_bing, is_plugin: params.is_plugin, scripts},
+                            {
+                                prompt: params.content,
+                                is_bing: params.is_bing,
+                                is_plugin: params.is_plugin,
+                                scripts,
+                                history: chatHistory,
+                                signal: abort.signal
+                            },
                             contents,
-                            group
+                            group,
+                            item.Data
                         )
                         resolve(null)
                     })
@@ -690,7 +725,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }
         /** 流式输出逻辑 */
         isBreak.current = true
-        // for (let item of controller.current) item.abort()
+        if (controller.current) {
+            controller.current.abort()
+        }
     })
     /** 点赞|踩 */
     const generateLikePromise = useMemoizedFn((params: {uid: string; grade: "good" | "bad"}) => {
@@ -821,25 +858,25 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     })
 
     /** 插件调试执行 - 运行结束 - 更改历史/缓存结果 */
-    const onPluginEnd = useMemoizedFn(({token,info,status,riskState}: PluginEndProps) => {
+    const onPluginEnd = useMemoizedFn(({token, info, status, runtimeId, riskState}: PluginEndProps) => {
         const data = [...history]
         const filterIndex = data.findIndex((item) => item.token === active)
         if (filterIndex === -1) return
         const chat = data[filterIndex]
         chat.history = chat.history.map((item) => {
-            if(item.token === token){
+            if (item.token === token) {
                 let itemInfo = item.info as ChatCSMultipleInfoProps
-                let content:ChatCSSingleInfoProps[] = itemInfo.content.map((item)=>{
-                    if(riskState){
-                        return {...item,status,riskState}
+                let content: ChatCSSingleInfoProps[] = itemInfo.content.map((item) => {
+                    if (riskState) {
+                        return {...item, status, runtimeId, riskState}
                     }
-                    return {...item,status}
+                    return {...item, status, runtimeId}
                 })
                 let info = {
                     ...item.info,
                     content
                 }
-                return {...item,info}
+                return {...item, info}
             }
             return item
         }) as ChatInfoProps[]
@@ -871,7 +908,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             setWidth("95vw")
         }
     }, [isShowPrompt])
-    console.log("currentChat---", currentChat)
 
     return (
         <Resizable
@@ -1245,13 +1281,14 @@ interface PluginRunStatusProps {
         fail： 执行失败
     */
     status: "loading" | "succee" | "fail" | "info"
+    pluginNameList: string[]
     progressList?: any
     infoList?: StreamResult.Risk[]
     runtimeId?: string
 }
 
 const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
-    const {status, progressList, infoList, runtimeId} = props
+    const {status, pluginNameList, progressList, infoList, runtimeId} = props
     const onDetail = useMemoizedFn(() => {
         let defaultActiveKey: string = ""
         switch (status) {
@@ -1265,6 +1302,13 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                 defaultActiveKey = "Console"
                 break
         }
+        console.log("查看详情:", {
+            pluginBatchExecutorPageInfo: {
+                runtimeId,
+                defaultActiveKey
+            }
+        })
+
         addToTab(YakitRoute.BatchExecutorPage, {
             pluginBatchExecutorPageInfo: {
                 runtimeId,
@@ -1276,7 +1320,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
         <div className={styles["plugin-run-status"]}>
             {status === "loading" && (
                 <div className={styles["plugin-run"]}>
-                    <div className={styles["title"]}>8个插件执行中，请耐心等待...</div>
+                    <div className={styles["title"]}>{pluginNameList.length}个插件执行中，请耐心等待...</div>
                     <div className={styles["sub-title"]}>
                         一般来说，检测将会在 <span className={styles["highlight"]}>10-20s</span> 内结束
                     </div>
@@ -1394,101 +1438,174 @@ const defPluginBatchExecuteExtraFormValue: PluginBatchExecuteExtraFormValue = {
 const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
     const {data, setPluginRun, onStartExecute} = props
     // 数据
-    const [datsSource, setDatsSource] = useState<ChatPluginListProps[]>([])
+    const [datsSource, setDatsSource] = useState<ChatPluginListProps>({
+        input: "",
+        data: []
+    })
     // 选中项
     const [checkedList, setCheckedList] = useState<string[]>([])
+    // 是否显示暂无数据
+    const [showNoPlugin, setShowNoPlugin] = useState<boolean>(false)
+    // 私有域地址
+    const privateDomainRef = useRef<string>("")
+
+    /**获取最新的私有域 */
+    const getPrivateDomainAndRefList = useMemoizedFn(() => {
+        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+            if (setting) {
+                const values = JSON.parse(setting)
+                privateDomainRef.current = values.BaseUrl
+            }
+            // 私有域获取完成后再解析数据
+            try {
+                const arr: ChatPluginListProps = JSON.parse(data)
+                if (arr.data.length === 0) {
+                    setShowNoPlugin(true)
+                    return
+                }
+                setDatsSource(arr)
+            } catch (error) {
+                yakitNotify("error", `解析失败|${error}`)
+            }
+        })
+    })
 
     useEffect(() => {
-        try {
-            const arr: ChatPluginListProps[] = JSON.parse(data)
-            setDatsSource(arr)
-        } catch (error) {
-            yakitNotify("error", `解析失败|${error}`)
-        }
+        getPrivateDomainAndRefList()
     }, [])
 
+    /** 单项勾选|取消勾选 */
+    const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
+        try {
+            // 全选情况时的取消勾选
+            if (checkedList.length === datsSource.data.length) {
+                setCheckedList(checkedList.filter((item) => item !== data.ScriptName))
+                return
+            }
+            // 单项勾选回调
+            if (value) setCheckedList([...checkedList, data.ScriptName])
+            else setCheckedList(checkedList.filter((item) => item !== data.ScriptName))
+        } catch (error) {
+            yakitNotify("error", "勾选失败:" + error)
+        }
+    })
+
+    const onPluginClick = useMemoizedFn((data: YakScript, index: number) => {
+        // 取消选中
+        if (checkedList.includes(data.ScriptName)) {
+            setCheckedList(checkedList.filter((item) => item !== data.ScriptName))
+        }
+        // 选中
+        else {
+            setCheckedList([...checkedList, data.ScriptName])
+        }
+    })
+
+    /** 单项副标题组件 */
+    const optExtra = useMemoizedFn((data: YakScript) => {
+        console.log("optExtra", privateDomainRef.current, data.OnlineBaseUrl)
+
+        if (privateDomainRef.current !== data.OnlineBaseUrl) return <></>
+        if (data.OnlineIsPrivate) {
+            return <SolidPrivatepluginIcon className='icon-svg-16' />
+        } else {
+            return <SolidCloudpluginIcon className='icon-svg-16' />
+        }
+    })
     return (
-        <div className={styles["plugin-list-content"]}>
-            <div className={styles["list"]}>
-                {datsSource.map((item, index) => {
-                    const {script_name} = item
-                    return (
-                        <div className={classNames(styles["list-item"])} key={script_name}>
-                            <YakitCheckbox
-                                checked={checkedList.includes(script_name)}
-                                onChange={(e) => {
-                                    if (e.target.checked) {
-                                        const list = Array.from(new Set([...checkedList, script_name]))
-                                        setCheckedList(list)
-                                    } else {
-                                        const list = checkedList.filter((item) => item !== script_name)
-                                        setCheckedList(list)
-                                    }
-                                }}
-                            />
-                            <div className={classNames(styles["content"], "yakit-content-single-ellipsis")}>
-                                {script_name}
+        <>
+            {showNoPlugin ? (
+                <div>暂无匹配插件</div>
+            ) : (
+                <>
+                    <div>好的，我为你匹配到 {datsSource.data.length} 个可用插件，是否要开始执行？</div>
+                    <div className={styles["plugin-list-content"]}>
+                        <div className={"plugin-details-opt-wrapper"}>
+                            {datsSource.data.map((info, i) => {
+                                const check = checkedList.includes(info.ScriptName)
+                                return (
+                                    <PluginDetailsListItem<YakScript>
+                                        order={i}
+                                        plugin={info}
+                                        selectUUId={""} //本地用的ScriptName代替uuid
+                                        check={check}
+                                        headImg={info.HeadImg || ""}
+                                        pluginUUId={info.ScriptName} //本地用的ScriptName代替uuid
+                                        pluginName={info.ScriptName}
+                                        help={info.Help}
+                                        content={info.Content}
+                                        optCheck={optCheck}
+                                        official={!!info.OnlineOfficial}
+                                        isCorePlugin={!!info.IsCorePlugin}
+                                        pluginType={info.Type}
+                                        onPluginClick={onPluginClick}
+                                        extra={optExtra}
+                                    />
+                                )
+                            })}
+                        </div>
+                        <div className={styles["footer"]}>
+                            <div className={styles["count-box"]}>
+                                <div className={styles["check-box"]}>
+                                    <YakitCheckbox
+                                        checked={checkedList.length === datsSource.data.length}
+                                        indeterminate={
+                                            checkedList.length > 0 && checkedList.length !== datsSource.data.length
+                                        }
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                let list = datsSource.data.map((item) => item.ScriptName)
+                                                setCheckedList(list)
+                                            } else {
+                                                setCheckedList([])
+                                            }
+                                        }}
+                                    />
+                                    <div className={styles["text"]}>全选</div>
+                                </div>
+                                <div className={styles["show-box"]}>
+                                    <div className={styles["show"]}>
+                                        <div className={styles["title"]}>Total</div>
+                                        <div className={styles["count"]}>{datsSource.data.length}</div>
+                                    </div>
+                                    <div className={styles["line"]} />
+                                    <div className={styles["show"]}>
+                                        <div className={styles["title"]}>Selected</div>
+                                        <div className={styles["count"]}>{checkedList.length}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={styles["extra"]}>
+                                <YakitButton
+                                    disabled={checkedList.length === 0}
+                                    icon={<SolidPlayIcon />}
+                                    onClick={() => {
+                                        onStartExecute(checkedList)
+                                    }}
+                                >
+                                    开始执行
+                                </YakitButton>
                             </div>
                         </div>
-                    )
-                })}
-            </div>
-            <div className={styles["footer"]}>
-                <div className={styles["count-box"]}>
-                    <div className={styles["check-box"]}>
-                        <YakitCheckbox
-                            checked={checkedList.length === datsSource.length}
-                            indeterminate={checkedList.length > 0 && checkedList.length !== datsSource.length}
-                            onChange={(e) => {
-                                if (e.target.checked) {
-                                    let list = datsSource.map((item) => item.script_name)
-                                    setCheckedList(list)
-                                } else {
-                                    setCheckedList([])
-                                }
-                            }}
-                        />
-                        <div className={styles["text"]}>全选</div>
                     </div>
-                    <div className={styles["show-box"]}>
-                        <div className={styles["show"]}>
-                            <div className={styles["title"]}>Total</div>
-                            <div className={styles["count"]}>{datsSource.length}</div>
-                        </div>
-                        <div className={styles["line"]} />
-                        <div className={styles["show"]}>
-                            <div className={styles["title"]}>Selected</div>
-                            <div className={styles["count"]}>{checkedList.length}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className={styles["extra"]}>
-                    <YakitButton
-                        disabled={checkedList.length === 0}
-                        icon={<SolidPlayIcon />}
-                        onClick={() => {
-                            onStartExecute(checkedList)
-                        }}
-                    >
-                        开始执行
-                    </YakitButton>
-                </div>
-            </div>
-        </div>
+                </>
+            )}
+        </>
     )
 })
 
 interface PluginEndProps {
     token: string
-    info:  ChatCSMultipleInfoProps
-    status: "info"|"succee" | "fail"
+    info: ChatCSMultipleInfoProps
+    status: "info" | "succee" | "fail"
+    runtimeId: string
     riskState?: StreamResult.Risk[]
 }
 
 interface ChatCSContentProps {
     /** 用于更改缓存 */
-    onPluginEnd: (v:PluginEndProps) => void
+    onPluginEnd: (v: PluginEndProps) => void
     /** 唯一标识符 */
     token: string
     /** 当前正在查询的那个回答的唯一标识符 */
@@ -1516,23 +1633,22 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     const [pluginRun, setPluginRun] = useState<boolean>(false)
     /**展示类型 */
     const [showType, setShowType] = useState<"loading" | "succee" | "fail" | "info">("loading")
-    const [lastRiskState,setRiskState] = useState<StreamResult.Risk[]>()
-    // 渲染之前执行后的状态
-    useEffect(()=>{
-        console.log("info-ooo",info);
+    const [lastRiskState, setRiskState] = useState<StreamResult.Risk[]>()
+    /**执行的插件名数组 */
+    const [pluginNameList, setPluginNameList] = useState<string[]>([])
+    // 渲染之前执行过后的状态
+    useEffect(() => {
         const {content} = info
-        if(Array.isArray(content)&&content.length>0){
-            const {status,riskState} = content[0]
-            if(status){
+        if (Array.isArray(content) && content.length > 0) {
+            const {status, runtimeId, riskState} = content[0]
+            if (status) {
                 setPluginRun(true)
                 setShowType(status)
-            }
-            if(riskState){
-                setPluginRun(true)
-                setRiskState(riskState)
+                setRuntimeId(runtimeId)
+                riskState && setRiskState(riskState)
             }
         }
-    },[])
+    }, [])
 
     /**插件运行结果展示 */
     const [streamInfo, hybridScanStreamEvent] = useHoldBatchGRPCStream({
@@ -1553,20 +1669,22 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     })
     const onTypeByresult = useMemoizedFn((v: "succee" | "fail") => {
         const newStreamInfo = streamInfo as HoldGRPCStreamInfo
-        if (newStreamInfo.riskState.length > 0) {
-            // 此处更改history为结果
-            onPluginEnd({token,info,status:"info",riskState:newStreamInfo.riskState})
-            setShowType("info")
-        } else {
-            onPluginEnd({token,info,status:v})
-            setShowType(v)
+        if (runtimeId) {
+            if (newStreamInfo.riskState.length > 0) {
+                // 此处更改history为结果
+                onPluginEnd({token, info, status: "info", runtimeId, riskState: newStreamInfo.riskState})
+                setShowType("info")
+            } else {
+                onPluginEnd({token, info, status: v, runtimeId})
+                setShowType(v)
+            }
         }
     })
 
     const infoList = useCreation(() => {
         const info = streamInfo as HoldGRPCStreamInfo
-        return lastRiskState||info.riskState
-    }, [streamInfo.riskState,lastRiskState])
+        return lastRiskState || info.riskState
+    }, [streamInfo.riskState, lastRiskState])
 
     const progressList = useCreation(() => {
         return streamInfo.progressState
@@ -1600,6 +1718,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
 
         apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
             setPluginRun(true)
+            setPluginNameList(selectPluginName)
             setShowType("loading")
             hybridScanStreamEvent.reset()
             hybridScanStreamEvent.start()
@@ -1640,9 +1759,9 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                             <YakChatLogIcon />
                             {time}
                         </div>
-                        
-                            {showType === "loading" && (
-                                <div style={{display: "flex"}} className={styles["header-right"]}>
+
+                        {showType === "loading" && (
+                            <div style={{display: "flex"}} className={styles["header-right"]}>
                                 <YakitButton
                                     type='primary'
                                     colors='danger'
@@ -1653,15 +1772,15 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                 >
                                     停止
                                 </YakitButton>
-                                </div>
-                            )}
-                            {showType !== "loading" && 
+                            </div>
+                        )}
+                        {showType !== "loading" && (
                             <div className={styles["header-right"]}>
-                            <div className={styles["right-btn"]} onClick={onDel}>
-                                        <TrashIcon />
-                              </div></div>
-                            }
-                        
+                                <div className={styles["right-btn"]} onClick={onDel}>
+                                    <TrashIcon />
+                                </div>
+                            </div>
+                        )}
                     </div>
                     <div className={styles["opt-content"]}>
                         <PluginRunStatus
@@ -1669,6 +1788,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                             progressList={progressList}
                             infoList={infoList}
                             runtimeId={runtimeId}
+                            pluginNameList={pluginNameList}
                         />
                     </div>
                 </>
@@ -1717,13 +1837,15 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                         </div>
                                     )}
 
-                                    {renderType !== "plugin-list" &&<div className={styles["right-btn"]}>
-                                        <CopyComponents
-                                            className={classNames(styles["copy-icon-style"])}
-                                            copyText={copyContent}
-                                            iconColor={"#85899e"}
-                                        />
-                                    </div>}
+                                    {renderType !== "plugin-list" && (
+                                        <div className={styles["right-btn"]}>
+                                            <CopyComponents
+                                                className={classNames(styles["copy-icon-style"])}
+                                                copyText={copyContent}
+                                                iconColor={"#85899e"}
+                                            />
+                                        </div>
+                                    )}
 
                                     <div className={styles["right-btn"]} onClick={onDel}>
                                         <TrashIcon />

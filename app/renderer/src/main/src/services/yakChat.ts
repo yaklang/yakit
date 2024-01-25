@@ -4,7 +4,6 @@ import axios, {AxiosProgressEvent, GenericAbortSignal, type AxiosResponse} from 
 const service = axios.create({
     // baseURL: "https://u91298-91ae-7b4e898b.neimeng.seetacloud.com:6443/"
     baseURL: "http://e23k678378.yicp.fun:25950/" 
-    //"http://e23k678378.yicp.fun:25950/" 
 
     // "http://8.140.192.177:6006/"
 })
@@ -44,6 +43,8 @@ interface YakChatPluginOptions {
     token: string
     plugin_scope:number
     scripts:ScriptsProps[]
+    history: {role: string; content: string}[]
+    signal?: GenericAbortSignal
 }
 
 function http({prompt, is_bing, token, history, signal, onDownloadProgress}: YakChatOptions) {
@@ -71,14 +72,14 @@ export const chatCS = ({prompt, is_bing, token, history, signal, onDownloadProgr
     return http({prompt, is_bing, token, history, signal, onDownloadProgress})
 }
 
-function httpPlugin({prompt, is_bing, token,plugin_scope, scripts}:YakChatPluginOptions){
+function httpPlugin({prompt, is_bing, token,plugin_scope, scripts, history,signal}:YakChatPluginOptions){
     console.log("请求",{
         prompt,
         user_token: token,
         plugin_scope,
         is_bing,
         scripts,
-        history:[]
+        history
     });
     
     return service({
@@ -93,15 +94,16 @@ function httpPlugin({prompt, is_bing, token,plugin_scope, scripts}:YakChatPlugin
             plugin_scope,
             is_bing,
             scripts,
-            history:[]
+            history
         },
+        signal: signal,
         // 浏览器专属
         // onDownloadProgress: onDownloadProgress
     })
 }
 
-export const chatCSPlugin = ({prompt, is_bing, token,plugin_scope, scripts}:YakChatPluginOptions) => {
-    return httpPlugin({prompt, is_bing, token,plugin_scope,scripts,})
+export const chatCSPlugin = ({prompt, is_bing, token,plugin_scope, scripts, history,signal}:YakChatPluginOptions) => {
+    return httpPlugin({prompt, is_bing, token,plugin_scope,scripts, history,signal})
 }
 
 export const chatGrade = (params: {uid: string; grade: "good" | "bad"}) => {

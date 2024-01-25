@@ -1,4 +1,5 @@
-import { StreamResult } from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {YakScript} from "@/pages/invoker/schema"
 
 /** @name chat-cs聊天对话框信息 */
 export interface CacheChatCSProps {
@@ -22,7 +23,7 @@ export interface ChatInfoProps {
     time: string
     info: ChatMeInfoProps | ChatCSMultipleInfoProps | ChatPluginListProps
     // 渲染类型
-    renderType?:"plugin-list"
+    renderType?: "plugin-list"
 }
 /** 用户信息属性 */
 export interface ChatMeInfoProps {
@@ -38,8 +39,8 @@ export interface ChatCSMultipleInfoProps {
 
 /** 服务器插件列表属性 */
 export interface ChatPluginListProps {
-    input:string
-    script_name:string
+    input: string
+    data: YakScript[]
 }
 
 export interface ChatCSSingleInfoProps {
@@ -51,6 +52,7 @@ export interface ChatCSSingleInfoProps {
 
     /** 缓存插件执行结果 */
     status?: "succee" | "fail" | "info"
+    runtimeId?: string
     riskState?: StreamResult.Risk[]
 }
 
