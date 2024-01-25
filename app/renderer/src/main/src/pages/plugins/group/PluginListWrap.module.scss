@@ -1,0 +1,65 @@
+.plugin-list-wrapper {
+    height: 100%;
+    .plugin-list-header {
+        display: flex;
+        justify-content: space-between;
+        height: 28px;
+        margin-bottom: 12px;
+        &-left {
+            display: flex;
+            align-items: center;
+            &-title {
+                color: #31343f;
+                font-size: 16px;
+                font-weight: 600;
+                margin-right: 16px;
+            }
+            .body-total-selected {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                color: #b4bbca;
+                font-size: 12px;
+                .divider-style {
+                    width: 1px;
+                    height: 12px;
+                    background-color: #eaecf3;
+                }
+                .num-style {
+                    color: #f28b44;
+                }
+            }
+        }
+        &-right {
+            .header-extra {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 12px;
+                // padding-right: 8px;
+                .is-list-btn {
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    padding: 4px;
+                    align-items: center;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                        color: #85899e;
+                    }
+                }
+                .is-list-btn:hover {
+                    background-color: #f0f1f3;
+                }
+            }
+        }
+    }
+    .plugin-list-body {
+        height: calc(100% - 40px);
+    }
+}

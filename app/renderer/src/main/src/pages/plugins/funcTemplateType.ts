@@ -236,7 +236,7 @@ export interface GridLayoutOptProps {
     subTitle?: (data: any) => ReactNode
     extraFooter?: (data: any) => ReactNode
     /** 点击该展示项的回调 */
-    onClick?: (data: any, index: number) => any
+    onClick?: (data: any, index: number, value: boolean) => any
 }
 
 export interface TagsListShowProps {
