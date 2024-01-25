@@ -3390,7 +3390,8 @@ const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
                     <div className={style["select-heard"]} ref={selectRef}>
                         <div className={classNames(style["select-search-input"])}>
                             <YakitInput
-                                size='small'
+                                className={style["select-header-input"]}
+                                size='middle'
                                 onSearch={onSearch}
                                 onChange={(e) => onSearch(e.target.value)}
                                 {...filterSearchInputProps}
