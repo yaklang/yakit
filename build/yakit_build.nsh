@@ -61,7 +61,6 @@ FunctionEnd
         ; set install path
         StrCpy $INSTDIR $InstallPath
     ${EndIf}
-    MessageBox MB_OK "debug: install dir: $INSTDIR, install path: $InstallPath"
 !macroend
 
 !macro checkIsUpdated
@@ -77,11 +76,6 @@ FunctionEnd
     !insertmacro checkInstalled
     !insertmacro checkIsUpdated
     ReadRegStr $YAKIT_HOME HKCU "Environment" "YAKIT_HOME"
-
-    ; Set Migrate yakit-projects folder
-    ${If} $YAKIT_HOME == ""
-        StrCpy $YAKIT_HOME "$PROFILE\yakit-projects"
-    ${EndIf}
 !macroend
 
 !macro customUnInit 
@@ -94,6 +88,7 @@ FunctionEnd
     ${If} $IS_UPDATED == "true"
         Goto continue
     ${EndIf}
+    !insertmacro checkInstalled
     ; 删除安装目录
     MessageBox MB_YESNO "即将删除 $INSTDIR 文件夹，是否继续，选择否将取消卸载" IDYES continue IDNO cancelUninstall
     cancelUninstall:
@@ -124,14 +119,7 @@ FunctionEnd
 !macroend
 
 !macro customInstall 
-    ; 存储安装目录
-    DetailPrint "写入环境变量..."
-    WriteRegStr HKCU "Software\Yakit" "InstallPath" "$INSTDIR"
-    WriteRegStr HKCU "Environment" "YAKIT_HOME" "$INSTDIR\yakit-projects" 
-    ; 创建 yakit-projects 文件夹
-    DetailPrint "创建yakit-projects文件夹..."
-    CreateDirectory "$INSTDIR\yakit-projects"
-    DetailPrint "正在安装..."
+    
 !macroend
 
 Section "Main" SectionMain
@@ -143,18 +131,26 @@ Section "Main" SectionMain
     ${EndIf}
 
     ; Migrate yakit-projects folder
-    ${If} $YAKIT_HOME != "" 
-    ${AndIf} $YAKIT_HOME != "$INSTDIR\yakit-projects"
-    ${AndIf} ${FileExists} "$YAKIT_HOME"
+    ${If} "$PROFILE\yakit-projects" != "$INSTDIR\yakit-projects"
+    ${AndIf} ${FileExists} "$PROFILE\yakit-projects"
         ClearErrors
-        CopyFiles /Silent $YAKIT_HOME "$INSTDIR\yakit-projects"
+        CopyFiles /Silent $PROFILE\yakit-projects "$INSTDIR\yakit-projects"
         ${If} ${Errors} 
             DetailPrint "迁移yakit-projects文件夹失败..."
         ${Else}
-            RMDir /R $YAKIT_HOME
+            RMDir /R $PROFILE\yakit-projects
             DetailPrint "删除旧的yakit-projects文件夹..."
         ${EndIf} 
     ${EndIf}
+
+    ; 存储安装目录
+    DetailPrint "写入环境变量..."
+    WriteRegStr HKCU "Software\Yakit" "InstallPath" "$INSTDIR"
+    WriteRegStr HKCU "Environment" "YAKIT_HOME" "$INSTDIR\yakit-projects" 
+    ; 创建 yakit-projects 文件夹
+    DetailPrint "创建yakit-projects文件夹..."
+    CreateDirectory "$INSTDIR\yakit-projects"
+    DetailPrint "正在安装..."
 SectionEnd
 
 Section "Uninstall"
