@@ -983,6 +983,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
+            triggerSubMenuAction={'click'}
         ></YakitMenu>
     )
     const menuSelect = useMemoizedFn((type: string) => {
@@ -1166,6 +1167,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             styles["ui-op-dropdown"],
                                             styles["ui-op-setting-dropdown"]
                                         )}
+                                        trigger={"click"}
                                         placement={"bottom"}
                                         content={menu}
                                         onVisibleChange={(visible) => setShow(visible)}
@@ -1273,6 +1275,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                             styles["ui-op-setting-dropdown"]
                                         )}
                                         placement={"bottom"}
+                                        trigger={"click"}
                                         content={menu}
                                         onVisibleChange={(visible) => setShow(visible)}
                                     >

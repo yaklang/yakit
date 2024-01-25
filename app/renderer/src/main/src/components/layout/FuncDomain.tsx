@@ -1166,6 +1166,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         <YakitMenu
             width={142}
             selectedKeys={[]}
+            triggerSubMenuAction={'click'}
             data={GetUIOpSettingMenu() as YakitMenuItemProps[]}
             onClick={({key}) => menuSelect(key)}
         />
@@ -1178,6 +1179,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 placement={"bottom"}
                 content={menu}
                 onVisibleChange={(visible) => setShow(visible)}
+                trigger="click"
             >
                 <div className={styles["ui-op-btn-wrapper"]}>
                     <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
@@ -1245,6 +1247,7 @@ const UIDevTool: React.FC = React.memo(() => {
         <YakitPopover
             overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
             placement={"bottom"}
+            trigger={"click"}
             content={menu}
             onVisibleChange={(visible) => setShow(visible)}
         >
@@ -1954,6 +1957,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         <YakitPopover
             overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-plus-dropdown"])}
             placement={"bottomRight"}
+            trigger={"click"}
             content={notice}
             visible={show}
             onVisibleChange={(visible) => {
@@ -2213,6 +2217,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         <YakitPopover
             overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-plus-dropdown"])}
             placement={"bottomRight"}
+            trigger={"click"}
             content={notice}
             onVisibleChange={(visible) => setShow(visible)}
         >
@@ -2372,6 +2377,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 content={menu}
                 visible={show}
                 onVisibleChange={(visible) => setShow(visible)}
+                trigger={'click'}
             >
                 <div className={styles["ui-op-btn-wrapper"]}>
                     <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
