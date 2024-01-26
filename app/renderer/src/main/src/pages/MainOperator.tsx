@@ -49,6 +49,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import "./main.scss"
 import "./GlobalClass.scss"
+import {YakitSystem} from "@/yakitGVDefine"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -553,8 +554,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     useEffect(() => {
         if (isCommunityEdition()) {
-            getLocalValue(LocalGV.UpdateForwardAnnouncement).then((val: string) => {
-                if (val !== LocalGV.JudgeUpdateForwardAnnouncement) setUpdateShow(true)
+            ipcRenderer.invoke("fetch-system-name").then((type: YakitSystem) => {
+                if (type === "Windows_NT") {
+                    getLocalValue(LocalGV.UpdateForwardAnnouncement).then((val: string) => {
+                        if (val !== LocalGV.JudgeUpdateForwardAnnouncement) setUpdateShow(true)
+                    })
+                }
             })
         }
     }, [])
@@ -692,6 +697,7 @@ const UpdateForward: React.FC<UpdateForwardProsp> = memo((props) => {
             title='重要更新内容前瞻'
             okText='已知道!'
             cancelText='关闭'
+            cancelButtonProps={{style: {display: "none"}}}
             onCancel={onCancel}
             onOk={onOk}
             footerExtra={
