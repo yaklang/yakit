@@ -105,7 +105,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     const onSetIsExpand = useMemoizedFn((checked: boolean) => {
         const value = JSON.stringify(checked)
         setIsExpand(checked)
-        console.log('存', value);
         setRemoteValue(CodeGV.MenuExpand, value)
         emiter.emit("menuExpandSwitch", value)
     })
