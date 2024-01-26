@@ -184,9 +184,20 @@ export const setUpYaklangMonaco = () => {
         }, [] as Array<string>),
         digits: /\d+(_+\d+)*/,
         symbols: /[=><!~?:&|+\-*\/\^%]+/,
-        escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+        escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4})/,
+        inlineExpr: /\$\{[^}]*\}/,
+        invalidInlineExpr:  /\$\{[^}]*$/,
         tokenizer: {
             root: [
+
+                // f-strings
+                [/f"/, 'string.quoted.double.js', '@fstring'],
+                [/f'/, 'string.quoted.single.js', '@fstring2'],
+                [/f`/, 'string', '@frawstring'],
+                // x-strings
+                [/x"/, 'string.quoted.double.js', '@xstring'],
+                [/x'/, 'string.quoted.single.js', '@xstring2'],
+                [/x`/, 'string', '@xrawstring'],
                 // identifiers and keywords
                 [/_(?!\w)/, 'keyword.$0'],
                 [
@@ -209,9 +220,6 @@ export const setUpYaklangMonaco = () => {
                         }
                     },
                 ],
-
-
-
 
                 // whitespace
                 { include: '@whitespace' },
@@ -247,16 +255,45 @@ export const setUpYaklangMonaco = () => {
                 // delimiter: after number because of .\d floats
                 [/[;,.]/, 'delimiter'],
 
+                
+
                 // characters
                 [/'[^\\']'/, 'string'],
                 [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
 
                 // strings
                 [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-teminated string
+                [/'([^'\\]|\\.)*$/, 'string.invalid'], // non-teminated string
                 [/"/, 'string.quoted.double.js', '@string'],
                 [/'/, 'string.quoted.single.js', '@string2'],
                 [/`/, 'string', '@rawstring'],
                 [/'/, 'string.invalid'],
+            ],
+
+            fuzz_tag: [
+                [/{{/, "fuzz.tag.inner", "@fuzz_tag_second"],
+                [/}}/, "fuzz.tag.inner", "@pop"],
+                [/[\w:]+}}/, "fuzz.tag.inner", "@pop"],
+                [/[\w:]+\(/, "fuzz.tag.inner", "@fuzz_tag_param"],
+            ],
+            fuzz_tag_second: [
+                [/{{/, "fuzz.tag.second", "@fuzz_tag"],
+                [/}}/, "fuzz.tag.second", "@pop"],
+                [/[\w:]+}}/, "fuzz.tag.second", "@pop"],
+                [/[\w:]+\(/, "fuzz.tag.second", "@fuzz_tag_param_second"],
+            ],
+            fuzz_tag_param: [
+                [/\(/, "fuzz.tag.inner", "@fuzz_tag_param"],
+                [/\\\)/, "bold-keyword"],
+                [/\)/, "fuzz.tag.inner", "@pop"],
+                [/{{/, "fuzz.tag.second", "@fuzz_tag_second"],
+                [/./, "bold-keyword"]
+            ],
+            fuzz_tag_param_second: [
+                [/\\\)/, "bold-keyword"],
+                [/\)/, "fuzz.tag.second", "@pop"],
+                [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+                [/./, "bold-keyword"]
             ],
 
 
@@ -285,20 +322,69 @@ export const setUpYaklangMonaco = () => {
                 [/[\/*]/, 'comment.doc']
             ],
 
-            string: [
-                [/[^\\"]+/, 'string'],
+            xrawstring: [
+                [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
                 [/@escapes/, 'string.escape'],
+                [/[^`]/, 'string'],
+                [/`/, 'string', '@pop']
+            ],
+
+            xstring: [
+                [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+                [/@escapes/, 'string.escape'],
+                [/[^\\"]+/, 'string'],
                 [/\\./, 'string.escape.invalid'],
                 [/"/, 'string', '@pop']
             ],
 
-            string2: [
-                [/[^\\']/, 'string'],
+            xstring2: [
+                [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
                 [/@escapes/, 'string.escape'],
+                [/[^\\']/, 'string'],
+                [/'/, 'string', '@pop']
+            ],
+
+
+            frawstring: [
+                [/@escapes/, 'string.escape'],
+                [/@inlineExpr/, 'string.inline.expr'],
+                [/@invalidInlineExpr/, 'string.invalid'],
+                [/[^`]/, 'string'],
+                [/`/, 'string', '@pop']
+            ],
+
+            fstring: [
+                [/@escapes/, 'string.escape'],
+                [/@inlineExpr/, 'string.inline.expr'],
+                [/@invalidInlineExpr/, 'string.invalid'],
+                [/[^\\"]+/, 'string'],
+                [/\\./, 'string.escape.invalid'],
+                [/"/, 'string', '@pop']
+            ],
+
+            fstring2: [
+                [/@escapes/, 'string.escape'],
+                [/@inlineExpr/, 'string.inline.expr'],
+                [/@invalidInlineExpr/, 'string.invalid'],
+                [/[^\\']/, 'string'],
+                [/'/, 'string', '@pop']
+            ],
+
+            string: [
+                [/@escapes/, 'string.escape'],                
+                [/[^\\"]+/, 'string'],
+                [/\\./, 'string.invalid'],
+                [/"/, 'string', '@pop']
+            ],
+
+            string2: [
+                [/@escapes/, 'string.escape'],
+                [/[^\\']/, 'string'],
                 [/'/, 'string', '@pop']
             ],
 
             rawstring: [
+                [/@escapes/, "string.escape"],
                 [/[^`]/, 'string'],
                 [/`/, 'string', '@pop']
             ],

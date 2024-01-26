@@ -18,7 +18,7 @@ monaco.editor.defineTheme("kurior", {
             "token": "libFunction",
         },
         {
-            "foreground": "#ff0000", "background": "#cc7c22",
+            "foreground": "#ff0000",
             "token": "fuzz.tag.inner", fontStyle: "bold underline",
         },
         {
@@ -164,6 +164,18 @@ monaco.editor.defineTheme("kurior", {
             "foreground": "#417e00",
             "background": "#c9d4be",
             "token": "string.regexp"
+        },
+        {
+            "foreground": "#B05A3C",
+            "token": "string.escape"
+        },
+        {
+            "foreground": "#6A5ACD",
+            "token": "string.inline.expr"
+        },
+        {
+            "foreground": "#FF0000",
+            "token": "string.invalid"
         },
         {
             "foreground": "#005273",
