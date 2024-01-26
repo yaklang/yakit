@@ -40,7 +40,12 @@ import {
     CheckIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
-import {ColumnsTypeProps, FiltersItemProps, SortProps} from "../TableVirtualResize/TableVirtualResizeType"
+import {
+    ColumnsTypeProps,
+    FiltersItemProps,
+    SelectSearchProps,
+    SortProps
+} from "../TableVirtualResize/TableVirtualResizeType"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaHTTPFlowID, showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
@@ -749,9 +754,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }),
         SourceType: props.params?.SourceType || "mitm"
     })
-    const [tagsQuery, setTagsQuery] = useState<string[]>([])
-    const [contentTypeQuery, setContentTypeQuery] = useState<string>("")
-
+    const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [pagination, setPagination] = useState<PaginationSchema>({
         Limit: OFFSET_LIMIT,
         Order: "desc",
@@ -958,8 +961,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         getShieldList()
     }, [inViewport])
     useEffect(() => {
-        getHTTPFlowsFieldGroup(true)
-    }, [])
+        if (inViewport) {
+            getHTTPFlowsFieldGroup(true)
+        }
+    }, [inViewport])
 
     const getShieldList = useMemoizedFn(() => {
         getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA)
@@ -992,16 +997,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filter.AfterUpdatedAt = undefined
                 filter.BeforeUpdatedAt = undefined
             }
-            if (filter["Tags"]) {
-                setTagsQuery(filter["Tags"])
-            }
             if (filter["ContentType"]) {
-                setTagsQuery(filter["ContentType"].join(","))
                 filter["SearchContentType"] = filter["ContentType"].join(",")
             }
             setParams({
                 ...params,
                 ...filter,
+                Tags: [...tagsFilter],
                 bodyLength: !!(afterBodyLength || beforeBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
                 AfterBodyLength: afterBodyLength,
                 BeforeBodyLength: beforeBodyLength
@@ -1083,7 +1085,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }, 100)
             return
         }
-
         updateQueryParams(query)
         query = query.StatusCode ? {...query, StatusCode: query.StatusCode.join(",")} : query
 
@@ -1644,18 +1645,47 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         : ""
                 },
                 filterProps: {
-                    filtersType: "select",
+                    filterKey: "Tags",
                     filterMultiple: true,
-                    filterSearchInputProps: {
-                        size: "small"
-                    },
                     filterIcon: (
                         <OutlineSearchIcon
                             className={style["filter-icon"]}
                             onClick={() => getHTTPFlowsFieldGroup(true)}
                         />
                     ),
-                    filters: tags
+                    filterRender: (closePopover: () => void) => {
+                        return (
+                            <MultipleSelect
+                                filterProps={{
+                                    filterSearch: true,
+                                    filterSearchInputProps: {
+                                        prefix: <OutlineSearchIcon className='search-icon' />,
+                                        allowClear: true
+                                    }
+                                }}
+                                originalList={tags}
+                                value={tagsFilter}
+                                onSelect={(v, item) => {
+                                    if (Array.isArray(v)) {
+                                        setTagsFilter(v)
+                                    }
+                                }}
+                                onClose={() => {
+                                    closePopover()
+                                }}
+                                onQuery={() => {
+                                    // 这里重置过后的 tagsFilter 不一定是最新的
+                                    setParams({
+                                        ...getParams(),
+                                        Tags: [],
+                                    })
+                                    setTimeout(() => {
+                                        updateData()
+                                    }, 100)
+                                }}
+                            ></MultipleSelect>
+                        )
+                    }
                 }
             },
             {
@@ -1861,7 +1891,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             }
         ]
-    }, [tags, checkBodyLength])
+    }, [tags, tagsFilter, checkBodyLength])
 
     // 背景颜色是否标注为红色
     const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
@@ -2580,8 +2610,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         setParams(newParams)
         setIsReset(!isReset)
-        setTagsQuery([])
-        setContentTypeQuery("")
         setColor([])
         setCheckBodyLength(false)
         if (pageType === "History") {
@@ -3271,49 +3299,52 @@ const contentType: FiltersItemProps[] = [
     }
 ]
 
-interface MultipleSelectProps {
-    onSelect: (values: string[], option?: FiltersItemProps | FiltersItemProps[]) => void
-    value: string | string[]
-    options: FiltersItemProps[]
-    onSure: () => void
-}
+const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
+    const {originalList, onSelect, value, filterProps, onClose, onQuery} = props
+    const {filterSearch, filterSearchInputProps = {}} = filterProps || {}
 
-const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
-    const {onSelect, value, options} = props
-    const [showList, setShowList] = useState<boolean>(false)
     const containerRef = useRef(null)
     const wrapperRef = useRef(null)
     const scrollDomRef = useRef<any>(null)
     const selectRef = useRef<any>(null)
-    const listRef = useRef<any>(null)
-    useClickAway(() => {
-        if (showList) setShowList(false)
-    }, listRef)
+
+    const [data, setData] = useState<FiltersItemProps[]>(originalList)
+    useEffect(() => {
+        setData(originalList)
+    }, [originalList])
     useEffect(() => {
         // 新版UI组件之前的过度写法
         const scrollDom = selectRef.current?.firstChild?.firstChild?.firstChild
         if (!scrollDom) return
         scrollDomRef.current = scrollDom
     }, [])
-    const onHandleScroll = useMemoizedFn(() => {
-        scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
-        // setShowList(true)
-    })
-    const onChangeSelect = useMemoizedFn((values: string[], option: FiltersItemProps[]) => {
-        onSelect(values, option)
-        // 滑动至最右边
-        onHandleScroll()
-        setTimeout(() => {
-            onSure()
-        }, 100)
-    })
-    // const originalList = useMemo(() => Array.from(Array(99999).keys()), [])
-    const [list] = useVirtualList(options, {
+
+    const [list] = useVirtualList(data, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
-        itemHeight: 30,
-        overscan: 10
+        itemHeight: 34,
+        overscan: 15
     })
+
+    const onHandleScroll = useDebounceFn(
+        useMemoizedFn(() => {
+            scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
+        }),
+        {wait: 500}
+    ).run
+
+    const onSearch = useDebounceFn(
+        useMemoizedFn((label: string) => {
+            if (label) {
+                const newData = originalList.filter((ele) => ele.label.includes(label))
+                setData(newData)
+            } else {
+                setData(originalList)
+            }
+        }),
+        {wait: 200}
+    ).run
+
     const onSelectMultiple = useMemoizedFn((selectItem: FiltersItemProps) => {
         if (value) {
             if (!Array.isArray(value)) return
@@ -3321,53 +3352,51 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
             if (index === -1) {
                 onSelect([...value, selectItem.value], selectItem)
             } else {
-                value.splice(index, 1)
-                onSelect(value, selectItem)
+                const copyValue = structuredClone(value)
+                copyValue.splice(index, 1)
+                onSelect(copyValue, selectItem)
             }
         } else {
             onSelect([selectItem.value], selectItem)
         }
         setTimeout(() => {
-            onHandleScroll()
-        }, 100)
+            if (filterSearch) onHandleScroll()
+        }, 50)
     })
 
     const onReset = useMemoizedFn(() => {
         onSelect([])
+        setTimeout(() => {
+            onQuery()
+        }, 200)
     })
 
     const onSure = useMemoizedFn(() => {
-        if (props.onSure) props.onSure()
-        setShowList(false)
+        onClose()
     })
-    return (
-        <div className={style["select-search-multiple"]} ref={listRef}>
-            <div className={style["select-heard"]} ref={selectRef} onClick={() => setShowList(true)}>
-                <YakitSelect
-                    size='small'
-                    mode='tags'
-                    style={{width: 150}}
-                    onChange={(values, option) => onChangeSelect(values, option as FiltersItemProps[])}
-                    allowClear
-                    value={Array.isArray(value) ? [...value] : []}
-                    dropdownStyle={{height: 0, padding: 0}}
-                    options={options}
-                    className='select-small'
-                    onFocus={() => onHandleScroll()}
-                />
-            </div>
+
+    const renderMultiple = useMemoizedFn(() => {
+        return (
             <div
-                className={classNames(style["select-search"], {
-                    [style["select-search-show"]]: showList
+                className={classNames(style["select-search-multiple"], {
+                    [style["select-search-multiple-filterSearch"]]: filterSearch
                 })}
-                onMouseLeave={() => {
-                    setTimeout(() => {
-                        onSure()
-                    }, 200)
-                }}
             >
-                <div ref={containerRef} className={classNames(style["select-list"])}>
-                    <div ref={wrapperRef}>
+                {filterSearch && (
+                    <div className={style["select-heard"]} ref={selectRef}>
+                        <div className={classNames(style["select-search-input"])}>
+                            <YakitInput
+                                className={style["select-header-input"]}
+                                size='middle'
+                                onSearch={onSearch}
+                                onChange={(e) => onSearch(e.target.value)}
+                                {...filterSearchInputProps}
+                            />
+                        </div>
+                    </div>
+                )}
+                <div ref={containerRef} className={style["select-container"]}>
+                    <div ref={wrapperRef} className={style["select-wrapper"]}>
                         {(list.length > 0 &&
                             list.map((item) => {
                                 const checked = Array.isArray(value)
@@ -3381,17 +3410,21 @@ const MultipleSelect: React.FC<MultipleSelectProps> = (props) => {
                                         })}
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
-                                        <span className={style["select-item-text"]}>{item.data.label}</span>
+                                        <span className={classNames(style["select-item-text"], "content-ellipsis")}>
+                                            {item.data.label}
+                                        </span>
                                         {checked && <CheckIcon className={style["check-icon"]} />}
                                     </div>
                                 )
-                            })) || <div className={style["no-data"]}>暂无数据</div>}
+                            })) || <div className={classNames(style["no-data"])}>暂无数据</div>}
                     </div>
+                    <FooterBottom onReset={onReset} onSure={onSure} />
                 </div>
-                <FooterBottom onReset={onReset} onSure={onSure} />
             </div>
-        </div>
-    )
+        )
+    })
+
+    return <div className={style["select-search"]}>{renderMultiple()}</div>
 }
 
 interface RangeInputNumberProps {
