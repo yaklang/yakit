@@ -149,17 +149,17 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         const [scrollToIndex, setScrollToIndex] = useState<number>()
 
-        useThrottleEffect(
-            () => {
-                setListTable([...data]);
-                const dataLength = data.length
-                if(dataLength>0){scrollUpdate(dataLength)}
-            },
-            [data],
-            {
-              wait: 500,
-            },
-          );
+        // useThrottleEffect(
+        //     () => {         
+        //             setListTable([...data]);
+        //             const dataLength = data.length
+        //             if(dataLength>0){scrollUpdate(dataLength)}  
+        //     },
+        //     [data],
+        //     {
+        //       wait: 500,
+        //     },
+        //   );
 
           const scrollUpdate = useMemoizedFn((dataLength) => {
             const scrollTop = tableRef.current?.containerRef?.scrollTop
@@ -487,17 +487,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
         useThrottleEffect(
             () => {
-                if (isEnd && sorterTable) {
-                    const scrollTop = tableRef.current?.containerRef?.scrollTop
-                    if (scrollTop <= 10) {
-                        queryData()
-                    }
-                } else {
-                    queryData()
-                }
+                queryData()
             },
             [data, isEnd],
-            {wait: 200}
+            {wait: 500}
         )
 
         useEffect(() => {
@@ -639,10 +632,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     }
                     setExportData && setExportData([...searchList])
                     setListTable([...searchList])
+                    if(searchList.length>0){scrollUpdate(searchList.length)} 
                 } else {
                     const newData = sorterFunction(data, sorterTable) || []
                     setExportData && setExportData([...newData])
                     setListTable([...newData])
+                    if(newData.length>0){scrollUpdate(newData.length)} 
                 }
                 // ------------  搜索 结束  ------------
             } catch (error) {
