@@ -55,6 +55,8 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         switch (ele.type) {
             case "risk":
                 return <VulnerabilitiesRisksTable riskState={streamInfo.riskState} />
+            case "port":
+                return <PluginExecutePortTable runtimeId={runtimeId} />
             case "http":
                 return (
                     <PluginExecuteHttpFlow
@@ -130,6 +132,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     )
 })
 const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo((props) => {
+    const {runtimeId} = props
     const [response, setResponse] = useState<QueryGeneralResponse<PortAsset>>({
         Data: [],
         Pagination: genDefaultPagination(20),
@@ -155,15 +158,16 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
     }, [selected])
 
     const update = useDebounceFn(
-        (current: number, pageSize?: number, order?: string, orderBy?: string) => {
+        (current: number, pageSize?: number) => {
             const query = {
                 Pagination: {
-                    Limit: 500,
+                    Limit: pageSize||20,
                     Page: current || response.Pagination.Page,
-                    Order: order || "desc",
-                    OrderBy: orderBy || "updated_at"
+                    Order: "desc",
+                    OrderBy: "updated_at"
                 },
-                TitleEffective: titleEffective
+                TitleEffective: titleEffective,
+                RuntimeId: runtimeId
             }
             ipcRenderer.invoke("QueryPorts", query).then((rsp: QueryGeneralResponse<PortAsset>) => {
                 const d = current === 1 ? rsp.Data : response.Data.concat(rsp.Data)
@@ -367,7 +371,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
                             total: response.Total,
                             limit: response.Pagination.Limit,
                             page: response.Pagination.Page,
-                            onChange: (page, limit) => {}
+                            onChange: (page, limit) => update(page, limit)
                         }}
                         columns={columns}
                         onRowContextMenu={onRowContextMenu}

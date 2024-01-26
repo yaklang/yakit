@@ -57,6 +57,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const [tabName, setTabName] = useState<string>(initSpaceEnginePageInfo())
     /**是否在执行中 */
     const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    const [scanBeforeSave, setScanBeforeSave] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
 
     const spaceEngineWrapperRef = useRef<HTMLDivElement>(null)
@@ -95,6 +96,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
         setIsExpand(!isExpand)
     })
     const onStartExecute = useMemoizedFn((value) => {
+        setScanBeforeSave(!!value?.ScanBeforeSave)
         spaceEngineStreamEvent.reset()
         apiFetchPortAssetFromSpaceEngine(value, tokenRef.current).then(() => {
             setIsExecuting(true)
@@ -117,7 +119,6 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const isShowResult = useCreation(() => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])
-    console.log("runtimeId", isExecuting, runtimeId)
     return (
         <div className={styles["space-engine-wrapper"]} ref={spaceEngineWrapperRef}>
             <ExpandAndRetract className={styles["space-engine-heard"]} onExpand={onExpand} isExpand={isExpand}>
