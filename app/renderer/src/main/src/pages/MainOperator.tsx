@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
+import React, {ReactNode, memo, useEffect, useRef, useState} from "react"
 import {Alert, Avatar, Button, Layout, Modal, Space, Upload} from "antd"
 import {CameraOutlined} from "@ant-design/icons"
 import {failed, info, success, yakitNotify} from "../utils/notification"
@@ -18,7 +18,7 @@ import SetPassword from "./SetPassword"
 import {UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 import {refreshToken} from "@/utils/login"
-import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {
@@ -29,7 +29,7 @@ import {
     shouldVerifyEnpriTraceLogin
 } from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
-import {CodeGV, RemoteGV} from "@/yakitGV"
+import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
 import {EnterpriseLoginInfoIcon} from "@/assets/icons"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
@@ -44,9 +44,12 @@ import {MainOperatorContent} from "./layout/mainOperatorContent/MainOperatorCont
 import {MultipleNodeInfo} from "./layout/mainOperatorContent/MainOperatorContentType"
 import {WaterMark} from "@ant-design/pro-layout"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 import "./main.scss"
 import "./GlobalClass.scss"
+import {YakitSystem} from "@/yakitGVDefine"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -549,6 +552,26 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
     }, [chartCSDragItemRef, chartCSDragAreaRef])
 
+    useEffect(() => {
+        if (isCommunityEdition()) {
+            ipcRenderer.invoke("fetch-system-name").then((type: YakitSystem) => {
+                if (type === "Windows_NT") {
+                    getLocalValue(LocalGV.UpdateForwardAnnouncement).then((val: string) => {
+                        if (val !== LocalGV.JudgeUpdateForwardAnnouncement) setUpdateShow(true)
+                    })
+                }
+            })
+        }
+    }, [])
+    const [updateShow, setUpdateShow] = useState<boolean>(false)
+    const onUpdateCancenl = useMemoizedFn(() => {
+        if (updateShow) setUpdateShow(false)
+    })
+    const onUpdateIgnore = useMemoizedFn(() => {
+        setLocalValue(LocalGV.UpdateForwardAnnouncement, LocalGV.JudgeUpdateForwardAnnouncement)
+        onUpdateCancenl()
+    })
+
     return (
         <>
             <WaterMark content={waterMarkStr()} style={{overflow: "hidden", height: "100%"}}>
@@ -641,8 +664,62 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 onOk={() => {}}
                 onCancel={() => {}}
             />
+
+            <UpdateForward
+                visible={updateShow}
+                onCancel={onUpdateCancenl}
+                onOk={onUpdateCancenl}
+                onIgnore={onUpdateIgnore}
+            />
         </>
     )
 })
 
 export default Main
+
+interface UpdateForwardProsp {
+    visible: boolean
+    onCancel: () => any
+    onOk: () => any
+    onIgnore: () => any
+}
+const UpdateForward: React.FC<UpdateForwardProsp> = memo((props) => {
+    const {visible, onCancel, onOk, onIgnore} = props
+
+    return (
+        <YakitModal
+            type='white'
+            maskClosable={false}
+            keyboard={false}
+            centered={true}
+            closable={false}
+            visible={visible}
+            title='重要更新内容前瞻'
+            okText='已知道!'
+            cancelText='关闭'
+            cancelButtonProps={{style: {display: "none"}}}
+            onCancel={onCancel}
+            onOk={onOk}
+            footerExtra={
+                <YakitButton type='text' onClick={onIgnore}>
+                    不再提示
+                </YakitButton>
+            }
+        >
+            <div className='update-forward-wrapper'>
+                <div className='title-style'>Windows自定义安装上线预告!!!</div>
+                <div className='content-style'>
+                    下一个版本即将上线自定义安装，安装涉及到旧数据迁移，为避免出现意外情况，建议安装前将yakit-project文件夹进行备份。
+                </div>
+
+                <div className='content-style'>
+                    <span className='highlight-style'>注意事项!!</span>
+                    <div>1、安装前需先将引擎进行更新</div>
+                    <div>
+                        2、迁移会将用户文件夹下的yakit-project文件复制到安装路径，并删除。如安装后打开发现没有引擎或数据，可能是用户文件夹下的yakit-project由于被占用无法删除，导致读取的还是用户文件下的内容。如已经迁移完可直接将用户文件夹下的yakit-project删除即可正常读取
+                    </div>
+                </div>
+            </div>
+        </YakitModal>
+    )
+})

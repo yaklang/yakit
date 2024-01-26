@@ -18,7 +18,12 @@ export enum LocalGV {
     NoAutobootLatestVersionCheck = "no-autoboot-latest-version-check",
 
     /** @name 未安装引擎提示框内的用户协议是否勾选 */
-    IsCheckedUserAgreement = "is-checked-user-agreement"
+    IsCheckedUserAgreement = "is-checked-user-agreement",
+
+    /** @name 重要更新的前瞻提示框-本地缓存值 */
+    UpdateForwardAnnouncement = "update-forward-announcement",
+    /** @name 判断前瞻提示框是否显示的界定值(代码里进行调整控制) */
+    JudgeUpdateForwardAnnouncement = "v1.2.9-sp1"
 }
 
 /** 引擎数据库缓存数据-键值变量 */
@@ -59,8 +64,8 @@ export enum RemoteGV {
     ChatCSStorage = "chat-cs-storage",
     /** @name 是否已了解chat-cs功能 */
     KnowChatCS = "know-chat-cs",
-     /** @name webFuzzer页面以及每个页面的数据缓存字段 */
-    FuzzerCache="fuzzer-list-cache",
+    /** @name webFuzzer页面以及每个页面的数据缓存字段 */
+    FuzzerCache = "fuzzer-list-cache",
     /** @name webFuzzer序列的缓存字段 */
     FuzzerSequenceCache = "fuzzer_sequence_cache",
     /** @name history页面左侧tabs */
@@ -80,5 +85,5 @@ export enum CodeGV {
     /** @name public版本菜单模式 */
     PublicMenuModeValue = "public",
     /** @name 菜单状态缓存 */
-    MenuExpand = "menu-expand",
+    MenuExpand = "menu-expand"
 }

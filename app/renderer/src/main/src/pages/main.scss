@@ -314,3 +314,20 @@
     transform: translateX(0px);
     -webkit-transform: translateX(0px);
 }
+
+// -------------------- UpdateForward --------------------
+.update-forward-wrapper {
+    color: #31343f;
+    .title-style {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 30px;
+    }
+    .content-style {
+        line-height: 20px;
+    }
+    .highlight-style {
+        color: #bd2a21;
+        line-height: 30px;
+    }
+}
