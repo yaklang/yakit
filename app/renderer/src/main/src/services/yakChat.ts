@@ -3,7 +3,7 @@ import axios, {AxiosProgressEvent, GenericAbortSignal, type AxiosResponse} from 
 
 const service = axios.create({
     // baseURL: "https://u91298-91ae-7b4e898b.neimeng.seetacloud.com:6443/"
-    baseURL: "http://e23k678378.yicp.fun:25950/" 
+    baseURL: "http://e23k678378.yicp.fun:80/" 
 
     // "http://8.140.192.177:6006/"
 })

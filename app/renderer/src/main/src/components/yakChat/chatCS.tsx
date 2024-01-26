@@ -1,5 +1,15 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useGetState, useMemoizedFn, useScroll, useSize, useUpdateEffect} from "ahooks"
+import {
+    useCreation,
+    useDebounceEffect,
+    useGetState,
+    useInViewport,
+    useMemoizedFn,
+    useScroll,
+    useSize,
+    useUpdateEffect,
+    useVirtualList
+} from "ahooks"
 import {Resizable} from "re-resizable"
 import {
     ChatAltIcon,
@@ -84,7 +94,13 @@ import {
     SolidYakitPluginIcon
 } from "@/assets/icon/colors"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
-import {HybridScanRequest, apiCancelHybridScan, apiHybridScan, convertHybridScanParams} from "@/pages/plugins/utils"
+import {
+    HybridScanRequest,
+    apiCancelHybridScan,
+    apiHybridScan,
+    apiStopHybridScan,
+    convertHybridScanParams
+} from "@/pages/plugins/utils"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {
@@ -101,6 +117,8 @@ import {addToTab} from "@/pages/MainTabs"
 import {QueryYakScriptsResponse, YakScript} from "@/pages/invoker/schema"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
+import {SettingOutlined} from "@ant-design/icons"
+import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 const {ipcRenderer} = window.require("electron")
 
 /** 将 new Date 转换为日期 */
@@ -240,6 +258,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const [resTime, setResTime, getResTime] = useGetState<string>("")
     const resTimeRef = useRef<any>(null)
 
+    const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
+    const [maxNumber, setMaxNumber] = useState<number>(5)
+    const PlginRunMaxNumber = "PlginRunMaxNumber"
+
     /** 流输出模式 */
     const controller = useRef<AbortController | null>(null)
     /** 是否人为中断连接(流输出模式) */
@@ -285,6 +307,26 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             }
         } catch (error) {}
     })
+
+    useEffect(() => {
+        // 读取最大执行数量
+        getRemoteValue(PlginRunMaxNumber).then((value: string) => {
+            if (!value) return
+            try {
+                const data: {maxNumber: number} = JSON.parse(value)
+                setMaxNumber(data.maxNumber)
+            } catch (error) {}
+        })
+    }, [])
+
+    useDebounceEffect(
+        () => {
+            // 缓存最大执行数量
+            setRemoteValue(PlginRunMaxNumber, JSON.stringify({maxNumber}))
+        },
+        [maxNumber],
+        {wait: 500}
+    )
 
     /** 自定义问题提问 */
     const onBtnSubmit = useMemoizedFn(() => {
@@ -442,25 +484,22 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 chatCSPlugin({
                     ...params,
                     token: userInfo.token,
-                    plugin_scope: 5
+                    plugin_scope: maxNumber
                 })
                     .then((res) => {
                         console.log("res", res, yakData)
                         const {data} = res
                         const {result, id}: {result: {scripts: string[]; input: string}; id: string} = data
-                        const {scripts, input} = result
-                        if (Array.isArray(scripts)) {
-                            if (!cs.id) cs.id = id
-                            let mathYakData = yakData.filter((item) => scripts.includes(item.ScriptName))
-                            console.log("mathYakData", mathYakData)
-                            cs.content = JSON.stringify({
-                                input,
-                                data: mathYakData
-                            })
-                            setContentPluginList(cs, contents, group)
-                        } else {
-                            yakitNotify("error", `获取失败|result`)
-                        }
+                        const {scripts = [], input = ""} = result
+
+                        if (!cs.id) cs.id = id
+                        let mathYakData = yakData.filter((item) => scripts.includes(item.ScriptName))
+                        console.log("mathYakData", mathYakData)
+                        cs.content = JSON.stringify({
+                            input,
+                            data: mathYakData
+                        })
+                        setContentPluginList(cs, contents, group)
                     })
                     .finally(() => {
                         resolve(`plugin|success`)
@@ -1139,6 +1178,23 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                                 插件调试执行
                                                             </div>
                                                         </div>
+                                                        {isPlugin && (
+                                                            <div className={styles["plugin-run-max-number-box"]}>
+                                                                <div className={styles["title"]}>最大执行数量：</div>
+                                                                <div>
+                                                                    <YakitInputNumber
+                                                                        className={styles["input-left"]}
+                                                                        placeholder='Minimum'
+                                                                        min={1}
+                                                                        value={maxNumber}
+                                                                        onChange={(v) => {
+                                                                            setMaxNumber(v as number)
+                                                                        }}
+                                                                        size='small'
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 }
                                             >
@@ -1174,8 +1230,44 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                 >
                                                     插件调试执行
                                                 </div>
+                                                {isPlugin && (
+                                                    <YakitPopover
+                                                        title={"插件配置"}
+                                                        // placement="topLeft"
+                                                        overlayClassName={styles["chatcs-plugin-option-popover"]}
+                                                        content={
+                                                            <div className={styles["option-box"]}>
+                                                                <div>最大执行数量：</div>
+                                                                <div>
+                                                                    <YakitInputNumber
+                                                                        className={styles["input-left"]}
+                                                                        placeholder='Minimum'
+                                                                        min={1}
+                                                                        value={maxNumber}
+                                                                        onChange={(v) => {
+                                                                            setMaxNumber(v as number)
+                                                                        }}
+                                                                        size='small'
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                        onVisibleChange={(v) => {
+                                                            setPopoverVisible(v)
+                                                        }}
+                                                        overlayInnerStyle={{width: 220}}
+                                                        visible={popoverVisible}
+                                                    >
+                                                        <YakitButton
+                                                            icon={<SettingOutlined />}
+                                                            type={"text"}
+                                                            size={"small"}
+                                                        />
+                                                    </YakitPopover>
+                                                )}
                                             </div>
                                         )}
+
                                         <div className={styles["footer-divider"]}></div>
                                         <div
                                             className={classNames(styles["footer-submit"], {
@@ -1283,12 +1375,27 @@ interface PluginRunStatusProps {
     status: "loading" | "succee" | "fail" | "info"
     pluginNameList: string[]
     progressList?: any
-    infoList?: StreamResult.Risk[]
+    infoList: StreamResult.Risk[]
     runtimeId?: string
 }
 
 const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
     const {status, pluginNameList, progressList, infoList, runtimeId} = props
+
+    const containerRef = useRef(null)
+    const wrapperRef = useRef(null)
+    const [vlistHeigth, setVListHeight] = useState(0)
+    const [list] = useVirtualList(infoList, {
+        containerTarget: containerRef,
+        wrapperTarget: wrapperRef,
+        itemHeight: 28,
+        overscan: 5
+    })
+
+    useEffect(()=>{
+        setVListHeight(infoList.length>10?280:28*infoList.length)
+    },[infoList])
+
     const onDetail = useMemoizedFn(() => {
         let defaultActiveKey: string = ""
         switch (status) {
@@ -1316,6 +1423,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
             }
         })
     })
+
     return (
         <div className={styles["plugin-run-status"]}>
             {status === "loading" && (
@@ -1350,37 +1458,61 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                             </YakitButton>
                         </div>
                     </div>
-                    {infoList && (
-                        <div className={styles["content"]}>
-                            {infoList.map((item) => {
-                                /**获取风险等级的展示tag类型 */
-                                const getSeverity = (type) => {
-                                    switch (type) {
-                                        case "warning":
-                                            return "低危"
-                                        case "info":
-                                            return "中危"
-                                        case "danger":
-                                            return "高危"
-                                        case "serious":
-                                            return "严重"
-                                        default:
-                                            return undefined
+
+                    <div className={styles["content"]}>
+                        <div ref={containerRef} style={{height: vlistHeigth, overflow: "auto", overflowAnchor: "none"}}>
+                            <div ref={wrapperRef}>
+                                {list.map((item) => {
+                                    const {data, index} = item
+                                    /**获取风险等级的展示tag类型 */
+                                    const getSeverity = (type) => {
+                                        switch (type) {
+                                            case "low":
+                                                return "低危"
+                                            case "middle":
+                                                return "中危"
+                                            case "high":
+                                                return "高危"
+                                            case "critical":
+                                                return "严重"
+                                            case "info":
+                                                return "信息/指纹"
+                                            default:
+                                                return "未知"
+                                        }
                                     }
-                                }
-                                return (
-                                    <div className={styles["item-box"]}>
-                                        <YakitTag color={item.Severity as "warning" | "info" | "danger" | "serious"}>
-                                            {getSeverity(item.Severity)}
-                                        </YakitTag>
-                                        <div className={classNames(styles["text"], "yakit-content-single-ellipsis")}>
-                                            {item.FromYakScript}：{item.Title}
+                                    const getSeverityColor = (type) => {
+                                        switch (type) {
+                                            case "low":
+                                                return "warning"
+                                            case "middle":
+                                                return "danger"
+                                            case "high":
+                                                return "serious"
+                                            case "critical":
+                                                return "serious"
+                                            case "info":
+                                                return "info"
+                                            default:
+                                                return "warning"
+                                        }
+                                    }
+                                    return (
+                                        <div className={styles["item-box"]} key={index}>
+                                            <YakitTag color={getSeverityColor(data.Severity)}>
+                                                {getSeverity(data.Severity)}
+                                            </YakitTag>
+                                            <div
+                                                className={classNames(styles["text"], "yakit-content-single-ellipsis")}
+                                            >
+                                                {data.FromYakScript}：{data.Title}
+                                            </div>
                                         </div>
-                                    </div>
-                                )
-                            })}
+                                    )
+                                })}
+                            </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             )}
             {status === "succee" && (
@@ -1429,7 +1561,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
 interface PluginListContentProps {
     data: string
     setPluginRun: (v: boolean) => void
-    onStartExecute: (v: string[]) => void
+    onStartExecute: (v: string[], input: string) => void
 }
 const defPluginBatchExecuteExtraFormValue: PluginBatchExecuteExtraFormValue = {
     ...cloneDeep(defPluginExecuteFormValue),
@@ -1503,8 +1635,6 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
 
     /** 单项副标题组件 */
     const optExtra = useMemoizedFn((data: YakScript) => {
-        console.log("optExtra", privateDomainRef.current, data.OnlineBaseUrl)
-
         if (privateDomainRef.current !== data.OnlineBaseUrl) return <></>
         if (data.OnlineIsPrivate) {
             return <SolidPrivatepluginIcon className='icon-svg-16' />
@@ -1581,7 +1711,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                                     disabled={checkedList.length === 0}
                                     icon={<SolidPlayIcon />}
                                     onClick={() => {
-                                        onStartExecute(checkedList)
+                                        onStartExecute(checkedList, datsSource.input)
                                     }}
                                 >
                                     开始执行
@@ -1633,7 +1763,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     const [pluginRun, setPluginRun] = useState<boolean>(false)
     /**展示类型 */
     const [showType, setShowType] = useState<"loading" | "succee" | "fail" | "info">("loading")
-    const [lastRiskState, setRiskState] = useState<StreamResult.Risk[]>()
+    const [lastRiskState, setLastRiskState] = useState<StreamResult.Risk[]>()
     /**执行的插件名数组 */
     const [pluginNameList, setPluginNameList] = useState<string[]>([])
     // 渲染之前执行过后的状态
@@ -1645,7 +1775,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                 setPluginRun(true)
                 setShowType(status)
                 setRuntimeId(runtimeId)
-                riskState && setRiskState(riskState)
+                riskState && setLastRiskState(riskState)
             }
         }
     }, [])
@@ -1690,7 +1820,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
         return streamInfo.progressState
     }, [streamInfo.progressState])
     /**开始执行 */
-    const onStartExecute = useMemoizedFn((selectPluginName: string[]) => {
+    const onStartExecute = useMemoizedFn((selectPluginName: string[], Input: string) => {
         // 任务配置参数
         const taskParams: PluginBatchExecutorTaskProps = {
             Concurrent: extraParamsValue.Concurrent,
@@ -1698,7 +1828,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             Proxy: extraParamsValue.Proxy
         }
         const params: HybridScanRequest = {
-            Input: "192.168.3.150:8080",
+            Input,
             ...taskParams,
             HTTPRequestTemplate: {
                 ...extraParamsValue,
@@ -1727,8 +1857,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
     /**取消执行 */
     const onStopExecute = useMemoizedFn((e) => {
         e.stopPropagation()
-        apiCancelHybridScan(tokenRef.current).then(() => {
-            hybridScanStreamEvent.stop()
+        apiStopHybridScan(runtimeId || "", tokenRef.current).then(() => {
             setPluginRun(false)
         })
     })
