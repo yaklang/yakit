@@ -1366,10 +1366,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             .then((rsp: HTTPFlowsFieldGroupResponse) => {
                 const tags = rsp.Tags
-                console.log(
-                    "后端获取Tags",
-                    rsp.Tags
-                )
                 setTags(tags.map((ele) => ({label: ele.Value, value: ele.Value})))
             })
             .catch((e: any) => {
