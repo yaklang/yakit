@@ -44,7 +44,6 @@ import {ExpandAndRetract} from "../operator/expandAndRetract/ExpandAndRetract"
 import {PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/routes/newRoute"
-import {addToTab} from "@/pages/MainTabs"
 
 const PluginBatchExecuteExtraParamsDrawer = React.lazy(() => import("./PluginBatchExecuteExtraParams"))
 
@@ -381,14 +380,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
     const progressList = useCreation(() => {
         return streamInfo.progressState
     }, [streamInfo.progressState])
-    const toHybridScan = useMemoizedFn(() => {
-        addToTab(YakitRoute.BatchExecutorPage, {
-            pluginBatchExecutorPageInfo: {
-                runtimeId,
-                defaultActiveKey: "漏洞与风险"
-            }
-        })
-    })
 
     return (
         <div className={styles["plugin-batch-executor"]} ref={batchExecuteDomRef}>
@@ -519,7 +510,6 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
                                         开始执行
                                     </YakitButton>
                                 )}
-                                <YakitButton onClick={toHybridScan}>查看详情</YakitButton>
                                 <YakitButton
                                     type='text'
                                     onClick={openExtraPropsDrawer}
