@@ -30,7 +30,9 @@ export interface PluginExecuteWebsiteTreeProps {
     runtimeId: string
     website?: boolean
 }
-export interface PluginExecutePortTableProps {}
+export interface PluginExecutePortTableProps {
+    runtimeId: string
+}
 
 export interface PluginExecuteCustomTableProps {
     tableInfo: HoldGRPCStreamProps.InfoTable
