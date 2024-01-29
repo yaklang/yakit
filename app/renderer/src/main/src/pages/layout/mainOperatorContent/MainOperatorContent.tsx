@@ -31,7 +31,15 @@ import {
 } from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import {useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {
+    DragDropContext,
+    Droppable,
+    Draggable,
+    DragUpdate,
+    ResponderProvided,
+    DragStart,
+    BeforeCapture
+} from "@hello-pangea/dnd"
 import classNames from "classnames"
 import _ from "lodash"
 import {KeyConvertRoute, routeConvertKey} from "../publicMenu/utils"
@@ -2284,7 +2292,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             })
         })
 
-        const onDragUpdate = useMemoizedFn((result: DragDropContextResultProps) => {
+        const onDragUpdate = useMemoizedFn((result: DragUpdate, provided: ResponderProvided) => {
             const sourceIndex = result.source.index
             const {subIndex} = getPageItemById(subPage, result.draggableId)
             if (subIndex === -1) {
@@ -3415,7 +3423,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, newCurrentGroup)
             }
         })
-        const onDragStart = useMemoizedFn((result: DragDropContextResultProps) => {
+        const onDragStart = useMemoizedFn((result: DragStart, provided: ResponderProvided) => {
             if (!result.source) return
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
             if (index === -1) return
@@ -3430,7 +3438,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 }
             }
         })
-        const onBeforeCapture = useMemoizedFn((result: DragDropContextResultProps) => {
+        const onBeforeCapture = useMemoizedFn((result: BeforeCapture) => {
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
             if (index === -1) return
             // subIndex === -1 没有在组内
@@ -3518,7 +3526,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                                         onUnfoldAndCollapse={onUnfoldAndCollapse}
                                                         onGroupContextMenu={onGroupRightClickOperation}
                                                         dropType={subDropType}
-                                                        // dropType='droppable'
                                                     />
                                                 </React.Fragment>
                                             )
@@ -3587,7 +3594,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
         }
     })
     return (
-        <Draggable key={subItem.id} draggableId={subItem.id} index={index} type={dropType}>
+        <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(provided, snapshot) => {
                 const itemStyle = getItemStyle(snapshot.isDragging, provided.draggableProps.style)
                 return (
@@ -3638,7 +3645,6 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                                 />
                             </div>
                         </Tooltip>
-                        {provided.placeholder}
                     </div>
                 )
             }}
@@ -3777,8 +3783,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                 return (
                                     <div
                                         ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        // {...provided.dragHandleProps}
+                                        {...provided.droppableProps}
                                         className={classNames(
                                             styles["tab-menu-sub-group-children"],
                                             styles["tab-menu-sub-group-children-motion"],
@@ -3807,7 +3812,6 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                 )
                             }}
                         </Droppable>
-                        {providedGroup.placeholder}
                     </div>
                 )
             }}
