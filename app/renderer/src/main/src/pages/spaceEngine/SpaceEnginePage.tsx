@@ -104,13 +104,15 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
             spaceEngineStreamEvent.start()
         })
     })
-    const onStopExecute = useMemoizedFn(() => {
+    const onStopExecute = useMemoizedFn((e) => {
+        e.stopPropagation()
         apiCancelFetchPortAssetFromSpaceEngine(tokenRef.current).then(() => {
             spaceEngineStreamEvent.stop()
             setIsExecuting(false)
         })
     })
-    const onClearExecuteResult = useMemoizedFn(() => {
+    const onClearExecuteResult = useMemoizedFn((e) => {
+        e.stopPropagation()
         spaceEngineStreamEvent.reset()
         setRuntimeId("")
         onExpand()
