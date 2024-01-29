@@ -17,7 +17,6 @@ import {
     OperateGroup,
     DroppableCloneProps,
     SubTabsProps,
-    DragDropContextResultProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
 import {
@@ -38,7 +37,8 @@ import {
     DragUpdate,
     ResponderProvided,
     DragStart,
-    BeforeCapture
+    BeforeCapture,
+    DropResult
 } from "@hello-pangea/dnd"
 import classNames from "classnames"
 import _ from "lodash"
@@ -1630,7 +1630,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     const {currentTabKey, setCurrentTabKey, onRemove, pageCache, setPageCache, openMultipleMenuPage} = props
     /** ---------- 拖拽排序 start ---------- */
-    const onDragEnd = useMemoizedFn((result: DragDropContextResultProps) => {
+    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided) => {
         if (!result.destination) {
             return
         }
@@ -2324,7 +2324,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             setCombineIds([])
         })
-        const onSubMenuDragEnd = useMemoizedFn((result: DragDropContextResultProps) => {
+        const onSubMenuDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
             try {
                 // console.log("onSubMenuDragEnd", result)
                 const {droppableId: sourceDroppableId} = result.source
@@ -2378,7 +2378,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             } catch (error) {}
         })
         /** @description 组外向组内移动合并 */
-        const mergingGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const mergingGroup = useMemoizedFn((result: DropResult) => {
             if (!result.combine) {
                 return
             }
@@ -2433,7 +2433,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
 
         /**@description 组内向组外合并 */
-        const mergeWithinAndOutsideGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const mergeWithinAndOutsideGroup = useMemoizedFn((result: DropResult) => {
             if (!result.combine) {
                 return
             }
@@ -2444,15 +2444,15 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             if (droppableId.includes("group") === combineDraggableId.includes("group")) {
                 // 不能正常拖拽的时候，两个组之间的拖拽交互失效
                 // 所以执行movingBetweenDifferentGroups,不走合并的逻辑
-                const newResult = {
+                const newResult:DropResult = {
                     combine: null,
                     destination: {
                         droppableId: combineDraggableId,
                         index: 0
                     },
                     draggableId: result.draggableId,
-                    mode: "",
-                    reason: "",
+                    mode: "FLUID",
+                    reason: "DROP",
                     source: {
                         droppableId,
                         index: sourceIndex
@@ -2507,7 +2507,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
         })
         /** @description 组外之间移动 */
-        const movingBetweenOutsideGroups = useMemoizedFn((result: DragDropContextResultProps) => {
+        const movingBetweenOutsideGroups = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }
@@ -2531,7 +2531,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
         })
         /** @description 同一个组内之间移动 */
-        const movingWithinSameGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const movingWithinSameGroup = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }
@@ -2561,7 +2561,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
 
         /** @description 不同一个组间移动 从组A到组B */
-        const movingBetweenDifferentGroups = useMemoizedFn((result: DragDropContextResultProps) => {
+        const movingBetweenDifferentGroups = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }
@@ -2606,7 +2606,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
 
         /** @description 组内向组外移动 */
-        const movingWithinAndOutsideGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const movingWithinAndOutsideGroup = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }
@@ -2647,7 +2647,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
         })
         /** @description 组外向组内移动 */
-        const moveOutOfGroupAndInGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const moveOutOfGroupAndInGroup = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }

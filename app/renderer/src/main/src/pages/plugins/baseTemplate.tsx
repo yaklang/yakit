@@ -44,7 +44,7 @@ import {formatDate} from "@/utils/timeUtil"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {DragDropContext, Droppable, Draggable,DropResult,ResponderProvided} from "@hello-pangea/dnd"
 import {useDebounceFn, useGetState, useMemoizedFn,useControllableValue} from "ahooks"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -1240,7 +1240,7 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
         setList([...result])
     })
 
-    const onDragEnd = useMemoizedFn((result) => {
+    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided) => {
         const {source, destination} = result
         if (!destination || !source) {
             return
@@ -1285,7 +1285,7 @@ export const PluginParamList: React.FC<PluginParamListProps> = memo((props) => {
                                                             snapshot.isDragging,
                                                             provided.draggableProps.style
                                                         )}
-                                                        key={item}
+                                                        key={item.Field}
                                                     >
                                                         <div
                                                             className={classNames(styles["list-opt"], {

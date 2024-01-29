@@ -33,7 +33,7 @@ import {
 } from "@/assets/icon/outline"
 import {OutlineAddPayloadIcon, PropertyIcon, PropertyNoAddIcon} from "./icon"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {DragDropContext, Droppable, Draggable, BeforeCapture, DropResult, ResponderProvided, DragStart, DragUpdate} from "@hello-pangea/dnd"
 import {
     SolidChevrondownIcon,
     SolidChevronrightIcon,
@@ -49,7 +49,6 @@ import {
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import Dragger from "antd/lib/upload/Dragger"
-import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOperatorContentType"
 import {v4 as uuidv4} from "uuid"
 import {DeletePayloadProps, NewPayloadTable, Payload, QueryPayloadParams} from "./newPayloadTable"
 import {callCopyToClipboard} from "@/utils/basic"
@@ -895,7 +894,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     })
 
     // 组外两个游离的文件合成组 或者 组外的文件拖拽到组外的文件夹合成组
-    const mergingGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+    const mergingGroup = useMemoizedFn((result: DropResult) => {
         const {source, destination, draggableId, type, combine} = result
         if (!combine) {
             return
@@ -939,7 +938,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         }
     })
     // 组内的文件拖拽到组外并和组外的文件夹合成组(组内向组外合并)
-    const mergeWithinAndOutsideGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+    const mergeWithinAndOutsideGroup = useMemoizedFn((result: DropResult) => {
         const {source, destination, draggableId, type, combine} = result
         if (!combine) {
             return
@@ -984,11 +983,11 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         }
     })
     // 拖放结束时的回调函数
-    const onDragEnd = useMemoizedFn((result) => {
+    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided) => {
         try {
             const {source, destination, draggableId, type, combine} = result
             /** 合并组   ---------start--------- */
-            if (result.combine) {
+            if (combine) {
                 // 组外两个游离的文件合成组
                 if (source.droppableId === "droppable-payload" && combine.droppableId === "droppable-payload") {
                     mergingGroup(result)
@@ -1003,7 +1002,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             setCombineIds([])
             moveLevelRef.current = undefined
             /** 合并组   ---------end--------- */
-            if (!destination && !source) {
+            if (!destination && !source||destination===null) {
                 return
             }
             const copyData: DataItem[] = JSON.parse(JSON.stringify(data))
@@ -1095,7 +1094,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
      * @description: 计算移动的范围是否在目标范围类destinationDrag
      */
     const onDragUpdate = useThrottleFn(
-        (result) => {
+        (result: DragUpdate, provided: ResponderProvided) => {
             const {index, droppableId} = result.source
             const {combine, destination, draggableId} = result
             // if (droppableId === "droppable-payload") {
@@ -1145,7 +1144,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         {wait: 200}
     ).run
 
-    const onBeforeCapture = useMemoizedFn((result: DragDropContextResultProps) => {
+    const onBeforeCapture = useMemoizedFn((result: BeforeCapture) => {
         // 根据Id判断其是否为文件
         const item = findItemById(data, result.draggableId)
         if (item && item.type !== "Folder") {
@@ -1157,7 +1156,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
         }
     })
 
-    const onDragStart = useMemoizedFn((result: DragDropContextResultProps) => {
+    const onDragStart = useMemoizedFn((result: DragStart, provided: ResponderProvided) => {
         if (!result.source) return
         // 如果拖拽的是文件夹 则不允许合并
         const moveType = findItemById(data, result.draggableId)

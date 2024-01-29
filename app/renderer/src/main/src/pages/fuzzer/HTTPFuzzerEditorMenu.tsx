@@ -16,7 +16,7 @@ import {
     IconOutlinePencilAltIcon,
     TrashIcon
 } from "@/assets/newIcon"
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {DragDropContext, Droppable, Draggable, DraggingStyle} from "@hello-pangea/dnd"
 import {AutoDecodeResult} from "@/utils/encodec"
 import {callCopyToClipboard} from "@/utils/basic"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -355,22 +355,23 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                 {(provided) => (
                                     <div {...provided.droppableProps} ref={provided.innerRef}>
                                         {labelData.map((item, index) => (
-                                            <Draggable key={item?.Description} draggableId={item.Id} index={index}>
+                                            <Draggable key={item?.Description} draggableId={`${item.Id}`} index={index}>
                                                 {(provided, snapshot) => {
+                                                    const draggablePropsStyle= provided.draggableProps.style as DraggingStyle
                                                     return (
                                                         <div
                                                             ref={provided.innerRef}
                                                             {...provided.draggableProps}
                                                             {...provided.dragHandleProps}
                                                             style={{
-                                                                ...provided.draggableProps.style,
-                                                                top: provided.draggableProps.style?.top
-                                                                    ? provided.draggableProps.style?.top -
+                                                                ...draggablePropsStyle,
+                                                                top: draggablePropsStyle?.top
+                                                                    ? draggablePropsStyle?.top -
                                                                       top +
                                                                       scrollTop
                                                                     : "none",
-                                                                left: provided.draggableProps.style?.top
-                                                                    ? provided.draggableProps.style?.left - left - 60
+                                                                left: draggablePropsStyle?.top
+                                                                    ? draggablePropsStyle?.left - left - 60
                                                                     : "none"
                                                             }}
                                                         >
@@ -476,7 +477,6 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            {provided.placeholder}
                                                         </div>
                                                     )
                                                     // snapshot.isDragging 是否拖拽此项
