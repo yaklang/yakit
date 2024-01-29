@@ -4,11 +4,11 @@ import {isEngineConnectionAlive, outputToWelcomeConsole} from "@/components/layo
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
 import {failed} from "@/utils/notification"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
-import { useStore, yakitDynamicStatus } from "@/store"
-import { remoteOperation } from "@/pages/dynamicControl/DynamicControl"
-import { isEnpriTraceAgent } from "@/utils/envfile"
+import {useStore, yakitDynamicStatus} from "@/store"
+import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 
 export interface YaklangEngineWatchDogCredential {
     Mode?: YaklangEngineMode
@@ -33,8 +33,7 @@ export interface YaklangEngineWatchDogProps {
     onReady?: () => any
     onFailed?: (failedCount: number) => any
     onKeepaliveShouldChange?: (keepalive: boolean) => any
-    onAdminPort?: () => any
-    setRunRemote:(v:boolean)=>void
+    setRunRemote: (v: boolean) => void
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo(
@@ -42,10 +41,10 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         const {setRunRemote} = props
         const [autoStartProgress, setAutoStartProgress] = useState(false)
         const [__startingUp, setIsStartingUp, getIsStartingUp] = useGetState(false)
-        const {dynamicStatus,setDynamicStatus} = yakitDynamicStatus()
+        const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
         const {userInfo} = useStore()
         /** 引擎信息认证 */
-        const engineTest = useMemoizedFn((isDynamicControl?:boolean) => {
+        const engineTest = useMemoizedFn((isDynamicControl?: boolean) => {
             // 重置状态
             setAutoStartProgress(false)
             const mode = props.credential.Mode
@@ -72,24 +71,19 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         props.onKeepaliveShouldChange(true)
                     }
                     // 如果为远程控制 则修改私有域为
-                    if(isDynamicControl){
+                    if (isDynamicControl) {
                         // ipcRenderer.send("edit-baseUrl", {baseUrl: "http://192.168.3.100:8080"})
                         // 远程控制生效
-                        setDynamicStatus({...dynamicStatus,isDynamicStatus:true})
-                        remoteOperation(true,dynamicStatus,userInfo)
-                        if(dynamicStatus.baseUrl&&dynamicStatus.baseUrl.length>0){
-                            setRemoteValue(RemoteGV.HttpSetting, JSON.stringify({BaseUrl:dynamicStatus.baseUrl})) 
+                        setDynamicStatus({...dynamicStatus, isDynamicStatus: true})
+                        remoteOperation(true, dynamicStatus, userInfo)
+                        if (dynamicStatus.baseUrl && dynamicStatus.baseUrl.length > 0) {
+                            setRemoteValue(RemoteGV.HttpSetting, JSON.stringify({BaseUrl: dynamicStatus.baseUrl}))
                         }
                     }
-                    
                 })
                 .catch((e) => {
                     outputToWelcomeConsole("未连接到引擎，尝试启动引擎进程")
                     switch (mode) {
-                        case "admin":
-                            outputToWelcomeConsole("尝试启动管理员进程")
-                            setAutoStartProgress(true)
-                            return
                         case "local":
                             outputToWelcomeConsole("尝试启动本地进程")
                             setAutoStartProgress(true)
@@ -137,14 +131,9 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                     return
                 }
 
-                // 只有普通模式和管理员模式才涉及到引擎启动的流程
+                // 只有普通模式才涉及到引擎启动的流程
                 outputToWelcomeConsole(`切换模式为: ${mode}`)
-                const isAdmin = mode === "admin"
-                if (isAdmin) {
-                    outputToWelcomeConsole(`开始以管理员权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
-                } else {
-                    outputToWelcomeConsole(`开始以普通权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
-                }
+                outputToWelcomeConsole(`开始以普通权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
 
                 setTimeout(() => {
                     if (props.onKeepaliveShouldChange) {
@@ -162,8 +151,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         ipcRenderer
                             .invoke("start-local-yaklang-engine", {
                                 port: props.credential.Port,
-                                sudo: isAdmin,
-                                isEnpriTraceAgent:isEnpriTraceAgent()
+                                isEnpriTraceAgent: isEnpriTraceAgent()
                             })
                             .then(() => {
                                 outputToWelcomeConsole("引擎启动成功！")
@@ -180,15 +168,6 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                             `端口被占用，无法启动本地引擎（${EngineModeVerbose(mode as YaklangEngineMode)}）`
                         )
                         outputToWelcomeConsole(`错误原因为: ${e}`)
-                        /**
-                         * 管理员模式补充情况
-                         * 连接的管理员进程进行关闭，然后手动触发重连，端口检测接口发出'端口不可用'信息
-                         * 解决方案：进行新端口的生成，并重连
-                         * 原因(猜测)：管理员进程的关闭是个过程，nodejs在kill后的30s才能检测端口可用
-                         */
-                        if (props.credential.Mode === "admin") {
-                            if (props.onAdminPort) props.onAdminPort()
-                        }
                     })
             },
             [autoStartProgress, props.onKeepaliveShouldChange, props.credential],

@@ -7,7 +7,7 @@ import {
     YakitCopySvgIcon,
     YaklangInstallHintSvgIcon
 } from "../icons"
-import {Button, Checkbox, Popconfirm, Progress} from "antd"
+import {Checkbox, Popconfirm, Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
