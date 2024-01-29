@@ -159,7 +159,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     setStorage([])
                     return
                 }
-                console.log("获取缓存数据", data)
                 // 不兼容之前版本 - 筛选掉之前缓存的对话内容(依据:之前版本存在baseType必选项)
                 // @ts-ignore
                 data.lists = data.lists.filter((item) => !item.baseType)
@@ -176,7 +175,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const setStorage = useMemoizedFn((data: CacheChatCSProps[]) => {
         let cache: string = ""
         if (data.length > 0) cache = JSON.stringify({lists: data, user_id: userInfo.user_id || 0})
-        console.log("更改缓存数据", data)
         setRemoteValue(RemoteGV.ChatCSStorage, cache)
     })
 
@@ -362,7 +360,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 is_plugin
             }
         }
-        console.log("Prompt提问", data)
         onSubmit(data)
     })
 
@@ -487,14 +484,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     plugin_scope: maxNumber
                 })
                     .then((res) => {
-                        console.log("res", res, yakData)
                         const {data} = res
                         const {result, id}: {result: {scripts: string[]; input: string}; id: string} = data
                         const {scripts = [], input = ""} = result
 
                         if (!cs.id) cs.id = id
                         let mathYakData = yakData.filter((item) => scripts.includes(item.ScriptName))
-                        console.log("mathYakData", mathYakData)
                         cs.content = JSON.stringify({
                             input,
                             data: mathYakData
@@ -539,10 +534,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 content: "",
                 id: ""
             }
-            console.log("params---", {
-                ...params,
-                token: userInfo.token
-            })
 
             return await new Promise((resolve, reject) => {
                 chatCS({
@@ -1409,12 +1400,6 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                 defaultActiveKey = "Console"
                 break
         }
-        console.log("查看详情:", {
-            pluginBatchExecutorPageInfo: {
-                runtimeId,
-                defaultActiveKey
-            }
-        })
 
         addToTab(YakitRoute.BatchExecutorPage, {
             pluginBatchExecutorPageInfo: {
@@ -1486,9 +1471,9 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                                             case "low":
                                                 return "warning"
                                             case "middle":
-                                                return "danger"
+                                                return "info"
                                             case "high":
-                                                return "serious"
+                                                return "danger"
                                             case "critical":
                                                 return "serious"
                                             case "info":
@@ -1787,7 +1772,6 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
         token: tokenRef.current,
         onEnd: () => {
             hybridScanStreamEvent.stop()
-            console.log("onEnd---", streamInfo)
             onTypeByresult("succee")
         },
         onError: () => {
@@ -1844,8 +1828,6 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             }
         }
         const hybridScanParams: HybridScanControlAfterRequest = convertHybridScanParams(params, pluginInfo, "")
-        console.log("开始执行", hybridScanParams)
-
         apiHybridScan(hybridScanParams, tokenRef.current).then(() => {
             setPluginRun(true)
             setPluginNameList(selectPluginName)
@@ -2232,8 +2214,6 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
             .then((result) => {
                 const {data} = result
                 if (data.status) {
-                    console.log("玉舍此", data)
-
                     let list: PromptListProps[] = []
                     const obj = data.data || {}
                     const label: PromptLabelProps = {
