@@ -1002,7 +1002,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
             setCombineIds([])
             moveLevelRef.current = undefined
             /** 合并组   ---------end--------- */
-            if (!destination && !source||destination===null) {
+            if (!destination) {
                 return
             }
             const copyData: DataItem[] = JSON.parse(JSON.stringify(data))

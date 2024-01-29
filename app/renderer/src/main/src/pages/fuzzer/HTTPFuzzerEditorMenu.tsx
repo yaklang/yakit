@@ -365,12 +365,12 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                                             {...provided.dragHandleProps}
                                                             style={{
                                                                 ...draggablePropsStyle,
-                                                                top: draggablePropsStyle?.top
+                                                                top: isDragging
                                                                     ? draggablePropsStyle?.top -
                                                                       top +
                                                                       scrollTop
                                                                     : "none",
-                                                                left: draggablePropsStyle?.top
+                                                                left: isDragging
                                                                     ? draggablePropsStyle?.left - left - 60
                                                                     : "none"
                                                             }}
