@@ -3,7 +3,7 @@ import {Button, Checkbox, Col, Divider, Form, Input, InputNumber, Row, Space, Sp
 import {InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem} from "../../utils/inputUtil"
 import {randomString} from "../../utils/randomUtil"
 import {ExecResult, YakScript} from "../invoker/schema"
-import {failed, info, success} from "../../utils/notification"
+import {failed, info, success, yakitInfo} from "../../utils/notification"
 import {writeExecResultXTerm, xtermClear} from "../../utils/xtermUtils"
 import {OpenPortTableViewer} from "./PortTable"
 import {ExtractExecResultMessageToYakitPort, YakitPort} from "../../components/yakitLogSchema"
@@ -30,6 +30,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
 import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage";
 import {PcapMetadata} from "@/models/Traffic";
 import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage";
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 
 const {ipcRenderer} = window.require("electron")
 const ScanPortTemplate = "scan-port-template"
@@ -194,7 +195,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
     // 获取最新的唯一标识UUID
     const uuid: string = uuidv4()
     const [_, setNowUUID, getNowUUID] = useGetState<string>(uuid)
-
+    // 监听网卡选择是否被修改
+    const [isSetInterface,setInterface] = useState<boolean>(false)
     return (
         <div style={{width: "100%", height: "100%"}}>
             <Tabs className='scan-port-tabs no-theme-tabs' tabBarStyle={{marginBottom: 5}}>
@@ -419,6 +421,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
                                                                 <ScanPortForm
                                                                     defaultParams={params}
                                                                     setParams={setParams}
+                                                                    isSetInterface={isSetInterface}
+                                                                    setInterface={setInterface}
                                                                 />
                                                             </>
                                                         )
@@ -526,6 +530,9 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
 interface ScanPortFormProp {
     defaultParams: PortScanParams
     setParams: (p: PortScanParams) => any
+    // 网卡选择是否被修改
+    isSetInterface?: boolean
+    setInterface?:(v:boolean)=>void
     // 简易企业版显示
     isSimpleDetectShow?: boolean
     // 简易版扫描速度
@@ -538,7 +545,7 @@ interface ScanPortFormProp {
 }
 
 export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
-    const {deepLevel, isSetPort, bruteParams, setBruteParams} = props
+    const {deepLevel, isSetPort, bruteParams, setBruteParams,setInterface,isSetInterface} = props
     const isSimpleDetectShow = props.isSimpleDetectShow || false
     const [params, setParams] = useState<PortScanParams>(props.defaultParams)
     const [simpleParams, setSimpleParams] = useState<StartBruteParams | undefined>(bruteParams)
@@ -587,26 +594,38 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
     ]
 
     const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
+    const globalNetworkConfig = useRef<GlobalNetworkConfig>()
     useEffect(() => {
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
             console.log("GetGlobalNetworkConfig", rsp)
+            globalNetworkConfig.current = rsp
             const { SynScanNetInterface} = rsp
             console.log("SynScanNetInterface", SynScanNetInterface)
             ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
-                if (!data || data.AvailablePcapDevices.length == 0) {
+                if (!data || data.AvailablePcapDevices.length === 0) {
                     return
                 }
                 const interfaceList = data.AvailablePcapDevices.map(
                     (item) => (
                         {label: `${item.NetInterfaceName}-(${item.IP})`, value: item.Name})
                 )
-                if (SynScanNetInterface.length === 0) {
+                if (SynScanNetInterface.length === 0&&!isSetInterface) {
                     setParams({...params, SynScanNetInterface: data.DefaultPublicNetInterface.NetInterfaceName})
                 }
                 setNetInterfaceList(interfaceList)
+                if(SynScanNetInterface.length !== 0&&!isSetInterface){
+                    setParams({...params, SynScanNetInterface})
+                }
             })
         })
     }, [])
+    
+    const updateGlobalNetworkConfig = useMemoizedFn(()=>{
+        ipcRenderer.invoke("SetGlobalNetworkConfig", {...globalNetworkConfig.current,SynScanNetInterface:params.SynScanNetInterface}).then(() => {
+            yakitInfo("更新配置成功")
+        })
+    })
+    
     return (
         <Form
             onSubmitCapture={(e) => {
@@ -648,10 +667,12 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                             size='small'
                             value={params.SynScanNetInterface}
                             onChange={(netInterface) => {
+                                setInterface&&setInterface(true)
                                 setParams({...params, SynScanNetInterface: netInterface})
                             }}
                             maxTagCount={100}
                         />
+                        <YakitButton onClick={updateGlobalNetworkConfig} size="small">同步到全局网络配置</YakitButton>
                     </Form.Item>
                 </>
             )}
