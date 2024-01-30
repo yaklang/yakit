@@ -732,3 +732,21 @@ const OutlineSparklesActive = () => (
 export const OutlineSparklesActiveIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineSparklesActive} {...props} />
 }
+
+const SolidExclamation = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M7.43135 2.78887C8.1195 1.56549 9.88088 1.56549 10.569 2.78887L15.5913 11.7174C16.2662 12.9172 15.3991 14.3998 14.0225 14.3998H3.97791C2.60123 14.3998 1.73414 12.9172 2.40908 11.7174L7.43135 2.78887ZM9.90011 11.6999C9.90011 12.197 9.49717 12.5999 9.00011 12.5999C8.50305 12.5999 8.10011 12.197 8.10011 11.6999C8.10011 11.2029 8.50305 10.7999 9.00011 10.7999C9.49717 10.7999 9.90011 11.2029 9.90011 11.6999ZM9.00011 4.49993C8.50305 4.49993 8.10011 4.90287 8.10011 5.39993V8.09993C8.10011 8.59698 8.50305 8.99993 9.00011 8.99993C9.49717 8.99993 9.90011 8.59698 9.90011 8.09993V5.39993C9.90011 4.90287 9.49717 4.49993 9.00011 4.49993Z'
+            fill='white'
+        />
+    </svg>
+)
+
+/**
+ * @description  Icon/Solid/exclamation
+ */
+export const SolidExclamationIcon = (props: Partial<IconProps>) => {
+    return <Icon component={SolidExclamation} {...props} />
+}

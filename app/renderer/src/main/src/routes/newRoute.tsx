@@ -203,7 +203,7 @@ export enum YakitRoute {
     // 我的插件回收站页面
     OnlinePluginRecycleBin = "online-plugin-recycle-bin",
     /** 简易版专属 */
-    SimpleDetect = "simpleDetect",
+    SimpleDetect = "simple-detect",
     // 录屏管理器
     ScreenRecorderPage = "screen-recorder-page",
     // 全局功能-试验性功能-BAS实验室
@@ -228,7 +228,7 @@ export enum YakitRoute {
     Beta_WebShellManager = "beta-webshell-manager",
     Beta_WebShellOpt = "beta-webshell-opt",
     // 数据统计
-    Data_Statistics = "Data_Statistics"
+    Data_Statistics = "data_statistics"
 }
 /**
  * @description 页面路由对应的页面信息
@@ -299,7 +299,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "modify-yakit-script": {label: "编辑插件"},
     "yakit-plugin-journal-details": {label: "插件修改详情"},
     "online-plugin-recycle-bin": {label: "线上插件回收站"},
-    simpleDetect: {label: "安全检测"},
+    "simple-detect": {label: "安全检测"},
     "screen-recorder-page": {label: "录屏管理"},
     "db-chaosmaker": {label: "BAS实验室"},
     "beta-debug-plugin": {label: "插件调试"},
@@ -312,7 +312,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "**beta-debug-traffic-analize": {label: "流量分析"},
     "beta-webshell-manager": {label: "网站管理"},
     "beta-webshell-opt": {label: "WebShell 实例"},
-    "Data_Statistics":{label: "数据统计"}
+    "data_statistics":{label: "数据统计"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
