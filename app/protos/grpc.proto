@@ -176,6 +176,14 @@ service Yak {
 
   rpc ImportYakScript(ImportYakScriptRequest) returns (stream ImportYakScriptResult);
 
+  // YakScript Group
+  rpc QueryYakScriptGroup(QueryYakScriptGroupRequest) returns (QueryYakScriptGroupResponse);
+  rpc SaveYakScriptGroup(SaveYakScriptGroupRequest) returns (Empty);
+  rpc RenameYakScriptGroup(RenameYakScriptGroupRequest) returns (Empty);
+  rpc DeleteYakScriptGroup(DeleteYakScriptGroupRequest) returns (Empty);
+  rpc GetYakScriptGroup(GetYakScriptGroupRequest) returns (GetYakScriptGroupResponse);
+
+
   // HTTPFlow
   rpc GetHTTPFlowByHash(GetHTTPFlowByHashRequest) returns (HTTPFlow);
   rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
@@ -3518,6 +3526,7 @@ message QueryYakScriptRequest {
   bool IgnoreGeneralModuleOrder = 15;
   repeated string Family = 16;
   string UUID = 17;
+  repeated string Group = 18;
 }
 
 message QueryYakScriptResponse {
@@ -3541,7 +3550,7 @@ message YakScriptParam {
   string Group = 7;
 
   string ExtraSetting = 8;
-
+  
   string MethodType = 9;
 }
 
@@ -3667,9 +3676,48 @@ message ImportYakScriptResult {
   string MessageType = 3;
 }
 
+message QueryYakScriptGroupRequest {
+  string Type = 1;
+}
+
+message QueryYakScriptGroupResponse {
+  repeated GroupCount Group = 1;
+}
+
+message GroupCount {
+  string Value = 1;
+  int32 Total = 2;
+}
+
+message SaveYakScriptGroupRequest {
+  repeated string YakScriptName = 1;
+  repeated string SaveGroup = 2;
+  repeated string RemoveGroup = 3;
+}
+
+message RenameYakScriptGroupRequest {
+  string Group = 1;
+  string NewGroup = 2;
+}
+
+message DeleteYakScriptGroupRequest {
+  string Group = 1;
+}
+
+message GetYakScriptGroupRequest {
+  repeated string YakScriptName = 1;
+}
+
+message GetYakScriptGroupResponse {
+  repeated string SetGroup = 1;
+  repeated string AllGroup = 2;
+}
+
+
 message GetYakScriptTagsAndTypeResponse {
   repeated TagsAndType Type = 1;
   repeated TagsAndType Tag = 2;
+  repeated TagsAndType Group = 3;
 }
 
 message TagsAndType {
