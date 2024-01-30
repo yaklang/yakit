@@ -526,7 +526,12 @@ module.exports = {
                             case "win32":
                                 return "bins/yak_windows_amd64.exe"
                             case "linux":
-                                return "bins/yak_linux_amd64"
+                                switch (os.arch()) {
+                                    case "arm64":
+                                        return "bins/yak_linux_arm64"
+                                    default:
+                                        return "bins/yak_linux_amd64"
+                                }
                             default:
                                 return ""
                         }
