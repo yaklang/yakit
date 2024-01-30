@@ -3677,7 +3677,7 @@ message ImportYakScriptResult {
 }
 
 message QueryYakScriptGroupRequest {
-  bool All = 1;
+  string Type = 1;
 }
 
 message QueryYakScriptGroupResponse {
