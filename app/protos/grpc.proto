@@ -3528,7 +3528,6 @@ message QueryYakScriptRequest {
   string UUID = 17;
   PluginGroup Group = 18;
   repeated string ExcludeTypes = 19;
-  repeated string IncludedTypes = 20;
 }
 
 message PluginGroup {
