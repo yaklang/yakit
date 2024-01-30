@@ -9,8 +9,14 @@ Var /Global IS_INSTALLED
 Var /Global IS_UPDATED
 Var /Global InstallPath
 
+
+Function ShouldShowDirectoryPage
+    ${If} $InstallPath != ""
+        Abort
+    ${EndIf}
+FunctionEnd
+
 Function DirectoryPageShow
-    ; MessageBox MB_OK "DirectoryPageShow"
     ; 获取目录页面的句柄
     FindWindow $0 "#32770" "" $HWNDPARENT
     ; 获取目录页面顶部文本控件的句柄
@@ -28,6 +34,7 @@ FunctionEnd
 
 
 !insertmacro MUI_PAGE_WELCOME
+!define MUI_PAGE_CUSTOMFUNCTION_PRE ShouldShowDirectoryPage
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW DirectoryPageShow
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -57,7 +64,7 @@ FunctionEnd
         StrCpy $IS_INSTALLED "true"
     ${EndIf} 
     ReadRegStr $InstallPath HKCU "Software\Yakit" "InstallPath"
-    ${If} $InstallPath != "" 
+    ${If} $InstallPath != "" ; 设置用户一开始的安装路径
         ; set install path
         StrCpy $INSTDIR $InstallPath
     ${EndIf}
@@ -88,7 +95,6 @@ FunctionEnd
     ${If} $IS_UPDATED == "true"
         Goto continue
     ${EndIf}
-    !insertmacro checkInstalled
     ; 删除安装目录
     MessageBox MB_YESNO "即将删除 $INSTDIR 文件夹，是否继续，选择否将取消卸载" IDYES continue IDNO cancelUninstall
     cancelUninstall:
@@ -125,7 +131,6 @@ FunctionEnd
 Section "Main" SectionMain
     ; create new directory if not installed 
     ${If} $IS_INSTALLED != "true"
-    ${OrIf} $InstallPath == ""
         StrCpy $INSTDIR "$INSTDIR\yakit"
         CreateDirectory $INSTDIR
     ${EndIf}
