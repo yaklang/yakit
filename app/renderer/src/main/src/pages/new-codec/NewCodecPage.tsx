@@ -12,7 +12,7 @@ import classNames from "classnames";
 import {DragSortIcon, PencilAltIcon, RemoveIcon} from "@/assets/newIcon";
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput";
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {DragDropContext, Droppable, Draggable, DropResult, ResponderProvided} from "@hello-pangea/dnd"
 import { useMemoizedFn} from "ahooks"
 import {queryYakScriptList} from "@/pages/yakitStore/network";
 import {CodecPluginTemplate} from "@/pages/invoker/data/CodecPluginTemplate";
@@ -324,7 +324,7 @@ const CodecTypeItem = ({codecDate, listKey}) => {
 const CodecWorkFlow = () => {
     const ctx = useContext(CodecCtx)
     const {workFlow, setWorkFlow} = ctx!
-    const onDragEnd = useMemoizedFn((result) => {
+    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided) => {
         if (!result?.destination){
             return
         }

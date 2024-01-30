@@ -31,7 +31,7 @@ import {
     SolidOfficialpluginIcon, SolidPrivatepluginIcon
 } from "@/assets/icon/colors"
 import classNames from "classnames"
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {DragDropContext, Droppable, Draggable, DragUpdate, ResponderProvided, DropResult} from "@hello-pangea/dnd"
 import {Avatar, Input, Modal, Tooltip} from "antd"
 import {useCreation, useDebounceEffect, useHover, useMemoizedFn, useThrottleFn} from "ahooks"
 import {randomString} from "@/utils/randomUtil"
@@ -288,7 +288,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         setMenuData([...menuData])
     })
     /** @description 中间和右侧菜单-拖拽结束后的计算 */
-    const onDragEnd = useMemoizedFn((result) => {
+    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided) => {
         if (!result.destination) {
             return
         }
@@ -360,7 +360,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
     })
     /** @description 中间和右侧菜单-计算移动的范围是否在目标范围类 */
     const onDragUpdate = useThrottleFn(
-        (result) => {
+        (result: DragUpdate, provided: ResponderProvided) => {
             if (!result.destination) {
                 setDestinationDrag("")
                 return

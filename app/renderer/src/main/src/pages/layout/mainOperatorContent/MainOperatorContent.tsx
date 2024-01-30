@@ -17,7 +17,6 @@ import {
     OperateGroup,
     DroppableCloneProps,
     SubTabsProps,
-    DragDropContextResultProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
 import {
@@ -31,7 +30,16 @@ import {
 } from "@/routes/newRoute"
 import {isEnpriTraceAgent, isBreachTrace, shouldVerifyEnpriTraceLogin} from "@/utils/envfile"
 import {useGetState, useInViewport, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {
+    DragDropContext,
+    Droppable,
+    Draggable,
+    DragUpdate,
+    ResponderProvided,
+    DragStart,
+    BeforeCapture,
+    DropResult
+} from "@hello-pangea/dnd"
 import classNames from "classnames"
 import _ from "lodash"
 import {KeyConvertRoute, routeConvertKey} from "../publicMenu/utils"
@@ -1622,7 +1630,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     const {currentTabKey, setCurrentTabKey, onRemove, pageCache, setPageCache, openMultipleMenuPage} = props
     /** ---------- 拖拽排序 start ---------- */
-    const onDragEnd = useMemoizedFn((result: DragDropContextResultProps) => {
+    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided) => {
         if (!result.destination) {
             return
         }
@@ -2284,7 +2292,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             })
         })
 
-        const onDragUpdate = useMemoizedFn((result: DragDropContextResultProps) => {
+        const onDragUpdate = useMemoizedFn((result: DragUpdate, provided: ResponderProvided) => {
             const sourceIndex = result.source.index
             const {subIndex} = getPageItemById(subPage, result.draggableId)
             if (subIndex === -1) {
@@ -2316,7 +2324,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
             setCombineIds([])
         })
-        const onSubMenuDragEnd = useMemoizedFn((result: DragDropContextResultProps) => {
+        const onSubMenuDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
             try {
                 // console.log("onSubMenuDragEnd", result)
                 const {droppableId: sourceDroppableId} = result.source
@@ -2370,7 +2378,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             } catch (error) {}
         })
         /** @description 组外向组内移动合并 */
-        const mergingGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const mergingGroup = useMemoizedFn((result: DropResult) => {
             if (!result.combine) {
                 return
             }
@@ -2425,7 +2433,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
 
         /**@description 组内向组外合并 */
-        const mergeWithinAndOutsideGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const mergeWithinAndOutsideGroup = useMemoizedFn((result: DropResult) => {
             if (!result.combine) {
                 return
             }
@@ -2436,15 +2444,15 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             if (droppableId.includes("group") === combineDraggableId.includes("group")) {
                 // 不能正常拖拽的时候，两个组之间的拖拽交互失效
                 // 所以执行movingBetweenDifferentGroups,不走合并的逻辑
-                const newResult = {
+                const newResult:DropResult = {
                     combine: null,
                     destination: {
                         droppableId: combineDraggableId,
                         index: 0
                     },
                     draggableId: result.draggableId,
-                    mode: "",
-                    reason: "",
+                    mode: "FLUID",
+                    reason: "DROP",
                     source: {
                         droppableId,
                         index: sourceIndex
@@ -2499,7 +2507,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
         })
         /** @description 组外之间移动 */
-        const movingBetweenOutsideGroups = useMemoizedFn((result: DragDropContextResultProps) => {
+        const movingBetweenOutsideGroups = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }
@@ -2523,7 +2531,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
         })
         /** @description 同一个组内之间移动 */
-        const movingWithinSameGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const movingWithinSameGroup = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }
@@ -2553,7 +2561,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
 
         /** @description 不同一个组间移动 从组A到组B */
-        const movingBetweenDifferentGroups = useMemoizedFn((result: DragDropContextResultProps) => {
+        const movingBetweenDifferentGroups = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }
@@ -2598,7 +2606,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
 
         /** @description 组内向组外移动 */
-        const movingWithinAndOutsideGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const movingWithinAndOutsideGroup = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }
@@ -2639,7 +2647,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             }
         })
         /** @description 组外向组内移动 */
-        const moveOutOfGroupAndInGroup = useMemoizedFn((result: DragDropContextResultProps) => {
+        const moveOutOfGroupAndInGroup = useMemoizedFn((result: DropResult) => {
             if (!result.destination) {
                 return
             }
@@ -3415,7 +3423,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, newCurrentGroup)
             }
         })
-        const onDragStart = useMemoizedFn((result: DragDropContextResultProps) => {
+        const onDragStart = useMemoizedFn((result: DragStart, provided: ResponderProvided) => {
             if (!result.source) return
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
             if (index === -1) return
@@ -3430,7 +3438,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 }
             }
         })
-        const onBeforeCapture = useMemoizedFn((result: DragDropContextResultProps) => {
+        const onBeforeCapture = useMemoizedFn((result: BeforeCapture) => {
             const {index, subIndex} = getPageItemById(subPage, result.draggableId)
             if (index === -1) return
             // subIndex === -1 没有在组内
@@ -3518,7 +3526,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                                         onUnfoldAndCollapse={onUnfoldAndCollapse}
                                                         onGroupContextMenu={onGroupRightClickOperation}
                                                         dropType={subDropType}
-                                                        // dropType='droppable'
                                                     />
                                                 </React.Fragment>
                                             )
@@ -3587,7 +3594,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
         }
     })
     return (
-        <Draggable key={subItem.id} draggableId={subItem.id} index={index} type={dropType}>
+        <Draggable key={subItem.id} draggableId={subItem.id} index={index}>
             {(provided, snapshot) => {
                 const itemStyle = getItemStyle(snapshot.isDragging, provided.draggableProps.style)
                 return (
@@ -3638,7 +3645,6 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                                 />
                             </div>
                         </Tooltip>
-                        {provided.placeholder}
                     </div>
                 )
             }}
@@ -3777,8 +3783,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                 return (
                                     <div
                                         ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        // {...provided.dragHandleProps}
+                                        {...provided.droppableProps}
                                         className={classNames(
                                             styles["tab-menu-sub-group-children"],
                                             styles["tab-menu-sub-group-children-motion"],
@@ -3807,7 +3812,6 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                 )
                             }}
                         </Droppable>
-                        {providedGroup.placeholder}
                     </div>
                 )
             }}

@@ -19,7 +19,7 @@ import {
     SolidStopIcon,
     SolidSwitchConfigurationIcon
 } from "@/assets/icon/solid"
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {DragDropContext, Droppable, Draggable, DropResult, ResponderProvided} from "@hello-pangea/dnd"
 import {
     useCreation,
     useDebounceEffect,
@@ -605,7 +605,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         setOriginSequenceList([...newSequence])
     })
 
-    const onDragEnd = useMemoizedFn((result) => {
+    const onDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
         if (!result.destination) {
             return
         }
