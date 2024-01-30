@@ -17,6 +17,8 @@ import {isCommunityEdition} from "@/utils/envfile"
 import "../plugins.scss"
 import {PluginListWrap} from "./PluginListWrap"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {UpdateGroupList} from "./UpdateGroupList"
 import styles from "./PluginOnlineList.module.scss"
 
 interface PluginOnlineGroupsListProps {}
@@ -45,6 +47,8 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
     const [selectList, setSelectList] = useState<string[]>([])
     const showPluginIndex = useRef<number>(0)
     const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
+    const [groupList, setGroupList] = useState<any>([]) // 组数据
+    const updateGroupListRef = useRef<any>()
 
     useEffect(() => {
         getInitTotal()
@@ -176,15 +180,52 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
         setShowPluginIndex(index)
     })
 
+    // 获取组所有组数据
+    const getGroupListAll = () => {
+        setGroupList([
+            {
+                groupName: "test",
+                checked: true
+            },
+            {
+                groupName: "test1",
+                checked: false
+            },
+            {
+                groupName: "test2",
+                checked: false
+            }
+        ])
+    }
+
+    // 更新组数据
+    const updateGroupList = () => {
+        console.log(updateGroupListRef.current.latestGroupList)
+    }
+
     // 单项额外操作
     const optExtraNode = useMemoizedFn((data, index) => {
         return (
-            <OutlinePluscircleIcon
-                className={styles["add-group-icon"]}
-                onClick={() => {
-                    optClick(data, index)
+            <YakitPopover
+                overlayClassName={styles["add-group-popover"]}
+                placement='bottomRight'
+                trigger='click'
+                content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
+                onVisibleChange={(visible) => {
+                    if (visible) {
+                        getGroupListAll()
+                    } else {
+                        updateGroupList()
+                    }
                 }}
-            />
+            >
+                <OutlinePluscircleIcon
+                    className={styles["add-group-icon"]}
+                    onClick={() => {
+                        optClick(data, index)
+                    }}
+                />
+            </YakitPopover>
         )
     })
 
@@ -198,13 +239,29 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                 setIsList={setIsList}
                 extraHeader={
                     <div className='extra-header-wrapper'>
-                        <FuncBtn
-                            maxWidth={1050}
-                            icon={<SolidPluscircleIcon />}
-                            size='large'
-                            name='添加到组...'
-                            onClick={() => {}}
-                        />
+                        <YakitPopover
+                            overlayClassName={styles["add-group-popover"]}
+                            placement='bottomRight'
+                            trigger='click'
+                            content={
+                                <UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>
+                            }
+                            onVisibleChange={(visible) => {
+                                if (visible) {
+                                    getGroupListAll()
+                                } else {
+                                    updateGroupList()
+                                }
+                            }}
+                        >
+                            <FuncBtn
+                                maxWidth={1050}
+                                icon={<SolidPluscircleIcon />}
+                                size='large'
+                                name='添加到组...'
+                                onClick={() => {}}
+                            />
+                        </YakitPopover>
                         <div className='divider-style'></div>
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
                     </div>

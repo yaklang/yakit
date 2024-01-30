@@ -18,7 +18,8 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
     // 判断是否是 管理员或者超级管理员权限
     const judgeOnlineStatus = useMemo(() => {
         const flag = ["admin", "superadmin"].includes(userInfo.role || "")
-        setPluginGroupType(flag ? "online" : "local")
+        // INFO 暂时默认本地
+        setPluginGroupType(!flag ? "online" : "local")
         return flag
     }, [userInfo.role])
 

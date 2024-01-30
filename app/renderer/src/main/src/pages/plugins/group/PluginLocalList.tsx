@@ -18,6 +18,8 @@ import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors
 import "../plugins.scss"
 import {PluginListWrap} from "./PluginListWrap"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {UpdateGroupList} from "./UpdateGroupList"
 import styles from "./PluginLocalList.module.scss"
 
 interface PluginLocalGroupsListProps {}
@@ -41,6 +43,8 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const [initTotal, setInitTotal] = useState<number>(0)
     const [privateDomain, setPrivateDomain] = useState<string>("") // 私有域地址
     const [hasMore, setHasMore] = useState<boolean>(true)
+    const [groupList, setGroupList] = useState<any>([]) // 组数据
+    const updateGroupListRef = useRef<any>()
 
     useEffect(() => {
         getInitTotal()
@@ -198,6 +202,56 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
             return <SolidCloudpluginIcon />
         }
     })
+
+    // 获取组所有组数据
+    const getGroupListAll = () => {
+        setGroupList([
+            {
+                groupName: "test",
+                checked: true
+            },
+            {
+                groupName: "test1",
+                checked: false
+            },
+            {
+                groupName: "test2",
+                checked: false
+            }
+        ])
+    }
+
+    // 更新组数据
+    const updateGroupList = () => {
+        console.log(updateGroupListRef.current.latestGroupList)
+    }
+
+    // 单项额外操作
+    const optExtraNode = useMemoizedFn((data, index) => {
+        return (
+            <YakitPopover
+                overlayClassName={styles["add-group-popover"]}
+                placement='bottomRight'
+                trigger='click'
+                content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
+                onVisibleChange={(visible) => {
+                    if (visible) {
+                        getGroupListAll()
+                    } else {
+                        updateGroupList()
+                    }
+                }}
+            >
+                <OutlinePluscircleIcon
+                    className={styles["add-group-icon"]}
+                    onClick={() => {
+                        optClick(data, index)
+                    }}
+                />
+            </YakitPopover>
+        )
+    })
+
     return (
         <div className={styles["plugin-local-list-wrapper"]} ref={pluginsGroupsRef}>
             <PluginListWrap
@@ -208,13 +262,28 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                 setIsList={setIsList}
                 extraHeader={
                     <div className='extra-header-wrapper'>
-                        <FuncBtn
-                            maxWidth={1050}
-                            icon={<SolidPluscircleIcon />}
-                            size='large'
-                            name='添加到组...'
-                            onClick={() => {}}
-                        />
+                        <YakitPopover
+                            overlayClassName={styles["add-group-popover"]}
+                            placement='bottomRight'
+                            trigger='click'
+                            content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
+                            onVisibleChange={(visible) => {
+                                if (visible) {
+                                    getGroupListAll()
+                                } else {
+                                    updateGroupList()
+                                }
+                            }}
+                        >
+                            <FuncBtn
+                                maxWidth={1050}
+                                icon={<SolidPluscircleIcon />}
+                                size='large'
+                                name='添加到组...'
+                                onClick={() => {}}
+                            />
+                        </YakitPopover>
+
                         <div className='divider-style'></div>
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
                     </div>
@@ -244,14 +313,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                                     official={!!data.OnlineOfficial}
                                     prImgs={(data.CollaboratorInfo || []).map((ele) => ele.HeadImg)}
                                     time={data.UpdatedAt || 0}
-                                    extraFooter={(data) => (
-                                        <OutlinePluscircleIcon
-                                            className={styles["add-group-icon"]}
-                                            onClick={() => {
-                                                optClick(data, index)
-                                            }}
-                                        />
-                                    )}
+                                    extraFooter={(data) => optExtraNode(data, index)}
                                     subTitle={optSubTitle}
                                     onClick={(data, index, value) => optCheck(data, value)}
                                 />
@@ -274,14 +336,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                                     type={data.Type}
                                     isCorePlugin={!!data.IsCorePlugin}
                                     official={!!data.OnlineOfficial}
-                                    extraNode={(data) => (
-                                        <OutlinePluscircleIcon
-                                            className={styles["add-group-icon"]}
-                                            onClick={() => {
-                                                optClick(data, index)
-                                            }}
-                                        />
-                                    )}
+                                    extraNode={(data) => optExtraNode(data, index)}
                                     onClick={(data, index) => {}}
                                     subTitle={optSubTitle}
                                 />

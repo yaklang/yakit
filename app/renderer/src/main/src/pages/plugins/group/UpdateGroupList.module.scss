@@ -1,0 +1,45 @@
+.add-group-list-wrap {
+    width: 240px;
+    .search-heard {
+        height: 28px;
+        margin-bottom: 8px;
+        :global {
+            .ant-input {
+                font-size: 14px;
+                height: 26px;
+            }
+
+            .search-icon {
+                color: #85899e;
+                svg {
+                    height: 16px;
+                    width: 16px;
+                }
+            }
+        }
+    }
+    .group-list {
+        max-height: 240px;
+        overflow: auto;
+        &-item {
+            height: 28px;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: #31343f;
+            .group-name-wrap {
+                width: 100%;
+                :global {
+                    .ant-checkbox-wrapper {
+                        width: 100%;
+                        span:last-child {
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
