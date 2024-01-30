@@ -1,8 +1,8 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import ReactDOM from "react-dom"
-import {useDebounceFn, useGetState, useKeyPress, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import { useDebounceFn, useGetState, useKeyPress, useMemoizedFn, useThrottleFn, useUpdateEffect } from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
-import MonacoEditor, {monaco} from "react-monaco-editor"
+import MonacoEditor, { monaco } from "react-monaco-editor"
 // 编辑器 注册
 import "@/utils/monacoSpec/theme"
 import "@/utils/monacoSpec/fuzzHTTP"
@@ -20,26 +20,26 @@ import {
     OperationRecordRes,
     OtherMenuListProps
 } from "./YakitEditorType"
-import {showByRightContext} from "../YakitMenu/showByRightContext"
-import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
-import {StringToUint8Array} from "@/utils/str"
-import {baseMenuLists, extraMenuLists} from "./contextMenus"
-import {EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType} from "./EditorMenu"
-import {YakitSystem} from "@/yakitGVDefine"
+import { showByRightContext } from "../YakitMenu/showByRightContext"
+import { ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult } from "@/utils/editorMarkers"
+import { StringToUint8Array } from "@/utils/str"
+import { baseMenuLists, extraMenuLists } from "./contextMenus"
+import { EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType } from "./EditorMenu"
+import { YakitSystem } from "@/yakitGVDefine"
 import cloneDeep from "lodash/cloneDeep"
-import {convertKeyboard, keySortHandle} from "./editorUtils"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import { convertKeyboard, keySortHandle } from "./editorUtils"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
 
 import classNames from "classnames"
 import styles from "./YakitEditor.module.scss"
 import "./StaticYakitEditor.scss"
-import {queryYakScriptList} from "@/pages/yakitStore/network"
-import {YakScript} from "@/pages/invoker/schema"
-import {CodecType} from "@/pages/codec/CodecPage"
-import {failed} from "@/utils/notification"
-import {randomString} from "@/utils/randomUtil"
-import {v4 as uuidv4} from "uuid"
-import {editor as newEditor} from "monaco-editor"
+import { queryYakScriptList } from "@/pages/yakitStore/network"
+import { YakScript } from "@/pages/invoker/schema"
+import { CodecType } from "@/pages/codec/CodecPage"
+import { failed } from "@/utils/notification"
+import { randomString } from "@/utils/randomUtil"
+import { v4 as uuidv4 } from "uuid"
+import { editor as newEditor } from "monaco-editor"
 import IModelDecoration = newEditor.IModelDecoration
 import {
     CountDirectionProps,
@@ -47,17 +47,17 @@ import {
     HTTPFuzzerRangeEditorMenu,
     HTTPFuzzerRangeReadOnlyEditorMenu
 } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
-import {QueryFuzzerLabelResponseProps} from "@/pages/fuzzer/StringFuzzer"
-import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "@/pages/fuzzer/InsertFileFuzzTag"
-import {monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
-import {onInsertYakFuzzer, showDictsAndSelect} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {openExternalWebsite} from "@/utils/openWebsite"
+import { QueryFuzzerLabelResponseProps } from "@/pages/fuzzer/StringFuzzer"
+import { insertFileFuzzTag, insertTemporaryFileFuzzTag } from "@/pages/fuzzer/InsertFileFuzzTag"
+import { monacoEditorWrite } from "@/pages/fuzzer/fuzzerTemplates"
+import { onInsertYakFuzzer, showDictsAndSelect } from "@/pages/fuzzer/HTTPFuzzerPage"
+import { openExternalWebsite } from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
-import {GetPluginLanguage} from "@/pages/plugins/builtInData"
-import {createRoot} from "react-dom/client"
+import { GetPluginLanguage } from "@/pages/plugins/builtInData"
+import { createRoot } from "react-dom/client"
 import { setEditorContext } from "@/utils/monacoSpec/yakEditor"
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require("electron")
 
 /** @name 字体key值对应字体大小 */
 const keyToFontSize: Record<string, number> = {
@@ -72,18 +72,18 @@ const DefaultMenuTop: EditorMenuItemType[] = [
         key: "font-size",
         label: "字体大小",
         children: [
-            {key: "font-size-small", label: "小"},
-            {key: "font-size-middle", label: "中"},
-            {key: "font-size-large", label: "大"}
+            { key: "font-size-small", label: "小" },
+            { key: "font-size-middle", label: "中" },
+            { key: "font-size-large", label: "大" }
         ]
     }
 ]
 
 /** 编辑器右键默认菜单 - 底部 */
 const DefaultMenuBottom: EditorMenuItemType[] = [
-    {key: "cut", label: "剪切"},
-    {key: "copy", label: "复制"},
-    {key: "paste", label: "粘贴"}
+    { key: "cut", label: "剪切" },
+    { key: "copy", label: "复制" },
+    { key: "paste", label: "粘贴" }
 ]
 
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
@@ -127,9 +127,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         return GetPluginLanguage(type || "http")
     }, [type])
 
-    useMemo(()=>{
-        if (editor ){
-            setEditorContext(editor, "plugin", props.type ||"")
+    useMemo(() => {
+        if (editor) {
+            setEditorContext(editor, "plugin", props.type || "")
         }
     }, [props.type, editor])
 
@@ -207,7 +207,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useEffect(() => {
         // 往customhttp菜单组中注入codec插件
         try {
-            ;(extraMenuLists["customhttp"].menu[0] as EditorMenuItemProps).children = codecPlugin.map((item) => {
+            ; (extraMenuLists["customhttp"].menu[0] as EditorMenuItemProps).children = codecPlugin.map((item) => {
                 return {
                     key: item.key,
                     label: item.key
@@ -218,7 +218,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
 
         const keyToRun: Record<string, string[]> = {}
-        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+        const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
 
         for (let key in allMenu) {
             const keys: string[] = []
@@ -228,11 +228,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             keyToRun[key] = keys
         }
 
-        keyToOnRunRef.current = {...keyToRun}
+        keyToOnRunRef.current = { ...keyToRun }
     }, [contextMenu])
 
     /** 菜单功能点击处理事件 */
-    const {run: menuItemHandle} = useDebounceFn(
+    const { run: menuItemHandle } = useDebounceFn(
         useMemoizedFn((key: string, keyPath: string[]) => {
             if (!editor) return
             /** 是否执行过方法(onRightContextMenu) */
@@ -243,7 +243,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const menuItemName = keyPath[0]
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
-                        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+                        const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
                         allMenu[name].onRun(editor, menuItemName)
                         executeFunc = true
                         onRightContextMenu(menuItemName)
@@ -255,7 +255,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const menuName = keyPath[0]
                 for (let name in keyToOnRunRef.current) {
                     if (keyToOnRunRef.current[name].includes(menuName)) {
-                        const allMenu = {...baseMenuLists, ...extraMenuLists, ...contextMenu}
+                        const allMenu = { ...baseMenuLists, ...extraMenuLists, ...contextMenu }
                         allMenu[name].onRun(editor, menuName)
                         executeFunc = true
                         onRightContextMenu(menuName)
@@ -267,7 +267,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             if (!executeFunc) onRightContextMenu(key)
             return
         }),
-        {wait: 300}
+        { wait: 300 }
     )
     /** 操作记录存储 */
     const onOperationRecord = (type: "fontSize" | "showBreak", value: number | boolean) => {
@@ -342,7 +342,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         for (let item of data) {
             /** 屏蔽菜单分割线选项 */
             if (typeof (data as any as EditorMenuItemDividerProps)["type"] !== "undefined") {
-                const info: EditorMenuItemDividerProps = {type: "divider"}
+                const info: EditorMenuItemDividerProps = { type: "divider" }
                 menus.push(info)
             } else {
                 /** 处理带快捷键的菜单项 */
@@ -448,20 +448,20 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
             if (type === "http") {
                 rightContextMenu.current = rightContextMenu.current.concat([
-                    {key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符"}
+                    { key: "http-show-break", label: getShowBreak() ? "隐藏换行符" : "显示换行符" }
                 ])
             }
             if (language === "yak") {
                 rightContextMenu.current = rightContextMenu.current.concat([
-                    {type: "divider"},
-                    {key: "yak-formatter", label: "Yak 代码格式化"}
+                    { type: "divider" },
+                    { key: "yak-formatter", label: "Yak 代码格式化" }
                 ])
             }
             if (menuType.length > 0) {
                 const types = Array.from(new Set(menuType))
                 for (let key of types)
                     rightContextMenu.current = rightContextMenu.current.concat([
-                        {type: "divider"},
+                        { type: "divider" },
                         cloneDeep(extraMenuLists[key].menu[0])
                     ])
             }
@@ -500,21 +500,20 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         () => {
             failed("粘贴过快，请稍后再试")
         },
-        {wait: 500}
+        { wait: 500 }
     )
     useEffect(() => {
         if (!editor) {
             return
         }
+        const model = editor.getModel()
+        if (!model) {
+            return
+        }
+        let current: string[] = []
 
-        if (props.type === "http") {
-            const model = editor.getModel()
-            if (!model) {
-                return
-            }
 
-            let current: string[] = []
-
+        if (props.type === "http" || props.type === "html") {
             /** 随机上下文ID */
             const randomStr = randomString(10)
             /** 对于需要自定义命令的快捷键生成对应的上下文ID */
@@ -545,58 +544,62 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const text =
                     endsp.lineNumber === 1
                         ? model.getValueInRange({
-                              startLineNumber: 1,
-                              startColumn: 1,
-                              endLineNumber: 1,
-                              endColumn: endsp.column
-                          })
+                            startLineNumber: 1,
+                            startColumn: 1,
+                            endLineNumber: 1,
+                            endColumn: endsp.column
+                        })
                         : model.getValueInRange({
-                              startLineNumber: 1,
-                              startColumn: 1,
-                              endLineNumber: endsp.lineNumber,
-                              endColumn: endsp.column
-                          })
+                            startLineNumber: 1,
+                            startColumn: 1,
+                            endLineNumber: endsp.lineNumber,
+                            endColumn: endsp.column
+                        })
 
                 const dec: YakitIModelDecoration[] = []
-                ;(() => {
-                    try {
-                        ;[
-                            {regexp: /\nContent-Length:\s*?\d+/, classType: "content-length"},
-                        ].map((detail) => {
-                            // handle content-length
-                            const match = detail.regexp.exec(text)
-                            if (!match) {
-                                return
-                            }
+                if (props.type === "http") {
+                    ; (() => {
+                        try {
+                            ;[
+                                { regexp: /\nContent-Length:\s*?\d+/, classType: "content-length" },
+                            ].map((detail) => {
+                                // handle content-length
+                                const match = detail.regexp.exec(text)
+                                if (!match) {
+                                    return
+                                }
+                                const start = model.getPositionAt(match.index)
+                                const end = model.getPositionAt(match.index + match[0].indexOf(":"))
+                                dec.push({
+                                    id: detail.classType + match.index,
+                                    ownerId: 0,
+                                    range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                                    options: { afterContentClassName: detail.classType }
+                                } as YakitIModelDecoration)
+                            })
+                        } catch (e) { }
+                    })()
+                }
+                if (props.type === "html" || props.type === "http") {
+                    ; (() => {
+                        const text = model.getValue()
+                        let match
+                        const regex = /(\\u[\dabcdef]{4})+/ig
+
+                        while ((match = regex.exec(text)) !== null) {
                             const start = model.getPositionAt(match.index)
-                            const end = model.getPositionAt(match.index + match[0].indexOf(":"))
+                            const end = model.getPositionAt(match.index + match[0].length)
+                            const decoded = match[0].split("\\u").filter(Boolean).map(hex => String.fromCharCode(parseInt(hex, 16))).join("")
                             dec.push({
-                                id: detail.classType + match.index,
-                                ownerId: 0,
+                                id: "decode" + match.index,
+                                ownerId: 1,
                                 range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                                options: {afterContentClassName: detail.classType}
-                            } as YakitIModelDecoration)
-                        })
-                    } catch (e) {}
-                })()
-                ;(() => {
-                    const text = model.getValue()
-                    let match 
-                    const regex = /(\\u[\dabcdef]{4})+/ig
-    
-                    while ((match = regex.exec(text)) !== null) {
-                        const start = model.getPositionAt(match.index)
-                        const end = model.getPositionAt(match.index + match[0].length)
-                        const decoded = match[0].split("\\u").filter(Boolean).map(hex => String.fromCharCode(parseInt(hex, 16))).join("")
-                        dec.push({
-                            id: "decode" + match.index,
-                            ownerId: 1,
-                            range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                            options: {className: "unicode-decode", hoverMessage: {value: decoded}, afterContentClassName: "unicode-decode", after: {content: decoded, inlineClassName: "unicode-decode-after"}}
-                        } as IModelDecoration)
-                    }
-                })()
-                ;(() => {
+                                options: { className: "unicode-decode", hoverMessage: { value: decoded }, afterContentClassName: "unicode-decode", after: { content: decoded, inlineClassName: "unicode-decode-after" } }
+                            } as IModelDecoration)
+                        }
+                    })()
+                }
+                ; (() => {
                     const keywordRegExp = /\r?\n/g
                     let match
                     let count = 0
@@ -609,7 +612,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             id: "keyword" + match.index,
                             ownerId: 2,
                             range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                            options: {beforeContentClassName: className}
+                            options: { beforeContentClassName: className }
                         } as YakitIModelDecoration)
                         if (count > 19) {
                             return
@@ -626,7 +629,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             return () => {
                 try {
                     editor.dispose()
-                } catch (e) {}
+                } catch (e) { }
             }
         }
     }, [editor])
@@ -649,7 +652,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             <EditorMenu
                 size='rightMenu'
                 data={[...rightContextMenu.current]}
-                onClick={({key, keyPath}) => menuItemHandle(key, keyPath)}
+                onClick={({ key, keyPath }) => menuItemHandle(key, keyPath)}
             />
         )
     })
@@ -675,7 +678,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
             menuItemHandle(keyToMenu[0], keyToMenu)
         },
-        {target: wrapperRef}
+        { target: wrapperRef }
     )
 
     /** 计算编辑器的高度 有点问题，为什么用state记录而不是ref记录，测试过后删除该问题 */
@@ -715,8 +718,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
             const allContent = model.getValue()
             ipcRenderer
-                .invoke("YaklangCompileAndFormat", {Code: allContent})
-                .then((e: {Errors: YakStaticAnalyzeErrorResult[]; Code: string}) => {
+                .invoke("YaklangCompileAndFormat", { Code: allContent })
+                .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
                     if (e.Code !== "") {
                         model.setValue(e.Code)
                     }
@@ -733,7 +736,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     console.info(e)
                 })
         }),
-        {wait: 500, leading: true, trailing: false}
+        { wait: 500, leading: true, trailing: false }
     )
     /** Yak语言 代码错误检查并显示提示标记 */
     const yakStaticAnalyze = useDebounceFn(
@@ -741,8 +744,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             if (language === "yak") {
                 const allContent = model.getValue()
                 ipcRenderer
-                    .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type})
-                    .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
+                    .invoke("StaticAnalyzeError", { Code: StringToUint8Array(allContent), PluginType: type })
+                    .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
                         if (e && e.Result.length > 0) {
                             const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
                             monaco.editor.setModelMarkers(model, "owner", markers)
@@ -752,7 +755,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     })
             }
         }),
-        {wait: 300}
+        { wait: 300 }
     )
 
     const downPosY = useRef<number>()
@@ -777,7 +780,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         // 插入标签
         const insertLabelFun = (v: QueryFuzzerLabelResponseProps) => {
             if (v.Label) {
-                editor && editor.trigger("keyboard", "type", {text: v.Label})
+                editor && editor.trigger("keyboard", "type", { text: v.Label })
             } else if (v.DefaultDescription === "插入文件-fixed") {
                 editor && insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
             } else if (v.DefaultDescription === "插入Payload-fixed") {
@@ -854,72 +857,72 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 } else {
                     readOnly
                         ? createRoot(domNode).render(
-                              <HTTPFuzzerRangeReadOnlyEditorMenu
-                                  editorInfo={editorInfo.current}
-                                  rangeValue={
-                                      (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
-                                  }
-                                  close={() => closeFizzRangeWidget()}
-                                  fizzRangeTimeoutId={fizzRangeTimeoutId}
-                              />
-                          )
+                            <HTTPFuzzerRangeReadOnlyEditorMenu
+                                editorInfo={editorInfo.current}
+                                rangeValue={
+                                    (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
+                                }
+                                close={() => closeFizzRangeWidget()}
+                                fizzRangeTimeoutId={fizzRangeTimeoutId}
+                            />
+                        )
                         : createRoot(domNode).render(
-                              <HTTPFuzzerRangeEditorMenu
-                                  editorInfo={editorInfo.current}
-                                  close={() => closeFizzRangeWidget()}
-                                  insert={(fun: any) => {
-                                      if (editor) {
-                                          const selectedText =
-                                              editor.getModel()?.getValueInRange(editor.getSelection() as any) || ""
-                                          if (selectedText.length > 0) {
-                                              ipcRenderer
-                                                  .invoke("QueryFuzzerLabel")
-                                                  .then((data: {Data: QueryFuzzerLabelResponseProps[]}) => {
-                                                      const {Data} = data
-                                                      let newSelectedText: string = selectedText
-                                                      if (Array.isArray(Data) && Data.length > 0) {
-                                                          // 选中项是否存在于标签中
-                                                          let isHave: boolean = Data.map((item) => item.Label).includes(
-                                                              selectedText
-                                                          )
-                                                          if (isHave) {
-                                                              newSelectedText = selectedText.replace(/{{|}}/g, "")
-                                                          }
-                                                      }
-                                                      const text: string = fun(newSelectedText)
-                                                      editor.trigger("keyboard", "type", {text})
-                                                  })
-                                          }
-                                      }
-                                  }}
-                                  replace={(text: string) => {
-                                      if (editor) {
-                                          editor.trigger("keyboard", "type", {text})
-                                          closeFizzRangeWidget()
-                                      }
-                                  }}
-                                  rangeValue={
-                                      (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
-                                  }
-                                  fizzRangeTimeoutId={fizzRangeTimeoutId}
-                                  hTTPFuzzerClickEditorMenuProps={
-                                      readOnly
-                                          ? undefined
-                                          : {
-                                                editorInfo: editorInfo.current,
-                                                close: () => closeFizzRangeWidget(),
-                                                insert: (v: QueryFuzzerLabelResponseProps) => {
-                                                    insertLabelFun(v)
-                                                    closeFizzRangeWidget()
-                                                },
-                                                addLabel: () => {
-                                                    closeFizzRangeWidget()
-                                                    onInsertYakFuzzer(editor)
-                                                }
+                            <HTTPFuzzerRangeEditorMenu
+                                editorInfo={editorInfo.current}
+                                close={() => closeFizzRangeWidget()}
+                                insert={(fun: any) => {
+                                    if (editor) {
+                                        const selectedText =
+                                            editor.getModel()?.getValueInRange(editor.getSelection() as any) || ""
+                                        if (selectedText.length > 0) {
+                                            ipcRenderer
+                                                .invoke("QueryFuzzerLabel")
+                                                .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
+                                                    const { Data } = data
+                                                    let newSelectedText: string = selectedText
+                                                    if (Array.isArray(Data) && Data.length > 0) {
+                                                        // 选中项是否存在于标签中
+                                                        let isHave: boolean = Data.map((item) => item.Label).includes(
+                                                            selectedText
+                                                        )
+                                                        if (isHave) {
+                                                            newSelectedText = selectedText.replace(/{{|}}/g, "")
+                                                        }
+                                                    }
+                                                    const text: string = fun(newSelectedText)
+                                                    editor.trigger("keyboard", "type", { text })
+                                                })
+                                        }
+                                    }
+                                }}
+                                replace={(text: string) => {
+                                    if (editor) {
+                                        editor.trigger("keyboard", "type", { text })
+                                        closeFizzRangeWidget()
+                                    }
+                                }}
+                                rangeValue={
+                                    (editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ""
+                                }
+                                fizzRangeTimeoutId={fizzRangeTimeoutId}
+                                hTTPFuzzerClickEditorMenuProps={
+                                    readOnly
+                                        ? undefined
+                                        : {
+                                            editorInfo: editorInfo.current,
+                                            close: () => closeFizzRangeWidget(),
+                                            insert: (v: QueryFuzzerLabelResponseProps) => {
+                                                insertLabelFun(v)
+                                                closeFizzRangeWidget()
+                                            },
+                                            addLabel: () => {
+                                                closeFizzRangeWidget()
+                                                onInsertYakFuzzer(editor)
                                             }
-                                  }
-                              />
-                          )
+                                        }
+                                }
+                            />
+                        )
                 }
                 return domNode
             },
@@ -977,11 +980,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 //     }
                 // }
 
-                const {target, event} = e
-                const {posy} = event
+                const { target, event } = e
+                const { posy } = event
                 const detail =
                     target.type === newEditor.MouseTargetType.CONTENT_WIDGET ||
-                    target.type === newEditor.MouseTargetType.OVERLAY_WIDGET
+                        target.type === newEditor.MouseTargetType.OVERLAY_WIDGET
                         ? target.detail
                         : undefined
                 const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
@@ -1020,7 +1023,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         // })
 
         editor.onMouseDown((e) => {
-            const {leftButton, posy} = e.event
+            const { leftButton, posy } = e.event
             // 当两者都没有打开时
             if (leftButton && !fizzSelectWidget.isOpen && !fizzRangeWidget.isOpen) {
                 // 记录posy位置
@@ -1030,9 +1033,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
         editor.onMouseUp((e) => {
             // @ts-ignore
-            const {leftButton, rightButton, posx, posy, editorPos} = e.event
+            const { leftButton, rightButton, posx, posy, editorPos } = e.event
             // 获取编辑器所处x，y轴,并获取其长宽
-            const {x, y} = editorPos
+            const { x, y } = editorPos
             const editorHeight = editorPos.height
             const editorWidth = editorPos.width
 
@@ -1041,7 +1044,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             const position = editor.getScrolledVisiblePosition(a)
             if (position) {
                 // 获取焦点在编辑器中所处位置，height为每行所占高度（随字体大小改变）
-                const {top, left, height} = position
+                const { top, left, height } = position
 
                 // 解决方法1
                 // 获取焦点位置判断焦点所处于编辑器的位置（上下左右）从而决定弹出层显示方向
@@ -1057,7 +1060,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     const editorContainer = editor.getDomNode()
                     if (editorContainer) {
                         const editorContainerInfo = editorContainer.getBoundingClientRect()
-                        const {top, bottom, left, right} = editorContainerInfo
+                        const { top, bottom, left, right } = editorContainerInfo
                         // 通过判断编辑器长宽限制是否显示 (宽度小于250或者长度小于200则不展示)
                         const isShowByLimit = right - left > 250 && bottom - top > 200
                         // 判断焦点位置
@@ -1132,7 +1135,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             }
         })
         editor.onDidScrollChange((e) => {
-            const {scrollTop} = e
+            const { scrollTop } = e
             onScrollTop.current = scrollTop
         })
 
@@ -1154,7 +1157,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 onResize={(width, height) => {
                     if (!width || !height) return
                     /** 重绘编辑器尺寸 */
-                    if (editor) editor.layout({height, width})
+                    if (editor) editor.layout({ height, width })
                     /** 记录当前编辑器外边框尺寸 */
                     preWidthRef.current = width
                     preHeightRef.current = height
@@ -1212,7 +1215,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         wordWrap: noWordWrap ? "off" : "on",
                         renderLineHighlight: "line",
                         lineNumbers: noLineNumber ? "off" : "on",
-                        minimap: noMiniMap ? {enabled: false} : undefined,
+                        minimap: noMiniMap ? { enabled: false } : undefined,
                         lineNumbersMinChars: lineNumbersMinChars || 5,
                         contextmenu: false,
                         renderWhitespace: "all",
