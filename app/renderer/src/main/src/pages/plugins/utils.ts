@@ -6,9 +6,12 @@ import {info, yakitNotify} from "@/utils/notification"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 import {compareAsc} from "../yakitStore/viewers/base"
 import {
+    GetYakScriptGroupResponse,
     GetYakScriptTagsAndTypeResponse,
+    QueryYakScriptGroupResponse,
     QueryYakScriptRequest,
     QueryYakScriptsResponse,
+    SaveYakScriptGroupRequest,
     YakScript,
     genDefaultPagination
 } from "../invoker/schema"
@@ -1311,5 +1314,107 @@ export const onToEditPlugin = (plugin: YakScript) => {
 export const apiGetYakScriptById: (Id: string | number) => Promise<YakScript> = (Id) => {
     return new Promise((resolve, reject) => {
         ipcRenderer.invoke("GetYakScriptById", {Id}).then(resolve).catch(reject)
+    })
+}
+
+/**本地获取插件组数据 */
+export const apiFetchQueryYakScriptGroupLocal: (All?: boolean) => Promise<QueryYakScriptGroupResponse> = (
+    All = true
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("QueryYakScriptGroup", {All})
+                .then((res: QueryYakScriptGroupResponse) => {
+                    resolve(res)
+                })
+                .catch((e) => {
+                    yakitNotify("error", e)
+                })
+        } catch (error) {
+            yakitNotify("error", error + "")
+            reject(error)
+        }
+    })
+}
+
+/**本地插件组名字修改 */
+export const apiFetchRenameYakScriptGroupLocal: (Group: string, NewGroup: string) => Promise<null> = (
+    Group,
+    NewGroup
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("RenameYakScriptGroup", {Group, NewGroup})
+                .then((res: null) => {
+                    resolve(null)
+                })
+                .catch((e) => {
+                    yakitNotify("error", e)
+                })
+        } catch (error) {
+            yakitNotify("error", error + "")
+            reject(error)
+        }
+    })
+}
+
+/**本地插件组删除 */
+export const apiFetchDeleteYakScriptGroupLocal: (Group: string) => Promise<null> = (Group) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("DeleteYakScriptGroup", {Group})
+                .then((res: null) => {
+                    resolve(null)
+                })
+                .catch((e) => {
+                    yakitNotify("error", e)
+                })
+        } catch (error) {
+            yakitNotify("error", error + "")
+            reject(error)
+        }
+    })
+}
+
+/**本地获取插件所在插件组和其他插件组 */
+export const apiFetchGetYakScriptGroupLocal: (YakScriptName: string[]) => Promise<GetYakScriptGroupResponse> = (
+    YakScriptName
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("GetYakScriptGroup", {YakScriptName})
+                .then((res: GetYakScriptGroupResponse) => {
+                    resolve(res)
+                })
+                .catch((e) => {
+                    yakitNotify("error", e)
+                })
+        } catch (error) {
+            yakitNotify("error", error + "")
+            reject(error)
+        }
+    })
+}
+
+/**本地更新插件所在组&新增插件组 */
+export const apiFetchSaveYakScriptGroupLocal: (params: SaveYakScriptGroupRequest) => Promise<null> = (params) => {
+    return new Promise((resolve, reject) => {
+        try {
+            ipcRenderer
+                .invoke("SaveYakScriptGroup", params)
+                .then((res: null) => {
+                    resolve(null)
+                })
+                .catch((e) => {
+                    yakitNotify("error", e)
+                })
+        } catch (error) {
+            yakitNotify("error", error + "")
+            reject(error)
+        }
     })
 }

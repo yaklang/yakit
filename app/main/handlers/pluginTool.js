@@ -251,4 +251,85 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteLocalPluginsByWhere", async (e, params) => {
         return await asyncDeleteLocalPluginsByWhere(params)
     })
+
+
+    const asyncQueryYakScriptGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 获取插件组数据
+    ipcMain.handle("QueryYakScriptGroup", async (e, params) => {
+        return await asyncQueryYakScriptGroup(params)
+    })
+
+    const asyncRenameYakScriptGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().RenameYakScriptGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 插件组名字修改
+    ipcMain.handle("RenameYakScriptGroup", async (e, params) => {
+        return await asyncRenameYakScriptGroup(params)
+    })
+
+    const asyncDeleteYakScriptGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteYakScriptGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 插件组删除
+    ipcMain.handle("DeleteYakScriptGroup", async (e, params) => {
+        return await asyncDeleteYakScriptGroup(params)
+    })
+
+    const asyncGetYakScriptGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetYakScriptGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 获取插件所在插件组和其他插件组
+    ipcMain.handle("GetYakScriptGroup", async (e, params) => {
+        return await asyncGetYakScriptGroup(params)
+    })
+
+    const asyncSaveYakScriptGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SaveYakScriptGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 更新插件所在组&新增插件组
+    ipcMain.handle("SaveYakScriptGroup", async (e, params) => {
+        return await asyncSaveYakScriptGroup(params)
+    })
 }

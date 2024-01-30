@@ -168,3 +168,23 @@ export interface GetYakScriptTagsAndTypeResponse {
     Type: TagsAndType[]
     Tag: TagsAndType[]
 }
+
+export interface GroupCount {
+    Value: string
+    Total: number
+}
+
+export interface QueryYakScriptGroupResponse {
+    Group: GroupCount[]
+}
+
+export interface GetYakScriptGroupResponse {
+    SetGroup: string[]
+    AllGroup: string[]
+}
+
+export interface SaveYakScriptGroupRequest {
+    YakScriptName: string[]
+    SaveGroup: string[]
+    RemoveGroup: string[]
+}
