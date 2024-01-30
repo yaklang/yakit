@@ -431,7 +431,18 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
     const onOKFun = useMemoizedFn(async () => {
         await form.validateFields()
         try {
-            const res: GenerateURLResponse = await ipcRenderer.invoke("mitm-agent-hijacking-config", handleReqParams())
+            let params = handleReqParams()
+            if (params.Port === "0") {
+                if (params.Scheme === "http") {
+                    params.Port = "80"
+                } else if (params.Scheme === "https") {
+                    params.Port = "443"
+                } else {
+                    params.Port = "1080"
+                }
+            } 
+
+            const res: GenerateURLResponse = await ipcRenderer.invoke("mitm-agent-hijacking-config", params)
             generateURL(res.URL)
             onClose()
         } catch (error) {
@@ -471,7 +482,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
                 >
                     <Form.Item label='协议' name='Scheme' style={{marginBottom: 4}}>
                         <YakitSelect
-                            options={["http", "socks5"].map((item) => ({
+                            options={["http", "https", "socks4", "socks4a", "socks5"].map((item) => ({
                                 value: item,
                                 label: item
                             }))}
@@ -486,7 +497,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
                             {required: true, message: "请输入地址"},
                             {
                                 pattern:
-                                    /^((([a-z\d]([a-z\d-]*[a-z\d])*)\.)*[a-z]([a-z\d-]*[a-z\d])?|(?:\d{1,3}\.){3}\d{1,3}):\d+$/,
+                                    /^((([a-z\d]([a-z\d-]*[a-z\d])*)\.)*[a-z]([a-z\d-]*[a-z\d])?|(?:\d{1,3}\.){3}\d{1,3})(:\d+)?$/,
                                 message: "输入地址格式不正确"
                             }
                         ]}
@@ -497,7 +508,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
                         label='用户名'
                         name='Username'
                         style={{marginBottom: 4}}
-                        rules={[{required: true, message: "请输入用户名"}]}
+                        rules={[{required: false, message: "请输入用户名"}]}
                     >
                         <YakitInput placeholder='请输入用户名' />
                     </Form.Item>
@@ -505,7 +516,7 @@ export const AgentConfigModal: React.FC<AgentConfigModalProp> = React.memo((prop
                         label='密码'
                         name="Password"
                         style={{marginBottom: 4}}
-                        rules={[{required: true, message: "请输入密码"}]}
+                        rules={[{required: false, message: "请输入密码"}]}
                     >
                         <YakitInput placeholder='请输入密码' />
                     </Form.Item>
