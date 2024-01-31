@@ -5,6 +5,7 @@ import {useStore} from "@/store"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {PluginOnlineGroupList} from "./PluginOnlineGroupList"
 import {PluginLocalGroupList} from "./PluginLocalGroupList"
+import {GroupListItem} from "./PluginGroupList"
 import styles from "./PluginGroups.module.scss"
 
 interface PluginGroupsProps {}
@@ -12,14 +13,14 @@ interface PluginGroupsProps {}
 export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
     const [pluginGroupType, setPluginGroupType] = useState<"online" | "local">("online")
-    const pluginOnlineGroupListRef = useRef<any>()
-    const pluginLocalGroupListRef = useRef<any>()
+    const [onlineGroupLen, setOnlineGroupLen] = useState<number>(0)
+    const [localGroupLen, setLocalGroupLen] = useState<number>(0)
+    const [activeLocalGroup, setActiveLocalGroup] = useState<GroupListItem>() // 当前选中本地插件组
 
     // 判断是否是 管理员或者超级管理员权限
     const judgeOnlineStatus = useMemo(() => {
         const flag = ["admin", "superadmin"].includes(userInfo.role || "")
-        // INFO 暂时默认本地
-        setPluginGroupType(!flag ? "online" : "local")
+        setPluginGroupType(flag ? "online" : "local")
         return flag
     }, [userInfo.role])
 
@@ -29,7 +30,7 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
             <div className={styles["plugin-groups-left-wrap"]}>
                 <div className={styles["plugin-groups-left-header"]}>
                     <span className={styles["plugin-groups-left-header-text"]}>插件组管理</span>
-                    {judgeOnlineStatus && (
+                    {/* {judgeOnlineStatus && (
                         <YakitRadioButtons
                             style={{marginRight: 4}}
                             value={pluginGroupType}
@@ -47,11 +48,9 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                             ]}
                             size={"small"}
                         />
-                    )}
+                    )} */}
                     <span className={styles["plugin-groups-number"]}>
-                        {pluginGroupType === "online"
-                            ? pluginOnlineGroupListRef.current?.groupListLen || 0
-                            : pluginLocalGroupListRef.current?.groupListLen || 0}
+                        {pluginGroupType === "online" ? onlineGroupLen : localGroupLen}
                     </span>
                 </div>
                 <div className={styles["plugin-groups-left-body"]}>
@@ -61,7 +60,7 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                             height: "100%"
                         }}
                     >
-                        <PluginOnlineGroupList ref={pluginOnlineGroupListRef}></PluginOnlineGroupList>
+                        {/* <PluginOnlineGroupList onOnlineGroupLen={setOnlineGroupLen}></PluginOnlineGroupList> */}
                     </div>
                     <div
                         style={{
@@ -69,7 +68,13 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                             height: "100%"
                         }}
                     >
-                        <PluginLocalGroupList ref={pluginLocalGroupListRef}></PluginLocalGroupList>
+                        <PluginLocalGroupList
+                            onLocalGroupLen={setLocalGroupLen}
+                            activeLocalGroup={activeLocalGroup}
+                            onActiveGroup={(groupItem) => {
+                                setActiveLocalGroup(groupItem)
+                            }}
+                        ></PluginLocalGroupList>
                     </div>
                 </div>
             </div>
@@ -81,7 +86,7 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                         height: "100%"
                     }}
                 >
-                    <PluginOnlineList></PluginOnlineList>
+                    {/* <PluginOnlineList></PluginOnlineList> */}
                 </div>
                 <div
                     style={{
@@ -89,7 +94,7 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                         height: "100%"
                     }}
                 >
-                    <PluginLocalList></PluginLocalList>
+                    {activeLocalGroup && <PluginLocalList activeGroup={activeLocalGroup}></PluginLocalList>}
                 </div>
             </div>
         </div>

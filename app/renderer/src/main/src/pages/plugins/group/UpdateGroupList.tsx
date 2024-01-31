@@ -1,10 +1,15 @@
 import React, {useEffect, useImperativeHandle, useState} from "react"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
-import styles from "./UpdateGroupList.module.scss"
 import {Tooltip} from "antd"
+import styles from "./UpdateGroupList.module.scss"
+
+export interface UpdateGroupListItem {
+    groupName: string
+    checked: boolean
+}
 
 interface UpdateGroupListProps {
     ref: React.Ref<any>
@@ -13,13 +18,15 @@ interface UpdateGroupListProps {
 
 export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef((props, ref) => {
     const {originGroupList} = props
-    const [groupList, setGroupList] = useState<any>(originGroupList)
+    const [groupList, setGroupList] = useState<UpdateGroupListItem[]>([])
     const [searchFlag, setSearchFlag] = useState<boolean>(false)
-    const [searchGroupList, setSearchGroupList] = useState<any>([])
-    const [addGroupList, setAddGroupList] = useState<any>([])
+    const [searchVal, setSearchVal] = useState<string>("")
+    const [searchGroupList, setSearchGroupList] = useState<UpdateGroupListItem[]>([])
+    const [addGroupList, setAddGroupList] = useState<UpdateGroupListItem[]>([])
 
     useEffect(() => {
-        setGroupList(originGroupList)
+        setGroupList(structuredClone(originGroupList))
+        resetSearch()
     }, [originGroupList])
 
     useImperativeHandle(
@@ -44,32 +51,35 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
         return width
     }
 
-    const onSearch = useDebounceFn(
-        useMemoizedFn((groupName: string) => {
-            if (groupName) {
-                const filterList = groupList.filter((item) => item.groupName.includes(groupName))
-                if (filterList.length) {
-                    setAddGroupList([])
-                    setSearchGroupList(filterList)
-                } else {
-                    setAddGroupList([
-                        {
-                            groupName,
-                            checked: false
-                        }
-                    ])
-                }
-                setSearchFlag(true)
-            } else {
-                setSearchFlag(false)
-                setSearchGroupList([])
+    const onSearch = useMemoizedFn((groupName: string) => {
+        if (groupName) {
+            setSearchVal(groupName)
+            const filterList = groupList.filter((item) => item.groupName === groupName)
+            if (filterList.length) {
                 setAddGroupList([])
+                setSearchGroupList(filterList)
+            } else {
+                setAddGroupList([
+                    {
+                        groupName,
+                        checked: false
+                    }
+                ])
             }
-        }),
-        {wait: 200}
-    ).run
+            setSearchFlag(true)
+        } else {
+            resetSearch()
+        }
+    })
 
-    const changeFiled = (list, groupName, checked: boolean) => {
+    const resetSearch = () => {
+        setSearchVal("")
+        setSearchFlag(false)
+        setSearchGroupList([])
+        setAddGroupList([])
+    }
+
+    const changeFiled = (list: UpdateGroupListItem[], groupName: string, checked: boolean) => {
         const copyList = structuredClone(list)
         copyList.forEach((i) => {
             if (i.groupName === groupName) {
@@ -102,30 +112,33 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
         <div className={styles["add-group-list-wrap"]}>
             <div className={styles["search-heard"]}>
                 <YakitInput
+                    value={searchVal}
                     size='middle'
                     prefix={<OutlineSearchIcon className='search-icon' />}
                     allowClear={true}
-                    onChange={(e) => onSearch(e.target.value)}
+                    onChange={(e) => onSearch(e.target.value.trim())}
                 />
             </div>
             <div className={styles["group-list"]}>
                 {searchFlag
                     ? addGroupList.length
                         ? addGroupList.map((item) => (
-                              <div className={styles["group-list-item"]}>
-                                  <Tooltip title={getTextWidth(item.groupName) > 204 ? item.groupName : ""}>
+                              <div className={styles["group-list-item"]} key={item.groupName}>
+                                  <Tooltip
+                                      title={getTextWidth(`新增分组 “${item.groupName}"`) > 204 ? item.groupName : ""}
+                                  >
                                       <YakitCheckbox
                                           wrapperClassName={styles["group-name-wrap"]}
                                           checked={item.checked}
                                           onChange={(e) => onCheckedChange(e, item)}
                                       >
-                                          新增分组 "{item.groupName}"
+                                          新增分组 “{item.groupName}"
                                       </YakitCheckbox>
                                   </Tooltip>
                               </div>
                           ))
                         : searchGroupList.map((item) => (
-                              <div className={styles["group-list-item"]}>
+                              <div className={styles["group-list-item"]} key={item.groupName}>
                                   <Tooltip title={getTextWidth(item.groupName) > 204 ? item.groupName : ""}>
                                       <YakitCheckbox
                                           wrapperClassName={styles["group-name-wrap"]}
@@ -138,7 +151,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
                               </div>
                           ))
                     : groupList.map((item) => (
-                          <div className={styles["group-list-item"]}>
+                          <div className={styles["group-list-item"]} key={item.groupName}>
                               <Tooltip title={getTextWidth(item.groupName) > 204 ? item.groupName : ""}>
                                   <YakitCheckbox
                                       wrapperClassName={styles["group-name-wrap"]}

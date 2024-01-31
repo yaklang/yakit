@@ -3527,6 +3527,8 @@ message QueryYakScriptRequest {
   repeated string Family = 16;
   string UUID = 17;
   PluginGroup Group = 18;
+  repeated string ExcludeTypes = 19;
+  repeated string IncludedTypes = 20;
 }
 
 message PluginGroup {
@@ -3692,6 +3694,7 @@ message QueryYakScriptGroupResponse {
 message GroupCount {
   string Value = 1;
   int32 Total = 2;
+  bool Default = 3;
 }
 
 message SaveYakScriptGroupRequest {

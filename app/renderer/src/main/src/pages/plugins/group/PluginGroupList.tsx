@@ -3,22 +3,49 @@ import classNames from "classnames"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import styles from "./PluginGroupList.module.scss"
 
+export interface GroupListItem {
+    id: string // 唯一标识
+    name: string // 插件组名字
+    number: number // 插件组对应插件数量
+    icon: React.ReactElement // 插件组前的icon
+    iconColor: string // icon颜色
+    showOptBtns: boolean // 是否显示操作按钮
+    default: boolean // 是否默认
+}
+
 interface PluginGroupListProps {
-    data: any // 插件组数据
-    editGroupName: string // 当前编辑组名
-    onEditInputBlur: (groupItem: any, editGroupNewName: string) => void
-    extraOptBtn: (groupItem: any) => ReactNode // 插件组操作按钮
+    data: GroupListItem[] // 插件组数据
+    editGroup?: GroupListItem // 当前编辑组
+    onEditInputBlur: (groupItem: GroupListItem, newName: string) => void
+    extraOptBtn: (groupItem: GroupListItem) => ReactNode // 插件组操作按钮
+    onActiveGroup: (groupItem: GroupListItem) => void
 }
 
 export const PluginGroupList: React.FC<PluginGroupListProps> = (props) => {
-    const {data, editGroupName, onEditInputBlur, extraOptBtn} = props
-    const [activeGroup, setActiveGroup] = useState<string>("全部") // 当前选中插件组
+    const {data, editGroup, onEditInputBlur, extraOptBtn, onActiveGroup} = props
+    const [activeGroupId, setActiveGroupId] = useState<string>(data[0].id) // 当前选中插件组id
     const editInputRef = useRef<any>()
-    const [editGroupNewName, setEditGroupNewName] = useState<string>(editGroupName) // 插件组新名字
+    const [newName, setNewName] = useState<string>("") // 插件组新名字
 
     useEffect(() => {
-        setEditGroupNewName(editGroupName)
-    }, [editGroupName])
+        if (editGroup) {
+            setNewName(editGroup.name)
+        }
+    }, [editGroup])
+
+    useEffect(() => {
+        const index = data.findIndex((item) => item.id === activeGroupId)
+        if (index === -1) {
+            setActiveGroupId(data[0].id)
+        }
+    }, [data])
+
+    useEffect(() => {
+        const findGroupItem = data.find((item) => item.id === activeGroupId)
+        if (findGroupItem) {
+            onActiveGroup(findGroupItem)
+        }
+    }, [activeGroupId])
 
     return (
         <div className={styles["plugin-group-list"]}>
@@ -28,40 +55,41 @@ export const PluginGroupList: React.FC<PluginGroupListProps> = (props) => {
                         className={classNames(styles["plugin-group-list-item"], {
                             [styles["plugin-group-list-item-border-bottom-unshow"]]: false
                         })}
+                        key={item.id}
                     >
-                        {editGroupName === item.groupName ? (
+                        {editGroup && editGroup.id === item.id ? (
                             <div className={styles["plugin-group-list-item-input"]}>
                                 <YakitInput
                                     ref={editInputRef}
                                     wrapperStyle={{height: "100%"}}
                                     style={{height: "100%"}}
-                                    onBlur={(groupItem) => onEditInputBlur(groupItem, editGroupNewName)}
+                                    onBlur={() => onEditInputBlur(item, newName)}
                                     autoFocus={true}
-                                    value={editGroupNewName}
-                                    onChange={(e) => setEditGroupNewName(e.target.value)}
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value.trim())}
                                 ></YakitInput>
                             </div>
                         ) : (
                             <div
                                 className={classNames(styles["plugin-group-list-item-cont"], {
-                                    [styles["plugin-group-list-item-cont-active"]]: activeGroup === item.groupName
+                                    [styles["plugin-group-list-item-cont-active"]]: activeGroupId === item.id
                                 })}
                                 onClick={() => {
-                                    setActiveGroup(item.groupName)
+                                    setActiveGroupId(item.id)
                                 }}
                             >
                                 <div className={styles["plugin-group-list-item-cont-left"]}>
                                     <span className={styles["list-item-icon"]} style={{color: item.iconColor}}>
                                         {item.icon}
                                     </span>
-                                    <span className={styles["groups-text"]}>{item.groupName}</span>
+                                    <span className={styles["groups-text"]}>{item.name}</span>
                                 </div>
                                 <div
                                     className={classNames(styles["plugin-number"], {
                                         [styles["plugin-number-unshow"]]: item.showOptBtns
                                     })}
                                 >
-                                    {item.pluginNumer}
+                                    {item.number}
                                 </div>
                                 {item.showOptBtns && (
                                     <div

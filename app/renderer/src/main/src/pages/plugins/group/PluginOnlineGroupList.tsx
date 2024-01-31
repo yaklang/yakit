@@ -40,9 +40,10 @@ const testGroupList = [
 ]
 
 interface PluginOnlineGroupListProps {
-    ref: React.Ref<any>
+    onOnlineGroupLen: (len: number) => void
 }
-export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = React.forwardRef((props, ref) => {
+export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (props) => {
+    const {onOnlineGroupLen} = props
     const [groupList, setGroupList] = useState<any>(testGroupList) // 组数据
     const [editGroup, setEditGroup] = useState<any>({}) // 编辑插件组
     const [delGroup, setDelGroup] = useState<any>({}) // 删除插件组
@@ -50,14 +51,6 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = React
     const [delGroupConfirmPopVisible, setDelGroupConfirmPopVisible] = useState<boolean>(false)
     const [pluginGroupDelNoPrompt, setPluginGroupDelNoPrompt] = useState<boolean>(false)
     const delGroupConfirmPopRef = useRef<any>()
-
-    useImperativeHandle(
-        ref,
-        () => ({
-            groupListLen: groupList.length - 2 <= 0 ? 0 : groupList.length - 2
-        }),
-        [groupList]
-    )
 
     useEffect(() => {
         getRemoteValue(RemoteGV.PluginGroupDelNoPrompt).then((result: string) => {
@@ -69,10 +62,10 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = React
         <>
             <PluginGroupList
                 data={groupList}
-                editGroupName={editGroup.groupName}
+                editGroup={editGroup}
                 onEditInputBlur={(groupItem, editGroupNewName) => {
                     setEditGroup({})
-                    if (!editGroupNewName || editGroupNewName === groupItem.groupName) return
+                    if (!editGroupNewName || editGroupNewName === groupItem.name) return
                     // TODO 更新插件名
                 }}
                 extraOptBtn={(groupItem) => {
@@ -101,12 +94,15 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = React
                         </>
                     )
                 }}
+                onActiveGroup={(groupItem) => {}}
             ></PluginGroupList>
             {/* 删除确认框 */}
             <DelGroupConfirmPop
                 ref={delGroupConfirmPopRef}
                 visible={delGroupConfirmPopVisible}
-                onVisible={setDelGroupConfirmPopVisible}
+                onCancel={() => {
+                    setDelGroupConfirmPopVisible(false)
+                }}
                 delGroupName={delGroup.groupName || ""}
                 onOk={() => {
                     // TODO 删除
@@ -119,18 +115,18 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = React
             ></DelGroupConfirmPop>
         </>
     )
-})
+}
 
 interface DelGroupConfirmPopProps {
     ref: React.Ref<any>
     visible: boolean
-    onVisible: (visible: boolean) => void
+    onCancel: () => void
     delGroupName: string
     onOk: () => void
 }
 
 export const DelGroupConfirmPop: React.FC<DelGroupConfirmPopProps> = React.forwardRef((props, ref) => {
-    const {visible, onVisible, onOk, delGroupName} = props
+    const {visible, onCancel, onOk, delGroupName} = props
     const [delGroupConfirmNoPrompt, setDelGroupConfirmNoPrompt] = useState<boolean>(false)
 
     useEffect(() => {
@@ -161,9 +157,7 @@ export const DelGroupConfirmPop: React.FC<DelGroupConfirmPopProps> = React.forwa
                 </YakitCheckbox>
             }
             onOk={onOk}
-            onCancel={() => {
-                onVisible(false)
-            }}
+            onCancel={onCancel}
         />
     )
 })

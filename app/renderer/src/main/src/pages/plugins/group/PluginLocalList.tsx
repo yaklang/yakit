@@ -1,5 +1,5 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
-import {useMemoizedFn, useInViewport, useDebounceFn, useLatest} from "ahooks"
+import {useMemoizedFn, useInViewport, useDebounceFn, useLatest, useUpdateEffect} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultSearch} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
@@ -9,7 +9,13 @@ import {OutlinePluscircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useStore} from "@/store"
 import {initialLocalState, pluginLocalReducer} from "../pluginReducer"
-import {apiQueryYakScript, apiQueryYakScriptTotal, convertLocalPluginsRequestParams} from "../utils"
+import {
+    apiFetchGetYakScriptGroupLocal,
+    apiFetchSaveYakScriptGroupLocal,
+    apiQueryYakScript,
+    apiQueryYakScriptTotal,
+    convertLocalPluginsRequestParams
+} from "../utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue} from "@/utils/kv"
 import emiter from "@/utils/eventBus/eventBus"
@@ -19,13 +25,19 @@ import "../plugins.scss"
 import {PluginListWrap} from "./PluginListWrap"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {UpdateGroupList} from "./UpdateGroupList"
+import {UpdateGroupList, UpdateGroupListItem} from "./UpdateGroupList"
+import {GroupListItem} from "./PluginGroupList"
 import styles from "./PluginLocalList.module.scss"
 
-interface PluginLocalGroupsListProps {}
-const defaultFilters = {plugin_type: [], tags: []}
+const defaultFilters = {
+    plugin_type: []
+}
 
+interface PluginLocalGroupsListProps {
+    activeGroup: GroupListItem
+}
 export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo((props) => {
+    const {activeGroup} = props
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<YakScript[]>([])
     const showPluginIndex = useRef<number>(0) // 当前展示的插件序列
@@ -43,8 +55,12 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const [initTotal, setInitTotal] = useState<number>(0)
     const [privateDomain, setPrivateDomain] = useState<string>("") // 私有域地址
     const [hasMore, setHasMore] = useState<boolean>(true)
-    const [groupList, setGroupList] = useState<any>([]) // 组数据
+    const [groupList, setGroupList] = useState<UpdateGroupListItem[]>([]) // 组数据
     const updateGroupListRef = useRef<any>()
+
+    useUpdateEffect(() => {
+        refreshLocalPluginList()
+    }, [activeGroup])
 
     useEffect(() => {
         getInitTotal()
@@ -62,11 +78,17 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     }, [])
 
     useEffect(() => {
+        emiter.on("onRefPluginGroupMagLocalPluginList", refreshLocalPluginList)
         emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
         return () => {
             emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
+            emiter.off("onSwitchPrivateDomain", refreshLocalPluginList)
         }
     }, [])
+
+    const refreshLocalPluginList = () => {
+        fetchList(true)
+    }
 
     // 获取私有域
     const getPrivateDomainAndRefList = useMemoizedFn(() => {
@@ -75,7 +97,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                 const values = JSON.parse(setting)
                 setPrivateDomain(values.BaseUrl)
                 setTimeout(() => {
-                    fetchList(true)
+                    refreshLocalPluginList()
                 }, 200)
             }
         })
@@ -89,7 +111,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     // 点击刷新按钮重新拿数据
     const onRefListAndTotalAndGroup = useMemoizedFn(() => {
         getInitTotal()
-        fetchList(true)
+        refreshLocalPluginList()
     })
 
     // 获取插件列表数据
@@ -111,8 +133,24 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
             const queryFilters = filters
             const querySearch = search
             const query: QueryYakScriptRequest = {
-                ...convertLocalPluginsRequestParams(queryFilters, querySearch, params)
+                ...convertLocalPluginsRequestParams(queryFilters, querySearch, params),
+                ExcludeTypes: ["yak", "codec"]
             }
+            // 插件组
+            if (activeGroup.default) {
+                if (activeGroup.name === "未分组") {
+                    query.Group = {
+                        UnSetGroup: true,
+                        Group: [activeGroup.name]
+                    }
+                }
+            } else {
+                query.Group = {
+                    UnSetGroup: false,
+                    Group: [activeGroup.name]
+                }
+            }
+
             try {
                 const res = await apiQueryYakScript(query)
                 if (!res.Data) res.Data = []
@@ -148,7 +186,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const onSearch = useMemoizedFn((val) => {
         setSearch(val)
         setTimeout(() => {
-            fetchList(true)
+            refreshLocalPluginList()
         }, 200)
     })
 
@@ -203,27 +241,56 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
         }
     })
 
-    // 获取组所有组数据
-    const getGroupListAll = () => {
-        setGroupList([
-            {
-                groupName: "test",
+    // 本地获取插件所在插件组和其他插件组
+    const scriptNameRef = useRef<string[]>([])
+    const getYakScriptGroupLocal = (scriptName: string[]) => {
+        scriptNameRef.current = scriptName
+        if (!scriptName.length) return
+        apiFetchGetYakScriptGroupLocal(scriptName).then((res) => {
+            const newSetGroup = [...res.SetGroup].map((name) => ({
+                groupName: name,
                 checked: true
-            },
-            {
-                groupName: "test1",
+            }))
+            const newAllGroup = [...res.AllGroup].map((name) => ({
+                groupName: name,
                 checked: false
-            },
-            {
-                groupName: "test2",
-                checked: false
-            }
-        ])
+            }))
+            setGroupList([...newSetGroup, ...newAllGroup])
+        })
     }
 
     // 更新组数据
     const updateGroupList = () => {
-        console.log(updateGroupListRef.current.latestGroupList)
+        const latestGroupList = updateGroupListRef.current.latestGroupList
+
+        // 新
+        const checkedGroup = latestGroupList.filter((item) => item.checked).map((item) => item.groupName)
+        const unCheckedGroup = latestGroupList.filter((item) => !item.checked).map((item) => item.groupName)
+
+        // 旧
+        const originCheckedGroup = groupList.filter((item) => item.checked).map((item) => item.groupName)
+
+        let saveGroup: string[] = []
+        let removeGroup: string[] = []
+        checkedGroup.forEach((groupName: string) => {
+            saveGroup.push(groupName)
+        })
+        unCheckedGroup.forEach((groupName: string) => {
+            if (originCheckedGroup.includes(groupName)) {
+                removeGroup.push(groupName)
+            }
+        })
+        if (!saveGroup.length && !removeGroup.length) return
+        apiFetchSaveYakScriptGroupLocal({
+            YakScriptName: scriptNameRef.current,
+            SaveGroup: saveGroup,
+            RemoveGroup: removeGroup
+        }).then(() => {
+            if (activeGroup.id !== "全部") {
+                refreshLocalPluginList()
+            }
+            emiter.emit("onRefPluginGroupMagLocalQueryYakScriptGroup", "")
+        })
     }
 
     // 单项额外操作
@@ -236,7 +303,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                 content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
                 onVisibleChange={(visible) => {
                     if (visible) {
-                        getGroupListAll()
+                        getYakScriptGroupLocal([data.ScriptName])
                     } else {
                         updateGroupList()
                     }
@@ -255,7 +322,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     return (
         <div className={styles["plugin-local-list-wrapper"]} ref={pluginsGroupsRef}>
             <PluginListWrap
-                title='重要资产'
+                title={activeGroup.name}
                 total={response.Total}
                 selected={selectNum}
                 isList={isList}
@@ -266,21 +333,23 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                             overlayClassName={styles["add-group-popover"]}
                             placement='bottomRight'
                             trigger='click'
-                            content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
+                            content={
+                                <UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>
+                            }
                             onVisibleChange={(visible) => {
                                 if (visible) {
-                                    getGroupListAll()
+                                    getYakScriptGroupLocal(selectList.map((item) => item.ScriptName))
                                 } else {
                                     updateGroupList()
                                 }
                             }}
                         >
                             <FuncBtn
+                                disabled={!selectList.length}
                                 maxWidth={1050}
                                 icon={<SolidPluscircleIcon />}
                                 size='large'
                                 name='添加到组...'
-                                onClick={() => {}}
                             />
                         </YakitPopover>
 
@@ -355,7 +424,6 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                     <div className={styles["plugin-local-empty"]}>
                         <YakitEmpty
                             title='暂无数据'
-                            description='可新建插件同步至云端，创建属于自己的插件'
                             style={{marginTop: 80}}
                         />
                         <div className={styles["plugin-local-buttons"]}>

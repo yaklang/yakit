@@ -8,6 +8,7 @@ import {compareAsc} from "../yakitStore/viewers/base"
 import {
     GetYakScriptGroupResponse,
     GetYakScriptTagsAndTypeResponse,
+    GroupCount,
     QueryYakScriptGroupResponse,
     QueryYakScriptRequest,
     QueryYakScriptsResponse,
@@ -1318,23 +1319,16 @@ export const apiGetYakScriptById: (Id: string | number) => Promise<YakScript> = 
 }
 
 /**本地获取插件组数据 */
-export const apiFetchQueryYakScriptGroupLocal: (All?: boolean) => Promise<QueryYakScriptGroupResponse> = (
-    All = true
-) => {
+export const apiFetchQueryYakScriptGroupLocal: (All?: boolean) => Promise<GroupCount[]> = (All = true) => {
     return new Promise((resolve, reject) => {
-        try {
-            ipcRenderer
-                .invoke("QueryYakScriptGroup", {All})
-                .then((res: QueryYakScriptGroupResponse) => {
-                    resolve(res)
-                })
-                .catch((e) => {
-                    yakitNotify("error", e)
-                })
-        } catch (error) {
-            yakitNotify("error", error + "")
-            reject(error)
-        }
+        ipcRenderer
+            .invoke("QueryYakScriptGroup", {All})
+            .then((res: QueryYakScriptGroupResponse) => {
+                resolve(res.Group)
+            })
+            .catch((e) => {
+                yakitNotify("error", "获取本地插件组：" + e)
+            })
     })
 }
 
@@ -1344,38 +1338,28 @@ export const apiFetchRenameYakScriptGroupLocal: (Group: string, NewGroup: string
     NewGroup
 ) => {
     return new Promise((resolve, reject) => {
-        try {
-            ipcRenderer
-                .invoke("RenameYakScriptGroup", {Group, NewGroup})
-                .then((res: null) => {
-                    resolve(null)
-                })
-                .catch((e) => {
-                    yakitNotify("error", e)
-                })
-        } catch (error) {
-            yakitNotify("error", error + "")
-            reject(error)
-        }
+        ipcRenderer
+            .invoke("RenameYakScriptGroup", {Group, NewGroup})
+            .then((res: null) => {
+                resolve(null)
+            })
+            .catch((e) => {
+                yakitNotify("error", "修改本地插件组名：" + e)
+            })
     })
 }
 
 /**本地插件组删除 */
 export const apiFetchDeleteYakScriptGroupLocal: (Group: string) => Promise<null> = (Group) => {
     return new Promise((resolve, reject) => {
-        try {
-            ipcRenderer
-                .invoke("DeleteYakScriptGroup", {Group})
-                .then((res: null) => {
-                    resolve(null)
-                })
-                .catch((e) => {
-                    yakitNotify("error", e)
-                })
-        } catch (error) {
-            yakitNotify("error", error + "")
-            reject(error)
-        }
+        ipcRenderer
+            .invoke("DeleteYakScriptGroup", {Group})
+            .then((res: null) => {
+                resolve(null)
+            })
+            .catch((e) => {
+                yakitNotify("error", "删除本地插件组：" + e)
+            })
     })
 }
 
@@ -1384,37 +1368,27 @@ export const apiFetchGetYakScriptGroupLocal: (YakScriptName: string[]) => Promis
     YakScriptName
 ) => {
     return new Promise((resolve, reject) => {
-        try {
-            ipcRenderer
-                .invoke("GetYakScriptGroup", {YakScriptName})
-                .then((res: GetYakScriptGroupResponse) => {
-                    resolve(res)
-                })
-                .catch((e) => {
-                    yakitNotify("error", e)
-                })
-        } catch (error) {
-            yakitNotify("error", error + "")
-            reject(error)
-        }
+        ipcRenderer
+            .invoke("GetYakScriptGroup", {YakScriptName})
+            .then((res: GetYakScriptGroupResponse) => {
+                resolve(res)
+            })
+            .catch((e) => {
+                yakitNotify("error", "" + e)
+            })
     })
 }
 
 /**本地更新插件所在组&新增插件组 */
 export const apiFetchSaveYakScriptGroupLocal: (params: SaveYakScriptGroupRequest) => Promise<null> = (params) => {
     return new Promise((resolve, reject) => {
-        try {
-            ipcRenderer
-                .invoke("SaveYakScriptGroup", params)
-                .then((res: null) => {
-                    resolve(null)
-                })
-                .catch((e) => {
-                    yakitNotify("error", e)
-                })
-        } catch (error) {
-            yakitNotify("error", error + "")
-            reject(error)
-        }
+        ipcRenderer
+            .invoke("SaveYakScriptGroup", params)
+            .then((res: null) => {
+                resolve(null)
+            })
+            .catch((e) => {
+                yakitNotify("error", "更新本地插件所在组：" + e)
+            })
     })
 }
