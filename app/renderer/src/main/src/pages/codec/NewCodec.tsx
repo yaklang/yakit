@@ -30,10 +30,10 @@ import {
 } from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {DragDropContext, Droppable, Draggable} from "react-beautiful-dnd"
+import {DragDropContext, Droppable, Draggable, BeforeCapture, DropResult, ResponderProvided, DragStart, DragUpdate} from "@hello-pangea/dnd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-import {DragDropContextResultProps} from "../layout/mainOperatorContent/MainOperatorContentType"
+
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
@@ -674,7 +674,6 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
                                 key={`${parentItem.title}-${item.title}`}
                                 draggableId={`${parentItem.title}-${item.title}`}
                                 index={index}
-                                shouldCloneOnDrag={false}
                             >
                                 {(provided, snapshot) => (
                                     <div
@@ -993,7 +992,7 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
     /**
      * @description: 拖拽结束后的计算
      */
-    const onDragEnd = useMemoizedFn((result: DragDropContextResultProps) => {
+    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided) => {
         const {source, destination} = result
         console.log("onDragEnd", result)
 
@@ -1016,16 +1015,16 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
      * @description: 计算移动的范围是否在目标范围类
      */
     const onDragUpdate = useThrottleFn(
-        (result) => {
+        (result: DragUpdate, provided: ResponderProvided) => {
             const {index, droppableId} = result.source
             const {combine, destination, draggableId} = result
         },
         {wait: 200}
     ).run
 
-    const onBeforeCapture = useMemoizedFn((result: DragDropContextResultProps) => {})
+    const onBeforeCapture = useMemoizedFn((result: BeforeCapture) => {})
 
-    const onDragStart = useMemoizedFn((result: DragDropContextResultProps) => {
+    const onDragStart = useMemoizedFn((result: DragStart) => {
         if (!result.source) return
         // console.log("onDragStart---", result)
     })
