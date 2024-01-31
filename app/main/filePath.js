@@ -11,7 +11,7 @@ const appPath = app.isPackaged ? path.dirname(app.getPath('exe')) : app.getAppPa
  * 在新版本中，windows自定义安装路径会将家目录的yakit-projects迁移到软件根目录下，则会使用该目录 */
 const defaultYakitProjectPath = path.join(os.homedir(), "yakit-projects")
 const YakitProjectPath = fs.existsSync(defaultYakitProjectPath)? defaultYakitProjectPath: path.join(appPath, "yakit-projects");
-console.log("YakitProjectPath: ", YakitProjectPath)
+
 /** 引擎和软件安装包路径 */
 const yaklangEngineDir = path.join(YakitProjectPath, "yak-engine")
 /**

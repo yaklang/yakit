@@ -21,6 +21,8 @@ extraFiles:
       - "*.txt"
       - "*.gzip"
       - "!*.db"
+  - from: "LICENSE.md"
+    to: "LICENSE.md"
 
 directories:
   buildResources: resources
@@ -79,6 +81,20 @@ win:
       arch:
         - x64
   icon: "app/assets/yakiteelogo.ico"
+
+nsis:
+  oneClick: false 
+  perMachine: false
+  deleteAppDataOnUninstall: true
+  allowToChangeInstallationDirectory: true 
+  installerIcon: app/assets/yakiteelogo.ico 
+  uninstallerIcon: app/assets/yakiteelogo.ico 
+  unicode: true
+  include: build/yakit_build.nsh
+  license: LICENSE.md
+  warningsAsErrors: false
+  createDesktopShortcut: false
+  createStartMenuShortcut: true
 
 #publish:
 #  - provider: generic
