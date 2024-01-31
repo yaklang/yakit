@@ -1591,23 +1591,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filters: [
                         {
                             value: "100-199",
-                            label: "100-200"
+                            label: "[100,200)"
                         },
                         {
                             value: "200-299",
-                            label: "200-300"
+                            label: "[200-300)"
                         },
                         {
                             value: "300-399",
-                            label: "300-400"
+                            label: "[300-400)"
                         },
                         {
                             value: "400-499",
-                            label: "400-500"
+                            label: "[400-500)"
                         },
                         {
                             value: "500-600",
-                            label: "500-600"
+                            label: "[500-600]"
                         }
                     ]
                 },
