@@ -3526,7 +3526,12 @@ message QueryYakScriptRequest {
   bool IgnoreGeneralModuleOrder = 15;
   repeated string Family = 16;
   string UUID = 17;
-  repeated string Group = 18;
+  PluginGroup Group = 18;
+}
+
+message PluginGroup {
+  bool UnSetGroup = 1;
+  repeated string Group = 2;
 }
 
 message QueryYakScriptResponse {
