@@ -67,6 +67,7 @@ export interface PortScanParams {
     BasicCrawlerRequestMax?: number
 
     SynScanNetInterface?: string
+    HostAliveConcurrent?: number
 }
 
 const ScanKind: { [key: string]: string } = {
@@ -100,7 +101,8 @@ export const PortScanPage: React.FC<PortScanPageProp> = (props) => {
         HostAlivePorts: "22,80,443",
         EnableBasicCrawler: true,
         BasicCrawlerRequestMax: 5,
-        SynConcurrent: 1000
+        SynConcurrent: 1000,
+        HostAliveConcurrent:20
     })
     const [token, setToken] = useState(randomString(40))
     const xtermRef = useRef(null)
@@ -1025,6 +1027,11 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
             />
             {!params.SkippedHostAliveScan && (
                 <>
+                    <InputInteger
+                        label={"存活检测并发"}
+                        value={params.HostAliveConcurrent}
+                        setValue={(HostAliveConcurrent) => setParams({...params, HostAliveConcurrent})}
+                    />
                     <InputItem
                         label={"TCP Ping 端口"}
                         help={"配置 TCP Ping 端口：以这些端口是否开放作为 TCP Ping 依据"}

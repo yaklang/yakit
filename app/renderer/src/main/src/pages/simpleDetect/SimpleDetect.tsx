@@ -162,7 +162,8 @@ export const SimpleDetectForm: React.FC<SimpleDetectFormProps> = (props) => {
         HostAlivePorts: "22,80,443",
         ExcludeHosts: "",
         ExcludePorts: "",
-        Proxy: []
+        Proxy: [],
+        HostAliveConcurrent:200
     })
 
     const [bruteParams, setBruteParams, getBruteParams] = useGetState<StartBruteParams>({
