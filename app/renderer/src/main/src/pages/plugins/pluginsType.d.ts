@@ -71,7 +71,7 @@ export interface YakParamProps {
     Help: string
     /** 参数组(非必填时选项) */
     Group?: string
-    /**  */
+    /** 后端自定义内容 */
     MethodType?: string
     /** 值 */
     Value?: any

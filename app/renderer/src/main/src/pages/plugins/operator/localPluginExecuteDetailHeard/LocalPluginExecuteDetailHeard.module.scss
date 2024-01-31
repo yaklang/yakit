@@ -14,12 +14,6 @@
 
 .plugin-execute-form-item {
     width: 100%;
-    :global(.ant-form-item-tooltip) {
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-    }
 }
 
 .plugin-execute-form-wrapper {

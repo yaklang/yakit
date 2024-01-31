@@ -338,6 +338,11 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
     const [code, setCode] = useState<string>(pluginTypeToName["yak"]?.content || "")
     // 源码全屏框
     const [codeModal, setCodeModal] = useState<boolean>(false)
+    const onOpenCodeModal = useMemoizedFn(() => {
+        if (codeModal) return
+        setCodeModal(true)
+        if (previewParamsShow) setPreviewParamsShow(false)
+    })
     const onModifyCode = useMemoizedFn((content: string) => {
         if (code !== content) setCode(content)
         setCodeModal(false)
@@ -1219,7 +1224,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                                             <YakitButton
                                                 type='text2'
                                                 icon={<OutlineArrowsexpandIcon />}
-                                                onClick={() => setCodeModal(true)}
+                                                onClick={onOpenCodeModal}
                                             />
                                         </div>
                                     </div>
@@ -1312,6 +1317,7 @@ const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) => {
             return () => {
                 setContent("")
                 setPreviewShow(false)
+                setPreviewParams([])
                 setPreviewCloseLoading(false)
             }
         }
@@ -1663,7 +1669,7 @@ const PreviewParams: React.FC<PreviewParamsProps> = memo(
                         不可操作，仅供实时预览
                     </div>
                 }
-                layout='bottomRight'
+                layout='topRight'
                 visible={visible}
                 contentStyle={{padding: 0}}
                 footerStyle={{flexDirection: "row-reverse", justifyContent: "center"}}
@@ -1677,6 +1683,7 @@ const PreviewParams: React.FC<PreviewParamsProps> = memo(
                 okButtonText='结束预览'
                 okButtonProps={{colors: "danger", icon: <SolidEyeoffIcon />}}
                 onOk={onOk}
+                cacheSizeKey='plugin-preview-params'
             >
                 <Form form={form} className={styles["preview-params-wrapper"]} layout='vertical'>
                     <div className={styles["required-params-wrapper"]}>
@@ -1699,8 +1706,8 @@ const PreviewParams: React.FC<PreviewParamsProps> = memo(
                             >
                                 {groupParams.map((item, index) => (
                                     <YakitPanel key={`${item.group}`} header={`参数组：${item.group}`}>
-                                        {item.data?.map((formItem) => (
-                                            <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
+                                        {item.data?.map((formItem, index) => (
+                                            <React.Fragment key={`${formItem.Field}${formItem.FieldVerbose}${index}`}>
                                                 <FormContentItemByType item={formItem} pluginType='yak' />
                                             </React.Fragment>
                                         ))}

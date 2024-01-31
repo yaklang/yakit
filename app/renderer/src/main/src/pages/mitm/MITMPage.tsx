@@ -1055,7 +1055,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                 }
                 bodyStyle={{padding: 0}}
                 footerStyle={{justifyContent: "flex-end"}}
-                footer={[
+                footer={<>
                     <YakitButton type={"outline2"} onClick={onCancel}>
                         {loadMode === "local" && localStreamData?.Progress === 1 ? "完成" : "取消"}
                     </YakitButton>,
@@ -1066,7 +1066,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
                     >
                         导入
                     </YakitButton>
-                ]}
+                </>}
             >
                 <Form form={form} className={style["import-local-plugin-form"]}>
                     {getRenderByLoadMode(loadMode)}

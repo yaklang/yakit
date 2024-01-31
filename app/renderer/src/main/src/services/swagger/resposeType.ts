@@ -27,7 +27,7 @@ export declare namespace API {
     required?: boolean;
     group?: string;
     extra_setting?: string;
-    method_type: string;
+    method_type?: string;
   }
   export interface YakitPluginListResponse extends Paging {
     data: YakitPluginDetail[];
