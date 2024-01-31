@@ -1025,15 +1025,13 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 value={params.SkippedHostAliveScan}
                 setValue={(SkippedHostAliveScan) => setParams({...params, SkippedHostAliveScan})}
             />
-            {
-                params.SkippedHostAliveScan &&  <InputInteger
-                label={"存活检测并发"}
-                value={params.HostAliveConcurrent}
-                setValue={(HostAliveConcurrent) => setParams({...params, HostAliveConcurrent})}
-            />
-            }
             {!params.SkippedHostAliveScan && (
                 <>
+                    <InputInteger
+                        label={"存活检测并发"}
+                        value={params.HostAliveConcurrent}
+                        setValue={(HostAliveConcurrent) => setParams({...params, HostAliveConcurrent})}
+                    />
                     <InputItem
                         label={"TCP Ping 端口"}
                         help={"配置 TCP Ping 端口：以这些端口是否开放作为 TCP Ping 依据"}
