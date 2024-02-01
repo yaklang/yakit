@@ -138,7 +138,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             apiFetchPluginDetailCheck({uuid: info.uuid, list_type: "check"})
                 .then((res) => {
                     if (res) {
-                        console.log("插件管理的单个插件详情", res)
+                        // console.log("插件管理的单个插件详情", res)
                         setPlugin({...res})
                         setOldContent("")
                         // 源码

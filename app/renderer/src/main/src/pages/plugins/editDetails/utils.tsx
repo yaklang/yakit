@@ -358,7 +358,7 @@ export const uploadOnlinePlugin = (
     isModify: boolean,
     callback?: (plugin?: YakScript) => any
 ) => {
-    console.log("method:post|api:plugins", JSON.stringify(info))
+    // console.log("method:post|api:plugins", JSON.stringify(info))
 
     // 往线上上传插件
     NetWorkApi<API.PluginsEditRequest, API.PluginsResponse>({
@@ -410,7 +410,7 @@ export const uploadOnlinePlugin = (
  * @param info 复制online的信息
  */
 export const copyOnlinePlugin = (info: API.CopyPluginsRequest, callback?: (plugin?: YakScript) => any) => {
-    console.log("method:post|api:copy/plugins", JSON.stringify(info))
+    // console.log("method:post|api:copy/plugins", JSON.stringify(info))
 
     // 往线上上传插件
     NetWorkApi<API.CopyPluginsRequest, API.PluginsResponse>({
@@ -463,11 +463,11 @@ export const onCodeToInfo: (type: string, code: string) => Promise<CodeToInfoRes
             YakScriptType: type,
             YakScriptCode: code
         }
-        console.log("onCodeToInfo-request", JSON.stringify(request))
+        // console.log("onCodeToInfo-request", JSON.stringify(request))
         ipcRenderer
             .invoke("YaklangInspectInformation", request)
             .then((res: CodeToInfoResponseProps) => {
-                console.log("源码提取参数和风险信息", res)
+                // console.log("源码提取参数和风险信息", res)
                 resolve({
                     Information: res.Information || [],
                     CliParameter: res.CliParameter || [],

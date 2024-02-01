@@ -101,7 +101,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         ipcRenderer
             .invoke("YaklangGetCliCodeFromDatabase", {ScriptName: name})
             .then((res: {Code: string; NeedHandle: boolean}) => {
-                console.log("是否有旧数据的提示框", res)
+                // console.log("是否有旧数据的提示框", res)
                 if (res.NeedHandle && !oldShow) {
                     oldParamsRef.current = res.Code
                     if (!oldShow) setOldShow(true)
@@ -135,7 +135,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
         ipcRenderer
             .invoke("GetYakScriptById", {Id: id})
             .then((res: YakScript) => {
-                console.log("编辑插件-获取插件信息", res)
+                // console.log("编辑插件-获取插件信息", res)
                 if (res.Type === "yak") fetchOldData(res.ScriptName)
 
                 setInfo(res)
@@ -506,7 +506,7 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
             }
 
             const request: localYakInfo = convertLocalToLocalInfo(isModifyState, {info: info, modify: modify})
-            console.log("grpc-SaveNewYakScript", JSON.stringify(request))
+            // console.log("grpc-SaveNewYakScript", JSON.stringify(request))
             if (!saveLoading) setSaveLoading(true)
             ipcRenderer
                 .invoke("SaveNewYakScript", request)
@@ -1655,7 +1655,7 @@ const PreviewParams: React.FC<PreviewParamsProps> = memo(
                     [ele.Field]: value
                 }
             })
-            console.log("预览参数-更新源码后的配置更新", newFormValue)
+            // console.log("预览参数-更新源码后的配置更新", newFormValue)
 
             form.setFieldsValue({...newFormValue})
         })

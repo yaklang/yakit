@@ -336,7 +336,7 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
         if (form) {
             form.validateFields()
                 .then((value: HTTPRequestBuilderParams) => {
-                    console.log("插件执行时的表单值", value)
+                    // console.log("插件执行时的表单值", value)
                     // 保存参数-请求路径的选项
                     if (pathRef && pathRef.current) {
                         pathRef.current.onSetRemoteValues(value?.Path || [])
