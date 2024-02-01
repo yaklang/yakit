@@ -45,7 +45,7 @@ import {AutoCard} from "../../components/AutoCard"
 import {AutoSpin} from "../../components/AutoSpin"
 import cloneDeep from "lodash/cloneDeep"
 import {Terminal} from "./Terminal"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useDebounceEffect} from "ahooks"
 import {ResizeBox} from "../../components/ResizeBox"
 import {CVXterm} from "../../components/CVXterm"
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream"
@@ -209,18 +209,17 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
         ipcRenderer.invoke(`InteractiveRunYakCodeWrite`, token, data)
     })
     // 自动保存
-    const autoSave = useMemoizedFn(() => {
-        for (let tabInfo of tabList) {
-            if (tabInfo.isFile) {
-                ipcRenderer.invoke("write-file", {
-                    route: tabInfo.route,
-                    data: tabInfo.code
-                })
-            }
+    const autoSaveCurrentFile = useMemoizedFn(() => {
+        const tabInfo = tabList[+activeTab]
+        if (tabInfo?.isFile) {
+            ipcRenderer.invoke("write-file", {
+                route: tabInfo.route,
+                data: tabInfo.code
+            })
         }
     })
     // 保存近期文件内的15个
-    const saveFiliList = useMemoizedFn(() => {
+    const saveFileList = useMemoizedFn(() => {
         let files = cloneDeep(fileList).reverse()
         files.splice(14)
         files = files.reverse()
@@ -233,10 +232,13 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
             ipcRenderer.invoke("cancel-InteractiveRunYakCode", token)
         }
     }, [])
+    // 自动保存
+    useDebounceEffect(() => {
+        autoSaveCurrentFile()
+        saveFileList()
+    }, [tabList[+activeTab]?.code], {wait: 500})
     // 获取和保存近期打开文件信息，同时展示打开默认内容
     useEffect(() => {
-        let time: any = null
-        let timer: any = null
         setLoading(true)
         ipcRenderer
             .invoke("fetch-local-cache", RecentFileList)
@@ -258,12 +260,6 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
             .catch(() => {})
             .finally(() => {
                 setTimeout(() => setLoading(false), 300)
-                time = setInterval(() => {
-                    autoSave()
-                }, 2000)
-                timer = setInterval(() => {
-                    saveFiliList()
-                }, 5000)
             })
         ipcRenderer.invoke("fetch-local-cache", FontSizeCacheKey).then((value: any) => {
             if (value) {
@@ -271,9 +267,7 @@ export const YakExecutor: React.FC<YakExecutorProp> = (props) => {
             }
         })
         return () => {
-            saveFiliList()
-            if (time) clearInterval(time)
-            if (timer) clearInterval(timer)
+            saveFileList()
         }
     }, [])
 
