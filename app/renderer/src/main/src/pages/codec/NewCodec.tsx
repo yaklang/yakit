@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Divider, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import {useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./NewCodec.module.scss"
@@ -30,7 +30,16 @@ import {
 } from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {DragDropContext, Droppable, Draggable, BeforeCapture, DropResult, ResponderProvided, DragStart, DragUpdate} from "@hello-pangea/dnd"
+import {
+    DragDropContext,
+    Droppable,
+    Draggable,
+    BeforeCapture,
+    DropResult,
+    ResponderProvided,
+    DragStart,
+    DragUpdate
+} from "@hello-pangea/dnd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 
@@ -41,6 +50,9 @@ import {NewCodecCheckUI, NewCodecEditor, NewCodecInputUI, NewCodecSelectUI} from
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
+
+const SaveCodecMethods = "SaveCodecMethods"
+
 interface NewCodecRightEditorBoxProps {
     isExpand: boolean
     setExpand: (v: boolean) => void
@@ -545,8 +557,10 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
 }
 
 interface NewCodecLeftDragListItemProps {
-    node: LeftDataNodeProps[]
-    parentItem: LeftDataProps
+    node: CodecMethod[]
+    collectList: string[]
+    getCollectData: (v: string[]) => void
+    parentItem?: LeftDataProps
 }
 let lastIsDragging = false
 const getLeftItemStyle = (isDragging, draggableStyle) => {
@@ -582,44 +596,52 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
 
 // 左边拖拽源
 export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> = (props) => {
-    const {node, parentItem} = props
+    const {node, collectList, parentItem, getCollectData} = props
 
     // 将其添加至运行列表
     const onClickToRunList = useMemoizedFn(() => {
         console.log("onClickToRunList")
     })
 
-    const dragListItemDom = useMemoizedFn((item) => (
+    const dragListItemDom = useMemoizedFn((item: CodecMethod) => (
         <YakitPopover
             // visible={true}
             placement='right'
             overlayClassName={styles["drag-list-item-popover"]}
             content={
                 <div className={styles["popover-content"]}>
-                    <div className={styles["title"]}>Base64 解码</div>
-                    <div className={styles["content"]}>
-                        Base64
-                        是一种使用一组受限符号对任意字节数据进行编码的表示法，这些符号可以方便地被人类使用并由计算机处理。
-                    </div>
+                    <div className={styles["title"]}>{item.CodecName}</div>
+                    <div className={styles["content"]}>{item.Desc}</div>
                 </div>
             }
         >
             <div className={styles["drag-list-item"]} onClick={onClickToRunList}>
-                <div className={styles["title"]}>{item.title}</div>
+                <div className={styles["title"]}>{item.CodecName}</div>
                 <div className={styles["extra"]}>
-                    {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
-                e.stopPropagation()
-            }}>
-                <OutlineStarIcon/>
-            </div> */}
-                    <div
-                        className={classNames(styles["star-icon"], styles["star-icon-active"])}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                        }}
-                    >
-                        <SolidStarIcon />
-                    </div>
+                    {collectList.includes(item.CodecName) ? (
+                        <div
+                            className={classNames(styles["star-icon"], styles["star-icon-active"])}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                const list = collectList.filter((itemIn) => itemIn !== item.CodecName)
+                                getCollectData(list)
+                                setRemoteValue(SaveCodecMethods, JSON.stringify(list))
+                            }}
+                        >
+                            <SolidStarIcon />
+                        </div>
+                    ) : (
+                        <div
+                            className={classNames(styles["star-icon"], styles["star-icon-default"])}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                getCollectData([...collectList, item.CodecName])
+                                setRemoteValue(SaveCodecMethods, JSON.stringify([...collectList, item.CodecName]))
+                            }}
+                        >
+                            <OutlineStarIcon />
+                        </div>
+                    )}
                 </div>
             </div>
         </YakitPopover>
@@ -631,8 +653,10 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
             direction='vertical'
             isDropDisabled={true}
             renderClone={(provided, snapshot, rubric) => {
-                const item: LeftDataNodeProps[] =
-                    node.filter((item) => `${parentItem.title}-${item.title}` === rubric.draggableId) || []
+                const item: CodecMethod[] =
+                    node.filter(
+                        (item) => `${parentItem?.title || "search"}-${item.CodecName}` === rubric.draggableId
+                    ) || []
                 return (
                     <div
                         ref={provided.innerRef}
@@ -645,7 +669,7 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
                         <>
                             {item.length > 0 && (
                                 <div className={styles["drag-list-item-clone"]}>
-                                    <div className={styles["title"]}>{item[0].title}</div>
+                                    <div className={styles["title"]}>{item[0].CodecName}</div>
                                     <div className={styles["extra"]}>
                                         {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])}>
                                         <OutlineStarIcon/>
@@ -671,8 +695,8 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
                     {node.map((item, index) => {
                         return (
                             <Draggable
-                                key={`${parentItem.title}-${item.title}`}
-                                draggableId={`${parentItem.title}-${item.title}`}
+                                key={`${parentItem?.title || "search"}-${item.CodecName}`}
+                                draggableId={`${parentItem?.title || "search"}-${item.CodecName}`}
                                 index={index}
                             >
                                 {(provided, snapshot) => (
@@ -699,20 +723,32 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
 
 interface NewCodecLeftDragListProps {
     leftData: LeftDataProps[]
-}
-
-interface LeftDataNodeProps {
-    title: string
+    leftCollectData: LeftDataProps[]
+    collectList: string[]
+    leftSearchData: CodecMethod[]
+    isShowSearchList: boolean
+    getCollectData: (v: string[]) => void
+    searchValue?: string
+    setSearchValue?: (v: string) => void
 }
 
 interface LeftDataProps {
     title: string
-    node: LeftDataNodeProps[]
+    node: CodecMethod[]
 }
 
 // codec左边拖拽列表
 export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props) => {
-    const {leftData} = props
+    const {
+        leftData,
+        leftCollectData,
+        collectList,
+        searchValue,
+        leftSearchData,
+        setSearchValue,
+        isShowSearchList,
+        getCollectData
+    } = props
     const [fold, setFold] = useState<boolean>(true)
     const [activeKey, setActiveKey] = useState<string[]>([])
 
@@ -742,67 +778,88 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                             }
                             style={{width: "100%"}}
                             placeholder='请输入关键词搜索'
-                            value={""}
+                            value={searchValue}
                             onChange={(e) => {
-                                // setDictionariesName(e.target.value)
+                                setSearchValue && setSearchValue(e.target.value)
                             }}
                         />
                     </div>
                     <div className={styles["left-drag-list"]}>
                         <YakitSpin spinning={false}>
                             {/* 左边列表 */}
-                            <YakitCollapse
-                                expandIcon={() => <></>}
-                                accordion={true}
-                                activeKey={activeKey}
-                                onChange={(key) => {
-                                    const arr = key as string[]
-                                    setActiveKey(arr)
-                                }}
-                                className={styles["left-drag-list-collapse"]}
-                            >
-                                {leftData.map((item, index) => {
-                                    return (
-                                        <YakitPanel
-                                            header={
-                                                (activeKey || []).includes(item.title) ? (
-                                                    <div className={styles["panel-active-title"]}>{item.title}</div>
-                                                ) : (
-                                                    item.title
-                                                )
-                                            }
-                                            key={item.title}
-                                            extra={
-                                                item.title === "我收藏的工具" ? (
-                                                    <>
-                                                        {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
+                            <>
+                                {isShowSearchList ? (
+                                    <div className={styles["left-drag-list-collapse"]}>
+                                        <NewCodecLeftDragListItem
+                                            node={leftSearchData}
+                                            collectList={collectList}
+                                            getCollectData={getCollectData}
+                                        />
+                                        <div className={styles["to-end"]}>已经到底啦～</div>
+                                    </div>
+                                ) : (
+                                    <YakitCollapse
+                                        expandIcon={() => <></>}
+                                        accordion={true}
+                                        activeKey={activeKey}
+                                        onChange={(key) => {
+                                            const arr = key as string[]
+                                            setActiveKey(arr)
+                                        }}
+                                        className={styles["left-drag-list-collapse"]}
+                                    >
+                                        {[...leftCollectData, ...leftData].map((item, index) => {
+                                            return (
+                                                <YakitPanel
+                                                    header={
+                                                        (activeKey || []).includes(item.title) ? (
+                                                            <div className={styles["panel-active-title"]}>
+                                                                {item.title}
+                                                            </div>
+                                                        ) : (
+                                                            item.title
+                                                        )
+                                                    }
+                                                    key={item.title}
+                                                    extra={
+                                                        item.title === "我收藏的工具" ? (
+                                                            <>
+                                                                {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])} onClick={(e) => {
                                                         e.stopPropagation()
                                                     }}>
                                                     <OutlineStarIcon/>
                                                 </div> */}
-                                                        <div
-                                                            className={classNames(
-                                                                styles["star-icon"],
-                                                                styles["star-icon-active"]
-                                                            )}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                            }}
-                                                        >
-                                                            <SolidStarIcon />
-                                                        </div>
-                                                    </>
-                                                ) : null
-                                            }
-                                        >
-                                            {item.node.length > 0 && (
-                                                <NewCodecLeftDragListItem node={item.node} parentItem={item} />
-                                            )}
-                                        </YakitPanel>
-                                    )
-                                })}
-                                <div className={styles["to-end"]}>已经到底啦～</div>
-                            </YakitCollapse>
+                                                                <div
+                                                                style={{color:"#FFD583"}}
+                                                                    className={classNames(
+                                                                        styles["star-icon"],
+                                                                        styles["star-icon-active"]
+                                                                    )}
+                                                                    // onClick={(e) => {
+                                                                    //     e.stopPropagation()
+                                                                    // }}
+                                                                >
+                                                                    <SolidStarIcon />
+                                                                </div>
+                                                            </>
+                                                        ) : null
+                                                    }
+                                                >
+                                                    {item.node.length > 0 && (
+                                                        <NewCodecLeftDragListItem
+                                                            node={item.node}
+                                                            parentItem={item}
+                                                            collectList={collectList}
+                                                            getCollectData={getCollectData}
+                                                        />
+                                                    )}
+                                                </YakitPanel>
+                                            )
+                                        })}
+                                        <div className={styles["to-end"]}>已经到底啦～</div>
+                                    </YakitCollapse>
+                                )}
+                            </>
                         </YakitSpin>
                     </div>
                 </div>
@@ -928,71 +985,154 @@ const initialRightItems: RightItemsProps[] = [
         ]
     }
 ]
+export interface CodecParam {
+    Name: string
+    Type: string
+    Options: string[]
+    Required: boolean
+    Desc: string
+    Regex: string
+    Label: string
+}
+export interface CodecMethod {
+    Tag: string
+    CodecName: string
+    CodecMethod: string
+    Desc: string
+    Params: CodecParam[]
+}
+export interface CodecMethods {
+    Methods: CodecMethod[]
+}
 export interface NewCodecProps {}
 const NewCodec: React.FC<NewCodecProps> = (props) => {
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
     const [rightItems, setRightItems] = useState<RightItemsProps[]>(initialRightItems)
     const [leftData, setLeftData] = useState<LeftDataProps[]>([
-        {
-            title: "我收藏的工具",
-            node: []
-        },
-        {
-            title: "对称加解密",
-            node: [{title: "SM4加密"}, {title: "SM4解密"}, {title: "AES加密"}, {title: "AES解密"}]
-        },
-        {
-            title: "Java",
-            node: [{title: "反序列化"}, {title: "序列化"}]
-        },
-        {
-            title: "解码",
-            node: [
-                {title: "Base64 解码"},
-                {title: "HTML 解码"},
-                {title: "URL解码"},
-                {title: "十六进制解码"},
-                {title: "Unicode 中文解码"}
-            ]
-        },
-        {
-            title: "编码",
-            node: [
-                {title: "Base64 编码"},
-                {title: "HTML 编码"},
-                {title: "URL编码"},
-                {title: "URL路径编码"},
-                {title: "十六进制编码"},
-                {title: "Unicode 中文编码"}
-            ]
-        },
-        {
-            title: "hash",
-            node: [{title: "MD5"}, {title: "SM3"}, {title: "Sha1"}, {title: "Sha2"}]
-        },
-        {
-            title: "美化",
-            node: [{title: "JSON"}, {title: "HTTP数据包"}]
-        },
-        {
-            title: "Yaklang",
-            node: [{title: "Codec插件"}, {title: "热加载临时脚本"}]
-        },
-        {
-            title: "其他",
-            node: [
-                {title: "解析HTTP参数"},
-                {title: "从URL加载数据包"},
-                {title: "数据包转Curl命令"},
-                {title: "FuzzTag(模糊测试)"}
-            ]
-        }
+        // {
+        //     title: "我收藏的工具",
+        //     node: []
+        // },
+        // {
+        //     title: "其他",
+        //     node: [
+        //         {title: "解析HTTP参数"},
+        //         {title: "从URL加载数据包"},
+        //         {title: "数据包转Curl命令"},
+        //         {title: "FuzzTag(模糊测试)"}
+        //     ]
+        // }
     ])
+    // 我的收藏
+    const [leftCollectData, setLeftCollectData] = useState<LeftDataProps[]>([])
+    const [collectList, setCollectList] = useState<string[]>([])
+
+    const [leftSearchData, setLeftSearchData] = useState<CodecMethod[]>([])
+    const [searchValue, setSearchValue] = useState<string>()
+    // 是否显示搜索列表
+    const [isShowSearchList, setShowSearchList] = useState<boolean>(false)
+    const cacheCodecRef = useRef<CodecMethod[]>([])
+
+    // 构造页面左边列表数据
+    const initLeftData = useMemoizedFn((Methods: CodecMethod[]) => {
+        // 分类的类名
+        let tagList: string[] = []
+        let data: LeftDataProps[] = []
+        Methods.forEach((item) => {
+            if (tagList.includes(item.Tag)) {
+                const newData = data.map((itemIn) => {
+                    const {title, node} = itemIn
+                    if (itemIn.title === item.Tag) {
+                        return {
+                            title,
+                            node: [...node, item]
+                        }
+                    }
+                    return itemIn
+                })
+                data = newData
+            } else {
+                data.push({
+                    title: item.Tag,
+                    node: [item]
+                })
+                tagList.push(item.Tag)
+            }
+        })
+        console.log("tagList---", tagList, data)
+        setLeftData(data)
+    })
+
+    // 获取codec收藏列表
+    const getCollectData = useMemoizedFn((star?: string[]) => {
+        const setStar = (starList: string[]) => {
+            const filterCodec = cacheCodecRef.current.filter((item) => starList.includes(item.CodecName))
+            /* 此处需要收藏的工具有顺序 则需要根据starList排列filterCodec */
+            filterCodec.sort((a,b)=>{
+                const indexA = starList.indexOf(a.CodecName);
+                const indexB = starList.indexOf(b.CodecName);
+                return indexA - indexB;
+            })
+            setCollectList(starList)
+            if (filterCodec.length > 0) {
+                setLeftCollectData([
+                    {
+                        title: "我收藏的工具",
+                        node: filterCodec
+                    }
+                ])
+            } else {
+                setLeftCollectData([])
+            }
+        }
+        if (star) {
+            setStar(star)
+        } else {
+            getRemoteValue(SaveCodecMethods).then((res) => {
+                // 如果存在收藏
+                if (res) {
+                    try {
+                        const cacheList: string[] = JSON.parse(res)
+                        setStar(cacheList)
+                    } catch (error) {}
+                } else {
+                    setLeftCollectData([])
+                    setCollectList([])
+                }
+            })
+        }
+    })
+
+    // 获取codec列表
+    const getLeftData = useMemoizedFn(() => {
+        ipcRenderer.invoke("GetAllCodecMethods").then((res: CodecMethods) => {
+            console.log("GetAllCodecMethods---", res)
+            const {Methods} = res
+            cacheCodecRef.current = Methods
+            getCollectData()
+            initLeftData(Methods)
+        })
+    })
+
+    useDebounceEffect(
+        () => {
+            if (searchValue && searchValue.length) {
+                const filterCodec = cacheCodecRef.current.filter((item) => item.CodecName.includes(searchValue))
+                setLeftSearchData(filterCodec)
+                setShowSearchList(true)
+            } else {
+                setShowSearchList(false)
+                getLeftData()
+            }
+        },
+        [searchValue],
+        {leading: true, wait: 500}
+    )
     /**
      * @description: 拖拽结束后的计算
      */
-    const onDragEnd = useMemoizedFn((result: DropResult,provided: ResponderProvided) => {
+    const onDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
         const {source, destination} = result
         console.log("onDragEnd", result)
 
@@ -1037,7 +1177,16 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                     onDragUpdate={onDragUpdate}
                     onBeforeCapture={onBeforeCapture}
                 >
-                    <NewCodecLeftDragList leftData={leftData} />
+                    <NewCodecLeftDragList
+                        leftData={leftData}
+                        leftCollectData={leftCollectData}
+                        collectList={collectList}
+                        leftSearchData={leftSearchData}
+                        isShowSearchList={isShowSearchList}
+                        searchValue={searchValue}
+                        setSearchValue={setSearchValue}
+                        getCollectData={getCollectData}
+                    />
                     <NewCodecMiddleRunList rightItems={rightItems} />
                 </DragDropContext>
             )}

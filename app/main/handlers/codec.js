@@ -63,4 +63,19 @@ module.exports = (win, getClient) => {
     ipcMain.handle("newCodec", async (e, params) => {
         return await asyncNewCodec(params)
     })
+
+    const asyncGetAllCodecMethods = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllCodecMethods(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllCodecMethods", async (e, params) => {
+        return await asyncGetAllCodecMethods(params)
+    })
 }
