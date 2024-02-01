@@ -1,4 +1,4 @@
-import {QueryYakScriptRiskDetailByCWEResponse, YakParamProps} from "../plugins/pluginsType"
+import {YakParamProps, YakRiskInfoProps} from "../plugins/pluginsType"
 
 export interface ExecHistoryRecord {
     Script: string
@@ -102,12 +102,13 @@ export interface YakScript {
     OnlineGroup?: string
     IsCorePlugin?: boolean
     UpdatedAt?: number
-    RiskType?: string
-    RiskDetail?: QueryYakScriptRiskDetailByCWEResponse
-    RiskAnnotation?: string
+    // RiskType?: string 废弃
+    // RiskDetail?: YakRiskInfoProps[] 废弃
+    // RiskAnnotation?: string 废弃
     CollaboratorInfo?: Collaborator[]
     /**前端判断使用，该插件是否为本地插件，OnlineBaseUrl与当前最新的私有域不一样则为本地插件 */
     isLocalPlugin?: boolean
+    RiskInfo?: YakRiskInfoProps[]
 }
 
 export interface Collaborator {

@@ -328,6 +328,12 @@ export interface CodeScoreModuleProps {
     code: string
     /** 是否开始评分 */
     isStart: boolean
+    /** 执行完后的成功结果回调延时(默认:1000) */
+    successWait?: number
+    /** 评分合格的提示语(默认: "（表现良好，开始上传插件中...）") */
+    successHint?: string
+    /** 评分合格的提示语(默认: "（上传失败，请修复后再上传）") */
+    failedHint?: string
     /** 执行完后的回调(合格给ture，不合格给false) */
     callback: (value: boolean) => any
 }
@@ -351,8 +357,48 @@ export interface CodeScoreSmokingEvaluateResponseProps {
 /** 插件源码评分返回Results详细信息 */
 export interface CodeScoreSmokingEvaluateResultProps {
     /**前端循环key使用 */
-    IdKey:string
+    IdKey: string
     Item: string
     Suggestion: string
     ExtraInfo: Uint8Array
+    Range: GRPCRange
+}
+/** 源码位置信息 */
+export interface GRPCRange {
+    Code: string
+    StartLine: number
+    StartColumn: number
+    EndLine: number
+    EndColumn: number
+}
+
+/** 类型标签 */
+export interface PluginTypeTagProps {
+    checked: boolean
+    setCheck: () => any
+    disabled: boolean
+    icon: ReactNode
+    name: string
+    description: string
+}
+
+/** 源码放大版编辑器 */
+export interface PluginEditorModalProps {
+    /** 源码语言 */
+    language?: string
+    visible: boolean
+    setVisible: (content: string) => any
+    code: string
+}
+
+/** 对比器放大版编辑器 */
+export interface PluginDiffEditorModalProps {
+    /** 源码语言 */
+    language?: string
+    /** 原代码 */
+    oldCode: string
+    /** 对比代码 */
+    newCode: string
+    visible: boolean
+    setVisible: (content: string) => any
 }

@@ -1,6 +1,6 @@
-const { ipcMain } = require("electron")
+const {ipcMain} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
-const { USER_INFO } = require("../state")
+const {USER_INFO} = require("../state")
 
 module.exports = (win, getClient) => {
     // get plugins risk list
@@ -124,5 +124,37 @@ module.exports = (win, getClient) => {
     })
     ipcMain.handle("cancel-exportYakScript", async () => {
         if (exportYakScriptStream) exportYakScriptStream.cancel()
+    })
+
+    // 判断插件是否有老数据需要迁移提示
+    const asyncYaklangGetCliCodeFromDatabase = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().YaklangGetCliCodeFromDatabase(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("YaklangGetCliCodeFromDatabase", async (e, params) => {
+        return await asyncYaklangGetCliCodeFromDatabase(params)
+    })
+
+    // 代码转参数&风险
+    const asyncYaklangInspectInformation = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().YaklangInspectInformation(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("YaklangInspectInformation", async (e, params) => {
+        return await asyncYaklangInspectInformation(params)
     })
 }

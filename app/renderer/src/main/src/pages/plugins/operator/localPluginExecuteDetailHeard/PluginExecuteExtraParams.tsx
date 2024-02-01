@@ -156,10 +156,15 @@ interface FixExtraParamsNodeProps {
     pathRef: React.MutableRefObject<YakitBaseSelectRef>
     form: FormInstance<HTTPRequestBuilderParams>
     onReset: (fields) => void
+
+    /** YakitCollapse的bordered 插件调试页面的样式需要该属性 */
+    bordered?: boolean
+    /** HTTP方法和请求路径的wrapper样式 插件调试页面的样式需要该属性 */
+    httpPathWrapper?: string
 }
 type Fields = keyof HTTPRequestBuilderParams
 export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo((props) => {
-    const {onReset, pathRef, form} = props
+    const {onReset, pathRef, form, bordered, httpPathWrapper} = props
     const [activeKey, setActiveKey] = useState<string[]>(["GET 参数"])
 
     const getParamsRef = useRef<any>()
@@ -218,33 +223,35 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
     }
     return (
         <div className={styles["plugin-extra-params"]}>
-            <Form.Item label='HTTP方法' name='Method' initialValue='GET'>
-                <YakitSelect
-                    options={["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT"].map((item) => ({
-                        value: item,
-                        label: item
-                    }))}
-                    size='small'
-                />
-            </Form.Item>
-            <Form.Item label='请求路径' name='Path'>
-                <YakitSelect
-                    ref={pathRef}
-                    allowClear
-                    defaultOptions={["/", "/admin"].map((item) => ({value: item, label: item}))}
-                    mode='tags'
-                    placeholder='请输入...'
-                    cacheHistoryDataKey={PluginGV.LocalExecuteExtraPath}
-                    isCacheDefaultValue={false}
-                    size='small'
-                />
-            </Form.Item>
+            <div className={httpPathWrapper}>
+                <Form.Item label='HTTP方法' name='Method' initialValue='GET'>
+                    <YakitSelect
+                        options={["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS", "CONNECT"].map((item) => ({
+                            value: item,
+                            label: item
+                        }))}
+                        size='small'
+                    />
+                </Form.Item>
+                <Form.Item label='请求路径' name='Path'>
+                    <YakitSelect
+                        ref={pathRef}
+                        allowClear
+                        defaultOptions={["/", "/admin"].map((item) => ({value: item, label: item}))}
+                        mode='tags'
+                        placeholder='请输入...'
+                        cacheHistoryDataKey={PluginGV.LocalExecuteExtraPath}
+                        isCacheDefaultValue={false}
+                        size='small'
+                    />
+                </Form.Item>
+            </div>
             <YakitCollapse
                 destroyInactivePanel={false}
                 activeKey={activeKey}
                 onChange={(key) => setActiveKey(key as string[])}
-                bordered={false}
-                className={styles['kv-params-wrapper']}
+                bordered={!!bordered}
+                className={styles["kv-params-wrapper"]}
             >
                 <YakitPanel
                     header={
@@ -287,7 +294,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                         onDel={(i) => {
                             handleRemove(i, "GetParams")
                         }}
-                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                        collapseWrapperClassName={styles["variable-list-wrapper"]}
                     />
                 </YakitPanel>
                 <YakitPanel
@@ -332,7 +339,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                         onDel={(i) => {
                             handleRemove(i, "PostParams")
                         }}
-                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                        collapseWrapperClassName={styles["variable-list-wrapper"]}
                     />
                 </YakitPanel>
                 <YakitPanel
@@ -377,7 +384,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                         onDel={(i) => {
                             handleRemove(i, "Headers")
                         }}
-                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                        collapseWrapperClassName={styles["variable-list-wrapper"]}
                     />
                 </YakitPanel>
                 <YakitPanel
@@ -422,7 +429,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                         onDel={(i) => {
                             handleRemove(i, "Cookie")
                         }}
-                        collapseWrapperClassName={styles['variable-list-wrapper']}
+                        collapseWrapperClassName={styles["variable-list-wrapper"]}
                     />
                 </YakitPanel>
             </YakitCollapse>

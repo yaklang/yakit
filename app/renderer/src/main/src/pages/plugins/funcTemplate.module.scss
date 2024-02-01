@@ -1096,6 +1096,10 @@
                         color: var(--color-gray-text-04, #31343f);
                         font-size: 12px;
                         line-height: 16px;
+                        font-weight: 400;
+                        .error-position {
+                            color: #b4bbca;
+                        }
                     }
                 }
             }
@@ -1133,4 +1137,99 @@
             }
         }
     }
+}
+// -------------------- PluginTypeTag ↓↓↓ --------------------
+.type-tag-wrapper {
+    flex: 1 0 0;
+    padding: 12px 12px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-radius: 8px;
+    border: 1px solid #eaecf3;
+    overflow: hidden;
+    cursor: pointer;
+    .type-tag-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+    .type-tag-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        .content-title {
+            color: #31343f;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 20px;
+        }
+        .content-body {
+            color: #85899e;
+            font-size: 12px;
+            line-height: 16px;
+        }
+    }
+}
+.type-tag-wrapper:hover {
+    border-color: #fbc6a1;
+    :global {
+        .ant-radio-inner {
+            border-color: #f28b44;
+        }
+    }
+}
+.type-tag-active {
+    border: 1px solid #fbc6a1;
+    background: rgba(242, 139, 68, 0.06);
+}
+.type-tag-disabled {
+    background: #f8f8f8;
+    border-color: #eaecf3;
+    cursor: not-allowed;
+    .type-tag-content {
+        .content-title {
+            color: #b4bbca;
+        }
+        .content-body {
+            color: #ccd2de;
+        }
+    }
+}
+.type-tag-disabled:hover {
+    border-color: #eaecf3;
+}
+.type-tag-active.type-tag-disabled {
+    background-color: #f0f1f3;
+}
+// -------------------- PluginEditorModal & PluginDiffEditorModal ↓↓↓ --------------------
+.plugin-editor-modal-subtitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+// 缩小功能图标
+.plugin-editor-modal-close-icon {
+    svg {
+        width: 16px;
+        height: 16px;
+        color: #85899e;
+    }
+}
+.plugin-editor-modal-close-icon:hover {
+    svg {
+        color: var(--yakit-primary-5);
+    }
+}
+.plugin-editor-modal-body {
+    width: 100%;
+    height: 80vh;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 0 0 4px 4px;
+    background-color: #f0f1f3;
 }

@@ -15,16 +15,14 @@ import {PluginDetailHeader} from "../../baseTemplate"
 import styles from "./LocalPluginExecuteDetailHeard.module.scss"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {Divider, Form, Progress} from "antd"
-import {YakParamProps} from "../../pluginsType"
+import {PluginParamDataEditorProps, YakParamProps} from "../../pluginsType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
 import {YakitFormDragger, YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {failed, yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Uint8ArrayToString} from "@/utils/str"
 import classNames from "classnames"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
@@ -34,95 +32,10 @@ import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
 import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "../../utils"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {GetPluginLanguage} from "../../builtInData"
+import {ParamsToGroupByGroupName, getValueByType, getYakExecutorParam} from "../../editDetails/utils"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
-
-/**
- * @description 根据组名将参数分组
- * @returns 返回处理好分组后的数据
- *  */
-const ParamsToGroupByGroupName = (arr: YakParamProps[]): YakExtraParamProps[] => {
-    let map = {}
-    let paramsGroupList: YakExtraParamProps[] = []
-    for (var i = 0; i < arr.length; i++) {
-        var ai = arr[i]
-        if (!map[ai.Group || "default"]) {
-            paramsGroupList.push({
-                group: ai.Group || "default",
-                data: [ai]
-            })
-            map[ai.Group || "default"] = ai
-        } else {
-            for (var j = 0; j < paramsGroupList.length; j++) {
-                var dj = paramsGroupList[j]
-                if (dj.group === (ai.Group || "default")) {
-                    dj.data.push(ai)
-                    break
-                }
-            }
-        }
-    }
-    return paramsGroupList || []
-}
-
-/**
- * @description 表单显示的值,根据类型返回对应的类型的值
- */
-const getValueByType = (defaultValue, type: string): number | string | boolean | string[] => {
-    let value
-    switch (type) {
-        case "uint":
-            value = parseInt(defaultValue || "0")
-            break
-        case "float":
-            value = parseFloat(defaultValue || "0.0")
-            break
-        case "boolean":
-            value = defaultValue === "true"
-            break
-        case "http-packet":
-        case "yak":
-            value = Buffer.from((defaultValue || "") as string, "utf8")
-            break
-        case "select":
-            const newVal = defaultValue ? defaultValue.split(",") : []
-            value = newVal.length > 0 ? newVal : []
-            break
-        default:
-            value = defaultValue ? defaultValue : ""
-            break
-    }
-    return value
-}
-
-/**
- * @description 处理最后的执行参数
- * @param {{[string]:any}} object
- * @returns {YakExecutorParam[]}
- */
-const getYakExecutorParam = (object) => {
-    let newValue: YakExecutorParam[] = []
-    Object.entries(object).forEach(([key, val]) => {
-        if (val instanceof Buffer) {
-            newValue = [
-                ...newValue,
-                {
-                    Key: key,
-                    Value: Uint8ArrayToString(val)
-                }
-            ]
-            return
-        }
-        newValue = [
-            ...newValue,
-            {
-                Key: key,
-                Value: val
-            }
-        ]
-    })
-    return newValue
-}
 
 export const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
     IsHttps: false,
@@ -501,6 +414,26 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
         failed("获取参数配置数据错误，请重新打开该页面")
     }
     switch (item.TypeVerbose) {
+        // 单选并获取文件内容
+        case "upload-file-content":
+            return (
+                <YakitFormDraggerContent
+                    className={styles["plugin-execute-form-item"]}
+                    formItemProps={{
+                        name: item.Field,
+                        label: item.FieldVerbose || item.Field,
+                        rules: [{required: item.Required}]
+                    }}
+                    accept='.txt,.xlsx,.xls,.csv'
+                    textareaProps={{
+                        placeholder: "请输入内容，多条内容用“英文逗号”分隔",
+                        rows: 3
+                    }}
+                    help='可将TXT、Excel文件拖入框内或'
+                    disabled={disabled}
+                />
+            )
+        // 单选文件-路径
         case "upload-path":
             return (
                 <YakitFormDragger
@@ -510,11 +443,28 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
                         label: item.FieldVerbose || item.Field,
                         rules: [{required: item.Required}]
                     }}
-                    selectType='all'
+                    isShowPathNumber={false}
+                    selectType='file'
+                    multiple={false}
                     disabled={disabled}
                 />
             )
-
+        // 批量文件-路径
+        case "multiple-file-path":
+            return (
+                <YakitFormDragger
+                    className={styles["plugin-execute-form-item"]}
+                    formItemProps={{
+                        name: item.Field,
+                        label: item.FieldVerbose || item.Field,
+                        rules: [{required: item.Required}]
+                    }}
+                    renderType='textarea'
+                    selectType='file'
+                    disabled={disabled}
+                />
+            )
+        // 其他基础类型
         default:
             return (
                 <OutputFormComponentsByType
@@ -529,7 +479,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
 
 /**执行表单单个项 */
 export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
-    const {item, extraSetting, codeType, disabled} = props
+    const {item, extraSetting, codeType, disabled, pluginType} = props
     const [validateStatus, setValidateStatus] = useState<"success" | "error">("success")
     const [code, setCode] = useState<Buffer>(Buffer.from(item.DefaultValue || "", "utf8"))
     const formProps = {
@@ -627,6 +577,13 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                 </Form.Item>
             )
         case "yak":
+            let language: string = pluginType || ""
+            try {
+                const info = JSON.parse(item.ExtraSetting || "") as PluginParamDataEditorProps
+                language = info?.language || pluginType || ""
+            } catch (error) {}
+            language = GetPluginLanguage(language || codeType || "yak")
+
             return (
                 <Form.Item
                     {...formProps}
@@ -653,7 +610,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <YakitEditor type={codeType} value={item.DefaultValue || ""} readOnly={disabled} />
+                    <YakitEditor type={language} value={item.DefaultValue || ""} readOnly={disabled} />
                 </Form.Item>
             )
         default:

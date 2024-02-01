@@ -1,7 +1,14 @@
 import ReactDOM from "react-dom"
-import React, {memo, useMemo, useRef, useState} from "react"
-import {YakitWindowContentProps, WindowPositionOPProps, WindowPositionType, YakitWindowProps} from "./YakitWindowType"
-import {useDebounce, useDebounceEffect, useGetState, useMemoizedFn, useSize} from "ahooks"
+import React, {memo, useLayoutEffect, useMemo, useRef, useState} from "react"
+import {
+    YakitWindowContentProps,
+    WindowPositionOPProps,
+    WindowPositionType,
+    YakitWindowProps,
+    YakitWindowCacheSizes,
+    YakitWindowCacheSizeProps
+} from "./YakitWindowType"
+import {useDebounce, useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
 import {YakitButton} from "../YakitButton/YakitButton"
@@ -10,25 +17,38 @@ import {SolidFloatwinIcon, SolidTodownIcon, SolidToleftIcon, SolidTorightIcon} f
 import {Tooltip} from "antd"
 import {YakitPopover} from "../YakitPopover/YakitPopover"
 import {Resizable} from "re-resizable"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import cloneDeep from "lodash/cloneDeep"
 
 import classNames from "classnames"
 import styles from "./YakitWindow.module.scss"
 
+const DefaultCacheSize: YakitWindowCacheSizes = {
+    shrink: {width: 0, height: 0},
+    bottom: {width: 0, height: 0},
+    left: {width: 0, height: 0},
+    right: {width: 0, height: 0}
+}
+
 /**
  * @name yakit-窗体组件(可拖拽、移动和手动改变尺寸)
- * @description 组件还在打磨中，建议非必须下不使用
+ * @description 不建议设置默认初始的停靠位置，因为有保存尺寸的情况
+ * @description 暂时不支持别的场景使用，需要用先问问
+ * @description 因紧急改动，导致组件业务化，无法适用公共场景
  */
 export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
     const {
         getContainer,
         visible,
         layout = "center",
-        defaultDockSide = ["shrink", "left", "right", "bottom"],
+        defaultDockSide = [/* "shrink", */ "left", "right", "bottom"],
         isDrag = true,
         width = 300,
         height = 360,
         minWidth = 240,
         minHeight = 200,
+        onResize,
+        cacheSizeKey,
         ...rest
     } = props
 
@@ -60,9 +80,51 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
     }, [containerWH])
     /** -------------------- 挂靠节点相关逻辑 End -------------------- */
 
+    /** -------------------- 窗体尺寸缓存逻辑 Start -------------------- */
+    /** 窗体缓存的尺寸 */
+    const cacheSize = useRef<YakitWindowCacheSizes>(cloneDeep(DefaultCacheSize))
+    // 获取缓存尺寸数据
+    useLayoutEffect(() => {
+        if (visible) {
+            if (cacheSizeKey) {
+                getRemoteValue(cacheSizeKey)
+                    .then((value: string) => {
+                        if (value) {
+                            try {
+                                cacheSize.current = JSON.parse(value)
+                                const {width, height} = cacheSize.current["shrink"] || {}
+                                if (shrinkRef && shrinkRef.current) {
+                                    shrinkRef.current.updateSize({
+                                        width: width,
+                                        height: height
+                                    })
+                                }
+                            } catch (error) {}
+                        }
+                    })
+                    .catch(() => {})
+            }
+
+            return () => {
+                cacheSize.current = cloneDeep(DefaultCacheSize)
+            }
+        }
+    }, [visible, cacheSizeKey])
+    // 设置缓存尺寸数据
+    const setCacheSize = useDebounceFn(
+        useMemoizedFn((type: WindowPositionType, size: YakitWindowCacheSizeProps) => {
+            if (!cacheSizeKey) return
+            const cache: YakitWindowCacheSizes = cloneDeep(cacheSize.current)
+            cache[type] = {...size}
+            setRemoteValue(cacheSizeKey, JSON.stringify(cache))
+        }),
+        {wait: 300}
+    ).run
+    /** -------------------- 窗体尺寸缓存逻辑 End -------------------- */
+
     /** -------------------- 窗体停靠模式及大小改变的相关逻辑 End -------------------- */
     // 窗体停靠模式
-    const [dockSide, setDockSide, getDockSide] = useGetState<WindowPositionType>("shrink")
+    const [dockSide, setDockSide, getDockSide] = useGetState<WindowPositionType>("right")
     const onDockSide = useMemoizedFn((side: WindowPositionType) => {
         if (!defaultDockSide.includes(side)) return
         if (side === getDockSide()) return
@@ -71,6 +133,39 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
     const leftRef = useRef<any>(null)
     const rightRef = useRef<any>(null)
     const bottomRef = useRef<any>(null)
+    const shrinkRef = useRef<any>(null)
+
+    // 窗体宽高改变监听事件
+    const onShrinkResize = useThrottleFn(
+        useMemoizedFn((type: WindowPositionType) => {
+            let windowRef: any = null
+
+            switch (type) {
+                case "shrink":
+                    windowRef = shrinkRef
+                    break
+                case "bottom":
+                    windowRef = bottomRef
+                    break
+                case "left":
+                    windowRef = leftRef
+                    break
+                case "right":
+                    windowRef = rightRef
+                    break
+            }
+
+            if (windowRef && windowRef.current) {
+                const {width, height} = windowRef.current?.state || {}
+                if (width && height) {
+                    if (onResize) onResize({type: type, size: {width: width, height: height}})
+                    if (cacheSizeKey) setCacheSize(type, {width: width, height: height})
+                }
+            }
+        }),
+        {wait: 100}
+    ).run
+
     // 挂靠节点大小改变时，触发窗体的大小同步改变
     useDebounceEffect(
         () => {
@@ -150,8 +245,8 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 left: true,
                 topRight: false,
                 bottomRight: false,
-                bottomLeft: true,
-                topLeft: false
+                bottomLeft: false,
+                topLeft: true
             }
         }
 
@@ -204,8 +299,8 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 className={classNames({
                     [styles["yakit-window-hidden-wrapper"]]: !visible
                 })}
-                style={{position: "fixed", top: dockSideTop, left: 0, zIndex: 999}}
-                defaultSize={{width: width, height: winMaxHeight.show}}
+                style={{position: "fixed", top: dockSideTop, left: 0, zIndex: 1002}}
+                defaultSize={{width: cacheSize.current["left"]?.width || width, height: winMaxHeight.show}}
                 minHeight={winMaxHeight.show}
                 minWidth={minWidth}
                 maxWidth={winMaxWidth.change}
@@ -219,6 +314,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                     bottomLeft: false,
                     topLeft: false
                 }}
+                onResize={() => onShrinkResize("left")}
             >
                 <YakitWindowContent
                     {...rest}
@@ -239,8 +335,8 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 className={classNames({
                     [styles["yakit-window-hidden-wrapper"]]: !visible
                 })}
-                style={{position: "fixed", top: dockSideTop, right: 0, zIndex: 999}}
-                defaultSize={{width: width, height: winMaxHeight.show}}
+                style={{position: "fixed", top: dockSideTop, right: 0, zIndex: 1002}}
+                defaultSize={{width: cacheSize.current["right"]?.width || width, height: winMaxHeight.show}}
                 minHeight={winMaxHeight.show}
                 minWidth={minWidth}
                 maxWidth={winMaxWidth.change}
@@ -254,6 +350,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                     bottomLeft: false,
                     topLeft: false
                 }}
+                onResize={() => onShrinkResize("right")}
             >
                 <YakitWindowContent
                     {...rest}
@@ -274,8 +371,8 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 className={classNames({
                     [styles["yakit-window-hidden-wrapper"]]: !visible
                 })}
-                style={{position: "fixed", bottom: 0, left: 0, zIndex: 999}}
-                defaultSize={{width: winMaxWidth.show, height: height}}
+                style={{position: "fixed", bottom: 0, left: 0, zIndex: 1002}}
+                defaultSize={{width: winMaxWidth.show, height: cacheSize.current["bottom"]?.height || height}}
                 minWidth={winMaxWidth.show}
                 minHeight={minHeight}
                 maxHeight={winMaxHeight.change}
@@ -289,6 +386,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                     bottomLeft: false,
                     topLeft: false
                 }}
+                onResize={() => onShrinkResize("bottom")}
             >
                 <YakitWindowContent
                     {...rest}
@@ -321,10 +419,12 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
                 style={layout === "center" ? {left: `calc(50% - ${Math.trunc(width / 2)}px)`} : undefined}
             >
                 <Resizable
+                    ref={shrinkRef}
                     defaultSize={{width: width, height: height}}
                     minWidth={minWidth}
                     minHeight={minHeight}
                     enable={{...layoutDragEnable}}
+                    onResize={() => onShrinkResize("shrink")}
                 >
                     <YakitWindowContent
                         {...rest}
@@ -458,8 +558,13 @@ const YakitWindowContent: React.FC<YakitWindowContentProps> = memo((props) => {
     const divRef = useRef<HTMLDivElement>(null)
     const winSize = useSize(divRef)
 
+    const docSideClassName = useMemo(() => {
+        if (activeDockSide === "shrink") return ""
+        return styles[`yakit-window-${activeDockSide}-body`]
+    }, [activeDockSide])
+
     return (
-        <div ref={divRef} className={classNames(styles["yakit-window-body"], wrapClassName)}>
+        <div ref={divRef} className={classNames(styles["yakit-window-body"], docSideClassName, wrapClassName)}>
             <div
                 style={headerStyle}
                 className={styles["yakit-window-body-header"]}
@@ -494,11 +599,11 @@ const YakitWindowContent: React.FC<YakitWindowContentProps> = memo((props) => {
             <div style={footerStyle} className={styles["yakit-window-body-footer"]}>
                 {footerExtra}
                 <div className={styles["btn-group"]}>
-                    <YakitButton type='outline2' size='large' onClick={onOk} {...okButtonProps}>
-                        {okButtonText}
-                    </YakitButton>
-                    <YakitButton colors='danger' size='large' onClick={onCancel} {...cancelButtonProps}>
+                    <YakitButton type='outline2' size='large' onClick={onCancel} {...cancelButtonProps}>
                         {cancelButtonText}
+                    </YakitButton>
+                    <YakitButton size='large' onClick={onOk} {...okButtonProps}>
+                        {okButtonText}
                     </YakitButton>
                 </div>
             </div>

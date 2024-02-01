@@ -12,7 +12,6 @@ import classNames from "classnames"
 import {YakitInput} from "../YakitInput/YakitInput"
 import {useMemoizedFn} from "ahooks"
 import {failed, yakitNotify} from "@/utils/notification"
-import {FileItem} from "fs"
 
 const {Dragger} = Upload
 
@@ -559,7 +558,7 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                     } else {
                         yakitNotify("error", "文件类型不支持")
                     }
-                } else {
+                } else if (filesLength > 1) {
                     yakitNotify("error", "只支持单文件上传")
                 }
             })
@@ -604,15 +603,17 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
             >
                 {renderContent(
                     <div className={classNames(styles["form-item-help"], styles["form-item-content-help"])}>
-                        {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
-                        <span
-                            className={classNames(styles["dragger-help-active"], {
-                                [styles["dragger-help-active-disabled"]]: disabled
-                            })}
-                            onClick={onUploadFile}
-                        >
-                            点击此处上传
-                        </span>
+                        <label>
+                            {help ? help : showDefHelp ? "可将文件拖入框内或" : ""}
+                            <span
+                                className={classNames(styles["dragger-help-active"], {
+                                    [styles["dragger-help-active-disabled"]]: disabled
+                                })}
+                                onClick={onUploadFile}
+                            >
+                                点击此处上传
+                            </span>
+                        </label>
                     </div>
                 )}
             </Dragger>

@@ -4,7 +4,7 @@ import {YakParamProps} from "../../pluginsType"
 import {KVPair} from "@/models/kv"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import { FormInstance } from "antd"
+import {FormInstance} from "antd"
 
 export interface PluginExecuteDetailHeardProps {
     token: string
@@ -45,6 +45,8 @@ export interface OutputFormComponentsByTypeProps {
     /**根据插件类型出编辑器类型/或者自己输入对应的编辑器类型 */
     codeType?: string
     disabled?: boolean
+    /** 插件类型 */
+    pluginType?: string
 }
 
 export interface FormExtraSettingProps {
@@ -71,5 +73,5 @@ export interface FormContentItemByTypeProps {
 
 export interface PluginFixFormParamsProps {
     form: FormInstance<any>
-    disabled:boolean
+    disabled: boolean
 }

@@ -213,7 +213,7 @@
     position: sticky;
     top: 0;
     background-color: #fff;
-    z-index: 10;
+    z-index: 12;
     .header-wrapper {
         display: flex;
         justify-content: space-between;
@@ -326,6 +326,60 @@
     }
 }
 // -------------------- PluginModifyInfo ↓↓↓ --------------------
+%risk-info {
+    margin-bottom: 16px;
+    padding: 16px 12px;
+    display: flex;
+    gap: 8px;
+    border-radius: 8px;
+    background: #f8f8f8;
+    .bug-icon {
+        svg {
+            width: 24px;
+            height: 24px;
+            color: #8863f7;
+        }
+    }
+    .bug-info {
+        flex: 1 0 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 16px;
+        .info-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
+            .name-style {
+                flex: 1;
+                overflow: hidden;
+                color: #31343f;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+            }
+        }
+        .info-content {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            .header-style {
+                color: #85899e;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+            }
+            .content-style {
+                color: #85899e;
+                font-size: 12px;
+                line-height: 16px;
+            }
+        }
+    }
+}
 .plugin-modify-info-wrapper {
     .modify-input {
         :global {
@@ -376,51 +430,14 @@
         }
     }
     .modify-bug-type {
-        margin-bottom: 16px;
-        padding: 16px 12px;
-        display: flex;
-        gap: 8px;
-        border-radius: 8px;
-        background: #f8f8f8;
-        .bug-icon {
-            svg {
-                width: 24px;
-                height: 24px;
-                color: #8863f7;
-            }
-        }
-        .bug-info {
-            flex: 1 0 0;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 16px;
-            .info-title {
-                height: 20px;
-                color: #31343f;
-                font-size: 14px;
-                font-weight: 600;
-                line-height: 20px;
-            }
-            .info-content {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                .header-style {
-                    color: #85899e;
-                    font-size: 14px;
-                    font-weight: 600;
-                    line-height: 20px;
-                }
-                .content-style {
-                    color: #85899e;
-                    font-size: 12px;
-                    line-height: 16px;
-                }
-            }
-        }
+        @extend %risk-info;
+    }
+}
+.risk-info-modal {
+    max-height: 75vh;
+    overflow: hidden auto;
+    .risk-info-opt {
+        @extend %risk-info;
     }
 }
 // -------------------- PluginModifySetting ↓↓↓ --------------------
@@ -429,33 +446,6 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-
-    .setting-params {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        .setting-params-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            .header-title {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                .title-style {
-                    color: #31343f;
-                    font-size: 14px;
-                }
-                .sub-title-style {
-                    color: #b4bbca;
-                    font-size: 12px;
-                }
-            }
-        }
-        .setting-params-add {
-            width: 100%;
-        }
-    }
 
     .setting-switch {
         display: flex;
@@ -471,86 +461,7 @@
         }
     }
 }
-// -------------------- PluginAddParamModal ↓↓↓ --------------------
-.plugin-add-param-form {
-    width: 100%;
-    max-height: 80vh;
-    padding: 24px;
-    overflow: hidden auto;
-}
-// -------------------- PluginParamList ↓↓↓ --------------------
-.plugin-param-list-wrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    border-radius: 4px;
-    border: 1px solid #eaecf3;
 
-    .type-style {
-        width: 96px;
-    }
-    .name-style {
-        flex: 1;
-        overflow: hidden;
-    }
-    .default-style {
-        flex: 1;
-        overflow: hidden;
-    }
-    .required-style {
-        width: 72px;
-    }
-    .op-style {
-        width: 56px;
-    }
-    .list-header {
-        padding: 8px 8px 8px 32px;
-        display: flex;
-        gap: 8px;
-        background: #f8f8f8;
-        .header-title {
-            height: 16px;
-            color: #31343f;
-            font-size: 12px;
-            font-weight: 600;
-            line-height: 16px;
-        }
-    }
-    .list-opt {
-        padding: 8px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        border-top: 1px solid #eaecf3;
-        .drag-icon {
-            width: 16px;
-            height: 16px;
-            display: flex;
-            svg {
-                width: 16px;
-                height: 16px;
-                color: #ccd2de;
-            }
-        }
-        .text-style {
-            color: #75757e;
-            font-size: 14px;
-            line-height: 20px;
-        }
-        .op-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-    }
-    .list-drag-opt {
-        border: 1px solid #eaecf3;
-        border-radius: 4px;
-    }
-}
-.plugin-param-list-hidden {
-    display: none;
-}
 // -------------------- PluginEditorDiff ↓↓↓ --------------------
 .plugin-edtior-diff-wrapper {
     width: 100%;

@@ -1,5 +1,3 @@
-import {PluginParamDataProps} from "../pluginsType"
-
 /**
  * @name 插件数据修改时-内置的tags列表数据
  */
@@ -30,24 +28,11 @@ export const BuiltInTags: string[] = [
     "空间引擎"
 ]
 
-/**
- * @name 插件类型为port-scan(端口扫描)时，内置的两个参数配置信息
- */
-export const PortScanPluginParams: Record<string, PluginParamDataProps> = {
-    target: {
-        Field: "target",
-        FieldVerbose: "扫描的目标",
-        TypeVerbose: "string",
-        Required: true,
-        DefaultValue: "",
-        Help: ""
-    },
-    ports: {
-        Field: "ports",
-        FieldVerbose: "端口",
-        TypeVerbose: "string",
-        Required: false,
-        DefaultValue: "80",
-        Help: ""
-    }
+/** @name Risk信息风险等级对应Tag组件颜色 */
+export const RiskLevelToTag: Record<string, {color: string; name: string}> = {
+    critical: {color: "serious", name: "严重"},
+    high: {color: "danger", name: "高危"},
+    warning: {color: "info", name: "中危"},
+    low: {color: "yellow", name: "低危"},
+    info: {color: "success", name: "信息/指纹"}
 }

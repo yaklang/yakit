@@ -216,6 +216,7 @@ export const YakScriptCreatorForm: React.FC<YakScriptCreatorFormProp> = (props) 
             title: "插件未保存",
             content: "是否要保存该插件?",
             confirmLoading: saveLoading,
+            maskClosable: false,
             onOk: (m) => {
                 modalRef.current = m
                 onSaveLocal()

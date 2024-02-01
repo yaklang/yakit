@@ -990,6 +990,10 @@ export const LocalPluginExecutor: React.FC<LocalPluginExecutorProps> = React.mem
                                                 return
                                             }
                                             if (script.Id && +script.Id) {
+                                                if(script.ScriptName==="综合目录扫描与爆破"){
+                                                    yakitNotify("warning","暂不可编辑")
+                                                    return
+                                                }
                                                 emiter.emit(
                                                     "openPage",
                                                     JSON.stringify({

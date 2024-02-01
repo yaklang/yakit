@@ -27,6 +27,7 @@ export declare namespace API {
     required?: boolean;
     group?: string;
     extra_setting?: string;
+    method_type?: string;
   }
   export interface YakitPluginListResponse extends Paging {
     data: YakitPluginDetail[];
@@ -583,11 +584,9 @@ export declare namespace API {
     data: PluginsSearchData[];
   }
   export interface PluginsRiskDetail {
-    cweId: string;
-    /**
-     * 漏洞类型
-     */
-    riskType: string;
+    level: string;
+    typeVerbose: string;
+    cve: string;
     /**
      * 漏洞描述
      */
@@ -614,28 +613,8 @@ export declare namespace API {
     download_total?: number;
     is_private?: boolean;
     group?: string;
-    riskType?: string;
-    riskDetail?: PluginsRequestRiskDetail;
-    /**
-     * 补充说明
-     */
-    annotation?: string;
+    riskInfo?: PluginsRiskDetail[];
     isCorePlugin?: boolean;
-  }
-  export interface PluginsRequestRiskDetail {
-    cweId?: string;
-    /**
-     * 漏洞类型
-     */
-    riskType?: string;
-    /**
-     * 漏洞描述
-     */
-    description?: string;
-    /**
-     * 修复建议
-     */
-    solution?: string;
   }
   export interface PluginsRecycleRequest extends PluginsWhere, PluginsRecycle {}
   export interface PluginsRecycle {
@@ -709,12 +688,7 @@ export declare namespace API {
      */
     base_script_name?: string;
     group?: string;
-    riskType?: string;
-    riskDetail?: PluginsDetailRiskDetail;
-    /**
-     * 补充说明
-     */
-    risk_annotation?: string;
+    riskInfo?: PluginsRiskDetail[];
     /**
      * 是否为内置插件
      */
@@ -723,21 +697,6 @@ export declare namespace API {
      * 协作者
      */
     collaborator?: CollaboratorInfo[];
-  }
-  export interface PluginsDetailRiskDetail {
-    cweId: string;
-    /**
-     * 漏洞类型
-     */
-    riskType: string;
-    /**
-     * 漏洞描述
-     */
-    description: string;
-    /**
-     * 修复建议
-     */
-    solution: string;
   }
   export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
   export interface PluginsAuditDetailResponse
@@ -798,31 +757,11 @@ export declare namespace API {
     stars?: number;
     download_total?: number;
     group?: string;
-    riskType?: string;
-    riskDetail?: PluginsAuditDetailMergeBeforePluginsRiskDetail;
-    /**
-     * 补充说明
-     */
-    risk_annotation?: string;
+    riskInfo?: PluginsRiskDetail[];
     /**
      * 是否为内置插件
      */
     isCorePlugin?: boolean;
-  }
-  export interface PluginsAuditDetailMergeBeforePluginsRiskDetail {
-    cweId: string;
-    /**
-     * 漏洞类型
-     */
-    riskType: string;
-    /**
-     * 漏洞描述
-     */
-    description: string;
-    /**
-     * 修复建议
-     */
-    solution: string;
   }
   export interface PluginsAudit {
     pageType?: string;

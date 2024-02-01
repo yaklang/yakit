@@ -928,10 +928,10 @@ const GetUIOpSettingMenu = () => {
                     key: "bas-chaosmaker",
                     label: "BAS实验室"
                 },
-                {
-                    key: "debug-plugin",
-                    label: "插件调试功能"
-                },
+                // {
+                //     key: "debug-plugin",
+                //     label: "插件调试功能"
+                // },
                 {
                     key: "debug-monaco-editor",
                     label: "(DEV)调试Playground"

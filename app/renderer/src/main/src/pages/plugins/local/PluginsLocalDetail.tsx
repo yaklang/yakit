@@ -148,6 +148,10 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
             return
         }
         if (plugin.Id && +plugin.Id) {
+            if(plugin.ScriptName==="综合目录扫描与爆破"){
+                yakitNotify("warning","暂不可编辑")
+                return
+            }
             emiter.emit(
                 "openPage",
                 JSON.stringify({

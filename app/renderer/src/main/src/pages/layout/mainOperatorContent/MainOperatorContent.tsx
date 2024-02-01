@@ -3989,6 +3989,7 @@ const onModalSecondaryConfirm = (props?: YakitSecondaryConfirmProps) => {
         onCancelText: "不保存",
         onOkText: "保存",
         keyboard:false,
+        zIndex: 1010,
         ...(props || {}),
         onOk: () => {
             if (props?.onOk) {

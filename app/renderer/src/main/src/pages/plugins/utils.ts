@@ -867,6 +867,7 @@ export const apiFetchPluginDetailCheck: (
 export const apiAuditPluginDetaiCheck: (query: API.PluginsAuditRequest) => Promise<API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {
         try {
+            // console.log("method:post|api:plugins/audit", JSON.stringify(query))
             NetWorkApi<API.PluginsAuditRequest, API.ActionSucceeded>({
                 method: "post",
                 url: "plugins/audit",
@@ -1026,6 +1027,7 @@ export const apiDebugPlugin: (params: DebugPluginRequest, token: string) => Prom
                 default:
                     break
             }
+            // console.log("插件执行时的参数", executeParams)
             ipcRenderer
                 .invoke("DebugPlugin", executeParams, token)
                 .then(() => {

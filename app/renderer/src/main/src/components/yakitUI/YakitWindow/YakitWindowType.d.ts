@@ -1,5 +1,6 @@
 import {ResizableProps} from "re-resizable"
 import {CSSProperties} from "react"
+import {YakitButtonProp} from "../YakitButton/YakitButton"
 
 export interface YakitWindowProps
     extends Omit<YakitWindowContentProps, "callbackDrag" | "activeDockSide" | "onDockSide"> {
@@ -28,6 +29,11 @@ export interface YakitWindowProps
     minWidth?: ResizableProps["minWidth"]
     /** 窗体最小高度，默认为200px */
     minHeight?: ResizableProps["minHeight"]
+
+    /** 窗体 resize 时的触发事件 */
+    onResize?: (info: {type: WindowPositionType; size: YakitWindowCacheSizeProps}) => any
+    /** 窗体缓存宽高的标识字段(键值对中的键名)(设置此字段则默认开启宽高缓存) */
+    cacheSizeKey?: string
 }
 
 export interface YakitWindowContentProps extends WindowPositionOPProps {
@@ -73,10 +79,22 @@ export interface YakitWindowContentProps extends WindowPositionOPProps {
  */
 export type WindowPositionType = "shrink" | "left" | "right" | "bottom"
 export interface WindowPositionOPProps {
-    /** 默认停靠位置(默认为浮窗、左侧、右侧和底部) */
+    /** 默认可停靠位置(默认为浮窗、左侧、右侧和底部) */
     defaultDockSide?: WindowPositionType[]
     /** 当前激活的停靠模式 */
     activeDockSide: WindowPositionType
     /** 设置停靠模式的回调 */
     onDockSide?: (v: WindowPositionType) => void
 }
+
+/**
+ * @name 窗体缓存信息
+ * @param width 宽度
+ * @param height 高度
+ */
+export interface YakitWindowCacheSizeProps {
+    width: number
+    height: number
+}
+/** @name 窗体缓存数据(所有模式) */
+export type YakitWindowCacheSizes = Record<string, YakitWindowCacheSizeProps>

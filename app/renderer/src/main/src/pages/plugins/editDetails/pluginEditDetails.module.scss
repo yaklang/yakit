@@ -5,6 +5,7 @@
     padding: 0;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .plugin-edit-details-header {
@@ -99,11 +100,34 @@
         gap: 48px;
 
         .header-wrapper {
-            height: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
             color: #31343f;
             font-size: 16px;
             font-weight: 600;
             line-height: 24px;
+
+            .subtitle-help-wrapper {
+                display: flex;
+                align-items: center;
+                color: #b4bbca;
+                font-size: 14px;
+                font-weight: 400;
+                line-height: 20px;
+                cursor: pointer;
+                .text-style {
+                    text-decoration-line: underline;
+                }
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+            .subtitle-help-wrapper:hover {
+                color: var(--yakit-primary-5);
+            }
         }
 
         .body-type-wrapper {
@@ -133,11 +157,6 @@
                             display: flex;
                             gap: 16px;
                         }
-                    }
-
-                    .type-kind {
-                        display: flex;
-                        gap: 16px;
                     }
                 }
             }
@@ -236,6 +255,12 @@
                                 font-size: 12px;
                             }
                         }
+                        .header-extra {
+                            display: flex;
+                            justify-content: flex-end;
+                            align-items: center;
+                            gap: 16px;
+                        }
                     }
                     .editor-body {
                         width: 100%;
@@ -268,161 +293,63 @@
     }
 }
 
-// 脚本类型标签
-.type-tag-wrapper {
-    flex: 1 0 0;
-    padding: 12px 12px 12px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    border-radius: 8px;
-    border: 1px solid #eaecf3;
-    overflow: hidden;
-    cursor: pointer;
-    .type-tag-header {
+// ---------- PluginEditorModal ----------
+.plugin-edit-page-modal {
+    &:global(.ant-modal-wrap) {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        :global {
+            .ant-modal {
+                max-width: unset;
+                height: 100%;
+                .ant-modal-content {
+                    height: 100%;
+                    .ant-modal-body {
+                        height: 100%;
+                        & > div {
+                            height: 100%;
+                            display: flex;
+                            flex-direction: column;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .plugin-editor-modal-subtitle {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        .extra-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 16px;
+        }
+    }
+    .plugin-editor-modal-close-icon {
         svg {
-            width: 20px;
-            height: 20px;
-        }
-    }
-    .type-tag-content {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        .content-title {
-            color: #31343f;
-            font-size: 14px;
-            font-weight: 600;
-            line-height: 20px;
-        }
-        .content-body {
-            color: #85899e;
-            font-size: 12px;
-            line-height: 16px;
-        }
-    }
-}
-.type-tag-wrapper:hover {
-    border-color: #fbc6a1;
-    :global {
-        .ant-radio-inner {
-            border-color: #f28b44;
-        }
-    }
-}
-.type-tag-active {
-    border: 1px solid #fbc6a1;
-    background: rgba(242, 139, 68, 0.06);
-}
-.type-tag-disabled {
-    background: #f8f8f8;
-    border-color: #eaecf3;
-    cursor: not-allowed;
-    .type-tag-content {
-        .content-title {
-            color: #b4bbca;
-        }
-        .content-body {
-            color: #ccd2de;
-        }
-    }
-}
-.type-tag-disabled:hover {
-    border-color: #eaecf3;
-}
-.type-tag-active.type-tag-disabled {
-    background-color: #f0f1f3;
-}
-
-// 种类类型标签
-.kind-tag-wrapper {
-    flex: 1 0 0;
-    display: flex;
-    padding: 20px 12px 20px 16px;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 8px;
-    border: 1px solid #eaecf3;
-    cursor: pointer;
-    user-select: none;
-    .opt-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #31343f;
-        font-size: 14px;
-        font-weight: 600;
-        line-height: 20px;
-        svg {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             color: #85899e;
         }
     }
-}
-.kind-tag-wrapper:hover {
-    border-color: #fbc6a1;
-    :global {
-        .ant-radio-inner {
-            border-color: #f28b44;
-        }
-    }
-}
-.kind-tag-active {
-    border: 1px solid #fbc6a1;
-    background: rgba(242, 139, 68, 0.06);
-    .opt-title {
+    .plugin-editor-modal-close-icon:hover {
         svg {
-            color: #f28b44;
+            color: var(--yakit-primary-5);
         }
     }
-}
-.kind-tag-disabled {
-    background: #f8f8f8;
-    border-color: #eaecf3;
-    cursor: not-allowed;
-    .opt-title {
-        color: #b4bbca;
-        svg {
-            color: #ccd2de;
-        }
-    }
-}
-.kind-tag-disabled:hover {
-    border-color: #eaecf3;
-}
-.kind-tag-active.kind-tag-disabled {
-    background-color: #f0f1f3;
-}
 
-// 源码放大版编辑器
-.plugin-editor-modal-subtitle {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.plugin-editor-modal-close-icon {
-    svg {
-        width: 16px;
-        height: 16px;
-        color: #85899e;
+    .plugin-editor-modal-body {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        overflow: hidden;
+        border-radius: 0 0 4px 4px;
+        background-color: #f0f1f3;
     }
-}
-.plugin-editor-modal-close-icon:hover {
-    svg {
-        color: var(--yakit-primary-5);
-    }
-}
-.plugin-editor-modal-body {
-    width: 100%;
-    height: 80vh;
-    padding: 0;
-    overflow: hidden;
-    border-radius: 0 0 4px 4px;
-    background-color: #f0f1f3;
 }
 
 // 插件同步&复制云端弹窗
@@ -459,4 +386,71 @@
 // ---------- ModifyPluginReason ----------
 .modify-plugin-reason-wrapper {
     padding: 16px 24px 24px 24px;
+}
+
+// ---------- 旧数据迁移提示 ----------
+.old-data-hint-wrapper {
+    top: 25%;
+}
+
+// ---------- PreviewParams ----------
+.preview-params-wrapper {
+    padding: 16px 8px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden auto;
+
+    .required-params-wrapper {
+        :global {
+            .ant-form-item {
+                margin-bottom: 8px;
+            }
+            .ant-form-item-label{
+                padding: 0;
+            }
+        }
+    }
+
+    .additional-params-divider {
+        margin: 16px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 4px;
+        .text-style {
+            color: #b4bbca;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+        }
+        .divider-style {
+            flex: 1;
+            overflow: hidden;
+            height: 1px;
+            border-top: 1px dashed #eaecf3;
+        }
+    }
+
+    .extra-group-params-wrapper {
+        & > :global(.ant-collapse-item .ant-collapse-header) {
+            padding: 8px;
+        }
+        & > :global(.ant-collapse-item .ant-collapse-content > .ant-collapse-content-box) {
+            padding-left: 8px;
+            padding-right: 8px;
+            :global {
+                .ant-form-item {
+                    margin-bottom: 0;
+                }
+            }
+        }
+    }
+
+    .to-end {
+        text-align: center;
+        color: var(--yakit-disable-text-color);
+        font-size: 11px;
+        padding-top: 12px;
+        padding-bottom: 24px;
+    }
 }
