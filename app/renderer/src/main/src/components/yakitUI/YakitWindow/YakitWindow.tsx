@@ -33,13 +33,15 @@ const DefaultCacheSize: YakitWindowCacheSizes = {
 /**
  * @name yakit-窗体组件(可拖拽、移动和手动改变尺寸)
  * @description 不建议设置默认初始的停靠位置，因为有保存尺寸的情况
+ * @description 暂时不支持别的场景使用，需要用先问问
+ * @description 因紧急改动，导致组件业务化，无法适用公共场景
  */
 export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
     const {
         getContainer,
         visible,
         layout = "center",
-        defaultDockSide = ["shrink", "left", "right", "bottom"],
+        defaultDockSide = [/* "shrink", */ "left", "right", "bottom"],
         isDrag = true,
         width = 300,
         height = 360,
@@ -122,7 +124,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
 
     /** -------------------- 窗体停靠模式及大小改变的相关逻辑 End -------------------- */
     // 窗体停靠模式
-    const [dockSide, setDockSide, getDockSide] = useGetState<WindowPositionType>("shrink")
+    const [dockSide, setDockSide, getDockSide] = useGetState<WindowPositionType>("right")
     const onDockSide = useMemoizedFn((side: WindowPositionType) => {
         if (!defaultDockSide.includes(side)) return
         if (side === getDockSide()) return

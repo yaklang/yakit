@@ -403,7 +403,10 @@
     .required-params-wrapper {
         :global {
             .ant-form-item {
-                margin-bottom: 0;
+                margin-bottom: 8px;
+            }
+            .ant-form-item-label{
+                padding: 0;
             }
         }
     }

@@ -481,6 +481,10 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     /**编辑 */
     const onEditPlugin = useMemoizedFn((data: YakScript) => {
         if (data?.Id && +data.Id) {
+            if(data.ScriptName==="综合目录扫描与爆破"){
+                yakitNotify("warning","暂不可编辑")
+                return
+            }
             emiter.emit(
                 "openPage",
                 JSON.stringify({

@@ -1683,7 +1683,7 @@ const PreviewParams: React.FC<PreviewParamsProps> = memo(
                 okButtonText='结束预览'
                 okButtonProps={{colors: "danger", icon: <SolidEyeoffIcon />}}
                 onOk={onOk}
-                cacheSizeKey='plugin-preview-params'
+                // cacheSizeKey='plugin-preview-params'
             >
                 <Form form={form} className={styles["preview-params-wrapper"]} layout='vertical'>
                     <div className={styles["required-params-wrapper"]}>
