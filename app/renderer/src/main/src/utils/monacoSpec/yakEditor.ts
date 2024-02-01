@@ -322,15 +322,16 @@ export const setUpYaklangMonaco = () => {
                 [/[\/*]/, 'comment.doc']
             ],
 
+            // disable fuzztag because of monaco editor bug
             xrawstring: [
-                [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+                // [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
                 [/@escapes/, 'string.escape'],
                 [/[^`]/, 'string'],
                 [/`/, 'string', '@pop']
             ],
 
             xstring: [
-                [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+                // [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
                 [/@escapes/, 'string.escape'],
                 [/[^\\"]+/, 'string'],
                 [/\\./, 'string.escape.invalid'],
@@ -338,7 +339,7 @@ export const setUpYaklangMonaco = () => {
             ],
 
             xstring2: [
-                [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
+                // [/{{/, "fuzz.tag.inner", "@fuzz_tag"],
                 [/@escapes/, 'string.escape'],
                 [/[^\\']/, 'string'],
                 [/'/, 'string', '@pop']
