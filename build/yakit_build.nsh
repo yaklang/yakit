@@ -1,17 +1,22 @@
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
+!include "StrFunc.nsh"
 !include "MUI2.nsh"
+
+${StrStr} # Supportable for Install Sections and Functions
+${UnStrStr} # Supportable for Uninstall Sections and Functions
 
 Unicode true
 
-Var /Global YAKIT_HOME
 Var /Global IS_INSTALLED
 Var /Global IS_UPDATED
-Var /Global InstallPath
+Var /Global INSTALL_PATH
+Var /Global INSTALL_PATH_REG_KEY_NAME 
+Var /Global EXE_NAME
 
 
 Function ShouldShowDirectoryPage
-    ${If} $InstallPath != ""
+    ${If} $INSTALL_PATH != ""
         Abort
     ${EndIf}
 FunctionEnd
@@ -49,25 +54,29 @@ FunctionEnd
 Function FinishLeave 
     ${NSD_GetState} $mui.FinishPage.Run $0
     ${If} $0 <> 0 
-    Exec "$INSTDIR\Yakit.exe"
+    Exec "$INSTDIR\$EXE_NAME.exe"
     ${EndIf}
     ${NSD_GetState} $mui.FinishPage.ShowReadme $0
     ${If} $0 <> 0 
-    CreateShortCut "$DESKTOP\Yakit.lnk" "$INSTDIR\Yakit.exe"
+    CreateShortCut "$DESKTOP\$EXE_NAME.lnk" "$INSTDIR\$EXE_NAME.exe"
     ${EndIf}
     Quit
 FunctionEnd
 
+
+
 !macro checkInstalled
-    ; 判断是否已安装
-    ${If} ${FileExists} `$INSTDIR\Yakit.exe`
-        StrCpy $IS_INSTALLED "true"
-    ${EndIf} 
-    ReadRegStr $InstallPath HKCU "Software\Yakit" "InstallPath"
-    ${If} $InstallPath != "" ; 设置用户一开始的安装路径
+    ; 设置用户一开始的安装路径
+    ReadRegStr $INSTALL_PATH HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
+    ${If} $INSTALL_PATH != "" 
         ; set install path
-        StrCpy $INSTDIR $InstallPath
+        StrCpy $INSTDIR $INSTALL_PATH
     ${EndIf}
+
+    ; 判断是否已安装
+    ${If} ${FileExists} `$INSTDIR\$EXE_NAME.exe`
+        StrCpy $IS_INSTALLED "true"
+    ${EndIf}     
 !macroend
 
 !macro checkIsUpdated
@@ -80,12 +89,39 @@ FunctionEnd
 !macroend
 
 !macro customInit 
+    ; 根据不同版本设置不同的RegKey 社区版/SE/EE
+    StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
+    StrCpy $EXE_NAME "Yakit"
+    ${StrStr} $0 $EXEFILE "EnpriTraceAgent"
+    ${If} $0 != "" ; se
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
+        StrCpy $EXE_NAME "EnpriTraceAgent"
+    ${Else}
+        ${StrStr} $0 $EXEFILE "EnpriTrace"
+        ${If} $0 != "" ; ee
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
+            StrCpy $EXE_NAME "EnpriTrace"
+        ${EndIf}
+    ${EndIf}
+    
     !insertmacro checkInstalled
     !insertmacro checkIsUpdated
-    ReadRegStr $YAKIT_HOME HKCU "Environment" "YAKIT_HOME"
 !macroend
 
 !macro customUnInit 
+    ; 根据不同版本设置不同的RegKey 社区版/SE/EE
+    StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
+    StrCpy $EXE_NAME "Yakit"
+    ${If} ${FileExists} `$INSTDIR\EnpriTraceAgent.exe` ; se 
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
+        StrCpy $EXE_NAME "EnpriTraceAgent"
+    ${Else}
+        ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee 
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
+            StrCpy $EXE_NAME "EnpriTrace"
+        ${EndIf}
+    ${EndIf}
+
     !insertmacro checkInstalled
     !insertmacro checkIsUpdated
 !macroend
@@ -111,15 +147,15 @@ FunctionEnd
     ; 非更新时才删除以下的东西
     ${If} $IS_UPDATED != "true"
         ; 删除开始菜单快捷方式
-        Delete "$SMPROGRAMS\Yakit\*.*"
-        Delete "$SMPROGRAMS\$StartMenuFolder\Yakit.lnk"
-        RMDir "$SMPROGRAMS\Yakit"
+        Delete "$SMPROGRAMS\$EXE_NAME\*.*"
+        Delete "$SMPROGRAMS\$StartMenuFolder\$EXE_NAME.lnk"
+        RMDir "$SMPROGRAMS\$EXE_NAME"
 
         ; 删除桌面快捷方式
-        Delete "$DESKTOP\Yakit.lnk"
+        Delete "$DESKTOP\$EXE_NAME.lnk"
 
         ; 删除注册表项
-        DeleteRegKey HKCU "Software\Yakit"
+        DeleteRegValue HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
         DeleteRegValue HKCU "Environment" "YAKIT_HOME"
     ${EndIf}
 !macroend
@@ -131,7 +167,7 @@ FunctionEnd
 Section "Main" SectionMain
     ; create new directory if not installed 
     ${If} $IS_INSTALLED != "true"
-        StrCpy $INSTDIR "$INSTDIR\yakit"
+        StrCpy $INSTDIR "$INSTDIR\$EXE_NAME"
         CreateDirectory $INSTDIR
     ${EndIf}
 
@@ -150,7 +186,7 @@ Section "Main" SectionMain
 
     ; 存储安装目录
     DetailPrint "写入环境变量..."
-    WriteRegStr HKCU "Software\Yakit" "InstallPath" "$INSTDIR"
+    WriteRegStr HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME "$INSTDIR"
     WriteRegStr HKCU "Environment" "YAKIT_HOME" "$INSTDIR\yakit-projects" 
     ; 创建 yakit-projects 文件夹
     DetailPrint "创建yakit-projects文件夹..."
@@ -171,28 +207,3 @@ Section "Uninstall"
  continueUninstall:
 
 SectionEnd
-
-Function isEmptyDir
-  # Stack ->                    # Stack: <directory>
-  Exch $0                       # Stack: $0
-  Push $1                       # Stack: $1, $0
-  FindFirst $0 $1 "$0\*.*"
-  strcmp $1 "." 0 _notempty
-    FindNext $0 $1
-    strcmp $1 ".." 0 _notempty
-      ClearErrors
-      FindNext $0 $1
-      IfErrors 0 _notempty
-        FindClose $0
-        Pop $1                  # Stack: $0
-        StrCpy $0 1
-        Exch $0                 # Stack: 1 (true)
-        goto _end
-     _notempty:
-       FindClose $0
-       ClearErrors
-       Pop $1                   # Stack: $0
-       StrCpy $0 0
-       Exch $0                  # Stack: 0 (false)
-  _end:
-FunctionEnd
