@@ -11,19 +11,28 @@ import "./theme/yakit.scss"
 import "./yakitLib.scss"
 import "./assets/global.scss"
 
-const divRoot = document.getElementById("root")
-if (divRoot) {
-    createRoot(divRoot).render(
-        // <React.StrictMode>
-        <DndProvider backend={HTML5Backend}>
-            <NewApp />
-        </DndProvider>
-        // </React.StrictMode>,
-    )
-} else {
-    // 正常情况/理论情况下，是不会出现这个情况
-    createRoot(document.body).render(<div>此安装包有问题,请联系Yakit官方管理员</div>)
-}
+// const divRoot = document.getElementById("root")
+// if (divRoot) {
+//     createRoot(divRoot).render(
+//         // <React.StrictMode>
+//         <DndProvider backend={HTML5Backend}>
+//             <NewApp />
+//         </DndProvider>
+//         // </React.StrictMode>,
+//     )
+// } else {
+//     // 正常情况/理论情况下，是不会出现这个情况
+//     createRoot(document.body).render(<div>此安装包有问题,请联系Yakit官方管理员</div>)
+// }
+// ahooks useVirtualList在createRoot(divRoot).render生成下的元素会出现渲染不及时，掉帧闪的问题，暂时先换成ReactDOM.render，期待官方修复
+ReactDOM.render(
+    // <React.StrictMode>
+    <DndProvider backend={HTML5Backend}>
+        <NewApp />
+    </DndProvider>,
+    // </React.StrictMode>,
+    document.getElementById("root")
+)
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals

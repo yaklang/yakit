@@ -24,7 +24,7 @@
         "@types/react-resizable": "^1.7.4",
         "@types/react-sparklines": "^1.7.2",
         "@uiw/react-md-editor": "^3.6.5",
-        "ahooks": "^3.1.6",
+        "ahooks": "3.7.9",
         "ali-react-table": "2.6.1",
         "antd": "4.21.7",
         "axios": "^1.4.0",
@@ -50,14 +50,14 @@
         "monaco-themes": "^0.4.4",
         "prettier": "^3.0.1",
         "re-resizable": "^6.9.9",
-        "react": "^18.2.0",
+        "react": "18.2.0",
         "react-app-rewired": "^2.1.8",
         "react-codemirror2": "^7.2.1",
         "react-copy-to-clipboard": "^5.0.4",
         "react-countup": "^6.4.1",
         "react-dnd": "^16.0.1",
         "react-dnd-html5-backend": "^16.0.1",
-        "react-dom": "^18.2.0",
+        "react-dom": "18.2.0",
         "react-dragger": "^1.3.0",
         "react-error-boundary": "^3.1.4",
         "react-error-overlay": "6.0.9",
@@ -107,7 +107,8 @@
         "build-breachtrace": "env-cmd -e breachtrace -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "test": "react-app-rewired test",
         "eject": "react-app-rewired eject",
-        "analyzer": "env-cmd -e analyzer -f cross-env react-app-rewired build"
+        "analyzer": "env-cmd -e analyzer -f cross-env react-app-rewired build",
+        "postinstall": "patch-package"
     },
     "eslintConfig": {
         "extends": [
@@ -131,6 +132,7 @@
         "env-cmd": "^10.1.0",
         "mini-css-extract-plugin": "^2.7.6",
         "node-polyfill-webpack-plugin": "^3.0.0",
+        "patch-package": "^8.0.0",
         "postcss-normalize": "^10.0.1",
         "progress-bar-webpack-plugin": "^2.1.0",
         "sass": "^1.54.8",
