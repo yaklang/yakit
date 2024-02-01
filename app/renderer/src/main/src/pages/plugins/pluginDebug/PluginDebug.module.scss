@@ -1,6 +1,9 @@
 @use "@/pages/plugins/plugins.scss";
 
 .plugin-debug-drawer {
+    &:global(.ant-drawer-bottom.ant-drawer-open.no-mask) {
+        transform: unset;
+    }
     :global {
         .ant-drawer-body {
             padding: 0;
