@@ -151,7 +151,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                     // @ts-ignore
                     size: getDownloadProgress().size
                 })
-                success("下载完毕")
+                success("下载完毕") 
                 /** 安装yaklang引擎 */
                 ipcRenderer
                     .invoke("install-yak-engine", `v${latestVersionRef.current}`)
@@ -645,7 +645,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                             <div className={styles["body-hint"]}>
                                 <span className={styles["hint-sign"]}>如遇网络问题无法下载，可手动下载安装：</span>
                                 <br/>
-                                Windows 用户可以把引擎放在 %HOME%/yakit-projects/yak-engine/yak.exe 即可识别 MacOS /
+                                Windows 用户可以把引擎放在 安装目录(一般为%HOME%)/yakit-projects/yak-engine/yak.exe 即可识别 MacOS /
                                 Linux 用户可以把引擎放在 ~/yakit-projects/yak-engine/yak 即可识别
                             </div>
 

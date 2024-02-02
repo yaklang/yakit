@@ -1,0 +1,209 @@
+!include "LogicLib.nsh"
+!include "FileFunc.nsh"
+!include "StrFunc.nsh"
+!include "MUI2.nsh"
+
+${StrStr} # Supportable for Install Sections and Functions
+${UnStrStr} # Supportable for Uninstall Sections and Functions
+
+Unicode true
+
+Var /Global IS_INSTALLED
+Var /Global IS_UPDATED
+Var /Global INSTALL_PATH
+Var /Global INSTALL_PATH_REG_KEY_NAME 
+Var /Global EXE_NAME
+
+
+Function ShouldShowDirectoryPage
+    ${If} $INSTALL_PATH != ""
+        Abort
+    ${EndIf}
+FunctionEnd
+
+Function DirectoryPageShow
+    ; 获取目录页面的句柄
+    FindWindow $0 "#32770" "" $HWNDPARENT
+    ; 获取目录页面顶部文本控件的句柄
+    GetDlgItem $1 $0 1006
+    ${If} $IS_INSTALLED == "true"
+        SendMessage $1 ${WM_SETTEXT} 0 "STR:检测到程序已经安装。点击安装会将旧程序卸载并重新进行安装。安装程序会自动迁移 yakit-projects 文件夹。"
+    ${Else}
+        SendMessage $1 ${WM_SETTEXT} 0 "STR:安装程序会自动迁移 yakit-projects 文件夹。"
+    ${EndIf}
+FunctionEnd
+
+Function ForceQuit
+    Quit
+FunctionEnd
+
+
+!insertmacro MUI_PAGE_WELCOME
+!define MUI_PAGE_CUSTOMFUNCTION_PRE ShouldShowDirectoryPage
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW DirectoryPageShow
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE FinishLeave
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_SHOWREADME
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "创建桌面快捷方式"
+!define MUI_FINISHPAGE_LINK "Yakit官网"
+!define MUI_FINISHPAGE_LINK_LOCATION "https://yaklang.com"
+!insertmacro MUI_PAGE_FINISH
+
+Function FinishLeave 
+    ${NSD_GetState} $mui.FinishPage.Run $0
+    ${If} $0 <> 0 
+    Exec "$INSTDIR\$EXE_NAME.exe"
+    ${EndIf}
+    ${NSD_GetState} $mui.FinishPage.ShowReadme $0
+    ${If} $0 <> 0 
+    CreateShortCut "$DESKTOP\$EXE_NAME.lnk" "$INSTDIR\$EXE_NAME.exe"
+    ${EndIf}
+    Quit
+FunctionEnd
+
+
+
+!macro checkInstalled
+    ; 设置用户一开始的安装路径
+    ReadRegStr $INSTALL_PATH HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
+    ${If} $INSTALL_PATH != "" 
+        ; set install path
+        StrCpy $INSTDIR $INSTALL_PATH
+    ${EndIf}
+
+    ; 判断是否已安装
+    ${If} ${FileExists} `$INSTDIR\$EXE_NAME.exe`
+        StrCpy $IS_INSTALLED "true"
+    ${EndIf}     
+!macroend
+
+!macro checkIsUpdated
+    ClearErrors
+    ${GetParameters} $0
+    ${GetOptions} $0 "--updated" $R0
+    ${IfNot} ${Errors} ; 是更新 
+        StrCpy $IS_UPDATED "true"
+    ${EndIf}
+!macroend
+
+!macro customInit 
+    ; 根据不同版本设置不同的RegKey 社区版/SE/EE
+    StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
+    StrCpy $EXE_NAME "Yakit"
+    ${StrStr} $0 $EXEFILE "EnpriTraceAgent"
+    ${If} $0 != "" ; se
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
+        StrCpy $EXE_NAME "EnpriTraceAgent"
+    ${Else}
+        ${StrStr} $0 $EXEFILE "EnpriTrace"
+        ${If} $0 != "" ; ee
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
+            StrCpy $EXE_NAME "EnpriTrace"
+        ${EndIf}
+    ${EndIf}
+    
+    !insertmacro checkInstalled
+    !insertmacro checkIsUpdated
+!macroend
+
+!macro customUnInit 
+    ; 根据不同版本设置不同的RegKey 社区版/SE/EE
+    StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
+    StrCpy $EXE_NAME "Yakit"
+    ${If} ${FileExists} `$INSTDIR\EnpriTraceAgent.exe` ; se 
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
+        StrCpy $EXE_NAME "EnpriTraceAgent"
+    ${Else}
+        ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee 
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
+            StrCpy $EXE_NAME "EnpriTrace"
+        ${EndIf}
+    ${EndIf}
+
+    !insertmacro checkInstalled
+    !insertmacro checkIsUpdated
+!macroend
+
+
+!macro customRemoveFiles
+    ${If} $IS_UPDATED == "true"
+        Goto continue
+    ${EndIf}
+    ; 删除安装目录
+    MessageBox MB_YESNO "即将删除 $INSTDIR 文件夹，是否继续，选择否将取消卸载" IDYES continue IDNO cancelUninstall
+    cancelUninstall:
+        Quit
+    continue:
+    RMDir /r "$INSTDIR"
+    ; 如果保留了yakit-projects文件夹，将其从临时位置移回原始位置
+    ${If} ${FileExists} `$TEMP\temp-yakit-projects\*.*`
+        CreateDirectory "$INSTDIR"
+        CopyFiles /SILENT "$TEMP\temp-yakit-projects\*.*" "$INSTDIR\yakit-projects"
+        RMDir /r "$TEMP\temp-yakit-projects"
+    ${EndIf}
+    
+    ; 非更新时才删除以下的东西
+    ${If} $IS_UPDATED != "true"
+        ; 删除开始菜单快捷方式
+        Delete "$SMPROGRAMS\$EXE_NAME\*.*"
+        Delete "$SMPROGRAMS\$StartMenuFolder\$EXE_NAME.lnk"
+        RMDir "$SMPROGRAMS\$EXE_NAME"
+
+        ; 删除桌面快捷方式
+        Delete "$DESKTOP\$EXE_NAME.lnk"
+
+        ; 删除注册表项
+        DeleteRegValue HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
+        DeleteRegValue HKCU "Environment" "YAKIT_HOME"
+    ${EndIf}
+!macroend
+
+!macro customInstall 
+    
+!macroend
+
+Section "Main" SectionMain
+    ; create new directory if not installed 
+    ${If} $IS_INSTALLED != "true"
+        StrCpy $INSTDIR "$INSTDIR\$EXE_NAME"
+        CreateDirectory $INSTDIR
+    ${EndIf}
+
+    ; Migrate yakit-projects folder
+    ${If} "$PROFILE\yakit-projects" != "$INSTDIR\yakit-projects"
+    ${AndIf} ${FileExists} "$PROFILE\yakit-projects"
+        ClearErrors
+        CopyFiles $PROFILE\yakit-projects "$INSTDIR\yakit-projects"
+        ${If} ${Errors} 
+            DetailPrint "迁移yakit-projects文件夹失败..."
+        ${Else}
+            RMDir /R $PROFILE\yakit-projects
+            DetailPrint "删除旧的yakit-projects文件夹..."
+        ${EndIf} 
+    ${EndIf}
+
+    ; 存储安装目录
+    DetailPrint "写入环境变量..."
+    WriteRegStr HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME "$INSTDIR"
+    WriteRegStr HKCU "Environment" "YAKIT_HOME" "$INSTDIR\yakit-projects" 
+    ; 创建 yakit-projects 文件夹
+    DetailPrint "创建yakit-projects文件夹..."
+    CreateDirectory "$INSTDIR\yakit-projects"
+    DetailPrint "正在安装..."
+SectionEnd
+
+Section "Uninstall"
+    ${If} $IS_UPDATED == "true"
+        Goto keepFolder
+    ${EndIf}
+    MessageBox MB_YESNO "卸载时是否保留yakit-projects文件夹？" IDYES keepFolder IDNO continueUninstall
+ keepFolder:
+    DetailPrint "保留yakit-projects文件夹..."
+    SetOutPath $TEMP
+    CopyFiles /SILENT "$INSTDIR\yakit-projects\*.*" "$TEMP\temp-yakit-projects"
+    Goto continueUninstall
+ continueUninstall:
+
+SectionEnd

@@ -7,7 +7,7 @@ const fs = require("fs")
 const os = require("os")
 const path = require("path")
 const {setLocalCache} = require("../localCache")
-const { async } = require("node-stream-zip")
+const {YakitProjectPath} =require("../filePath")
 const isWindows = process.platform === "win32"
 
 if (process.platform === "darwin" || process.platform === "linux") {
@@ -35,7 +35,7 @@ function sudoExec(cmd, opt, callback) {
     } else {
         _sudoPrompt.exec(
             cmd,
-            {...opt, env: {YAKIT_HOME: path.join(os.homedir(), "yakit-projects/"), YAK_DEFAULT_DATABASE_NAME: dbFile}},
+            {...opt, env: {YAKIT_HOME: YakitProjectPath, YAK_DEFAULT_DATABASE_NAME: dbFile}},
             callback
         )
     }
@@ -268,7 +268,7 @@ module.exports = {
                     return
                 }
                 try {
-                    const info = fs.statSync(path.join(os.homedir(), `yakit-projects/${dbFile}`))
+                    const info = fs.statSync(path.join(YakitProjectPath, dbFile))
                     if ((info.mode & 0o200) > 0) {
                         resolve("")
                     } else {
@@ -291,7 +291,7 @@ module.exports = {
                     resolve(true)
                     return
                 }
-                const databaseFile = path.join(os.homedir(), `yakit-projects/${dbFile}`)
+                const databaseFile = path.join(YakitProjectPath, dbFile)
 
                 try {
                     fs.chmodSync(databaseFile, 0o644)

@@ -5,7 +5,7 @@ const os = require("os")
 const _sudoPrompt = require("sudo-prompt")
 const { GLOBAL_YAK_SETTING } = require("../state")
 const { testRemoteClient } = require("../ipc")
-const { getLocalYaklangEngine, engineLog } = require("../filePath")
+const { getLocalYaklangEngine, engineLog, YakitProjectPath } = require("../filePath")
 const psList = require("./libs/ps-yak-process")
 const net = require("net");
 const fs = require("fs")
@@ -64,7 +64,7 @@ function sudoExec(cmd, opt, callback) {
             callback(err)
         })
     } else {
-        _sudoPrompt.exec(cmd, { ...opt, env: { YAKIT_HOME: path.join(os.homedir(), "yakit-projects/") } }, callback)
+        _sudoPrompt.exec(cmd, { ...opt, env: { YAKIT_HOME: YakitProjectPath } }, callback)
     }
 }
 
@@ -167,17 +167,20 @@ module.exports = (win, callback, getClient, newClient) => {
     const asyncStartLocalYakEngineServer = (win, params) => {
         engineCount += 1
 
-        const { sudo, port,isEnpriTraceAgent } = params
+        const { sudo, port, isEnpriTraceAgent } = params
         return new Promise((resolve, reject) => {
             try {
                 // 考虑如果管理员权限启动未成功该通过什么方式自启普通权限引擎进程
                 if (sudo) {
                     if (isWindows) {
                         const subprocess = childProcess.exec(
-                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${port}${dbFile ? " --profile-db " + dbFile : ""}${isEnpriTraceAgent?` --disable-output`:""}`),
+                            generateWindowsSudoCommand(getLocalYaklangEngine(), `grpc --port ${port}${dbFile ? " --profile-db " + dbFile : ""}${isEnpriTraceAgent ? ` --disable-output` : ""}`),
                             {
                                 maxBuffer: 1000 * 1000 * 1000,
-                                stdio: "pipe",
+                                stdio: "pipe", 
+                                env: {
+                                    YAKIT_HOME: YakitProjectPath
+                                }
                             }
                         )
                         subprocess.stdout.on("data", toStdout)
@@ -191,7 +194,7 @@ module.exports = (win, callback, getClient, newClient) => {
                         })
                         resolve()
                     } else {
-                        const cmd = `${getLocalYaklangEngine()} grpc --port ${port}${dbFile ? ` --profile-db ${dbFile}` : ""}${isEnpriTraceAgent?` --disable-output`:""}`
+                        const cmd = `${getLocalYaklangEngine()} grpc --port ${port}${dbFile ? ` --profile-db ${dbFile}` : ""}${isEnpriTraceAgent ? ` --disable-output` : ""}`
                         sudoExec(
                             cmd,
                             {
@@ -212,12 +215,15 @@ module.exports = (win, callback, getClient, newClient) => {
 
                     const grpcPort = ["grpc", "--port", `${port}`]
                     const extraParams = dbFile ? [...grpcPort, "--profile-db", dbFile] : grpcPort
-                    const resultParams = isEnpriTraceAgent? [...extraParams, "--disable-output"]:extraParams
+                    const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
 
                     const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
                         // stdio: ["ignore", "ignore", "ignore"]
                         detached: false, windowsHide: true,
-                        stdio: ["ignore", log, log]
+                        stdio: ["ignore", log, log],
+                        env: {
+                            YAKIT_HOME: YakitProjectPath
+                        }
                     })
 
                     // subprocess.unref()

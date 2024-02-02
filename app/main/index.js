@@ -6,11 +6,10 @@ const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
 const {initExtraLocalCache, getExtraLocalCacheValue, initLocalCache, setCloeseExtraLocalCache} = require("./localCache")
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
-const {engineLog} = require("./filePath")
+const {engineLog,windowStatePatch} = require("./filePath")
 const fs = require("fs")
 const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
-const {windowStatePatch} = require("./filePath")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
