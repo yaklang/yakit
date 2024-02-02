@@ -28,16 +28,18 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList, UpdateGroupListItem} from "./UpdateGroupList"
 import {GroupListItem} from "./PluginGroupList"
 import styles from "./PluginLocalList.module.scss"
+import { isEnpriTraceAgent } from "@/utils/envfile"
 
 const defaultFilters = {
     plugin_type: []
 }
 
 interface PluginLocalGroupsListProps {
+    pluginsGroupsInViewport: boolean
     activeGroup: GroupListItem
 }
 export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo((props) => {
-    const {activeGroup} = props
+    const {pluginsGroupsInViewport, activeGroup} = props
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<YakScript[]>([])
     const showPluginIndex = useRef<number>(0) // 当前展示的插件序列
@@ -50,8 +52,8 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const [loading, setLoading] = useState<boolean>(false)
     const latestLoadingRef = useLatest(loading)
     const isLoadingRef = useRef<boolean>(true) // 是否为初次加载
-    const pluginsGroupsRef = useRef<HTMLDivElement>(null)
-    const [inViewport = true] = useInViewport(pluginsGroupsRef)
+    const pluginsLocalListRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(pluginsLocalListRef)
     const [initTotal, setInitTotal] = useState<number>(0)
     const [privateDomain, setPrivateDomain] = useState<string>("") // 私有域地址
     const [hasMore, setHasMore] = useState<boolean>(true)
@@ -75,7 +77,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
 
     useEffect(() => {
         getPrivateDomainAndRefList()
-    }, [])
+    }, [pluginsGroupsInViewport])
 
     useEffect(() => {
         emiter.on("onRefPluginGroupMagLocalPluginList", refreshLocalPluginList)
@@ -247,11 +249,20 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
         scriptNameRef.current = scriptName
         if (!scriptName.length) return
         apiFetchGetYakScriptGroupLocal(scriptName).then((res) => {
-            const newSetGroup = [...res.SetGroup].map((name) => ({
+            const copySetGroup = [...res.SetGroup]
+            const index = copySetGroup.findIndex((name) => name === "基础扫描")
+            const newSetGroup = copySetGroup.map((name) => ({
                 groupName: name,
                 checked: true
             }))
-            const newAllGroup = [...res.AllGroup].map((name) => ({
+
+            let copyAllGroup = [...res.AllGroup]
+            // 便携版 如果没有基础扫描 塞基础扫描
+            const index2 = copyAllGroup.findIndex((name) => name === "基础扫描")
+            if (isEnpriTraceAgent() && index === -1 && index2 === -1) {
+                copyAllGroup = [...copyAllGroup, "基础扫描"]
+            }
+            const newAllGroup = copyAllGroup.map((name) => ({
                 groupName: name,
                 checked: false
             }))
@@ -320,7 +331,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     })
 
     return (
-        <div className={styles["plugin-local-list-wrapper"]} ref={pluginsGroupsRef}>
+        <div className={styles["plugin-local-list-wrapper"]} ref={pluginsLocalListRef}>
             <PluginListWrap
                 title={activeGroup.name}
                 total={response.Total}
@@ -422,10 +433,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                     />
                 ) : (
                     <div className={styles["plugin-local-empty"]}>
-                        <YakitEmpty
-                            title='暂无数据'
-                            style={{marginTop: 80}}
-                        />
+                        <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
                         <div className={styles["plugin-local-buttons"]}>
                             <YakitButton
                                 type='outline1'

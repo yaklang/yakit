@@ -7,11 +7,16 @@ import {PluginOnlineGroupList} from "./PluginOnlineGroupList"
 import {PluginLocalGroupList} from "./PluginLocalGroupList"
 import {GroupListItem} from "./PluginGroupList"
 import styles from "./PluginGroups.module.scss"
+import {useInViewport} from "ahooks"
+import {SolidPluscircleIcon, SolidQuestionmarkcircleIcon} from "@/assets/icon/solid"
+import {Tooltip} from "antd"
 
 interface PluginGroupsProps {}
 
 export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
+    const pluginsGroupsRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(pluginsGroupsRef)
     const [pluginGroupType, setPluginGroupType] = useState<"online" | "local">("online")
     const [onlineGroupLen, setOnlineGroupLen] = useState<number>(0)
     const [localGroupLen, setLocalGroupLen] = useState<number>(0)
@@ -25,11 +30,14 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
     }, [userInfo.role])
 
     return (
-        <div className={styles["plugin-groups-wrapper"]}>
+        <div className={styles["plugin-groups-wrapper"]} ref={pluginsGroupsRef}>
             {/* 左侧插件组 */}
             <div className={styles["plugin-groups-left-wrap"]}>
                 <div className={styles["plugin-groups-left-header"]}>
                     <span className={styles["plugin-groups-left-header-text"]}>插件组管理</span>
+                    <Tooltip title='插件组只能管理除Yak和Codec类型以外的插件' placement='bottomLeft'>
+                        <SolidQuestionmarkcircleIcon className={styles["pligin-group-mag-icon"]} />
+                    </Tooltip>
                     {/* {judgeOnlineStatus && (
                         <YakitRadioButtons
                             style={{marginRight: 4}}
@@ -56,11 +64,13 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                 <div className={styles["plugin-groups-left-body"]}>
                     <div
                         style={{
-                            display: pluginGroupType === "online" && judgeOnlineStatus ? "block" : "none",
+                            display: pluginGroupType === "online" ? "block" : "none",
                             height: "100%"
                         }}
                     >
-                        {/* <PluginOnlineGroupList onOnlineGroupLen={setOnlineGroupLen}></PluginOnlineGroupList> */}
+                        {/* {judgeOnlineStatus && (
+                            <PluginOnlineGroupList onOnlineGroupLen={setOnlineGroupLen}></PluginOnlineGroupList>
+                        )} */}
                     </div>
                     <div
                         style={{
@@ -69,6 +79,7 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                         }}
                     >
                         <PluginLocalGroupList
+                            pluginsGroupsInViewport={inViewport}
                             onLocalGroupLen={setLocalGroupLen}
                             activeLocalGroup={activeLocalGroup}
                             onActiveGroup={(groupItem) => {
@@ -82,11 +93,11 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
             <div className={styles["plugin-groups-right-wrap"]}>
                 <div
                     style={{
-                        display: pluginGroupType === "online" && judgeOnlineStatus ? "block" : "none",
+                        display: pluginGroupType === "online" ? "block" : "none",
                         height: "100%"
                     }}
                 >
-                    {/* <PluginOnlineList></PluginOnlineList> */}
+                    {/* {judgeOnlineStatus && <PluginOnlineList></PluginOnlineList>} */}
                 </div>
                 <div
                     style={{
@@ -94,7 +105,12 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                         height: "100%"
                     }}
                 >
-                    {activeLocalGroup && <PluginLocalList activeGroup={activeLocalGroup}></PluginLocalList>}
+                    {activeLocalGroup && (
+                        <PluginLocalList
+                            pluginsGroupsInViewport={inViewport}
+                            activeGroup={activeLocalGroup}
+                        ></PluginLocalList>
+                    )}
                 </div>
             </div>
         </div>

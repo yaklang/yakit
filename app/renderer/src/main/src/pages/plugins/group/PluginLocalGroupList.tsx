@@ -13,14 +13,16 @@ import {
 } from "../utils"
 import {GroupCount} from "@/pages/invoker/schema"
 import emiter from "@/utils/eventBus/eventBus"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 
 interface PluginLocalGroupListProps {
+    pluginsGroupsInViewport: boolean
     onLocalGroupLen: (len: number) => void
     activeLocalGroup?: GroupListItem
     onActiveGroup: (groupItem: GroupListItem) => void
 }
 export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props) => {
-    const {onLocalGroupLen, activeLocalGroup, onActiveGroup} = props
+    const {pluginsGroupsInViewport, onLocalGroupLen, activeLocalGroup, onActiveGroup} = props
     const [groupList, setGroupList] = useState<GroupListItem[]>([])
     const [editGroup, setEditGroup] = useState<GroupListItem>() // 编辑插件组
     const [delGroup, setDelGroup] = useState<GroupListItem>() // 删除插件组
@@ -33,7 +35,7 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
         getRemoteValue(RemoteGV.PluginGroupDelNoPrompt).then((result: string) => {
             setPluginGroupDelNoPrompt(result === "true")
         })
-    }, [])
+    }, [pluginsGroupsInViewport])
 
     useEffect(() => {
         emiter.on("onRefPluginGroupMagLocalQueryYakScriptGroup", getGroupList)
@@ -54,15 +56,29 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
     // 获取组列表数据
     const getGroupList = () => {
         apiFetchQueryYakScriptGroupLocal().then((group: GroupCount[]) => {
-            const arr = group.map((item) => ({
-                id: item.Default ? item.Value : item.Value + "_group",
-                name: item.Value,
-                number: item.Total,
-                icon: assemblyExtraField(item.Default, item.Value, "icon"),
-                iconColor: assemblyExtraField(item.Default, item.Value, "iconColor"),
-                showOptBtns: assemblyExtraField(item.Default, item.Value, "showOptBtns"),
-                default: item.Default
-            }))
+            const copyGroup = structuredClone(group)
+            const findBasicScanningIndex = copyGroup.findIndex((item) => item.Value === "基础扫描")
+            const findNotGroupIndex = copyGroup.findIndex((item) => item.Value === "未分组" && item.Default)
+            // 便携版 若未返回基础扫描 前端自己筛一个进去
+            if (findBasicScanningIndex === -1 && isEnpriTraceAgent()) {
+                copyGroup.splice(findNotGroupIndex + 1, 0, {Value: "基础扫描", Total: 0, Default: false})
+            }
+            const arr = copyGroup.map((item) => {
+                const obj = {
+                    id: item.Default ? item.Value : item.Value + "_group",
+                    name: item.Value,
+                    number: item.Total,
+                    icon: assemblyExtraField(item.Default, item.Value, "icon"),
+                    iconColor: assemblyExtraField(item.Default, item.Value, "iconColor"),
+                    showOptBtns: assemblyExtraField(item.Default, item.Value, "showOptBtns"),
+                    default: item.Default
+                }
+                // 便携版 基础扫描不允许编辑删除操作
+                if (isEnpriTraceAgent() && item.Value === "基础扫描") {
+                    obj.showOptBtns = false
+                }
+                return obj
+            })
             setGroupList(arr)
             onLocalGroupLen(arr.length - 2 > 0 ? arr.length - 2 : 0)
         })
@@ -74,14 +90,13 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
         if (!newName || newName === groupItem.name) return
         apiFetchRenameYakScriptGroupLocal(groupItem.name, newName).then(() => {
             getGroupList()
-            // BUG 一个组里面后端查出相同插件 当前选中组的名字 与其他组的新名字相同的话 需要刷新插件列表
             if (activeLocalGroup?.default === false && activeLocalGroup.name === newName) {
                 emiter.emit("onRefPluginGroupMagLocalPluginList", "")
             }
         })
     }
 
-    // BUG 后端删除数据 会导致所有组被删除 插件组删除
+    // 插件组删除
     const onGroupDel = (groupItem: GroupListItem, callBack?: () => void) => {
         apiFetchDeleteYakScriptGroupLocal(groupItem.name).then(() => {
             getGroupList()
