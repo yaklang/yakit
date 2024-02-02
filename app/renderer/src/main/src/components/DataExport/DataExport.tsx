@@ -67,14 +67,15 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                     if (totalCellNumber < maxCellNumber && response.Total <= pageSize) {
                         // 单元格数量小于最大单元格数量，直接导出
                         export_json_to_excel({
-                            header: res.header,
-                            data: res.exportData,
+                            header: header,
+                            data: exportData,
                             filename: `${fileName}1-${exportData.length}`,
                             autoWidth: true,
                             bookType: "xlsx",
                             optsSingleCellSetting
                         })
-                    } else {
+                    } 
+                    else {
                         // 分批导出
                         const frequency = Math.ceil(totalCellNumber / maxCellNumber) // 导出次数
                         exportNumber.current = Math.floor(maxCellNumber / header.length) //每次导出的数量
@@ -181,10 +182,12 @@ interface ExportSelectProps {
     getData: (query: PaginationSchema) => Promise<any>
     /* 导出文件名称 */
     fileName?: string
+    /* limit */
+    pageSize?: number
 }
 // 导出字段选择
 export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
-    const {exportValue,fileName,setExportTitle,exportKey,getData} = props
+    const {exportValue,fileName,setExportTitle,exportKey,getData,pageSize} = props
     const [checkValue,setCheckValue] = useState<CheckboxValueType[]>([])
     useEffect(()=>{
         getRemoteValue(exportKey).then((setting) => {
@@ -227,6 +230,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
                     getData={getData}
                     fileName={fileName}
                     text="导出"
+                    pageSize={pageSize}
                 />
             </div>
         </div>
