@@ -330,11 +330,11 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                                     label: "导出",
                                     itemIcon: <OutlineExportIcon className={styles["plugin-local-extra-node-icon"]} />
                                 },
-                                {
-                                    key: "local-debugging",
-                                    label: "本地调试",
-                                    itemIcon: <OutlineTerminalIcon className={styles["plugin-local-extra-node-icon"]} />
-                                },
+                                // {
+                                //     key: "local-debugging",
+                                //     label: "本地调试",
+                                //     itemIcon: <OutlineTerminalIcon className={styles["plugin-local-extra-node-icon"]} />
+                                // },
                                 {
                                     key: "add-to-menu",
                                     label: "添加到菜单栏",
