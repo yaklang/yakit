@@ -14,16 +14,16 @@ interface TabRenameModalProps {
 const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) => {
     const {title, onClose, name, onOk} = props
     const [value, setValue] = useState<string>(name)
-    const [textareaRef, setTextAreaRef] = useState<TextAreaRef | null>(null);
+    const textareaRef = useRef<TextAreaRef>(null)
     useEffect(() => {
-        if (textareaRef) {
-            const textArea = textareaRef.resizableTextArea?.textArea;
+        if (textareaRef.current) {
+            const textArea = textareaRef.current.resizableTextArea?.textArea
             if (textArea) {
-                textArea.focus();
-                textArea.select();
+                // textArea.focus();
+                textArea.select()
             }
         }
-    }, [textareaRef]);
+    }, [])
     return (
         <div className={styles["subMenu-edit-modal"]}>
             <div className={styles["subMenu-edit-modal-heard"]}>
@@ -34,12 +34,9 @@ const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) 
             </div>
             <div className={styles["subMenu-edit-modal-body"]}>
                 <YakitInput.TextArea
-                    ref={(ref) => {
-                        if (ref && !textareaRef) {
-                            setTextAreaRef(ref);
-                        }
-                    }}
+                    ref={textareaRef}
                     autoSize={{minRows: 3, maxRows: 3}}
+                    isShowResize={false}
                     showCount
                     value={value}
                     maxLength={50}
