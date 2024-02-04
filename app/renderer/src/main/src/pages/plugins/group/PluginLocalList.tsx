@@ -252,17 +252,18 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
         if (!scriptName.length) return
         apiFetchGetYakScriptGroupLocal(scriptName).then((res) => {
             const copySetGroup = [...res.SetGroup]
-            const index = copySetGroup.findIndex((name) => name === "基础扫描")
             const newSetGroup = copySetGroup.map((name) => ({
                 groupName: name,
                 checked: true
             }))
-
             let copyAllGroup = [...res.AllGroup]
             // 便携版 如果没有基础扫描 塞基础扫描
-            const index2 = copyAllGroup.findIndex((name) => name === "基础扫描")
-            if (isEnpriTraceAgent() && index === -1 && index2 === -1) {
-                copyAllGroup = [...copyAllGroup, "基础扫描"]
+            if (isEnpriTraceAgent()) {
+                const index = copySetGroup.findIndex((name) => name === "基础扫描")
+                const index2 = copyAllGroup.findIndex((name) => name === "基础扫描")
+                if (index === -1 && index2 === -1) {
+                    copyAllGroup = [...copyAllGroup, "基础扫描"]
+                }
             }
             const newAllGroup = copyAllGroup.map((name) => ({
                 groupName: name,

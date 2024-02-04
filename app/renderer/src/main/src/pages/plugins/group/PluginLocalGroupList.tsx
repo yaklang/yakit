@@ -57,11 +57,13 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
     const getGroupList = () => {
         apiFetchQueryYakScriptGroupLocal().then((group: GroupCount[]) => {
             const copyGroup = structuredClone(group)
-            const findBasicScanningIndex = copyGroup.findIndex((item) => item.Value === "基础扫描")
-            const findNotGroupIndex = copyGroup.findIndex((item) => item.Value === "未分组" && item.Default)
             // 便携版 若未返回基础扫描 前端自己筛一个进去
-            if (findBasicScanningIndex === -1 && isEnpriTraceAgent()) {
-                copyGroup.splice(findNotGroupIndex + 1, 0, {Value: "基础扫描", Total: 0, Default: false})
+            if (isEnpriTraceAgent()) {
+                const findBasicScanningIndex = copyGroup.findIndex((item) => item.Value === "基础扫描")
+                if (findBasicScanningIndex === -1) {
+                    const findNotGroupIndex = copyGroup.findIndex((item) => item.Value === "未分组" && item.Default)
+                    copyGroup.splice(findNotGroupIndex + 1, 0, {Value: "基础扫描", Total: 0, Default: false})
+                }
             }
             const arr = copyGroup.map((item) => {
                 const obj = {
