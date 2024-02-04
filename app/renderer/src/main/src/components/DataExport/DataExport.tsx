@@ -35,6 +35,43 @@ interface PaginationProps {
 
 const maxCellNumber = 100000 // 最大单元格10w
 
+
+/* 校验数组长度是否大于90MB，并在超过90MB时将数组分割成多个小段 */
+  const splitArrayBySize = (arr, maxSizeInBytes) => {
+    const serializedArray = JSON.stringify(arr);
+    const byteLength = new TextEncoder().encode(serializedArray).length;
+  
+    if (byteLength <= maxSizeInBytes) {
+      // 如果数组大小小于等于指定大小，无需分割
+      return [arr];
+    }
+  
+    const chunks:any = [];
+    let currentChunk:any = [];
+    let currentSize = 0;
+  
+    // 遍历数组元素，将其添加到当前块，直到达到指定大小
+    for (const element of arr) {
+      const elementSize = new TextEncoder().encode(JSON.stringify(element)).length;
+  
+      if (currentSize + elementSize > maxSizeInBytes) {
+        // 如果当前块超过了指定大小，将其存储并创建新的块
+        chunks.push(currentChunk);
+        currentChunk = [element];
+        currentSize = elementSize;
+      } else {
+        // 否则，将元素添加到当前块
+        currentChunk.push(element);
+        currentSize += elementSize;
+      }
+    }
+  
+    // 存储最后一个块
+    chunks.push(currentChunk);
+  
+    return chunks;
+  }
+
 export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     const {
         btnProps,
@@ -57,6 +94,9 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         Pagination: genDefaultPagination(pageSize, 1),
         Total: 0
     })
+    const [splitVisible,setSplitVisible] = useState<boolean>(false)
+    const [chunksData,setChunksData] = useState<any[]>([])
+    const beginNumberRef = useRef<number>(0)
     const toExcel = useMemoizedFn((query = {Limit: pageSize, Page: 1}) => {
         setLoading(true)
         getData(query as any)
@@ -64,8 +104,15 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 if (res) {
                     const {header, exportData, response, optsSingleCellSetting} = res
                     const totalCellNumber = header.length * exportData.length
-                    if (totalCellNumber < maxCellNumber && response.Total <= pageSize) {
-                        // 单元格数量小于最大单元格数量，直接导出
+
+                    const maxSizeInBytes = 90 * 1024 * 1024; // 90MB
+                    const chunks:any[] = splitArrayBySize(exportData,maxSizeInBytes)
+
+                    console.log("chunks--",chunks);
+                    if ((totalCellNumber < maxCellNumber && response.Total <= pageSize)&&chunks.length===1) {
+                        console.log("ggg");
+                        
+                        // 单元格数量小于最大单元格数量 或者导出内容小于90M，直接导出
                         export_json_to_excel({
                             header: header,
                             data: exportData,
@@ -74,17 +121,38 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                             bookType: "xlsx",
                             optsSingleCellSetting
                         })
-                    } 
-                    else {
+                    }
+                    else if(!(totalCellNumber < maxCellNumber && response.Total <= pageSize)){
                         // 分批导出
                         const frequency = Math.ceil(totalCellNumber / maxCellNumber) // 导出次数
                         exportNumber.current = Math.floor(maxCellNumber / header.length) //每次导出的数量
                         exportDataBatch.current = exportData
                         headerExcel.current = header
+                        optsCell.current = optsSingleCellSetting
                         setFrequency(frequency)
                         setVisible(true)
+                    } 
+                    else {
+                        // 分割导出
+                        headerExcel.current = header
+                        optsCell.current = optsSingleCellSetting
+                        setSplitVisible(true)
+                        setChunksData(chunks)
+                        // let begin:number = 0
+                        // for (let i = 0; i < chunks.length; i++) {
+                        //     let filename = `${fileName}${begin||1}-${begin+chunks[i].length}`
+                        //     begin += chunks[i].length
+                        //     export_json_to_excel({
+                        //         header: header,
+                        //         data: chunks[i],
+                        //         filename,
+                        //         autoWidth: true,
+                        //         bookType: "xlsx",
+                        //         optsSingleCellSetting
+                        //     })
+                        // }
                     }
-                    optsCell.current = optsSingleCellSetting
+                    
                     setPagination(response)
                 }
             })
@@ -122,6 +190,17 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
         }
         toExcel(query)
     }
+
+    const onSplitExport = useMemoizedFn((data,start,end)=>{
+        export_json_to_excel({
+            header: headerExcel.current,
+            data: data,
+            filename: `${fileName}${start}-${end}`,
+            autoWidth: true,
+            bookType: "xlsx",
+            optsSingleCellSetting:optsCell.current
+        })
+    })
     return (
         <>
             {showButton ? (
@@ -165,6 +244,30 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                         onChange={onChange}
                     />
                 </div>
+                </div>
+            </YakitModal>
+            <YakitModal
+                title='数据导出'
+                closable={true}
+                visible={splitVisible}
+                onCancel={() => setSplitVisible(false)}
+                footer={null}
+            >
+                <div style={{padding: 24}}>
+                <Space wrap>
+                    {chunksData.map((item, index) =>{
+                        if(index===0){beginNumberRef.current = 0}
+                        console.log("beginNumberRef.current",beginNumberRef.current);
+                        
+                        let start:number = beginNumberRef.current || 1
+                        let end:number = beginNumberRef.current + item.length
+                        beginNumberRef.current = end+1
+                        return(<YakitButton key={index} type='outline2' onClick={() => onSplitExport(item,start,end)}>
+                                {start}-{end}
+                            </YakitButton>)
+                            
+                    })}
+                </Space>
                 </div>
             </YakitModal>
         </>

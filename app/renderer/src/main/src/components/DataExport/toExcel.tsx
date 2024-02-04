@@ -1,4 +1,5 @@
 /* eslint-disable */
+import {yakitNotify} from "@/utils/notification"
 import {saveAs} from "file-saver"
 import moment from "moment"
 import * as XLSX from "xlsx"
@@ -28,7 +29,7 @@ function sheet_from_array_of_arrays(data, optsSingleCellSetting) {
             }
             if (cell.v == null) continue
             // 根据单元格内容设置单元格样式
-            if (optsSingleCellSetting&&R > 0 && C === optsSingleCellSetting.c) {
+            if (optsSingleCellSetting && R > 0 && C === optsSingleCellSetting.c) {
                 if (typeof cell.v === "string" || typeof cell.v === "number") {
                     cell.s = optsSingleCellSetting.colorObj[cell.v]
                 }
@@ -104,11 +105,11 @@ export function export_json_to_excel({
                 } else if (val.toString().charCodeAt(0) > 255) {
                     /*再判断是否为中文*/
                     return {
-                        wch: val.toString().length * 2>60?60:val.toString().length * 2
+                        wch: val.toString().length * 2 > 60 ? 60 : val.toString().length * 2
                     }
                 } else {
                     return {
-                        wch: val.toString().length>60?60:val.toString().length
+                        wch: val.toString().length > 60 ? 60 : val.toString().length
                     }
                 }
             })
@@ -122,22 +123,26 @@ export function export_json_to_excel({
                 }
             }
         }
+
         ws["!cols"] = result
     }
 
     /* add worksheet to workbook */
     wb.SheetNames.push(ws_name)
     wb.Sheets[ws_name] = ws
-
-    var wbout = XLSXStyle.write(wb, {
-        bookType: bookType,
-        bookSST: false,
-        type: "binary"
-    })
-    saveAs(
-        new Blob([s2ab(wbout)], {
-            type: "application/octet-stream"
-        }),
-        `${filename}(${moment().valueOf()}).${bookType}`
-    )
+    try {
+        var wbout = XLSXStyle.write(wb, {
+            bookType: bookType,
+            bookSST: false,
+            type: "binary"
+        })
+        saveAs(
+            new Blob([s2ab(wbout)], {
+                type: "application/octet-stream"
+            }),
+            `${filename}(${moment().valueOf()}).${bookType}`
+        )
+    } catch (error) {
+        yakitNotify("error", `xlsx过大:${error}`)
+    }
 }

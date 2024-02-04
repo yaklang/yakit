@@ -1677,7 +1677,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     // 这里重置过后的 tagsFilter 不一定是最新的
                                     setParams({
                                         ...getParams(),
-                                        Tags: [],
+                                        Tags: []
                                     })
                                     setTimeout(() => {
                                         updateData()
@@ -2121,9 +2121,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     }
 
-    const getPageSize = useMemo(()=>{
-        return total>5000?500:100
-    },[total])
+    const getPageSize = useMemo(() => {
+        if(total>5000){
+            return 500
+        }
+        else if(total>2000){
+            return 200
+        }
+        else {
+            return 100
+        }
+    }, [total])
 
     // 数据导出
     const initExcelData = (resolve, newExportData: HTTPFlow[], rsp) => {
@@ -2154,7 +2162,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const getExcelData = useMemoizedFn((pagination, list: HTTPFlow[]) => {
         return new Promise((resolve) => {
             const l = data.length
-            const query:any = {
+            const query: any = {
                 ...params,
                 Tags: params.Tags,
                 Pagination: {...pagination},
@@ -2162,7 +2170,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 //     pagination.Page === 1
                 //         ? undefined
                 //         : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
-                OffsetId:undefined,
+                OffsetId: undefined,
                 AfterBodyLength: params.AfterBodyLength
                     ? onConvertBodySizeByUnit(params.AfterBodyLength, getBodyLengthUnit())
                     : undefined,
@@ -2171,134 +2179,126 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     : undefined,
                 Full: false
             }
-console.log("5555",pagination,data,query);
 
             if (checkBodyLength && !query.AfterBodyLength) {
                 query.AfterBodyLength = 1
             }
-            let exportParams = {}
-// 这里的key值 不一定和表格的key对应的上
-const arrList = [
-    {
-        title: "序号",
-        key: "id"
-    },
-    {
-        title: "方法",
-        key: "method"
-    },
-    {
-        title: "状态码",
-        key: "status_code"
-    },
-    {
-        title: "URL",
-        key: "url"
-    },
-    {
-        title: "Title",
-        key: "response"
-    },
-    {
-        title: "Tags",
-        key: "tags"
-    },
-    {
-        title: "IP",
-        key: "iP_address"
-    },
-    {
-        title: "响应长度",
-        key: "body_length"
-    },
-    {
-        title: "参数",
-        key: "get_params_total"
-    },
-    {
-        title: "响应类型",
-        key: "content_type"
-    },
-    {
-        title: "请求时间",
-        key: "updated_at"
-    },
-    {
-        title: "请求大小",
-        key: "request"
-    },
-    {
-        title: "请求包",
-        key: "request"
-    },
-    {
-        title: "响应包",
-        key: "response"
-    }
-]
-const FieldName = arrList.filter((item) => exportTitle.includes(item.title)).map((item) => item.key)
-            if (isAllSelect) {
-                // 需要多少次请求
-                let pageSize = getPageSize
-                let count = Math.ceil(total/pageSize)
-                const resultArray:number[] = [];
-                for (let i = 1; i <= count; i++) {
-                  resultArray.push(i);
+            let exportParams: any = {}
+            // 这里的key值 不一定和表格的key对应的上
+            const arrList = [
+                {
+                    title: "序号",
+                    key: "id"
+                },
+                {
+                    title: "方法",
+                    key: "method"
+                },
+                {
+                    title: "状态码",
+                    key: "status_code"
+                },
+                {
+                    title: "URL",
+                    key: "url"
+                },
+                {
+                    title: "Title",
+                    key: "response"
+                },
+                {
+                    title: "Tags",
+                    key: "tags"
+                },
+                {
+                    title: "IP",
+                    key: "iP_address"
+                },
+                {
+                    title: "响应长度",
+                    key: "body_length"
+                },
+                {
+                    title: "参数",
+                    key: "get_params_total"
+                },
+                {
+                    title: "响应类型",
+                    key: "content_type"
+                },
+                {
+                    title: "请求时间",
+                    key: "updated_at"
+                },
+                {
+                    title: "请求大小",
+                    key: "request"
+                },
+                {
+                    title: "请求包",
+                    key: "request"
+                },
+                {
+                    title: "响应包",
+                    key: "response"
                 }
-                console.log("FieldName",exportTitle,FieldName);
-                
-                const promiseList = resultArray.map((item)=>{
-                    query.Pagination.Limit = pageSize
-                    query.Pagination.Page = item
-                    exportParams = {ExportWhere: query, FieldName}
-                    return new Promise((resolve, reject) => {
-                        ipcRenderer
-                    .invoke("ExportHTTPFlows", exportParams)
-                    .then((rsp: YakQueryHTTPFlowResponse) => {
-                        console.log("rsp---",rsp);
-                        resolve(rsp)
-                    })
-                    .catch((e)=>{
-                        console.log("eee---",e);
-                        reject(e)
-                    })
-                    .finally(() => {
-                        console.log("finally---");
-                    })
-                    })
-                })
-                console.log("promiseList---",promiseList);
-                
-                Promise.allSettled(promiseList)
-  .then(results => {
-    console.log("输出：",results);
-    let rsp:YakQueryHTTPFlowResponse = {
-        Data:[],
-        Pagination: {...pagination,Page: 1, OrderBy: 'id', Order: ''},
-        Total:parseInt(total+"") 
-    }
-    results.forEach((item)=>{
-        if(item.status==="fulfilled"){
-            const value = item.value as YakQueryHTTPFlowResponse
-            rsp.Data = [...rsp.Data,...value.Data]
-        }
-    })
-    initExcelData(resolve, rsp.Data, rsp)
-  });
+            ]
+            const FieldName = arrList.filter((item) => exportTitle.includes(item.title)).map((item) => item.key)
+
+            const Ids: number[] = list.map((item) => parseInt(item.Id + ""))
+            // 最大请求条数
+            let pageSize = getPageSize
+            // 需要多少次请求
+            let count = Math.ceil((isAllSelect ? total : Ids.length) / pageSize)
+            const resultArray: number[] = []
+            for (let i = 1; i <= count; i++) {
+                resultArray.push(i)
             }
-            else{
-                const Ids: number[] = list.map((item) => parseInt(item.Id + ""))
-                exportParams = {ExportWhere: query, Ids, FieldName}
-            console.log("exportParams---",exportParams);
-            
-            ipcRenderer
-                .invoke("ExportHTTPFlows", exportParams)
-                .then((rsp: YakQueryHTTPFlowResponse) => {
-                    console.log("rsp---",rsp);
-                    initExcelData(resolve, rsp.Data, rsp)
+            const promiseList = resultArray.map((item) => {
+                query.Pagination.Limit = pageSize
+                query.Pagination.Page = item
+                exportParams = {ExportWhere: query, FieldName}
+                if (!isAllSelect) {
+                    exportParams.Ids = Ids
+                }
+                return new Promise((resolve, reject) => {
+                    ipcRenderer
+                        .invoke("ExportHTTPFlows", exportParams)
+                        .then((rsp: YakQueryHTTPFlowResponse) => {
+                            console.log("rsp---", rsp)
+                            resolve(rsp)
+                        })
+                        .catch((e) => {
+                            console.log("eee---", e)
+                            reject(e)
+                        })
+                        .finally(() => {
+                            console.log("finally---")
+                        })
                 })
-            }
-            
+            })
+            Promise.allSettled(promiseList).then((results) => {
+                console.log("输出：", results)
+                let rsp: YakQueryHTTPFlowResponse = {
+                    Data: [],
+                    Pagination: {...pagination, Page: 1, OrderBy: "id", Order: ""},
+                    Total: parseInt(total + "")
+                }
+                let message:string = ""
+                results.forEach((item) => {
+                    if (item.status === "fulfilled") {
+                        const value = item.value as YakQueryHTTPFlowResponse
+                        rsp.Data = [...rsp.Data, ...value.Data]
+                    }
+                    else{
+                        message = item.reason?.message
+                    }
+                })
+                if(message.length>0){
+                    yakitNotify("warning", `部分导出内容缺失:${message}`)
+                }
+                initExcelData(resolve, rsp.Data, rsp)
+            })
         })
     })
 
@@ -2323,7 +2323,7 @@ const FieldName = arrList.filter((item) => exportTitle.includes(item.title)).map
             },
             width: 650,
             footer: null,
-            maskClosable:false
+            maskClosable: false
         })
     }
 
