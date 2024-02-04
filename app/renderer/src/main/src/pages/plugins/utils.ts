@@ -759,7 +759,13 @@ export const apiFetchGroupStatisticsLocal: () => Promise<API.PluginsSearchRespon
                                 count: ele.Total
                             }))
                         }
-                    ].filter((ele) => ele.data.length > 0)
+                    ].filter((ele) => {
+                        if (ele.groupKey === 'plugin_group') {
+                            return true
+                        } else {
+                            return ele.data.length > 0
+                        }
+                    })
                     resolve({data})
                 })
                 .catch((e) => {

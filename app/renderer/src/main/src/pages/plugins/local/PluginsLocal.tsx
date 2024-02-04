@@ -68,7 +68,7 @@ import styles from "./PluginsLocal.module.scss"
 import {PluginLocalExport, initExportLocalParams} from "./PluginLocalExportProps"
 
 const {ipcRenderer} = window.require("electron")
-const defaultFilters = {plugin_type: [], tags: []}
+const defaultFilters = {plugin_type: [], tags: [], plugin_group: []}
 
 export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     // 获取插件列表数据-相关逻辑
@@ -158,6 +158,32 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     useUpdateEffect(() => {
         fetchList(true)
     }, [userInfo.isLogin, filters])
+
+    // 当filters过滤条件被其他页面或者意外删掉，插件列表却带了该过滤条件的情况，切换到该页面时需要把被删掉的过滤条件排除
+    useEffect(() => {
+        let updateFilterFlag = false
+        let lasetFilter: PluginFilterParams = structuredClone(filters)
+        Object.keys(filters).forEach((key) => {
+            filters[key].forEach((item: API.PluginsSearchData) => {
+                const value = item.value
+                pluginGroupList.forEach((item2) => {
+                    if (item2.groupKey === key) {
+                        updateFilterFlag = item2.data.findIndex((item3) => item3.value === value) === -1
+                        if (updateFilterFlag) {
+                            lasetFilter = {
+                                ...lasetFilter,
+                                [key]: lasetFilter[key].filter((item4: API.PluginsSearchData) => item4.value !== value)
+                            }
+                        }
+                    }
+                })
+            })
+        })
+
+        if (updateFilterFlag) {
+            setFilters(lasetFilter)
+        }
+    }, [filters, pluginGroupList])
 
     const {pluginLocalPageData, clearDataByRoute} = usePageInfo(
         (s) => ({
