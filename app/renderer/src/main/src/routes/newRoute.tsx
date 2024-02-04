@@ -112,9 +112,9 @@ import {DiagnoseNetworkPage} from "@/pages/diagnoseNetwork/DiagnoseNetworkPage"
 import HTTPFuzzerPage from "@/pages/fuzzer/HTTPFuzzerPage"
 import {ErrorBoundary} from "react-error-boundary"
 import {PageItemProps} from "@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType"
-import {WebShellViewer} from "@/pages/webShell/WebShellViewer";
-import {WebShellDetail} from "@/pages/webShell/models";
-import {WebShellDetailOpt} from "@/pages/webShell/WebShellDetailOpt";
+import {WebShellViewer} from "@/pages/webShell/WebShellViewer"
+import {WebShellDetail} from "@/pages/webShell/models"
+import {WebShellDetailOpt} from "@/pages/webShell/WebShellDetailOpt"
 import {
     FuzzerParamItem,
     AdvancedConfigValueProps
@@ -393,7 +393,7 @@ export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.M
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
 /** 用户退出登录后，需自动关闭的页面 */
-export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit,YakitRoute.Data_Statistics]
+export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
 export interface ComponentParams {
     // Route.HTTPFuzzer 参数
@@ -491,8 +491,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <PluginGroups />
-            // return <NewHome />
+            return <NewHome />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -548,7 +547,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Plugin_Groups:
             return <PluginGroups />
         case YakitRoute.BatchExecutorPage:
-            return <PluginBatchExecutor id={params?.id || ""}/>
+            return <PluginBatchExecutor id={params?.id || ""} />
         case YakitRoute.DNSLog:
             return <DNSLogPage />
         case YakitRoute.ICMPSizeLog:
@@ -656,7 +655,9 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Beta_WebShellManager:
             return <WebShellViewer />
         case YakitRoute.Beta_WebShellOpt:
-            return <WebShellDetailOpt id={(params?.id||"") + ""} webshellInfo={params?.webshellInfo as WebShellDetail}/>
+            return (
+                <WebShellDetailOpt id={(params?.id || "") + ""} webshellInfo={params?.webshellInfo as WebShellDetail} />
+            )
         case YakitRoute.Data_Statistics:
             return <DataStatistics />
         case YakitRoute.Space_Engine:

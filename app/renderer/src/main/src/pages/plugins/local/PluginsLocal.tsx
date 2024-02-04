@@ -481,8 +481,8 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     /**编辑 */
     const onEditPlugin = useMemoizedFn((data: YakScript) => {
         if (data?.Id && +data.Id) {
-            if(data.ScriptName==="综合目录扫描与爆破"){
-                yakitNotify("warning","暂不可编辑")
+            if (data.ScriptName === "综合目录扫描与爆破") {
+                yakitNotify("warning", "暂不可编辑")
                 return
             }
             emiter.emit(
@@ -860,7 +860,27 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
                     setVisible={onSetShowFilter}
                     selecteds={filters as Record<string, API.PluginsSearchData[]>}
                     onSelect={setFilters}
-                    groupList={pluginGroupList}
+                    groupList={pluginGroupList.map((item) => {
+                        if (item.groupKey === "plugin_group") {
+                            item.groupExtraOptBtn = (
+                                <>
+                                    <YakitButton
+                                        type='text'
+                                        onClick={() =>
+                                            emiter.emit(
+                                                "menuOpenPage",
+                                                JSON.stringify({route: YakitRoute.Plugin_Groups})
+                                            )
+                                        }
+                                    >
+                                        管理分组
+                                    </YakitButton>
+                                    <div className={styles["divider-style"]} />
+                                </>
+                            )
+                        }
+                        return item
+                    })}
                 >
                     <PluginsList
                         checked={allCheck}

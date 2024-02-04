@@ -171,6 +171,7 @@ export interface TagsAndType {
 export interface GetYakScriptTagsAndTypeResponse {
     Type: TagsAndType[]
     Tag: TagsAndType[]
+    Group: TagsAndType[]
 }
 
 export interface GroupCount {

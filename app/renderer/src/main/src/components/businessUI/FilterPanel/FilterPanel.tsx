@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {FilterPanelProps} from "./FilterPanelType"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -30,7 +30,15 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
     } = props
 
     const [activeKey, setActiveKey] = useState<string[]>([])
+    const groupListStrRef = useRef<string>("[]")
     useEffect(() => {
+        const excludeGroupExtraOptBtn = JSON.stringify(
+            groupList.map((item) => ({...item, groupExtraOptBtn: undefined}))
+        )
+        if (groupListStrRef.current === excludeGroupExtraOptBtn) {
+            return
+        }
+        groupListStrRef.current = excludeGroupExtraOptBtn
         const keys = groupList.map((l) => l.groupKey)
         setActiveKey(keys)
     }, [groupList])
@@ -71,24 +79,27 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                             <YakitCollapse
                                 activeKey={activeKey}
                                 onChange={(key) => setActiveKey(key as string[])}
-                                className={styles["content-collapse"]} 
+                                className={styles["content-collapse"]}
                             >
                                 {groupList.map((item, i) => (
                                     <YakitPanel
                                         header={item.groupName}
                                         key={item.groupKey}
                                         extra={
-                                            <YakitButton
-                                                type='text'
-                                                colors='danger'
-                                                className={styles["clear-btn"]}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    onClear(item.groupKey)
-                                                }}
-                                            >
-                                                清空
-                                            </YakitButton>
+                                            <>
+                                                {item.groupExtraOptBtn}
+                                                <YakitButton
+                                                    type='text'
+                                                    colors='danger'
+                                                    className={styles["clear-btn"]}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        onClear(item.groupKey)
+                                                    }}
+                                                >
+                                                    清空
+                                                </YakitButton>
+                                            </>
                                         }
                                     >
                                         {(item.data || []).map((listItem) => {

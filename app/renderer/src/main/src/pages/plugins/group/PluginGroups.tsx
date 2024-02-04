@@ -8,7 +8,7 @@ import {PluginLocalGroupList} from "./PluginLocalGroupList"
 import {GroupListItem} from "./PluginGroupList"
 import styles from "./PluginGroups.module.scss"
 import {useInViewport} from "ahooks"
-import {SolidPluscircleIcon, SolidQuestionmarkcircleIcon} from "@/assets/icon/solid"
+import {SolidQuestionmarkcircleIcon} from "@/assets/icon/solid"
 import {Tooltip} from "antd"
 
 interface PluginGroupsProps {}

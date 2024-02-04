@@ -655,7 +655,8 @@ export const convertLocalPluginsRequestParams = (
 
         // filter
         Type: (filter.plugin_type?.map((ele) => ele.value) || []).join(","),
-        Tag: filter.tags?.map((ele) => ele.value) || []
+        Tag: filter.tags?.map((ele) => ele.value) || [],
+        Group: {UnSetGroup: false, Group: filter.plugin_group?.map((ele) => ele.value) || []}
     }
     return toolDelInvalidKV(data)
 }
@@ -743,6 +744,16 @@ export const apiFetchGroupStatisticsLocal: () => Promise<API.PluginsSearchRespon
                             groupName: "Tag",
                             sort: 2,
                             data: (res["Tag"] || []).map((ele) => ({
+                                label: ele.Value,
+                                value: ele.Value,
+                                count: ele.Total
+                            }))
+                        },
+                        {
+                            groupKey: "plugin_group",
+                            groupName: "插件组",
+                            sort: 3,
+                            data: (res["Group"] || []).map((ele) => ({
                                 label: ele.Value,
                                 value: ele.Value,
                                 count: ele.Total

@@ -582,6 +582,7 @@ export declare namespace API {
     groupName: string;
     sort: number;
     data: PluginsSearchData[];
+    groupExtraOptBtn?: React.ReactElement
   }
   export interface PluginsRiskDetail {
     level: string;

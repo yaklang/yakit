@@ -28,7 +28,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList, UpdateGroupListItem} from "./UpdateGroupList"
 import {GroupListItem} from "./PluginGroupList"
 import styles from "./PluginLocalList.module.scss"
-import { isEnpriTraceAgent } from "@/utils/envfile"
+import {isEnpriTraceAgent} from "@/utils/envfile"
 
 const defaultFilters = {
     plugin_type: []
@@ -43,7 +43,6 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<YakScript[]>([])
     const showPluginIndex = useRef<number>(0) // 当前展示的插件序列
-    const [plugin, setPlugin] = useState<YakScript>() // 点击单项拿到的插件数据
     const [isList, setIsList] = useState<boolean>(false) // 网格与列表之间切换
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
     const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters) // 过滤条件 插件组需要过滤Yak、codec
@@ -229,7 +228,6 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
 
     // 单项点击回调
     const optClick = useMemoizedFn((data: YakScript, index: number) => {
-        setPlugin({...data})
         setShowPluginIndex(index)
     })
 
