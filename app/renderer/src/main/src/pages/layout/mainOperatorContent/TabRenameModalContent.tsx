@@ -1,8 +1,9 @@
-import React, {useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import styles from "./TabRenameModalContent.module.scss"
 import {RemoveIcon} from "@/assets/newIcon"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import { TextAreaRef } from "antd/lib/input/TextArea"
 
 interface TabRenameModalProps {
     title: string
@@ -13,6 +14,16 @@ interface TabRenameModalProps {
 const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) => {
     const {title, onClose, name, onOk} = props
     const [value, setValue] = useState<string>(name)
+    const textareaRef = useRef<TextAreaRef>(null)
+    useEffect(() => {
+        if (textareaRef.current) {
+            const textArea = textareaRef.current.resizableTextArea?.textArea
+            if (textArea) {
+                // textArea.focus();
+                textArea.select()
+            }
+        }
+    }, [])
     return (
         <div className={styles["subMenu-edit-modal"]}>
             <div className={styles["subMenu-edit-modal-heard"]}>
@@ -23,7 +34,9 @@ const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) 
             </div>
             <div className={styles["subMenu-edit-modal-body"]}>
                 <YakitInput.TextArea
+                    ref={textareaRef}
                     autoSize={{minRows: 3, maxRows: 3}}
+                    isShowResize={false}
                     showCount
                     value={value}
                     maxLength={50}
