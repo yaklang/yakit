@@ -76,6 +76,10 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
 
     useEffect(() => {
         getPrivateDomainAndRefList()
+    }, [])
+
+    useUpdateEffect(() => {
+        refreshLocalPluginList()
     }, [pluginsGroupsInViewport])
 
     useEffect(() => {
@@ -298,6 +302,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
             if (activeGroup.id !== "全部") {
                 refreshLocalPluginList()
             }
+            emiter.emit("onRefLocalPluginList", "") // 刷新本地插件列表
             emiter.emit("onRefPluginGroupMagLocalQueryYakScriptGroup", "")
         })
     }
