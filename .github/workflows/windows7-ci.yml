@@ -1,0 +1,120 @@
+name: Yakit-Windows7
+
+on:
+  push:
+    branches:
+      - "ci/win7*"
+      # ci/win7-ce
+      # ci/win7-ee
+
+jobs:
+  build_yakit:
+    runs-on: macos-latest
+    if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-') }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 18.18.2
+
+      - run: echo ${{ github.ref }}
+      - run: cp buildutil/zip /usr/local/bin/zip
+      - run: chmod +x /usr/local/bin/zip
+      - run: zip -h
+      
+      - name: "Download Yak Engine via wget(Windows)"
+        id: download-windows-engine
+        run: wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+      - name: "Fetch Latest EngineVersion"
+        id: fetch-version-engine
+        run: wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
+      - run: ls ./bins && cat bins/engine-version.txt
+
+      - name: Extract Version
+        id: extract_version
+        uses: Saionaro/extract-package-version@v1.1.1
+      - name: Echo Yakit Package Version
+        run: echo ${{ steps.extract_version.outputs.version }}
+
+      - run: wget -O bins/database/default-cve.db.gzip https://cve-db.oss-accelerate.aliyuncs.com/default-cve.db.gzip
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ee') }}
+        name: "Download CVE(Include CWE) Data (EnpriTrace && EnpriTraceAgent)"
+      - run: wget -O bins/resources/local-plugins-se.yakitresource.txt https://yaklang.oss-accelerate.aliyuncs.com/yakit-ee/local-plugins-se.yakitresource.txt
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ee') }}
+        name: "Download Plugin resource Files (EnpriTrace && EnpriTraceAgent)"
+
+      - run: yarn install-render
+        working-directory: ./
+        name: "Install Render Dependencies"
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+      
+      # 企业版
+      - run: yarn build-render-enterprise
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ee') }}
+        working-directory: ./
+        name: "Build Enterprise"
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16.20.0
+      - run: yarn install
+        working-directory: ./
+        name: "Install Dependencies"
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+      - name: Build Yakit (EE)
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ee') }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        working-directory: ./
+        run: |
+          yarn add -D dmg-license && yarn electron-publish-ee
+
+      # 社区版
+      - run: yarn build-render
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ce') }}
+        working-directory: ./
+        name: "Build CE Render"
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16.20.0
+      - run: yarn install
+        working-directory: ./
+        name: "Install Main Dependencies"
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+      - name: Build Yakit (CE)
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ce') }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        working-directory: ./
+        run: |
+          yarn add -D dmg-license && yarn pack-win
+
+      - name: View Published Content
+        run: ls ./release
+
+      # 社区版
+      - name: Upload Yakit(CE) Artifacts Windows
+        uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ce') }}
+        with:
+          name: Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          path: ./release/Yakit-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+
+      # start Enterprise Edition
+      - name: Upload Yakit(EE) Artifacts Windows
+        uses: actions/upload-artifact@v2
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ee') }}
+        with:
+          name: EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
+          path: ./release/EnpriTrace-${{ steps.extract_version.outputs.version }}-windows-amd64.exe
