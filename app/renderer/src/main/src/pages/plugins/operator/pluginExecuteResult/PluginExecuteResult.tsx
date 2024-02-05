@@ -13,7 +13,7 @@ import {
     VulnerabilitiesRisksTableProps
 } from "./PluginExecuteResultType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useDebounceFn, useMemoizedFn, useSelections} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn, useSelections} from "ahooks"
 import emiter from "@/utils/eventBus/eventBus"
 import {RouteToPageProps} from "@/pages/layout/publicMenu/PublicMenu"
 import {YakitRoute} from "@/routes/newRoute"
@@ -38,12 +38,16 @@ import {SolidPaperairplaneIcon, SolidViewgridIcon} from "@/assets/icon/solid"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {PortAsset} from "@/pages/assetViewer/models"
-import {PortTableAndDetail, portAssetFormatJson} from "@/pages/assetViewer/PortAssetPage"
+import {PortTableAndDetail, QueryPortsRequest, portAssetFormatJson} from "@/pages/assetViewer/PortAssetPage"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {PortTable} from "@/pages/assetViewer/PortTable/PortTable"
+import {PortTableRefProps} from "@/pages/assetViewer/PortTable/PortTableType"
+import {defQueryPortsRequest} from "@/pages/assetViewer/PortTable/utils"
+import cloneDeep from "lodash/cloneDeep"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -133,158 +137,10 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
 })
 const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo((props) => {
     const {runtimeId} = props
-    const [response, setResponse] = useState<QueryGeneralResponse<PortAsset>>({
-        Data: [],
-        Pagination: genDefaultPagination(20),
-        Total: 0
-    })
-    const [sendPopoverVisible, setSendPopoverVisible] = useState<boolean>(false)
-    const [checkedURL, setCheckedURL] = useState<string[]>([])
-    const [currentSelectItem, setCurrentSelectItem] = useState<PortAsset>()
-    const [scrollToIndex, setScrollToIndex] = useState<number>()
-    const [titleEffective, setTitleEffective] = useState<boolean>(false)
-    const selectedId = useMemo<string[]>(() => {
-        return response.Data.map((i) => `${i.Id}`)
-    }, [response.Data])
-    const {selected, allSelected, isSelected, select, unSelect, selectAll, unSelectAll, setSelected} =
-        useSelections<string>(selectedId)
-    useEffect(() => {
-        update(1)
-    }, [])
-    useEffect(() => {
-        setCheckedURL(
-            response.Data.filter((e) => selected.includes(`${e.Id}`)).map((item) => `${item.Host}:${item.Port}`)
-        )
-    }, [selected])
-
-    const update = useDebounceFn(
-        (current: number, pageSize?: number) => {
-            const query = {
-                Pagination: {
-                    Limit: pageSize||20,
-                    Page: current || response.Pagination.Page,
-                    Order: "desc",
-                    OrderBy: "updated_at"
-                },
-                TitleEffective: titleEffective,
-                RuntimeId: runtimeId
-            }
-            ipcRenderer.invoke("QueryPorts", query).then((rsp: QueryGeneralResponse<PortAsset>) => {
-                const d = current === 1 ? rsp.Data : response.Data.concat(rsp.Data)
-                setResponse({
-                    Total: current === 1 ? rsp.Total : response.Total,
-                    Pagination: {
-                        ...rsp.Pagination
-                    },
-                    Data: d
-                })
-            })
-        },
-        {wait: 200}
-    ).run
-    const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
-        return [
-            {
-                title: "网络地址",
-                dataKey: "Host",
-                fixed: "left",
-                render: (text) => (
-                    <div className={styles["table-host"]}>
-                        <span className='content-ellipsis'>{text}</span>
-                        <CopyComponents copyText={text} />
-                    </div>
-                )
-            },
-            {
-                title: "端口",
-                dataKey: "Port",
-                width: 100,
-                render: (text) => <YakitTag color='blue'>{text}</YakitTag>
-            },
-            {
-                title: "协议",
-                dataKey: "Proto",
-                width: 100,
-                render: (text) => <YakitTag color='success'>{text}</YakitTag>
-            },
-            {
-                title: "服务指纹",
-                dataKey: "ServiceType"
-            },
-            {
-                title: "Title",
-                dataKey: "HtmlTitle",
-                afterIconExtra: (
-                    <div className={styles["htmlTitle-extra"]}>
-                        <YakitCheckbox
-                            checked={titleEffective}
-                            onChange={(e) => {
-                                setTitleEffective(e.target.checked)
-                                setTimeout(() => {
-                                    update(1)
-                                }, 200)
-                            }}
-                        />
-                        <span className={styles["valid-data"]}>有效数据</span>
-                    </div>
-                )
-            },
-            {
-                title: "最近更新时间",
-                dataKey: "UpdatedAt",
-                render: (text) => (text ? formatTimestamp(text) : "-")
-            }
-        ]
-    }, [titleEffective])
-    const getData = useMemoizedFn(() => {
-        return new Promise((resolve) => {
-            let exportData: PortAsset[] = []
-            const header: string[] = []
-            const filterVal: string[] = []
-            columns.forEach((item) => {
-                if (item.dataKey !== "Action") {
-                    header.push(item.title)
-                    filterVal.push(item.dataKey)
-                }
-            })
-            exportData = portAssetFormatJson(filterVal, response.Data)
-            resolve({
-                header,
-                exportData,
-                response: response
-            })
-        })
-    })
-    const menuData: YakitMenuItemType[] = useMemo(() => {
-        return [
-            {
-                label: "发送到漏洞检测",
-                key: "bug-test"
-            },
-            {label: "发送到爆破", key: "brute"}
-        ]
-    }, [])
-    const onRowContextMenu = useMemoizedFn((rowData: PortAsset, selectedRows: PortAsset[], event: React.MouseEvent) => {
-        if (!rowData) return
-        showByRightContext(
-            {
-                width: 180,
-                data: menuData,
-                onClick: ({key}) => menuSelect(key, [`${rowData.Host}:${rowData.Port}`])
-            },
-            event.clientX,
-            event.clientY
-        )
-    })
-    const menuSelect = useMemoizedFn((key, urls) => {
-        ipcRenderer
-            .invoke("send-to-tab", {
-                type: key,
-                data: {URL: JSON.stringify(urls)}
-            })
-            .then(() => {
-                setSendPopoverVisible(false)
-            })
+    const [total, setTotal] = useState<number>(0)
+    const [params, setParams] = useState<QueryPortsRequest>({
+        ...cloneDeep(defQueryPortsRequest),
+        RuntimeId:runtimeId
     })
     const onJumpPort = useMemoizedFn(() => {
         const info: RouteToPageProps = {
@@ -293,110 +149,21 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
         emiter.emit("menuOpenPage", JSON.stringify(info))
     })
     return (
-        <PortTableAndDetail
-            firstNode={
+        <PortTable
+            query={params}
+            setQuery={setParams}
+            tableTitle={<span>开放端口 / Open Ports</span>}
+            tableTitleExtraOperate={
                 <>
-                    <TableVirtualResize<PortAsset>
-                        titleHeight={43}
-                        renderTitle={
-                            <div className={styles["table-renderTitle"]}>
-                                <span>开放端口 / Open Ports</span>
-                                <div className={styles["table-head-extra"]}>
-                                    <ExportExcel
-                                        btnProps={{
-                                            size: "small",
-                                            type: "outline2"
-                                        }}
-                                        getData={getData}
-                                        text='导出全部'
-                                    />
-                                    <YakitButton
-                                        type='primary'
-                                        icon={<SolidViewgridIcon />}
-                                        size='small'
-                                        onClick={onJumpPort}
-                                    >
-                                        端口资产管理
-                                    </YakitButton>
-                                    <YakitDropdownMenu
-                                        menu={{
-                                            data: menuData,
-                                            onClick: ({key}) => menuSelect(key, checkedURL)
-                                        }}
-                                        dropdown={{
-                                            trigger: ["click"],
-                                            placement: "bottom",
-                                            visible: sendPopoverVisible,
-                                            onVisibleChange: (v) => setSendPopoverVisible(v),
-                                            disabled: selected.length === 0
-                                        }}
-                                    >
-                                        <YakitButton
-                                            onClick={() => {}}
-                                            icon={<SolidPaperairplaneIcon />}
-                                            type={"primary"}
-                                            disabled={selected.length === 0}
-                                            size='small'
-                                        >
-                                            发送到...
-                                        </YakitButton>
-                                    </YakitDropdownMenu>
-                                </div>
-                            </div>
-                        }
-                        scrollToIndex={scrollToIndex}
-                        isRightClickBatchOperate={true}
-                        renderKey='Id'
-                        data={response.Data}
-                        rowSelection={{
-                            isAll: allSelected,
-                            type: "checkbox",
-                            selectedRowKeys: selected,
-                            onSelectAll: (newSelectedRowKeys: string[], selected: PortAsset[], checked: boolean) => {
-                                if (checked) {
-                                    selectAll()
-                                } else {
-                                    unSelectAll()
-                                }
-                            },
-                            onChangeCheckboxSingle: (c: boolean, keys: string) => {
-                                if (c) {
-                                    select(keys)
-                                } else {
-                                    unSelect(keys)
-                                }
-                            }
-                        }}
-                        pagination={{
-                            total: response.Total,
-                            limit: response.Pagination.Limit,
-                            page: response.Pagination.Page,
-                            onChange: (page, limit) => update(page, limit)
-                        }}
-                        columns={columns}
-                        onRowContextMenu={onRowContextMenu}
-                        onSetCurrentRow={(val) => {
-                            if (!currentSelectItem) {
-                                const index = response.Data.findIndex((ele) => ele.Id === val?.Id)
-                                setScrollToIndex(index)
-                            }
-                            if (val?.Id !== currentSelectItem?.Id) {
-                                setCurrentSelectItem(val)
-                            }
-                        }}
-                        enableDrag={true}
-                    />
+                    <YakitButton type='primary' icon={<SolidViewgridIcon />} size='small' onClick={onJumpPort}>
+                        端口资产管理
+                    </YakitButton>
+                    {total}
                 </>
             }
-            currentSelectItem={currentSelectItem}
-            resizeBoxProps={{
-                isShowDefaultLineStyle: false,
-                firstNode: undefined,
-                secondNode: undefined,
-                lineDirection: "bottom",
-                secondNodeStyle: {padding: 0}
-            }}
-            secondNodeClassName={styles["port-table-detail"]}
+            containerClassName={styles["plugin-execute-port-table-container"]}
+            btnSize='small'
+            setTotal={setTotal}
         />
     )
 })

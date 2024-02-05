@@ -10,6 +10,7 @@
 .space-engine-wrapper {
     @extend %column-center;
     overflow: hidden;
+    height: 100%;
     .space-engine-heard {
         padding: 8px;
         z-index: 9;
