@@ -16,7 +16,12 @@ export const defQueryPortsRequest: QueryPortsRequest = {
     Keywords: "",
     ComplexSelect: "",
     RuntimeId: "",
-    Pagination: genDefaultPagination()
+    Pagination: {
+        Limit:  20,
+        Page: 1,
+        OrderBy: "id",
+        Order: "desc"
+    }
 }
 /**
  * @description QueryPorts 获取端口资产表数据（基础版）

@@ -49,60 +49,36 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            .refresh-button {
-                cursor: pointer;
-                border-radius: 4px;
-                width: 32px;
-                height: 24px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                margin-left: 8px;
-                .refresh-icon {
-                    color: var(--yakit-body-text-color);
-                    svg {
-                        width: 16px;
-                        height: 16px;
-                    }
-                }
-                &:hover {
-                    background-color: var(--yakit-background-color);
+            .port-table-badge {
+                .refresh-button {
+                    cursor: pointer;
+                    border-radius: 4px;
+                    width: 32px;
+                    height: 24px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin-left: 8px;
                     .refresh-icon {
-                        color: var(--yakit-primary-5);
+                        color: var(--yakit-body-text-color);
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                        }
+                    }
+                    &:hover {
+                        background-color: var(--yakit-background-color);
+                        .refresh-icon {
+                            color: var(--yakit-primary-5);
+                        }
                     }
                 }
             }
         }
     }
-    .portAsset-table {
-        flex: 1;
-        height: 100%;
-        overflow: hidden;
-        .portAsset-table-list-container {
-            border-radius: 4px;
-            overflow-x: auto !important;
-        }
-        .table-head-extra {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .table-host {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex: 1;
-        }
-    }
-    .htmlTitle-extra {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-right: 20px;
-        word-break: keep-all;
-        .valid-data {
-            margin-bottom: 1px;
-        }
+    .port-table-title {
+        border-bottom: 0;
+        padding: 8px 0;
     }
 }
 .table-head-send-popover {
