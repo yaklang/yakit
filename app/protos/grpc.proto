@@ -181,7 +181,8 @@ service Yak {
   rpc SaveYakScriptGroup(SaveYakScriptGroupRequest) returns (Empty);
   rpc RenameYakScriptGroup(RenameYakScriptGroupRequest) returns (Empty);
   rpc DeleteYakScriptGroup(DeleteYakScriptGroupRequest) returns (Empty);
-  rpc GetYakScriptGroup(GetYakScriptGroupRequest) returns (GetYakScriptGroupResponse);
+  rpc GetYakScriptGroup(QueryYakScriptRequest) returns (GetYakScriptGroupResponse);
+  rpc ResetYakScriptGroup(ResetYakScriptGroupRequest) returns (Empty);
 
 
   // HTTPFlow
@@ -3697,7 +3698,7 @@ message GroupCount {
 }
 
 message SaveYakScriptGroupRequest {
-  repeated string YakScriptName = 1;
+  QueryYakScriptRequest Filter = 1;
   repeated string SaveGroup = 2;
   repeated string RemoveGroup = 3;
 }
@@ -3711,15 +3712,15 @@ message DeleteYakScriptGroupRequest {
   string Group = 1;
 }
 
-message GetYakScriptGroupRequest {
-  repeated string YakScriptName = 1;
-}
 
 message GetYakScriptGroupResponse {
   repeated string SetGroup = 1;
   repeated string AllGroup = 2;
 }
 
+message ResetYakScriptGroupRequest {
+  string Token = 1;
+}
 
 message GetYakScriptTagsAndTypeResponse {
   repeated TagsAndType Type = 1;
