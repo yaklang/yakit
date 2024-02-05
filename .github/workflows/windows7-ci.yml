@@ -50,14 +50,22 @@ jobs:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
       
-      # 企业版
-      - run: yarn build-render-enterprise
+      - name: "Build EE Render"
+        run: yarn build-render-enterprise
         if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ee') }}
         working-directory: ./
-        name: "Build Enterprise"
         env:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
+
+      - name: "Build CE Render"
+        run: yarn build-render
+        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ce') }}
+        working-directory: ./
+        env:
+          CI: ""
+          NODE_OPTIONS: --max_old_space_size=4096
+
       - uses: actions/setup-node@v2
         with:
           node-version: 16.20.0
@@ -67,31 +75,15 @@ jobs:
         env:
           CI: ""
           NODE_OPTIONS: --max_old_space_size=4096
+
       - name: Build Yakit (EE)
         if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ee') }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         working-directory: ./
         run: |
-          yarn add -D dmg-license && yarn electron-publish-ee
+          yarn add -D dmg-license && yarn pack-win-ee
 
-      # 社区版
-      - run: yarn build-render
-        if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ce') }}
-        working-directory: ./
-        name: "Build CE Render"
-        env:
-          CI: ""
-          NODE_OPTIONS: --max_old_space_size=4096
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16.20.0
-      - run: yarn install
-        working-directory: ./
-        name: "Install Main Dependencies"
-        env:
-          CI: ""
-          NODE_OPTIONS: --max_old_space_size=4096
       - name: Build Yakit (CE)
         if: ${{ startsWith(github.ref, 'refs/heads/ci/win7-ce') }}
         env:
