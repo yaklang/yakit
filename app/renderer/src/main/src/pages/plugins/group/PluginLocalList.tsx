@@ -196,10 +196,10 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     })
 
     // 全选
-    // const onCheck = useMemoizedFn((value: boolean) => {
-    //     setSelectList([])
-    //     setAllCheck(value)
-    // })
+    const onCheck = useMemoizedFn((value: boolean) => {
+        setSelectList([])
+        setAllCheck(value)
+    })
 
     // 单选
     const optCheck = useMemoizedFn((data: YakScript, value: boolean) => {
@@ -337,6 +337,8 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     return (
         <div className={styles["plugin-local-list-wrapper"]} ref={pluginsLocalListRef}>
             <PluginListWrap
+                checked={allCheck}
+                onCheck={onCheck}
                 title={activeGroup.name}
                 total={response.Total}
                 selected={selectNum}
@@ -360,7 +362,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                             }}
                         >
                             <FuncBtn
-                                disabled={!selectList.length}
+                                disabled={!selectList.length && !allCheck}
                                 maxWidth={1050}
                                 icon={<SolidPluscircleIcon />}
                                 size='large'

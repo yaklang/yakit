@@ -14,6 +14,14 @@
                 font-weight: 600;
                 margin-right: 16px;
             }
+            .body-check {
+                display: flex;
+                align-items: center;
+                margin-right: 8px;
+                gap: 4px;
+                color: #31343f;
+                font-size: 12px;
+            }
             .body-total-selected {
                 height: 100%;
                 display: flex;

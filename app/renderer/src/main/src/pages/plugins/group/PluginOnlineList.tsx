@@ -163,10 +163,10 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
     })
 
     // 全选
-    // const onCheck = useMemoizedFn((value: boolean) => {
-    //     setSelectList([])
-    //     setAllCheck(value)
-    // })
+    const onCheck = useMemoizedFn((value: boolean) => {
+        setSelectList([])
+        setAllCheck(value)
+    })
 
     // 单项勾选|取消勾选
     const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
@@ -295,6 +295,8 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
     return (
         <div className={styles["plugin-online-list-wrapper"]} ref={pluginsOnlineGroupsListRef}>
             <PluginListWrap
+                checked={allCheck}
+                onCheck={onCheck}
                 title={activeGroup.name}
                 total={response.pagemeta.total}
                 selected={selectNum}
