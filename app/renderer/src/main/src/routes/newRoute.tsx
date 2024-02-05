@@ -491,7 +491,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <NewHome />
+            // return <NewHome />
+            return <PluginGroups />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>

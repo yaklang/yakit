@@ -27,8 +27,8 @@ import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList, UpdateGroupListItem} from "./UpdateGroupList"
 import {GroupListItem} from "./PluginGroupList"
-import styles from "./PluginLocalList.module.scss"
 import {isEnpriTraceAgent} from "@/utils/envfile"
+import styles from "./PluginLocalList.module.scss"
 
 const defaultFilters = {
     plugin_type: []
@@ -87,7 +87,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
         emiter.on("onSwitchPrivateDomain", getPrivateDomainAndRefList)
         return () => {
             emiter.off("onSwitchPrivateDomain", getPrivateDomainAndRefList)
-            emiter.off("onSwitchPrivateDomain", refreshLocalPluginList)
+            emiter.off("onRefPluginGroupMagLocalPluginList", refreshLocalPluginList)
         }
     }, [])
 
@@ -114,7 +114,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     })
 
     // 点击刷新按钮重新拿数据
-    const onRefListAndTotalAndGroup = useMemoizedFn(() => {
+    const onRefListAndTotal = useMemoizedFn(() => {
         getInitTotal()
         refreshLocalPluginList()
     })
@@ -439,11 +439,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                     <div className={styles["plugin-local-empty"]}>
                         <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
                         <div className={styles["plugin-local-buttons"]}>
-                            <YakitButton
-                                type='outline1'
-                                icon={<OutlineRefreshIcon />}
-                                onClick={onRefListAndTotalAndGroup}
-                            >
+                            <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefListAndTotal}>
                                 刷新
                             </YakitButton>
                         </div>

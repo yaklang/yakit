@@ -1,7 +1,7 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
 import {FuncBtn, FuncSearch, GridLayoutOpt, ListLayoutOpt, ListShowContainer} from "../funcTemplate"
 import {OutlinePluscircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
-import {useMemoizedFn, useDebounceFn, useInViewport, useLatest} from "ahooks"
+import {useMemoizedFn, useDebounceFn, useInViewport, useLatest, useUpdateEffect} from "ahooks"
 import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultSearch} from "../baseTemplate"
@@ -13,42 +13,52 @@ import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {isCommunityEdition} from "@/utils/envfile"
 import "../plugins.scss"
 import {PluginListWrap} from "./PluginListWrap"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList} from "./UpdateGroupList"
+import {GroupListItem} from "./PluginGroupList"
+import {YakScript} from "@/pages/invoker/schema"
+import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import styles from "./PluginOnlineList.module.scss"
 
-interface PluginOnlineGroupsListProps {}
+const defaultFilters = {
+    plugin_type: []
+}
+
+interface PluginOnlineGroupsListProps {
+    pluginsGroupsInViewport: boolean
+    activeGroup: GroupListItem
+}
 export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.memo((props) => {
-    const userInfo = useStore((s) => s.userInfo)
-    const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
-    const pluginsOnlineGroupsListRef = useRef<HTMLDivElement>(null)
-    const [inViewport = true] = useInViewport(pluginsOnlineGroupsListRef)
-    const [initTotal, setInitTotal] = useState<number>(0)
-    const [loading, setLoading] = useState<boolean>(false)
-    const latestLoadingRef = useLatest(loading)
-    const isLoadingRef = useRef<boolean>(true) // 是否为初次加载
-    const [hasMore, setHasMore] = useState<boolean>(true)
+    const {pluginsGroupsInViewport, activeGroup} = props
+    const [allCheck, setAllCheck] = useState<boolean>(false)
+    const [selectList, setSelectList] = useState<string[]>([])
+    const showPluginIndex = useRef<number>(0)
+    const [isList, setIsList] = useState<boolean>(false) // 判断是网格还是列表
     const [search, setSearch] = useState<PluginSearchParams>(
         cloneDeep({
             ...defaultSearch,
             keyword: ""
         })
     )
-    const [filters, setFilters] = useState<PluginFilterParams>({
-        plugin_type: [],
-        tags: []
-    })
-    const [isList, setIsList] = useState<boolean>(false) // 判断是网格还是列表
-    const [allCheck, setAllCheck] = useState<boolean>(false)
-    const [selectList, setSelectList] = useState<string[]>([])
-    const showPluginIndex = useRef<number>(0)
-    const [plugin, setPlugin] = useState<YakitPluginOnlineDetail>()
+    const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters) // 过滤条件 插件组需要过滤Yak、codec
+    const userInfo = useStore((s) => s.userInfo)
+    const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
+    const [loading, setLoading] = useState<boolean>(false)
+    const latestLoadingRef = useLatest(loading)
+    const isLoadingRef = useRef<boolean>(true) // 是否为初次加载
+    const pluginsOnlineGroupsListRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(pluginsOnlineGroupsListRef)
+    const [initTotal, setInitTotal] = useState<number>(0)
+    const [hasMore, setHasMore] = useState<boolean>(true)
     const [groupList, setGroupList] = useState<any>([]) // 组数据
     const updateGroupListRef = useRef<any>()
+
+    useUpdateEffect(() => {
+        refreshOnlinePluginList()
+    }, [activeGroup])
 
     useEffect(() => {
         getInitTotal()
@@ -63,25 +73,31 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
             setInitTotal(+res.pagemeta.total)
         })
     })
+
     useEffect(() => {
         onSwitchPrivateDomainRefOnlinePluginInit()
     }, [])
+
+    useUpdateEffect(() => {
+        refreshOnlinePluginList()
+    }, [pluginsGroupsInViewport])
+
     useEffect(() => {
+        emiter.on("onRefPluginGroupMagOnlinePluginList", refreshOnlinePluginList)
         emiter.on("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)
         return () => {
+            emiter.off("onRefPluginGroupMagOnlinePluginList", refreshOnlinePluginList)
             emiter.off("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)
         }
     }, [])
-    // 切换私有域，刷新初始化的total和列表数据,回到列表页
-    const onSwitchPrivateDomainRefOnlinePluginInit = useMemoizedFn(() => {
-        onRefListAndTotalAndGroup()
-        setPlugin(undefined)
-    })
 
-    // 点击刷新按钮
-    const onRefListAndTotalAndGroup = useMemoizedFn(() => {
-        getInitTotal()
+    const refreshOnlinePluginList = () => {
         fetchList(true)
+    }
+
+    // 切换私有域，刷新初始化的total和列表数据
+    const onSwitchPrivateDomainRefOnlinePluginInit = useMemoizedFn(() => {
+        onRefListAndTotal()
     })
 
     // 滚动更多加载
@@ -89,12 +105,10 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
         fetchList()
     })
 
-    // 搜索
-    const onSearch = useMemoizedFn((val) => {
-        setSearch(val)
-        setTimeout(() => {
-            fetchList(true)
-        }, 200)
+    // 点击刷新按钮
+    const onRefListAndTotal = useMemoizedFn(() => {
+        getInitTotal()
+        refreshOnlinePluginList()
     })
 
     const fetchList = useDebounceFn(
@@ -140,17 +154,19 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
         {wait: 200, leading: true}
     ).run
 
+    // 搜索
+    const onSearch = useMemoizedFn((val) => {
+        setSearch(val)
+        setTimeout(() => {
+            refreshOnlinePluginList()
+        }, 200)
+    })
+
     // 全选
     // const onCheck = useMemoizedFn((value: boolean) => {
     //     setSelectList([])
     //     setAllCheck(value)
     // })
-
-    // 选中插件的数量
-    const selectNum = useMemo(() => {
-        if (allCheck) return response.pagemeta.total
-        else return selectList.length
-    }, [allCheck, selectList, response.pagemeta.total])
 
     // 单项勾选|取消勾选
     const optCheck = useMemoizedFn((data: YakitPluginOnlineDetail, value: boolean) => {
@@ -169,38 +185,85 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
         }
     })
 
-    // 当前展示的插件序列
+    // 选中插件的数量
+    const selectNum = useMemo(() => {
+        if (allCheck) return response.pagemeta.total
+        else return selectList.length
+    }, [allCheck, selectList, response.pagemeta.total])
+
+    // 用于网格 列表 插件切换定位
     const setShowPluginIndex = useMemoizedFn((index: number) => {
         showPluginIndex.current = index
     })
 
     // 单项点击回调
     const optClick = useMemoizedFn((data: YakitPluginOnlineDetail, index: number) => {
-        setPlugin({...data})
         setShowPluginIndex(index)
     })
 
-    // 获取组所有组数据
-    const getGroupListAll = () => {
-        setGroupList([
-            {
-                groupName: "test",
-                checked: true
-            },
-            {
-                groupName: "test1",
-                checked: false
-            },
-            {
-                groupName: "test2",
-                checked: false
-            }
-        ])
+    // 单项副标题组件
+    const optSubTitle = useMemoizedFn((data: YakScript) => {
+        if (data.isLocalPlugin) return <></>
+        if (data.OnlineIsPrivate) {
+            return <SolidPrivatepluginIcon />
+        } else {
+            return <SolidCloudpluginIcon />
+        }
+    })
+
+    // 线上获取插件所在插件组和其他插件组
+    const pluginUuidRef = useRef<string[]>([])
+    const getYakScriptGroupOnline = (uuid: string[]) => {
+        pluginUuidRef.current = uuid
+        if (!uuid.length) return
+        // apiFetchGetYakScriptGroupLocal(scriptName).then((res) => {
+        //     const copySetGroup = [...res.SetGroup]
+        //     const newSetGroup = copySetGroup.map((name) => ({
+        //         groupName: name,
+        //         checked: true
+        //     }))
+        //     let copyAllGroup = [...res.AllGroup]
+        //     const newAllGroup = copyAllGroup.map((name) => ({
+        //         groupName: name,
+        //         checked: false
+        //     }))
+        //     setGroupList([...newSetGroup, ...newAllGroup])
+        // })
     }
 
     // 更新组数据
     const updateGroupList = () => {
-        console.log(updateGroupListRef.current.latestGroupList)
+        const latestGroupList = updateGroupListRef.current.latestGroupList
+
+        // 新
+        const checkedGroup = latestGroupList.filter((item) => item.checked).map((item) => item.groupName)
+        const unCheckedGroup = latestGroupList.filter((item) => !item.checked).map((item) => item.groupName)
+
+        // 旧
+        const originCheckedGroup = groupList.filter((item) => item.checked).map((item) => item.groupName)
+
+        let saveGroup: string[] = []
+        let removeGroup: string[] = []
+        checkedGroup.forEach((groupName: string) => {
+            saveGroup.push(groupName)
+        })
+        unCheckedGroup.forEach((groupName: string) => {
+            if (originCheckedGroup.includes(groupName)) {
+                removeGroup.push(groupName)
+            }
+        })
+        if (!saveGroup.length && !removeGroup.length) return
+        // apiFetchSaveYakScriptGroupLocal({
+        //     YakScriptName: pluginUuidRef.current,
+        //     SaveGroup: saveGroup,
+        //     RemoveGroup: removeGroup
+        // }).then(() => {
+        //     if (activeGroup.id !== "全部") {
+        //         refreshOnlinePluginList()
+        //     }
+        //     emiter.emit("onRefLocalPluginList", "") // 刷新线上插件列表
+        //     emiter.emit("onRefPluginGroupMagOnlineQueryYakScriptGroup", "")
+        // })
     }
 
     // 单项额外操作
@@ -213,7 +276,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                 content={<UpdateGroupList ref={updateGroupListRef} originGroupList={groupList}></UpdateGroupList>}
                 onVisibleChange={(visible) => {
                     if (visible) {
-                        getGroupListAll()
+                        getYakScriptGroupOnline([data.uuid])
                     } else {
                         updateGroupList()
                     }
@@ -232,7 +295,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
     return (
         <div className={styles["plugin-online-list-wrapper"]} ref={pluginsOnlineGroupsListRef}>
             <PluginListWrap
-                title='重要资产'
+                title={activeGroup.name}
                 total={response.pagemeta.total}
                 selected={selectNum}
                 isList={isList}
@@ -248,19 +311,13 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                             }
                             onVisibleChange={(visible) => {
                                 if (visible) {
-                                    getGroupListAll()
+                                    getYakScriptGroupOnline(selectList)
                                 } else {
                                     updateGroupList()
                                 }
                             }}
                         >
-                            <FuncBtn
-                                maxWidth={1050}
-                                icon={<SolidPluscircleIcon />}
-                                size='large'
-                                name='添加到组...'
-                                onClick={() => {}}
-                            />
+                            <FuncBtn maxWidth={1050} icon={<SolidPluscircleIcon />} size='large' name='添加到组...' />
                         </YakitPopover>
                         <div className='divider-style'></div>
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
@@ -293,6 +350,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                                     official={!!data.official}
                                     extraFooter={(data) => optExtraNode(data, index)}
                                     onClick={(data, index, value) => optCheck(data, value)}
+                                    subTitle={optSubTitle}
                                 />
                             )
                         }}
@@ -315,6 +373,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                                     official={!!data.official}
                                     extraNode={(data) => optExtraNode(data, index)}
                                     onClick={(data, index) => {}}
+                                    subTitle={optSubTitle}
                                 />
                             )
                         }}
@@ -328,16 +387,9 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                     />
                 ) : (
                     <div className={styles["plugin-online-empty"]}>
-                        <YakitEmpty
-                            title='暂无数据'
-                            description={isCommunityEdition() ? "" : "可将本地所有插件一键上传"}
-                        />
+                        <YakitEmpty title='暂无数据' />
                         <div className={styles["plugin-online-buttons"]}>
-                            <YakitButton
-                                type='outline1'
-                                icon={<OutlineRefreshIcon />}
-                                onClick={onRefListAndTotalAndGroup}
-                            >
+                            <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefListAndTotal}>
                                 刷新
                             </YakitButton>
                         </div>

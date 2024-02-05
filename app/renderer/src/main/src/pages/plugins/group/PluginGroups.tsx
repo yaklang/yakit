@@ -6,10 +6,10 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {PluginOnlineGroupList} from "./PluginOnlineGroupList"
 import {PluginLocalGroupList} from "./PluginLocalGroupList"
 import {GroupListItem} from "./PluginGroupList"
-import styles from "./PluginGroups.module.scss"
 import {useInViewport} from "ahooks"
 import {SolidQuestionmarkcircleIcon} from "@/assets/icon/solid"
 import {Tooltip} from "antd"
+import styles from "./PluginGroups.module.scss"
 
 interface PluginGroupsProps {}
 
@@ -21,6 +21,7 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
     const [onlineGroupLen, setOnlineGroupLen] = useState<number>(0)
     const [localGroupLen, setLocalGroupLen] = useState<number>(0)
     const [activeLocalGroup, setActiveLocalGroup] = useState<GroupListItem>() // 当前选中本地插件组
+    const [activeOnlineGroup, setActiveOnlineGroup] = useState<GroupListItem>() // 当前选中线上插件组
 
     // 判断是否是 管理员或者超级管理员权限
     const judgeOnlineStatus = useMemo(() => {
@@ -69,7 +70,12 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                         }}
                     >
                         {/* {judgeOnlineStatus && (
-                            <PluginOnlineGroupList onOnlineGroupLen={setOnlineGroupLen}></PluginOnlineGroupList>
+                            <PluginOnlineGroupList
+                                pluginsGroupsInViewport={inViewport}
+                                onOnlineGroupLen={setOnlineGroupLen}
+                                activeOnlineGroup={activeOnlineGroup}
+                                onActiveGroup={setActiveOnlineGroup}
+                            ></PluginOnlineGroupList>
                         )} */}
                     </div>
                     <div
@@ -82,9 +88,7 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                             pluginsGroupsInViewport={inViewport}
                             onLocalGroupLen={setLocalGroupLen}
                             activeLocalGroup={activeLocalGroup}
-                            onActiveGroup={(groupItem) => {
-                                setActiveLocalGroup(groupItem)
-                            }}
+                            onActiveGroup={setActiveLocalGroup}
                         ></PluginLocalGroupList>
                     </div>
                 </div>
@@ -97,7 +101,12 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                         height: "100%"
                     }}
                 >
-                    {/* {judgeOnlineStatus && <PluginOnlineList></PluginOnlineList>} */}
+                    {/* {judgeOnlineStatus && activeOnlineGroup && (
+                        <PluginOnlineList
+                            pluginsGroupsInViewport={inViewport}
+                            activeGroup={activeOnlineGroup}
+                        ></PluginOnlineList>
+                    )} */}
                 </div>
                 <div
                     style={{
