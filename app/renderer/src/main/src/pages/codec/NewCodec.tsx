@@ -42,12 +42,13 @@ import {
 } from "@hello-pangea/dnd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
-
+import {v4 as uuidv4} from "uuid"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {NewCodecCheckUI, NewCodecEditor, NewCodecInputUI, NewCodecSelectUI} from "./NewCodecUIStore"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {CheckboxValueType} from "antd/lib/checkbox/Group"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -152,29 +153,75 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
 interface NewCodecMiddleTypeItemProps {
     data: RightItemsProps
+    outerKey: string
+    rightItems: RightItemsProps[]
+    setRightItems: (v: RightItemsProps[]) => void
 }
 
 export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (props) => {
-    const {data} = props
+    const {data, outerKey, rightItems, setRightItems} = props
 
     const {title, node} = data
-    const [itemStatus, setItemStatus] = useState<"run" | "suspend" | "shield">("run")
+    const [itemStatus, setItemStatus] = useState<"run" | "suspend" | "shield">()
 
+    useEffect(() => {
+        const itemArr = rightItems.filter((item) => item.key === outerKey)
+        if (itemArr.length > 0) {
+            setItemStatus(itemArr[0].status || "run")
+        }
+    }, [rightItems, outerKey])
     // 屏蔽
     const onShieldFun = useMemoizedFn(() => {
-        itemStatus === "shield" ? setItemStatus("run") : setItemStatus("shield")
+        const newRightItems = rightItems.map((item) => {
+            if (item.key === outerKey) {
+                item.status = itemStatus === "shield" ? "run" : "shield"
+                return item
+            }
+            return item
+        })
+        setRightItems(newRightItems)
     })
 
     // 中止
     const onSuspendFun = useMemoizedFn(() => {
-        itemStatus === "suspend" ? setItemStatus("run") : setItemStatus("suspend")
+        const newRightItems = rightItems.map((item) => {
+            if (item.key === outerKey) {
+                item.status = itemStatus === "suspend" ? "run" : "suspend"
+                return item
+            }
+            return item
+        })
+        setRightItems(newRightItems)
     })
 
     // 删除
-    const onDeleteFun = useMemoizedFn(() => {})
+    const onDeleteFun = useMemoizedFn(() => {
+        const newRightItems = rightItems.filter((item) => item.key !== outerKey)
+        setRightItems(newRightItems)
+    })
+
+    // 更改控件值
+    const setValueByUI = useMemoizedFn((val: any, index: number) => {
+        const itemArr = rightItems.filter((item) => item.key === outerKey)
+        const newNode = itemArr[0]?.node
+        if (Array.isArray(newNode)) {
+            if (newNode[index].type !== "flex") {
+                const initNode = newNode as RightItemsTypeProps[]
+                initNode[index].value = val
+                const newRightItems = rightItems.map((item) => {
+                    if (item.key === outerKey) {
+                        item.node = initNode
+                        return item
+                    }
+                    return item
+                })
+                setRightItems(newRightItems)
+            }
+        }
+    })
 
     // 控件
-    const onShowUI = useMemoizedFn((item: RightItemsTypeProps) => {
+    const onShowUI = useMemoizedFn((item: RightItemsTypeProps, index: number) => {
         switch (item.type) {
             case "input":
                 // 输入框模块
@@ -184,11 +231,20 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                         disabled={itemStatus === "shield" || item.disabled}
                         require={item.require}
                         defaultValue={item.defaultValue}
+                        value={item.value}
+                        onChange={(e) => setValueByUI(e.target.value, index)}
                     />
                 )
-            case "check":
+            case "checkbox":
                 // 多选框模块
-                return <NewCodecCheckUI disabled={itemStatus === "shield" || item.disabled} value={item.checkArr} />
+                return (
+                    <NewCodecCheckUI
+                        disabled={itemStatus === "shield" || item.disabled}
+                        options={item.checkArr}
+                        value={item.value}
+                        onChange={(checkedValues: CheckboxValueType[]) => setValueByUI(checkedValues, index)}
+                    />
+                )
             case "select":
                 // 下拉框模块
                 return (
@@ -197,7 +253,10 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                         require={item.require}
                         title={item.title}
                         showSearch={item.showSearch}
-                        value={item.selectArr}
+                        options={item.selectArr}
+                        value={item.value}
+                        isPlugin={item.isPlugin}
+                        onSelect={(val) => setValueByUI(val, index)}
                     />
                 )
             case "editor":
@@ -208,6 +267,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                         title={item.title}
                         require={item.require}
                         value={item.value}
+                        onChange={(val) => setValueByUI(val, index)}
                     />
                 )
             default:
@@ -263,7 +323,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                     </div>
                 </div>
             </div>
-            {node?.map((item) => {
+            {node?.map((item, index) => {
                 switch (item.type) {
                     case "flex":
                         // 左右布局
@@ -271,16 +331,16 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                             <div style={{display: "flex", flexDirection: "row", gap: 8}}>
                                 <div style={{flex: item.leftFlex || 3}}>
                                     {/* 左 */}
-                                    {onShowUI(item.leftNode)}
+                                    {onShowUI(item.leftNode, index)}
                                 </div>
                                 <div style={{flex: item.rightFlex || 2}}>
                                     {/* 右 */}
-                                    {onShowUI(item.rightNode)}
+                                    {onShowUI(item.rightNode, index)}
                                 </div>
                             </div>
                         )
                     default:
-                        return <>{onShowUI(item)}</>
+                        return <>{onShowUI(item, index)}</>
                 }
             })}
         </div>
@@ -379,6 +439,7 @@ interface SaveObjProps {
 
 interface NewCodecMiddleRunListProps {
     rightItems: RightItemsProps[]
+    setRightItems: (v: RightItemsProps[]) => void
 }
 
 const getMiddleItemStyle = (isDragging, draggableStyle) => {
@@ -395,7 +456,7 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
 
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (props) => {
-    const {rightItems} = props
+    const {rightItems, setRightItems} = props
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [_, setFilterName, getFilterName] = useGetState<string>("")
     // 历史选取项
@@ -511,33 +572,52 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                 {/* 右边拖放目标 */}
                 <Droppable droppableId='right' direction='vertical'>
                     {(provided) => (
-                        <div ref={provided.innerRef} {...provided.droppableProps}>
-                            {rightItems.map((item, index) => (
-                                <Draggable key={`run-${index}`} draggableId={`run-${index}`} index={index}>
-                                    {(provided, snapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            style={{
-                                                ...getMiddleItemStyle(
-                                                    snapshot.isDragging,
-                                                    provided.draggableProps.style
-                                                )
-                                            }}
+                        <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            style={rightItems.length > 0 ? {height: "100%"} : {height: "100%", overflow: "hidden"}}
+                        >
+                            {rightItems.length > 0 ? (
+                                <>
+                                    {rightItems.map((item, index) => (
+                                        <Draggable
+                                            key={`run-${item.key}`}
+                                            draggableId={`run-${item.key}`}
+                                            index={index}
                                         >
-                                            <NewCodecMiddleTypeItem data={item} />
-                                        </div>
-                                    )}
-                                </Draggable>
-                            ))}
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    style={{
+                                                        ...getMiddleItemStyle(
+                                                            snapshot.isDragging,
+                                                            provided.draggableProps.style
+                                                        )
+                                                    }}
+                                                >
+                                                    <NewCodecMiddleTypeItem
+                                                        data={item}
+                                                        outerKey={item.key}
+                                                        rightItems={rightItems}
+                                                        setRightItems={setRightItems}
+                                                    />
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                </>
+                            ) : (
+                                <div className={styles["no-data"]}>
+                                    <YakitEmpty title='请从左侧列表拖入要使用的 Codec 工具' />
+                                </div>
+                            )}
+
                             {provided.placeholder}
                         </div>
                     )}
                 </Droppable>
-                {/* <div className={styles["no-data"]}>
-                    <YakitEmpty title='请从左侧列表拖入要使用的 Codec 工具' />
-                </div> */}
             </div>
             <div className={styles["run-box"]}>
                 <YakitCheckbox
@@ -560,8 +640,11 @@ interface NewCodecLeftDragListItemProps {
     node: CodecMethod[]
     collectList: string[]
     getCollectData: (v: string[]) => void
+    onClickToRunList:(v: CodecMethod) => void
     parentItem?: LeftDataProps
+
 }
+
 let lastIsDragging = false
 const getLeftItemStyle = (isDragging, draggableStyle) => {
     let transform: string = draggableStyle["transform"] || ""
@@ -596,12 +679,7 @@ const getLeftItemStyle = (isDragging, draggableStyle) => {
 
 // 左边拖拽源
 export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> = (props) => {
-    const {node, collectList, parentItem, getCollectData} = props
-
-    // 将其添加至运行列表
-    const onClickToRunList = useMemoizedFn(() => {
-        console.log("onClickToRunList")
-    })
+    const {node, collectList, parentItem, getCollectData,onClickToRunList} = props
 
     const dragListItemDom = useMemoizedFn((item: CodecMethod) => (
         <YakitPopover
@@ -615,7 +693,7 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
                 </div>
             }
         >
-            <div className={styles["drag-list-item"]} onClick={onClickToRunList}>
+            <div className={styles["drag-list-item"]} onClick={()=>onClickToRunList(item)}>
                 <div className={styles["title"]}>{item.CodecName}</div>
                 <div className={styles["extra"]}>
                     {collectList.includes(item.CodecName) ? (
@@ -672,8 +750,8 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
                                     <div className={styles["title"]}>{item[0].CodecName}</div>
                                     <div className={styles["extra"]}>
                                         {/* <div className={classNames(styles['star-icon'],styles['star-icon-default'])}>
-                                        <OutlineStarIcon/>
-                                    </div> */}
+                                            <OutlineStarIcon/>
+                                        </div> */}
                                         <div
                                             className={classNames(styles["star-icon"], styles["star-icon-active"])}
                                             onClick={(e) => {
@@ -728,6 +806,7 @@ interface NewCodecLeftDragListProps {
     leftSearchData: CodecMethod[]
     isShowSearchList: boolean
     getCollectData: (v: string[]) => void
+    onClickToRunList:(v: CodecMethod)=>void
     searchValue?: string
     setSearchValue?: (v: string) => void
 }
@@ -747,7 +826,8 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
         leftSearchData,
         setSearchValue,
         isShowSearchList,
-        getCollectData
+        getCollectData,
+        onClickToRunList
     } = props
     const [fold, setFold] = useState<boolean>(true)
     const [activeKey, setActiveKey] = useState<string[]>([])
@@ -794,6 +874,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                                             node={leftSearchData}
                                             collectList={collectList}
                                             getCollectData={getCollectData}
+                                            onClickToRunList={onClickToRunList}
                                         />
                                         <div className={styles["to-end"]}>已经到底啦～</div>
                                     </div>
@@ -830,7 +911,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                                                     <OutlineStarIcon/>
                                                 </div> */}
                                                                 <div
-                                                                style={{color:"#FFD583"}}
+                                                                    style={{color: "#FFD583"}}
                                                                     className={classNames(
                                                                         styles["star-icon"],
                                                                         styles["star-icon-active"]
@@ -851,6 +932,7 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
                                                             parentItem={item}
                                                             collectList={collectList}
                                                             getCollectData={getCollectData}
+                                                            onClickToRunList={onClickToRunList}
                                                         />
                                                     )}
                                                 </YakitPanel>
@@ -884,22 +966,30 @@ export const NewCodecLeftDragList: React.FC<NewCodecLeftDragListProps> = (props)
 interface RightItemsInputProps {
     // 标题
     title?: string
+    // 参数名
+    name?: string
     // 是否必传
     require?: boolean
     // 是否禁用
     disabled?: boolean
     // 默认值
     defaultValue?: string
+    // 值
+    value?: string
+    // 正则校验
+    regex?: string
     // 控件类型
     type: "input"
 }
 
 // 多选框
 interface RightItemsCheckProps {
-    // 值
-    checkArr: string[]
+    // 可选值
+    checkArr: {label: string; value: string}[]
+    // 选中值
+    value?: string[]
     // 控件类型
-    type: "check"
+    type: "checkbox"
     // 是否禁用
     disabled?: boolean
 }
@@ -908,8 +998,12 @@ interface RightItemsCheckProps {
 interface RightItemsSelectProps {
     // 标题
     title?: string
-    // 值
-    selectArr: string[]
+    // 参数名
+    name?: string
+    // 可选值
+    selectArr: {label: string; value: string}[]
+    // 选中值
+    value?: string
     // 是否禁用
     disabled?: boolean
     // 是否必传
@@ -918,6 +1012,8 @@ interface RightItemsSelectProps {
     showSearch?: boolean
     // 控件类型
     type: "select"
+    // 是否启用社区插件查询
+    isPlugin?: boolean
 }
 
 // 编辑器
@@ -949,41 +1045,50 @@ interface RightItemsFlexProps {
 }
 interface RightItemsProps {
     title: string
+    key: string
     node?: (RightItemsTypeProps | RightItemsFlexProps)[]
+    // 屏蔽/中止
+    status?: "shield" | "suspend" | "run"
 }
 const initialRightItems: RightItemsProps[] = [
-    {
-        title: "Item A",
-        node: [
-            {title: "校验规则", require: true, disabled: true, defaultValue: "A-Za-z0-9+/=", type: "input"},
-            {checkArr: ["严格校验", "自动丢弃不合规片段"], type: "check"},
-            {selectArr: ["B", "K", "M"], type: "select"},
-            {title: "Key", require: true, type: "input"},
-            {
-                leftNode: {type: "input", title: "IV"},
-                rightNode: {selectArr: ["B", "K", "M"], type: "select"},
-                type: "flex"
-            },
-            {selectArr: ["B", "K", "M"], showSearch: true, type: "select"},
-            {value: "NewCodecEditor--", title: "编写临时插件", require: true, type: "editor"}
-        ]
-    },
-    {
-        title: "Item B",
-        node: [
-            {title: "校验规则", require: true, disabled: true, defaultValue: "A-Za-z0-9+/=", type: "input"},
-            {checkArr: ["严格校验", "自动丢弃不合规片段"], type: "check"},
-            {selectArr: ["B", "K", "M"], type: "select"},
-            {title: "Key", require: true, type: "input"},
-            {
-                leftNode: {type: "input", title: "IV"},
-                rightNode: {selectArr: ["B", "K", "M"], type: "select"},
-                type: "flex"
-            },
-            {selectArr: ["B", "K", "M"], showSearch: true, type: "select"},
-            {value: "NewCodecEditor--", title: "编写临时插件", require: true, type: "editor"}
-        ]
-    }
+    // {
+    //     title: "Item A",
+    //     node: [
+    //         {title: "校验规则", require: true, disabled: true, defaultValue: "A-Za-z0-9+/=", type: "input"},
+    //         {checkArr: [{
+    //             label:"严格校验",
+    //             value:"严格校验"
+    //         }, {label:"自动丢弃不合规片段",value:"自动丢弃不合规片段"}], type: "checkbox"},
+    //         {selectArr: ["B", "K", "M"], type: "select"},
+    //         {title: "Key", require: true, type: "input"},
+    //         {
+    //             leftNode: {type: "input", title: "IV"},
+    //             rightNode: {selectArr: ["B", "K", "M"], type: "select"},
+    //             type: "flex"
+    //         },
+    //         {selectArr: ["B", "K", "M"], showSearch: true, type: "select"},
+    //         {value: "NewCodecEditor--", title: "编写临时插件", require: true, type: "editor"}
+    //     ]
+    // },
+    // {
+    //     title: "Item B",
+    //     node: [
+    //         {title: "校验规则", require: true, disabled: true, defaultValue: "A-Za-z0-9+/=", type: "input"},
+    //         {checkArr: [{
+    //             label:"严格校验",
+    //             value:"严格校验"
+    //         }, {label:"自动丢弃不合规片段",value:"自动丢弃不合规片段"}], type: "checkbox"},
+    //         {selectArr: ["B", "K", "M"], type: "select"},
+    //         {title: "Key", require: true, type: "input"},
+    //         {
+    //             leftNode: {type: "input", title: "IV"},
+    //             rightNode: {selectArr: ["B", "K", "M"], type: "select"},
+    //             type: "flex"
+    //         },
+    //         {selectArr: ["B", "K", "M"], showSearch: true, type: "select"},
+    //         {value: "NewCodecEditor--", title: "编写临时插件", require: true, type: "editor"}
+    //     ]
+    // }
 ]
 export interface CodecParam {
     Name: string
@@ -1060,6 +1165,14 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                 tagList.push(item.Tag)
             }
         })
+        
+        // 找到 title 为 "其他" 的项的索引
+        const index = data.findIndex((item) => item.title === "其他")
+        // 如果找到了，则将该项移动到数组尾部
+        if (index !== -1) {
+            const otherItem = data.splice(index, 1)[0]
+            data.push(otherItem)
+        }
         console.log("tagList---", tagList, data)
         setLeftData(data)
     })
@@ -1069,10 +1182,10 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
         const setStar = (starList: string[]) => {
             const filterCodec = cacheCodecRef.current.filter((item) => starList.includes(item.CodecName))
             /* 此处需要收藏的工具有顺序 则需要根据starList排列filterCodec */
-            filterCodec.sort((a,b)=>{
-                const indexA = starList.indexOf(a.CodecName);
-                const indexB = starList.indexOf(b.CodecName);
-                return indexA - indexB;
+            filterCodec.sort((a, b) => {
+                const indexA = starList.indexOf(a.CodecName)
+                const indexB = starList.indexOf(b.CodecName)
+                return indexA - indexB
             })
             setCollectList(starList)
             if (filterCodec.length > 0) {
@@ -1129,23 +1242,103 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
         [searchValue],
         {leading: true, wait: 500}
     )
+
+    const initNode = useMemoizedFn((codecItem: CodecMethod) => {
+        return codecItem.Params.map((item) => {
+            const {Type, Options, Label, Name, Required, Regex, Desc} = item
+            switch (Type) {
+                case "select":
+                    return {
+                        type: "select",
+                        selectArr: Options.map((item) => ({label: item, value: item})),
+                        title: Label,
+                        name: Name,
+                        require: Required
+                    } as RightItemsSelectProps
+                case "input":
+                    return {
+                        type: "input",
+                        title: Label,
+                        name: Name,
+                        require: Required,
+                        regex: Regex
+                    } as RightItemsInputProps
+                case "checkbox":
+                    let checkArr = [{label: Label, value: Name}]
+                    return {
+                        type: "checkbox",
+                        checkArr,
+                        require: Required
+                    } as RightItemsCheckProps
+                case "monaco":
+                    return {
+                        type: "editor",
+                        title: Label,
+                        name: Name,
+                        require: Required
+                    } as RightItemsEditorProps
+                case "search":
+                    // search控件的selectArr来源于接口请求
+                    return {
+                        type: "select",
+                        selectArr: [],
+                        title: Label,
+                        name: Name,
+                        require: Required,
+                        isPlugin: true,
+                        showSearch:true
+                    } as RightItemsSelectProps
+                default:
+                    return {
+                        title: "未识别数据",
+                        require: false,
+                        type: "input"
+                    } as RightItemsInputProps
+            }
+        })
+    })
+
+    /**
+     * @description: 点击后添加至运行列表
+     */
+    const onClickToRunList = useMemoizedFn((item: CodecMethod) => {
+        console.log("onClickToRunList",item);
+        const node = initNode(item)
+        const newRightItems = JSON.parse(JSON.stringify(rightItems))
+        newRightItems.push({title: item.CodecName, key: uuidv4(), node})
+        setRightItems(newRightItems)
+    })
+
     /**
      * @description: 拖拽结束后的计算
      */
     const onDragEnd = useMemoizedFn((result: DropResult, provided: ResponderProvided) => {
-        const {source, destination} = result
+        const {source, destination, draggableId} = result
         console.log("onDragEnd", result)
 
         // 左边向右边拖拽
         if (source.droppableId === "left" && destination && destination.droppableId === "right") {
-            // rightItems.splice(destination.index, 0, removed)
-            // setLeftItems([...leftItems])
-            // setRightItems([...rightItems])
+            const firstDashIndex = draggableId.indexOf("-")
+            // 组来源或者搜索来源
+            const sourceType = draggableId.substring(0, firstDashIndex)
+            // 获取拖拽项
+            const CodecName = draggableId.substring(firstDashIndex + 1)
+            const codecArr = cacheCodecRef.current.filter((item) => item.CodecName === CodecName)
+            console.log("item--", codecArr)
+            if (codecArr.length > 0) {
+                const codecItem = codecArr[0]
+                const node = initNode(codecItem)
+                rightItems.splice(destination.index, 0, {title: codecItem.CodecName, key: uuidv4(), node})
+                console.log("newRightItems", rightItems, node)
+
+                setRightItems(rightItems)
+            }
         }
 
         // 右边内部排序
         if (source.droppableId === "right" && destination && destination.droppableId === "right") {
             const [removed] = rightItems.splice(source.index, 1)
+            console.log("removed--", removed)
             rightItems.splice(destination.index, 0, removed)
             setRightItems([...rightItems])
         }
@@ -1186,8 +1379,9 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                         searchValue={searchValue}
                         setSearchValue={setSearchValue}
                         getCollectData={getCollectData}
+                        onClickToRunList={onClickToRunList}
                     />
-                    <NewCodecMiddleRunList rightItems={rightItems} />
+                    <NewCodecMiddleRunList rightItems={rightItems} setRightItems={setRightItems} />
                 </DragDropContext>
             )}
             <NewCodecRightEditorBox isExpand={isExpand} setExpand={setExpand} />

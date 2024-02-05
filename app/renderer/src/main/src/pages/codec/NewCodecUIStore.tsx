@@ -1,7 +1,7 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Checkbox, CheckboxProps, Divider} from "antd"
 import {DownOutlined} from "@ant-design/icons"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./NewCodecUIStore.module.scss"
@@ -13,11 +13,13 @@ import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {IMonacoEditor, NewHTTPPacketEditor, YakEditor} from "@/utils/editors"
-import {StringToUint8Array} from "@/utils/str"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitInputProps} from "@/components/yakitUI/YakitInput/YakitInputType"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import { DefaultOptionType } from "antd/lib/select"
 const {ipcRenderer} = window.require("electron")
 export interface NewCodecInputUIProps extends YakitInputProps {
     // 标题
@@ -87,21 +89,20 @@ export const NewCodecInputUI: React.FC<NewCodecInputUIProps> = (props) => {
 export interface NewCodecCheckUIProps {
     // 是否禁用
     disabled?: boolean
-    // 值
-    value?: string[]
+    // 可供选择值
+    options?: {label: string; value: string}[]
+    // 选中值
+    value?: CheckboxValueType[]
+    onChange?: (v: CheckboxValueType[]) => void
 }
 export const NewCodecCheckUI: React.FC<NewCodecCheckUIProps> = (props) => {
-    const {disabled, value = []} = props
-    const onChange = (checkedValues: CheckboxValueType[]) => {}
+    const {disabled, options = [], value, onChange} = props
     return (
         <div className={styles["new-codec-check-ui"]}>
-            <Checkbox.Group
-                // value={[]}
-                onChange={onChange}
-            >
-                {value.map((item) => (
-                    <YakitCheckbox key={item} value={item} disabled={disabled}>
-                        <div className={styles["text"]}>{item}</div>
+            <Checkbox.Group value={value} onChange={onChange}>
+                {options.map((item) => (
+                    <YakitCheckbox key={item.label} value={item.value} disabled={disabled}>
+                        <div className={styles["text"]}>{item.label}</div>
                     </YakitCheckbox>
                 ))}
             </Checkbox.Group>
@@ -118,19 +119,27 @@ export interface NewCodecSelectUIProps extends YakitSelectProps {
     showSearch?: boolean
     // 左右布局时 border圆角方向
     directionBox?: "left" | "right"
-    // 值
-    value?: string[]
+    // 是否启用社区插件查询
+    isPlugin?: boolean
 }
-// 当前控件样式仅适配此尺寸 - 如需更多尺寸请扩展
+// 当前控件样式仅适配此尺寸 - 如需更多尺寸请自行扩展
 export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
-    const {require, title, showSearch, directionBox, value = [], ...restProps} = props
+    const {require, title, showSearch, directionBox, options = [],isPlugin, ...restProps} = props
     const [show, setShow] = useState<boolean>(false)
+    const [optionsList,setOptionsList] = useState<DefaultOptionType[]>(options)
+
+    useEffect(()=>{
+        if(isPlugin){
+
+        }
+    },[])
     return (
         <div
             className={classNames(styles["new-codec-select-ui"], {
                 [styles["new-codec-title-select-ui"]]: title,
                 [styles["new-codec-no-title-select-ui"]]: !title,
-                [styles["new-codec-search-select-ui"]]: showSearch,
+                [styles["new-codec-no-title-search-select-ui"]]: showSearch&&!title,
+                [styles["new-codec-title-search-select-ui"]]: showSearch&&title,
                 [styles["new-codec-right-border-select-ui"]]: directionBox === "right"
             })}
         >
@@ -142,8 +151,8 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
             )}
             <YakitSelect
                 showSearch={showSearch}
-                onSelect={(val) => {}}
                 placeholder='请选择...'
+                // value={}
                 suffixIcon={
                     showSearch ? (
                         <div className={styles["search-icon"]}>
@@ -157,14 +166,9 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
 
                 {...restProps}
             >
-                {value.map((item) => (
-                    <YakitSelect value={item}>{item}</YakitSelect>
+                {optionsList.map((item) => (
+                    <YakitSelect value={item.value}>{item.label}</YakitSelect>
                 ))}
-                {/* <YakitSelect value='B'>B</YakitSelect>
-                <YakitSelect value='K'>
-                    KdsffffffffffffffffffssssssssssssssssssKdsffffffffffffffffffssssssssssssssssssKdsffffffffffffffffffssssssssssssssssssKdsffffffffffffffffffssssssssssssssssssKdsffffffffffffffffffssssssssssssssssss
-                </YakitSelect>
-                <YakitSelect value='M'>M</YakitSelect> */}
             </YakitSelect>
         </div>
     )
@@ -172,15 +176,31 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
 interface NewCodecEditorBodyProps extends NewCodecEditorProps {
     // 值
     editorValue: string
+    setEditorValue: (v: string) => void
     // 是否是全屏
     extend: boolean
     // 全屏回调
     onExtend?: () => void
     // 缩小回调
     onClose?: () => void
+    // 是否打开弹层
+    isShowExtend?: boolean
 }
 export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => {
-    const {title, require, extend, onExtend, onClose, disabled, editorValue} = props
+    const {
+        title,
+        require,
+        extend,
+        onExtend,
+        onClose,
+        isShowExtend,
+        disabled,
+        value = "",
+        editorValue,
+        setEditorValue,
+        onChange
+    } = props
+
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     // 编辑器焦点状态
@@ -199,6 +219,13 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
         }
     }, [reqEditor])
 
+    useEffect(() => {
+        // 当弹窗编辑器更改时 修改mini编辑器
+        if (reqEditor && isShowExtend) {
+            reqEditor.setValue(editorValue)
+        }
+    }, [reqEditor, isShowExtend, editorValue])
+
     const onFocusEditor = useMemoizedFn(() => {
         if (disabled) return
         reqEditor && reqEditor.focus()
@@ -213,6 +240,15 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
             onExtend && onExtend()
         }
     })
+
+    const editorContChange = useDebounceFn(
+        (content) => {
+            const str = Uint8ArrayToString(content)
+            setEditorValue(str)
+        },
+        {wait: 100}
+    ).run
+
     return (
         <div
             className={classNames(styles["new-codec-editor"], {
@@ -230,10 +266,11 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
                 <div className={styles["extra"]}>
                     <div
                         className={classNames(styles["apply"], {
-                            [styles["apply-disabled"]]: disabled
+                            [styles["apply-disabled"]]: editorValue === value || disabled
                         })}
                         onClick={(e) => {
                             e.stopPropagation()
+                            onChange && onChange(editorValue)
                         }}
                     >
                         应用
@@ -261,7 +298,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
                     disabled={disabled}
                     noHeader={true}
                     originValue={StringToUint8Array(editorValue)}
-                    onChange={() => {}}
+                    onChange={editorContChange}
                 />
             </div>
         </div>
@@ -273,34 +310,55 @@ export interface NewCodecEditorProps {
     title?: string
     // 值
     value?: string
+    // 值变化的回调
+    onChange?: (v: string) => void
     // 是否为必填
     require?: boolean
     // 是否禁用
     disabled?: boolean
 }
 export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
-    const {value} = props
-    const [editorValue, setEditorValue] = useState<string>(value || "")
-    const onExtend = useMemoizedFn(() => {
-        const m = showYakitModal({
-            title: null,
-            footer: null,
-            width: 1200,
-            type: "white",
-            closable: false,
-            maskClosable: false,
-            hiddenHeader: true,
-            content: (
+    const {value = ""} = props
+    const [editorValue, setEditorValue] = useState<string>("")
+    // 是否打开弹层
+    const [isShowExtend, setShowExtend] = useState<boolean>(false)
+    useEffect(() => {
+        setEditorValue(value)
+    }, [value])
+
+    return (
+        <>
+            <NewCodecEditorBody
+                isShowExtend={isShowExtend}
+                editorValue={editorValue}
+                setEditorValue={setEditorValue}
+                extend={false}
+                onExtend={()=>setShowExtend(true)}
+                {...props}
+            />
+            {isShowExtend&&<YakitModal
+                title={null}
+                footer={null}
+                width={1200}
+                type={"white"}
+                closable={false}
+                maskClosable={false}
+                hiddenHeader={true}
+                visible={isShowExtend}
+                bodyStyle={{padding: 0}}
+            >
                 <NewCodecEditorBody
                     extend={true}
                     onClose={() => {
-                        m.destroy()
+                        setShowExtend(false)
                     }}
                     editorValue={editorValue}
+                    setEditorValue={(str) => {
+                        setEditorValue(str)
+                    }}
                     {...props}
                 />
-            )
-        })
-    })
-    return <NewCodecEditorBody editorValue={editorValue} extend={false} onExtend={onExtend} {...props} />
+            </YakitModal>}
+        </>
+    )
 }
