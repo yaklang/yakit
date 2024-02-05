@@ -1381,12 +1381,12 @@ export const apiFetchDeleteYakScriptGroupLocal: (Group: string) => Promise<null>
 }
 
 /**本地获取插件所在插件组和其他插件组 */
-export const apiFetchGetYakScriptGroupLocal: (YakScriptName: string[]) => Promise<GetYakScriptGroupResponse> = (
-    YakScriptName
+export const apiFetchGetYakScriptGroupLocal: (params: QueryYakScriptRequest) => Promise<GetYakScriptGroupResponse> = (
+    params
 ) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("GetYakScriptGroup", {YakScriptName})
+            .invoke("GetYakScriptGroup", params)
             .then((res: GetYakScriptGroupResponse) => {
                 resolve(res)
             })

@@ -190,7 +190,7 @@ export interface GetYakScriptGroupResponse {
 }
 
 export interface SaveYakScriptGroupRequest {
-    YakScriptName: string[]
+    Filter: QueryYakScriptRequest
     SaveGroup: string[]
     RemoveGroup: string[]
 }

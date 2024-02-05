@@ -120,6 +120,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     })
 
     // 获取插件列表数据
+    const [queryFetchList, setQueryFetchList] = useState<QueryYakScriptRequest>()
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
@@ -155,7 +156,8 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                     Group: [activeGroup.name]
                 }
             }
-
+            console.log("插件列表", query)
+            setQueryFetchList(query)
             try {
                 const res = await apiQueryYakScript(query)
                 if (!res.Data) res.Data = []
@@ -249,8 +251,13 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const scriptNameRef = useRef<string[]>([])
     const getYakScriptGroupLocal = (scriptName: string[]) => {
         scriptNameRef.current = scriptName
-        if (!scriptName.length) return
-        apiFetchGetYakScriptGroupLocal(scriptName).then((res) => {
+        if (!queryFetchList) return
+        const query = structuredClone(queryFetchList)
+        if (!allCheck) {
+            query.IncludedScriptNames = scriptName
+        }
+        console.log("获取查询参数", query)
+        apiFetchGetYakScriptGroupLocal(query).then((res) => {
             const copySetGroup = [...res.SetGroup]
             const newSetGroup = copySetGroup.map((name) => ({
                 groupName: name,
@@ -294,9 +301,18 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                 removeGroup.push(groupName)
             }
         })
-        if (!saveGroup.length && !removeGroup.length) return
+        if ((!saveGroup.length && !removeGroup.length) || !queryFetchList) return
+        const query = structuredClone(queryFetchList)
+        if (!allCheck) {
+            query.IncludedScriptNames = scriptNameRef.current
+        }
+        console.log("设置查询参数", {
+            Filter: query,
+            SaveGroup: saveGroup,
+            RemoveGroup: removeGroup
+        })
         apiFetchSaveYakScriptGroupLocal({
-            YakScriptName: scriptNameRef.current,
+            Filter: query,
             SaveGroup: saveGroup,
             RemoveGroup: removeGroup
         }).then(() => {
