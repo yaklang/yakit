@@ -10,6 +10,8 @@ import {useInViewport} from "ahooks"
 import {SolidQuestionmarkcircleIcon} from "@/assets/icon/solid"
 import {Tooltip} from "antd"
 import styles from "./PluginGroups.module.scss"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 interface PluginGroupsProps {}
 
@@ -35,11 +37,12 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
             {/* 左侧插件组 */}
             <div className={styles["plugin-groups-left-wrap"]}>
                 <div className={styles["plugin-groups-left-header"]}>
-                    <span className={styles["plugin-groups-left-header-text"]}>插件组管理</span>
-                    <Tooltip title='插件组只能管理除Yak和Codec类型以外的插件' placement='bottomLeft'>
-                        <SolidQuestionmarkcircleIcon className={styles["pligin-group-mag-icon"]} />
-                    </Tooltip>
-                    {/* {judgeOnlineStatus && (
+                    <div className={styles["plugin-groups-left-header-info"]}>
+                        <span className={styles["plugin-groups-left-header-text"]}>插件组管理</span>
+                        <Tooltip title='插件组只能管理除Yak和Codec类型以外的插件' placement='bottomLeft'>
+                            <SolidQuestionmarkcircleIcon className={styles["pligin-group-mag-icon"]} />
+                        </Tooltip>
+                        {/* {judgeOnlineStatus && (
                         <YakitRadioButtons
                             style={{marginRight: 4}}
                             value={pluginGroupType}
@@ -58,9 +61,37 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                             size={"small"}
                         />
                     )} */}
-                    <span className={styles["plugin-groups-number"]}>
-                        {pluginGroupType === "online" ? onlineGroupLen : localGroupLen}
-                    </span>
+                        <span className={styles["plugin-groups-number"]}>
+                            {pluginGroupType === "online" ? onlineGroupLen : localGroupLen}
+                        </span>
+                    </div>
+                    <div className={styles["plugin-groups-opt-btns"]}>
+                        {pluginGroupType === "local" && (
+                            <Tooltip title='重置将把插件分组全部删除，并重新下载线上分组'>
+                                <YakitButton
+                                    type='text'
+                                    colors='danger'
+                                    onClick={() => {
+                                        const m = showYakitModal({
+                                            title: "重置",
+                                            onOkText: "确认",
+                                            onOk: () => {
+                                                m.destroy()
+                                            },
+                                            content: (
+                                                <div style={{margin: 15}}>
+                                                    重置将删除本地所有分组，并重新下载所有线上插件，是否重置？
+                                                </div>
+                                            ),
+                                            onCancel: () => {}
+                                        })
+                                    }}
+                                >
+                                    重置
+                                </YakitButton>
+                            </Tooltip>
+                        )}
+                    </div>
                 </div>
                 <div className={styles["plugin-groups-left-body"]}>
                     <div

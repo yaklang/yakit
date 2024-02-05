@@ -6,35 +6,44 @@
         background: var(--yakit-card-background-color);
         border-right: 1px solid var(--yakit-border-color);
         .plugin-groups-left-header {
-            padding: 0 12px;
-            height: 40px;
             display: flex;
             align-items: center;
-            border-bottom: 1px solid var(--yakit-border-color);
-            &-text {
-                font-size: 12px;
-                color: #31343f;
-                font-weight: bold;
-                margin-right: 4px;
-            }
-            .pligin-group-mag-icon {
-                margin-right: 4px;
-                svg {
-                    width: 16px;
+            justify-content: space-between;
+            padding: 0 12px;
+            &-info {
+                height: 40px;
+                display: flex;
+                align-items: center;
+                border-bottom: 1px solid var(--yakit-border-color);
+                &-text {
+                    font-size: 12px;
+                    color: #31343f;
+                    font-weight: bold;
+                    margin-right: 4px;
+                }
+                .pligin-group-mag-icon {
+                    margin-right: 4px;
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                        color: #b4bbca;
+                    }
+                }
+                .plugin-groups-number {
+                    padding: 0px 8px;
                     height: 16px;
-                    color: #b4bbca;
+                    line-height: 16px;
+                    background: var(--yakit-background-color);
+                    border-radius: 8px;
+                    color: var(--yakit-body-text-color);
+                    font-size: 12px;
                 }
             }
-            .plugin-groups-number {
-                padding: 0px 8px;
-                height: 16px;
-                line-height: 16px;
-                background: var(--yakit-background-color);
-                border-radius: 8px;
-                color: var(--yakit-body-text-color);
-                font-size: 12px;
+
+            .plugin-groups-opt-btns {
             }
         }
+
         .plugin-groups-left-body {
             padding: 12px;
             height: calc(100% - 40px);
