@@ -268,12 +268,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-18.14.6.tgz#ae1973dd2b1eeb1825695bb11ebfb746d27e3e93"
   integrity sha512-93+VvleD3mXwlLI/xASjw0FzKcwzl3OdTCzm1LaRfqgS21gfFtK3zDXM5Op9TeeMsJVOaJ2VRDpT9q4Y3d0AvA==
 
-"@types/node@^18.11.18":
-  version "18.19.4"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.19.4.tgz#89672e84f11a2c19543d694dac00ab8d7bc20ddb"
-  integrity sha512-xNzlUhzoHotIsnFoXmJB+yWmBvFZgKCI9TtPIEdYIMM1KWfwuY8zh7wvc1u1OAXlC7dlf6mZVx/s+Y5KfFz19A==
-  dependencies:
-    undici-types "~5.26.4"
+"@types/node@^16.11.26":
+  version "16.18.79"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.18.79.tgz#153e25561b271cf87dc1b28d38f98cebd514d788"
+  integrity sha512-Qd7jdLR5zmnIyMhfDrfPqN5tUCvreVpP3Qrf2oSM+F7SNzlb/MwHISGUkdFHtevfkPJ3iAGyeQI/jsbh9EStgQ==
 
 "@types/plist@^3.0.1":
   version "3.0.5"
@@ -1035,13 +1033,13 @@ electron-window-state@^5.0.3:
     jsonfile "^4.0.0"
     mkdirp "^0.5.1"
 
-electron@27.0.0:
-  version "27.0.0"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-27.0.0.tgz#bb6c45881e531b2ec1c7cc46c47aba773f38ee14"
-  integrity sha512-mr3Zoy82l8XKK/TgguE5FeNeHZ9KHXIGIpUMjbjZWIREfAv+X2Q3vdX6RG0Pmi1K23AFAxANXQezIHBA2Eypwg==
+electron@22.3.27:
+  version "22.3.27"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-22.3.27.tgz#b77451a53f0c502e7559cceac28ac58eb289eef8"
+  integrity sha512-7Rht21vHqj4ZFRnKuZdFqZFsvMBCmDqmjetiMqPtF+TmTBiGne1mnstVXOA/SRGhN2Qy5gY5bznJKpiqogjM8A==
   dependencies:
     "@electron/get" "^2.0.0"
-    "@types/node" "^18.11.18"
+    "@types/node" "^16.11.26"
     extract-zip "^2.0.1"
 
 emoji-regex@^8.0.0:
