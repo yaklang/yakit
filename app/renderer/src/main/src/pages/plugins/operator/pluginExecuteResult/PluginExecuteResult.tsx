@@ -158,12 +158,12 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
                     <YakitButton type='primary' icon={<SolidViewgridIcon />} size='small' onClick={onJumpPort}>
                         端口资产管理
                     </YakitButton>
-                    {total}
                 </>
             }
             containerClassName={styles["plugin-execute-port-table-container"]}
             btnSize='small'
             setTotal={setTotal}
+            detailBodyClassName={styles["plugin-execute-port-table-detail-body"]}
         />
     )
 })
