@@ -37,40 +37,44 @@ const maxCellNumber = 100000 // 最大单元格10w
 
 
 /* 校验数组长度是否大于90MB，并在超过90MB时将数组分割成多个小段 */
-  const splitArrayBySize = (arr, maxSizeInBytes) => {
-    const serializedArray = JSON.stringify(arr);
-    const byteLength = new TextEncoder().encode(serializedArray).length;
+const splitArrayBySize = (arr, maxSizeInBytes) => {
+    // chunkSize用于减少解析次数-性能优化（每chunkSize条判断一次）
+    const chunkSize:number = 100
+    const chunks:any[] = [];
+    let currentChunk:any[]  = [];
+    let currentSize:number  = 0;
   
-    if (byteLength <= maxSizeInBytes) {
-      // 如果数组大小小于等于指定大小，无需分割
-      return [arr];
-    }
+    for (let i = 0; i < arr.length; i++) {
+      const element:any = arr[i];
   
-    const chunks:any = [];
-    let currentChunk:any = [];
-    let currentSize = 0;
+      // 将元素添加到当前块
+      currentChunk.push(element);
   
-    // 遍历数组元素，将其添加到当前块，直到达到指定大小
-    for (const element of arr) {
-      const elementSize = new TextEncoder().encode(JSON.stringify(element)).length;
+      // 每隔 chunkSize 条数据一起计算一次是否超过指定大小，或者已经到达数组末尾
+      if ((i + 1) % chunkSize === 0 || i === arr.length - 1) {
+        // 一起计算前20个元素的大小
+        const elementsToCalculate = currentChunk.slice(-chunkSize);
+        const elementsSize = elementsToCalculate.reduce((size, el) => {
+          return size + new TextEncoder().encode(JSON.stringify(el)).length;
+        }, 0);
   
-      if (currentSize + elementSize > maxSizeInBytes) {
-        // 如果当前块超过了指定大小，将其存储并创建新的块
-        chunks.push(currentChunk);
-        currentChunk = [element];
-        currentSize = elementSize;
-      } else {
-        // 否则，将元素添加到当前块
-        currentChunk.push(element);
-        currentSize += elementSize;
+        currentSize += elementsSize;
+  
+        if (currentSize > maxSizeInBytes) {
+          // 如果当前块超过了指定大小，将其存储并创建新的块
+          chunks.push(currentChunk.slice(0, -chunkSize)); // push 未超过时的数组
+          currentChunk = elementsToCalculate;
+          currentSize = elementsSize;
+        }
+        else if(i === arr.length - 1){
+            // 最后一次循环，且未超过指定大小，将剩余的 currentChunk 加到 chunks 中
+            chunks.push(currentChunk)
+        }
       }
     }
   
-    // 存储最后一个块
-    chunks.push(currentChunk);
-  
     return chunks;
-  }
+};
 
 export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     const {
@@ -108,10 +112,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                     const maxSizeInBytes = 90 * 1024 * 1024; // 90MB
                     const chunks:any[] = splitArrayBySize(exportData,maxSizeInBytes)
 
-                    console.log("chunks--",chunks);
                     if ((totalCellNumber < maxCellNumber && response.Total <= pageSize)&&chunks.length===1) {
-                        console.log("ggg");
-                        
                         // 单元格数量小于最大单元格数量 或者导出内容小于90M，直接导出
                         export_json_to_excel({
                             header: header,
@@ -257,8 +258,6 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 <Space wrap>
                     {chunksData.map((item, index) =>{
                         if(index===0){beginNumberRef.current = 0}
-                        console.log("beginNumberRef.current",beginNumberRef.current);
-                        
                         let start:number = beginNumberRef.current || 1
                         let end:number = beginNumberRef.current + item.length
                         beginNumberRef.current = end+1

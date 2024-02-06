@@ -2125,11 +2125,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if(total>5000){
             return 500
         }
-        else if(total>2000){
-            return 200
+        else if(total<1000){
+            return 100
         }
         else {
-            return 100
+            return Math.round(total / 1000) * 100;
         }
     }, [total])
 
@@ -2265,20 +2265,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ipcRenderer
                         .invoke("ExportHTTPFlows", exportParams)
                         .then((rsp: YakQueryHTTPFlowResponse) => {
-                            console.log("rsp---", rsp)
                             resolve(rsp)
                         })
                         .catch((e) => {
-                            console.log("eee---", e)
                             reject(e)
                         })
                         .finally(() => {
-                            console.log("finally---")
                         })
                 })
             })
             Promise.allSettled(promiseList).then((results) => {
-                console.log("输出：", results)
                 let rsp: YakQueryHTTPFlowResponse = {
                     Data: [],
                     Pagination: {...pagination, Page: 1, OrderBy: "id", Order: ""},
