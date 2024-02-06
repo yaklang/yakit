@@ -48,6 +48,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             tableTitleExtraOperate,
             containerClassName = "",
             tableTitleClassName = "",
+            detailBodyClassName = "",
             isStop = true,
             setSelectNumber
         } = props
@@ -57,6 +58,8 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             Pagination: genDefaultPagination(defLimit),
             Total: 0
         })
+        const [selected, setSelected] = useState<PortAsset[]>([])
+        const [allSelected, setAllSelected] = useState<boolean>(false)
         const [total, setTotal] = useControllableValue<number>(props, {
             defaultValue: 0,
             trigger: "setTotal"
@@ -70,13 +73,11 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             defaultValue: [],
             trigger: "setOffsetDataInTop"
         })
-        const [interval, setInterval] = useState<number | undefined>(1000)
+        const [interval, setInterval] = useState<number | undefined>(undefined)
         const [sendPopoverVisible, setSendPopoverVisible] = useState<boolean>(false)
-        const [checkedURL, setCheckedURL] = useState<string[]>([])
         const [currentSelectItem, setCurrentSelectItem] = useState<PortAsset>()
         const [scrollToIndex, setScrollToIndex] = useState<number>()
 
-        // const [titleEffective, setTitleEffective] = useState<boolean>(false)
         const [query, setQuery] = useControllableValue<QueryPortsRequest>(props, {
             defaultValue: {
                 ...cloneDeep(defQueryPortsRequest)
@@ -91,11 +92,6 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
         const afterId = useRef<number>()
         const beforeId = useRef<number>()
         const tableRef = useRef<any>(null)
-        const selectedId = useMemo<string[]>(() => {
-            return response.Data.map((i) => `${i.Id}`)
-        }, [response.Data])
-        const {selected, allSelected, isSelected, select, unSelect, selectAll, unSelectAll, setSelected} =
-            useSelections<string>(selectedId)
 
         // 选中数量
         const selectNum = useMemo(() => {
@@ -103,18 +99,23 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             else return selected.length
         }, [allSelected, selected, total])
 
+        const selectedRowKeys = useCreation(() => {
+            return selected.map((ele) => `${ele.Id}`)
+        }, [selected])
+        const checkedURL = useCreation(() => {
+            return selected.map((ele) => `${ele.Host}:${ele.Port}`)
+        }, [selected])
+
         useImperativeHandle(ref, () => ({
             onRemove
         }))
 
         useEffect(() => {
-            setCheckedURL(
-                response.Data.filter((e) => selected.includes(`${e.Id}`)).map((item) => `${item.Host}:${item.Port}`)
-            )
-        }, [selected])
-        useEffect(() => {
             if (setSelectNumber) setSelectNumber(selectNum)
         }, [selectNum])
+        useEffect(() => {
+            if (allSelected) setSelected(response.Data)
+        }, [allSelected, response.Data])
 
         useEffect(() => {
             getTotal()
@@ -138,19 +139,29 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 getIncrementInTop()
             }
         }, interval)
+        /**获取所有数据，带查询条件 */
+        const getAllData: () => Promise<QueryGeneralResponse<PortAsset>> = useMemoizedFn(() => {
+            return new Promise((resolve, reject) => {
+                const params: QueryPortsRequest = {
+                    ...query,
+                    All: true
+                }
+                apiQueryPortsBase(params).then(resolve).catch(reject)
+            })
+        })
 
         const onRemove = useMemoizedFn(() => {
             return new Promise((resolve, reject) => {
                 const transferParams = {
-                    selectedRowKeys: allSelected ? [] : selected,
+                    selectedRowKeys: allSelected ? [] : selected.map((ele) => ele.Id),
                     params: {...query},
                     interfaceName: "DeletePorts"
                 }
                 setLoading(true)
                 onRemoveToolFC(transferParams)
                     .then(() => {
-                        setCheckedURL([])
-                        unSelectAll()
+                        setAllSelected(false)
+                        setSelected([])
                         onRefreshData()
                         resolve(null)
                     })
@@ -209,16 +220,20 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                     prePage.current = 1
                     setIsRefresh(!isRefresh)
                 }
-                console.log("query-params", params)
+                // console.log("query-params", params)
                 apiQueryPortsBase(params)
                     .then((rsp: QueryGeneralResponse<PortAsset>) => {
-                        console.log(
-                            "rsp",
-                            rsp,
-                            rsp.Data.map((ele) => ele.Id)
-                        )
+                        // console.log(
+                        //     "rsp",
+                        //     rsp,
+                        //     rsp.Data.map((ele) => ele.Id)
+                        // )
                         const d = init ? rsp.Data : response.Data.concat(rsp.Data)
                         prePage.current += 1
+                        if (init) {
+                            // 初始数据回来后，再开始刷新实时数据
+                            setInterval(1000)
+                        }
                         setResponse({
                             Total: 0,
                             Pagination: {
@@ -267,29 +282,29 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             // console.log("offsetDataInTop", offsetDataInTop)
             if (scrollTop < 10 && offsetDataInTop?.length > 0) {
                 // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
-                setResponse({
-                    ...response,
-                    Data: [...offsetDataInTop, ...response.Data]
-                })
+                setResponse((oldResponse) => ({
+                    ...oldResponse,
+                    Data: [...offsetDataInTop, ...oldResponse.Data]
+                }))
                 setOffsetDataInTop([])
                 return
             }
             apiQueryPortsIncrementOrderAsc(params).then((rsp) => {
-                console.log(
-                    "rsp-------top",
-                    params,
-                    rsp.Data.map((ele) => ele.Id)
-                )
+                // console.log(
+                //     "rsp-------top",
+                //     params,
+                //     rsp.Data.map((ele) => ele.Id)
+                // )
                 if (rsp.Data.length > 0) {
                     afterId.current = rsp.Data[0].Id
                 }
                 const newData = rsp.Data
                 const newTotal = total + rsp.Data.length
                 if (scrollTop < 10) {
-                    setResponse({
-                        ...response,
-                        Data: [...newData, ...response.Data]
-                    })
+                    setResponse((oldResponse) => ({
+                        ...oldResponse,
+                        Data: [...newData, ...oldResponse.Data]
+                    }))
                     setTotal(newTotal)
                 } else {
                     setOffsetDataInTop([...newData, ...offsetDataInTop])
@@ -364,13 +379,10 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 }
             ]
         }, [query.TitleEffective])
+        /**导出数据 */
         const getData = useMemoizedFn(() => {
             return new Promise((resolve, reject) => {
-                const params: QueryPortsRequest = {
-                    ...query,
-                    All: true
-                }
-                apiQueryPortsIncrementOrderAsc(params)
+                getAllData()
                     .then((res) => {
                         let exportData: PortAsset[] = []
                         const header: string[] = []
@@ -413,6 +425,17 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             }
         )
         const menuSelect = useMemoizedFn((key, urls) => {
+            if (allSelected) {
+                getAllData().then((res) => {
+                    const allUrls = res.Data.map((item) => `${item.Host}:${item.Port}`)
+                    openExternalPage(key, allUrls)
+                })
+            } else {
+                openExternalPage(key, urls)
+            }
+        })
+        /**发送到其他页面 */
+        const openExternalPage = useMemoizedFn((key, urls) => {
             ipcRenderer
                 .invoke("send-to-tab", {
                     type: key,
@@ -435,7 +458,8 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                     OrderBy: sort.orderBy
                 }
             })
-        }) /**table所在的div大小发生变化 */
+        })
+        /**table所在的div大小发生变化 */
         const onTableResize = useMemoizedFn((width, height) => {
             if (!height) {
                 return
@@ -443,20 +467,19 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             const tableCellHeight = 28
             const limit = Math.trunc(height / tableCellHeight) + 5
             defLimitRef.current = limit
-            // if (total === 0) {
-            //     // init
-            //     update(true)
-            //     return
-            // } else if (tableBodyHeightRef.current <= height) {
-            //     // 窗口由小变大时 重新拉取数据
-            //     const length = response.Data.length
-            //     const h = length * tableCellHeight
-            //     if (h < height) {
-            //         // update()
-            //     }
-            //     return
-            // }
-            update()
+            if (total === 0) {
+                // init
+                update(true)
+                return
+            } else if (tableBodyHeightRef.current <= height) {
+                // 窗口由小变大时 重新拉取数据
+                const length = response.Data.length
+                const h = length * tableCellHeight
+                if (h < height) {
+                    update()
+                }
+                return
+            }
             tableBodyHeightRef.current = height
         })
         return (
@@ -518,14 +541,14 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                                                     placement: "bottom",
                                                     visible: sendPopoverVisible,
                                                     onVisibleChange: (v) => setSendPopoverVisible(v),
-                                                    disabled: allSelected || selected.length === 0
+                                                    disabled: selectNum === 0
                                                 }}
                                             >
                                                 <YakitButton
                                                     onClick={() => {}}
                                                     icon={<SolidPaperairplaneIcon />}
                                                     type={"primary"}
-                                                    disabled={allSelected || selected.length === 0}
+                                                    disabled={selectNum === 0}
                                                     size={btnSize}
                                                 >
                                                     发送到...
@@ -543,23 +566,24 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                             rowSelection={{
                                 isAll: allSelected,
                                 type: "checkbox",
-                                selectedRowKeys: selected,
+                                selectedRowKeys: selectedRowKeys,
                                 onSelectAll: (
                                     newSelectedRowKeys: string[],
                                     selected: PortAsset[],
                                     checked: boolean
                                 ) => {
                                     if (checked) {
-                                        selectAll()
+                                        setAllSelected(true)
                                     } else {
-                                        unSelectAll()
+                                        setAllSelected(false)
+                                        setSelected([])
                                     }
                                 },
-                                onChangeCheckboxSingle: (c: boolean, keys: string) => {
+                                onChangeCheckboxSingle: (c: boolean, keys: string, selectedRows) => {
                                     if (c) {
-                                        select(keys)
+                                        setSelected((s) => [...s, selectedRows])
                                     } else {
-                                        unSelect(keys)
+                                        setSelected((s) => s.filter((ele) => ele.Id !== selectedRows.Id))
                                     }
                                 }
                             }}
@@ -567,7 +591,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                                 total: total,
                                 limit: response.Pagination.Limit,
                                 page: response.Pagination.Page,
-                                onChange: (page, limit) => update()
+                                onChange: () => update()
                             }}
                             columns={columns}
                             onRowContextMenu={onRowContextMenu}
@@ -594,7 +618,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                     lineDirection: "bottom",
                     secondNodeStyle: {padding: 0}
                 }}
-                secondNodeClassName={styles["port-table-detail"]}
+                secondNodeClassName={classNames(styles["port-table-detail"], detailBodyClassName)}
             />
         )
     })
