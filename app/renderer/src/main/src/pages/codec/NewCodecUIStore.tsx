@@ -14,12 +14,13 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {IMonacoEditor, NewHTTPPacketEditor, YakEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitInputProps} from "@/components/yakitUI/YakitInput/YakitInputType"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import { DefaultOptionType } from "antd/lib/select"
+import { queryYakScriptList } from "../yakitStore/network"
+import { YakScript } from "../invoker/schema"
+import { YakParamProps } from "../plugins/pluginsType"
 const {ipcRenderer} = window.require("electron")
 export interface NewCodecInputUIProps extends YakitInputProps {
     // 标题
@@ -110,6 +111,13 @@ export const NewCodecCheckUI: React.FC<NewCodecCheckUIProps> = (props) => {
     )
 }
 
+export interface CodecType {
+    key?: string
+    verbose: string
+    help?: React.ReactNode
+    isYakScript?: boolean
+}
+
 export interface NewCodecSelectUIProps extends YakitSelectProps {
     // 标题
     title?: string
@@ -124,15 +132,43 @@ export interface NewCodecSelectUIProps extends YakitSelectProps {
 }
 // 当前控件样式仅适配此尺寸 - 如需更多尺寸请自行扩展
 export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
-    const {require, title, showSearch, directionBox, options = [],isPlugin, ...restProps} = props
+    const {require, title, showSearch, directionBox, options = [],isPlugin,onSearch, ...restProps} = props
     const [show, setShow] = useState<boolean>(false)
     const [optionsList,setOptionsList] = useState<DefaultOptionType[]>(options)
 
+    const [codecPlugin, setCodecPlugin] = useState<CodecType[]>([])
     useEffect(()=>{
         if(isPlugin){
-
+            search()
         }
     },[])
+
+    const search = useMemoizedFn((keyword?: string) => {
+        // setPluginLoading(true)
+        queryYakScriptList(
+            "codec",
+            (i: YakScript[], total) => {
+                const codecPlugin:CodecType[] = i.map((script) => {
+                    return {
+                        key: script.ScriptName,
+                        help: script.Help,
+                        verbose: script.ScriptName,
+                        isYakScript: true
+                    }
+                })
+                const codecPluginSelect = codecPlugin.map((item)=>({label:item.key||"",value:item.key||""}))
+                setCodecPlugin(codecPlugin)
+                setOptionsList(codecPluginSelect)
+            },
+            () => setTimeout(() => {
+                // setPluginLoading(false)
+            }, 300),
+            10,
+            undefined,
+            keyword
+        )
+    })
+
     return (
         <div
             className={classNames(styles["new-codec-select-ui"], {
@@ -152,7 +188,6 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
             <YakitSelect
                 showSearch={showSearch}
                 placeholder='请选择...'
-                // value={}
                 suffixIcon={
                     showSearch ? (
                         <div className={styles["search-icon"]}>
@@ -163,7 +198,14 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                 }
                 onDropdownVisibleChange={(v) => setShow(v)}
                 // wrapperClassName={style["unit-select"]}
-
+                onSearch={(v) => {
+                    if(isPlugin){
+                        search(v)
+                    }
+                    else{
+                        onSearch&&onSearch(v)
+                    }
+                }}
                 {...restProps}
             >
                 {optionsList.map((item) => (
