@@ -388,55 +388,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     /** @name 路由对应的菜单展示名称 */
     const routeKeyToLabel = useRef<Map<string, string>>(new Map<string, string>())
 
-    useEffect(() => {
-        const firstUseProjectFlag = `FIRST_USE_PROJECT_BETA_SrLYymNzXvhO`
-        getRemoteValue(firstUseProjectFlag)
-            .then((value) => {
-                if (!value) {
-                    const m = showModal({
-                        title: "重要提示",
-                        content: (
-                            <Space direction={"vertical"}>
-                                <div>{`本系统 >= 1.1.17，引擎 >= 1.1.18 后为了新增 "项目" 功能，项目数据库和用户数据库进行了严格分离`}</div>
-                                <div>用户可在 "数据库" - "项目管理" 中查看新的项目管理 （Beta）</div>
-                                <div>您的流量数据与扫描结果将会存储新的项目数据库中</div>
-                                <Alert
-                                    type={"warning"}
-                                    description={
-                                        "原本的用户数据并不会丢失，用户目录下 SQLite3 数据库 yakit-projects/default-yakit.db 包含所有用户信息"
-                                    }
-                                />
-                                <div>
-                                    <Button.Group>
-                                        <Button
-                                            onClick={() => {
-                                                m.destroy()
-                                            }}
-                                        >
-                                            Ok
-                                        </Button>
-                                        <Button
-                                            type={"link"}
-                                            onClick={() => {
-                                                m.destroy()
-                                                setRemoteValue(firstUseProjectFlag, "1").catch((e) => {})
-                                            }}
-                                        >
-                                            知道了，不再提示
-                                        </Button>
-                                    </Button.Group>
-                                </div>
-                            </Space>
-                        )
-                    })
-                    return
-                }
-            })
-            .catch((e) => {
-                info("无法获取第一次使用项目标签")
-            })
-    }, [])
-
     const {screenRecorderInfo} = useScreenRecorder()
     useUpdateEffect(() => {
         if (!screenRecorderInfo.isRecording) {

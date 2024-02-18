@@ -428,7 +428,7 @@ module.exports = (win, getClient) => {
         return await asyncPromotePermissionForUserPcap(params)
     })
 
-    // asyncMigrateLegacyDatabase wrapper
+    // 已下线功能-旧版本迁移[自动迁移数据库]
     const asyncMigrateLegacyDatabase = (params) => {
         return new Promise((resolve, reject) => {
             getClient().MigrateLegacyDatabase(params, (err, data) => {

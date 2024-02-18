@@ -47,7 +47,6 @@ import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
-import {migrateLegacyDatabase} from "@/utils/ConfigMigrateLegacyDatabase"
 import {GithubSvgIcon, PencilAltIcon, TerminalIcon, CameraIcon} from "@/assets/newIcon"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
@@ -1133,9 +1132,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "pcapfix":
                 showPcapPermission()
-                return
-            case "migrateLegacy":
-                migrateLegacyDatabase()
                 return
             case "changeProject":
             case "encryptionProject":
