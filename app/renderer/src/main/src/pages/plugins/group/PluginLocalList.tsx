@@ -253,9 +253,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
         scriptNameRef.current = scriptName
         if (!queryFetchList) return
         const query = structuredClone(queryFetchList)
-        if (!allCheck) {
-            query.IncludedScriptNames = scriptName
-        }
+        query.IncludedScriptNames = scriptName
         console.log("获取查询参数", query)
         apiFetchGetYakScriptGroupLocal(query).then((res) => {
             const copySetGroup = [...res.SetGroup]
@@ -303,9 +301,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
         })
         if ((!saveGroup.length && !removeGroup.length) || !queryFetchList) return
         const query = structuredClone(queryFetchList)
-        if (!allCheck) {
-            query.IncludedScriptNames = scriptNameRef.current
-        }
+        query.IncludedScriptNames = scriptNameRef.current
         console.log("设置查询参数", {
             Filter: query,
             SaveGroup: saveGroup,
