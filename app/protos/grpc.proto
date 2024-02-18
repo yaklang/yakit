@@ -3557,7 +3557,7 @@ message YakScriptParam {
   string Group = 7;
 
   string ExtraSetting = 8;
-  
+
   string MethodType = 9;
 }
 

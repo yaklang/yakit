@@ -13,7 +13,7 @@ export interface UpdateGroupListItem {
 
 interface UpdateGroupListProps {
     ref: React.Ref<any>
-    originGroupList: any // 原始组数据
+    originGroupList: UpdateGroupListItem[] // 原始组数据
 }
 
 export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef((props, ref) => {

@@ -280,7 +280,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
 
     // 更新组数据
     const updateGroupList = () => {
-        const latestGroupList = updateGroupListRef.current.latestGroupList
+        const latestGroupList: UpdateGroupListItem[] = updateGroupListRef.current.latestGroupList
 
         // 新
         const checkedGroup = latestGroupList.filter((item) => item.checked).map((item) => item.groupName)

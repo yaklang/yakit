@@ -17,7 +17,7 @@ import "../plugins.scss"
 import {PluginListWrap} from "./PluginListWrap"
 import {SolidPluscircleIcon} from "@/assets/icon/solid"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {UpdateGroupList} from "./UpdateGroupList"
+import {UpdateGroupList, UpdateGroupListItem} from "./UpdateGroupList"
 import {GroupListItem} from "./PluginGroupList"
 import {YakScript} from "@/pages/invoker/schema"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
@@ -53,7 +53,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
     const [inViewport = true] = useInViewport(pluginsOnlineGroupsListRef)
     const [initTotal, setInitTotal] = useState<number>(0)
     const [hasMore, setHasMore] = useState<boolean>(true)
-    const [groupList, setGroupList] = useState<any>([]) // 组数据
+    const [groupList, setGroupList] = useState<UpdateGroupListItem[]>([]) // 组数据
     const updateGroupListRef = useRef<any>()
 
     useUpdateEffect(() => {
@@ -233,7 +233,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
 
     // 更新组数据
     const updateGroupList = () => {
-        const latestGroupList = updateGroupListRef.current.latestGroupList
+        const latestGroupList: UpdateGroupListItem[] = updateGroupListRef.current.latestGroupList
 
         // 新
         const checkedGroup = latestGroupList.filter((item) => item.checked).map((item) => item.groupName)
