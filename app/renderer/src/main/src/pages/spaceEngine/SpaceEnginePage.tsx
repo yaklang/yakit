@@ -64,12 +64,22 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const [inViewport] = useInViewport(spaceEngineWrapperRef)
     const tokenRef = useRef<string>(randomString(40))
 
-    const [streamInfo, spaceEngineStreamEvent] = useHoldGRPCStream({
-        tabs: [
-            {tabName: "扫描端口列表", type: "port"},
+    const defaultTabs = useCreation(() => {
+        if (scanBeforeSave) {
+            return [
+                {tabName: "扫描端口列表", type: "port"},
+                {tabName: "日志", type: "log"},
+                {tabName: "Console", type: "console"}
+            ]
+        }
+        return [
             {tabName: "日志", type: "log"},
             {tabName: "Console", type: "console"}
-        ],
+        ]
+    }, [scanBeforeSave])
+
+    const [streamInfo, spaceEngineStreamEvent] = useHoldGRPCStream({
+        tabs: defaultTabs,
         taskName: "FetchPortAssetFromSpaceEngine",
         apiKey: "FetchPortAssetFromSpaceEngine",
         token: tokenRef.current,
@@ -159,8 +169,9 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         }}
                         labelWrap={true}
                         initialValues={getDefaultSpaceEngineStartParams()}
+                        disabled={isExecuting}
                     >
-                        <SpaceEngineFormContent />
+                        <SpaceEngineFormContent disabled={isExecuting} />
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["space-engine-form-operate"]}>
                                 {isExecuting ? (
@@ -192,8 +203,11 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
         </div>
     )
 })
-interface SpaceEngineFormContentProps {}
+interface SpaceEngineFormContentProps {
+    disabled: boolean
+}
 const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo((props) => {
+    const {disabled} = props
     const [globalNetworkConfig, setGlobalNetworkConfig] = useState<GlobalNetworkConfig>(defaultParams)
     useEffect(() => {
         onGetGlobalNetworkConfig()
@@ -214,7 +228,6 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
     })
     /**设置第三方应用配置 */
     const onSetGlobalNetworkConfig = useMemoizedFn((type) => {
-        console.log("globalNetworkConfig", globalNetworkConfig, type)
         let m = showYakitModal({
             title: "添加第三方应用",
             width: 600,
@@ -246,7 +259,6 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                                 existedResult.push(e)
                             }
                             const params = {...globalNetworkConfig, AppConfigs: existedResult}
-                            console.log("params", params)
                             apiSetGlobalNetworkConfig(params).then(() => {
                                 onGetGlobalNetworkConfig()
                                 m.destroy()
@@ -281,12 +293,12 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                     onSelect={onSelectType}
                 />
             </Form.Item>
-            <OutputFormComponentsByType item={codecItem} codeType='plaintext' />
+            <OutputFormComponentsByType item={codecItem} codeType='plaintext' disabled={disabled} />
             <Form.Item name='MaxPage' label='最大页数' rules={[{required: true}]}>
-                <YakitInputNumber min={1} type='horizontal' />
+                <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
             </Form.Item>
             <Form.Item name='MaxRecord' label='最大记录数' rules={[{required: true}]}>
-                <YakitInputNumber min={1} type='horizontal' />
+                <YakitInputNumber min={1} type='horizontal' disabled={disabled} />
             </Form.Item>
             <Form.Item
                 name='ScanBeforeSave'
