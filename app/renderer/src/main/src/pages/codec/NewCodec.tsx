@@ -57,10 +57,14 @@ const SaveCodecMethods = "SaveCodecMethods"
 interface NewCodecRightEditorBoxProps {
     isExpand: boolean
     setExpand: (v: boolean) => void
+    inputEditor: string
+    setInputEditor: (v: string) => void
+    outputEditor: string
+    setOutputEditor: (v: string) => void
 }
 // codec右边编辑器
 export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (props) => {
-    const {isExpand, setExpand} = props
+    const {isExpand, setExpand, inputEditor, setInputEditor, outputEditor, setOutputEditor} = props
     const Expand = () => (
         <div
             className={styles["expand-box"]}
@@ -71,6 +75,19 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
             {isExpand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
         </div>
     )
+
+    const onClear = useMemoizedFn(() => {
+        setInputEditor("")
+    })
+
+    const onReplace = useMemoizedFn(() => {
+        setInputEditor(outputEditor)
+    })
+
+    const onCopy = useMemoizedFn(() => {
+        ipcRenderer.invoke("set-copy-clipboard", outputEditor)
+        success("复制成功")
+    })
     return (
         <div className={styles["new-codec-editor-box"]}>
             <YakitResizeBox
@@ -91,15 +108,17 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                     </div>
                                 </Tooltip>
                                 <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
-                                <div className={styles["clear"]}>清空</div>
+                                <div className={styles["clear"]} onClick={onClear}>
+                                    清空
+                                </div>
                             </div>
                         </div>
                         <div className={styles["editor"]}>
                             <YakEditor
                                 noMiniMap={true}
-                                value={""}
+                                value={inputEditor}
                                 setValue={(content: string) => {
-                                    // setEditorValue(content)
+                                    setInputEditor(content)
                                 }}
                                 // loading={loading}
                                 noWordWrap={true}
@@ -118,12 +137,12 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                     </div>
                                 </Tooltip>
                                 <Tooltip title={"将Output替换至Input"}>
-                                    <div className={styles["extra-icon"]}>
+                                    <div className={styles["extra-icon"]} onClick={onReplace}>
                                         <OutlineArrowBigUpIcon />
                                     </div>
                                 </Tooltip>
                                 <Tooltip title={"复制"}>
-                                    <div className={styles["extra-icon"]}>
+                                    <div className={styles["extra-icon"]} onClick={onCopy}>
                                         <OutlineDocumentduplicateIcon />
                                     </div>
                                 </Tooltip>
@@ -135,10 +154,10 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         <div className={styles["editor"]}>
                             <YakEditor
                                 readOnly={true}
-                                value={""}
+                                value={outputEditor}
                                 noMiniMap={true}
                                 setValue={(content: string) => {
-                                    // setEditorValue(content)
+                                    setOutputEditor(content)
                                 }}
                                 // loading={loading}
                                 noWordWrap={true}
@@ -351,14 +370,14 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
 interface CodecRunListHistoryStoreProps {
     popoverVisible: boolean
     setPopoverVisible: (v: boolean) => void
-    onSelect: (v: any) => void
+    onSelect: (v: SaveObjProps) => void
 }
 const CodecRunListHistory = "CodecRunListHistory"
 export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> = React.memo((props) => {
     const {popoverVisible, setPopoverVisible, onSelect} = props
-    const [mitmSaveData, setMitmSaveData] = useState<any[]>([])
+    const [mitmSaveData, setMitmSaveData] = useState<SaveObjProps[]>([])
     useEffect(() => {
-        // onMitmSaveFilter()
+        onMitmSaveFilter()
     }, [popoverVisible])
     const onMitmSaveFilter = useMemoizedFn(() => {
         getRemoteValue(CodecRunListHistory).then((data) => {
@@ -367,22 +386,22 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                 return
             }
             try {
-                const filterData: any[] = JSON.parse(data)
-                setMitmSaveData(filterData)
+                const cacheData: SaveObjProps[] = JSON.parse(data)
+                setMitmSaveData(cacheData)
             } catch (error) {}
         })
     })
 
-    const removeItem = useMemoizedFn((filterName: string) => {
-        setMitmSaveData((mitmSaveData) => mitmSaveData.filter((item) => item.filterName !== filterName))
+    const removeItem = useMemoizedFn((historyName: string) => {
+        setMitmSaveData((mitmSaveData) => mitmSaveData.filter((item) => item.historyName !== historyName))
     })
 
-    // useUpdateEffect(() => {
-    //     setRemoteValue(CodecRunListHistory, JSON.stringify(mitmSaveData))
-    // }, [mitmSaveData])
+    useUpdateEffect(() => {
+        setRemoteValue(CodecRunListHistory, JSON.stringify(mitmSaveData))
+    }, [mitmSaveData])
 
-    const onSelectItem = useMemoizedFn((filter) => {
-        onSelect(filter)
+    const onSelectItem = useMemoizedFn((item: SaveObjProps) => {
+        onSelect(item)
         setPopoverVisible(false)
     })
     return (
@@ -406,20 +425,20 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                 <div className={styles["list"]}>
                     {mitmSaveData.map((item, index) => (
                         <div
-                            key={item.filterName}
+                            key={item.historyName}
                             className={classNames(styles["list-item"], {
                                 [styles["list-item-border"]]: index !== mitmSaveData.length - 1
                             })}
                             onClick={() => {
-                                onSelectItem(item.filter)
+                                onSelectItem(item)
                             }}
                         >
-                            <div className={styles["name"]}>{item.filterName}</div>
+                            <div className={styles["name"]}>{item.historyName}</div>
                             <div
                                 className={styles["opt"]}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    removeItem(item.filterName)
+                                    removeItem(item.historyName)
                                 }}
                             >
                                 <OutlineTrashIcon />
@@ -436,11 +455,14 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
 
 interface SaveObjProps {
     historyName: string
+    rightItems: RightItemsProps[]
 }
 
 interface NewCodecMiddleRunListProps {
     rightItems: RightItemsProps[]
     setRightItems: (v: RightItemsProps[]) => void
+    inputEditor:string
+    setOutputEditor:(v:string)=>void
 }
 
 interface CheckFailProps {
@@ -461,18 +483,57 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
     }
 }
 
+const CodecAutoRun = "CodecAutoRun"
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (props) => {
-    const {rightItems, setRightItems} = props
+    const {rightItems, setRightItems,inputEditor,setOutputEditor} = props
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [_, setFilterName, getFilterName] = useGetState<string>("")
+    // 是否自动执行
+    const [autoRun, setAutoRun] = useState<boolean>(false)
+    useDebounceEffect(
+        () => {
+            if (autoRun&&rightItems.length>0) {
+                console.log("自动执行----")
+                runCodec()
+            }
+        },
+        [autoRun, rightItems,inputEditor],
+        {leading: true, wait: 500}
+    )
+    useEffect(() => {
+        getRemoteValue(CodecAutoRun).then((data) => {
+            if (data) {
+                try {
+                    const {autoRun} = JSON.parse(data)
+                    setAutoRun(autoRun)
+                } catch (error) {}
+            }
+        })
+    }, [])
+    useUpdateEffect(() => {
+        // 缓存勾选项
+        setRemoteValue(
+            CodecAutoRun,
+            JSON.stringify({
+                autoRun
+            })
+        )
+    }, [autoRun])
+
     // 历史选取项
-    const onMenuSelect = useMemoizedFn((v) => {})
+    const onMenuSelect = useMemoizedFn((v: SaveObjProps) => {
+        setRightItems(v.rightItems)
+    })
     // 列表定位
-    const scrollToRef = useRef<HTMLDivElement>(null);
+    const scrollToRef = useRef<HTMLDivElement>(null)
 
     // 保存至历史
     const onSaveCodecRunListHistory = useMemoizedFn(() => {
+        if (rightItems.length === 0) {
+            warn("请从左侧列表拖入要使用的 Codec 工具")
+            return
+        }
         const m = showYakitModal({
             title: "保存编解码顺序",
             content: (
@@ -502,31 +563,30 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                     warn("请输入名字")
                                     return
                                 }
-                                // const filter = filtersRef.current.getFormValue()
                                 const saveObj: SaveObjProps = {
-                                    historyName: getFilterName()
-                                    // filter
+                                    historyName: getFilterName(),
+                                    rightItems
                                 }
-                                // getRemoteValue(CodecRunListHistory).then((data) => {
-                                //     if (!data) {
-                                //         setRemoteValue(CodecRunListHistory, JSON.stringify([saveObj]))
-                                //         info("存储成功")
-                                //         m.destroy()
-                                //         return
-                                //     }
-                                //     try {
-                                //         const filterData: SaveObjProps[] = JSON.parse(data)
-                                //         if (
-                                //             filterData.filter((item) => item.historyName === getFilterName()).length > 0
-                                //         ) {
-                                //             warn("此名字重复")
-                                //         } else {
-                                //             setRemoteValue(CodecRunListHistory, JSON.stringify([saveObj, ...filterData]))
-                                //             info("存储成功")
-                                //             m.destroy()
-                                //         }
-                                //     } catch (error) {}
-                                // })
+                                getRemoteValue(CodecRunListHistory).then((data) => {
+                                    if (!data) {
+                                        setRemoteValue(CodecRunListHistory, JSON.stringify([saveObj]))
+                                        info("存储成功")
+                                        m.destroy()
+                                        return
+                                    }
+                                    try {
+                                        const cacheData: SaveObjProps[] = JSON.parse(data)
+                                        if (
+                                            cacheData.filter((item) => item.historyName === getFilterName()).length > 0
+                                        ) {
+                                            warn("此名字重复")
+                                        } else {
+                                            setRemoteValue(CodecRunListHistory, JSON.stringify([saveObj, ...cacheData]))
+                                            info("存储成功")
+                                            m.destroy()
+                                        }
+                                    } catch (error) {}
+                                })
                             }}
                         >
                             保存
@@ -544,10 +604,10 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
     })
 
     // 执行函数
-    const runCodecFun = useMemoizedFn(()=>{
-
+    const runCodecFun = useMemoizedFn(() => {
+        // 执行完成后 更改Output值
+        setOutputEditor("Output")
     })
-
 
     // 执行校验
     const runCodec = useMemoizedFn(() => {
@@ -579,12 +639,15 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                             })
                         }
                         // 校验正则
-                        if (regex && value && !regex.test(value)) {
-                            checkFail.push({
-                                key,
-                                index: indexIn,
-                                message: `${title}-${rightItem.title}:校验不通过`
-                            })
+                        if (regex && value) {
+                            const regexp = new RegExp(regex)
+                            if (!regexp.test(value)) {
+                                checkFail.push({
+                                    key,
+                                    index: indexIn,
+                                    message: `${title}-${rightItem.title}:校验不通过`
+                                })
+                            }
                         }
                     } else if (itemIn.type === "checkbox") {
                         // checkbox无需校验 如若没有则数据转换时为false
@@ -610,26 +673,29 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                 message: `${title}-${rightItem.title}:为必填项`
                             })
                         }
-                    }
-                    else if(itemIn.type === "flex"){
+                    } else if (itemIn.type === "flex") {
                         // 此处为布局预留
                     }
                 })
             }
         })
-        console.log("rightItemsStop--", rightItemsStop,checkFail)
-        if(checkFail.length>0){
+        console.log("rightItemsStop--", rightItemsStop, checkFail)
+        if (checkFail.length > 0) {
             // 提示
             warn(checkFail[0].message)
-            if(scrollToRef.current){
-                // 此处锚点跳转
+            if (scrollToRef.current) {
+                // 此处锚点跳转功能预留
                 // scrollToRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-        }
-        else{
+        } else {
             // 执行函数
             runCodecFun()
         }
+    })
+
+    // 清空
+    const onClear = useMemoizedFn(() => {
+        setRightItems([])
     })
 
     return (
@@ -663,7 +729,9 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                         </div>
                     </YakitPopover>
                     <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
-                    <div className={styles["clear"]}>清空</div>
+                    <div className={styles["clear"]} onClick={onClear}>
+                        清空
+                    </div>
                 </div>
             </div>
             <div className={styles["run-list"]} ref={scrollToRef}>
@@ -718,15 +786,16 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                 </Droppable>
             </div>
             <div className={styles["run-box"]}>
-                <YakitCheckbox
-                    checked={true}
-                    // onChange={(e) =>
-                    //     onCheck( e.target.checked)
-                    // }
-                >
+                <YakitCheckbox checked={autoRun} onChange={(e) => setAutoRun(e.target.checked)}>
                     自动执行
                 </YakitCheckbox>
-                <YakitButton size='max' className={styles["run-box-btn"]} icon={<SolidPlayIcon />} onClick={runCodec}>
+                <YakitButton
+                    disabled={rightItems.length === 0}
+                    size='max'
+                    className={styles["run-box-btn"]}
+                    icon={<SolidPlayIcon />}
+                    onClick={runCodec}
+                >
                     立即执行
                 </YakitButton>
             </div>
@@ -1074,7 +1143,7 @@ interface RightItemsInputProps {
     // 值
     value?: string
     // 正则校验
-    regex?: RegExp
+    regex?: string
     // 控件类型
     type: "input"
 }
@@ -1197,7 +1266,7 @@ export interface CodecParam {
     Options: string[]
     Required: boolean
     Desc: string
-    Regex: RegExp
+    Regex: string
     Label: string
 }
 export interface CodecMethod {
@@ -1215,21 +1284,7 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
     // 是否全部展开
     const [isExpand, setExpand] = useState<boolean>(false)
     const [rightItems, setRightItems] = useState<RightItemsProps[]>(initialRightItems)
-    const [leftData, setLeftData] = useState<LeftDataProps[]>([
-        // {
-        //     title: "我收藏的工具",
-        //     node: []
-        // },
-        // {
-        //     title: "其他",
-        //     node: [
-        //         {title: "解析HTTP参数"},
-        //         {title: "从URL加载数据包"},
-        //         {title: "数据包转Curl命令"},
-        //         {title: "FuzzTag(模糊测试)"}
-        //     ]
-        // }
-    ])
+    const [leftData, setLeftData] = useState<LeftDataProps[]>([])
     // 我的收藏
     const [leftCollectData, setLeftCollectData] = useState<LeftDataProps[]>([])
     const [collectList, setCollectList] = useState<string[]>([])
@@ -1239,6 +1294,9 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
     // 是否显示搜索列表
     const [isShowSearchList, setShowSearchList] = useState<boolean>(false)
     const cacheCodecRef = useRef<CodecMethod[]>([])
+    // Input/Output编辑器内容
+    const [inputEditor, setInputEditor] = useState<string>("")
+    const [outputEditor, setOutputEditor] = useState<string>("")
 
     // 构造页面左边列表数据
     const initLeftData = useMemoizedFn((Methods: CodecMethod[]) => {
@@ -1431,19 +1489,20 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
             if (codecArr.length > 0) {
                 const codecItem = codecArr[0]
                 const node = initNode(codecItem)
-                rightItems.splice(destination.index, 0, {title: codecItem.CodecName, key: uuidv4(), node})
-                console.log("newRightItems", rightItems, node)
-
-                setRightItems(rightItems)
+                const newRightItems = JSON.parse(JSON.stringify(rightItems))
+                newRightItems.splice(destination.index, 0, {title: codecItem.CodecName, key: uuidv4(), node})
+                console.log("newRightItems", newRightItems, node)
+                setRightItems(newRightItems)
             }
         }
 
         // 右边内部排序
         if (source.droppableId === "right" && destination && destination.droppableId === "right") {
-            const [removed] = rightItems.splice(source.index, 1)
+            const newRightItems = JSON.parse(JSON.stringify(rightItems))
+            const [removed] = newRightItems.splice(source.index, 1)
             console.log("removed--", removed)
-            rightItems.splice(destination.index, 0, removed)
-            setRightItems([...rightItems])
+            newRightItems.splice(destination.index, 0, removed)
+            setRightItems([...newRightItems])
         }
     })
 
@@ -1464,6 +1523,7 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
         if (!result.source) return
         // console.log("onDragStart---", result)
     })
+
     return (
         <div className={styles["new-codec"]}>
             {!isExpand && (
@@ -1484,10 +1544,22 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                         getCollectData={getCollectData}
                         onClickToRunList={onClickToRunList}
                     />
-                    <NewCodecMiddleRunList rightItems={rightItems} setRightItems={setRightItems} />
+                    <NewCodecMiddleRunList 
+                    rightItems={rightItems} 
+                    setRightItems={setRightItems} 
+                    inputEditor={inputEditor}
+                    setOutputEditor={setOutputEditor}
+                    />
                 </DragDropContext>
             )}
-            <NewCodecRightEditorBox isExpand={isExpand} setExpand={setExpand} />
+            <NewCodecRightEditorBox
+                isExpand={isExpand}
+                setExpand={setExpand}
+                inputEditor={inputEditor}
+                setInputEditor={setInputEditor}
+                outputEditor={outputEditor}
+                setOutputEditor={setOutputEditor}
+            />
         </div>
     )
 }

@@ -262,11 +262,11 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
     }, [reqEditor])
 
     useEffect(() => {
-        // 当弹窗编辑器更改时 修改mini编辑器
-        if (reqEditor && isShowExtend) {
+        // 当弹窗编辑器更改时
+        if (reqEditor&&reqEditor.getValue()!==editorValue) {
             reqEditor.setValue(editorValue)
         }
-    }, [reqEditor, isShowExtend, editorValue])
+    }, [reqEditor, editorValue])
 
     const onFocusEditor = useMemoizedFn(() => {
         if (disabled) return
@@ -367,7 +367,7 @@ export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
     useEffect(() => {
         setEditorValue(value)
     }, [value])
-
+    
     return (
         <>
             <NewCodecEditorBody
