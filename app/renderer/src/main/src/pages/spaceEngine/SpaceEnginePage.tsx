@@ -169,7 +169,6 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         }}
                         labelWrap={true}
                         initialValues={getDefaultSpaceEngineStartParams()}
-                        disabled={isExecuting}
                     >
                         <SpaceEngineFormContent disabled={isExecuting} />
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
@@ -291,6 +290,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                         {label: "Quake", value: "quake"}
                     ]}
                     onSelect={onSelectType}
+                    disabled={disabled}
                 />
             </Form.Item>
             <OutputFormComponentsByType item={codecItem} codeType='plaintext' disabled={disabled} />
@@ -310,7 +310,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                     title: "开启扫描后会用Yakit的端口扫描进行验证"
                 }}
             >
-                <YakitSwitch size='large' />
+                <YakitSwitch size='large' disabled={disabled}/>
             </Form.Item>
         </>
     )

@@ -59,6 +59,8 @@ export interface QueryPortsRequest extends QueryGeneralRequest {
     AfterId?: number
     BeforeId?: number
     All?: boolean
+    Order?: string
+    OrderBy?: string
 }
 
 interface GroupList {
@@ -159,21 +161,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     })
     const onResetRefresh = useMemoizedFn(() => {
         setParams({
-            Hosts: "",
-            Ports: "",
-            Service: "",
+            ...cloneDeep(defQueryPortsRequest),
             State: props.closed ? "closed" : "open",
-            Title: "",
-            Keywords: "",
-            ComplexSelect: "",
-            TitleEffective: false,
-            Pagination: {
-                Limit: 15,
-                Page: 1,
-                OrderBy: "desc",
-                Order: "updated_at"
-            },
-            RuntimeId: ""
         })
         setQueryList(undefined)
         setIsRefresh(!isRefresh)
@@ -262,6 +251,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                     query={params}
                     setQuery={setParams}
                     isRefresh={isRefresh}
+                    setIsRefresh={setIsRefresh}
                     tableTitleExtraOperate={
                         <>
                             <YakitPopconfirm
