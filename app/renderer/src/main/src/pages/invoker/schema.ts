@@ -139,7 +139,6 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     // 插件组
     Group?: { UnSetGroup: boolean, Group: string[] }
     ExcludeTypes?: string[]
-    IncludedTypes?: string[]
 }
 
 /*

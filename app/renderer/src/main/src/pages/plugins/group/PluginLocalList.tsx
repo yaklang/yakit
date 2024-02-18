@@ -31,7 +31,8 @@ import {isEnpriTraceAgent} from "@/utils/envfile"
 import styles from "./PluginLocalList.module.scss"
 
 const defaultFilters = {
-    plugin_type: []
+    plugin_type: [],
+    plugin_group: []
 }
 
 interface PluginLocalGroupsListProps {
@@ -60,8 +61,16 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const updateGroupListRef = useRef<any>()
 
     useUpdateEffect(() => {
-        refreshLocalPluginList()
+        const groups =
+            activeGroup.default && activeGroup.id === "全部"
+                ? []
+                : [{value: activeGroup.name, count: 0, label: activeGroup.name}]
+        setFilters({...filters, plugin_group: groups})
     }, [activeGroup])
+
+    useUpdateEffect(() => {
+        refreshLocalPluginList()
+    }, [filters])
 
     useEffect(() => {
         getInitTotal()
@@ -142,19 +151,10 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                 ...convertLocalPluginsRequestParams(queryFilters, querySearch, params),
                 ExcludeTypes: ["yak", "codec"]
             }
-            // 插件组
-            if (activeGroup.default) {
-                if (activeGroup.name === "未分组") {
-                    query.Group = {
-                        UnSetGroup: true,
-                        Group: [activeGroup.name]
-                    }
-                }
-            } else {
-                query.Group = {
-                    UnSetGroup: false,
-                    Group: [activeGroup.name]
-                }
+
+            // 未分组插件查询
+            if (activeGroup.default && activeGroup.id === "未分组" && query.Group) {
+                query.Group.UnSetGroup = true
             }
             console.log("插件列表", query)
             setQueryFetchList(query)
