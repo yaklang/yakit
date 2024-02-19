@@ -222,7 +222,13 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 }
                 apiQueryPortsBase(params)
                     .then((rsp: QueryGeneralResponse<PortAsset>) => {
-                        // console.log('rsp,prePage.current',prePage.current,params,rsp.Pagination,rsp.Data.map(ele=>ele.Id))
+                        console.log(
+                            "rsp,prePage.current",
+                            prePage.current,
+                            params,
+                            rsp.Pagination,
+                            rsp.Data.map((ele) => ele.Id)
+                        )
                         const d = init ? rsp.Data : response.Data.concat(rsp.Data)
                         prePage.current += 1
                         if (init) {
@@ -275,26 +281,42 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             }
             const scrollTop = getScrollTop()
             if (scrollTop < 10 && offsetDataInTop?.length > 0) {
+                const newResData = response.Data.filter((ele) => !offsetDataInTop.find((ele2) => ele.Id === ele2.Id))
                 // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
-                setResponse((oldResponse) => ({
-                    ...oldResponse,
-                    Data: [...offsetDataInTop, ...oldResponse.Data]
-                }))
+
+                setResponse({
+                    ...response,
+                    Data: [...offsetDataInTop, ...response.Data]
+                })
+                setAllResponse({
+                    ...allResponse,
+                    Data: [...offsetDataInTop, ...allResponse.Data]
+                })
                 setOffsetDataInTop([])
                 return
             }
             apiQueryPortsIncrementOrderAsc(params).then((rsp) => {
-                // console.log('getIncrementInTop',params,rsp.Pagination,rsp.Data.map(ele=>ele.Id))
+                console.log(
+                    "getIncrementInTop",
+                    params,
+                    rsp.Pagination,
+                    rsp.Data.map((ele) => ele.Id)
+                )
                 if (rsp.Data.length > 0) {
                     afterId.current = rsp.Data[0].Id
                 }
                 const newData = rsp.Data
                 const newTotal = total + rsp.Data.length
                 if (scrollTop < 10) {
-                    setResponse((oldResponse) => ({
-                        ...oldResponse,
-                        Data: [...newData, ...oldResponse.Data]
-                    }))
+                    // const newResData=response.Data.filter(ele=>!newData.find(ele2=>ele.Id===ele2.Id))
+                    setResponse({
+                        ...response,
+                        Data: [...newData, ...response.Data]
+                    })
+                    setAllResponse({
+                        ...allResponse,
+                        Data: [...newData, ...allResponse.Data]
+                    })
                     setTotal(newTotal)
                 } else {
                     setOffsetDataInTop([...newData, ...offsetDataInTop])
@@ -305,7 +327,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
         const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
             return [
                 {
-                    title: "Id",
+                    title: "序号",
                     dataKey: "Id",
                     fixed: "left",
                     ellipsis: false,
@@ -380,11 +402,19 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                     header.push(item.title)
                     filterVal.push(item.dataKey)
                 })
-                exportData = portAssetFormatJson(filterVal, allResponse)
+                exportData = portAssetFormatJson(filterVal, allResponse.Data)
                 resolve({
                     header,
                     exportData,
-                    response: response
+                    response: {
+                        ...allResponse,
+                        Pagination: {
+                            Page: 1,
+                            Limit: total,
+                            OrderBy: query.Pagination.OrderBy,
+                            Order: query.Pagination.Order
+                        }
+                    }
                 })
             })
         })
@@ -457,6 +487,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             defLimitRef.current = limit
             if (total === 0) {
                 // init
+                setInterval(undefined)
                 update(true)
                 return
             } else if (tableBodyHeightRef.current <= height) {
@@ -596,6 +627,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                                 }
                             }}
                             enableDrag={true}
+                            useUpAndDown
                             containerClassName={containerClassName}
                             onChange={onTableChange}
                         />
