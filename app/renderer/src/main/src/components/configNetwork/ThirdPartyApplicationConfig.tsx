@@ -9,6 +9,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 export interface ThirdPartyApplicationConfigProp {
     data?: ThirdPartyApplicationConfig
     onAdd: (i: ThirdPartyApplicationConfig) => void;
+    onCancel:()=>void
 }
 
 export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConfigProp> = (props) => {
@@ -18,7 +19,7 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
     })
     const [advanced, setAdvanced] = useState(false);
     return <Form
-        layout={"horizontal"} labelCol={{span: 5}} wrapperCol={{span: 14}}
+        layout={"horizontal"} labelCol={{span: 4}} wrapperCol={{span: 20}}
         onSubmitCapture={e => {
             e.preventDefault()
         }}
@@ -70,14 +71,14 @@ export const ThirdPartyApplicationConfigForm: React.FC<ThirdPartyApplicationConf
                 />
             </>
         }
-        <Form.Item wrapperCol={{span: 14, offset: 5}}>
-            <Space>
-                <YakitButton
-                    type={"primary"} loading={false}
-                    onClick={() => props.onAdd(params)}
-                >确定添加改应用信息</YakitButton>
-            </Space>
-        </Form.Item>
+        <div style={{display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12}}>
+            <YakitButton type='outline2' loading={false} onClick={() => props.onCancel()}>
+                取消
+            </YakitButton>
+            <YakitButton type={"primary"} loading={false} onClick={() => props.onAdd(params)}>
+                确定添加
+            </YakitButton>
+        </div>
 
     </Form>
 };
