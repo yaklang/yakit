@@ -34,6 +34,7 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {GetPluginLanguage} from "../../builtInData"
 import {ParamsToGroupByGroupName, getValueByType, getYakExecutorParam} from "../../editDetails/utils"
+import {ExpandAndRetract} from "../expandAndRetract/ExpandAndRetract"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -72,7 +73,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const [isClickExecute, setIsClickExecute] = useState<boolean>(false)
 
     /**是否展开/收起 */
-    const [isExpend, setIsExpend] = useState<boolean>(false)
+    const [isExpand, setIsExpand] = useState<boolean>(false)
     /**额外参数弹出框 */
     const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
     const [extraParamsValue, setExtraParamsValue] = useState<PluginExecuteExtraFormValue>({
@@ -200,7 +201,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         debugPluginStreamEvent.reset()
         apiDebugPlugin(executeParams, token).then(() => {
             setIsExecuting(true)
-            setIsExpend(false)
+            setIsExpand(false)
             debugPluginStreamEvent.start()
         })
     })
@@ -236,7 +237,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const onClearExecuteResult = useMemoizedFn(() => {
         debugPluginStreamEvent.reset()
         setRuntimeId("")
-        setIsExpend(true)
+        setIsExpand(true)
         yakitNotify("success", "执行结果清除成功")
     })
     const isShowExtraParamsButton = useMemo(() => {
@@ -265,70 +266,70 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 return {}
         }
     }, [plugin.Type, extraParamsValue, customExtraParamsValue])
+    const onExpand = useMemoizedFn((e) => {
+        e.stopPropagation()
+        setIsExpand(!isExpand)
+    })
     return (
         <>
-            <PluginDetailHeader
-                pluginName={plugin.ScriptName}
-                help={plugin.Help}
-                tagMinWidth={120}
-                tags={plugin.Tags}
-                extraNode={
-                    <div className={styles["plugin-head-executing-wrapper"]}>
-                        {isClickExecute ? (
-                            <div className={styles["plugin-head-executing"]}>
-                                {progressList.length === 1 && (
-                                    <PluginExecuteProgress
-                                        percent={progressList[0].progress}
-                                        name={progressList[0].id}
-                                    />
-                                )}
-                                {runtimeId && (
-                                    <YakitButton type='text' danger onClick={onClearExecuteResult}>
-                                        清除执行结果
-                                    </YakitButton>
-                                )}
-                                {isExecuting ? (
-                                    <>
-                                        <YakitButton danger onClick={onStopExecute}>
-                                            停止
+            <ExpandAndRetract
+                isExpand={isExpand}
+                onExpand={onExpand}
+                className={styles["expand-retract"]}
+                animationWrapperClassName={styles["expand-retract-animation-wrapper"]}
+            >
+                <PluginDetailHeader
+                    pluginName={plugin.ScriptName}
+                    help={plugin.Help}
+                    tagMinWidth={120}
+                    tags={plugin.Tags}
+                    extraNode={
+                        <div className={styles["plugin-head-executing-wrapper"]}>
+                            {isClickExecute ? (
+                                <div className={styles["plugin-head-executing"]}>
+                                    {progressList.length === 1 && (
+                                        <PluginExecuteProgress
+                                            percent={progressList[0].progress}
+                                            name={progressList[0].id}
+                                        />
+                                    )}
+                                    {runtimeId && (
+                                        <YakitButton type='text' danger onClick={onClearExecuteResult}>
+                                            清除执行结果
                                         </YakitButton>
-                                    </>
-                                ) : (
-                                    <>{extraNode}</>
-                                )}
+                                    )}
+                                    {isExecuting ? (
+                                        <>
+                                            <YakitButton danger onClick={onStopExecute}>
+                                                停止
+                                            </YakitButton>
+                                        </>
+                                    ) : (
+                                        <>{extraNode}</>
+                                    )}
+                                </div>
+                            ) : (
+                                <>{extraNode}</>
+                            )}
+                        </div>
+                    }
+                    img={plugin.HeadImg || ""}
+                    user={plugin.Author}
+                    pluginId={plugin.UUID}
+                    updated_at={plugin.UpdatedAt || 0}
+                    prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
+                        headImg: ele.HeadImg,
+                        userName: ele.UserName
+                    }))}
+                    type={plugin.Type}
+                />
+            </ExpandAndRetract>
 
-                                {isExpend ? (
-                                    <YakitButton type='text2' onClick={() => setIsExpend(false)}>
-                                        收起
-                                        <OutlineChevrondownIcon />
-                                    </YakitButton>
-                                ) : (
-                                    <YakitButton type='text2' onClick={() => setIsExpend(true)}>
-                                        展开
-                                        <OutlineChevrondownIcon />
-                                    </YakitButton>
-                                )}
-                            </div>
-                        ) : (
-                            <>{extraNode}</>
-                        )}
-                    </div>
-                }
-                img={plugin.HeadImg || ""}
-                user={plugin.Author}
-                pluginId={plugin.UUID}
-                updated_at={plugin.UpdatedAt || 0}
-                prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
-                    headImg: ele.HeadImg,
-                    userName: ele.UserName
-                }))}
-                type={plugin.Type}
-            />
             <Form
                 form={form}
                 onFinish={onStartExecute}
                 className={classNames(styles["plugin-execute-form-wrapper"], {
-                    [styles["plugin-execute-form-wrapper-hidden"]]: isClickExecute && !isExpend
+                    [styles["plugin-execute-form-wrapper-hidden"]]: !isExpand
                 })}
                 labelCol={{span: 6}}
                 wrapperCol={{span: 12}} //这样设置是为了让输入框居中

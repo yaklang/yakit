@@ -7,13 +7,14 @@ interface ExpandAndRetractProps {
     onExpand: MouseEventHandler<HTMLDivElement>
     isExpand: boolean
     children?: ReactNode
-    className?: string
+    className?:string
+    animationWrapperClassName?:string
 }
 export const ExpandAndRetract: React.FC<ExpandAndRetractProps> = React.memo((props) => {
-    const {isExpand, onExpand, children, className = ""} = props
+    const {isExpand, onExpand, children,className='',animationWrapperClassName=''} = props
     return (
-        <div className={classNames(styles["expand-and-retract-header"], className)} onClick={onExpand}>
-            <div className={styles["expand-and-retract-header-icon-body"]}>
+        <div className={classNames(styles["expand-and-retract-header"],className)} onClick={onExpand}>
+            <div className={classNames(styles["expand-and-retract-header-icon-body"],animationWrapperClassName)}>
                 {isExpand ? (
                     <>
                         <OutlineChevrondoubleupIcon />

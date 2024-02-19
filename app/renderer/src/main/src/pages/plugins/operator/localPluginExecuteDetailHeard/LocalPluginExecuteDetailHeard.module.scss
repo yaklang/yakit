@@ -82,3 +82,10 @@
     gap: 16px;
     padding-top: 12px;
 }
+
+.expand-retract {
+    padding-top: 0;
+    .expand-retract-animation-wrapper {
+        top: 82%;
+    }
+}
