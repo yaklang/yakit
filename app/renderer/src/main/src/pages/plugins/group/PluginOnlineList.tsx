@@ -241,9 +241,8 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
         pluginUuidRef.current = uuid
         if (!queryFetchList) return
         const query = structuredClone(queryFetchList)
-        // TODO query.IncludedScriptNames = uuid
-        console.log("获取查询参数", query)
-        apiFetchGetYakScriptGroupOnline(query).then((res) => {
+        console.log("获取查询参数", {...query, uuid})
+        apiFetchGetYakScriptGroupOnline({...query, uuid}).then((res) => {
             const copySetGroup = [...res.setGroup]
             const newSetGroup = copySetGroup.map((name) => ({
                 groupName: name,

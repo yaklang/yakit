@@ -1488,12 +1488,12 @@ export const apiFetchDeleteYakScriptGroupOnline: (query: PluginGroupDel) => Prom
 }
 
 /**线上获取插件所在插件组和其他插件组 */
-export const apiFetchGetYakScriptGroupOnline: (params: API.PluginsWhere) => Promise<API.PluginsGroupResponse> = (
+export const apiFetchGetYakScriptGroupOnline: (params: API.PluginsGroupRequest) => Promise<API.PluginsGroupResponse> = (
     params
 ) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<API.PluginsWhere, API.PluginsGroupResponse>({
+            NetWorkApi<API.PluginsGroupRequest, API.PluginsGroupResponse>({
                 method: "get",
                 url: "plugins/group",
                 data: {...params}
