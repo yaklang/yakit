@@ -102,7 +102,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
         const tableRef = useRef<any>(null)
 
         const allSelected = useCreation(() => {
-            if (response.Data.length > 0) {
+            if (total > 0) {
                 return selectNum === total
             }
             return false
@@ -128,7 +128,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
 
         useEffect(() => {
             getAllData()
-        }, [query, isRefresh])
+        }, [varyQuery, isRefresh])
         useUpdateEffect(() => {
             onRefreshData()
         }, [varyQuery, isRefresh])
@@ -150,7 +150,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
         }, interval)
         /**
          * 1.获取所有数据，带查询条件
-         * 2.获取数据总数，通过page和limit。因为有BeforeId/AfterId字段查询回来的总数并不是真正的总数
+         * 2.获取数据总数，因为有BeforeId/AfterId字段查询回来的总数并不是真正的总数
          */
         const getAllData: () => Promise<QueryGeneralResponse<PortAsset>> = useMemoizedFn(() => {
             return new Promise((resolve, reject) => {
@@ -160,10 +160,13 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                     Order: query.Pagination.Order,
                     OrderBy: query.Pagination.OrderBy
                 }
-                apiQueryPortsBase(params).then((allRes) => {
-                    setAllResponse(allRes)
-                    setTotal(Number(allRes.Total))
-                })
+                apiQueryPortsBase(params)
+                    .then((allRes) => {
+                        setAllResponse(allRes)
+                        setTotal(Number(allRes.Total))
+                        resolve(allRes)
+                    })
+                    .catch(reject)
             })
         })
 
@@ -219,18 +222,12 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 }
                 if (init) {
                     setLoading(true)
-                    prePage.current = 1
+                    prePage.current = 0
                     setSelectNumber(0)
                     setSelected([])
                 }
-                // console.log("query-params", params)
                 apiQueryPortsBase(params)
                     .then((rsp: QueryGeneralResponse<PortAsset>) => {
-                        // console.log(
-                        //     "rsp",
-                        //     rsp,
-                        //     rsp.Data.map((ele) => ele.Id)
-                        // )
                         const d = init ? rsp.Data : response.Data.concat(rsp.Data)
                         prePage.current += 1
                         if (init) {
@@ -282,7 +279,6 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 return
             }
             const scrollTop = getScrollTop()
-            // console.log("offsetDataInTop", offsetDataInTop)
             if (scrollTop < 10 && offsetDataInTop?.length > 0) {
                 // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
                 setResponse((oldResponse) => ({
@@ -293,11 +289,6 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 return
             }
             apiQueryPortsIncrementOrderAsc(params).then((rsp) => {
-                // console.log(
-                //     "getIncrementInTop",
-                //     params,
-                //     rsp.Data.map((ele) => ele.Id)
-                // )
                 if (rsp.Data.length > 0) {
                     afterId.current = rsp.Data[0].Id
                 }
@@ -565,7 +556,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                             renderKey='Id'
                             data={response.Data}
                             rowSelection={{
-                                isAll: selectNum === total,
+                                isAll: allSelected,
                                 type: "checkbox",
                                 selectedRowKeys: selectedRowKeys,
                                 onSelectAll: (

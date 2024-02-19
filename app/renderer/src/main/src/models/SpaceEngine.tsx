@@ -7,6 +7,7 @@ export interface SpaceEngineStartParams {
     MaxRecord: number
     PageSize: number
     ScanBeforeSave: boolean
+    Concurrent:number
 }
 export interface SpaceEngineStatus {
     Type: "zoomeye" | "fofa" | "hunter" | "shodan" | "quake" | ""
@@ -18,5 +19,5 @@ export interface SpaceEngineStatus {
 }
 
 export const getDefaultSpaceEngineStartParams = (): SpaceEngineStartParams => {
-    return {Type: "", Filter: "", MaxPage: 10, MaxRecord: 100, PageSize: 10, ScanBeforeSave: false}
+    return {Type: "", Filter: "", MaxPage: 10, MaxRecord: 100, PageSize: 100, ScanBeforeSave: false,Concurrent:20}
 }

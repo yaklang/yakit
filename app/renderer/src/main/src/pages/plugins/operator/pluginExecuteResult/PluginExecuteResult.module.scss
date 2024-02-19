@@ -11,7 +11,6 @@
         @extend %display-column-center;
         gap: 12px;
     }
- 
 
     .plugin-execute-result-tabBar {
         display: inline-block;
@@ -81,11 +80,23 @@
     padding: 0;
 }
 
-.plugin-execute-port-table-container{
+.plugin-execute-port-table-container {
     border: 0 !important;
 }
-.plugin-execute-port-table-detail-body{
+.plugin-execute-port-table-detail-body {
     border-left: 0;
     border-right: 0;
     border-bottom: 0;
+}
+
+.plugin-execute-custom-table-title {
+    color: var(--yakit-helper-text-color);
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px; /* 133.333% */
+    &-number{
+        color: var(--yakit-primary-5);
+        margin-left: 4px;
+    }
 }

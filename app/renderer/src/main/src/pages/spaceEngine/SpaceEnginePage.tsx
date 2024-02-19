@@ -26,7 +26,7 @@ import {OutputFormComponentsByType} from "../plugins/operator/localPluginExecute
 import {YakParamProps} from "../plugins/pluginsType"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {getDefaultSpaceEngineStartParams} from "@/models/SpaceEngine"
+import {SpaceEngineStartParams, getDefaultSpaceEngineStartParams} from "@/models/SpaceEngine"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
 import classNames from "classnames"
@@ -108,7 +108,12 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const onStartExecute = useMemoizedFn((value) => {
         setScanBeforeSave(!!value?.ScanBeforeSave)
         spaceEngineStreamEvent.reset()
-        apiFetchPortAssetFromSpaceEngine(value, tokenRef.current).then(() => {
+        const params: SpaceEngineStartParams = {
+            ...value,
+            PageSize: 100,
+            Concurrent: 20
+        }
+        apiFetchPortAssetFromSpaceEngine(params, tokenRef.current).then(() => {
             setIsExecuting(true)
             onExpand()
             spaceEngineStreamEvent.start()
@@ -310,7 +315,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                     title: "开启扫描后会用Yakit的端口扫描进行验证"
                 }}
             >
-                <YakitSwitch size='large' disabled={disabled}/>
+                <YakitSwitch size='large' disabled={disabled} />
             </Form.Item>
         </>
     )
