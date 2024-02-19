@@ -121,6 +121,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         // params.ComplexSelect 此条件搜索点击频繁
         const query = onGetQueryProcessing()
         setParams({...query})
+        setIsRefresh(!isRefresh)
     }, [queryList, advancedConfig])
     useEffect(() => {
         getPortsGroup()
@@ -165,7 +166,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             ...cloneDeep(defQueryPortsRequest),
             State: props.closed ? "closed" : "open"
         })
-        setKeywords('')
+        setKeywords("")
         setQueryList(undefined)
         setIsRefresh(!isRefresh)
     })
