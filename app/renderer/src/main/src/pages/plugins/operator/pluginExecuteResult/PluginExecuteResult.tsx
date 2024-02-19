@@ -140,7 +140,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
     const [total, setTotal] = useState<number>(0)
     const [params, setParams] = useState<QueryPortsRequest>({
         ...cloneDeep(defQueryPortsRequest),
-        RuntimeId:runtimeId
+        RuntimeId: runtimeId
     })
     const onJumpPort = useMemoizedFn(() => {
         const info: RouteToPageProps = {
@@ -437,7 +437,12 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
     })
     return (
         <PluginExecuteResultTabContent
-            title={name}
+            // title={name}
+            title={
+                <span className={styles["plugin-execute-custom-table-title"]}>
+                    Total<span className={styles["plugin-execute-custom-table-title-number"]}>{data.length}</span>
+                </span>
+            }
             extra={
                 <ExportExcel
                     btnProps={{
