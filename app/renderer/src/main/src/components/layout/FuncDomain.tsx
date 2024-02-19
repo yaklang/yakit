@@ -1040,6 +1040,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             })
     })
     const menuSelect = useMemoizedFn((type: string) => {
+        if(show) setShow(false)
         switch (type) {
             case "cve-database-all-update":
                 setDataBaseUpdateVisible(true)
@@ -1178,6 +1179,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-setting-dropdown"])}
                 placement={"bottom"}
                 content={menu}
+                visible={show}
                 onVisibleChange={(visible) => setShow(visible)}
                 trigger="click"
             >
