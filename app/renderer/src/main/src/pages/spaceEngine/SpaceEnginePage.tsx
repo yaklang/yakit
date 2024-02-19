@@ -235,9 +235,9 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
         let m = showYakitModal({
             title: "添加第三方应用",
             width: 600,
-            okButtonProps: {hidden: true},
             closable: true,
             maskClosable: false,
+            footer: null,
             content: (
                 <div style={{margin: 24}}>
                     <ThirdPartyApplicationConfigForm
@@ -268,6 +268,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                                 m.destroy()
                             })
                         }}
+                        onCancel={() => m.destroy()}
                     />
                 </div>
             )

@@ -165,6 +165,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
             ...cloneDeep(defQueryPortsRequest),
             State: props.closed ? "closed" : "open"
         })
+        setKeywords('')
         setQueryList(undefined)
         setIsRefresh(!isRefresh)
     })

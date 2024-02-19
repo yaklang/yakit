@@ -516,9 +516,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                     let m = showYakitModal({
                                                         title: "修改第三方应用",
                                                         width: 600,
-                                                        okButtonProps: {hidden: true},
                                                         closable: true,
                                                         maskClosable: false,
+                                                        footer: null,
                                                         content: (
                                                             <div style={{margin: 24}}>
                                                                 <ThirdPartyApplicationConfigForm
@@ -537,6 +537,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                         })
                                                                         m.destroy()
                                                                     }}
+                                                                    onCancel={() => m.destroy()}
                                                                 />
                                                             </div>
                                                         )
@@ -576,6 +577,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                                 setParams({...params, AppConfigs: existedResult})
                                                                 m.destroy()
                                                             }}
+                                                            onCancel={() => m.destroy()}
                                                         />
                                                     </div>
                                                 )
