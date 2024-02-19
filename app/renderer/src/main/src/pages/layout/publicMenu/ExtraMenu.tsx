@@ -45,7 +45,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
             <YakitMenu
                 width={142}
                 selectedKeys={[]}
-                triggerSubMenuAction="click"
+                // triggerSubMenuAction="click"
                 data={[
                     {
                         key: "import-plugin",

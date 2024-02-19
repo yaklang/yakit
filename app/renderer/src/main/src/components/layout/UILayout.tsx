@@ -948,7 +948,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 企业版-连接引擎后验证license=>展示企业登录
     const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
-    const [show, setShow] = useState<boolean>(false)
     const [_, setLocalInfo, getLocalInfo] = useGetState<LocalInfoProps>()
     useEffect(() => {
         // 获取操作系统、架构、Yakit 版本、Yak 版本
@@ -965,6 +964,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             ipcRenderer.removeAllListeners("again-judge-license-login")
         }
     }, [])
+    const [show, setShow] = useState<boolean>(false)
     const menu = (
         <YakitMenu
             // selectedKeys={[]}
@@ -983,10 +983,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
-            triggerSubMenuAction={'click'}
+            // triggerSubMenuAction={'click'}
         ></YakitMenu>
     )
     const menuSelect = useMemoizedFn((type: string) => {
+        if(show) setShow(false)
         const info = getLocalInfo()
         switch (type) {
             case "report_bug":
@@ -1170,6 +1171,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         trigger={"click"}
                                         placement={"bottom"}
                                         content={menu}
+                                        visible={show}
                                         onVisibleChange={(visible) => setShow(visible)}
                                     >
                                         <div className={styles["ui-op-btn-wrapper"]}>
@@ -1277,6 +1279,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                         placement={"bottom"}
                                         trigger={"click"}
                                         content={menu}
+                                        visible={show}
                                         onVisibleChange={(visible) => setShow(visible)}
                                     >
                                         <div className={styles["ui-op-btn-wrapper"]}>
