@@ -100,6 +100,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         ...cloneDeep(defQueryPortsRequest),
         State: props.closed ? "closed" : "open"
     })
+    const [keywords, setKeywords] = useState<string>("")
     const [total, setTotal] = useState<number>(0)
 
     const [selectNumber, setSelectNumber] = useState<number>(0)
@@ -162,7 +163,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
     const onResetRefresh = useMemoizedFn(() => {
         setParams({
             ...cloneDeep(defQueryPortsRequest),
-            State: props.closed ? "closed" : "open",
+            State: props.closed ? "closed" : "open"
         })
         setQueryList(undefined)
         setIsRefresh(!isRefresh)
@@ -185,14 +186,11 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             placeholder='请输入网络地址、端口、服务指纹、title关键词搜索'
                             style={{width: 320}}
                             onSearch={onSearch}
-                            onPressEnter={() => setIsRefresh(!isRefresh)}
-                            value={params.Keywords}
+                            onPressEnter={() => onSearch(keywords)}
+                            value={keywords}
                             onChange={(e) => {
                                 const {value} = e.target
-                                setParams({
-                                    ...params,
-                                    Keywords: value
-                                })
+                                setKeywords(value)
                             }}
                         />
                         <YakitDropdownMenu

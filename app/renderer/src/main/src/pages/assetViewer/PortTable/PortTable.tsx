@@ -115,23 +115,16 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             return selected.map((ele) => `${ele.Host}:${ele.Port}`)
         }, [selected])
 
-        const varyQuery = useCreation(() => {
-            return {
-                ...query,
-                Keywords: ""
-            }
-        }, [query])
-
         useImperativeHandle(ref, () => ({
             onRemove
         }))
 
         useEffect(() => {
             getAllData()
-        }, [varyQuery, isRefresh])
+        }, [query, isRefresh])
         useUpdateEffect(() => {
             onRefreshData()
-        }, [varyQuery, isRefresh])
+        }, [query, isRefresh])
 
         useUpdateEffect(() => {
             if (isStop) {
@@ -195,6 +188,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
 
         /**搜索，刷新数据 */
         const onRefreshData = useMemoizedFn(() => {
+            limitRef.current = defLimitRef.current
             update(true)
         })
 
@@ -228,6 +222,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 }
                 apiQueryPortsBase(params)
                     .then((rsp: QueryGeneralResponse<PortAsset>) => {
+                        // console.log('rsp,prePage.current',prePage.current,params,rsp.Pagination,rsp.Data.map(ele=>ele.Id))
                         const d = init ? rsp.Data : response.Data.concat(rsp.Data)
                         prePage.current += 1
                         if (init) {
@@ -289,6 +284,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 return
             }
             apiQueryPortsIncrementOrderAsc(params).then((rsp) => {
+                // console.log('getIncrementInTop',params,rsp.Pagination,rsp.Data.map(ele=>ele.Id))
                 if (rsp.Data.length > 0) {
                     afterId.current = rsp.Data[0].Id
                 }
