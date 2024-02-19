@@ -488,7 +488,7 @@ export const UIKitOutlineBugIcon = (props: Partial<IconProps>) => {
 const OutlineYakRunnerActive = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
         <mask
-            id='mask0_20342_21651'
+            id='mask0_21177_14861'
             style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
@@ -498,10 +498,10 @@ const OutlineYakRunnerActive = () => (
         >
             <rect width='16' height='16' fill='#D9D9D9' />
         </mask>
-        <g mask='url(#mask0_20342_21651)'>
+        <g mask='url(#mask0_21177_14861)'>
             <path
                 d='M1.33334 4.00008C1.33334 3.2637 1.99663 2.66675 2.81483 2.66675H13.1852C14.0034 2.66675 14.6667 3.2637 14.6667 4.00008V12.0001C14.6667 12.7365 14.0034 13.3334 13.1852 13.3334H2.81482C1.99663 13.3334 1.33334 12.7365 1.33334 12.0001V4.00008Z'
-                fill='#F7544A'
+                fill='#9D9AFB'
                 stroke='#31343F'
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -610,7 +610,7 @@ export const OutlineWebFuzzerIcon = (props: Partial<IconProps>) => {
 const OutlineWebFuzzerActive = () => (
     <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'>
         <mask
-            id='mask0_20342_21666'
+            id='mask0_21177_14871'
             style={{maskType: "alpha"}}
             maskUnits='userSpaceOnUse'
             x='0'
@@ -620,7 +620,7 @@ const OutlineWebFuzzerActive = () => (
         >
             <rect width='16' height='16' fill='#D9D9D9' />
         </mask>
-        <g mask='url(#mask0_20342_21666)'>
+        <g mask='url(#mask0_21177_14871)'>
             <path
                 d='M14 8C14 11.3137 11.3137 14 8.00001 14C7.54175 14 7.09549 13.9486 6.66667 13.8513'
                 stroke='#31343F'
