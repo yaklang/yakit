@@ -189,6 +189,8 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
         /**搜索，刷新数据 */
         const onRefreshData = useMemoizedFn(() => {
             limitRef.current = defLimitRef.current
+            setOffsetDataInTop([])
+            setInterval(undefined)
             update(true)
         })
 
@@ -281,9 +283,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             }
             const scrollTop = getScrollTop()
             if (scrollTop < 10 && offsetDataInTop?.length > 0) {
-                const newResData = response.Data.filter((ele) => !offsetDataInTop.find((ele2) => ele.Id === ele2.Id))
                 // 滚动条滚动到顶部的时候，如果偏移缓存数据中有数据，第一次优先将缓存数据放在总的数据中
-
                 setResponse({
                     ...response,
                     Data: [...offsetDataInTop, ...response.Data]
@@ -308,7 +308,6 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                 const newData = rsp.Data
                 const newTotal = total + rsp.Data.length
                 if (scrollTop < 10) {
-                    // const newResData=response.Data.filter(ele=>!newData.find(ele2=>ele.Id===ele2.Id))
                     setResponse({
                         ...response,
                         Data: [...newData, ...response.Data]
@@ -487,7 +486,6 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             defLimitRef.current = limit
             if (total === 0) {
                 // init
-                setInterval(undefined)
                 update(true)
                 return
             } else if (tableBodyHeightRef.current <= height) {
