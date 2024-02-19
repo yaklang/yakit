@@ -8,7 +8,13 @@ import {defaultSearch} from "../baseTemplate"
 import {PluginFilterParams, PluginSearchParams, PluginListPageMeta} from "../baseTemplateType"
 import {yakitNotify} from "@/utils/notification"
 import {initialOnlineState, pluginOnlineReducer} from "../pluginReducer"
-import {PluginsQueryProps, apiFetchOnlineList, convertPluginsRequestParams} from "../utils"
+import {
+    PluginsQueryProps,
+    apiFetchGetYakScriptGroupOnline,
+    apiFetchOnlineList,
+    apiFetchSaveYakScriptGroupOnline,
+    convertPluginsRequestParams
+} from "../utils"
 import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import emiter from "@/utils/eventBus/eventBus"
@@ -22,9 +28,11 @@ import {GroupListItem} from "./PluginGroupList"
 import {YakScript} from "@/pages/invoker/schema"
 import {SolidCloudpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import styles from "./PluginOnlineList.module.scss"
+import {API} from "@/services/swagger/resposeType"
 
 const defaultFilters = {
-    plugin_type: []
+    plugin_type: [],
+    plugin_group: []
 }
 
 interface PluginOnlineGroupsListProps {
@@ -43,7 +51,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
             keyword: ""
         })
     )
-    const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters) // 过滤条件 插件组需要过滤Yak、codec
+    const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters)
     const userInfo = useStore((s) => s.userInfo)
     const [response, dispatch] = useReducer(pluginOnlineReducer, initialOnlineState)
     const [loading, setLoading] = useState<boolean>(false)
@@ -57,8 +65,16 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
     const updateGroupListRef = useRef<any>()
 
     useUpdateEffect(() => {
-        refreshOnlinePluginList()
+        const groups =
+            activeGroup.default && activeGroup.id === "全部"
+                ? []
+                : [{value: activeGroup.name, count: 0, label: activeGroup.name}]
+        setFilters({...filters, plugin_group: groups})
     }, [activeGroup])
+
+    useUpdateEffect(() => {
+        refreshOnlinePluginList()
+    }, [filters])
 
     useEffect(() => {
         getInitTotal()
@@ -111,6 +127,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
         refreshOnlinePluginList()
     })
 
+    const [queryFetchList, setQueryFetchList] = useState<PluginsQueryProps>()
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
@@ -128,8 +145,15 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
             const queryFilters = filters
             const querySearch = search
             const query: PluginsQueryProps = {
-                ...convertPluginsRequestParams(queryFilters, querySearch, params)
+                ...convertPluginsRequestParams(queryFilters, querySearch, params),
+                excludePluginTypes: ["yak", "codec"] // 过滤条件 插件组需要过滤Yak、codec
             }
+            // 未分组插件查询
+            if (activeGroup.default && activeGroup.id === "未分组" && query.pluginGroup) {
+                query.pluginGroup.unSetGroup = true
+            }
+            console.log("插件列表", query)
+            setQueryFetchList(query)
             try {
                 const res = await apiFetchOnlineList(query)
                 if (!res.data) res.data = []
@@ -215,20 +239,23 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
     const pluginUuidRef = useRef<string[]>([])
     const getYakScriptGroupOnline = (uuid: string[]) => {
         pluginUuidRef.current = uuid
-        if (!uuid.length) return
-        // apiFetchGetYakScriptGroupLocal(scriptName).then((res) => {
-        //     const copySetGroup = [...res.SetGroup]
-        //     const newSetGroup = copySetGroup.map((name) => ({
-        //         groupName: name,
-        //         checked: true
-        //     }))
-        //     let copyAllGroup = [...res.AllGroup]
-        //     const newAllGroup = copyAllGroup.map((name) => ({
-        //         groupName: name,
-        //         checked: false
-        //     }))
-        //     setGroupList([...newSetGroup, ...newAllGroup])
-        // })
+        if (!queryFetchList) return
+        const query = structuredClone(queryFetchList)
+        // TODO query.IncludedScriptNames = uuid
+        console.log("获取查询参数", query)
+        apiFetchGetYakScriptGroupOnline(query).then((res) => {
+            const copySetGroup = [...res.setGroup]
+            const newSetGroup = copySetGroup.map((name) => ({
+                groupName: name,
+                checked: true
+            }))
+            let copyAllGroup = [...res.allGroup]
+            const newAllGroup = copyAllGroup.map((name) => ({
+                groupName: name,
+                checked: false
+            }))
+            setGroupList([...newSetGroup, ...newAllGroup])
+        })
     }
 
     // 更新组数据
@@ -252,18 +279,19 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                 removeGroup.push(groupName)
             }
         })
-        if (!saveGroup.length && !removeGroup.length) return
-        // apiFetchSaveYakScriptGroupLocal({
-        //     YakScriptName: pluginUuidRef.current,
-        //     SaveGroup: saveGroup,
-        //     RemoveGroup: removeGroup
-        // }).then(() => {
-        //     if (activeGroup.id !== "全部") {
-        //         refreshOnlinePluginList()
-        //     }
-        //     emiter.emit("onRefLocalPluginList", "") // 刷新线上插件列表
-        //     emiter.emit("onRefPluginGroupMagOnlineQueryYakScriptGroup", "")
-        // })
+        if ((!saveGroup.length && !removeGroup.length) || !queryFetchList) return
+        const params: API.GroupRequest = {
+            uuid: pluginUuidRef.current,
+            saveGroup,
+            removeGroup
+        }
+        apiFetchSaveYakScriptGroupOnline(params).then(() => {
+            if (activeGroup.id !== "全部") {
+                refreshOnlinePluginList()
+            }
+            emiter.emit("onRefLocalPluginList", "") // 刷新线上插件列表
+            emiter.emit("onRefPluginGroupMagOnlineQueryYakScriptGroup", "")
+        })
     }
 
     // 单项额外操作
@@ -389,7 +417,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                     />
                 ) : (
                     <div className={styles["plugin-online-empty"]}>
-                        <YakitEmpty title='暂无数据' />
+                        <YakitEmpty title='暂无数据' style={{marginTop: 80}} />
                         <div className={styles["plugin-online-buttons"]}>
                             <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefListAndTotal}>
                                 刷新

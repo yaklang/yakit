@@ -46,7 +46,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const showPluginIndex = useRef<number>(0) // 当前展示的插件序列
     const [isList, setIsList] = useState<boolean>(false) // 网格与列表之间切换
     const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters) // 过滤条件 插件组需要过滤Yak、codec
+    const [filters, setFilters] = useState<PluginFilterParams>(defaultFilters)
     const userInfo = useStore((s) => s.userInfo)
     const [response, dispatch] = useReducer(pluginLocalReducer, initialLocalState)
     const [loading, setLoading] = useState<boolean>(false)
@@ -149,7 +149,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
             const querySearch = search
             const query: QueryYakScriptRequest = {
                 ...convertLocalPluginsRequestParams(queryFilters, querySearch, params),
-                ExcludeTypes: ["yak", "codec"]
+                ExcludeTypes: ["yak", "codec"] // 过滤条件 插件组需要过滤Yak、codec
             }
 
             // 未分组插件查询
@@ -266,6 +266,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
             if (isEnpriTraceAgent()) {
                 const index = copySetGroup.findIndex((name) => name === "基础扫描")
                 const index2 = copyAllGroup.findIndex((name) => name === "基础扫描")
+                
                 if (index === -1 && index2 === -1) {
                     copyAllGroup = [...copyAllGroup, "基础扫描"]
                 }

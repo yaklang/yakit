@@ -7,8 +7,15 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
-import {GroupCount} from "@/pages/invoker/schema"
 import emiter from "@/utils/eventBus/eventBus"
+import {
+    PluginGroupDel,
+    PluginGroupRename,
+    apiFetchDeleteYakScriptGroupOnline,
+    apiFetchQueryYakScriptGroupOnline,
+    apiFetchRenameYakScriptGroupOnline
+} from "../utils"
+import {API} from "@/services/swagger/resposeType"
 
 interface PluginOnlineGroupListProps {
     pluginsGroupsInViewport: boolean
@@ -17,7 +24,7 @@ interface PluginOnlineGroupListProps {
     onActiveGroup: (groupItem: GroupListItem) => void
 }
 export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (props) => {
-    const {pluginsGroupsInViewport, onOnlineGroupLen, activeOnlineGroup} = props
+    const {pluginsGroupsInViewport, onOnlineGroupLen, activeOnlineGroup, onActiveGroup} = props
     const [groupList, setGroupList] = useState<GroupListItem[]>([]) // 组数据
     const [editGroup, setEditGroup] = useState<GroupListItem>() // 编辑插件组
     const [delGroup, setDelGroup] = useState<GroupListItem>() // 删除插件组
@@ -50,43 +57,49 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
 
     // 获取组列表数据
     const getGroupList = () => {
-        // apiFetchQueryYakScriptGroupLocal().then((group: GroupCount[]) => {
-        //     const copyGroup = structuredClone(group)
-        //     const arr = copyGroup.map((item) => {
-        //         const obj = {
-        //             id: item.Default ? item.Value : item.Value + "_group",
-        //             name: item.Value,
-        //             number: item.Total,
-        //             icon: assemblyExtraField(item.Default, item.Value, "icon"),
-        //             iconColor: assemblyExtraField(item.Default, item.Value, "iconColor"),
-        //             showOptBtns: assemblyExtraField(item.Default, item.Value, "showOptBtns"),
-        //             default: item.Default
-        //         }
-        //         return obj
-        //     })
-        //     setGroupList(arr)
-        //     onOnlineGroupLen(arr.length - 2 > 0 ? arr.length - 2 : 0)
-        // })
+        apiFetchQueryYakScriptGroupOnline().then((res: API.GroupResponse) => {
+            const copyGroup = structuredClone(res.data)
+            const arr = copyGroup.map((item) => {
+                const obj = {
+                    id: item.default ? item.value : item.value + "_group",
+                    name: item.value,
+                    number: item.total,
+                    icon: assemblyExtraField(item.default, item.value, "icon"),
+                    iconColor: assemblyExtraField(item.default, item.value, "iconColor"),
+                    showOptBtns: assemblyExtraField(item.default, item.value, "showOptBtns"),
+                    default: item.default
+                }
+                return obj
+            })
+            setGroupList(arr)
+            onOnlineGroupLen(arr.length - 2 > 0 ? arr.length - 2 : 0)
+        })
     }
 
     // 插件组名input失焦
     const onEditGroupNameBlur = (groupItem: GroupListItem, newName: string) => {
         setEditGroup(undefined)
         if (!newName || newName === groupItem.name) return
-        // apiFetchRenameYakScriptGroupLocal(groupItem.name, newName).then(() => {
-        //     getGroupList()
-        //     if (activeOnlineGroup?.default === false && activeOnlineGroup.name === newName) {
-        //         emiter.emit("onRefPluginGroupMagOnlinePluginList", "")
-        //     }
-        // })
+        const params: PluginGroupRename = {group: groupItem.name, newGroup: newName}
+        apiFetchRenameYakScriptGroupOnline(params).then(() => {
+            getGroupList()
+            if (activeOnlineGroup?.default === false && activeOnlineGroup.name === newName) {
+                emiter.emit("onRefPluginGroupMagOnlinePluginList", "")
+            }
+        })
     }
 
     // 插件组删除
     const onGroupDel = (groupItem: GroupListItem, callBack?: () => void) => {
-        // apiFetchDeleteYakScriptGroupLocal(groupItem.name).then(() => {
-        //     getGroupList()
-        //     callBack && callBack()
-        // })
+        const params: PluginGroupDel = {group: groupItem.name}
+        apiFetchDeleteYakScriptGroupOnline(params).then(() => {
+            getGroupList()
+            // 如果当前选中组为固定的未分组 刷新右侧插件列表
+            if (activeOnlineGroup?.default && activeOnlineGroup.id === "未分组") {
+                emiter.emit("onRefPluginGroupMagOnlinePluginList", "")
+            }
+            callBack && callBack()
+        })
     }
 
     return (
@@ -123,7 +136,7 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
                             </>
                         )
                     }}
-                    onActiveGroup={(groupItem) => {}}
+                    onActiveGroup={onActiveGroup}
                 ></PluginGroupList>
             )}
 

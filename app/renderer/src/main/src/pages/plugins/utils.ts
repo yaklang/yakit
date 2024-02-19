@@ -55,7 +55,7 @@ export const convertPluginsRequestParams = (
         status: filter.status?.map((ele) => Number(ele.value)) || [],
         tags: filter.tags?.map((ele) => ele.value) || [],
         is_private: filter.plugin_private?.map((ele) => ele.value === "true") || [],
-        group: filter.plugin_group?.map((ele) => ele.value) || []
+        pluginGroup: {unSetGroup: false, group: filter.plugin_group?.map((ele) => ele.value) || []}
     }
     return toolDelInvalidKV(data)
 }
@@ -760,7 +760,7 @@ export const apiFetchGroupStatisticsLocal: () => Promise<API.PluginsSearchRespon
                             }))
                         }
                     ].filter((ele) => {
-                        if (ele.groupKey === 'plugin_group') {
+                        if (ele.groupKey === "plugin_group") {
                             return true
                         } else {
                             return ele.data.length > 0
@@ -1407,5 +1407,132 @@ export const apiFetchSaveYakScriptGroupLocal: (params: SaveYakScriptGroupRequest
             .catch((e) => {
                 yakitNotify("error", "更新本地插件所在组：" + e)
             })
+    })
+}
+
+/** 线上获取插件组数据 */
+export const apiFetchQueryYakScriptGroupOnline: () => Promise<API.GroupResponse> = () => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<any, API.GroupResponse>({
+                method: "get",
+                url: "group"
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取插件组失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取插件组失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**线上插件组名字修改 */
+export interface PluginGroupRename {
+    group: string
+    newGroup: string
+}
+export const apiFetchRenameYakScriptGroupOnline: (query: PluginGroupRename) => Promise<API.ActionSucceeded> = (
+    query
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<PluginGroupRename, API.ActionSucceeded>({
+                method: "post",
+                url: "rename/group",
+                params: {...query}
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "修改插件组名失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "修改插件组名失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**线上插件组删除 */
+export interface PluginGroupDel {
+    group: string
+}
+export const apiFetchDeleteYakScriptGroupOnline: (query: PluginGroupDel) => Promise<API.ActionSucceeded> = (query) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<PluginGroupDel, API.ActionSucceeded>({
+                method: "delete",
+                url: "group",
+                params: {...query}
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "删除插件组失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "删除插件组失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**线上获取插件所在插件组和其他插件组 */
+export const apiFetchGetYakScriptGroupOnline: (params: API.PluginsWhere) => Promise<API.PluginsGroupResponse> = (
+    params
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.PluginsWhere, API.PluginsGroupResponse>({
+                method: "get",
+                url: "plugins/group",
+                data: {...params}
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "获取失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "获取失败：" + error)
+            reject(error)
+        }
+    })
+}
+
+/**线上更新插件所在组&新增插件组 */
+export const apiFetchSaveYakScriptGroupOnline: (params: API.GroupRequest) => Promise<API.ActionSucceeded> = (
+    params
+) => {
+    return new Promise((resolve, reject) => {
+        try {
+            NetWorkApi<API.GroupRequest, API.ActionSucceeded>({
+                method: "post",
+                url: "group",
+                data: {...params}
+            })
+                .then((res) => {
+                    resolve(res)
+                })
+                .catch((err) => {
+                    yakitNotify("error", "更新失败：" + err)
+                    reject(err)
+                })
+        } catch (error) {
+            yakitNotify("error", "更新失败：" + error)
+            reject(error)
+        }
     })
 }

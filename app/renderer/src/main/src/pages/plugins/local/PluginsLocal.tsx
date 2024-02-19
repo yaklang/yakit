@@ -1,5 +1,5 @@
 import React, {useState, useRef, useMemo, useEffect, useReducer} from "react"
-import {ExportParamsProps, LocalExtraOperateProps, PluginLocalBackProps, PluginsLocalProps} from "./PluginsLocalType"
+import {ExportParamsProps, LocalExtraOperateProps, PluginGroupList, PluginLocalBackProps, PluginsLocalProps} from "./PluginsLocalType"
 import {SolidChevrondownIcon, SolidPluscircleIcon} from "@/assets/icon/solid"
 import {useMemoizedFn, useInViewport, useDebounceFn, useLatest, useUpdateEffect, useThrottleFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
@@ -90,7 +90,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<YakScript[]>([])
 
-    const [pluginGroupList, setPluginGroupList] = useState<API.PluginsSearch[]>([])
+    const [pluginGroupList, setPluginGroupList] = useState<PluginGroupList[]>([])
     const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
 
     const [pluginRemoveCheck, setPluginRemoveCheck] = useState<boolean>(false)

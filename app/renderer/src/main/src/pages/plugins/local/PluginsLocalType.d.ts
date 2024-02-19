@@ -126,3 +126,6 @@ export interface PluginDetailsTabProps {
     /** 是否隐藏日志和问题 */
     hiddenLogIssue?: boolean
 }
+export interface PluginGroupList extends API.PluginsSearch {
+    groupExtraOptBtn?: React.ReactElement
+}
