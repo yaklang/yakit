@@ -1,4 +1,6 @@
 const {ipcMain} = require("electron");
+const fs = require("fs")
+const path = require("path")
 
 module.exports = (win, getClient) => {
     // asyncCodec wrapper
@@ -77,5 +79,42 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("GetAllCodecMethods", async (e, params) => {
         return await asyncGetAllCodecMethods(params)
+    })
+
+    const asyncSaveCodecOutputToTxt = (params) => {
+        return new Promise(async (resolve, reject) => {
+            const {outputDir, data, fileName} = params
+            const filePath = path.join(outputDir, fileName);
+            fs.writeFile(filePath, data, (err) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve({
+                        ok: true,
+                        outputDir: filePath
+                    })
+                }
+              });
+        })
+    }
+
+    ipcMain.handle("SaveCodecOutputToTxt", async (e, params) => {
+        return await asyncSaveCodecOutputToTxt(params)
+    })
+
+    const asyncimportCodecByPath  = (params) => {
+        return new Promise(async (resolve, reject) => {
+            fs.readFile(params, 'utf-8', function (err, data) {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve(data)
+                }
+            });
+        })
+    }
+
+    ipcMain.handle("importCodecByPath", async (e, params) => {
+        return await asyncimportCodecByPath(params)
     })
 }

@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Divider, Tooltip} from "antd"
+import {Divider, Tooltip, Upload} from "antd"
 import {} from "@ant-design/icons"
 import {useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
@@ -49,6 +49,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {NewCodecCheckUI, NewCodecEditor, NewCodecInputUI, NewCodecSelectUI} from "./NewCodecUIStore"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CheckboxValueType} from "antd/lib/checkbox/Group"
+import {openABSFileLocated} from "@/utils/openWebsite"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -76,18 +77,120 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
         </div>
     )
 
+    // 导入
+    const onImport = useMemoizedFn((path: string) => {
+        ipcRenderer
+            .invoke("importCodecByPath", path)
+            .then((r: string) => {
+                setInputEditor(r)
+            })
+            .catch((e) => {
+                failed(`import Codec failed ${e}`)
+            })
+            .finally(() => {})
+    })
+
+    // 清空
     const onClear = useMemoizedFn(() => {
         setInputEditor("")
     })
 
+    // 保存
+    const onSave = useMemoizedFn(() => {
+        if (outputEditor.length === 0) {
+            warn("暂无保存内容")
+            return
+        }
+        let name: string = ""
+        const m = showYakitModal({
+            title: "保存",
+            content: (
+                <div className={styles["codec-save-modal"]}>
+                    <YakitInput.TextArea
+                        placeholder='请为保存内容取个名字...'
+                        showCount
+                        maxLength={50}
+                        onChange={(e) => {
+                            name = e.target.value
+                        }}
+                    />
+                    <div className={styles["btn-box"]}>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                m.destroy()
+                            }}
+                        >
+                            取消
+                        </YakitButton>
+                        <YakitButton
+                            type='primary'
+                            onClick={() => {
+                                if (name.length === 0) {
+                                    warn("请输入名字")
+                                    return
+                                }
+                                m.destroy()
+                                ipcRenderer
+                                    .invoke("openDialog", {
+                                        title: "请选择文件夹",
+                                        properties: ["openDirectory"]
+                                    })
+                                    .then((data: {filePaths: string[]}) => {
+                                        const filesLength = data.filePaths.length
+                                        if (filesLength) {
+                                            const absolutePath = data.filePaths
+                                                .map((p) => p.replace(/\\/g, "\\"))
+                                                .join(",")
+                                            ipcRenderer
+                                                .invoke("SaveCodecOutputToTxt", {
+                                                    data: outputEditor,
+                                                    outputDir: absolutePath,
+                                                    fileName: `${name}-${new Date().getTime()}.txt`
+                                                })
+                                                .then((r) => {
+                                                    console.log(r)
+                                                    if (r?.ok) {
+                                                        success("保存成功")
+                                                        r?.outputDir && openABSFileLocated(r.outputDir)
+                                                    }
+                                                })
+                                                .catch((e) => {
+                                                    failed(`Save Codec failed ${e}`)
+                                                })
+                                                .finally(() => {})
+                                        }
+                                    })
+                            }}
+                        >
+                            保存
+                        </YakitButton>
+                    </div>
+                </div>
+            ),
+            onCancel: () => {
+                m.destroy()
+            },
+            footer: null,
+            width: 400
+        })
+    })
+
+    // 替换
     const onReplace = useMemoizedFn(() => {
         setInputEditor(outputEditor)
     })
 
+    // 复制
     const onCopy = useMemoizedFn(() => {
         ipcRenderer.invoke("set-copy-clipboard", outputEditor)
         success("复制成功")
     })
+
+    const suffixFun = (file_name: string) => {
+        let file_index = file_name.lastIndexOf(".")
+        return file_name.slice(file_index, file_name.length)
+    }
     return (
         <div className={styles["new-codec-editor-box"]}>
             <YakitResizeBox
@@ -103,9 +206,30 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             <div className={styles["title"]}>Input</div>
                             <div className={styles["extra"]}>
                                 <Tooltip title={"导入"}>
-                                    <div className={styles["extra-icon"]}>
-                                        <OutlineImportIcon />
-                                    </div>
+                                    <Upload
+                                        accept={"text/plain"}
+                                        multiple={false}
+                                        maxCount={1}
+                                        showUploadList={false}
+                                        beforeUpload={(f) => {
+                                            const file_name = f.name
+                                            const suffix = suffixFun(file_name)
+                                            if (![".txt"].includes(suffix)) {
+                                                warn("导入文件格式错误，请重新导入")
+                                                return false
+                                            }
+                                            // @ts-ignore
+                                            const path: string = f?.path || ""
+                                            if (path.length > 0) {
+                                                onImport(path)
+                                            }
+                                            return false
+                                        }}
+                                    >
+                                        <div className={styles["extra-icon"]}>
+                                            <OutlineImportIcon />
+                                        </div>
+                                    </Upload>
                                 </Tooltip>
                                 <Divider type={"vertical"} style={{margin: "4px 0px 0px"}} />
                                 <div className={styles["clear"]} onClick={onClear}>
@@ -132,7 +256,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             <div className={styles["title"]}>Output</div>
                             <div className={styles["extra"]}>
                                 <Tooltip title={"保存"}>
-                                    <div className={styles["extra-icon"]}>
+                                    <div className={styles["extra-icon"]} onClick={onSave}>
                                         <OutlineStorageIcon />
                                     </div>
                                 </Tooltip>
@@ -461,14 +585,19 @@ interface SaveObjProps {
 interface NewCodecMiddleRunListProps {
     rightItems: RightItemsProps[]
     setRightItems: (v: RightItemsProps[]) => void
-    inputEditor:string
-    setOutputEditor:(v:string)=>void
+    inputEditor: string
+    setOutputEditor: (v: string) => void
 }
 
 interface CheckFailProps {
     key: string
     index: number
     message: string
+}
+
+interface CodecWorkProps {
+    CodecType: string
+    Params: {Key: string; Value: any}[]
 }
 
 const getMiddleItemStyle = (isDragging, draggableStyle) => {
@@ -486,19 +615,19 @@ const getMiddleItemStyle = (isDragging, draggableStyle) => {
 const CodecAutoRun = "CodecAutoRun"
 // codec中间可执行列表
 export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (props) => {
-    const {rightItems, setRightItems,inputEditor,setOutputEditor} = props
+    const {rightItems, setRightItems, inputEditor, setOutputEditor} = props
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
     const [_, setFilterName, getFilterName] = useGetState<string>("")
     // 是否自动执行
     const [autoRun, setAutoRun] = useState<boolean>(false)
     useDebounceEffect(
         () => {
-            if (autoRun&&rightItems.length>0) {
+            if (autoRun && rightItems.length > 0 && inputEditor.length > 0) {
                 console.log("自动执行----")
                 runCodec()
             }
         },
-        [autoRun, rightItems,inputEditor],
+        [autoRun, rightItems, inputEditor],
         {leading: true, wait: 500}
     )
     useEffect(() => {
@@ -604,9 +733,50 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
     })
 
     // 执行函数
-    const runCodecFun = useMemoizedFn(() => {
-        // 执行完成后 更改Output值
-        setOutputEditor("Output")
+    const runCodecFun = useMemoizedFn((runItems: RightItemsProps[]) => {
+        console.log("runCodecFun---", runItems)
+        let newCodecParams: {Text: string; WorkFlow: CodecWorkProps[]} = {
+            Text: inputEditor,
+            WorkFlow: []
+        }
+        runItems.forEach((item) => {
+            let obj: CodecWorkProps = {
+                CodecType: item.codecType,
+                Params: []
+            }
+            if (Array.isArray(item.node)) {
+                const node = item.node as RightItemsTypeProps[]
+                node.forEach((itemIn) => {
+                    if (itemIn.type === "checkbox") {
+                        const {name, value = []} = itemIn
+                        obj.Params.push({
+                            Key: name,
+                            Value: value.includes(name)
+                        })
+                    } else {
+                        const {name, value} = itemIn
+                        obj.Params.push({
+                            Key: name,
+                            Value: value
+                        })
+                    }
+                })
+            }
+            newCodecParams.WorkFlow.push(obj)
+        })
+        console.log("newCodecParams---", newCodecParams)
+
+        ipcRenderer
+            .invoke("newCodec", newCodecParams)
+            .then((data: {Result: string}) => {
+                console.log("newCodec**", data)
+                // 执行完成后 更改Output值
+                setOutputEditor(data.Result)
+            })
+            .catch((e) => {
+                failed(`newCodec failed ${e}`)
+            })
+            .finally(() => {})
     })
 
     // 执行校验
@@ -679,7 +849,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                 })
             }
         })
-        console.log("rightItemsStop--", rightItemsStop, checkFail)
+        console.log("checkFail--", checkFail)
         if (checkFail.length > 0) {
             // 提示
             warn(checkFail[0].message)
@@ -689,7 +859,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
             }
         } else {
             // 执行函数
-            runCodecFun()
+            runCodecFun(rightItemsStop)
         }
     })
 
@@ -786,11 +956,15 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                 </Droppable>
             </div>
             <div className={styles["run-box"]}>
-                <YakitCheckbox checked={autoRun} onChange={(e) => setAutoRun(e.target.checked)}>
+                <YakitCheckbox
+                    disabled={rightItems.length === 0 || inputEditor.length === 0}
+                    checked={autoRun}
+                    onChange={(e) => setAutoRun(e.target.checked)}
+                >
                     自动执行
                 </YakitCheckbox>
                 <YakitButton
-                    disabled={rightItems.length === 0}
+                    disabled={rightItems.length === 0 || inputEditor.length === 0}
                     size='max'
                     className={styles["run-box-btn"]}
                     icon={<SolidPlayIcon />}
@@ -1133,7 +1307,7 @@ interface RightItemsInputProps {
     // 标题
     title?: string
     // 参数名
-    name?: string
+    name: string
     // 是否必传
     require?: boolean
     // 是否禁用
@@ -1152,6 +1326,8 @@ interface RightItemsInputProps {
 interface RightItemsCheckProps {
     // 可选值
     checkArr: {label: string; value: string}[]
+    // 参数名
+    name: string
     // 选中值
     value?: string[]
     // 控件类型
@@ -1167,7 +1343,7 @@ interface RightItemsSelectProps {
     // 标题
     title?: string
     // 参数名
-    name?: string
+    name: string
     // 可选值
     selectArr: {label: string; value: string}[]
     // 选中值
@@ -1189,7 +1365,7 @@ interface RightItemsEditorProps {
     // 标题
     title?: string
     // 参数名
-    name?: string
+    name: string
     // 是否禁用
     disabled?: boolean
     // 是否必传
@@ -1215,6 +1391,7 @@ interface RightItemsFlexProps {
 }
 interface RightItemsProps {
     title: string
+    codecType: string
     key: string
     node?: (RightItemsTypeProps | RightItemsFlexProps)[]
     // 屏蔽/中止
@@ -1428,6 +1605,7 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                     let checkArr = [{label: Label, value: Name}]
                     return {
                         type: "checkbox",
+                        name: Name,
                         checkArr,
                         require: Required
                     } as RightItemsCheckProps
@@ -1465,8 +1643,8 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
     const onClickToRunList = useMemoizedFn((item: CodecMethod) => {
         console.log("onClickToRunList", item)
         const node = initNode(item)
-        const newRightItems = JSON.parse(JSON.stringify(rightItems))
-        newRightItems.push({title: item.CodecName, key: uuidv4(), node})
+        const newRightItems: RightItemsProps[] = JSON.parse(JSON.stringify(rightItems))
+        newRightItems.push({title: item.CodecName, codecType: item.CodecMethod, key: uuidv4(), node})
         setRightItems(newRightItems)
     })
 
@@ -1489,8 +1667,13 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
             if (codecArr.length > 0) {
                 const codecItem = codecArr[0]
                 const node = initNode(codecItem)
-                const newRightItems = JSON.parse(JSON.stringify(rightItems))
-                newRightItems.splice(destination.index, 0, {title: codecItem.CodecName, key: uuidv4(), node})
+                const newRightItems: RightItemsProps[] = JSON.parse(JSON.stringify(rightItems))
+                newRightItems.splice(destination.index, 0, {
+                    title: codecItem.CodecName,
+                    codecType: codecItem.CodecMethod,
+                    key: uuidv4(),
+                    node
+                })
                 console.log("newRightItems", newRightItems, node)
                 setRightItems(newRightItems)
             }
@@ -1498,7 +1681,7 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
 
         // 右边内部排序
         if (source.droppableId === "right" && destination && destination.droppableId === "right") {
-            const newRightItems = JSON.parse(JSON.stringify(rightItems))
+            const newRightItems: RightItemsProps[] = JSON.parse(JSON.stringify(rightItems))
             const [removed] = newRightItems.splice(source.index, 1)
             console.log("removed--", removed)
             newRightItems.splice(destination.index, 0, removed)
@@ -1544,11 +1727,11 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
                         getCollectData={getCollectData}
                         onClickToRunList={onClickToRunList}
                     />
-                    <NewCodecMiddleRunList 
-                    rightItems={rightItems} 
-                    setRightItems={setRightItems} 
-                    inputEditor={inputEditor}
-                    setOutputEditor={setOutputEditor}
+                    <NewCodecMiddleRunList
+                        rightItems={rightItems}
+                        setRightItems={setRightItems}
+                        inputEditor={inputEditor}
+                        setOutputEditor={setOutputEditor}
                     />
                 </DragDropContext>
             )}
