@@ -222,6 +222,7 @@ module.exports = (win, callback, getClient, newClient) => {
                         detached: false, windowsHide: true,
                         stdio: ["ignore", log, log],
                         env: {
+                            ...process.env,
                             YAKIT_HOME: YakitProjectPath
                         }
                     })
