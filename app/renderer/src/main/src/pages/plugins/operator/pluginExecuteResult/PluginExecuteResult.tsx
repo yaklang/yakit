@@ -152,7 +152,14 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
         <PortTable
             query={params}
             setQuery={setParams}
-            tableTitle={<span>开放端口 / Open Ports</span>}
+            tableTitle={
+                <div className={styles["plugin-execute-port-table"]}>
+                    <span>开放端口 / Open Ports</span>
+                    <span className={styles["table-title"]}>
+                        Total<span className={styles["table-title-number"]}>{total}</span>
+                    </span>
+                </div>
+            }
             tableTitleExtraOperate={
                 <>
                     <YakitButton type='primary' icon={<SolidViewgridIcon />} size='small' onClick={onJumpPort}>
@@ -439,8 +446,8 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
         <PluginExecuteResultTabContent
             // title={name}
             title={
-                <span className={styles["plugin-execute-custom-table-title"]}>
-                    Total<span className={styles["plugin-execute-custom-table-title-number"]}>{data.length}</span>
+                <span className={styles["table-title"]}>
+                    Total<span className={styles["table-title-number"]}>{data.length}</span>
                 </span>
             }
             extra={

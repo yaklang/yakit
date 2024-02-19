@@ -89,14 +89,20 @@
     border-bottom: 0;
 }
 
-.plugin-execute-custom-table-title {
+.table-title {
     color: var(--yakit-helper-text-color);
     font-size: 12px;
     font-style: normal;
     font-weight: 400;
     line-height: 16px; /* 133.333% */
-    &-number{
+    &-number {
         color: var(--yakit-primary-5);
         margin-left: 4px;
     }
+}
+
+.plugin-execute-port-table {
+    @extend %display-flex-center;
+    align-items: flex-start;
+    gap: 8px;
 }
