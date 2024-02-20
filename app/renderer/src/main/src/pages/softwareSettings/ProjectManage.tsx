@@ -112,16 +112,16 @@ interface FilterInfoProps {
 
 /** 项目名过滤项 */
 const typeFilter: FilterInfoProps[] = [
-    {key: "all", label: "全部文件", itemIcon: <ProjectViewGridSvgIcon className={styles["type-filter-icon-style"]} />},
+    {key: "all", label: "全部文件", itemIcon: <ProjectViewGridSvgIcon />},
     {
         key: "project",
         label: "项目",
-        itemIcon: <ProjectDocumentTextSvgIcon className={styles["type-filter-icon-style"]} />
+        itemIcon: <ProjectDocumentTextSvgIcon />
     },
     {
         key: "file",
         label: "文件夹",
-        itemIcon: <ProjectFolderOpenSvgIcon className={styles["type-filter-icon-style"]} />
+        itemIcon: <ProjectFolderOpenSvgIcon />
     }
 ]
 /** 项目名过滤项对应展示内容 */
@@ -241,6 +241,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 onVisibleChange: (open) => setTypeShow(open)
                             }}
                             menu={{
+                                type: "grey",
                                 data: typeFilter,
                                 className: styles["dropdown-menu-body"],
                                 onClick: ({key}) => {
@@ -324,13 +325,14 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     )
                 }
             },
-            {key: "FileSize", name: "大小", width: "10%", render: (data) => {
-                return (
-                    <>
-                        {!data.Type || data.Type === "project" ? data.FileSize : "-"}
-                    </>
-                )
-            }},
+            {
+                key: "FileSize",
+                name: "大小",
+                width: "10%",
+                render: (data) => {
+                    return <>{!data.Type || data.Type === "project" ? data.FileSize : "-"}</>
+                }
+            },
             {
                 key: "CreatedAt",
                 name: timeToName["updated_at"],
@@ -344,6 +346,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 onVisibleChange: (open) => setTimeShow(open)
                             }}
                             menu={{
+                                type: "grey",
                                 data: timeFilter,
                                 className: styles["dropdown-menu-body"],
                                 onClick: ({key}) => {
@@ -396,18 +399,17 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             onVisibleChange: (open) => setOperateShow(open ? +Id : -1)
                         }}
                         menu={{
+                            type: "grey",
                             data: [
                                 {
                                     key: "newProject",
                                     label: "新建子项目",
-                                    itemIcon: (
-                                        <ProjectDocumentTextSvgIcon className={styles["type-filter-icon-style"]} />
-                                    )
+                                    itemIcon: <ProjectDocumentTextSvgIcon />
                                 },
                                 {
                                     key: "newFolder",
                                     label: "新建子文件夹",
-                                    itemIcon: <ProjectFolderOpenSvgIcon className={styles["type-filter-icon-style"]} />
+                                    itemIcon: <ProjectFolderOpenSvgIcon />
                                 }
                             ],
                             className: styles["dropdown-menu-body"],
@@ -434,6 +436,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                             onVisibleChange: (open) => setOperateShow(open ? +Id : -1)
                         }}
                         menu={{
+                            type: "grey",
                             data: [
                                 {key: "encryption", label: "加密导出"},
                                 {key: "plaintext", label: "明文导出"}
@@ -1022,11 +1025,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                         onVisibleChange: (open) => setHeaderShow(open)
                                     }}
                                     menu={{
+                                        type: "grey",
                                         data: [
                                             {
                                                 key: "export",
                                                 label: "导出",
-                                                itemIcon: <ExportIcon className={styles["type-filter-icon-style"]} />,
+                                                itemIcon: <ExportIcon />,
                                                 children: [
                                                     {key: "encryption", label: "加密导出"},
                                                     {key: "plaintext", label: "明文导出"}
@@ -1036,31 +1040,20 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                 key: "edit",
                                                 label: "编辑",
                                                 disabled: latestProject?.ProjectName === "[default]",
-                                                itemIcon: (
-                                                    <PencilAltIcon
-                                                        className={
-                                                            latestProject?.ProjectName === "[default]"
-                                                                ? styles["type-filter-icon-disabled-style"]
-                                                                : styles["type-filter-icon-style"]
-                                                        }
-                                                    />
-                                                )
+                                                itemIcon: <PencilAltIcon />
                                             },
                                             {
                                                 key: "copyPath",
                                                 label: "复制路径",
-                                                itemIcon: (
-                                                    <DocumentDuplicateSvgIcon
-                                                        className={styles["type-filter-icon-style"]}
-                                                    />
-                                                )
+                                                itemIcon: <DocumentDuplicateSvgIcon />
                                             },
                                             {type: "divider"},
                                             {
                                                 key: "delete",
                                                 label: "删除",
+                                                type: "danger",
                                                 disabled: latestProject?.ProjectName === "[default]",
-                                                itemIcon: <TrashIcon className={styles["type-filter-icon-style"]} />
+                                                itemIcon: <TrashIcon />
                                             }
                                         ],
                                         className: styles["dropdown-menu-body"],
