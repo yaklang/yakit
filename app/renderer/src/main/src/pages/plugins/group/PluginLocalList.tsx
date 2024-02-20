@@ -156,7 +156,6 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
             if (activeGroup.default && activeGroup.id === "未分组" && query.Group) {
                 query.Group.UnSetGroup = true
             }
-            console.log("插件列表", query)
             setQueryFetchList(query)
             try {
                 const res = await apiQueryYakScript(query)
@@ -254,7 +253,6 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
         if (!queryFetchList) return
         const query = structuredClone(queryFetchList)
         query.IncludedScriptNames = scriptName
-        console.log("获取查询参数", query)
         apiFetchGetYakScriptGroupLocal(query).then((res) => {
             const copySetGroup = [...res.SetGroup]
             const newSetGroup = copySetGroup.map((name) => ({
@@ -303,11 +301,6 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
         if ((!saveGroup.length && !removeGroup.length) || !queryFetchList) return
         const query = structuredClone(queryFetchList)
         query.IncludedScriptNames = scriptNameRef.current
-        console.log("设置查询参数", {
-            Filter: query,
-            SaveGroup: saveGroup,
-            RemoveGroup: removeGroup
-        })
         apiFetchSaveYakScriptGroupLocal({
             Filter: query,
             SaveGroup: saveGroup,

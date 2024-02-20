@@ -81,6 +81,7 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
         setEditGroup(undefined)
         if (!newName || newName === groupItem.name) return
         const params: PluginGroupRename = {group: groupItem.name, newGroup: newName}
+        console.log('修改组', params);
         apiFetchRenameYakScriptGroupOnline(params).then(() => {
             getGroupList()
             if (activeOnlineGroup?.default === false && activeOnlineGroup.name === newName) {
@@ -92,6 +93,7 @@ export const PluginOnlineGroupList: React.FC<PluginOnlineGroupListProps> = (prop
     // 插件组删除
     const onGroupDel = (groupItem: GroupListItem, callBack?: () => void) => {
         const params: PluginGroupDel = {group: groupItem.name}
+        console.log('删除组', params);
         apiFetchDeleteYakScriptGroupOnline(params).then(() => {
             getGroupList()
             // 如果当前选中组为固定的未分组 刷新右侧插件列表

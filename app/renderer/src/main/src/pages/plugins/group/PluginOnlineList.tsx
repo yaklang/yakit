@@ -284,6 +284,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
             saveGroup,
             removeGroup
         }
+        console.log('新增或移除', params);
         apiFetchSaveYakScriptGroupOnline(params).then(() => {
             if (activeGroup.id !== "全部") {
                 refreshOnlinePluginList()
@@ -346,7 +347,13 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                                 }
                             }}
                         >
-                            <FuncBtn maxWidth={1050} icon={<SolidPluscircleIcon />} size='large' name='添加到组...' />
+                            <FuncBtn
+                                disabled={!selectList.length && !allCheck}
+                                maxWidth={1050}
+                                icon={<SolidPluscircleIcon />}
+                                size='large'
+                                name='添加到组...'
+                            />
                         </YakitPopover>
                         <div className='divider-style'></div>
                         <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />

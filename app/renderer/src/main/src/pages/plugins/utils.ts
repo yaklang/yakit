@@ -1443,9 +1443,9 @@ export const apiFetchRenameYakScriptGroupOnline: (query: PluginGroupRename) => P
     return new Promise((resolve, reject) => {
         try {
             NetWorkApi<PluginGroupRename, API.ActionSucceeded>({
-                method: "post",
+                method: "get",
                 url: "rename/group",
-                params: {...query}
+                params: query
             })
                 .then((res) => {
                     resolve(res)
@@ -1471,13 +1471,13 @@ export const apiFetchDeleteYakScriptGroupOnline: (query: PluginGroupDel) => Prom
             NetWorkApi<PluginGroupDel, API.ActionSucceeded>({
                 method: "delete",
                 url: "group",
-                params: {...query}
+                params: query
             })
                 .then((res) => {
                     resolve(res)
                 })
                 .catch((err) => {
-                    yakitNotify("error", "删除插件组失败：" + err)
+                    yakitNotify("error", "删除插件组失败1：" + err)
                     reject(err)
                 })
         } catch (error) {
@@ -1487,7 +1487,7 @@ export const apiFetchDeleteYakScriptGroupOnline: (query: PluginGroupDel) => Prom
     })
 }
 
-/**线上获取插件所在插件组和其他插件组 */
+/** 线上获取插件所在插件组和其他插件组 */
 export const apiFetchGetYakScriptGroupOnline: (params: API.PluginsGroupRequest) => Promise<API.PluginsGroupResponse> = (
     params
 ) => {
@@ -1496,7 +1496,7 @@ export const apiFetchGetYakScriptGroupOnline: (params: API.PluginsGroupRequest) 
             NetWorkApi<API.PluginsGroupRequest, API.PluginsGroupResponse>({
                 method: "get",
                 url: "plugins/group",
-                data: {...params}
+                data: params
             })
                 .then((res) => {
                     resolve(res)
@@ -1521,7 +1521,7 @@ export const apiFetchSaveYakScriptGroupOnline: (params: API.GroupRequest) => Pro
             NetWorkApi<API.GroupRequest, API.ActionSucceeded>({
                 method: "post",
                 url: "group",
-                data: {...params}
+                data: params
             })
                 .then((res) => {
                     resolve(res)

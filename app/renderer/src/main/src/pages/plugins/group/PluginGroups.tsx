@@ -27,10 +27,10 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
 
     // 判断是否是 管理员或者超级管理员权限
     const judgeOnlineStatus = useMemo(() => {
-        const flag = ["admin", "superadmin"].includes(userInfo.role || "")
+        const flag = ["admin", "superAdmin"].includes(userInfo.role || "") && userInfo.isLogin
         setPluginGroupType(flag ? "online" : "local")
         return flag
-    }, [userInfo.role])
+    }, [userInfo.role, userInfo.isLogin])
 
     return (
         <div className={styles["plugin-groups-wrapper"]} ref={pluginsGroupsRef}>
@@ -42,25 +42,25 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                         <Tooltip title='插件组只能管理除Yak和Codec类型以外的插件' placement='bottomLeft'>
                             <SolidQuestionmarkcircleIcon className={styles["pligin-group-mag-icon"]} />
                         </Tooltip>
-                        {/* {judgeOnlineStatus && (
-                        <YakitRadioButtons
-                            style={{marginRight: 4}}
-                            value={pluginGroupType}
-                            onChange={(e) => setPluginGroupType(e.target.value)}
-                            buttonStyle='solid'
-                            options={[
-                                {
-                                    value: "online",
-                                    label: "线上"
-                                },
-                                {
-                                    value: "local",
-                                    label: "本地"
-                                }
-                            ]}
-                            size={"small"}
-                        />
-                    )} */}
+                        {judgeOnlineStatus && (
+                            <YakitRadioButtons
+                                style={{marginRight: 4}}
+                                value={pluginGroupType}
+                                onChange={(e) => setPluginGroupType(e.target.value)}
+                                buttonStyle='solid'
+                                options={[
+                                    {
+                                        value: "online",
+                                        label: "线上"
+                                    },
+                                    {
+                                        value: "local",
+                                        label: "本地"
+                                    }
+                                ]}
+                                size={"small"}
+                            />
+                        )}
                         <span className={styles["plugin-groups-number"]}>
                             {pluginGroupType === "online" ? onlineGroupLen : localGroupLen}
                         </span>
@@ -100,14 +100,14 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                             height: "100%"
                         }}
                     >
-                        {/* {judgeOnlineStatus && (
+                        {judgeOnlineStatus && (
                             <PluginOnlineGroupList
                                 pluginsGroupsInViewport={inViewport}
                                 onOnlineGroupLen={setOnlineGroupLen}
                                 activeOnlineGroup={activeOnlineGroup}
                                 onActiveGroup={setActiveOnlineGroup}
                             ></PluginOnlineGroupList>
-                        )} */}
+                        )}
                     </div>
                     <div
                         style={{
@@ -132,12 +132,12 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                         height: "100%"
                     }}
                 >
-                    {/* {judgeOnlineStatus && activeOnlineGroup && (
+                    {judgeOnlineStatus && activeOnlineGroup && (
                         <PluginOnlineList
                             pluginsGroupsInViewport={inViewport}
                             activeGroup={activeOnlineGroup}
                         ></PluginOnlineList>
-                    )} */}
+                    )}
                 </div>
                 <div
                     style={{

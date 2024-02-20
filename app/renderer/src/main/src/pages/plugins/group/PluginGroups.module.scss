@@ -10,11 +10,11 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 12px;
+            border-bottom: 1px solid var(--yakit-border-color);
             &-info {
                 height: 40px;
                 display: flex;
                 align-items: center;
-                border-bottom: 1px solid var(--yakit-border-color);
                 &-text {
                     font-size: 12px;
                     color: #31343f;
