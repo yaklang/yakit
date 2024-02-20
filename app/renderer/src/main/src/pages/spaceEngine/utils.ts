@@ -21,6 +21,27 @@ export const apiGetSpaceEngineStatus: (params: GetSpaceEngineStatusProps) => Pro
             })
     })
 }
+export interface GetSpaceEngineAccountStatusRequest {
+    Type: string
+    Key: string
+    Account: string
+}
+/**
+ * @description 校验引擎状态，根据前端传的值
+ */
+export const apiGetSpaceEngineAccountStatus: (
+    params: GetSpaceEngineAccountStatusRequest
+) => Promise<SpaceEngineStatus> = (params) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GetSpaceEngineAccountStatus", {...params})
+            .then(resolve)
+            .catch((e: any) => {
+                yakitNotify("error", "校验引擎失败:" + e)
+                reject(e)
+            })
+    })
+}
 /**获取全局配置 */
 export const apiGetGlobalNetworkConfig: () => Promise<GlobalNetworkConfig> = () => {
     return new Promise((resolve, reject) => {

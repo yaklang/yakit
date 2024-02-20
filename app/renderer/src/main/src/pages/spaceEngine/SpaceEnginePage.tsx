@@ -11,15 +11,21 @@ import {Form} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {
+    GetSpaceEngineAccountStatusRequest,
     GetSpaceEngineStatusProps,
     apiCancelFetchPortAssetFromSpaceEngine,
     apiFetchPortAssetFromSpaceEngine,
     apiGetGlobalNetworkConfig,
+    apiGetSpaceEngineAccountStatus,
     apiGetSpaceEngineStatus,
     apiSetGlobalNetworkConfig
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
-import {GlobalNetworkConfig, defaultParams} from "@/components/configNetwork/ConfigNetworkPage"
+import {
+    GlobalNetworkConfig,
+    ThirdPartyApplicationConfig,
+    defaultParams
+} from "@/components/configNetwork/ConfigNetworkPage"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {ThirdPartyApplicationConfigForm} from "@/components/configNetwork/ThirdPartyApplicationConfig"
 import {OutputFormComponentsByType} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -61,7 +67,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
     const [runtimeId, setRuntimeId] = useState<string>("")
 
     const spaceEngineWrapperRef = useRef<HTMLDivElement>(null)
-    const [inViewport] = useInViewport(spaceEngineWrapperRef)
+    const [inViewport = true] = useInViewport(spaceEngineWrapperRef)
     const tokenRef = useRef<string>(randomString(40))
 
     const defaultTabs = useCreation(() => {
@@ -175,7 +181,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
                         labelWrap={true}
                         initialValues={getDefaultSpaceEngineStartParams()}
                     >
-                        <SpaceEngineFormContent disabled={isExecuting} />
+                        <SpaceEngineFormContent disabled={isExecuting} inViewport={inViewport} />
                         <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                             <div className={styles["space-engine-form-operate"]}>
                                 {isExecuting ? (
@@ -209,13 +215,14 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
 })
 interface SpaceEngineFormContentProps {
     disabled: boolean
+    inViewport: boolean
 }
 const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo((props) => {
-    const {disabled} = props
+    const {disabled, inViewport} = props
     const [globalNetworkConfig, setGlobalNetworkConfig] = useState<GlobalNetworkConfig>(defaultParams)
     useEffect(() => {
         onGetGlobalNetworkConfig()
-    }, [])
+    }, [inViewport])
     const onSelectType = useMemoizedFn((key) => {
         const param: GetSpaceEngineStatusProps = {
             Type: key
@@ -225,7 +232,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                 case "normal":
                     break
                 default:
-                    yakitNotify("error", "空间引擎:" + value.Info)
+                    yakitNotify("error", "空间引擎校验失败" + value.Info || value.Status)
                     onSetGlobalNetworkConfig(key)
                     break
             }
@@ -237,6 +244,17 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
     })
     /**设置第三方应用配置 */
     const onSetGlobalNetworkConfig = useMemoizedFn((type) => {
+        const initData: ThirdPartyApplicationConfig = globalNetworkConfig.AppConfigs.find(
+            (ele) => ele.Type === type
+        ) || {
+            APIKey: "",
+            Domain: "",
+            Namespace: "",
+            Type: type,
+            UserIdentifier: "",
+            UserSecret: "",
+            WebhookURL: ""
+        }
         let m = showYakitModal({
             title: "添加第三方应用",
             width: 600,
@@ -246,15 +264,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             content: (
                 <div style={{margin: 24}}>
                     <ThirdPartyApplicationConfigForm
-                        data={{
-                            APIKey: "",
-                            Domain: "",
-                            Namespace: "",
-                            Type: type,
-                            UserIdentifier: "",
-                            UserSecret: "",
-                            WebhookURL: ""
-                        }}
+                        data={initData}
                         onAdd={(e) => {
                             let existed = false
                             const existedResult = (globalNetworkConfig.AppConfigs || []).map((i) => {
@@ -267,11 +277,28 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                             if (!existed) {
                                 existedResult.push(e)
                             }
-                            const params = {...globalNetworkConfig, AppConfigs: existedResult}
-                            apiSetGlobalNetworkConfig(params).then(() => {
-                                onGetGlobalNetworkConfig()
-                                m.destroy()
-                            })
+                            const editItem = existedResult.find((ele) => ele.Type === e.Type)
+                            if (editItem) {
+                                const checkParams: GetSpaceEngineAccountStatusRequest = {
+                                    Type: editItem.Type,
+                                    Key: editItem.APIKey,
+                                    Account: editItem.UserIdentifier
+                                }
+                                apiGetSpaceEngineAccountStatus(checkParams).then((value) => {
+                                    switch (value.Status) {
+                                        case "normal":
+                                            const params = {...globalNetworkConfig, AppConfigs: existedResult}
+                                            apiSetGlobalNetworkConfig(params).then(() => {
+                                                onGetGlobalNetworkConfig()
+                                                m.destroy()
+                                            })
+                                            break
+                                        default:
+                                            yakitNotify("error", "设置引擎失败:" + value.Info || value.Status)
+                                            break
+                                    }
+                                })
+                            }
                         }}
                         onCancel={() => m.destroy()}
                     />
