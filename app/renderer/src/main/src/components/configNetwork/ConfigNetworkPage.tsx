@@ -554,7 +554,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             let m = showYakitModal({
                                                 title: "添加第三方应用",
                                                 width: 600,
-                                                okButtonProps: {hidden: true},
+                                                footer: null,
                                                 closable: true,
                                                 maskClosable: false,
                                                 content: (

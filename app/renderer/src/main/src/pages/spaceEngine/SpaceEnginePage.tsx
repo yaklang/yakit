@@ -221,8 +221,13 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             Type: key
         }
         apiGetSpaceEngineStatus(param).then((value) => {
-            if (value.Status === "empty_key") {
-                onSetGlobalNetworkConfig(key)
+            switch (value.Status) {
+                case "normal":
+                    break
+                default:
+                    yakitNotify("error", "空间引擎:" + value.Info)
+                    onSetGlobalNetworkConfig(key)
+                    break
             }
         })
     })
