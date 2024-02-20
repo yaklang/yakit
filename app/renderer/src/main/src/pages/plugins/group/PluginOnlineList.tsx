@@ -152,7 +152,6 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
             if (activeGroup.default && activeGroup.id === "未分组" && query.pluginGroup) {
                 query.pluginGroup.unSetGroup = true
             }
-            console.log("插件列表", query)
             setQueryFetchList(query)
             try {
                 const res = await apiFetchOnlineList(query)
@@ -241,14 +240,13 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
         pluginUuidRef.current = uuid
         if (!queryFetchList) return
         const query = structuredClone(queryFetchList)
-        console.log("获取查询参数", {...query, uuid})
         apiFetchGetYakScriptGroupOnline({...query, uuid}).then((res) => {
-            const copySetGroup = [...res.setGroup]
+            const copySetGroup = Array.isArray(res.setGroup) ? [...res.setGroup] : []
             const newSetGroup = copySetGroup.map((name) => ({
                 groupName: name,
                 checked: true
             }))
-            let copyAllGroup = [...res.allGroup]
+            let copyAllGroup = Array.isArray(res.allGroup) ? [...res.allGroup] : []
             const newAllGroup = copyAllGroup.map((name) => ({
                 groupName: name,
                 checked: false
@@ -284,7 +282,6 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
             saveGroup,
             removeGroup
         }
-        console.log('新增或移除', params);
         apiFetchSaveYakScriptGroupOnline(params).then(() => {
             if (activeGroup.id !== "全部") {
                 refreshOnlinePluginList()

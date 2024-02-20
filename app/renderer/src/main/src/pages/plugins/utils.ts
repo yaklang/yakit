@@ -1499,6 +1499,7 @@ export const apiFetchGetYakScriptGroupOnline: (params: API.PluginsGroupRequest) 
                 data: params
             })
                 .then((res) => {
+                    console.log('值', res);
                     resolve(res)
                 })
                 .catch((err) => {

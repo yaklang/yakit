@@ -9,9 +9,9 @@ import {GroupListItem} from "./PluginGroupList"
 import {useInViewport} from "ahooks"
 import {SolidQuestionmarkcircleIcon} from "@/assets/icon/solid"
 import {Tooltip} from "antd"
-import styles from "./PluginGroups.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import styles from "./PluginGroups.module.scss"
 
 interface PluginGroupsProps {}
 

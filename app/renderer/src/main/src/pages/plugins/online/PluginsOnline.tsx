@@ -287,6 +287,32 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
         fetchList(true)
     }, [refresh, filters, otherSearch])
 
+    // 当filters过滤条件被其他页面或者意外删掉，插件列表却带了该过滤条件的情况，切换到该页面时需要把被删掉的过滤条件排除
+    useEffect(() => {
+        let updateFilterFlag = false
+        let lasetFilter: PluginFilterParams = structuredClone(filters)
+        Object.keys(filters).forEach((key) => {
+            filters[key].forEach((item: API.PluginsSearchData) => {
+                const value = item.value
+                pluginGroupList.forEach((item2) => {
+                    if (item2.groupKey === key) {
+                        updateFilterFlag = item2.data.findIndex((item3) => item3.value === value) === -1
+                        if (updateFilterFlag) {
+                            lasetFilter = {
+                                ...lasetFilter,
+                                [key]: lasetFilter[key].filter((item4: API.PluginsSearchData) => item4.value !== value)
+                            }
+                        }
+                    }
+                })
+            })
+        })
+
+        if (updateFilterFlag) {
+            setFilters(lasetFilter)
+        }
+    }, [filters, pluginGroupList])
+
     useEffect(() => {
         emiter.on("onSwitchPrivateDomain", onSwitchPrivateDomainRefOnlinePluginInit)
         emiter.on("onRefOnlinePluginList", onRefOnlinePluginList)
