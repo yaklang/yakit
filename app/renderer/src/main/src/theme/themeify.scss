@@ -27,3 +27,6 @@ $color-list: (
 @function fetch-color($type, $color) {
     @return map-get(map-get($color-list, $type), $color);
 }
+
+// 手动控制颜色变量,生成带透明度的颜色
+// color-mix(in srgb, var(--yakit-tag-color-orange) 20%, transparent)
