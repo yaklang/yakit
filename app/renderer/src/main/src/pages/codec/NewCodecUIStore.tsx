@@ -21,6 +21,7 @@ import { DefaultOptionType } from "antd/lib/select"
 import { queryYakScriptList } from "../yakitStore/network"
 import { YakScript } from "../invoker/schema"
 import { YakParamProps } from "../plugins/pluginsType"
+import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
 const {ipcRenderer} = window.require("electron")
 export interface NewCodecInputUIProps extends YakitInputProps {
     // 标题
@@ -285,8 +286,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
 
     const editorContChange = useDebounceFn(
         (content) => {
-            const str = Uint8ArrayToString(content)
-            setEditorValue(str)
+            setEditorValue(content)
         },
         {wait: 100}
     ).run
@@ -333,15 +333,14 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
                 </div>
             </div>
             <div className={styles["editor-box"]}>
-                <NewHTTPPacketEditor
-                    language={"yak"}
-                    onEditor={(editor) => {
+                <YakitEditor
+                    type="codec"
+                    editorDidMount={(editor) => {
                         setReqEditor(editor)
                     }}
                     disabled={disabled}
-                    noHeader={true}
-                    originValue={StringToUint8Array(editorValue)}
-                    onChange={editorContChange}
+                    value={editorValue}
+                    setValue={editorContChange}
                 />
             </div>
         </div>

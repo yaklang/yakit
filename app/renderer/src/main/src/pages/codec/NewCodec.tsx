@@ -1,9 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Divider, Tooltip, Upload} from "antd"
-import {} from "@ant-design/icons"
 import {useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
 import styles from "./NewCodec.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
@@ -11,7 +8,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {SolidDragsortIcon, SolidPlayIcon, SolidStarIcon} from "@/assets/icon/solid"
-import {YakEditor} from "@/utils/editors"
 import {SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {
     OutlineArrowBigUpIcon,
@@ -48,9 +44,9 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {NewCodecCheckUI, NewCodecEditor, NewCodecInputUI, NewCodecSelectUI} from "./NewCodecUIStore"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -239,15 +235,13 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             </div>
                         </div>
                         <div className={styles["editor"]}>
-                            <YakEditor
-                                noMiniMap={true}
-                                type='yak'
+                            <YakitEditor
+                                type='codec'
                                 value={inputEditor}
                                 setValue={(content: string) => {
                                     setInputEditor(content)
                                 }}
                                 // loading={loading}
-                                noWordWrap={true}
                             />
                         </div>
                     </div>
@@ -278,16 +272,14 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             </div>
                         </div>
                         <div className={styles["editor"]}>
-                            <YakEditor
+                            <YakitEditor
                                 readOnly={true}
-                                type='yak'
+                                type='codec'
                                 value={outputEditor}
-                                noMiniMap={true}
                                 setValue={(content: string) => {
                                     setOutputEditor(content)
                                 }}
                                 // loading={loading}
-                                noWordWrap={true}
                             />
                         </div>
                     </div>
