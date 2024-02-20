@@ -181,7 +181,7 @@ export const DelGroupConfirmPop: React.FC<DelGroupConfirmPopProps> = React.forwa
 
     useEffect(() => {
         if (visible) {
-            // setDelGroupConfirmNoPrompt(false)
+            setDelGroupConfirmNoPrompt(false)
         }
     }, [visible])
 
@@ -201,6 +201,7 @@ export const DelGroupConfirmPop: React.FC<DelGroupConfirmPopProps> = React.forwa
             footerExtra={
                 <YakitCheckbox
                     value={delGroupConfirmNoPrompt}
+                    checked={delGroupConfirmNoPrompt}
                     onChange={(e) => setDelGroupConfirmNoPrompt(e.target.checked)}
                 >
                     下次不再提醒

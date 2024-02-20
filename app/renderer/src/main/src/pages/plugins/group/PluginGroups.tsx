@@ -83,7 +83,9 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                                                     重置将删除本地所有分组，并重新下载所有线上插件，是否重置？
                                                 </div>
                                             ),
-                                            onCancel: () => {}
+                                            onCancel: () => {
+                                                m.destroy()
+                                            }
                                         })
                                     }}
                                 >
