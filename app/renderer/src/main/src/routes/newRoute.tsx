@@ -489,8 +489,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <NewCodec/>
-            // return <NewHome />
+            return <NewHome />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -515,7 +514,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.WebsocketFuzzer:
             return <WebsocketFuzzer tls={params?.wsTls} request={params?.wsRequest} />
         case YakitRoute.Codec:
-            return <CodecPage />
+            return <NewCodec />
         case YakitRoute.DataCompare:
             return <DataCompare leftData={params?.leftData} rightData={params?.rightData} />
         case YakitRoute.Mod_ScanPort:
