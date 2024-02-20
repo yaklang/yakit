@@ -14,18 +14,7 @@ export const apiGetSpaceEngineStatus: (params: GetSpaceEngineStatusProps) => Pro
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("GetSpaceEngineStatus", {...params})
-            .then((value: SpaceEngineStatus) => {
-                switch (value.Status) {
-                    case "error":
-                    case "invalid_type":
-                        yakitNotify("error", "获取空间引擎错误:" + value.Info)
-                        reject(value.Info)
-                        break
-                    default:
-                        resolve(value)
-                        break
-                }
-            })
+            .then(resolve)
             .catch((e: any) => {
                 yakitNotify("error", "获取空间引擎错误:" + e)
                 reject(e)
