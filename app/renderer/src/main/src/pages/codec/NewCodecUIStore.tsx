@@ -334,6 +334,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
             </div>
             <div className={styles["editor-box"]}>
                 <NewHTTPPacketEditor
+                    language={"yak"}
                     onEditor={(editor) => {
                         setReqEditor(editor)
                     }}

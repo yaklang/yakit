@@ -38,7 +38,8 @@ import {
     DropResult,
     ResponderProvided,
     DragStart,
-    DragUpdate
+    DragUpdate,
+    DraggableProvided
 } from "@hello-pangea/dnd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
@@ -240,6 +241,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         <div className={styles["editor"]}>
                             <YakEditor
                                 noMiniMap={true}
+                                type='yak'
                                 value={inputEditor}
                                 setValue={(content: string) => {
                                     setInputEditor(content)
@@ -278,6 +280,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                         <div className={styles["editor"]}>
                             <YakEditor
                                 readOnly={true}
+                                type='yak'
                                 value={outputEditor}
                                 noMiniMap={true}
                                 setValue={(content: string) => {
@@ -299,10 +302,11 @@ interface NewCodecMiddleTypeItemProps {
     outerKey: string
     rightItems: RightItemsProps[]
     setRightItems: (v: RightItemsProps[]) => void
+    provided: DraggableProvided
 }
 
 export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (props) => {
-    const {data, outerKey, rightItems, setRightItems} = props
+    const {data, outerKey, rightItems, setRightItems, provided} = props
 
     const {title, node} = data
     const [itemStatus, setItemStatus] = useState<"run" | "suspend" | "shield">()
@@ -429,7 +433,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                 [styles["type-item-shield"]]: itemStatus === "shield"
             })}
         >
-            <div className={styles["type-header"]}>
+            <div className={styles["type-header"]} {...provided.dragHandleProps}>
                 <div className={styles["type-title"]}>
                     <div className={styles["drag-icon"]}>
                         <SolidDragsortIcon />
@@ -754,7 +758,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                             Value: value.includes(name)
                         })
                     } else {
-                        const {name, value} = itemIn
+                        const {name, value = ""} = itemIn
                         obj.Params.push({
                             Key: name,
                             Value: value
@@ -767,7 +771,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
         console.log("newCodecParams---", newCodecParams)
 
         ipcRenderer
-            .invoke("newCodec", newCodecParams)
+            .invoke("NewCodec", newCodecParams)
             .then((data: {Result: string}) => {
                 console.log("newCodec**", data)
                 // 执行完成后 更改Output值
@@ -925,7 +929,6 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                                 <div
                                                     ref={provided.innerRef}
                                                     {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
                                                     style={{
                                                         ...getMiddleItemStyle(
                                                             snapshot.isDragging,
@@ -938,6 +941,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                                         outerKey={item.key}
                                                         rightItems={rightItems}
                                                         setRightItems={setRightItems}
+                                                        provided={provided}
                                                     />
                                                 </div>
                                             )}

@@ -57,12 +57,11 @@ module.exports = (win, getClient) => {
                     reject(err)
                     return
                 }
-                console.log(data)
                 resolve(data)
             })
         })
     }
-    ipcMain.handle("newCodec", async (e, params) => {
+    ipcMain.handle("NewCodec", async (e, params) => {
         return await asyncNewCodec(params)
     })
 

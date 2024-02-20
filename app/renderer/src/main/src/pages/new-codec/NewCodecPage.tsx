@@ -832,7 +832,7 @@ const CodecEditor = () => {
         }
 
         ipcRenderer
-            .invoke("newCodec", {Text: text, WorkFlow: workFlow})
+            .invoke("NewCodec", {Text: text, WorkFlow: workFlow})
             .then((res) => {
                 setResult(res?.Result || "")
 
