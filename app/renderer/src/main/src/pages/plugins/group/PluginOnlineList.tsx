@@ -127,7 +127,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
         refreshOnlinePluginList()
     })
 
-    const [queryFetchList, setQueryFetchList] = useState<PluginsQueryProps>()
+    const queryFetchList = useRef<PluginsQueryProps>()
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
@@ -152,7 +152,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
             if (activeGroup.default && activeGroup.id === "未分组" && query.pluginGroup) {
                 query.pluginGroup.unSetGroup = true
             }
-            setQueryFetchList(query)
+            queryFetchList.current = query
             try {
                 const res = await apiFetchOnlineList(query)
                 if (!res.data) res.data = []
@@ -238,8 +238,8 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
     const pluginUuidRef = useRef<string[]>([])
     const getYakScriptGroupOnline = (uuid: string[]) => {
         pluginUuidRef.current = uuid
-        if (!queryFetchList) return
-        const query = structuredClone(queryFetchList)
+        if (!queryFetchList.current) return
+        const query = structuredClone(queryFetchList.current)
         apiFetchGetYakScriptGroupOnline({...query, uuid}).then((res) => {
             const copySetGroup = Array.isArray(res.setGroup) ? [...res.setGroup] : []
             const newSetGroup = copySetGroup.map((name) => ({
@@ -276,7 +276,7 @@ export const PluginOnlineList: React.FC<PluginOnlineGroupsListProps> = React.mem
                 removeGroup.push(groupName)
             }
         })
-        if ((!saveGroup.length && !removeGroup.length) || !queryFetchList) return
+        if ((!saveGroup.length && !removeGroup.length) || !queryFetchList.current) return
         const params: API.GroupRequest = {
             uuid: pluginUuidRef.current,
             saveGroup,

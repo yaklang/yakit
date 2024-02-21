@@ -129,7 +129,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     })
 
     // 获取插件列表数据
-    const [queryFetchList, setQueryFetchList] = useState<QueryYakScriptRequest>()
+    const queryFetchList = useRef<QueryYakScriptRequest>()
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
@@ -156,7 +156,7 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
             if (activeGroup.default && activeGroup.id === "未分组" && query.Group) {
                 query.Group.UnSetGroup = true
             }
-            setQueryFetchList(query)
+            queryFetchList.current = query
             try {
                 const res = await apiQueryYakScript(query)
                 if (!res.Data) res.Data = []
@@ -250,8 +250,8 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
     const scriptNameRef = useRef<string[]>([])
     const getYakScriptGroupLocal = (scriptName: string[]) => {
         scriptNameRef.current = scriptName
-        if (!queryFetchList) return
-        const query = structuredClone(queryFetchList)
+        if (!queryFetchList.current) return
+        const query = structuredClone(queryFetchList.current)
         query.IncludedScriptNames = scriptName
         apiFetchGetYakScriptGroupLocal(query).then((res) => {
             const copySetGroup = [...res.SetGroup]
@@ -298,8 +298,8 @@ export const PluginLocalList: React.FC<PluginLocalGroupsListProps> = React.memo(
                 removeGroup.push(groupName)
             }
         })
-        if ((!saveGroup.length && !removeGroup.length) || !queryFetchList) return
-        const query = structuredClone(queryFetchList)
+        if ((!saveGroup.length && !removeGroup.length) || !queryFetchList.current) return
+        const query = structuredClone(queryFetchList.current)
         query.IncludedScriptNames = scriptNameRef.current
         apiFetchSaveYakScriptGroupLocal({
             Filter: query,
