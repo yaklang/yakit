@@ -248,6 +248,8 @@
                                 height: 100%;
                                 overflow: hidden;
                                 padding: 0 10px;
+                                display: flex;
+                                align-items: center;
                             }
                             .title-opt:first-child {
                                 padding: 0 10px 0 4px;
@@ -365,26 +367,6 @@
     }
 }
 
-// 表头过滤选项图标样式
-.type-filter-icon-style {
-    color: var(--yakit-body-text-color) !important;
-    :global {
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-    }
-}
-.type-filter-icon-disabled-style {
-    color: var(--yakit-disable-text-color) !important;
-    :global {
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-    }
-}
-
 .project-table-filter {
     height: 100%;
     padding: 4px 8px 4px 0;
@@ -424,6 +406,12 @@
 }
 .project-name-wrapper {
     color: var(--yakit-header-color);
+    .opt-project-icon {
+        color: #56c991;
+    }
+    .opt-floder-icon {
+        color: #ffb660;
+    }
 }
 .database-path-wrapper {
     color: var(--yakit-primary-5);
@@ -470,27 +458,41 @@
     }
     .btn-style {
         color: var(--yakit-body-text-color);
+        svg {
+            stroke-width: 1.5;
+            width: 16px;
+            height: 16px;
+        }
     }
     .del-style {
         color: var(--yakit-danger-5);
+        svg {
+            stroke-width: 1.5;
+            width: 16px;
+            height: 16px;
+        }
     }
 }
 
 // dropdownmenu 组件业务样式
 .dropdown-menu-filter-wrapper {
     border-radius: 4px;
-    --yakit-primary-5: var(--yakit-background-color);
-    --yakit-neutral10-color: var(--yakit-header-color);
-
     border: 1px solid var(--yakit-border-color);
     box-shadow: 0px 2px 4px rgba(133, 137, 158, 0.2);
 }
 .dropdown-menu-body {
     border-radius: 4px;
     padding: 8px 4px;
-    :global {
-        .ant-dropdown-menu-item {
-            color: var(--yakit-header-color);
+
+    :global(.ant-dropdown-menu-item.ant-dropdown-menu-item-only-child span) {
+        &.all-icon {
+            color: #4a94f8;
+        }
+        &.project-icon {
+            color: #56c991;
+        }
+        &.floder-icon {
+            color: #ffb660;
         }
     }
 }

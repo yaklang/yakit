@@ -381,6 +381,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
 
     // 收起菜单的点击回调
     const onNoExpandClickMenu = useMemoizedFn((key: string, keyPath: string[]) => {
+        setNoExpandMenu(-1)
         const data = keyToRouteInfo(key)
 
         if (data) {
@@ -439,9 +440,10 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                             overlayStyle={{paddingTop: 2}}
                             overlayClassName={styles["child-menu-popover"]}
                             placement={index === 0 ? "bottomLeft" : "bottom"}
+                            visible={noExpandMenu === index}
                             content={
                                 <YakitMenu
-                                    triggerSubMenuAction="click"
+                                    // triggerSubMenuAction="click"
                                     selectable={false}
                                     selectedKeys={[]}
                                     data={data}

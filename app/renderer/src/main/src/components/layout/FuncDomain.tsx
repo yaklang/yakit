@@ -1166,7 +1166,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         <YakitMenu
             width={142}
             selectedKeys={[]}
-            triggerSubMenuAction={'click'}
+            // triggerSubMenuAction={'click'}
             data={GetUIOpSettingMenu() as YakitMenuItemProps[]}
             onClick={({key}) => menuSelect(key)}
         />
