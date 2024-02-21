@@ -154,7 +154,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const getCacheEngineMode = useMemoizedFn(() => {
         setEngineMode(undefined)
         getLocalValue(LocalGV.YaklangEngineMode).then((val: YaklangEngineMode) => {
-            info(`加载上次引擎模式：${val}`)
+            if(val) info(`加载上次引擎模式：${val}`)
             switch (val) {
                 case "remote":
                     setEngineMode("remote")
