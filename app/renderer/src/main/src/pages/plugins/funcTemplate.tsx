@@ -67,7 +67,7 @@ import {Dropdown, Form, Radio, Tooltip} from "antd"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {formatDate} from "@/utils/timeUtil"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {PluginTestErrorIcon, PluginsGridCheckIcon} from "./icon"
+import {PluginTestErrorIcon, PluginTestWarningIcon, PluginsGridCheckIcon} from "./icon"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import YakitLogo from "@/assets/yakitLogo.png"
 import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
@@ -1654,7 +1654,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                     <div className={styles["error-list"]}>
                         {response && (
                             <div className={styles["list-body"]}>
-                                {(response?.Results || []).map((item) => {
+                                {(response?.Results || []).map((item, index) => {
                                     let errorPosition: string = ""
                                     try {
                                         const {StartLine, StartColumn, EndLine, EndColumn} = item.Range || {}
@@ -1666,7 +1666,11 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                                     return (
                                         <div className={styles["list-opt"]} key={item.IdKey}>
                                             <div className={styles["opt-header"]}>
-                                                <PluginTestErrorIcon />
+                                                {item.Severity === "Warning" ? (
+                                                    <PluginTestWarningIcon />
+                                                ) : (
+                                                    <PluginTestErrorIcon />
+                                                )}
                                                 {item.Item}
                                             </div>
                                             <div className={styles["opt-content"]}>
