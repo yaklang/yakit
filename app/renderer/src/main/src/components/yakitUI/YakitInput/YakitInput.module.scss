@@ -440,15 +440,15 @@
             font-size: 14px;
             color: var(--yakit-helper-text-color);
         }
-    }
-    .resizer-icon {
-        position: absolute;
-        bottom: 5px;
-        right: 2px;
-        color: var(--yakit-body-text-color);
-        z-index: 1;
-        pointer-events: none;
-        background-color: #fff;
+        .textArea-resizer-icon {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            color: var(--yakit-body-text-color);
+            z-index: 1;
+            pointer-events: none;
+            background-color: #fff;
+        }
     }
 }
 .yakit-textArea-resize-hide {

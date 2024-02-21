@@ -105,7 +105,7 @@ const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<Input
 
 const InternalTextArea: React.FC<InternalTextAreaProps & React.RefAttributes<TextAreaRef>> = forwardRef(
     (props, ref: React.Ref<TextAreaRef>) => {
-        const {wrapperClassName, wrapperStyle, isShowResize = true, ...restProps} = props
+        const {wrapperClassName, wrapperStyle, isShowResize = true,resizeClassName='', ...restProps} = props
         return (
             <div
                 className={classNames(
@@ -119,7 +119,7 @@ const InternalTextArea: React.FC<InternalTextAreaProps & React.RefAttributes<Tex
                 style={{...(wrapperStyle || {})}}
             >
                 <Input.TextArea spellCheck={false} {...restProps} ref={ref} />
-                {isShowResize && <ResizerIcon className={styles["resizer-icon"]} />}
+                {isShowResize && <ResizerIcon className={classNames("textArea-resizer-icon",resizeClassName)} />}
             </div>
         )
     }
