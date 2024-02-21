@@ -12,6 +12,7 @@ import {
     QueryYakScriptGroupResponse,
     QueryYakScriptRequest,
     QueryYakScriptsResponse,
+    ResetYakScriptGroupRequest,
     SaveYakScriptGroupRequest,
     YakScript,
     genDefaultPagination
@@ -1410,6 +1411,20 @@ export const apiFetchSaveYakScriptGroupLocal: (params: SaveYakScriptGroupRequest
     })
 }
 
+/**本地插件组重置为线上插件组 */
+export const apiFetchResetYakScriptGroup: (params: ResetYakScriptGroupRequest) => Promise<null> = (params) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("ResetYakScriptGroup", params)
+            .then((res: null) => {
+                resolve(null)
+            })
+            .catch((e) => {
+                yakitNotify("error", "重置失败：" + e)
+            })
+    })
+}
+
 /** 线上获取插件组数据 */
 export const apiFetchQueryYakScriptGroupOnline: () => Promise<API.GroupResponse> = () => {
     return new Promise((resolve, reject) => {
@@ -1499,7 +1514,6 @@ export const apiFetchGetYakScriptGroupOnline: (params: API.PluginsGroupRequest) 
                 data: params
             })
                 .then((res) => {
-                    console.log('值', res);
                     resolve(res)
                 })
                 .catch((err) => {

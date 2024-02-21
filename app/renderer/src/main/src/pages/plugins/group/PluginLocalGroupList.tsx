@@ -103,7 +103,7 @@ export const PluginLocalGroupList: React.FC<PluginLocalGroupListProps> = (props)
         apiFetchDeleteYakScriptGroupLocal(groupItem.name).then(() => {
             getGroupList()
             // 如果当前选中组为固定的未分组 刷新右侧插件列表
-            if (activeLocalGroup?.default && activeLocalGroup.id === '未分组') {
+            if (activeLocalGroup?.default && activeLocalGroup.id === "未分组") {
                 emiter.emit("onRefPluginGroupMagLocalPluginList", "")
             }
             callBack && callBack()

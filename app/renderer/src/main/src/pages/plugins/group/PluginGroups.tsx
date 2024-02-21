@@ -11,6 +11,8 @@ import {SolidQuestionmarkcircleIcon} from "@/assets/icon/solid"
 import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import emiter from "@/utils/eventBus/eventBus"
+import {apiFetchResetYakScriptGroup} from "../utils"
 import styles from "./PluginGroups.module.scss"
 
 interface PluginGroupsProps {}
@@ -77,6 +79,11 @@ export const PluginGroups: React.FC<PluginGroupsProps> = React.memo((props) => {
                                             onOkText: "确认",
                                             onOk: () => {
                                                 m.destroy()
+                                                // console.log({Token: userInfo.token});
+                                                // BUG 接口抛错 线上没有插件组的时候 重置到本地会多出无名插件组
+                                                apiFetchResetYakScriptGroup({Token: userInfo.token}).then(() => {
+                                                    emiter.emit("onRefPluginGroupMagLocalQueryYakScriptGroup", "")
+                                                })
                                             },
                                             content: (
                                                 <div style={{margin: 15}}>

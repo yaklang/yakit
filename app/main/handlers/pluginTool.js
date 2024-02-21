@@ -332,4 +332,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SaveYakScriptGroup", async (e, params) => {
         return await asyncSaveYakScriptGroup(params)
     })
+
+    const asyncResetYakScriptGroup = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ResetYakScriptGroup(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 重置插件组为线上插件组
+    ipcMain.handle("ResetYakScriptGroup", async (e, params) => {
+        return await asyncResetYakScriptGroup(params)
+    })
 }

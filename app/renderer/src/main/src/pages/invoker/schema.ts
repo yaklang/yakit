@@ -193,3 +193,7 @@ export interface SaveYakScriptGroupRequest {
     SaveGroup: string[]
     RemoveGroup: string[]
 }
+
+export interface ResetYakScriptGroupRequest {
+    Token: string
+}
