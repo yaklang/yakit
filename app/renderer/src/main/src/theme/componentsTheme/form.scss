@@ -27,6 +27,13 @@
     color: var(--yakit-danger-5);
 }
 
+// ----------------- textArea
+.ant-form {
+    .textArea-resizer-icon {
+        bottom: 5px;
+    }
+}
+
 // --------------input
 .ant-input-status-error:not(.ant-input-disabled):not(.ant-input-borderless).ant-input {
     border-color: var(--yakit-danger-5);
