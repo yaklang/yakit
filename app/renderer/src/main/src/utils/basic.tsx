@@ -448,7 +448,7 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
 
     const onCancel = () => {
         ipcRenderer.invoke("cancel-ExecYakCode", startToExecYakScriptViewerRef.current.token)
-        noErrorsLogCallBack && noErrorsLogCallBack()
+        
         onClose()
     }
 
@@ -473,6 +473,7 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
                 <StartToExecYakScriptViewer
                     key={refresh}
                     ref={startToExecYakScriptViewerRef} 
+                    noErrorsLogCallBack={noErrorsLogCallBack}
                     script={params} 
                     verbose={verbose} 
                     successInfo={successInfo} 
@@ -485,12 +486,13 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
 
 const StartToExecYakScriptViewer = React.forwardRef((props: {
     ref: any
+    noErrorsLogCallBack?: () => void
     verbose: string,
     script: YakScriptParam,
     successInfo?: boolean
     onCancel: () => void
 }, ref) => {
-    const {script, verbose, successInfo = true, onCancel} = props;
+    const {script, verbose, successInfo = true, onCancel, noErrorsLogCallBack} = props;
     const [token, setToken] = useState(randomString(40));
     const [loading, setLoading] = useState(true);
     const [messageStateStr, setMessageStateStr] = useState<string>("");
@@ -527,6 +529,7 @@ const StartToExecYakScriptViewer = React.forwardRef((props: {
             }
             // 导入日志都没有错误
             if (!checkErrorsFlagRef.current && !loading) {
+                noErrorsLogCallBack && noErrorsLogCallBack()
                 onCancel()
             }
         }
