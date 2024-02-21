@@ -23,13 +23,14 @@
     }
     .space-engine-content {
         padding: 16px;
-        padding-top: 24px;
+        padding-top: 0;
         flex: 1;
         display: flex;
         flex-direction: column;
         overflow: auto;
 
         .space-engine-form-wrapper {
+            padding-top: 24px;
             display: grid;
             grid-template-rows: 1fr;
             transition: all 0.3s ease;
@@ -46,6 +47,7 @@
             }
         }
         .space-engine-form-wrapper-hidden {
+            padding-top: 0;
             grid-template-rows: 0fr;
         }
     }
