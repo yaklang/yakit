@@ -362,6 +362,7 @@ export interface CodeScoreSmokingEvaluateResultProps {
     Suggestion: string
     ExtraInfo: Uint8Array
     Range: GRPCRange
+    Severity: string
 }
 /** 源码位置信息 */
 export interface GRPCRange {

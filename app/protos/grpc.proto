@@ -1124,6 +1124,7 @@ message SmokingEvaluateResult {
   string Suggestion = 2;
   bytes ExtraInfo = 3;
   Range Range = 4;
+  string Severity = 5;
 }
 
 message SmokingEvaluatePluginResponse {

@@ -504,7 +504,7 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
                                     [styles["tab-hidden"]]: activeTab !== "code"
                                 })}
                             >
-                                <YakitEditor type={"yak"} value={content} setValue={setContent} />
+                                <YakitEditor type={pluginType} value={content} setValue={setContent} />
                             </div>
 
                             <div

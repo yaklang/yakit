@@ -41,3 +41,21 @@ const PluginTestError = () => (
 export const PluginTestErrorIcon = (props: Partial<IconProps>) => {
     return <Icon component={PluginTestError} {...props} />
 }
+
+const PluginTestWarning = () => (
+    <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect width='20' height='20' rx='10' fill='#FFB660' />
+        <path
+            fillRule='evenodd'
+            clipRule='evenodd'
+            d='M8.43123 3.78893C9.11938 2.56556 10.8808 2.56556 11.5689 3.78893L16.5912 12.7174C17.2661 13.9173 16.399 15.3999 15.0223 15.3999H4.97779C3.6011 15.3999 2.73402 13.9173 3.40896 12.7174L8.43123 3.78893ZM10.9 12.7C10.9 13.197 10.497 13.6 9.99999 13.6C9.50293 13.6 9.09999 13.197 9.09999 12.7C9.09999 12.2029 9.50293 11.8 9.99999 11.8C10.497 11.8 10.9 12.2029 10.9 12.7ZM9.99999 5.49999C9.50293 5.49999 9.09999 5.90293 9.09999 6.39999V9.09999C9.09999 9.59704 9.50293 9.99999 9.99999 9.99999C10.497 9.99999 10.9 9.59704 10.9 9.09999V6.39999C10.9 5.90293 10.497 5.49999 9.99999 5.49999Z'
+            fill='white'
+        />
+    </svg>
+)
+/**
+ * @description  icon/log 节点状态/警告 Warning
+ */
+export const PluginTestWarningIcon = (props: Partial<IconProps>) => {
+    return <Icon component={PluginTestWarning} {...props} />
+}
