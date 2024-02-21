@@ -327,7 +327,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
     })
 
     // 真正查询接口传给后端的参数 主要用于其他地方可能需要查询参数的地方
-    const [queryFetchList, setQueryFetchList] = useState<QueryYakScriptRequest>()
+    const queryFetchList = useRef<QueryYakScriptRequest>()
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
             // if (latestLoadingRef.current) return //先注释，会影响详情的更多加载
@@ -349,7 +349,7 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
             const query: QueryYakScriptRequest = {
                 ...convertLocalPluginsRequestParams(queryFilters, querySearch, params)
             }
-            setQueryFetchList(query)
+            queryFetchList.current = query
             try {
                 const res = await apiQueryYakScript(query)
                 if (!res.Data) res.Data = []
@@ -641,14 +641,14 @@ export const PluginsLocal: React.FC<PluginsLocalProps> = React.memo((props) => {
         try {
             const showSaveDialogRes = await ipcRenderer.invoke("openDialog", {properties: ["openDirectory"]})
             if (showSaveDialogRes.canceled) return
-            if (queryFetchList) {
+            if (queryFetchList.current) {
                 const params: ExportParamsProps = {
                     OutputDir: showSaveDialogRes.filePaths[0],
                     YakScriptIds: Ids,
-                    Keywords: queryFetchList.Keyword || "",
-                    Type: queryFetchList.Type || "",
-                    UserName: queryFetchList.UserName || "",
-                    Tags: queryFetchList.Tag + ""
+                    Keywords: queryFetchList.current.Keyword || "",
+                    Type: queryFetchList.current.Type || "",
+                    UserName: queryFetchList.current.UserName || "",
+                    Tags: queryFetchList.current.Tag + ""
                 }
                 setExportParams(params)
                 setExportStatusModalVisible(true)
