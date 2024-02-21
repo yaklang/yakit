@@ -1,5 +1,5 @@
-import React, {Ref, useEffect, useState} from "react"
-import {Divider, Modal, notification, Typography} from "antd"
+import React, {Ref, useEffect, useRef, useState} from "react"
+import {Divider, Form, Modal, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info} from "@/utils/notification"
@@ -20,6 +20,10 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {AgentConfigModal} from "../MITMServerStartForm/MITMServerStartForm"
+import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -37,6 +41,7 @@ export interface MITMServerHijackingProp {
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
     tip: string
+    onSetTip: (tip: string) => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -50,7 +55,7 @@ const MITMFiltersModal = React.lazy(() => import("../MITMServerStartForm/MITMFil
 const MITMCertificateDownloadModal = React.lazy(() => import("../MITMServerStartForm/MITMCertificateDownloadModal"))
 
 export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) => {
-    const {host, port, addr, status, setStatus, setVisible, logs, statusCards, tip} = props
+    const {host, port, addr, status, setStatus, setVisible, logs, statusCards, tip, onSetTip} = props
 
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -87,6 +92,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         })
     }, [])
 
+    const [downStreamAgentModalVisible, setDownStreamAgentModalVisible] = useState<boolean>(false)
+
     return (
         <div className={style["mitm-server"]}>
             <div className={style["mitm-server-heard"]}>
@@ -95,11 +102,10 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     <div className={classNames(style["mitm-server-heard-addr"], "content-ellipsis")}>
                         <span style={{marginRight: 8}}>{addr}</span>
                         {tip
-                            .split("|")
+                            .split("|").filter(item => item)
                             .map(
-                                (item, index) =>
-                                    item &&
-                                    (index > 0 ? (
+                                (item) =>
+                                    (!item.startsWith("下游代理") ? (
                                         <YakitTag color='success'>{item}</YakitTag>
                                     ) : (
                                         <YakitTag>{item}</YakitTag>
@@ -122,6 +128,10 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                     }}
                                 />
                             </label>
+                        </div>
+                        <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
+                        <div className={style["link-item"]} onClick={() => setDownStreamAgentModalVisible(true)}>
+                            下游代理
                         </div>
                         <Divider type='vertical' style={{margin: "0 4px", top: 1}} />
                         <div className={style["link-item"]} onClick={() => setVisible(true)}>
@@ -152,6 +162,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     </div>
                 </div>
             </div>
+            <DownStreamAgentModal
+                downStreamAgentModalVisible={downStreamAgentModalVisible}
+                onCloseModal={() => setDownStreamAgentModalVisible(false)}
+                tip={tip}
+                onSetTip={onSetTip}
+            ></DownStreamAgentModal>
             <Divider style={{margin: "8px 0"}} />
             <div className={style["mitm-server-body"]}>
                 <MITMServer status={status} setStatus={setStatus} logs={logs} statusCards={statusCards} />
@@ -163,6 +179,109 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         </div>
     )
 }
+
+interface DownStreamAgentModalProp {
+    downStreamAgentModalVisible: boolean
+    onCloseModal: () => void
+    tip: string
+    onSetTip: (tip: string) => void
+}
+
+const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((props) => {
+    const {downStreamAgentModalVisible, onCloseModal, tip, onSetTip} = props
+    const [form] = Form.useForm()
+    const onOKFun = useMemoizedFn(async () => {
+        const tipArr = tip.split("|")
+        const downstreamProxy = form.getFieldsValue().downstreamProxy
+        downstreamProxyRef.current.onSetRemoteValues(downstreamProxy)
+        ipcRenderer.invoke("mitm-set-downstream-proxy", downstreamProxy)
+        if (downstreamProxy) {
+            if (tip.indexOf("下游代理") === -1) {
+                onSetTip(`下游代理${downstreamProxy}` + (tip.indexOf("|") === 0 ? tip : `|${tip}`))
+            } else {
+                const tipStr = tipArr
+                    .map((item) => {
+                        if (item.startsWith("下游代理")) {
+                            return `下游代理：${downstreamProxy}`
+                        } else {
+                            return item
+                        }
+                    })
+                    .join("|")
+                onSetTip(tipStr)
+            }
+        } else {
+            const tipStr = tipArr.filter((item) => !item.startsWith("下游代理")).join("|")
+            onSetTip(tipStr)
+        }
+        onClose()
+    })
+
+    const onClose = useMemoizedFn(() => {
+        onCloseModal()
+    })
+
+    const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
+    const downstreamProxyRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+        onGetRemoteValues: () => {},
+        onSetRemoteValues: (s: string) => {}
+    })
+
+    return (
+        <>
+            <YakitModal
+                visible={downStreamAgentModalVisible}
+                title='下游代理'
+                width={506}
+                maskClosable={false}
+                destroyOnClose={true}
+                closable
+                centered
+                okText='确认'
+                onCancel={onClose}
+                onOk={onOKFun}
+                bodyStyle={{padding: 0}}
+            >
+                <div style={{padding: 15}}>
+                    <Form
+                        form={form}
+                        colon={false}
+                        onSubmitCapture={(e) => e.preventDefault()}
+                        labelCol={{span: 6}}
+                        wrapperCol={{span: 18}}
+                        style={{height: "100%"}}
+                    >
+                        <Form.Item
+                            label='下游代理'
+                            name='downstreamProxy'
+                            help={
+                                <div
+                                    className={style["agent-down-stream-proxy"]}
+                                    onClick={() => setAgentConfigModalVisible(true)}
+                                >
+                                    配置代理认证
+                                </div>
+                            }
+                        >
+                            <YakitAutoComplete
+                                ref={downstreamProxyRef}
+                                placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
+                                cacheHistoryDataKey={MITMConsts.MITMDefaultDownstreamProxyHistory}
+                            />
+                        </Form.Item>
+                    </Form>
+                </div>
+            </YakitModal>
+            <AgentConfigModal
+                agentConfigModalVisible={agentConfigModalVisible}
+                onCloseModal={() => setAgentConfigModalVisible(false)}
+                generateURL={(url) => {
+                    form.setFieldsValue({downstreamProxy: url})
+                }}
+            ></AgentConfigModal>
+        </>
+    )
+})
 
 export const enableMITMPluginMode = (initPluginNames?: string[]) => {
     return ipcRenderer.invoke("mitm-enable-plugin-mode", initPluginNames)

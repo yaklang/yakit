@@ -211,6 +211,15 @@ module.exports = (win, getClient) => {
         }
     })
 
+    // 下游代理
+    ipcMain.handle("mitm-set-downstream-proxy", (e, downstreamProxy) => {
+        if (stream) {
+            stream.write({
+                downstreamProxy
+            })
+        }
+    })
+
     // 开始调用 MITM，设置 stream
     let isFirstData = true
     ipcMain.handle("mitm-start-call", (e, host, port, downstreamProxy, enableHttp2, certificates, extra) => {
