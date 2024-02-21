@@ -324,45 +324,52 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     type={plugin.Type}
                 />
             </ExpandAndRetract>
-
-            <Form
-                form={form}
-                onFinish={onStartExecute}
+            <div
                 className={classNames(styles["plugin-execute-form-wrapper"], {
                     [styles["plugin-execute-form-wrapper-hidden"]]: !isExpand
                 })}
-                labelCol={{span: 6}}
-                wrapperCol={{span: 12}} //这样设置是为了让输入框居中
-                validateMessages={{
-                    /* eslint-disable no-template-curly-in-string */
-                    required: "${label} 是必填字段"
-                }}
-                labelWrap={true}
             >
-                {pluginParamsNodeByPluginType(plugin.Type)}
-                <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
-                    <div className={styles["plugin-execute-form-operate"]}>
-                        {isExecuting ? (
-                            <YakitButton danger onClick={onStopExecute} size='large'>
-                                停止
-                            </YakitButton>
-                        ) : (
-                            <YakitButton
-                                className={styles["plugin-execute-form-operate-start"]}
-                                htmlType='submit'
-                                size='large'
-                            >
-                                开始执行
-                            </YakitButton>
-                        )}
-                        {isShowExtraParamsButton && (
-                            <YakitButton type='text' onClick={openExtraPropsDrawer} disabled={isExecuting} size='large'>
-                                额外参数
-                            </YakitButton>
-                        )}
-                    </div>
-                </Form.Item>
-            </Form>
+                <Form
+                    form={form}
+                    onFinish={onStartExecute}
+                    labelCol={{span: 6}}
+                    wrapperCol={{span: 12}} //这样设置是为了让输入框居中
+                    validateMessages={{
+                        /* eslint-disable no-template-curly-in-string */
+                        required: "${label} 是必填字段"
+                    }}
+                    labelWrap={true}
+                >
+                    {pluginParamsNodeByPluginType(plugin.Type)}
+                    <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                        <div className={styles["plugin-execute-form-operate"]}>
+                            {isExecuting ? (
+                                <YakitButton danger onClick={onStopExecute} size='large'>
+                                    停止
+                                </YakitButton>
+                            ) : (
+                                <YakitButton
+                                    className={styles["plugin-execute-form-operate-start"]}
+                                    htmlType='submit'
+                                    size='large'
+                                >
+                                    开始执行
+                                </YakitButton>
+                            )}
+                            {isShowExtraParamsButton && (
+                                <YakitButton
+                                    type='text'
+                                    onClick={openExtraPropsDrawer}
+                                    disabled={isExecuting}
+                                    size='large'
+                                >
+                                    额外参数
+                                </YakitButton>
+                            )}
+                        </div>
+                    </Form.Item>
+                </Form>
+            </div>
             {progressList.length > 1 && (
                 <div className={styles["plugin-head-executing-progress"]}>
                     {progressList.map((ele, index) => (

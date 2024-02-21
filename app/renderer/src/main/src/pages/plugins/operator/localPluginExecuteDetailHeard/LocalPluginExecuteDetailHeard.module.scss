@@ -17,8 +17,15 @@
 }
 
 .plugin-execute-form-wrapper {
-    @extend %display-column-center;
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: all 0.3s ease;
     padding-top: 24px;
+    :global {
+        .ant-form {
+            overflow: hidden;
+        }
+    }
     .plugin-execute-form-operate {
         @extend %display-flex-center;
         .plugin-execute-form-operate-start {
@@ -26,7 +33,10 @@
         }
     }
 }
-
+.plugin-execute-form-wrapper-hidden {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+}
 .code-wrapper {
     width: 100%;
     margin-bottom: 0px !important;
@@ -49,9 +59,6 @@
             }
         }
     }
-}
-.plugin-execute-form-wrapper-hidden {
-    display: none;
 }
 
 .plugin-execute-progress-wrapper {
