@@ -19,7 +19,7 @@ import {FilterPopoverBtn, FuncFilterPopover} from "../funcTemplate"
 import {YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
-import {PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
+import {PluginDetailsTabProps, PluginsLocalDetailProps, RemoveMenuModalContentProps} from "./PluginsLocalType"
 import {yakitNotify} from "@/utils/notification"
 import {YakitPluginOnlineJournal} from "@/pages/yakitStore/YakitPluginOnlineJournal/YakitPluginOnlineJournal"
 import {executeYakScriptByParams} from "@/pages/invoker/YakScriptCreator"
@@ -37,6 +37,8 @@ import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {LocalPluginExecute} from "./LocalPluginExecute"
 import "../plugins.scss"
 import styles from "./PluginsLocalDetail.module.scss"
+import {onToEditPlugin} from "../utils"
+import classNames from "classnames"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -139,27 +141,7 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!plugin) return
-        if (plugin.IsCorePlugin) {
-            yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
-            return
-        }
-        if (plugin.Type === "packet-hack") {
-            yakitNotify("error", "该类型已下架，不可编辑")
-            return
-        }
-        if (plugin.Id && +plugin.Id) {
-            if(plugin.ScriptName==="综合目录扫描与爆破"){
-                yakitNotify("warning","暂不可编辑")
-                return
-            }
-            emiter.emit(
-                "openPage",
-                JSON.stringify({
-                    route: YakitRoute.ModifyYakitScript,
-                    params: {source: YakitRoute.Plugin_Local, id: +plugin.Id}
-                })
-            )
-        }
+        onToEditPlugin(plugin)
     })
     const onUpload = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -460,53 +442,60 @@ export const PluginsLocalDetail: React.FC<PluginsLocalDetailProps> = (props) => 
                 // spinLoading={spinLoading || removeLoading}
                 spinLoading={spinLoading}
             >
-                <div className={styles["details-content-wrapper"]}>
-                    <PluginTabs defaultActiveKey='execute' tabPosition='right'>
-                        <TabPane tab='执行' key='execute'>
-                            <div className={styles["plugin-execute-wrapper"]}>
-                                {executorShow ? (
-                                    <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} />
-                                ) : (
-                                    <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />
-                                )}
-                            </div>
-                        </TabPane>
-                        <TabPane tab='源码' key='code'>
-                            <div className={styles["plugin-info-wrapper"]}>
-                                <PluginDetailHeader
-                                    pluginName={plugin.ScriptName}
-                                    help={plugin.Help}
-                                    tags={plugin.Tags}
-                                    extraNode={headExtraNode}
-                                    img={plugin.HeadImg || ""}
-                                    user={plugin.Author}
-                                    pluginId={plugin.UUID}
-                                    updated_at={plugin.UpdatedAt || 0}
-                                    prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
-                                        headImg: ele.HeadImg,
-                                        userName: ele.UserName
-                                    }))}
-                                    type={plugin.Type}
-                                />
-                                <div className={styles["details-editor-wrapper"]}>
-                                    <YakitEditor type={plugin.Type} value={plugin.Content} readOnly={true} />
-                                </div>
-                            </div>
-                        </TabPane>
-                        <TabPane tab='日志' key='log'>
-                            <div className={styles["plugin-log-wrapper"]}>
-                                <YakitPluginOnlineJournal pluginId={+plugin.OnlineId} />
-                            </div>
-                        </TabPane>
-                        <TabPane tab='问题反馈' key='feedback' disabled={true}>
-                            <div>问题反馈</div>
-                        </TabPane>
-                    </PluginTabs>
-                </div>
+                <PluginDetailsTab executorShow={executorShow} plugin={plugin} headExtraNode={headExtraNode} />
             </PluginDetails>
         </>
     )
 }
+
+export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((props) => {
+    const {executorShow, plugin, headExtraNode, wrapperClassName = ""} = props
+    return (
+        <div className={classNames(styles["details-content-wrapper"], wrapperClassName)}>
+            <PluginTabs defaultActiveKey='execute' tabPosition='right'>
+                <TabPane tab='执行' key='execute'>
+                    <div className={styles["plugin-execute-wrapper"]}>
+                        {executorShow ? (
+                            <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} />
+                        ) : (
+                            <YakitSpin wrapperClassName={styles["plugin-execute-spin"]} />
+                        )}
+                    </div>
+                </TabPane>
+                <TabPane tab='源码' key='code'>
+                    <div className={styles["plugin-info-wrapper"]}>
+                        <PluginDetailHeader
+                            pluginName={plugin.ScriptName}
+                            help={plugin.Help}
+                            tags={plugin.Tags}
+                            extraNode={headExtraNode}
+                            img={plugin.HeadImg || ""}
+                            user={plugin.Author}
+                            pluginId={plugin.UUID}
+                            updated_at={plugin.UpdatedAt || 0}
+                            prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
+                                headImg: ele.HeadImg,
+                                userName: ele.UserName
+                            }))}
+                            type={plugin.Type}
+                        />
+                        <div className={styles["details-editor-wrapper"]}>
+                            <YakitEditor type={plugin.Type} value={plugin.Content} readOnly={true} />
+                        </div>
+                    </div>
+                </TabPane>
+                <TabPane tab='日志' key='log'>
+                    <div className={styles["plugin-log-wrapper"]}>
+                        <YakitPluginOnlineJournal pluginId={+plugin.OnlineId} />
+                    </div>
+                </TabPane>
+                <TabPane tab='问题反馈' key='feedback' disabled={true}>
+                    <div>问题反馈</div>
+                </TabPane>
+            </PluginTabs>
+        </div>
+    )
+})
 
 const RemoveMenuModalContent: React.FC<RemoveMenuModalContentProps> = React.memo((props) => {
     const {pluginName, onCancel} = props
