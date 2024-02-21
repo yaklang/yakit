@@ -181,6 +181,9 @@
         .ant-#{$kind}menu-submenu-title {
             color: var(--menu-active-color);
         }
+        .ant-#{$kind}menu-submenu-title:hover {
+            background-color: unset;
+        }
     }
     .ant-#{$kind}menu-submenu.ant-#{$kind}menu-submenu-vertical.ant-#{$kind}menu-submenu-selected {
         span.anticon {

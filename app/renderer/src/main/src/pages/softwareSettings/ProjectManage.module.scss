@@ -406,6 +406,12 @@
 }
 .project-name-wrapper {
     color: var(--yakit-header-color);
+    .opt-project-icon {
+        color: #56c991;
+    }
+    .opt-floder-icon {
+        color: #ffb660;
+    }
 }
 .database-path-wrapper {
     color: var(--yakit-primary-5);
@@ -452,9 +458,19 @@
     }
     .btn-style {
         color: var(--yakit-body-text-color);
+        svg {
+            stroke-width: 1.5;
+            width: 16px;
+            height: 16px;
+        }
     }
     .del-style {
         color: var(--yakit-danger-5);
+        svg {
+            stroke-width: 1.5;
+            width: 16px;
+            height: 16px;
+        }
     }
 }
 
@@ -467,6 +483,18 @@
 .dropdown-menu-body {
     border-radius: 4px;
     padding: 8px 4px;
+
+    :global(.ant-dropdown-menu-item.ant-dropdown-menu-item-only-child span) {
+        &.all-icon {
+            color: #4a94f8;
+        }
+        &.project-icon {
+            color: #56c991;
+        }
+        &.floder-icon {
+            color: #ffb660;
+        }
+    }
 }
 
 // 新建项目或文件夹
