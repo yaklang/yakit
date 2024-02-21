@@ -906,7 +906,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     pluginId: data.pluginId,
                     pluginName: data.pluginName
                 }
-                removeMenuPage(info)
+                onBeforeRemovePage(info)
             }
             return
         }
