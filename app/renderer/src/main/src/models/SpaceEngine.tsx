@@ -1,7 +1,7 @@
 import React from "react"
 
 export interface SpaceEngineStartParams {
-    Type: "zoomeye" | "fofa" | "hunter" | "shodan" | ""
+    Type: "zoomeye" | "fofa" | "hunter" | "shodan" | "quake" | ""
     Filter: string
     MaxPage: number
     MaxRecord: number
