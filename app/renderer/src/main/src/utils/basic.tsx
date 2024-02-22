@@ -528,7 +528,7 @@ const StartToExecYakScriptViewer = React.forwardRef((props: {
                 }
             }
             // 导入日志都没有错误
-            if (!checkErrorsFlagRef.current && !loading) {
+            if (!checkErrorsFlagRef.current && !loading && messageState.length) {
                 noErrorsLogCallBack && noErrorsLogCallBack()
                 onCancel()
             }
