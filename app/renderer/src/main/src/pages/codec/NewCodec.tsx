@@ -667,7 +667,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                     case "flex":
                         // 左右布局
                         return (
-                            <div style={{display: "flex", flexDirection: "row", gap: 8}}>
+                            <div style={{display: "flex", flexDirection: "row", gap: 8}} key={`${data.key}-${index}`}>
                                 <div style={{flex: item.leftFlex || 3}}>
                                     {/* 左 */}
                                     {onShowUI(item.leftNode, index)}
@@ -679,7 +679,7 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
                             </div>
                         )
                     default:
-                        return <>{onShowUI(item, index)}</>
+                        return <div key={`${data.key}-${index}`}>{onShowUI(item, index)}</div>
                 }
             })}
         </div>
@@ -1155,6 +1155,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = (prop
                                                     }}
                                                 >
                                                     <NewCodecMiddleTypeItem
+                                                        key={`run-${item.key}`}
                                                         data={item}
                                                         outerKey={item.key}
                                                         rightItems={rightItems}
@@ -1682,7 +1683,7 @@ export interface CodecMethods {
     Methods: CodecMethod[]
 }
 export interface NewCodecProps {}
-const NewCodec: React.FC<NewCodecProps> = (props) => {
+export const NewCodec: React.FC<NewCodecProps> = (props) => {
     // codec分类展开收起
     const [fold, setFold] = useState<boolean>(true)
     // 是否全部展开
@@ -1981,4 +1982,3 @@ const NewCodec: React.FC<NewCodecProps> = (props) => {
         </div>
     )
 }
-export default NewCodec

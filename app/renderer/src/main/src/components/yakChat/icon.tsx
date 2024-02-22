@@ -316,26 +316,26 @@ const OutlineViewGrid = () => (
         <path
             d='M2.66663 4.00008C2.66663 3.2637 3.26358 2.66675 3.99996 2.66675H5.33329C6.06967 2.66675 6.66663 3.2637 6.66663 4.00008V5.33341C6.66663 6.06979 6.06967 6.66675 5.33329 6.66675H3.99996C3.26358 6.66675 2.66663 6.06979 2.66663 5.33341V4.00008Z'
             stroke='#85899E'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
         <path
             d='M9.33329 4.00008C9.33329 3.2637 9.93025 2.66675 10.6666 2.66675H12C12.7363 2.66675 13.3333 3.2637 13.3333 4.00008V5.33341C13.3333 6.06979 12.7363 6.66675 12 6.66675H10.6666C9.93025 6.66675 9.33329 6.06979 9.33329 5.33341V4.00008Z'
             stroke='#85899E'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
         <path
             d='M2.66663 10.6667C2.66663 9.93037 3.26358 9.33341 3.99996 9.33341H5.33329C6.06967 9.33341 6.66663 9.93037 6.66663 10.6667V12.0001C6.66663 12.7365 6.06967 13.3334 5.33329 13.3334H3.99996C3.26358 13.3334 2.66663 12.7365 2.66663 12.0001V10.6667Z'
             stroke='#85899E'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
         <path
             d='M9.33329 10.6667C9.33329 9.93037 9.93025 9.33341 10.6666 9.33341H12C12.7363 9.33341 13.3333 9.93037 13.3333 10.6667V12.0001C13.3333 12.7365 12.7363 13.3334 12 13.3334H10.6666C9.93025 13.3334 9.33329 12.7365 9.33329 12.0001V10.6667Z'
             stroke='#85899E'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
     </svg>
 )
@@ -368,26 +368,26 @@ const OutlineViewGridActive = () => (
         <path
             d='M2.66669 4.00008C2.66669 3.2637 3.26364 2.66675 4.00002 2.66675H5.33335C6.06973 2.66675 6.66669 3.2637 6.66669 4.00008V5.33341C6.66669 6.06979 6.06973 6.66675 5.33335 6.66675H4.00002C3.26364 6.66675 2.66669 6.06979 2.66669 5.33341V4.00008Z'
             stroke='#31343F'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
         <path
             d='M9.33335 4.00008C9.33335 3.2637 9.93031 2.66675 10.6667 2.66675H12C12.7364 2.66675 13.3334 3.2637 13.3334 4.00008V5.33341C13.3334 6.06979 12.7364 6.66675 12 6.66675H10.6667C9.93031 6.66675 9.33335 6.06979 9.33335 5.33341V4.00008Z'
             stroke='#31343F'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
         <path
             d='M2.66669 10.6667C2.66669 9.93037 3.26364 9.33341 4.00002 9.33341H5.33335C6.06973 9.33341 6.66669 9.93037 6.66669 10.6667V12.0001C6.66669 12.7365 6.06973 13.3334 5.33335 13.3334H4.00002C3.26364 13.3334 2.66669 12.7365 2.66669 12.0001V10.6667Z'
             stroke='#31343F'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
         <path
             d='M9.33335 10.6667C9.33335 9.93037 9.93031 9.33341 10.6667 9.33341H12C12.7364 9.33341 13.3334 9.93037 13.3334 10.6667V12.0001C13.3334 12.7365 12.7364 13.3334 12 13.3334H10.6667C9.93031 13.3334 9.33335 12.7365 9.33335 12.0001V10.6667Z'
             stroke='#31343F'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
     </svg>
 )
@@ -418,8 +418,8 @@ const UIKitOutlineBugActive = () => (
                 fill='#F7544A'
                 stroke='#F7544A'
             />
-            <path d='M8 14.0001V4.66675' stroke='#31343F' stroke-linecap='round' />
-            <path d='M10 4C10 2.89543 9.10457 2 8 2C6.89543 2 6 2.89543 6 4' stroke='#F7544A' stroke-linecap='round' />
+            <path d='M8 14.0001V4.66675' stroke='#31343F' strokeLinecap='round' />
+            <path d='M10 4C10 2.89543 9.10457 2 8 2C6.89543 2 6 2.89543 6 4' stroke='#F7544A' strokeLinecap='round' />
             <path
                 d='M3.83337 7.87879C3.83337 6.01274 5.34611 4.5 7.21216 4.5H8.78792C10.654 4.5 12.1667 6.01273 12.1667 7.87879V10C12.1667 12.3012 10.3012 14.1667 8.00004 14.1667C5.69885 14.1667 3.83337 12.3012 3.83337 10V7.87879Z'
                 stroke='#31343F'
@@ -427,7 +427,7 @@ const UIKitOutlineBugActive = () => (
             <path
                 d='M1.33337 8.66667H3.33337M12.6667 8.66667H14.6667M14 4C14 5.03499 13.2138 5.88635 12.2061 5.98951M2.00001 14C2.00001 12.8954 2.89544 12 4.00001 12M2.00001 4C2.00001 5.0188 2.76178 5.85968 3.74681 5.98413M14 14C14 12.8954 13.1046 12 12 12'
                 stroke='#31343F'
-                stroke-linecap='round'
+                strokeLinecap='round'
             />
         </g>
     </svg>
@@ -459,11 +459,11 @@ const UIKitOutlineBug = () => (
                 fill='#CCD2DE'
                 stroke='#85899E'
             />
-            <path d='M7.99997 14.0001V4.66675' stroke='#85899E' stroke-linecap='round' />
+            <path d='M7.99997 14.0001V4.66675' stroke='#85899E' strokeLinecap='round' />
             <path
                 d='M10 4C10 2.89543 9.1046 2 8.00003 2C6.89546 2 6.00003 2.89543 6.00003 4'
                 stroke='#85899E'
-                stroke-linecap='round'
+                strokeLinecap='round'
             />
             <path
                 d='M3.83337 7.87879C3.83337 6.01274 5.34611 4.5 7.21216 4.5H8.78792C10.654 4.5 12.1667 6.01273 12.1667 7.87879V10C12.1667 12.3012 10.3012 14.1667 8.00004 14.1667C5.69885 14.1667 3.83337 12.3012 3.83337 10V7.87879Z'
@@ -472,7 +472,7 @@ const UIKitOutlineBug = () => (
             <path
                 d='M1.33334 8.66667H3.33334M12.6667 8.66667H14.6667M14 4C14 5.03499 13.2138 5.88635 12.2061 5.98951M1.99998 14C1.99998 12.8954 2.89541 12 3.99998 12M1.99998 4C1.99998 5.0188 2.76175 5.85968 3.74678 5.98413M14 14C14 12.8954 13.1045 12 12 12'
                 stroke='#85899E'
-                stroke-linecap='round'
+                strokeLinecap='round'
             />
         </g>
     </svg>
@@ -503,14 +503,14 @@ const OutlineYakRunnerActive = () => (
                 d='M1.33334 4.00008C1.33334 3.2637 1.99663 2.66675 2.81483 2.66675H13.1852C14.0034 2.66675 14.6667 3.2637 14.6667 4.00008V12.0001C14.6667 12.7365 14.0034 13.3334 13.1852 13.3334H2.81482C1.99663 13.3334 1.33334 12.7365 1.33334 12.0001V4.00008Z'
                 fill='#F7544A'
                 stroke='#31343F'
-                stroke-linecap='round'
-                stroke-linejoin='round'
+                strokeLinecap='round'
+                strokeLinejoin='round'
             />
             <path
                 d='M5.33334 6L7.33334 8L5.33334 10M8.66668 10H10.6667'
                 stroke='#31343F'
-                stroke-linecap='round'
-                stroke-linejoin='round'
+                strokeLinecap='round'
+                strokeLinejoin='round'
             />
         </g>
     </svg>
@@ -541,14 +541,14 @@ const OutlineYakRunner = () => (
                 d='M1.33337 4.00008C1.33337 3.2637 1.99666 2.66675 2.81486 2.66675H13.1852C14.0034 2.66675 14.6667 3.2637 14.6667 4.00008V12.0001C14.6667 12.7365 14.0034 13.3334 13.1852 13.3334H2.81486C1.99666 13.3334 1.33337 12.7365 1.33337 12.0001V4.00008Z'
                 fill='#CCD2DE'
                 stroke='#85899E'
-                stroke-linecap='round'
-                stroke-linejoin='round'
+                strokeLinecap='round'
+                strokeLinejoin='round'
             />
             <path
                 d='M5.33337 6L7.33337 8L5.33337 10M8.66671 10H10.6667'
                 stroke='#85899E'
-                stroke-linecap='round'
-                stroke-linejoin='round'
+                strokeLinecap='round'
+                strokeLinejoin='round'
             />
         </g>
     </svg>
@@ -578,24 +578,24 @@ const OutlineWebFuzzer = () => (
             <path
                 d='M14 8C14 11.3137 11.3137 14 7.99996 14C7.5417 14 7.09544 13.9486 6.66663 13.8513'
                 stroke='#85899E'
-                stroke-linecap='round'
+                strokeLinecap='round'
             />
             <path
                 d='M2 8C2 4.68629 4.68629 2 8 2C8.45826 2 8.90452 2.05137 9.33333 2.14868'
                 stroke='#85899E'
-                stroke-linecap='round'
+                strokeLinecap='round'
             />
-            <ellipse cx='10.6667' cy='2.66659' rx='1.33333' ry='1.33333' stroke='#85899E' stroke-linecap='round' />
-            <ellipse cx='5.33333' cy='13.3333' rx='1.33333' ry='1.33333' stroke='#85899E' stroke-linecap='round' />
+            <ellipse cx='10.6667' cy='2.66659' rx='1.33333' ry='1.33333' stroke='#85899E' strokeLinecap='round' />
+            <ellipse cx='5.33333' cy='13.3333' rx='1.33333' ry='1.33333' stroke='#85899E' strokeLinecap='round' />
             <path
                 d='M8.33337 7.33333V5L5.33337 8.66667H7.66671L7.66671 11L10.6667 7.33333L8.33337 7.33333Z'
                 fill='#CCD2DE'
                 stroke='#CCD2DE'
-                stroke-linecap='round'
-                stroke-linejoin='round'
+                strokeLinecap='round'
+                strokeLinejoin='round'
             />
-            <path d='M3.33329 7.33325L1.99996 8.66659L0.666626 7.33325' stroke='#85899E' stroke-linecap='round' />
-            <path d='M12.6667 8.66675L14 7.33341L15.3334 8.66675' stroke='#85899E' stroke-linecap='round' />
+            <path d='M3.33329 7.33325L1.99996 8.66659L0.666626 7.33325' stroke='#85899E' strokeLinecap='round' />
+            <path d='M12.6667 8.66675L14 7.33341L15.3334 8.66675' stroke='#85899E' strokeLinecap='round' />
         </g>
     </svg>
 )
@@ -624,24 +624,24 @@ const OutlineWebFuzzerActive = () => (
             <path
                 d='M14 8C14 11.3137 11.3137 14 8.00001 14C7.54175 14 7.09549 13.9486 6.66667 13.8513'
                 stroke='#31343F'
-                stroke-linecap='round'
+                strokeLinecap='round'
             />
             <path
                 d='M2 8C2 4.68629 4.68629 2 8 2C8.45826 2 8.90452 2.05137 9.33333 2.14868'
                 stroke='#31343F'
-                stroke-linecap='round'
+                strokeLinecap='round'
             />
-            <ellipse cx='10.6667' cy='2.66659' rx='1.33333' ry='1.33333' stroke='#31343F' stroke-linecap='round' />
-            <ellipse cx='5.33333' cy='13.3333' rx='1.33333' ry='1.33333' stroke='#31343F' stroke-linecap='round' />
+            <ellipse cx='10.6667' cy='2.66659' rx='1.33333' ry='1.33333' stroke='#31343F' strokeLinecap='round' />
+            <ellipse cx='5.33333' cy='13.3333' rx='1.33333' ry='1.33333' stroke='#31343F' strokeLinecap='round' />
             <path
                 d='M8.33333 7.33333V5L5.33333 8.66667H7.66666L7.66666 11L10.6667 7.33333L8.33333 7.33333Z'
                 fill='#4A94F8'
                 stroke='#4A94F8'
-                stroke-linecap='round'
-                stroke-linejoin='round'
+                strokeLinecap='round'
+                strokeLinejoin='round'
             />
-            <path d='M3.33334 7.33325L2.00001 8.66659L0.666672 7.33325' stroke='#31343F' stroke-linecap='round' />
-            <path d='M12.6667 8.66675L14 7.33341L15.3333 8.66675' stroke='#31343F' stroke-linecap='round' />
+            <path d='M3.33334 7.33325L2.00001 8.66659L0.666672 7.33325' stroke='#31343F' strokeLinecap='round' />
+            <path d='M12.6667 8.66675L14 7.33341L15.3333 8.66675' stroke='#31343F' strokeLinecap='round' />
         </g>
     </svg>
 )
@@ -698,8 +698,8 @@ const OutlineSparkles = () => (
         <path
             d='M3.33333 2V4.66667M2 3.33333H4.66667M4 11.3333V14M2.66667 12.6667H5.33333M8.66667 2L10.1905 6.57143L14 8L10.1905 9.42857L8.66667 14L7.14286 9.42857L3.33333 8L7.14286 6.57143L8.66667 2Z'
             stroke='#85899E'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
     </svg>
 )
@@ -720,8 +720,8 @@ const OutlineSparklesActive = () => (
         <path
             d='M3.33333 2V4.66667M2 3.33333H4.66667M4 11.3333V14M2.66667 12.6667H5.33333M8.66667 2L10.1905 6.57143L14 8L10.1905 9.42857L8.66667 14L7.14286 9.42857L3.33333 8L7.14286 6.57143L8.66667 2Z'
             stroke='#31343F'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
     </svg>
 )

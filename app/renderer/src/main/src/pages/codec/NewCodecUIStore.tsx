@@ -204,8 +204,8 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                     }}
                     {...restProps}
                 >
-                    {optionsList.map((item) => (
-                        <YakitSelect value={item.value}>{item.label}</YakitSelect>
+                    {optionsList.map((item,index) => (
+                        <YakitSelect.Option value={item.value} key={`${item.label}-${index}`}>{item.label}</YakitSelect.Option>
                     ))}
                 </YakitSelect>
             ) : (
@@ -220,8 +220,8 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
                     }}
                     {...restProps}
                 >
-                    {optionsList.map((item) => (
-                        <YakitSelect value={item.value}>{item.label}</YakitSelect>
+                    {optionsList.map((item,index) => (
+                        <YakitSelect.Option value={item.value} key={`${item.label}-${index}`}>{item.label}</YakitSelect.Option>
                     ))}
                 </YakitSelect>
             )}
