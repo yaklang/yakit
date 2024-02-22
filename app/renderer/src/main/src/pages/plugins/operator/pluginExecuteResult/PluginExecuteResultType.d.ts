@@ -8,6 +8,7 @@ export interface PluginExecuteResultProps {
     loading: boolean
     pluginType: string
     defaultActiveKey?:string
+    pluginExecuteResultWrapper?:string
 }
 
 export interface VulnerabilitiesRisksTableProps {

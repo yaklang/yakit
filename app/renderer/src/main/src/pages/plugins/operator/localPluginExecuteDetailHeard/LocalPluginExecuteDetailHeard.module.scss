@@ -20,7 +20,7 @@
     display: grid;
     grid-template-rows: 1fr;
     transition: all 0.3s ease;
-    padding-top: 24px;
+    padding: 24px 12px 0;
     :global {
         .ant-form {
             overflow: hidden;
@@ -87,7 +87,8 @@
     @extend %display-flex-center;
     flex-wrap: wrap;
     gap: 16px;
-    padding-top: 12px;
+    padding: 12px;
+    padding-bottom: 0;
 }
 
 .expand-retract {

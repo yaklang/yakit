@@ -5,6 +5,7 @@ import {LocalPluginExecuteDetailHeard} from "../operator/localPluginExecuteDetai
 import {PluginExecuteResult} from "../operator/pluginExecuteResult/PluginExecuteResult"
 import {LocalPluginExecuteProps} from "./PluginsLocalType"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import styles from "./PluginsLocalDetail.module.scss"
 
 export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo((props) => {
     const {plugin, headExtraNode} = props
@@ -50,6 +51,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
                     runtimeId={runtimeId}
                     loading={isExecuting}
                     pluginType={plugin.Type}
+                    pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
                 />
             )}
         </>
